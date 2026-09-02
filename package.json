@@ -26,7 +26,7 @@
   },
   "devDependencies": {
     "@babel/core": "^8.0.1",
-    "@eslint/js": "^9.39.5",
+    "@eslint/js": "^10.0.1",
     "@inertiajs/core": "^3.7.0",
     "@inertiajs/vite": "^3.7.0",
     "@rolldown/plugin-babel": "^0.2.3",
