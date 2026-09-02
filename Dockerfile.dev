@@ -1,0 +1,52 @@
+# syntax=docker/dockerfile:1
+
+# Imagen SOLO para desarrollo/pruebas locales: un único stage, con todos los
+# grupos de gemas (incluido :development), sin precompilar assets (Vite sirve
+# todo al vuelo) y pensada para correr con el código montado como volumen.
+#
+# No usar esto para desplegar nada — para eso está el Dockerfile de la raíz
+# (production, multi-stage, Kamal/Heroku). Ver docs/desiciones/toDo.md.
+
+ARG RUBY_VERSION=4.0.5
+FROM docker.io/library/ruby:$RUBY_VERSION-slim
+
+WORKDIR /rails
+
+# Paquetes de sistema para compilar gemas nativas y correr Postgres/libvips.
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+      curl libjemalloc2 libvips postgresql-client \
+      build-essential git libpq-dev libyaml-dev node-gyp pkg-config python-is-python3 && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Node, para Vite y el resto del toolchain de frontend.
+ARG NODE_VERSION=24.16.0
+ENV PATH=/usr/local/node/bin:$PATH
+RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz -C /tmp/ && \
+    /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node && \
+    rm -rf /tmp/node-build-master
+
+ENV RAILS_ENV=development \
+    BUNDLE_PATH=/usr/local/bundle
+
+# Instala TODAS las gemas (sin BUNDLE_WITHOUT): acá sí hacen falta debug,
+# web-console, listen, rspec, capybara, etc.
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY . .
+
+EXPOSE 3000 5173
+
+# tmp/pids/server.pid sobrevive entre reinicios porque tmp/ está en el bind
+# mount del host — sin borrarlo, Puma cree que ya hay un server corriendo (el
+# pid de un contenedor anterior) y se niega a arrancar.
+#
+# db:prepare crea/migra la base si hace falta; después levanta Rails y Vite
+# juntos (mismo par de procesos que corre bin/dev localmente vía Procfile.dev).
+# bash, no sh: "wait -n" (frena el contenedor si cualquiera de los dos
+# procesos muere) es sintaxis de bash, dash no lo soporta.
+CMD ["bash", "-c", "rm -f tmp/pids/server.pid && bin/rails db:prepare && (bin/rails server -b 0.0.0.0 -p 3000 & npx vite --host 0.0.0.0 & wait -n)"]

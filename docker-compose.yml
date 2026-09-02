@@ -1,0 +1,59 @@
+# Entorno de DESARROLLO: RAILS_ENV=development, código montado como volumen
+# (los cambios se reflejan sin rebuild), Rails + Vite corriendo juntos.
+#
+# Levantar:  docker compose up --build
+# App:       http://localhost:3001
+# Vite:      http://localhost:5173
+#
+# Por qué RAILS_ENV=development y no production: en development no hay
+# force_ssl, no hace falta RAILS_MASTER_KEY (Rails genera su propio secreto
+# solo) y Vite sirve los assets al vuelo (no hay que precompilar nada).
+#
+# Nota: config/database.yml NO usa DATABASE_URL en development (solo en
+# production) — por eso acá se pasan PGHOST/PGUSER/PGPASSWORD en vez de
+# DATABASE_URL, para que libpq encuentre el Postgres del servicio "db".
+name: rails_inertia_base_dev
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rails_inertia_base_development
+    volumes:
+      - dev_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      RAILS_ENV: development
+      PGHOST: db
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    volumes:
+      - .:/rails
+      # node_modules se instala en el build (npm ci); si no lo aislamos, el
+      # bind mount de arriba lo tapa con lo que haya (o no haya) en el host.
+      - dev_node_modules:/rails/node_modules
+    ports:
+      # 3001 y no 3000: en esta máquina el navegador tiene cacheado un
+      # redirect a HTTPS para http://localhost:3000 (de cuando ahí corrió un
+      # docker-compose de producción con force_ssl, ya descartado). Si no
+      # tenés ese caché en tu navegador, "3000:3000" anda igual de bien.
+      - "3001:3000" # Rails → http://localhost:3001
+      - "5173:5173" # Vite dev server (el navegador le pide assets directo)
+
+volumes:
+  dev_db_data:
+  dev_node_modules:
