@@ -7,3 +7,8 @@ db/schema.rb linguist-generated
 vendor/* linguist-vendored
 config/credentials/*.yml.enc diff=rails_credentials
 config/credentials.yml.enc diff=rails_credentials
+
+# Force LF endings for executable scripts regardless of core.autocrlf: a CRLF
+# shebang (e.g. "#!/usr/bin/env ruby\r") breaks execution in Linux containers,
+# which bit the Docker build on a Windows checkout (autocrlf=true).
+bin/* text eol=lf
