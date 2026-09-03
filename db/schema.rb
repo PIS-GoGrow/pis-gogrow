@@ -10,9 +10,133 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_120002) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_205519) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "accounts", force: :cascade do |t|
+    t.decimal "amount", precision: 10, scale: 2
+    t.datetime "created_at", null: false
+    t.date "month"
+    t.bigint "owner_id", null: false
+    t.string "owner_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id"], name: "index_accounts_on_owner"
+  end
+
+  create_table "admins", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.datetime "updated_at", null: false
+    t.string "username"
+    t.index ["company_id"], name: "index_admins_on_company_id"
+    t.index ["email"], name: "index_admins_on_email", unique: true
+  end
+
+  create_table "benefits", force: :cascade do |t|
+    t.integer "amount"
+    t.bigint "consumer_id", null: false
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.date "due_date"
+    t.integer "percentage"
+    t.datetime "updated_at", null: false
+    t.index ["consumer_id"], name: "index_benefits_on_consumer_id"
+  end
+
+  create_table "companies", force: :cascade do |t|
+    t.string "address"
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "consumers", force: :cascade do |t|
+    t.string "address"
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.datetime "updated_at", null: false
+    t.string "username"
+    t.index ["company_id"], name: "index_consumers_on_company_id"
+    t.index ["email"], name: "index_consumers_on_email", unique: true
+  end
+
+  create_table "menus", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.string "name"
+    t.decimal "price", precision: 10, scale: 2
+    t.bigint "provider_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider_id"], name: "index_menus_on_provider_id"
+  end
+
+  create_table "notification_configurations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "order_accounts", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "order_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_order_accounts_on_account_id"
+    t.index ["order_id"], name: "index_order_accounts_on_order_id"
+  end
+
+  create_table "orders", force: :cascade do |t|
+    t.string "address"
+    t.integer "amount"
+    t.bigint "consumer_id", null: false
+    t.datetime "created_at", null: false
+    t.decimal "discounted_price", precision: 10, scale: 2
+    t.string "notes"
+    t.decimal "price", precision: 10, scale: 2
+    t.bigint "schedule_id", null: false
+    t.integer "status"
+    t.datetime "updated_at", null: false
+    t.index ["consumer_id"], name: "index_orders_on_consumer_id"
+    t.index ["schedule_id"], name: "index_orders_on_schedule_id"
+  end
+
+  create_table "payments", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "status"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_payments_on_account_id"
+  end
+
+  create_table "providers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.time "order_deadline"
+    t.datetime "updated_at", null: false
+    t.string "username"
+    t.index ["email"], name: "index_providers_on_email", unique: true
+  end
+
+  create_table "reviews", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.bigint "menu_id", null: false
+    t.integer "rating"
+    t.datetime "updated_at", null: false
+    t.index ["menu_id"], name: "index_reviews_on_menu_id"
+  end
+
+  create_table "schedules", force: :cascade do |t|
+    t.integer "amount"
+    t.datetime "created_at", null: false
+    t.date "date"
+    t.bigint "menu_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["menu_id"], name: "index_schedules_on_menu_id"
+  end
 
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -194,6 +318,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120002) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "user_notifications", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "notification_configuration_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.string "user_type", null: false
+    t.index ["notification_configuration_id"], name: "index_user_notifications_on_notification_configuration_id"
+    t.index ["user_type", "user_id"], name: "index_user_notifications_on_user"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -204,6 +338,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120002) do
     t.index ["email"], name: "index_users_on_email", unique: true
   end
 
+  add_foreign_key "admins", "companies"
+  add_foreign_key "benefits", "consumers"
+  add_foreign_key "consumers", "companies"
+  add_foreign_key "menus", "providers"
+  add_foreign_key "order_accounts", "accounts"
+  add_foreign_key "order_accounts", "orders"
+  add_foreign_key "orders", "consumers"
+  add_foreign_key "orders", "schedules"
+  add_foreign_key "payments", "accounts"
+  add_foreign_key "reviews", "menus"
+  add_foreign_key "schedules", "menus"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
@@ -213,4 +358,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120002) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "user_notifications", "notification_configurations"
 end
