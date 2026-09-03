@@ -12,9 +12,9 @@
 
 company = Company.create! name: 'GoGrow', address: '18 de Julio 1006'
 consumer = Consumer.create! username: 'Juan Andrés', company: company, email: 'a@a.com', address: 'Julio Herrera y Reissig 565'
-provider = Provider.create! username: 'TuViandita'
-menu = Menu.create! provider: provider, name: 'Milanesa con papas fritas', price: '300', description: ''
-schedule = Schedule.create! menu: menu, date: Date.today, deadline: Time.now + 3.hours, amount: 7
+provider = Provider.create! username: 'TuViandita', order_deadline: Time.now + 3.hours
+menu = Menu.create! provider: provider, name: 'Milanesa con papas fritas', price: 300, description: ''
+schedule = Schedule.create! menu: menu, date: Date.today, amount: 7
 order = Order.create! consumer: consumer, schedule: schedule, price: 300, discounted_price: 0, amount: 1
 account = Account.create! amount: 300, month: Date.today, owner: consumer
 account.orders << order
