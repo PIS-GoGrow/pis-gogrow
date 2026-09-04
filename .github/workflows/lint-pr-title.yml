@@ -1,0 +1,13 @@
+# Este archivo se encarga de validar que el titulo de cada Pull Request siga conventional commits. 
+
+name: Lint PR Title
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+jobs:
+  lint-pr-title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
