@@ -1,9 +1,13 @@
-### Summary
+## Qué se hizo
+<!-- Descripción breve del cambio -->
 
-<!-- Two or three sentences: what this does and why. Plain English. -->
+## Cómo probarlo
+<!-- Pasos para verificar que funciona -->
 
-### Changes
+## Ítem relacionado
+<!-- Link o ID del ítem en ClickUp -->
 
-<!-- One bullet per meaningful change. -->
-
--
+## Checklist
+- [ ] Tests agregados/actualizados
+- [ ] Sin warnings de linter
+- [ ] Probado localmente con Docker Compose
