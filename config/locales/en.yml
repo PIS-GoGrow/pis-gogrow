@@ -20,6 +20,7 @@ en:
     email_verification_invalid: "That email verification link is invalid"
     email_verification_sent: "We sent a verification email to your email address"
     email_verified: "Thank you for verifying your email address"
+    google_auth_failed: "We couldn't verify your Google account. Please try again."
     incorrect_credentials: "That email or password is incorrect"
     password_changed: "Your password has been changed"
     password_reset_instructions: "Check your email for reset instructions"
@@ -86,11 +87,15 @@ en:
         rails: "Rails Guides"
     dashboard:
       title: "Dashboard"
+      roles:
+        provider: "Provider panel"
     sessions:
       new:
         title: "Log in"
         heading: "Log in to your account"
-        description: "Enter your email and password below to log in"
+        description: "Sign in with your Google account to continue"
+        continue_with_google: "Continue with Google"
+        auth_error_title: "We couldn't sign you in"
         forgot_password: "Forgot password?"
         no_account: "Don't have an account?"
     users:

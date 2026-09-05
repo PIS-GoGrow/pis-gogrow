@@ -5,7 +5,7 @@ class UserSerializer < ApplicationSerializer
 
   typelize :string?
   attribute :avatar do |user|
-    nil # Placeholder for avatar URL (e.g. Gravatar, Active Storage)
+    user.avatar_url
   end
 end
 

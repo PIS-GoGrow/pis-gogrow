@@ -24,7 +24,7 @@ export function AppSidebar() {
   const mainNavItems: NavItem[] = [
     {
       title: t("nav.dashboard"),
-      href: dashboard.index().url,
+      href: dashboard.index({}).url,
       icon: LayoutGrid,
     },
   ]
@@ -35,7 +35,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href={dashboard.index()} prefetch>
+              <Link href={dashboard.index({})} prefetch>
                 <AppLogo />
               </Link>
             </SidebarMenuButton>

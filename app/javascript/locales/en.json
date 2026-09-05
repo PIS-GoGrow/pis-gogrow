@@ -50,6 +50,9 @@
     },
     "pages": {
       "dashboard": {
+        "roles": {
+          "provider": "Provider panel"
+        },
         "title": "Dashboard"
       },
       "home": {
@@ -82,7 +85,9 @@
       },
       "sessions": {
         "new": {
-          "description": "Enter your email and password below to log in",
+          "auth_error_title": "We couldn't sign you in",
+          "continue_with_google": "Continue with Google",
+          "description": "Sign in with your Google account to continue",
           "forgot_password": "Forgot password?",
           "heading": "Log in to your account",
           "no_account": "Don't have an account?",

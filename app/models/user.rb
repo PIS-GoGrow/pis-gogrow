@@ -12,10 +12,12 @@ class User < ApplicationRecord
   end
 
   has_many :sessions, dependent: :destroy
+  has_one :provider, dependent: :nullify
 
   validates :name, presence: true
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, allow_nil: true, length: { minimum: 12 }
+  validates :google_uid, uniqueness: true, allow_nil: true
 
   normalizes :email, with: -> { _1.strip.downcase }
 
@@ -26,6 +28,21 @@ class User < ApplicationRecord
   after_update if: :password_digest_previously_changed? do
     sessions.where.not(id: Current.session).delete_all
   end
+
+  # Finds or creates the account behind a Google Sign-In, from the payload
+  # OmniAuth returns after a successful login (request.env["omniauth.auth"]).
+  # A random password satisfies has_secure_password's presence check on
+  # create — the account can still set a real one later through the normal
+  # "forgot password" flow if it ever wants password-based login too.
+  def self.find_or_create_from_google(auth)
+    user = find_or_initialize_by(email: auth.info.email.to_s.downcase)
+    user.password = SecureRandom.hex(32) if user.new_record?
+    user.name = auth.info.name
+    user.google_uid = auth.uid
+    user.avatar_url = auth.info.image
+    user.save!
+    user
+  end
 end
 
 # == Schema Information
@@ -33,7 +50,9 @@ end
 # Table name: users
 #
 #  id              :bigint           not null, primary key
+#  avatar_url      :string
 #  email           :string           not null
+#  google_uid      :string
 #  name            :string           not null
 #  password_digest :string           not null
 #  verified        :boolean          default(FALSE), not null
@@ -42,5 +61,6 @@ end
 #
 # Indexes
 #
-#  index_users_on_email  (email) UNIQUE
+#  index_users_on_email       (email) UNIQUE
+#  index_users_on_google_uid  (google_uid) UNIQUE
 #

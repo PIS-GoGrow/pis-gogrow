@@ -101,5 +101,10 @@ end
 gem "alba"
 gem "alba-inertia"
 
+# Google Sign-In for the provider login flow
+gem "omniauth"
+gem "omniauth-google-oauth2"
+gem "omniauth-rails_csrf_protection"
+
 gem "sentry-ruby", "~> 6.5"
 gem "sentry-rails", "~> 6.5"

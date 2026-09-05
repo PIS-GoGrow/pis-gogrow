@@ -11,12 +11,18 @@ Rails.application.routes.draw do
   resources :sessions, only: [ :destroy ]
   resource :users, only: [ :destroy ]
 
+  # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the
+  # OmniAuth middleware before it reaches the router — only the callback and
+  # failure paths need a route.
+  get "auth/google_oauth2/callback", to: "omniauth_callbacks#google_oauth2"
+  get "auth/failure", to: "omniauth_callbacks#failure"
+
   namespace :identity do
     resource :email_verification, only: [ :show, :create ]
     resource :password_reset,     only: [ :new, :edit, :create, :update ]
   end
 
-  get :dashboard, to: "dashboard#index"
+  get "dashboard(/:role)", to: "dashboard#index", as: :dashboard, constraints: { role: /provider/ }
 
   namespace :settings do
     resource :profile, only: [ :show, :update ]

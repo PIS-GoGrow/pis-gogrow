@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_205519) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_05_160001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -116,8 +116,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_205519) do
     t.string "email"
     t.time "order_deadline"
     t.datetime "updated_at", null: false
+    t.bigint "user_id"
     t.string "username"
     t.index ["email"], name: "index_providers_on_email", unique: true
+    t.index ["user_id"], name: "index_providers_on_user_id", unique: true
   end
 
   create_table "reviews", force: :cascade do |t|
@@ -329,13 +331,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_205519) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.string "avatar_url"
     t.datetime "created_at", null: false
     t.string "email", null: false
+    t.string "google_uid"
     t.string "name", null: false
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
     t.boolean "verified", default: false, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["google_uid"], name: "index_users_on_google_uid", unique: true
   end
 
   add_foreign_key "admins", "companies"
@@ -347,6 +352,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_205519) do
   add_foreign_key "orders", "consumers"
   add_foreign_key "orders", "schedules"
   add_foreign_key "payments", "accounts"
+  add_foreign_key "providers", "users", on_delete: :nullify
   add_foreign_key "reviews", "menus"
   add_foreign_key "schedules", "menus"
   add_foreign_key "sessions", "users"
