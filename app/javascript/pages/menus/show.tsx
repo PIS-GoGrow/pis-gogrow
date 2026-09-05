@@ -6,7 +6,7 @@ interface MenuProps {
   menu: Menu
 }
 
-export default function Index({ menu }: MenuProps) {
+export default function Show({ menu }: MenuProps) {
   return (
     <div>
       <h1>{menu.name}</h1>

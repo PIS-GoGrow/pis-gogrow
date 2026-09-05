@@ -17,6 +17,14 @@ class MenusController < ApplicationController
   end
 
   def create
+    provider = Provider.find PROVIDER_ID
+    menu = provider.menus.new menu_params
+
+    if menu.save
+      redirect_to menus_path
+    else
+      render inertia: "menus/new", props: { errors: @menu.errors }
+    end
   end
 
   def show
@@ -33,5 +41,11 @@ class MenusController < ApplicationController
   end
 
   def destroy
+  end
+
+  private
+
+  def menu_params
+    params.expect(menu: [:name, :price, :description])
   end
 end
