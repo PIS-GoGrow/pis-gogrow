@@ -10,7 +10,6 @@ class MenusController < ApplicationController
     provider = Provider.find PROVIDER_ID
     menus = provider.menus
 
-
     render inertia: { menus: }
   end
 
@@ -21,6 +20,10 @@ class MenusController < ApplicationController
   end
 
   def show
+    provider = Provider.find PROVIDER_ID
+    menu = provider.menus.find(params[:id])
+
+    render inertia: { menu: }
   end
 
   def edit
