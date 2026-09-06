@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class Menu < ApplicationRecord
+  validates :name, presence: true
+  validates :price, comparison: { greater_than: 0 }
+
   belongs_to :provider
 
   has_many :schedules

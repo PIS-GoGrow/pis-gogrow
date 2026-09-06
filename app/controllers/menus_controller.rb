@@ -8,7 +8,7 @@ class MenusController < ApplicationController
 
   def index
     provider = Provider.find PROVIDER_ID
-    menus = provider.menus
+    menus = provider.menus.order created_at: :desc
 
     render inertia: { menus: }
   end
@@ -23,7 +23,7 @@ class MenusController < ApplicationController
     if menu.save
       redirect_to menus_path
     else
-      render inertia: "menus/new", props: { errors: @menu.errors }
+      redirect_to menus_path, inertia: { errors: menu.errors }
     end
   end
 
