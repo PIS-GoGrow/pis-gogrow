@@ -15,6 +15,10 @@ class OmniauthCallbacksController < InertiaController
     cookies.signed.permanent[:session_token] = { value: @session.id, httponly: true }
 
     redirect_to dashboard_path("provider"), notice: t("flash.signed_in")
+  rescue User::DomainNotAllowed
+    redirect_to sign_in_path, inertia: {
+      errors: { auth: t("flash.google_domain_not_allowed") }
+    }
   end
 
   # OmniAuth.config.on_failure redirects here on any failure in the flow

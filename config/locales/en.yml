@@ -21,6 +21,7 @@ en:
     email_verification_sent: "We sent a verification email to your email address"
     email_verified: "Thank you for verifying your email address"
     google_auth_failed: "We couldn't verify your Google account. Please try again."
+    google_domain_not_allowed: "This Google account isn't allowed to sign in here."
     incorrect_credentials: "That email or password is incorrect"
     password_changed: "Your password has been changed"
     password_reset_instructions: "Check your email for reset instructions"

@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class User < ApplicationRecord
+  class DomainNotAllowed < StandardError; end
+
   has_secure_password
 
   generates_token_for :email_verification, expires_in: 2.days do
@@ -29,13 +31,20 @@ class User < ApplicationRecord
     sessions.where.not(id: Current.session).delete_all
   end
 
+  def self.google_allowed_domains
+    ENV.fetch("GOOGLE_ALLOWED_DOMAINS", "gmail.com,gogrow.com").split(",").filter_map { it.strip.downcase.presence }
+  end
+
   # Finds or creates the account behind a Google Sign-In, from the payload
   # OmniAuth returns after a successful login (request.env["omniauth.auth"]).
   # A random password satisfies has_secure_password's presence check on
   # create — the account can still set a real one later through the normal
   # "forgot password" flow if it ever wants password-based login too.
   def self.find_or_create_from_google(auth)
-    user = find_or_initialize_by(email: auth.info.email.to_s.downcase)
+    email = auth.info.email.to_s.downcase
+    raise DomainNotAllowed unless google_allowed_domains.include?(email.split("@").last)
+
+    user = find_or_initialize_by(email: email)
     user.password = SecureRandom.hex(32) if user.new_record?
     user.name = auth.info.name
     user.google_uid = auth.uid
