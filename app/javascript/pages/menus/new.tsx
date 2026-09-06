@@ -16,15 +16,6 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@/components/ui/field"
-
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogHeader,
-  DialogTitle,
-	DialogFooter
-} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { useState } from 'react'
 
@@ -70,7 +61,10 @@ export function NewForm({ onCancelar }) {
                   type="text"
                   name="name"
                   value={data.name}
-                  onChange={(e) => setData('name', e.target.value)}
+                  onChange={(e) => {
+                    setData('name', e.target.value);
+                    clearErrors('name')
+                  }}
                 />
 						    {errors.name && (
                   <FieldDescription>
@@ -112,11 +106,9 @@ export function NewForm({ onCancelar }) {
               </Field>
             </div>
           </div>
-        <DialogFooter className="mt-3">
-          <Button type="submit" className="w-full" disabled={priceError || processing}>
+          <Button type="submit" className="mt-4 w-full" disabled={priceError || processing}>
             {processing ? 'Creando...' : 'Crear'}
           </Button>
-        </DialogFooter>
       </form>
   );
 }

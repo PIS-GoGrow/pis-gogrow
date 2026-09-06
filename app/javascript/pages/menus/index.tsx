@@ -18,7 +18,10 @@ import {
   DialogContent,
   DialogTrigger,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
@@ -27,6 +30,11 @@ interface MenuProps {
 }
 
 export default function Index({ menus }: MenuProps) {
+  const [showForm, setShowForm] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [openAction, setOpenAction] = useState(false)
+  const [actionId, setActionId] = useState(0)
+
   const menusJSX = menus.map(menu =>
 	<Card key={menu.id} size="sm" className="w-full ">
       <CardHeader>
@@ -35,7 +43,9 @@ export default function Index({ menus }: MenuProps) {
            {menu.description}
         </CardDescription>
 		    <CardAction>
-          <Button variant="outline">Borrar</Button>
+          <DialogTrigger className="ml-auto">
+            <Button variant="outline" onClick={() => setActionId(menu.id)}>Borrar</Button>
+          </DialogTrigger>
         </CardAction>
       </CardHeader>
       <CardContent>
@@ -44,26 +54,38 @@ export default function Index({ menus }: MenuProps) {
     </Card>
   )
 
-  const [showForm, setShowForm] = useState(false)
-  const [open, setOpen] = useState(false)
-
   return (
     <div className="m-5 w-250 mx-auto grid gap-2">
 	  <Dialog open={open} onOpenChange={setOpen}>
 	    <div className="flex items-center mb-5">
-          <h1 className="text-xl font-bold">Tus platos</h1>
+        <h1 className="text-xl font-bold">Tus platos</h1>
 		    <DialogTrigger className="ml-auto">
-			  <Button>Agregar plato</Button>
+			    <Button>Agregar plato</Button>
 		    </DialogTrigger>
-        </div>
+      </div>
 	    <DialogContent>
-		  <DialogHeader>
-            <DialogTitle>Crear plato</DialogTitle>
-          </DialogHeader>
-		  <NewForm onCancelar={() => { setOpen(false); }} />
+		    <DialogHeader>
+          <DialogTitle>Crear plato</DialogTitle>
+        </DialogHeader>
+		    <NewForm onCancelar={() => { setOpen(false); }} />
 	    </DialogContent>
-      </Dialog>
-	  <div className="grid gap-2 grid-cols-2">{menusJSX}</div>
+    </Dialog>
+
+    <Dialog open={openAction} onOpenChange={setOpenAction}>
+      <div className="grid gap-2 grid-cols-2">{menusJSX}</div>
+
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Estás seguro?</DialogTitle>
+          <DialogDescription>Esta acción es irreversible.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="sm:justify-start">
+            <Button asChild>
+              <Link href={menusRoutes.destroy(actionId)} method="delete" onClick={() => setOpenAction(false)}>Borrar</Link>
+            </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
     </div>
   )
 }

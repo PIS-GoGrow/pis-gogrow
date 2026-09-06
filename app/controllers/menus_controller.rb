@@ -41,6 +41,12 @@ class MenusController < ApplicationController
   end
 
   def destroy
+    provider = Provider.find PROVIDER_ID
+    menu = provider.menus.find(params[:id])
+
+    if menu.destroy
+      redirect_to menus_path
+    end
   end
 
   private
