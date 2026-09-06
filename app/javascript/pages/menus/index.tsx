@@ -10,8 +10,16 @@ import {
   CardDescription,
   CardFooter,
   CardHeader,
+  CardAction,
   CardTitle
 } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 
 interface MenuProps {
@@ -26,6 +34,9 @@ export default function Index({ menus }: MenuProps) {
         <CardDescription>
            {menu.description}
         </CardDescription>
+		    <CardAction>
+          <Button variant="outline">Borrar</Button>
+        </CardAction>
       </CardHeader>
       <CardContent>
         <p>{menu.price}$</p>
@@ -34,20 +45,24 @@ export default function Index({ menus }: MenuProps) {
   )
 
   const [showForm, setShowForm] = useState(false)
+  const [open, setOpen] = useState(false)
 
   return (
     <div className="m-5 w-250 mx-auto grid gap-2">
-	  <div className="flex items-center mb-5">
-        <h1 className="text-lg font-bold">Tus platos</h1>
-		{ showForm ? (<> </>) : (
-		  <Button className="ml-auto" onClick={() => { setShowForm(true); }}>
-		  	Agregar plato
-		  </Button>
-		) }
-      </div>
-	  { showForm ? (
-		<NewForm onCancelar={() => { setShowForm(false); }} />
-	  ) : (<></>)}
+	  <Dialog open={open} onOpenChange={setOpen}>
+	    <div className="flex items-center mb-5">
+          <h1 className="text-xl font-bold">Tus platos</h1>
+		    <DialogTrigger className="ml-auto">
+			  <Button>Agregar plato</Button>
+		    </DialogTrigger>
+        </div>
+	    <DialogContent>
+		  <DialogHeader>
+            <DialogTitle>Crear plato</DialogTitle>
+          </DialogHeader>
+		  <NewForm onCancelar={() => { setOpen(false); }} />
+	    </DialogContent>
+      </Dialog>
 	  <div className="grid gap-2 grid-cols-2">{menusJSX}</div>
     </div>
   )

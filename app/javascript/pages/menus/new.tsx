@@ -16,6 +16,15 @@ import {
   FieldDescription,
   FieldLabel,
 } from "@/components/ui/field"
+
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+	DialogFooter
+} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { useState } from 'react'
 
@@ -40,25 +49,23 @@ export function NewForm({ onCancelar }) {
       setPriceError(false)
     }
   }
+
   function handleSubmit(e) {
     e.preventDefault()
-		if (data.name === '') {
+		if (data.name === '')
 				setError('name', 'No puede estar vacío.');
-		} else 
+    else if (data.price === '')
+        setError('price', 'No puede estar vacío.');
+		else 
 				post(menusRoutes.create());
   }
 
   return (
-    <Card className="mx-auto w-full max-w-sm">
-      <CardHeader>
-        <CardTitle>Crear plato</CardTitle>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent>
-          <div className="flex flex-col gap-3">
-            <div className="grid gap-2">
-              <Field data-invalid={errors.name != undefined && errors.name !== ''}>
-                <FieldLabel htmlFor="name">Nombre</FieldLabel>
+    <form onSubmit={handleSubmit}>
+      <div className="flex flex-col gap-3">
+        <div className="grid gap-2">
+          <Field data-invalid={errors.name != undefined && errors.name !== ''}>
+            <FieldLabel htmlFor="name">Nombre</FieldLabel>
                 <Input
                   type="text"
                   name="name"
@@ -105,26 +112,20 @@ export function NewForm({ onCancelar }) {
               </Field>
             </div>
           </div>
-        </CardContent>
-        <CardFooter className="flex-col gap-2 mt-3">
+        <DialogFooter className="mt-3">
           <Button type="submit" className="w-full" disabled={priceError || processing}>
             {processing ? 'Creando...' : 'Crear'}
           </Button>
-          <Button onClick={onCancelar} variant="outline" className="w-full" type="button">
-            Cancelar
-          </Button>
-        </CardFooter>
+        </DialogFooter>
       </form>
-    </Card>
   );
 }
 
 export default function New() {
   return (
-    <div>
-			<Head title="Agregar plato" />
+    <div className="m-4">
+			<Head title="Crear plato" />
 			
-		  <h1>Agregar plato</h1>
 		  <NewForm />
     </div>
   );
