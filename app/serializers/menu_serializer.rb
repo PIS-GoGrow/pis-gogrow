@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class MenuSerializer < ApplicationSerializer
   typelize_from Menu
 

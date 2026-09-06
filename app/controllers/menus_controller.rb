@@ -52,6 +52,6 @@ class MenusController < ApplicationController
   private
 
   def menu_params
-    params.expect(menu: [:name, :price, :description])
+    params.expect(menu: [ :name, :price, :description ])
   end
 end
