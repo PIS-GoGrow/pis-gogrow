@@ -15,10 +15,12 @@ export default function MenuCard({
   setDeletingMenu,
 }: {
   menu: Menu
-  setDeletingMenu: React.Dispatch<React.SetStateAction<boolean>>
+  setDeletingMenu: React.Dispatch<
+    React.SetStateAction<{ id: number | null; name: string }>
+  >
 }) {
   return (
-    <Card key={menu.id} size="sm" className="w-full">
+    <Card key={menu.id} className="w-full">
       <CardHeader>
         <CardTitle>{menu.name}</CardTitle>
         <CardDescription>{menu.description}</CardDescription>
@@ -26,7 +28,9 @@ export default function MenuCard({
           <DialogTrigger className="ml-auto">
             <Button
               variant="outline"
-              onClick={() => setDeletingMenu({ id: menu.id, name: menu.name })}
+              onClick={() =>
+                setDeletingMenu({ id: menu.id, name: String(menu.name) })
+              }
             >
               Borrar
             </Button>

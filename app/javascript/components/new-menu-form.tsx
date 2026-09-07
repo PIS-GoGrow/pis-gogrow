@@ -21,10 +21,10 @@ export default function NewMenuForm({
     e.preventDefault()
 
     // No validamos que exista descripción porque no se requiere
-    if (data.name === "") setError("name", "No puede estar vacío.")
-    else if (data.price === "") setError("price", "No puede estar vacío.")
+    if (data.name === "") setError("name", ["No puede estar vacío."])
+    else if (data.price === "") setError("price", ["No puede estar vacío."])
     else
-      post(menusRoutes.create(), {
+      post(menusRoutes.create().url, {
         onSuccess: () => {
           formSuccess()
         },
@@ -35,7 +35,7 @@ export default function NewMenuForm({
     <form onSubmit={handleSubmit}>
       <div className="flex flex-col gap-3">
         <div className="grid gap-2">
-          <Field data-invalid={errors.name != undefined && errors.name !== ""}>
+          <Field data-invalid={!!errors.name?.length}>
             <FieldLabel htmlFor="name">Nombre</FieldLabel>
             <Input
               type="text"
@@ -46,15 +46,13 @@ export default function NewMenuForm({
                 clearErrors("name")
               }}
             />
-            {errors.name && <FieldDescription>{errors.name}</FieldDescription>}
+            {!!errors.name?.length && (
+              <FieldDescription>{errors.name}</FieldDescription>
+            )}
           </Field>
         </div>
         <div className="grid gap-2">
-          <Field
-            data-invalid={
-              errors.description != undefined && errors.description !== ""
-            }
-          >
+          <Field data-invalid={!!errors.description?.length}>
             <FieldLabel htmlFor="description">Descripción</FieldLabel>
             <Input
               type="text"
@@ -62,15 +60,13 @@ export default function NewMenuForm({
               value={data.description}
               onChange={(e) => setData("description", e.target.value)}
             />
-            {errors.description && (
+            {!!errors.description?.length && (
               <FieldDescription>{errors.description}</FieldDescription>
             )}
           </Field>
         </div>
         <div className="grid gap-2">
-          <Field
-            data-invalid={errors.price != undefined && errors.price !== ""}
-          >
+          <Field data-invalid={!!errors.price?.length}>
             <FieldLabel htmlFor="price">Precio</FieldLabel>
             <Input
               type="number"
@@ -83,7 +79,7 @@ export default function NewMenuForm({
                 clearErrors("price")
               }}
             />
-            {errors.price && (
+            {!!errors.price?.length && (
               <FieldDescription>{errors.price}</FieldDescription>
             )}
           </Field>

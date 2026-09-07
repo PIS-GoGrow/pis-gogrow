@@ -1,4 +1,5 @@
-import { Link } from "@inertiajs/react"
+import { router } from "@inertiajs/react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,9 +17,26 @@ export default function DeleteMenuDialog({
   setOpenDelete,
 }: {
   name: string
-  id: number
+  id: number | null
   setOpenDelete: React.Dispatch<React.SetStateAction<boolean>>
 }) {
+  const [processing, setProcessing] = useState(false)
+
+  function handleDelete() {
+    setProcessing(true)
+
+    router.delete(menusRoutes.destroy(Number(id)), {
+      onSuccess: () => {
+        setOpenDelete(false)
+      },
+      onFinish: () => {
+        setProcessing(false)
+      },
+    })
+  }
+
+  if (id == null) return <></>
+
   return (
     <DialogContent>
       <DialogHeader>
@@ -28,14 +46,8 @@ export default function DeleteMenuDialog({
         </DialogDescription>
       </DialogHeader>
       <DialogFooter className="sm:justify-start">
-        <Button asChild>
-          <Link
-            href={menusRoutes.destroy(id)}
-            method="delete"
-            onClick={() => setOpenDelete(false)}
-          >
-            Borrar
-          </Link>
+        <Button onClick={() => handleDelete()}>
+          {processing ? "Borrando..." : "Borrar"}
         </Button>
       </DialogFooter>
     </DialogContent>
