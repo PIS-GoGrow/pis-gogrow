@@ -42,7 +42,8 @@ export default function DeleteMenuDialog({
       <DialogHeader>
         <DialogTitle>Estás seguro?</DialogTitle>
         <DialogDescription>
-          Se borrará el plato &quot;{name}&quot;. Esta acción es irreversible.
+          Se borrará el plato &quot;{name}&quot; y toda las planificaciones
+          diarias asociadas. Esta acción es irreversible.
         </DialogDescription>
       </DialogHeader>
       <DialogFooter className="sm:justify-start">

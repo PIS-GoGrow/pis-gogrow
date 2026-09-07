@@ -4,7 +4,7 @@ class Order < ApplicationRecord
   belongs_to :consumer
   belongs_to :schedule
 
-  has_many :order_accounts
+  has_many :order_accounts, dependent: :destroy
   has_many :accounts, through: :order_accounts
 end
 

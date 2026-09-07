@@ -5,6 +5,13 @@ import DeleteMenuDialog from "@/components/delete-menu-dialog"
 import MenuCard from "@/components/menu-card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import type { Menu } from "@/types"
 
 interface MenuProps {
@@ -24,7 +31,7 @@ export default function Index({ menus }: MenuProps) {
   ))
 
   return (
-    <div className="m-5 mx-auto grid w-200 gap-2">
+    <div className="mx-auto grid w-full max-w-300 gap-2 p-5">
       {/* Agregamos un diálogo al lado del título para mostrar el formulario de crear platos */}
       <Dialog open={openCreate} onOpenChange={setOpenCreate}>
         <div className="mb-5 flex items-center">
@@ -34,17 +41,33 @@ export default function Index({ menus }: MenuProps) {
           </DialogTrigger>
         </div>
         <CreateMenuDialog setOpenCreate={setOpenCreate} />
-      </Dialog>
 
-      {/* Listamos los platos y creamos un diálogo para confirmar si eliminarlos. */}
-      <Dialog open={openDelete} onOpenChange={setOpenDelete}>
-        <div className="grid grid-cols-2 gap-2">{menusJSX}</div>
-
-        <DeleteMenuDialog
-          name={deletingMenu.name}
-          id={deletingMenu.id}
-          setOpenDelete={setOpenDelete}
-        />
+        {/* Listamos los platos y creamos un diálogo para confirmar si eliminarlos. */}
+        {menus.length == 0 ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>No hay platos aún</EmptyTitle>
+              <EmptyDescription>
+                No creaste ningún plato todavía. Creá el primero ahora para
+                poder publicar tu menú.
+              </EmptyDescription>
+              <EmptyContent>
+                <DialogTrigger>
+                  <Button>Agregar plato</Button>
+                </DialogTrigger>
+              </EmptyContent>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+            <div className="grid grid-cols-2 gap-2">{menusJSX}</div>
+            <DeleteMenuDialog
+              name={deletingMenu.name}
+              id={deletingMenu.id}
+              setOpenDelete={setOpenDelete}
+            />
+          </Dialog>
+        )}
       </Dialog>
     </div>
   )

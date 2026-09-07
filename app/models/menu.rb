@@ -6,7 +6,8 @@ class Menu < ApplicationRecord
 
   belongs_to :provider
 
-  has_many :schedules
+  # Hay que validar que este sea el comportamiento esperado
+  has_many :schedules, dependent: :destroy
 end
 
 # == Schema Information

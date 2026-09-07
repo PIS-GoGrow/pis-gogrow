@@ -3,7 +3,8 @@
 class Schedule < ApplicationRecord
   belongs_to :menu
 
-  has_many :orders
+  # Hay que cambiar esto, este comportamiento no parece ser el esperado
+  has_many :orders, dependent: :destroy
 end
 
 # == Schema Information
