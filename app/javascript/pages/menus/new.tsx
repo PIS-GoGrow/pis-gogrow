@@ -1,25 +1,17 @@
-import { Head, Link, useForm } from '@inertiajs/react'
-import { menus as menusRoutes } from "@/routes"
+import { Head, useForm } from '@inertiajs/react'
+import { useState } from 'react'
+
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import {
   Field,
   FieldDescription,
   FieldLabel,
 } from "@/components/ui/field"
-import { Label } from "@/components/ui/label"
-import { useState } from 'react'
+import { Input } from "@/components/ui/input"
+import { menus as menusRoutes } from "@/routes"
 
-export function NewForm({ onCancelar }) {
+
+export function NewForm({ formSuccess }: { formSuccess: () => void }) {
   const [priceError, setPriceError] = useState(false);
 
   const { data, setData, post, processing, errors, setError, clearErrors } = useForm({
@@ -28,7 +20,7 @@ export function NewForm({ onCancelar }) {
     price: ''
   })
 
-  function handlePriceChange(e) {
+  function handlePriceChange(e: React.ChangeEvent<HTMLInputElement>) {
     const valor = e.target.value
     setData('price', valor)
 
@@ -41,14 +33,18 @@ export function NewForm({ onCancelar }) {
     }
   }
 
-  function handleSubmit(e) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 		if (data.name === '')
 				setError('name', 'No puede estar vacío.');
     else if (data.price === '')
         setError('price', 'No puede estar vacío.');
 		else 
-				post(menusRoutes.create());
+				post(menusRoutes.create(), {
+						onSuccess: () => {
+								formSuccess();
+						}
+				});
   }
 
   return (

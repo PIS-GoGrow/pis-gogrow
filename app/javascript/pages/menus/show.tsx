@@ -1,6 +1,7 @@
-import { Head, Link } from '@inertiajs/react'
-import type { Menu } from "@/types"
+import { Link } from '@inertiajs/react'
+
 import { menus as menusRoutes } from "@/routes"
+import type { Menu } from "@/types"
 
 interface MenuProps {
   menu: Menu
