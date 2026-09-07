@@ -1,6 +1,6 @@
 import { Link } from "@inertiajs/react"
 import { Utensils } from "lucide-react"
-import { useTranslation } from "react-i18next"
+// import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
