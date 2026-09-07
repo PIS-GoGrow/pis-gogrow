@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react'
+import { Link } from "@inertiajs/react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -10,7 +10,15 @@ import {
 } from "@/components/ui/dialog"
 import { menus as menusRoutes } from "@/routes"
 
-export default function DeleteMenuDialog({ name, id, setOpenDelete }: { name: string, id: number, setOpenDelete: React.Dispatch<React.SetStateAction<boolean>> }) {
+export default function DeleteMenuDialog({
+  name,
+  id,
+  setOpenDelete,
+}: {
+  name: string
+  id: number
+  setOpenDelete: React.Dispatch<React.SetStateAction<boolean>>
+}) {
   return (
     <DialogContent>
       <DialogHeader>
@@ -21,7 +29,11 @@ export default function DeleteMenuDialog({ name, id, setOpenDelete }: { name: st
       </DialogHeader>
       <DialogFooter className="sm:justify-start">
         <Button asChild>
-          <Link href={menusRoutes.destroy(id)} method="delete" onClick={() => setOpenDelete(false)}>
+          <Link
+            href={menusRoutes.destroy(id)}
+            method="delete"
+            onClick={() => setOpenDelete(false)}
+          >
             Borrar
           </Link>
         </Button>
