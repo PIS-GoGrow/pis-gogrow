@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react"
-import { LayoutGrid } from "lucide-react"
+import { Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
@@ -13,19 +13,22 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { dashboard } from "@/routes"
+import { menus } from "@/routes"
 import type { NavItem } from "@/types"
 
 import AppLogo from "./app-logo"
 
 export function AppSidebar() {
-  const { t } = useTranslation()
-
   const mainNavItems: NavItem[] = [
     {
       title: t("nav.dashboard"),
       href: dashboard.index({}).url,
       icon: LayoutGrid,
+    },
+    {
+      title: "Platos",
+      href: menus.index().url,
+      icon: Utensils,
     },
   ]
 
