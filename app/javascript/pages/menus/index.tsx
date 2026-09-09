@@ -5,7 +5,7 @@ import CreateMenuDialog from "@/components/menus/create-menu-dialog"
 import DeleteMenuDialog from "@/components/menus/delete-menu-dialog"
 import MenuCard from "@/components/menus/menu-card"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogTrigger } from "@/components/ui/dialog"
+import { DialogTrigger } from "@/components/ui/dialog"
 import {
   Empty,
   EmptyContent,
@@ -29,7 +29,12 @@ export default function Index({ menus }: MenuProps) {
   }>({ id: null, name: "" })
 
   const menusJSX = menus.map((menu: Menu) => (
-    <MenuCard key={menu.id} menu={menu} showLink={true} setDeletingMenu={setDeletingMenu} />
+    <MenuCard
+      key={menu.id}
+      menu={menu}
+      showLink={true}
+      setDeletingMenu={setDeletingMenu}
+    />
   ))
 
   const breadcrumbs: BreadcrumbItem[] = [

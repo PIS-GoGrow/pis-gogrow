@@ -2,7 +2,7 @@
 
 class MenusController < InertiaController
   before_action :authenticate_provider
-  
+
   def index
     provider = Current.user.provider
     menus = provider.menus.order created_at: :desc

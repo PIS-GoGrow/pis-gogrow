@@ -10,8 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { DialogTrigger } from "@/components/ui/dialog"
+import { menus } from "@/routes"
 import type { Menu } from "@/types"
-import {menus} from "@/routes"
 
 export default function MenuCard({
   menu,
@@ -30,7 +30,7 @@ export default function MenuCard({
         <CardTitle>{menu.name}</CardTitle>
         <CardDescription>{menu.description}</CardDescription>
         <CardAction className="ml-auto">
-          { showLink && (
+          {showLink && (
             <Button className="mr-2" asChild>
               <Link href={menus.show(menu.id)}> Ver </Link>
             </Button>

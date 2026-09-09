@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react"
-import { Utensils, LayoutGrid } from "lucide-react"
+import { LayoutGrid, Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"

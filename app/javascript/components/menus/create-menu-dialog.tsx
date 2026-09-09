@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useState } from "react"
 
 import NewMenuForm from "@/components/menus/new-menu-form"
@@ -8,7 +9,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-export default function CreateMenuDialog({ children }) {
+interface CreateMenuProps {
+  children: ReactNode
+}
+
+export default function CreateMenuDialog({ children }: CreateMenuProps) {
   const [openCreate, setOpenCreate] = useState(false)
 
   return (

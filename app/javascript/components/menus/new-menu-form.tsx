@@ -5,11 +5,11 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { menus as menusRoutes } from "@/routes"
 
-export default function NewMenuForm({
-  formSuccess,
-}: {
+interface NewMenuProps {
   formSuccess: () => void
-}) {
+}
+
+export default function NewMenuForm({ formSuccess }: NewMenuProps) {
   const { data, setData, post, processing, errors, setError, clearErrors } =
     useForm({
       name: "",

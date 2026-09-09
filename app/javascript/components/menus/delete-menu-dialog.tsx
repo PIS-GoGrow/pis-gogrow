@@ -1,4 +1,5 @@
 import { router } from "@inertiajs/react"
+import type { ReactNode } from "react";
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -12,15 +13,16 @@ import {
 } from "@/components/ui/dialog"
 import { menus as menusRoutes } from "@/routes"
 
+interface DeleteMenuProps {
+  children: ReactNode
+  name: string
+  id: number | null
+}
 export default function DeleteMenuDialog({
   children,
   name,
   id,
-}: {
-  children: ReactNode
-  name: string
-  id: number | null
-}) {
+}: DeleteMenuProps) {
   const [openDelete, setOpenDelete] = useState(false)
   const [processing, setProcessing] = useState(false)
 
