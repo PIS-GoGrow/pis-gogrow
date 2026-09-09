@@ -22,7 +22,7 @@ end
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  consumer_id      :bigint           not null
-#  schedule_id      :bigint           not null
+#  schedule_id      :bigint
 #
 # Indexes
 #
