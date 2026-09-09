@@ -22,4 +22,12 @@ export default defineConfig(({ command }) => ({
     rails(),
     inertia({ ssr: "app/javascript/entrypoints/inertia.tsx" }),
   ],
+  server: {
+    host: "0.0.0.0",
+    port: 5173,
+    strictPort: true,
+    hmr: {
+      host: "localhost",
+    },
+  },
 }))

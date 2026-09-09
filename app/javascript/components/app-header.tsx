@@ -46,7 +46,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
   const mainNavItems: NavItem[] = [
     {
       title: t("nav.dashboard"),
-      href: dashboard.index().url,
+      href: dashboard.index({}).url,
       icon: LayoutGrid,
     },
   ]
@@ -101,7 +101,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
           </div>
 
           <Link
-            href={dashboard.index()}
+            href={dashboard.index({})}
             prefetch
             className="flex items-center space-x-2"
           >

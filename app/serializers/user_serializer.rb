@@ -5,7 +5,7 @@ class UserSerializer < ApplicationSerializer
 
   typelize :string?
   attribute :avatar do |user|
-    nil # Placeholder for avatar URL (e.g. Gravatar, Active Storage)
+    user.avatar_url
   end
 end
 
@@ -14,7 +14,9 @@ end
 # Table name: users
 #
 #  id              :bigint           not null, primary key
+#  avatar_url      :string
 #  email           :string           not null
+#  google_uid      :string
 #  name            :string           not null
 #  password_digest :string           not null
 #  verified        :boolean          default(FALSE), not null
@@ -23,5 +25,6 @@ end
 #
 # Indexes
 #
-#  index_users_on_email  (email) UNIQUE
+#  index_users_on_email       (email) UNIQUE
+#  index_users_on_google_uid  (google_uid) UNIQUE
 #

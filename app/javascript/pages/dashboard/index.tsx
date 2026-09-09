@@ -6,19 +6,29 @@ import AppLayout from "@/layouts/app-layout"
 import { dashboard } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 
-export default function Dashboard() {
+interface Props {
+  role?: string
+}
+
+export default function Dashboard({ role }: Props) {
   const { t } = useTranslation()
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: t("pages.dashboard.title"),
-      href: dashboard.index().url,
+      href: dashboard.index({ role }).url,
     },
   ]
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={breadcrumbs[breadcrumbs.length - 1].title} />
+
+      {role && (
+        <p className="text-muted-foreground px-4 pt-4 text-sm">
+          {t(`pages.dashboard.roles.${role}`)}
+        </p>
+      )}
 
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
