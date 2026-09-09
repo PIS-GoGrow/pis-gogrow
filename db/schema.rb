@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_05_160001) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_09_004350) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -27,11 +27,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_160001) do
   create_table "admins", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.datetime "created_at", null: false
-    t.string "email"
     t.datetime "updated_at", null: false
-    t.string "username"
+    t.bigint "user_id", null: false
     t.index ["company_id"], name: "index_admins_on_company_id"
-    t.index ["email"], name: "index_admins_on_email", unique: true
+    t.index ["user_id"], name: "index_admins_on_user_id"
   end
 
   create_table "benefits", force: :cascade do |t|
@@ -56,11 +55,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_160001) do
     t.string "address"
     t.bigint "company_id", null: false
     t.datetime "created_at", null: false
-    t.string "email"
     t.datetime "updated_at", null: false
-    t.string "username"
+    t.bigint "user_id", null: false
     t.index ["company_id"], name: "index_consumers_on_company_id"
-    t.index ["email"], name: "index_consumers_on_email", unique: true
+    t.index ["user_id"], name: "index_consumers_on_user_id"
   end
 
   create_table "menus", force: :cascade do |t|
@@ -113,12 +111,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_160001) do
 
   create_table "providers", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "email"
     t.time "order_deadline"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
-    t.string "username"
-    t.index ["email"], name: "index_providers_on_email", unique: true
     t.index ["user_id"], name: "index_providers_on_user_id", unique: true
   end
 
@@ -344,8 +339,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_05_160001) do
   end
 
   add_foreign_key "admins", "companies"
+  add_foreign_key "admins", "users"
   add_foreign_key "benefits", "consumers"
   add_foreign_key "consumers", "companies"
+  add_foreign_key "consumers", "users"
   add_foreign_key "menus", "providers"
   add_foreign_key "order_accounts", "accounts"
   add_foreign_key "order_accounts", "orders"

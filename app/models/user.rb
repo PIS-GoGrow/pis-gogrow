@@ -14,7 +14,10 @@ class User < ApplicationRecord
   end
 
   has_many :sessions, dependent: :destroy
-  has_one :provider, dependent: :nullify
+  
+  has_one :provider, dependent: :destroy
+  has_one :admin, dependent: :destroy
+  has_one :consumer, dependent: :destroy
 
   validates :name, presence: true
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
