@@ -1,6 +1,6 @@
 import { Link } from "@inertiajs/react"
-import { Utensils } from "lucide-react"
-// import { useTranslation } from "react-i18next"
+import { Utensils, LayoutGrid } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -13,12 +13,14 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { menus } from "@/routes"
+import { dashboard, menus } from "@/routes"
 import type { NavItem } from "@/types"
 
 import AppLogo from "./app-logo"
 
 export function AppSidebar() {
+  const { t } = useTranslation()
+
   const mainNavItems: NavItem[] = [
     {
       title: t("nav.dashboard"),
