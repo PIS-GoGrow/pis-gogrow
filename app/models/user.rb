@@ -14,7 +14,7 @@ class User < ApplicationRecord
   end
 
   has_many :sessions, dependent: :destroy
-  
+
   has_one :provider, dependent: :destroy
   has_one :admin, dependent: :destroy
   has_one :consumer, dependent: :destroy
