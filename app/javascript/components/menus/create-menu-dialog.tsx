@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 import { useState } from "react"
 
 import NewMenuForm from "@/components/menus/new-menu-form"
