@@ -5,8 +5,8 @@ class DashboardController < InertiaController
   # /dashboard/:role gates access — it checks that Current.user actually has
   # the profile (Admin/Consumer/Provider) that role names before rendering.
   def index
-    @role = params[:role]
-    return unless @role
+    @role = params[:role] 
+    return unless ['admin', 'consumer', 'provider'].include? params[:role]
 
     unless Current.user.public_send(@role)
       redirect_to dashboard_path and return
