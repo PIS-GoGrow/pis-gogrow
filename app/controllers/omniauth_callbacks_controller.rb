@@ -8,7 +8,7 @@ class OmniauthCallbacksController < InertiaController
 
   def google_oauth2
     user = User.find_or_create_from_google(request.env["omniauth.auth"])
-    user.provider || user.create_provider!(email: user.email, username: user.name)
+    user.provider || user.create_provider!
 
     reset_session
     @session = user.sessions.create!
