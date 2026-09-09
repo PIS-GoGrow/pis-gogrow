@@ -11,6 +11,13 @@ class ApplicationController < ActionController::Base
 
   private
 
+  # Valida que haya un proveedor logueado
+  def authenticate_provider
+    authenticate
+
+    redirect_to sign_in_path unless Current.user.provider?
+  end
+
   def authenticate
     redirect_to sign_in_path unless perform_authentication
   end

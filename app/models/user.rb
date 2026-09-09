@@ -55,6 +55,10 @@ class User < ApplicationRecord
     user.save!
     user
   end
+
+  def provider?
+    provider.present?
+  end
 end
 
 # == Schema Information

@@ -1,8 +1,9 @@
+import { Head } from "@inertiajs/react"
 import { useState } from "react"
 
-import CreateMenuDialog from "@/components/create-menu-dialog"
-import DeleteMenuDialog from "@/components/delete-menu-dialog"
-import MenuCard from "@/components/menu-card"
+import CreateMenuDialog from "@/components/menus/create-menu-dialog"
+import DeleteMenuDialog from "@/components/menus/delete-menu-dialog"
+import MenuCard from "@/components/menus/menu-card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogTrigger } from "@/components/ui/dialog"
 import {
@@ -22,15 +23,13 @@ interface MenuProps {
 }
 
 export default function Index({ menus }: MenuProps) {
-  const [openCreate, setOpenCreate] = useState(false)
-  const [openDelete, setOpenDelete] = useState(false)
   const [deletingMenu, setDeletingMenu] = useState<{
     id: number | null
     name: string
   }>({ id: null, name: "" })
 
   const menusJSX = menus.map((menu: Menu) => (
-    <MenuCard key={menu.id} menu={menu} setDeletingMenu={setDeletingMenu} />
+    <MenuCard key={menu.id} menu={menu} showLink={true} setDeletingMenu={setDeletingMenu} />
   ))
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -42,16 +41,17 @@ export default function Index({ menus }: MenuProps) {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
+      <Head title="Mis Platos" />
+
       <div className="mx-auto grid w-full max-w-300 gap-2 p-5">
         {/* Agregamos un diálogo al lado del título para mostrar el formulario de crear platos */}
-        <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+        <CreateMenuDialog>
           <div className="mb-5 flex items-center">
             <h1 className="text-xl font-bold">Tus platos</h1>
-            <DialogTrigger className="ml-auto">
+            <DialogTrigger className="ml-auto" asChild>
               <Button>Agregar plato</Button>
             </DialogTrigger>
           </div>
-          <CreateMenuDialog setOpenCreate={setOpenCreate} />
 
           {/* Listamos los platos y creamos un diálogo para confirmar si eliminarlos. */}
           {menus.length == 0 ? (
@@ -63,23 +63,18 @@ export default function Index({ menus }: MenuProps) {
                   poder publicar tu menú.
                 </EmptyDescription>
                 <EmptyContent>
-                  <DialogTrigger>
+                  <DialogTrigger asChild>
                     <Button>Agregar plato</Button>
                   </DialogTrigger>
                 </EmptyContent>
               </EmptyHeader>
             </Empty>
           ) : (
-            <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+            <DeleteMenuDialog name={deletingMenu.name} id={deletingMenu.id}>
               <div className="grid grid-cols-2 gap-2">{menusJSX}</div>
-              <DeleteMenuDialog
-                name={deletingMenu.name}
-                id={deletingMenu.id}
-                setOpenDelete={setOpenDelete}
-              />
-            </Dialog>
+            </DeleteMenuDialog>
           )}
-        </Dialog>
+        </CreateMenuDialog>
       </div>
     </AppLayout>
   )

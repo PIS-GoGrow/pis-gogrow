@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
-# Hardcodear id del proveedor mientras no haya login
-PROVIDER_ID = 1
-
 class MenusController < InertiaController
+  before_action :authenticate_provider
+  
   def index
-    provider = Provider.find PROVIDER_ID
+    provider = Current.user.provider
     menus = provider.menus.order created_at: :desc
 
     render inertia: { menus: }
@@ -15,7 +14,7 @@ class MenusController < InertiaController
   end
 
   def create
-    provider = Provider.find PROVIDER_ID
+    provider = Current.user.provider
     menu = provider.menus.new menu_params
 
     if menu.save
@@ -26,7 +25,7 @@ class MenusController < InertiaController
   end
 
   def show
-    provider = Provider.find PROVIDER_ID
+    provider = Current.user.provider
     menu = provider.menus.find(params[:id])
 
     render inertia: { menu: }
@@ -39,7 +38,7 @@ class MenusController < InertiaController
   end
 
   def destroy
-    provider = Provider.find PROVIDER_ID
+    provider = Current.user.provider
     menu = provider.menus.find(params[:id])
 
     if menu.destroy

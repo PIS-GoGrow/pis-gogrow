@@ -1,6 +1,6 @@
 import { Head } from "@inertiajs/react"
 
-import NewMenuForm from "@/components/new-menu-form"
+import NewMenuForm from "@/components/menus/new-menu-form"
 import { Card, CardTitle } from "@/components/ui/card"
 
 export default function New() {

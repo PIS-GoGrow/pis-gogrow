@@ -1,3 +1,5 @@
+import { Link } from "@inertiajs/react"
+
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -9,12 +11,15 @@ import {
 } from "@/components/ui/card"
 import { DialogTrigger } from "@/components/ui/dialog"
 import type { Menu } from "@/types"
+import {menus} from "@/routes"
 
 export default function MenuCard({
   menu,
+  showLink,
   setDeletingMenu,
 }: {
   menu: Menu
+  showLink: boolean
   setDeletingMenu: React.Dispatch<
     React.SetStateAction<{ id: number | null; name: string }>
   >
@@ -24,8 +29,13 @@ export default function MenuCard({
       <CardHeader>
         <CardTitle>{menu.name}</CardTitle>
         <CardDescription>{menu.description}</CardDescription>
-        <CardAction>
-          <DialogTrigger className="ml-auto">
+        <CardAction className="ml-auto">
+          { showLink && (
+            <Button className="mr-2" asChild>
+              <Link href={menus.show(menu.id)}> Ver </Link>
+            </Button>
+          )}
+          <DialogTrigger asChild>
             <Button
               variant="outline"
               onClick={() =>
