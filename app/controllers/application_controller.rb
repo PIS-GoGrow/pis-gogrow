@@ -15,7 +15,7 @@ class ApplicationController < ActionController::Base
   def authenticate_provider
     authenticate
 
-    redirect_to sign_in_path unless Current.user.provider?
+    redirect_to sign_in_path if Current.session && !Current.user.provider?
   end
 
   def authenticate
