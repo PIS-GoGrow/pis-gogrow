@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_09_192104) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_11_184526) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -127,12 +127,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_09_192104) do
   end
 
   create_table "schedules", force: :cascade do |t|
-    t.integer "amount"
+    t.integer "amount", null: false
     t.datetime "created_at", null: false
-    t.date "date"
+    t.date "date", null: false
     t.bigint "menu_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["menu_id", "date"], name: "index_schedules_on_menu_id_and_date", unique: true
     t.index ["menu_id"], name: "index_schedules_on_menu_id"
+    t.check_constraint "amount >= 0", name: "schedules_amount_non_negative"
   end
 
   create_table "sessions", force: :cascade do |t|
