@@ -36,5 +36,8 @@ account = Account.create! amount: 300, month: date, owner: consumer
 account.orders << order
 Payment.create! account: account
 
+admin_user = User.create! avatar_url: "https://lh3.googleusercontent.com/a/ACg8ocIQbkCUs7...", email: "rrhh.gogrow@gmail.com", google_uid: "101425658623552684238", name: "Juan Admin", password_digest: "$2a$12$kDAZOZpncJzrsfYTgpE.Xu47ZCiUJWL/a4TI5WcI0Q1LeecxlSsMe", verified: true
+amin = Admin.create! user: admin_user, company: company
+
 notification_config = NotificationConfiguration.create! description: "Notificaciones de orden en camino"
 notification_config.consumers << consumer
