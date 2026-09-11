@@ -59,6 +59,24 @@ class User < ApplicationRecord
   def provider?
     provider.present?
   end
+
+  def consumer?
+    consumer.present?
+  end
+
+  def admin?
+    admin.present?
+  end
+
+  def role
+    if provider?
+      :provider
+    elsif consumer?
+      :consumer
+    elsif admin?
+      :admin
+    end
+  end
 end
 
 # == Schema Information

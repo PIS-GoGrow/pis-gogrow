@@ -22,7 +22,7 @@ Rails.application.routes.draw do
     resource :password_reset,     only: [ :new, :edit, :create, :update ]
   end
 
-  get "dashboard(/:role)", to: "dashboard#index", as: :dashboard, constraints: { role: /provider/ }
+  get "dashboard(/:role)", to: "dashboard#index", as: :dashboard, constraints: { role: /provider|admin|consumer/ }
 
   namespace :settings do
     resource :profile, only: [ :show, :update ]

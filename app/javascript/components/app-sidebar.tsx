@@ -1,4 +1,4 @@
-import { Link } from "@inertiajs/react"
+import { Link, usePage } from "@inertiajs/react"
 import { LayoutGrid, Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -20,19 +20,33 @@ import AppLogo from "./app-logo"
 
 export function AppSidebar() {
   const { t } = useTranslation()
+  const { auth } = usePage().props
 
-  const mainNavItems: NavItem[] = [
-    {
-      title: t("nav.dashboard"),
-      href: dashboard.index({}).url,
-      icon: LayoutGrid,
-    },
-    {
-      title: "Platos",
-      href: menus.index().url,
-      icon: Utensils,
-    },
-  ]
+  const navItems = {
+	provider: [{
+		  title: t("nav.dashboard"),
+		  href: dashboard.index({ role: "provider" }).url,
+		  icon: LayoutGrid,
+		},
+		{
+		  title: "Platos",
+		  href: menus.index().url,
+		  icon: Utensils,
+		},
+	],
+	admin: [{
+		  title: t("nav.dashboard"),
+		  href: dashboard.index({ role: "admin" }).url,
+		  icon: LayoutGrid,
+		},
+	],
+	consumer: [{
+		  title: t("nav.dashboard"),
+		  href: dashboard.index({ role: "consumer" }).url,
+		  icon: LayoutGrid,
+		},
+	]
+  }
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -49,7 +63,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={mainNavItems} />
+		  <NavMain items={navItems[auth.user.role]} />
       </SidebarContent>
 
       <SidebarFooter>
