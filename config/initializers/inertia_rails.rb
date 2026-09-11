@@ -7,6 +7,7 @@ InertiaRails.configure do |config|
   config.use_data_inertia_head_attribute = true
   config.always_include_errors_hash = true
   config.parent_controller = "::InertiaController"
+  config.default_render = true
 
   # Flip to true (and rebuild with --build-arg SSR_ENABLED=true) to enable SSR.
   config.ssr_enabled = true

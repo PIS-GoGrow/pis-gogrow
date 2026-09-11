@@ -3,7 +3,7 @@
 class Provider < ApplicationRecord
   belongs_to :user, optional: true
 
-  has_many :menus
+  has_many :menus, dependent: :destroy
 end
 
 # == Schema Information

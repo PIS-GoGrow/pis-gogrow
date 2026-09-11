@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react"
-import { LayoutGrid } from "lucide-react"
+import { LayoutGrid, Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
@@ -13,7 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { dashboard } from "@/routes"
+import { dashboard, menus } from "@/routes"
 import type { NavItem } from "@/types"
 
 import AppLogo from "./app-logo"
@@ -26,6 +26,11 @@ export function AppSidebar() {
       title: t("nav.dashboard"),
       href: dashboard.index({}).url,
       icon: LayoutGrid,
+    },
+    {
+      title: "Platos",
+      href: menus.index().url,
+      icon: Utensils,
     },
   ]
 

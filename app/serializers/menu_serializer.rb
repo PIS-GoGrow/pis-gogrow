@@ -1,13 +1,9 @@
 # frozen_string_literal: true
 
-class Menu < ApplicationRecord
-  validates :name, presence: true
-  validates :price, comparison: { greater_than: 0 }
+class MenuSerializer < ApplicationSerializer
+  typelize_from Menu
 
-  belongs_to :provider
-
-  # Hay que validar que este sea el comportamiento esperado
-  has_many :schedules, dependent: :destroy
+  attributes :id, :name, :description, :price, :created_at, :updated_at
 end
 
 # == Schema Information
