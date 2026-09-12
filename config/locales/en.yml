@@ -39,6 +39,8 @@ en:
     user_deleted: "Your account has been deleted"
     role_not_available: "This role isn't available for you. Try signing in with a role you have access to."
     role_set: "Role set successfully."
+    no_permission: "You don't have permission to access this resource."
+    not_signed_in: "You must be signed in to access this resource."
   validations:
     password_challenge_invalid: "Password challenge is invalid"
   user_mailer:

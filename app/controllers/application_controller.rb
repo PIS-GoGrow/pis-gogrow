@@ -11,15 +11,17 @@ class ApplicationController < ActionController::Base
 
   private
 
-  # Valida que haya un proveedor logueado
+  # Valida que el usuario esté logueado y tenga el rol que se indica
   def authenticate_role(role)
     authenticate
 
-    redirect_to sign_in_path if Current.session && !Current.session.public_send("#{role}?")
+    if Current.session && !Current.session.public_send("#{role}?")
+      redirect_to root_path , alert: t("flash.no_permission")
+    end
   end
 
   def authenticate
-    redirect_to sign_in_path unless perform_authentication
+    redirect_to sign_in_path, alert: t("flash.not_signed_in") unless perform_authentication
   end
 
   def require_no_authentication
