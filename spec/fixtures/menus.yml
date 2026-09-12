@@ -1,0 +1,5 @@
+milanesa:
+  provider: tuviandita
+  name: Milanesa con papas fritas
+  description: Opción de carne o pollo
+  price: 300.50

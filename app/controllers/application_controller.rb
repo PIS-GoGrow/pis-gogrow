@@ -18,6 +18,13 @@ class ApplicationController < ActionController::Base
     redirect_to sign_in_path if Current.session && !Current.user.provider?
   end
 
+  # Valida que haya un empleado logueado
+  def authenticate_consumer
+    authenticate
+
+    redirect_to sign_in_path if Current.session && !Current.user.consumer?
+  end
+
   def authenticate
     redirect_to sign_in_path unless perform_authentication
   end

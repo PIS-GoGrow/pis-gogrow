@@ -1,0 +1,16 @@
+# Las fechas son relativas para que los specs no caduquen: el corte entre
+# pedidos próximos e historial se define contra Date.current.
+future:
+  menu: milanesa
+  date: <%= Date.current + 3 %>
+  amount: 10
+
+today:
+  menu: milanesa
+  date: <%= Date.current %>
+  amount: 5
+
+past:
+  menu: milanesa
+  date: <%= Date.current - 5 %>
+  amount: 7

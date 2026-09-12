@@ -23,7 +23,7 @@ end
 #  discounted_price :decimal(10, 2)
 #  notes            :string
 #  price            :decimal(10, 2)
-#  status           :integer
+#  status           :integer          default(0), not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  consumer_id      :bigint           not null
