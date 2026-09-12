@@ -33,11 +33,12 @@ en:
     password_reset_success: "Your password was reset successfully. Please sign in"
     profile_updated: "Your profile has been updated"
     session_logged_out: "That session has been logged out"
-    signed_in: "Signed in successfully"
+    signed_in: "Signed in successfully."
     signed_up: "Welcome! You have signed up successfully"
     unverified_email: "You can't reset your password until you verify your email"
     user_deleted: "Your account has been deleted"
     role_not_available: "This role isn't available for you. Try signing in with a role you have access to."
+    role_set: "Role set successfully."
   validations:
     password_challenge_invalid: "Password challenge is invalid"
   user_mailer:
@@ -57,6 +58,7 @@ en:
     platform: "Platform"
     dashboard: "Dashboard"
     menu: "Navigation Menu"
+    change_to: "Change to"
     settings:
       profile: "Profile"
       email: "Email"
@@ -105,6 +107,7 @@ en:
         forgot_password: "Forgot password?"
         no_account: "Don't have an account?"
       edit:
+        title: "Choose role"
         heading: "Choose your role"
         description: "You have more than one role available. You can choose which one to use now, and change it later"
     users:

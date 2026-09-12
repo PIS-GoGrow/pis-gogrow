@@ -1,4 +1,4 @@
-import { Head, Link } from "@inertiajs/react"
+import { Head } from "@inertiajs/react"
 import { useTranslation } from "react-i18next"
 
 import { GoogleMark } from "@/components/branding/google-mark"
@@ -6,7 +6,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import AuthLayout from "@/layouts/auth-layout"
 import { readAuthenticityToken } from "@/lib/utils"
-import { sessions } from "@/routes"
 
 interface Props {
   errors?: { auth?: string }
