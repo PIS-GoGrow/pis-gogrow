@@ -33,6 +33,7 @@ Rails.application.routes.draw do
   end
 
   resources :menus
+  resources :orders, only: [ :index, :show ]
 
   root "home#index"
 

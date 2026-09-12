@@ -51,6 +51,7 @@ en:
   nav:
     platform: "Platform"
     dashboard: "Dashboard"
+    orders: "My orders"
     menu: "Navigation Menu"
     settings:
       profile: "Profile"
@@ -90,6 +91,40 @@ en:
       title: "Dashboard"
       roles:
         provider: "Provider panel"
+    orders:
+      index:
+        title: "My orders"
+        upcoming_tab: "Upcoming"
+        history_tab: "History"
+        upcoming_empty_title: "No upcoming orders"
+        upcoming_empty_description: "You have no meals on the way."
+        history_empty_title: "No past orders"
+        history_empty_description: "Your finished orders will show up here."
+        quantity: "x%{count}"
+        upcoming_address: "You get it at: %{address}"
+        history_address: "You got it at: %{address}"
+        no_date: "No delivery date"
+        no_price: "Amount unavailable"
+        base_price: "Base price: %{amount}"
+        no_address: "No delivery address"
+        no_menu: "Meal unavailable"
+        no_provider: "Provider unavailable"
+      show:
+        title: "Order detail"
+        back: "Back to my orders"
+        quantity: "Quantity"
+        date: "Delivery date"
+        address: "Delivery address"
+        base_price: "Base price"
+        subsidy: "Subsidy applied"
+        total: "Final amount"
+        notes: "Notes"
+        no_notes: "No notes"
+      statuses:
+        pending: "Pending"
+        confirmed: "Confirmed"
+        cancelled: "Cancelled"
+        rejected: "Rejected"
     sessions:
       new:
         title: "Log in"

@@ -1,0 +1,9 @@
+one:
+  user: consumer_user
+  company: gogrow
+  address: Julio Herrera y Reissig 565
+
+other:
+  user: other_consumer_user
+  company: gogrow
+  address: Bulevar Artigas 1234

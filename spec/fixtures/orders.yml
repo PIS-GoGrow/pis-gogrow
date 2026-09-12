@@ -1,0 +1,81 @@
+# Cubren la matriz completa del corte entre secciones: estado x fecha, más la
+# orden sin schedule que el dependent: :nullify de Schedule puede dejar.
+upcoming_pending_future:
+  consumer: one
+  schedule: future
+  status: pending
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+upcoming_confirmed_future:
+  consumer: one
+  schedule: future
+  status: confirmed
+  amount: 2
+  price: 601.00
+  discounted_price: 300.50
+  address: Julio Herrera y Reissig 565
+
+upcoming_pending_today:
+  consumer: one
+  schedule: today
+  status: pending
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+history_cancelled_future:
+  consumer: one
+  schedule: future
+  status: cancelled
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+history_rejected_future:
+  consumer: one
+  schedule: future
+  status: rejected
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+history_confirmed_past:
+  consumer: one
+  schedule: past
+  status: confirmed
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+history_pending_past:
+  consumer: one
+  schedule: past
+  status: pending
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+history_without_schedule:
+  consumer: one
+  status: pending
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+other_consumer_upcoming:
+  consumer: other
+  schedule: future
+  status: confirmed
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Bulevar Artigas 1234

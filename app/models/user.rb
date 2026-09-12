@@ -59,6 +59,10 @@ class User < ApplicationRecord
   def provider?
     provider.present?
   end
+
+  def consumer?
+    consumer.present?
+  end
 end
 
 # == Schema Information
