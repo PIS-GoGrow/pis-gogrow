@@ -6,7 +6,6 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import AuthLayout from "@/layouts/auth-layout"
 import { readAuthenticityToken } from "@/lib/utils"
-
 import { sessions } from "@/routes"
 
 interface Props {
@@ -31,17 +30,23 @@ export default function Login({ role, errors }: Props) {
         </Alert>
       )}
 
-	  <div className="mx-auto grid gap-2 grid-cols-3">
-		  <Button asChild variant={role != "provider" ? "outline" : ""}>
-			  <Link href={sessions.new({ role: "provider" })}>{t("common.provider")}</Link>
-		  </Button>
-		  <Button asChild variant={role != "consumer" ? "outline" : ""}>
-			  <Link href={sessions.new({ role: "consumer" })}>{t("common.consumer")}</Link>
-		  </Button>
-		  <Button asChild variant={role != "admin" ? "outline" : ""}>
-			  <Link href={sessions.new({ role: "admin" })}>{t("common.admin")}</Link>
-		  </Button>
-	  </div>
+      <div className="mx-auto grid grid-cols-3 gap-2">
+        <Button asChild variant={role != "provider" ? "outline" : "default"}>
+          <Link href={sessions.new({ role: "provider" })}>
+            {t("common.provider")}
+          </Link>
+        </Button>
+        <Button asChild variant={role != "consumer" ? "outline" : "default"}>
+          <Link href={sessions.new({ role: "consumer" })}>
+            {t("common.consumer")}
+          </Link>
+        </Button>
+        <Button asChild variant={role != "admin" ? "outline" : "default"}>
+          <Link href={sessions.new({ role: "admin" })}>
+            {t("common.admin")}
+          </Link>
+        </Button>
+      </div>
 
       {/*
         Full-page navigation (not an Inertia visit): OmniAuth needs to
