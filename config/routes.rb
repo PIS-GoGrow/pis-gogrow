@@ -3,7 +3,7 @@
 Rails.application.routes.draw do
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
-  get  "sign_in(/:role)", to: "sessions#new", as: :sign_in, constraints: { role: /provider|admin|consumer/ }
+  get  "sign_in(/:role)", to: "sessions#new", as: :sign_in, constraints: { role: /(provider|admin|consumer)/ }
   post "sign_in", to: "sessions#create"
   get  "sign_up", to: "users#new", as: :sign_up
   post "sign_up", to: "users#create"

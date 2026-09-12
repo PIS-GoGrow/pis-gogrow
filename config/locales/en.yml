@@ -14,6 +14,9 @@ en:
     saved: "Saved"
     sign_up: "Sign up"
     settings: "Settings"
+    provider: "Provider"
+    consumer: "Consumer"
+    admin: "Admin"
   flash:
     already_signed_in: "You are already signed in"
     email_changed: "Your email has been changed"
@@ -22,6 +25,7 @@ en:
     email_verified: "Thank you for verifying your email address"
     google_auth_failed: "We couldn't verify your Google account. Please try again."
     google_domain_not_allowed: "This Google account isn't allowed to sign in here."
+    user_not_found: "The Google account you signed in with isn't registered. Please try a different one."
     incorrect_credentials: "That email or password is incorrect"
     password_changed: "Your password has been changed"
     password_reset_instructions: "Check your email for reset instructions"
@@ -33,6 +37,7 @@ en:
     signed_up: "Welcome! You have signed up successfully"
     unverified_email: "You can't reset your password until you verify your email"
     user_deleted: "Your account has been deleted"
+    role_not_available: "This role isn't available for you. Try signing in with a role you have access to."
   validations:
     password_challenge_invalid: "Password challenge is invalid"
   user_mailer:
@@ -94,7 +99,7 @@ en:
       new:
         title: "Log in"
         heading: "Log in to your account"
-        description: "Sign in with your Google account to continue"
+        description: "Select the role you want to use in this session and sign in with your Google account"
         continue_with_google: "Continue with Google"
         auth_error_title: "We couldn't sign you in"
         forgot_password: "Forgot password?"

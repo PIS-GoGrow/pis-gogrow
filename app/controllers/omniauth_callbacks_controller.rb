@@ -6,14 +6,27 @@ class OmniauthCallbacksController < InertiaController
   # Rails only requires the CSRF token on unsafe requests (POST/PUT/DELETE).
   # This callback arrives as a GET from Google, so it doesn't apply here.
   def google_oauth2
-    user = User.find_or_create_from_google(request.env["omniauth.auth"])
+    user = User.find_from_google(request.env["omniauth.auth"])
+
+    if !user
+      # No permitir loguearse si el usuario no existe aún
+      redirect_to sign_in_path, inertia: {
+        errors: { auth: t("flash.user_not_found") }
+      }
+
+      return
+    end
 
     reset_session
 
-    role = determine_role(user)
+    role = user.resolve_role cookies.signed[:accessing_role]&.to_sym
 
     if role.nil?
-      redirect_to root_path, alert: "Rol no disponible"
+      # No permitir loguearse si el usuario no tiene disponible el rol que
+      redirect_to sign_in_path, inertia: {
+        errors: { auth: t("flash.role_not_available") }
+      }
+
       return
     end
 
@@ -35,21 +48,5 @@ class OmniauthCallbacksController < InertiaController
     redirect_to sign_in_path, inertia: {
       errors: { auth: t("flash.google_auth_failed") }
     }
-  end
-
-  private
-
-  def determine_role(user)
-    role = cookies.signed[:accessing_role]
-
-    if (role == :provider || role == nil) && user.provider?
-      :provider
-    elsif (role == :consumer || role == nil) && user.consumer?
-      :consumer
-    elsif (role == :admin || role == nil) && user.admin?
-      :admin
-    else
-      nil
-    end
   end
 end
