@@ -27,7 +27,7 @@ export function AppSidebar() {
   const { t } = useTranslation()
   const { auth } = usePage().props
 
-  const navItems = {
+  const navItems: Record<string, NavItem[]> = {
     provider: [
       {
         title: t("nav.dashboard"),
@@ -55,7 +55,7 @@ export function AppSidebar() {
       },
     ],
   }
-  
+
   const role = auth.session.role
 
   return (
@@ -64,7 +64,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href={navItems[role][0].url} prefetch>
+              <Link href={navItems[role][0]?.href} prefetch>
                 <AppLogo />
               </Link>
             </SidebarMenuButton>
