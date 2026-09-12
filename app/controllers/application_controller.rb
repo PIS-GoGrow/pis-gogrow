@@ -15,27 +15,25 @@ class ApplicationController < ActionController::Base
   def authenticate_provider
     authenticate
 
-    redirect_to sign_in_path if Current.session && !Current.user.provider?
+    redirect_to sign_in_path if Current.session && !Current.session.provider?
   end
 
   # Valida que haya un consumidor logueado
   def authenticate_consumer
     authenticate
 
-    redirect_to sign_in_path if Current.session && !Current.user.consumer?
+    redirect_to sign_in_path if Current.session && !Current.session.consumer?
   end
 
   # Valida que haya un admin logueado
   def authenticate_admin
     authenticate
 
-    redirect_to sign_in_path if Current.session && !Current.user.admin?
+    redirect_to sign_in_path if Current.session && !Current.session.admin?
   end
 
   def authenticate
     redirect_to sign_in_path unless perform_authentication
-
-    Current.role = cookies.signed[:last_role]
   end
 
   def require_no_authentication
