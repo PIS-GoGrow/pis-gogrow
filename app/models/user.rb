@@ -56,16 +56,50 @@ class User < ApplicationRecord
     user
   end
 
+  def self.find_from_google(auth)
+    email = auth.info.email.to_s.downcase
+
+    find_by email: email
+  end
+
+  # Devuelve si el usuario es un proveedor
+  # Nota: En general, no habría que usar este método. Habría que consultar:
+  #   Current.session.provider?
+  # para ver qué rol tiene activo el usuario en esta sesión.
   def provider?
     provider.present?
   end
 
+  # Devuelve si el usuario es un consumidor
+  # Nota: En general, no habría que usar este método. Habría que consultar:
+  #   Current.session.consumer?
+  # para ver qué rol tiene activo el usuario en esta sesión.
   def consumer?
     consumer.present?
   end
 
+  # Devuelve si el usuario es un admin
+  # Nota: En general, no habría que usar este método. Habría que consultar:
+  #   Current.session.admin?
+  # para ver qué rol tiene activo el usuario en esta sesión.
   def admin?
     admin.present?
+  end
+
+  # Devuelve qué rol debería ser asignado al usuario, considerando que se está intentando acceder
+  # con un requested_role. El rol pedido se otorga si está presente en los roles del usuario.
+  # Si no hay ningún rol pedido (requested_role == nil), se otorga el primer rol que tenga el usuario
+  # en la lista [provider, consumer, admin].
+  def resolve_role(requested_role)
+    if (requested_role == :provider || requested_role.nil?) && provider?
+      :provider
+    elsif (requested_role == :consumer || requested_role.nil?) && consumer?
+      :consumer
+    elsif (requested_role == :admin || requested_role.nil?) && admin?
+      :admin
+    else
+      nil
+    end
   end
 end
 

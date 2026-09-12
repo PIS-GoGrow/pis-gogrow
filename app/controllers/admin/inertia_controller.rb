@@ -1,5 +1,5 @@
 # frozen_string_literal: true
 
 class Admin::InertiaController < InertiaController
-  before_action :authenticate_admin
+  before_action -> { authenticate_role(:admin) }
 end
