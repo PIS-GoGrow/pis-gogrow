@@ -8,7 +8,7 @@ class SessionsController < InertiaController
   def new
     cookies.signed[:accessing_role] = params[:role]
 
-    
+
     render inertia: {
       role: params[:role]
     }
