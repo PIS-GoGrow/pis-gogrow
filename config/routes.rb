@@ -3,7 +3,7 @@
 Rails.application.routes.draw do
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
-  get  "sign_in", to: "sessions#new", as: :sign_in
+  get  "sign_in(/:role)", to: "sessions#new", as: :sign_in, constraints: { role: /provider|admin|consumer/ }
   post "sign_in", to: "sessions#create"
   get  "sign_up", to: "users#new", as: :sign_up
   post "sign_up", to: "users#create"
@@ -22,8 +22,6 @@ Rails.application.routes.draw do
     resource :password_reset,     only: [ :new, :edit, :create, :update ]
   end
 
-  get "dashboard(/:role)", to: "dashboard#index", as: :dashboard, constraints: { role: /provider/ }
-
   namespace :settings do
     resource :profile, only: [ :show, :update ]
     resource :password, only: [ :show, :update ]
@@ -32,7 +30,18 @@ Rails.application.routes.draw do
     inertia :appearance
   end
 
-  resources :menus
+  namespace :provider do
+    resources :menus
+    get "dashboard", to: "dashboard#index", as: :dashboard
+  end
+
+  scope module: :consumer do
+    get "dashboard", to: "dashboard#index", as: :dashboard
+  end
+
+  namespace :admin do
+    get "dashboard", to: "dashboard#index", as: :dashboard
+  end
 
   root "home#index"
 

@@ -2,12 +2,24 @@ import { Head, Link, usePage } from "@inertiajs/react"
 import { useTranslation } from "react-i18next"
 
 import AppLogoIcon from "@/components/app-logo-icon"
-import { dashboard, sessions } from "@/routes"
+import {
+  adminDashboard,
+  consumerDashboard,
+  providerDashboard,
+  sessions,
+} from "@/routes"
 
 export default function Welcome() {
   const { t } = useTranslation()
   const page = usePage()
   const { auth } = page.props
+  const role = auth.session?.role
+
+  const dashboard = {
+    provider: providerDashboard,
+    consumer: consumerDashboard,
+    admin: adminDashboard,
+  }
 
   return (
     <>
@@ -24,7 +36,7 @@ export default function Welcome() {
           <nav className="flex items-center justify-end gap-4">
             {auth.user ? (
               <Link
-                href={dashboard.index({})}
+                href={dashboard[role].index()}
                 className="inline-block rounded-sm border border-[#19140035] px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#1915014a] dark:border-[#3E3E3A] dark:text-[#EDEDEC] dark:hover:border-[#62605b]"
               >
                 {t("pages.home.dashboard")}
@@ -32,7 +44,7 @@ export default function Welcome() {
             ) : (
               <>
                 <Link
-                  href={sessions.new()}
+                  href={sessions.new({})}
                   className="inline-block rounded-sm border border-transparent px-5 py-1.5 text-sm leading-normal text-[#1b1b18] hover:border-[#19140035] dark:text-[#EDEDEC] dark:hover:border-[#3E3E3A]"
                 >
                   {t("common.log_in")}

@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { DialogTrigger } from "@/components/ui/dialog"
-import { menus } from "@/routes"
+import { providerMenus } from "@/routes"
 import type { Menu } from "@/types"
 
 export default function MenuCard({
@@ -32,7 +32,7 @@ export default function MenuCard({
         <CardAction className="ml-auto">
           {showLink && (
             <Button className="mr-2" asChild>
-              <Link href={menus.show(menu.id)}> Ver </Link>
+              <Link href={providerMenus.show(menu.id)}> Ver </Link>
             </Button>
           )}
           <DialogTrigger asChild>
