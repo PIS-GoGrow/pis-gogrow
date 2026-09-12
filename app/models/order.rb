@@ -1,11 +1,20 @@
 # frozen_string_literal: true
 
 class Order < ApplicationRecord
+
+  enum :status, { pending: 0, completed: 1, canceled: 2 }, default: :pending
+
   belongs_to :consumer
   belongs_to :schedule
-
+  
   has_many :order_accounts, dependent: :destroy
   has_many :accounts, through: :order_accounts
+
+  validates :amount, presence: true, numericality: { only_integer: true, greater_than: 0}
+  validates :discounted_price, comparison: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true
+  validates :address, presence: true
+
 end
 
 # == Schema Information
