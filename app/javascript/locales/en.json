@@ -40,6 +40,7 @@
       }
     },
     "nav": {
+      "change_to": "Change to",
       "dashboard": "Dashboard",
       "menu": "Navigation Menu",
       "platform": "Platform",
@@ -89,7 +90,8 @@
       "sessions": {
         "edit": {
           "description": "You have more than one role available. You can choose which one to use now, and change it later",
-          "heading": "Choose your role"
+          "heading": "Choose your role",
+          "title": "Choose role"
         },
         "new": {
           "auth_error_title": "We couldn't sign you in",

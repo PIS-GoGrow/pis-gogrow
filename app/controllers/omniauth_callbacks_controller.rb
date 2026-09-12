@@ -28,7 +28,7 @@ class OmniauthCallbacksController < InertiaController
     if roles.length == 1
       redirect_to root_path, notice: t("flash.signed_in")
     else
-      redirect_to edit_session_path(@session), notice: t("flash.choose_role")
+      redirect_to edit_session_path(@session), notice: t("flash.signed_in")
     end
   rescue User::DomainNotAllowed
     redirect_to sign_in_path, inertia: {
