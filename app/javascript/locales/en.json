@@ -1,8 +1,10 @@
 {
   "en": {
     "common": {
+      "admin": "Admin",
       "cancel": "Cancel",
       "confirm_password": "Confirm password",
+      "consumer": "Consumer",
       "current_password": "Current password",
       "email_address": "Email address",
       "email_placeholder": "email@example.com",
@@ -11,6 +13,7 @@
       "log_out": "Log out",
       "name": "Name",
       "password": "Password",
+      "provider": "Provider",
       "save": "Save",
       "saved": "Saved",
       "settings": "Settings",
@@ -37,6 +40,7 @@
       }
     },
     "nav": {
+      "change_to": "Change to",
       "dashboard": "Dashboard",
       "menu": "Navigation Menu",
       "platform": "Platform",
@@ -84,10 +88,15 @@
         }
       },
       "sessions": {
+        "edit": {
+          "description": "You have more than one role available. You can choose which one to use now, and change it later",
+          "heading": "Choose your role",
+          "title": "Choose role"
+        },
         "new": {
           "auth_error_title": "We couldn't sign you in",
           "continue_with_google": "Continue with Google",
-          "description": "Sign in with your Google account to continue",
+          "description": "Select the role you want to use in this session and sign in with your Google account",
           "forgot_password": "Forgot password?",
           "heading": "Log in to your account",
           "no_account": "Don't have an account?",

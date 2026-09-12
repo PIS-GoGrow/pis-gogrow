@@ -1,5 +1,11 @@
 import { Link, router } from "@inertiajs/react"
-import { LogOut, Settings } from "lucide-react"
+import {
+  ChefHat,
+  LogOut,
+  Settings,
+  User as UserIcon,
+  UserStar,
+} from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -17,6 +23,7 @@ interface UserMenuContentProps {
   auth: {
     session: {
       id: number
+      role: string
     }
     user: User
   }
@@ -31,6 +38,27 @@ export function UserMenuContent({ auth }: UserMenuContentProps) {
     cleanup()
     router.flushAll()
   }
+
+  const user_icons = {
+    consumer: <UserIcon className="mr-2" />,
+    provider: <ChefHat className="mr-2" />,
+    admin: <UserStar className="mr-2" />,
+  }
+
+  const inactive_roles = user.roles.filter((r) => r !== session.role)
+  const roles_buttons = inactive_roles.map((r) => (
+    <DropdownMenuItem key={r} asChild>
+      <Link
+        className="block w-full"
+        href={sessions.update(session.id)}
+        data={{ role: r }}
+        as="button"
+      >
+        {user_icons[r]}
+        {t("nav.change_to")} {t("common." + r)}
+      </Link>
+    </DropdownMenuItem>
+  ))
 
   return (
     <>
@@ -55,6 +83,7 @@ export function UserMenuContent({ auth }: UserMenuContentProps) {
         </DropdownMenuItem>
       </DropdownMenuGroup>
       <DropdownMenuSeparator />
+      {roles_buttons}
       <DropdownMenuItem asChild>
         <Link
           className="block w-full"

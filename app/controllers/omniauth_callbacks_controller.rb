@@ -6,23 +6,30 @@ class OmniauthCallbacksController < InertiaController
   # Rails only requires the CSRF token on unsafe requests (POST/PUT/DELETE).
   # This callback arrives as a GET from Google, so it doesn't apply here.
   def google_oauth2
-    user = User.find_or_create_from_google(request.env["omniauth.auth"])
+    user = User.find_from_google(request.env["omniauth.auth"])
+    roles = user.roles
 
-    reset_session
+    if !user || user.roles.empty?
+      # No permitir loguearse si el usuario no existe aún, o si no tiene roles disponibles
+      redirect_to sign_in_path, inertia: {
+        errors: { auth: t("flash.user_not_found") }
+      }
 
-    role = determine_role(user)
-
-    if role.nil?
-      redirect_to root_path, alert: "Rol no disponible"
       return
     end
 
-    @session = user.sessions.create! role: role
+    reset_session
+
+    @session = user.sessions.create! role: roles[0]
 
     cookies.signed.permanent[:session_token] = { value: @session.id, httponly: true }
     cookies.delete(:accessing_role)
 
-    redirect_to root_path, notice: t("flash.signed_in")
+    if roles.length == 1
+      redirect_to root_path, notice: t("flash.signed_in")
+    else
+      redirect_to edit_session_path(@session), notice: t("flash.signed_in")
+    end
   rescue User::DomainNotAllowed
     redirect_to sign_in_path, inertia: {
       errors: { auth: t("flash.google_domain_not_allowed") }
@@ -35,21 +42,5 @@ class OmniauthCallbacksController < InertiaController
     redirect_to sign_in_path, inertia: {
       errors: { auth: t("flash.google_auth_failed") }
     }
-  end
-
-  private
-
-  def determine_role(user)
-    role = cookies.signed[:accessing_role]
-
-    if (role == :provider || role == nil) && user.provider?
-      :provider
-    elsif (role == :consumer || role == nil) && user.consumer?
-      :consumer
-    elsif (role == :admin || role == nil) && user.admin?
-      :admin
-    else
-      nil
-    end
   end
 end

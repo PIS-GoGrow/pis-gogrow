@@ -12,24 +12,10 @@ class ApplicationController < ActionController::Base
   private
 
   # Valida que haya un proveedor logueado
-  def authenticate_provider
+  def authenticate_role(role)
     authenticate
 
-    redirect_to sign_in_path if Current.session && !Current.session.provider?
-  end
-
-  # Valida que haya un consumidor logueado
-  def authenticate_consumer
-    authenticate
-
-    redirect_to sign_in_path if Current.session && !Current.session.consumer?
-  end
-
-  # Valida que haya un admin logueado
-  def authenticate_admin
-    authenticate
-
-    redirect_to sign_in_path if Current.session && !Current.session.admin?
+    redirect_to sign_in_path if Current.session && !Current.session.public_send("#{role}?")
   end
 
   def authenticate

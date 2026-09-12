@@ -3,10 +3,9 @@
 class SessionsController < InertiaController
   skip_before_action :authenticate, only: %i[new create]
   before_action :require_no_authentication, only: %i[new create]
-  before_action :set_session, only: :destroy
+  before_action :set_session, only: %i[edit update destroy]
 
   def new
-    cookies.signed[:accessing_role] = params[:role]
   end
 
   def create
@@ -17,6 +16,20 @@ class SessionsController < InertiaController
       redirect_to dashboard_path, notice: t("flash.signed_in")
     else
       redirect_to sign_in_path, alert: t("flash.incorrect_credentials")
+    end
+  end
+
+  def edit
+    render inertia: { roles: Current.user.roles, id: params[:id] }
+  end
+
+  def update
+    new_role = params[:role].to_sym
+
+    if Current.user.roles.include?(new_role) && Current.session.update(role: new_role)
+      redirect_to root_path, notice: t("flash.role_set")
+    else
+      redirect_to root_path, alert: t("flash.role_not_available")
     end
   end
 

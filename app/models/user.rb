@@ -56,16 +56,44 @@ class User < ApplicationRecord
     user
   end
 
+  def self.find_from_google(auth)
+    email = auth.info.email.to_s.downcase
+
+    find_by email: email
+  end
+
+  # Devuelve si el usuario es un proveedor
+  # Nota: En general, no habría que usar este método. Habría que consultar:
+  #   Current.session.provider?
+  # para ver qué rol tiene activo el usuario en esta sesión.
   def provider?
     provider.present?
   end
 
+  # Devuelve si el usuario es un consumidor
+  # Nota: En general, no habría que usar este método. Habría que consultar:
+  #   Current.session.consumer?
+  # para ver qué rol tiene activo el usuario en esta sesión.
   def consumer?
     consumer.present?
   end
 
+  # Devuelve si el usuario es un admin
+  # Nota: En general, no habría que usar este método. Habría que consultar:
+  #   Current.session.admin?
+  # para ver qué rol tiene activo el usuario en esta sesión.
   def admin?
     admin.present?
+  end
+
+  def roles
+    user_roles = []
+
+    user_roles << :provider if provider?
+    user_roles << :consumer if consumer?
+    user_roles << :admin if admin?
+
+    user_roles
   end
 end
 

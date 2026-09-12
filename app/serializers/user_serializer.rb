@@ -7,6 +7,11 @@ class UserSerializer < ApplicationSerializer
   attribute :avatar do |user|
     user.avatar_url
   end
+
+  typelize roles: "('consumer' | 'provider' | 'admin')[]"
+  attribute :roles do |user|
+    user.roles
+  end
 end
 
 # == Schema Information

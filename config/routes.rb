@@ -3,12 +3,13 @@
 Rails.application.routes.draw do
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
-  get  "sign_in(/:role)", to: "sessions#new", as: :sign_in, constraints: { role: /provider|admin|consumer/ }
+  get  "sign_in", to: "sessions#new", as: :sign_in
   post "sign_in", to: "sessions#create"
   get  "sign_up", to: "users#new", as: :sign_up
   post "sign_up", to: "users#create"
 
-  resources :sessions, only: [ :destroy ]
+  resources :sessions, only: [ :destroy, :edit, :update ]
+  
   resource :users, only: [ :destroy ]
 
   # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the
