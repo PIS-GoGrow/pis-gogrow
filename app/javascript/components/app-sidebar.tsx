@@ -13,36 +13,36 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { dashboard, menus } from "@/routes"
+import { providerDashboard, consumerDashboard, adminDashboard, providerMenus } from "@/routes"
 import type { NavItem } from "@/types"
 
 import AppLogo from "./app-logo"
 
 export function AppSidebar() {
   const { t } = useTranslation()
-  const { auth } = usePage().props
+  const { role } = usePage().props
 
   const navItems = {
 	provider: [{
 		  title: t("nav.dashboard"),
-		  href: dashboard.index({ role: "provider" }).url,
+		  href: providerDashboard.index().url,
 		  icon: LayoutGrid,
 		},
 		{
 		  title: "Platos",
-		  href: menus.index().url,
+		  href: providerMenus.index().url,
 		  icon: Utensils,
 		},
 	],
 	admin: [{
 		  title: t("nav.dashboard"),
-		  href: dashboard.index({ role: "admin" }).url,
+		  href: adminDashboard.index().url,
 		  icon: LayoutGrid,
 		},
 	],
 	consumer: [{
 		  title: t("nav.dashboard"),
-		  href: dashboard.index({ role: "consumer" }).url,
+		  href: consumerDashboard.index().url,
 		  icon: LayoutGrid,
 		},
 	]
@@ -54,7 +54,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href={dashboard.index({})} prefetch>
+              <Link href={navItems[role][0].url} prefetch>
                 <AppLogo />
               </Link>
             </SidebarMenuButton>
@@ -63,7 +63,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-		  <NavMain items={navItems[auth.user.role]} />
+		  <NavMain items={navItems[role]} />
       </SidebarContent>
 
       <SidebarFooter>

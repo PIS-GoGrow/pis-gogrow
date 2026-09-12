@@ -22,6 +22,7 @@ class SessionsController < InertiaController
   def destroy
     @session.destroy!
     Current.session = nil
+    cookies.delete(:last_role)
     redirect_to settings_sessions_path, notice: t("flash.session_logged_out"), inertia: { clear_history: true }
   end
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class MenusController < InertiaController
+class Provider::MenusController < Provider::InertiaController
   before_action :authenticate_provider
 
   def index
@@ -18,9 +18,9 @@ class MenusController < InertiaController
     menu = provider.menus.new menu_params
 
     if menu.save
-      redirect_to menus_path
+      redirect_to provider_menus_path
     else
-      redirect_to menus_path, inertia: { errors: menu.errors }
+      redirect_to provider_menus_path, inertia: { errors: menu.errors }
     end
   end
 
@@ -42,7 +42,7 @@ class MenusController < InertiaController
     menu = provider.menus.find(params[:id])
 
     if menu.destroy
-      redirect_to menus_path
+      redirect_to provider_menus_path
     end
   end
 

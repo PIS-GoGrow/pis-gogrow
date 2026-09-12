@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { menus as menusRoutes } from "@/routes"
+import { providerMenus } from "@/routes"
 
 interface DeleteMenuProps {
   children: ReactNode
@@ -29,7 +29,7 @@ export default function DeleteMenuDialog({
   function handleDelete() {
     setProcessing(true)
 
-    router.delete(menusRoutes.destroy(Number(id)), {
+    router.delete(providerMenus.destroy(Number(id)), {
       onSuccess: () => {
         setOpenDelete(false)
       },

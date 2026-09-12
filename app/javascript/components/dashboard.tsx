@@ -1,22 +1,19 @@
 import { Head } from "@inertiajs/react"
-import { useTranslation } from "react-i18next"
 
 import { PlaceholderPattern } from "@/components/placeholder-pattern"
 import AppLayout from "@/layouts/app-layout"
-import { dashboard } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 
 interface Props {
-  role?: string
+  url: string
+  role_name: string
 }
 
-export default function Dashboard({ role }: Props) {
-  const { t } = useTranslation()
-
+export default function Dashboard({ url, role_name }: Props) {
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      title: t("pages.dashboard.title"),
-      href: dashboard.index({ role }).url,
+      title: "Dashboard",
+      href: url,
     },
   ]
 
@@ -24,11 +21,9 @@ export default function Dashboard({ role }: Props) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={breadcrumbs[breadcrumbs.length - 1].title} />
 
-      {role && (
-        <p className="text-muted-foreground px-4 pt-4 text-sm">
-          {t(`pages.dashboard.roles.${role}`)}
-        </p>
-      )}
+	  <p className="text-muted-foreground px-4 pt-4 text-sm">
+	    Dashboard de {role_name}
+	  </p>
 
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
@@ -49,3 +44,5 @@ export default function Dashboard({ role }: Props) {
     </AppLayout>
   )
 }
+
+

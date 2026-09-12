@@ -14,7 +14,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import AppLayout from "@/layouts/app-layout"
-import { menus as menusRoutes } from "@/routes"
+import { providerMenus as menusRoutes } from "@/routes"
 import type { Menu } from "@/types"
 import type { BreadcrumbItem } from "@/types"
 

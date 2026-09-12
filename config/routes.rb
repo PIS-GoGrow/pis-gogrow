@@ -22,7 +22,6 @@ Rails.application.routes.draw do
     resource :password_reset,     only: [ :new, :edit, :create, :update ]
   end
 
-  get "dashboard(/:role)", to: "dashboard#index", as: :dashboard, constraints: { role: /provider|admin|consumer/ }
 
   namespace :settings do
     resource :profile, only: [ :show, :update ]
@@ -32,7 +31,18 @@ Rails.application.routes.draw do
     inertia :appearance
   end
 
-  resources :menus
+  namespace :provider do
+    resources :menus
+    get "dashboard", to: "dashboard#index", as: :dashboard
+  end
+
+  scope module: :consumer do
+    get "dashboard", to: "dashboard#index", as: :dashboard
+  end
+
+  namespace :admin do
+    get "dashboard", to: "dashboard#index", as: :dashboard
+  end
 
   root "home#index"
 
