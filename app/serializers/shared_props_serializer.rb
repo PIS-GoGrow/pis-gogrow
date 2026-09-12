@@ -7,9 +7,4 @@ class SharedPropsSerializer < ApplicationSerializer
   attribute :locale do
     I18n.locale.to_s
   end
-
-  typelize :string
-  attribute :role do
-    Current.role
-  end
 end

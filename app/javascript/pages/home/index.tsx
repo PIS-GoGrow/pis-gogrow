@@ -2,17 +2,23 @@ import { Head, Link, usePage } from "@inertiajs/react"
 import { useTranslation } from "react-i18next"
 
 import AppLogoIcon from "@/components/app-logo-icon"
-import { providerDashboard, consumerDashboard, adminDashboard, sessions } from "@/routes"
+import {
+  adminDashboard,
+  consumerDashboard,
+  providerDashboard,
+  sessions,
+} from "@/routes"
 
 export default function Welcome() {
   const { t } = useTranslation()
   const page = usePage()
-  const { auth, role } = page.props
+  const { auth } = page.props
+  const role = auth.session?.role
 
   const dashboard = {
-  	provider: providerDashboard,
-	consumer: consumerDashboard,
-	admin: adminDashboard,
+    provider: providerDashboard,
+    consumer: consumerDashboard,
+    admin: adminDashboard,
   }
 
   return (

@@ -13,40 +13,50 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { providerDashboard, consumerDashboard, adminDashboard, providerMenus } from "@/routes"
+import {
+  adminDashboard,
+  consumerDashboard,
+  providerDashboard,
+  providerMenus,
+} from "@/routes"
 import type { NavItem } from "@/types"
 
 import AppLogo from "./app-logo"
 
 export function AppSidebar() {
   const { t } = useTranslation()
-  const { role } = usePage().props
+  const { auth } = usePage().props
 
   const navItems = {
-	provider: [{
-		  title: t("nav.dashboard"),
-		  href: providerDashboard.index().url,
-		  icon: LayoutGrid,
-		},
-		{
-		  title: "Platos",
-		  href: providerMenus.index().url,
-		  icon: Utensils,
-		},
-	],
-	admin: [{
-		  title: t("nav.dashboard"),
-		  href: adminDashboard.index().url,
-		  icon: LayoutGrid,
-		},
-	],
-	consumer: [{
-		  title: t("nav.dashboard"),
-		  href: consumerDashboard.index().url,
-		  icon: LayoutGrid,
-		},
-	]
+    provider: [
+      {
+        title: t("nav.dashboard"),
+        href: providerDashboard.index().url,
+        icon: LayoutGrid,
+      },
+      {
+        title: "Platos",
+        href: providerMenus.index().url,
+        icon: Utensils,
+      },
+    ],
+    admin: [
+      {
+        title: t("nav.dashboard"),
+        href: adminDashboard.index().url,
+        icon: LayoutGrid,
+      },
+    ],
+    consumer: [
+      {
+        title: t("nav.dashboard"),
+        href: consumerDashboard.index().url,
+        icon: LayoutGrid,
+      },
+    ],
   }
+  
+  const role = auth.session.role
 
   return (
     <Sidebar collapsible="icon" variant="inset">
@@ -63,7 +73,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
-		  <NavMain items={navItems[role]} />
+        <NavMain items={navItems[role]} />
       </SidebarContent>
 
       <SidebarFooter>

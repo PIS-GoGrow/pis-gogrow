@@ -21,9 +21,9 @@ export default function Dashboard({ url, role_name }: Props) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={breadcrumbs[breadcrumbs.length - 1].title} />
 
-	  <p className="text-muted-foreground px-4 pt-4 text-sm">
-	    Dashboard de {role_name}
-	  </p>
+      <p className="text-muted-foreground px-4 pt-4 text-sm">
+        Dashboard de {role_name}
+      </p>
 
       <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <div className="grid auto-rows-min gap-4 md:grid-cols-3">
@@ -44,5 +44,3 @@ export default function Dashboard({ url, role_name }: Props) {
     </AppLayout>
   )
 }
-
-

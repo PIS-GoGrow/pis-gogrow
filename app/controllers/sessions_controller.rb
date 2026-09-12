@@ -6,6 +6,7 @@ class SessionsController < InertiaController
   before_action :set_session, only: :destroy
 
   def new
+    cookies.signed[:accessing_role] = params[:role]
   end
 
   def create
@@ -22,7 +23,6 @@ class SessionsController < InertiaController
   def destroy
     @session.destroy!
     Current.session = nil
-    cookies.delete(:last_role)
     redirect_to settings_sessions_path, notice: t("flash.session_logged_out"), inertia: { clear_history: true }
   end
 
