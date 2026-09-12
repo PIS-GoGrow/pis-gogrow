@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import type { Menu } from "@/types"
 
 interface MenuSelectionRowProps {
@@ -22,7 +23,13 @@ export default function MenuSelectionRow({
   onAmountChange,
 }: MenuSelectionRowProps) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border p-4">
+    <div
+      className={cn(
+        "flex flex-col gap-3 rounded-xl border p-4 cursor-pointer transition-colors",
+        checked ? "border-primary bg-primary/5" : "hover:border-primary/50"
+      )}
+      onClick={() => onToggle(menu.id)}
+    >
       <div className="flex items-start gap-3">
         <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
           <UtensilsCrossed className="size-5 text-muted-foreground" />
@@ -38,12 +45,16 @@ export default function MenuSelectionRow({
 
         <Checkbox
           checked={checked}
-          onCheckedChange={() => onToggle(menu.id)}
+          // Deshabilitamos los eventos del mouse acá para que el clic lo maneje solo la tarjeta
+          className="pointer-events-none"
           aria-label={`Seleccionar ${menu.name}`}
         />
       </div>
 
-      <div className="flex items-center justify-between">
+      <div
+        className="flex items-center justify-between"
+        onClick={(e) => e.stopPropagation()}
+      >
         <p className="font-semibold">{menu.price}$</p>
 
         <Field className="w-28">
