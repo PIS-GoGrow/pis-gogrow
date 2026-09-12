@@ -4,30 +4,10 @@ import AppLayout from "@/layouts/app-layout"
 import { schedules as schedulesRoutes } from "@/routes"
 import type { BreadcrumbItem, Menu } from "@/types"
 
-//interfaces temporales hasta que este creado el serializer
-interface ScheduleDay {
-  date: string
-  publishable: boolean
-  published: boolean
-  schedules: {
-    id: number
-    amount: number
-    menu: { id: number; name: string }
-  }[]
-}
+import type { SchedulesIndex } from "@/types"
 
-interface SchedulesIndexProps {
-  today: string
-  max_publish_date: string
-  week: {
-    starts_on: string
-    ends_on: string
-    previous_week_start: string | null
-    next_week_start: string | null
-  }
-  menus: Menu[]
-  days: ScheduleDay[]
-}
+type SchedulesIndexProps = SchedulesIndex
+type ScheduleDay = SchedulesIndex["days"][number]
 
 export default function Index({ week, menus, days }: SchedulesIndexProps) {
   const [selectedDate, setSelectedDate] = useState<string | undefined>(
