@@ -1,5 +1,4 @@
 import MenuSelectionRow from "@/components/schedules/menu-selection-row"
-import { Card, CardContent } from "@/components/ui/card"
 import type { Menu } from "@/types"
 
 interface MenuSelectionListProps {
@@ -16,19 +15,17 @@ export default function MenuSelectionList({
   onAmountChange,
 }: MenuSelectionListProps) {
   return (
-    <Card>
-      <CardContent>
-        {menus.map((menu) => (
-          <MenuSelectionRow
-            key={menu.id}
-            menu={menu}
-            checked={menu.id in selection}
-            amount={selection[menu.id] ?? ""}
-            onToggle={onToggle}
-            onAmountChange={onAmountChange}
-          />
-        ))}
-      </CardContent>
-    </Card>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {menus.map((menu) => (
+        <MenuSelectionRow
+          key={menu.id}
+          menu={menu}
+          checked={menu.id in selection}
+          amount={selection[menu.id] ?? ""}
+          onToggle={onToggle}
+          onAmountChange={onAmountChange}
+        />
+      ))}
+    </div>
   )
 }

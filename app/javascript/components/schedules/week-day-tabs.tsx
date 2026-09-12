@@ -6,8 +6,6 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import { cn } from "@/lib/utils"
 import { schedules as schedulesRoutes } from "@/routes"
 
-//como se muestran los dias de la semana
-
 interface Day {
   date: string
   publishable: boolean
@@ -25,12 +23,20 @@ interface WeekDayTabsProps {
 // Rails manda fechas "YYYY-MM-DD". Sin la hora, `new Date(...)` las interpreta
 // en UTC, y en un huso horario negativo (como el nuestro) el día mostrado
 // puede quedar corrido un día para atrás. Forzamos hora local con "T00:00:00".
-function dayLabel(isoDate: string) {
-  const date = new Date(`${isoDate}T00:00:00`)
-  return new Intl.DateTimeFormat("es-UY", {
-    weekday: "short",
-    day: "numeric",
-  }).format(date)
+function toLocalDate(isoDate: string) {
+  return new Date(`${isoDate}T00:00:00`)
+}
+
+function weekdayLabel(isoDate: string) {
+  return new Intl.DateTimeFormat("es-UY", { weekday: "short" }).format(
+    toLocalDate(isoDate),
+  )
+}
+
+function dayNumberLabel(isoDate: string) {
+  return new Intl.DateTimeFormat("es-UY", { day: "numeric" }).format(
+    toLocalDate(isoDate),
+  )
 }
 
 export default function WeekDayTabs({
@@ -63,23 +69,25 @@ export default function WeekDayTabs({
 
       <ToggleGroup
         type="single"
-        variant="outline"
         value={selectedDate ?? ""}
         onValueChange={(value) => value && onSelectDate(value)}
-        className="flex-1"
+        className="flex-1 justify-between gap-2"
       >
         {days.map((day) => (
           <ToggleGroupItem
             key={day.date}
             value={day.date}
             className={cn(
-              "relative flex-col gap-0.5 capitalize",
+              "relative flex h-16 w-16 flex-col items-center justify-center gap-0.5 rounded-xl border data-[state=on]:bg-primary data-[state=on]:text-primary-foreground",
               !day.publishable && "text-muted-foreground",
             )}
           >
-            {dayLabel(day.date)}
+            <span className="text-xs uppercase">{weekdayLabel(day.date)}</span>
+            <span className="text-lg font-semibold">
+              {dayNumberLabel(day.date)}
+            </span>
             {day.published && (
-              <span className="absolute top-1 right-1 size-1.5 rounded-full bg-green-600" />
+              <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-green-600" />
             )}
           </ToggleGroupItem>
         ))}

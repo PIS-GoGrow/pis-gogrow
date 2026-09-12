@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent } from "@/components/ui/card"
+import { UtensilsCrossed } from "lucide-react"
 
 //schedules a publicar
 
@@ -17,24 +17,31 @@ export default function PublishedDayView({
   schedules,
 }: PublishedDayViewProps) {
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-3">
-        <Badge variant="secondary" className="w-fit bg-green-100 text-green-700">
-          Publicado
-        </Badge>
-
-        {schedules.map((schedule) => (
-          <div
-            key={schedule.id}
-            className="flex items-center justify-between border-b py-2 last:border-b-0"
-          >
-            <p className="font-medium">{schedule.menu.name}</p>
-            <p className="text-sm text-muted-foreground">
-              Stock: {schedule.amount}
-            </p>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {schedules.map((schedule) => (
+        <div
+          key={schedule.id}
+          className="flex items-center gap-3 rounded-xl border p-4"
+        >
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
+            <UtensilsCrossed className="size-5 text-muted-foreground" />
           </div>
-        ))}
-      </CardContent>
-    </Card>
+
+          <div className="flex-1">
+            <Badge
+              variant="secondary"
+              className="mb-1 bg-green-100 text-green-700"
+            >
+              Publicado
+            </Badge>
+            <p className="font-medium">{schedule.menu.name}</p>
+          </div>
+
+          <p className="text-sm font-medium text-muted-foreground">
+            Stock: {schedule.amount}
+          </p>
+        </div>
+      ))}
+    </div>
   )
 }
