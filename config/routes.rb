@@ -29,6 +29,7 @@ Rails.application.routes.draw do
     resource :password, only: [ :show, :update ]
     resource :email, only: [ :show, :update ]
     resources :sessions, only: [ :index ]
+    resources :schedules, only: %i[index create]
     inertia :appearance
   end
 
