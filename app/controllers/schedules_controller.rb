@@ -66,10 +66,15 @@ class SchedulesController < InertiaController
       }
     end
 
+    next_week = week_start + 1.week
+    next_week_start = next_week > maximum_week_start ? nil : next_week
+
     render inertia: {
         week: {
             starts_on: week_start,
-            ends_on: week_end
+            ends_on: week_end,
+            previous_week_start: week_start - 1.week,
+            next_week_start: next_week_start
         },
         days: days,
         menus: serialized_menus
