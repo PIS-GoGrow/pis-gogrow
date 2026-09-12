@@ -87,6 +87,8 @@ RSpec.describe Schedule, type: :model do
   end
 end
 
+
+
 # == Schema Information
 #
 # Table name: schedules
