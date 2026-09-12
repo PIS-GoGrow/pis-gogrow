@@ -87,6 +87,10 @@
         }
       },
       "sessions": {
+        "edit": {
+          "description": "You have more than one role available. You can choose which one to use now, and change it later",
+          "heading": "Choose your role"
+        },
         "new": {
           "auth_error_title": "We couldn't sign you in",
           "continue_with_google": "Continue with Google",
