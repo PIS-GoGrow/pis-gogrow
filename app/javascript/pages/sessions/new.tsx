@@ -9,11 +9,10 @@ import { readAuthenticityToken } from "@/lib/utils"
 import { sessions } from "@/routes"
 
 interface Props {
-  role: string
   errors?: { auth?: string }
 }
 
-export default function Login({ role, errors }: Props) {
+export default function Login({ errors }: Props) {
   const { t } = useTranslation()
 
   return (
@@ -29,24 +28,6 @@ export default function Login({ role, errors }: Props) {
           <AlertDescription>{errors.auth}</AlertDescription>
         </Alert>
       )}
-
-      <div className="mx-auto grid grid-cols-3 gap-2">
-        <Button asChild variant={role != "provider" ? "outline" : "default"}>
-          <Link href={sessions.new({ role: "provider" })}>
-            {t("common.provider")}
-          </Link>
-        </Button>
-        <Button asChild variant={role != "consumer" ? "outline" : "default"}>
-          <Link href={sessions.new({ role: "consumer" })}>
-            {t("common.consumer")}
-          </Link>
-        </Button>
-        <Button asChild variant={role != "admin" ? "outline" : "default"}>
-          <Link href={sessions.new({ role: "admin" })}>
-            {t("common.admin")}
-          </Link>
-        </Button>
-      </div>
 
       {/*
         Full-page navigation (not an Inertia visit): OmniAuth needs to

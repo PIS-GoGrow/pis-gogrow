@@ -8,7 +8,8 @@ Rails.application.routes.draw do
   get  "sign_up", to: "users#new", as: :sign_up
   post "sign_up", to: "users#create"
 
-  resources :sessions, only: [ :destroy ]
+  resources :sessions, only: [ :destroy, :edit, :update ]
+  
   resource :users, only: [ :destroy ]
 
   # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the

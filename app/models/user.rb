@@ -86,20 +86,14 @@ class User < ApplicationRecord
     admin.present?
   end
 
-  # Devuelve qué rol debería ser asignado al usuario, considerando que se está intentando acceder
-  # con un requested_role. El rol pedido se otorga si está presente en los roles del usuario.
-  # Si no hay ningún rol pedido (requested_role == nil), se otorga el primer rol que tenga el usuario
-  # en la lista [provider, consumer, admin].
-  def resolve_role(requested_role)
-    if (requested_role == :provider || requested_role.nil?) && provider?
-      :provider
-    elsif (requested_role == :consumer || requested_role.nil?) && consumer?
-      :consumer
-    elsif (requested_role == :admin || requested_role.nil?) && admin?
-      :admin
-    else
-      nil
-    end
+  def roles
+    user_roles = []
+
+    user_roles << :provider if provider?
+    user_roles << :consumer if consumer?
+    user_roles << :admin if admin?
+
+    user_roles
   end
 end
 

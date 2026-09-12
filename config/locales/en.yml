@@ -104,6 +104,9 @@ en:
         auth_error_title: "We couldn't sign you in"
         forgot_password: "Forgot password?"
         no_account: "Don't have an account?"
+      edit:
+        heading: "Choose your role"
+        description: "You have more than one role available. You can choose which one to use now, and change it later"
     users:
       new:
         title: "Register"

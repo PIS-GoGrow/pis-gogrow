@@ -7,9 +7,10 @@ class OmniauthCallbacksController < InertiaController
   # This callback arrives as a GET from Google, so it doesn't apply here.
   def google_oauth2
     user = User.find_from_google(request.env["omniauth.auth"])
+    roles = user.roles
 
-    if !user
-      # No permitir loguearse si el usuario no existe aún
+    if !user || user.roles.empty?
+      # No permitir loguearse si el usuario no existe aún, o si no tiene roles disponibles
       redirect_to sign_in_path, inertia: {
         errors: { auth: t("flash.user_not_found") }
       }
@@ -19,23 +20,16 @@ class OmniauthCallbacksController < InertiaController
 
     reset_session
 
-    role = user.resolve_role cookies.signed[:accessing_role]&.to_sym
-
-    if role.nil?
-      # No permitir loguearse si el usuario no tiene disponible el rol que
-      redirect_to sign_in_path, inertia: {
-        errors: { auth: t("flash.role_not_available") }
-      }
-
-      return
-    end
-
-    @session = user.sessions.create! role: role
+    @session = user.sessions.create! role: roles[0]
 
     cookies.signed.permanent[:session_token] = { value: @session.id, httponly: true }
     cookies.delete(:accessing_role)
 
-    redirect_to root_path, notice: t("flash.signed_in")
+    if roles.length == 1
+      redirect_to root_path, notice: t("flash.signed_in")
+    else
+      redirect_to edit_session_path(@session), notice: t("flash.choose_role")
+    end
   rescue User::DomainNotAllowed
     redirect_to sign_in_path, inertia: {
       errors: { auth: t("flash.google_domain_not_allowed") }
