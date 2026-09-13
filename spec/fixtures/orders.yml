@@ -1,0 +1,27 @@
+pending_today:
+  consumer: martina
+  schedule: wok_today
+  status: pending
+  amount: 2
+  price: 300
+  notes: Sin picante
+  created_at: <%= Time.current.change(hour: 12, min: 30) %>
+
+confirmed_today:
+  consumer: martina
+  schedule: wok_today
+  status: confirmed
+  amount: 1
+  price: 300
+  address: Oficina GoGrow
+  created_at: <%= Time.current.change(hour: 13, min: 0) %>
+
+tomorrow:
+  consumer: martina
+  schedule: wok_tomorrow
+  price: 300
+
+other_provider_today:
+  consumer: martina
+  schedule: curry_today
+  price: 360

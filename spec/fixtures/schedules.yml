@@ -1,0 +1,14 @@
+wok_today:
+  menu: wok
+  date: <%= Date.current %>
+  amount: 10
+
+wok_tomorrow:
+  menu: wok
+  date: <%= Date.current.tomorrow %>
+  amount: 10
+
+curry_today:
+  menu: curry
+  date: <%= Date.current %>
+  amount: 5

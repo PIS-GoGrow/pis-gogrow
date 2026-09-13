@@ -1,8 +1,6 @@
 import { MapPin } from "lucide-react"
 
-import OrderStatusBadge, {
-  type OrderStatus,
-} from "@/components/orders/order-status-badge"
+import OrderStatusBadge from "@/components/orders/order-status-badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,17 +14,7 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useInitials } from "@/hooks/use-initials"
-
-export interface ProviderOrder {
-  id: number
-  consumer_name: string
-  time: string
-  menu_name: string
-  notes: string
-  address: string
-  price: number
-  status: OrderStatus
-}
+import type { ProviderOrder } from "@/types"
 
 interface OrderCardProps {
   order: ProviderOrder
@@ -59,14 +47,23 @@ export default function OrderCard({ order }: OrderCardProps) {
 
       <CardContent className="grid gap-3 px-4">
         <div className="grid gap-1">
-          <p>{order.menu_name}</p>
-          <p className="text-muted-foreground text-sm">{order.notes}</p>
+          <p>
+            {(order.amount ?? 1) > 1 && `${order.amount} × `}
+            {order.menu_name}
+          </p>
+          {order.notes && (
+            <p className="text-muted-foreground text-sm">{order.notes}</p>
+          )}
         </div>
         <div className="flex items-end justify-between gap-4">
-          <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-            <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-            {order.address}
-          </p>
+          {order.address ? (
+            <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+              <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
+              {order.address}
+            </p>
+          ) : (
+            <span />
+          )}
           <p className="text-lg font-semibold">${order.price}</p>
         </div>
       </CardContent>

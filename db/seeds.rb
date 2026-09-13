@@ -10,12 +10,12 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-date = Date.today
+date = Date.current
 
 company = Company.create! name: "GoGrow", address: "18 de Julio 1006"
 
 provider_user = User.create! email: "pis2026.tuviandita@gmail.com", name: "TuViandita", password_digest: "$2a$12$bJmXACYR/Ob7pRPwQQ90BeTxYrZ8zRuUkJc8rBM/zaWcKY0wsxmku", verified: true, google_uid: "108316160859916934526", avatar_url: "https://lh3.googleusercontent.com/a/ACg8ocJI-3dIr052h53KVJC3tMso4PDVJV_TwqQT4IQigdM72LNlKw"
-provider = Provider.create! order_deadline: Time.now + 3.hours, user: provider_user
+provider = Provider.create! order_deadline: Time.current + 3.hours, user: provider_user
 
 menu = Menu.create! provider: provider, name: "Milanesa con papas fritas", price: 300, description: "Opción de carne o pollo"
 schedule = Schedule.create! menu:, date: date, amount: 7

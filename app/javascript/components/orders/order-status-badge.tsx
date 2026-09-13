@@ -1,7 +1,6 @@
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-
-export type OrderStatus = "pending" | "confirmed" | "delivered" | "cancelled"
+import type { OrderStatus } from "@/types"
 
 const statuses: Record<OrderStatus, { label: string; className: string }> = {
   pending: {

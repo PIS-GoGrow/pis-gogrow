@@ -1,0 +1,9 @@
+wok:
+  provider: tuviandita
+  name: Wok de verduras
+  price: 300
+
+curry:
+  provider: endulzate
+  name: Pollo al curry
+  price: 360

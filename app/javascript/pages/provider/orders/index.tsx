@@ -3,8 +3,7 @@ import { Package } from "lucide-react"
 import { useState } from "react"
 
 import Heading from "@/components/heading"
-import OrderCard, { type ProviderOrder } from "@/components/orders/order-card"
-import type { OrderStatus } from "@/components/orders/order-status-badge"
+import OrderCard from "@/components/orders/order-card"
 import {
   Empty,
   EmptyDescription,
@@ -15,7 +14,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import AppLayout from "@/layouts/app-layout"
 import { providerOrders } from "@/routes"
-import type { BreadcrumbItem } from "@/types"
+import type { BreadcrumbItem, OrderStatus, ProviderOrdersIndex } from "@/types"
 
 type StatusFilter = "all" | OrderStatus
 
@@ -27,67 +26,13 @@ const filters: { value: StatusFilter; label: string }[] = [
   { value: "cancelled", label: "Cancelados" },
 ]
 
-// Datos de ejemplo mientras la pantalla no recibe los pedidos reales del proveedor.
-const sampleOrders: ProviderOrder[] = [
-  {
-    id: 1058,
-    consumer_name: "Martina Silva",
-    time: "12:30",
-    menu_name: "Wok de verduras + arroz",
-    notes: "Sin picante · Sin cebolla",
-    address: "Oficina GoGrow · 18 de Julio 1006",
-    price: 300,
-    status: "pending",
-  },
-  {
-    id: 1057,
-    consumer_name: "Lucas Pereira",
-    time: "12:30",
-    menu_name: "Sorrentinos artesanales",
-    notes: "Caprese · Salsa de tomate",
-    address: "Oficina GoGrow · 18 de Julio 1006",
-    price: 320,
-    status: "pending",
-  },
-  {
-    id: 1053,
-    consumer_name: "Camila Díaz",
-    time: "13:00",
-    menu_name: "Wok de verduras + arroz",
-    notes: "Picante suave",
-    address: "Av. Brasil 2145, apto. 402",
-    price: 300,
-    status: "confirmed",
-  },
-  {
-    id: 1049,
-    consumer_name: "Federico Costa",
-    time: "12:30",
-    menu_name: "Pollo al curry",
-    notes: "Sin modificaciones",
-    address: "Oficina GoGrow · 18 de Julio 1006",
-    price: 360,
-    status: "delivered",
-  },
-  {
-    id: 1046,
-    consumer_name: "Ana Rodríguez",
-    time: "12:30",
-    menu_name: "Sorrentinos artesanales",
-    notes: "Jamón y queso",
-    address: "Oficina GoGrow · 18 de Julio 1006",
-    price: 320,
-    status: "cancelled",
-  },
-]
-
-export default function Index() {
+export default function Index({ orders }: ProviderOrdersIndex) {
   const [filter, setFilter] = useState<StatusFilter>("all")
 
-  const orders =
+  const visibleOrders =
     filter === "all"
-      ? sampleOrders
-      : sampleOrders.filter((order) => order.status === filter)
+      ? orders
+      : orders.filter((order) => order.status === filter)
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -128,7 +73,7 @@ export default function Index() {
             </ToggleGroup>
           </div>
 
-          {orders.length === 0 ? (
+          {visibleOrders.length === 0 ? (
             <Empty className="border">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -136,13 +81,15 @@ export default function Index() {
                 </EmptyMedia>
                 <EmptyTitle>No hay pedidos</EmptyTitle>
                 <EmptyDescription>
-                  Todavía no tenés pedidos con este estado para hoy.
+                  {filter === "all"
+                    ? "Todavía no recibiste pedidos para hoy."
+                    : "No tenés pedidos con este estado para hoy."}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {orders.map((order) => (
+              {visibleOrders.map((order) => (
                 <OrderCard key={order.id} order={order} />
               ))}
             </div>

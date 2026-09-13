@@ -4,6 +4,8 @@ class Provider < ApplicationRecord
   belongs_to :user, optional: true
 
   has_many :menus, dependent: :destroy
+  has_many :schedules, through: :menus
+  has_many :orders, through: :schedules
 end
 
 # == Schema Information

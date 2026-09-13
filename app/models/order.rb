@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Order < ApplicationRecord
+  enum :status, { pending: 0, confirmed: 1, delivered: 2, cancelled: 3 }
+
   belongs_to :consumer
   belongs_to :schedule
 
@@ -18,7 +20,7 @@ end
 #  discounted_price :decimal(10, 2)
 #  notes            :string
 #  price            :decimal(10, 2)
-#  status           :integer
+#  status           :integer          default(0), not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  consumer_id      :bigint           not null
