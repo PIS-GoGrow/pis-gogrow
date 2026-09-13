@@ -39,6 +39,7 @@
     "nav": {
       "dashboard": "Dashboard",
       "menu": "Navigation Menu",
+      "orders": "My orders",
       "platform": "Platform",
       "settings": {
         "appearance": "Appearance",
@@ -67,6 +68,44 @@
         "resources_intro": "Here are some resources to begin:",
         "tagline": "Rails + Inertia.js + React + shadcn/ui",
         "title": "Welcome"
+      },
+      "orders": {
+        "index": {
+          "base_price": "Base price: %{amount}",
+          "history_address": "You got it at: %{address}",
+          "history_empty_description": "Your finished orders will show up here.",
+          "history_empty_title": "No past orders",
+          "history_tab": "History",
+          "no_address": "No delivery address",
+          "no_date": "No delivery date",
+          "no_menu": "Meal unavailable",
+          "no_price": "Amount unavailable",
+          "no_provider": "Provider unavailable",
+          "quantity": "x%{count}",
+          "title": "My orders",
+          "upcoming_address": "You get it at: %{address}",
+          "upcoming_empty_description": "You have no meals on the way.",
+          "upcoming_empty_title": "No upcoming orders",
+          "upcoming_tab": "Upcoming"
+        },
+        "show": {
+          "address": "Delivery address",
+          "back": "Back to my orders",
+          "base_price": "Base price",
+          "date": "Delivery date",
+          "no_notes": "No notes",
+          "notes": "Notes",
+          "quantity": "Quantity",
+          "subsidy": "Subsidy applied",
+          "title": "Order detail",
+          "total": "Final amount"
+        },
+        "statuses": {
+          "cancelled": "Cancelled",
+          "confirmed": "Confirmed",
+          "pending": "Pending",
+          "rejected": "Rejected"
+        }
       },
       "password_resets": {
         "edit": {

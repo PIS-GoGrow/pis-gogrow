@@ -47,6 +47,7 @@ Del prototipo se reutiliza **qué componente corresponde a cada caso y cómo se 
 | `Checkbox` | `@/components/ui/checkbox` | Selección múltiple o casilla sí/no |
 | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `SelectGroup`, `SelectLabel`, `SelectSeparator` | `@/components/ui/select` | Elegir una opción de una lista |
 | `ToggleGroup`, `ToggleGroupItem`, `Toggle` | `@/components/ui/toggle-group`, `@/components/ui/toggle` | Filtros, días, control segmentado |
+| `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `@/components/ui/tabs` | Alternar entre paneles de contenido |
 | `Separator` | `@/components/ui/separator` | Divisores horizontales o verticales |
 | `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose` | `@/components/ui/dialog` | Confirmaciones y formularios cortos sobre la pantalla |
 | `Sheet`, `SheetTrigger`, `SheetContent`, `SheetHeader`, `SheetTitle`, `SheetDescription`, `SheetFooter`, `SheetClose` | `@/components/ui/sheet` | Paneles que entran desde un borde (detalle, carrito en móvil) |
@@ -70,7 +71,6 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `Textarea` | `add textarea` | Texto multilínea | Mismas props que `<textarea>` |
 | `RadioGroup`, `RadioGroupItem` | `add radio-group` | Selección única con título y descripción | `name`, `value`/`defaultValue`, `onValueChange`; ítems con `value` e `id` |
 | `Switch` | `add switch` | Activar o desactivar una opción | `checked`, `onCheckedChange`, `name` |
-| `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `add tabs` | Alternar entre paneles de contenido | `defaultValue`/`value`; `TabsTrigger` y `TabsContent` con el mismo `value` |
 | `Progress` | `add progress` | Barra de progreso (beneficio usado, pedidos por proveedor) | `value` de 0 a 100 |
 
 ### Componentes propios (`components/`)
@@ -81,6 +81,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `Heading` | `@/components/heading` | Encabezado de pantalla: título y descripción opcional |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
 | `AlertError` | `@/components/alert-error` | `Alert` destructivo con una lista de errores |
+| `StatusBadge` | `@/components/status-badge` | Estado de un pedido: `Badge variant="outline"` con `data-status` y color por estado |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
@@ -97,7 +98,6 @@ El prototipo repite estos patrones en varias pantallas. Acá no existen: se crea
 |---|---|---|
 | `Stat` (tarjeta de métrica) | `components/stat.tsx` | `Card` compacta: etiqueta en `CardDescription`, valor y detalle en `CardContent` |
 | `QuantityInput` (− / número / +) | `components/quantity-input.tsx` | Dos `Button variant="outline" size="icon-sm"` con `aria-label` («Quitar uno», «Agregar uno») y el número en el medio |
-| `StatusBadge` | `components/status-badge.tsx` | `Badge variant="outline"` con `data-status` y un mapa de estado a clases de color |
 
 ## Superposiciones con el prototipo
 
@@ -114,11 +114,13 @@ El prototipo repite estos patrones en varias pantallas. Acá no existen: se crea
 | Filtros, días, control segmentado | `Button` con `aria-pressed` y `data-selected` | `ToggleGroup` | `ToggleGroup` |
 | Divisor con texto | Dos `Separator` y un `<span>` | `FieldSeparator` con texto | `FieldSeparator` |
 | `Avatar`, `Empty`, `Collapsible`, mensaje temporal | Pendientes de agregar | Instalados | Los del repo |
-| `Tabs`, `Switch`, `Progress` | Pendientes de agregar | No instalados | Los de shadcn, cuando se necesiten |
+| `Tabs` | Pendiente de agregar | Instalado | El del repo |
+| `Switch`, `Progress` | Pendientes de agregar | No instalados | Los de shadcn, cuando se necesiten |
 | Encabezado de sección (`Header`, `ScreenHeader`) | Duplicado en cuatro pantallas | `Heading`, `HeadingSmall` | Los del repo |
 | Navegación lateral y barra inferior | Una por dashboard | `AppLayout` con sidebar por rol | `AppLayout` |
 | Mensaje temporal | `styles.toast` con `setTimeout` | Flash del servidor que muestra Sonner | Flash del servidor |
-| `Stat`, control de cantidad, colores de estado | Duplicados | No existen | [Propios a crear](#propios-a-crear) |
+| Colores de estado | Duplicados | `StatusBadge` | El del repo |
+| `Stat`, control de cantidad | Duplicados | No existen | [Propios a crear](#propios-a-crear) |
 | `GoogleMark` | `branding/google-mark` | Igual | El mismo |
 
 ## Detalle por componente
@@ -166,7 +168,7 @@ import { Badge } from "@/components/ui/badge"
 | `asChild` | Renderiza el hijo (por ejemplo, un `Link`) con los estilos del badge | `false` |
 
 - Etiqueta informativa («Este mes», fecha de entrega): `variant="secondary"`.
-- Estado de un pedido o pago: `StatusBadge` (ver [Propios a crear](#propios-a-crear)). Mientras no exista, `variant="outline"` con las clases de color en `className`, y al segundo uso se crea el componente.
+- Estado de un pedido o pago: [`StatusBadge`](#statusbadge), que ya resuelve el color por estado. No se arma un `Badge` de estado a mano.
 
 ### Card
 
@@ -344,6 +346,34 @@ Reemplaza los botones con `aria-pressed` del prototipo para filtros, días y el 
 </ToggleGroup>
 ```
 
+### Tabs
+
+```tsx
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+```
+
+| Prop | Valores | Por defecto |
+|---|---|---|
+| `defaultValue` / `value` | `value` del panel abierto | — |
+| `orientation` | `horizontal` · `vertical` | `horizontal` |
+
+- Cada `TabsTrigger` y su `TabsContent` se vinculan por el mismo `value`.
+- Con `defaultValue` el estado lo maneja el componente; sólo hace falta `value` + `onValueChange` si la pantalla necesita leerlo o guardarlo en la URL.
+- `TabsList` ocupa el ancho de su contenido; `className="w-full"` lo estira.
+- Los paneles alternan contenido distinto. Para filtrar la misma lista corresponde [`ToggleGroup`](#togglegroup).
+
+```tsx
+<Tabs defaultValue="upcoming" className="gap-6">
+  <TabsList className="w-full">
+    <TabsTrigger value="upcoming">Próximos</TabsTrigger>
+    <TabsTrigger value="history">Historial</TabsTrigger>
+  </TabsList>
+
+  <TabsContent value="upcoming">…</TabsContent>
+  <TabsContent value="history">…</TabsContent>
+</Tabs>
+```
+
 ### RadioGroup (a agregar)
 
 Cuando se instale con `add radio-group`, la opción con título y descripción del prototipo (`RadioOption`) se arma combinando `RadioGroupItem` con `Field`. No se crea un `RadioOption` propio.
@@ -500,6 +530,20 @@ Reemplaza los `<details>` del prototipo.
 
 - `Spinner` va dentro del botón que dispara la acción, antes del texto, mientras `processing` es verdadero. Ya trae `role="status"`.
 - `Skeleton` reserva el lugar de contenido que todavía no llegó (por ejemplo, props diferidas de Inertia). Se le da tamaño con `className` (`h-4 w-32`).
+
+### StatusBadge
+
+```tsx
+import StatusBadge from "@/components/status-badge"
+```
+
+Envuelve `Badge variant="outline"` y resuelve el color a partir del estado, con un punto del mismo color antes del texto. El texto sale de `pages.orders.statuses.<estado>`, así que la pantalla sólo pasa el estado.
+
+El mapa de estilos está tipado con `OrderStatus`: agregar un estado al enum de Rails rompe la compilación hasta definir cómo se ve. También expone `data-status`, para poder apuntarle desde los tests o desde una clase del contenedor.
+
+```tsx
+<StatusBadge status={order.status} />
+```
 
 ### Heading y HeadingSmall
 

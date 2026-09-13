@@ -1,5 +1,5 @@
 import { Link, usePage } from "@inertiajs/react"
-import { LayoutGrid, Utensils } from "lucide-react"
+import { ClipboardList, LayoutGrid, Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
@@ -16,6 +16,7 @@ import {
 import {
   adminDashboard,
   consumerDashboard,
+  orders,
   providerDashboard,
   providerMenus,
 } from "@/routes"
@@ -52,6 +53,11 @@ export function AppSidebar() {
         title: t("nav.dashboard"),
         href: consumerDashboard.index().url,
         icon: LayoutGrid,
+      },
+      {
+        title: t("nav.orders"),
+        href: orders.index().url,
+        icon: ClipboardList,
       },
     ],
   }

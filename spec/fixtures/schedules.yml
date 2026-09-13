@@ -1,0 +1,36 @@
+# Las fechas son relativas para que los specs no caduquen: el corte entre
+# pedidos próximos e historial se define contra Date.current.
+future:
+  menu: milanesa
+  date: <%= Date.current + 3 %>
+  amount: 10
+
+today:
+  menu: milanesa
+  date: <%= Date.current %>
+  amount: 5
+
+past:
+  menu: milanesa
+  date: <%= Date.current - 5 %>
+  amount: 7
+
+# == Schema Information
+#
+# Table name: schedules
+#
+#  id         :bigint           not null, primary key
+#  amount     :integer
+#  date       :date
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#  menu_id    :bigint           not null
+#
+# Indexes
+#
+#  index_schedules_on_menu_id  (menu_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (menu_id => menus.id)
+#
