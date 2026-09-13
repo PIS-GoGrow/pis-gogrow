@@ -23,8 +23,9 @@ class SessionsController < InertiaController
     render inertia: { roles: Current.user.roles, id: params[:id] }
   end
 
+  # De una sesión solo se puede editar el rol efectivo del usuario
   def update
-    new_role = params[:role].to_sym
+    new_role = params[:role]
 
     if Current.user.roles.include?(new_role) && Current.session.update(role: new_role)
       redirect_to root_path, notice: t("flash.role_set")

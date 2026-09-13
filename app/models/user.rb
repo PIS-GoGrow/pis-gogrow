@@ -86,14 +86,15 @@ class User < ApplicationRecord
     admin.present?
   end
 
-  def roles
-    user_roles = []
-
-    user_roles << :provider if provider?
-    user_roles << :consumer if consumer?
-    user_roles << :admin if admin?
-
-    user_roles
+  # Actualiza la columna roles para reflejar los datos reales de la base de
+  # datos. Se corre automáticamente cuando un Provider/Consumer/Admin se
+  # modifica
+  def sync_roles!
+    update_column(:roles, [
+      ("provider" if Provider.exists?(user_id: id)),
+      ("consumer" if Consumer.exists?(user_id: id)),
+      ("admin" if Admin.exists?(user_id: id))
+    ].compact)
   end
 end
 
