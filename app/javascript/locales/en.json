@@ -39,6 +39,7 @@
     "nav": {
       "dashboard": "Dashboard",
       "menu": "Navigation Menu",
+      "menus": "Platos",
       "platform": "Platform",
       "settings": {
         "appearance": "Appearance",
@@ -49,6 +50,17 @@
       }
     },
     "pages": {
+      "consumer": {
+        "menus": {
+          "description": "Platos que podés pedir para hoy y los próximos días",
+          "empty_description": "Los proveedores todavía no publicaron platos para los próximos días.",
+          "empty_title": "No hay platos disponibles",
+          "provider": "Por %{name}",
+          "spots": "Cupo: %{count}",
+          "title": "Platos disponibles",
+          "view": "Ver"
+        }
+      },
       "dashboard": {
         "roles": {
           "provider": "Provider panel"
