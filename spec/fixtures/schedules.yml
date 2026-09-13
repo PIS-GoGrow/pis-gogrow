@@ -1,0 +1,24 @@
+milanesa_today:
+  menu: milanesa
+  date: <%= Date.current %>
+  amount: 7
+
+empanadas_tomorrow:
+  menu: empanadas
+  date: <%= Date.current.tomorrow %>
+  amount: 10
+
+empanadas_yesterday:
+  menu: empanadas
+  date: <%= Date.current.yesterday %>
+  amount: 10
+
+ensalada_yesterday:
+  menu: ensalada
+  date: <%= Date.current.yesterday %>
+  amount: 5
+
+tarta_sold_out:
+  menu: tarta
+  date: <%= Date.current.tomorrow %>
+  amount: 0

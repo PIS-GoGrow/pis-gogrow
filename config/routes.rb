@@ -38,6 +38,7 @@ Rails.application.routes.draw do
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :menus, only: [ :index, :show ]
   end
 
   namespace :admin do

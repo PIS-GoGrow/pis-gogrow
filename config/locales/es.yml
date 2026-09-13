@@ -59,6 +59,7 @@ es:
   nav:
     platform: "Plataforma"
     dashboard: "Panel"
+    menus: "Platos"
     menu: "Menú de navegación"
     change_to: "Cambiar a"
     settings:
@@ -84,6 +85,15 @@ es:
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
+    consumer:
+      menus:
+        title: "Platos disponibles"
+        description: "Platos que podés pedir para hoy y los próximos días"
+        view: "Ver"
+        provider: "Por %{name}"
+        spots: "Cupo: %{count}"
+        empty_title: "No hay platos disponibles"
+        empty_description: "Los proveedores todavía no publicaron platos para los próximos días."
     home:
       title: "Te damos la bienvenida"
       dashboard: "Panel"

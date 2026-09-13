@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils"
 import {
   adminDashboard,
   consumerDashboard,
+  consumerMenus,
   providerDashboard,
   providerMenus,
 } from "@/routes"
@@ -75,6 +76,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
         title: t("nav.dashboard"),
         href: consumerDashboard.index().url,
         icon: LayoutGrid,
+      },
+      {
+        title: t("nav.menus"),
+        href: consumerMenus.index().url,
+        icon: Utensils,
       },
     ],
   }

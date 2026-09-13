@@ -1,0 +1,25 @@
+milanesa:
+  provider: tuviandita
+  name: Milanesa con papas fritas
+  description: Opción de carne o pollo
+  price: 300
+
+empanadas:
+  provider: tuviandita
+  name: Empanadas de carne
+  price: 500
+
+ensalada:
+  provider: tuviandita
+  name: Ensalada César
+  price: 250
+
+tarta:
+  provider: tuviandita
+  name: Tarta de verduras
+  price: 280
+
+guiso:
+  provider: tuviandita
+  name: Guiso de lentejas
+  price: 260
