@@ -1,5 +1,5 @@
 import { Link, usePage } from "@inertiajs/react"
-import { LayoutGrid, Utensils } from "lucide-react"
+import { LayoutGrid, Package, Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
@@ -18,6 +18,7 @@ import {
   consumerDashboard,
   providerDashboard,
   providerMenus,
+  providerOrders,
 } from "@/routes"
 import type { NavItem } from "@/types"
 
@@ -38,6 +39,11 @@ export function AppSidebar() {
         title: "Platos",
         href: providerMenus.index().url,
         icon: Utensils,
+      },
+      {
+        title: "Pedidos",
+        href: providerOrders.index().url,
+        icon: Package,
       },
     ],
     admin: [

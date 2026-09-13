@@ -78,7 +78,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | Componente | Importar desde | Usar para |
 |---|---|---|
 | `AppLayout` | `@/layouts/app-layout` | Toda pantalla con sesión iniciada; recibe `breadcrumbs` |
-| `Heading` | `@/components/heading` | Encabezado de pantalla: título y descripción opcional |
+| `Heading` | `@/components/heading` | Encabezado de pantalla: título, con `eyebrow` y `description` opcionales |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
 | `AlertError` | `@/components/alert-error` | `Alert` destructivo con una lista de errores |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
@@ -86,6 +86,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
 | `Icon` | `@/components/icon` | Renderizar un ícono de lucide recibido como prop |
 | `GoogleMark` | `@/components/branding/google-mark` | Logo de Google en el acceso con Google |
+| `OrderStatusBadge` | `@/components/orders/order-status-badge` | Estado de un pedido (pendiente, confirmado, entregado, cancelado) con su color |
 
 `PlaceholderPattern` sólo rellena los dashboards que todavía no están hechos. No se usa en pantallas nuevas.
 
@@ -97,7 +98,7 @@ El prototipo repite estos patrones en varias pantallas. Acá no existen: se crea
 |---|---|---|
 | `Stat` (tarjeta de métrica) | `components/stat.tsx` | `Card` compacta: etiqueta en `CardDescription`, valor y detalle en `CardContent` |
 | `QuantityInput` (− / número / +) | `components/quantity-input.tsx` | Dos `Button variant="outline" size="icon-sm"` con `aria-label` («Quitar uno», «Agregar uno») y el número en el medio |
-| `StatusBadge` | `components/status-badge.tsx` | `Badge variant="outline"` con `data-status` y un mapa de estado a clases de color |
+| Badge de estado de pago | `components/payments/payment-status-badge.tsx` | Igual que `OrderStatusBadge`: `Badge variant="outline"` con `data-status` y un mapa de estado a texto y clases de color |
 
 ## Superposiciones con el prototipo
 
@@ -118,7 +119,8 @@ El prototipo repite estos patrones en varias pantallas. Acá no existen: se crea
 | Encabezado de sección (`Header`, `ScreenHeader`) | Duplicado en cuatro pantallas | `Heading`, `HeadingSmall` | Los del repo |
 | Navegación lateral y barra inferior | Una por dashboard | `AppLayout` con sidebar por rol | `AppLayout` |
 | Mensaje temporal | `styles.toast` con `setTimeout` | Flash del servidor que muestra Sonner | Flash del servidor |
-| `Stat`, control de cantidad, colores de estado | Duplicados | No existen | [Propios a crear](#propios-a-crear) |
+| Colores de estado de pedidos | Duplicados | `OrderStatusBadge` | `OrderStatusBadge` |
+| `Stat`, control de cantidad, colores de estado de pagos | Duplicados | No existen | [Propios a crear](#propios-a-crear) |
 | `GoogleMark` | `branding/google-mark` | Igual | El mismo |
 
 ## Detalle por componente
@@ -166,7 +168,8 @@ import { Badge } from "@/components/ui/badge"
 | `asChild` | Renderiza el hijo (por ejemplo, un `Link`) con los estilos del badge | `false` |
 
 - Etiqueta informativa («Este mes», fecha de entrega): `variant="secondary"`.
-- Estado de un pedido o pago: `StatusBadge` (ver [Propios a crear](#propios-a-crear)). Mientras no exista, `variant="outline"` con las clases de color en `className`, y al segundo uso se crea el componente.
+- Estado de un pedido: `<OrderStatusBadge status={order.status} />`. El texto y el color de cada estado están en [`order-status-badge.tsx`](app/javascript/components/orders/order-status-badge.tsx); no se repiten en las pantallas.
+- Estado de un pago: se crea el componente equivalente (ver [Propios a crear](#propios-a-crear)).
 
 ### Card
 
@@ -508,10 +511,11 @@ import Heading from "@/components/heading"
 import HeadingSmall from "@/components/heading-small"
 ```
 
-Reemplazan los `Header` y `ScreenHeader` del prototipo. Ambos reciben `title` y `description` opcional. `Heading` renderiza un `<h2>` con margen inferior y va una vez por pantalla; `HeadingSmall` renderiza un `<h3>` y encabeza cada sección.
+Reemplazan los `Header` y `ScreenHeader` del prototipo. Ambos reciben `title` y `description` opcional. `Heading` renderiza un `<h2>` con margen inferior y va una vez por pantalla; `HeadingSmall` renderiza un `<h3>` y encabeza cada sección. `Heading` acepta además `eyebrow`, el texto chico en mayúsculas que va arriba del título («OPERACIÓN DIARIA»).
 
 ```tsx
 <Heading title="Tus platos" description="Los platos que podés publicar en tu menú." />
+<Heading eyebrow="Operación diaria" title="Pedidos" />
 ```
 
 ### AppLayout y navegación
