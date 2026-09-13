@@ -1,10 +1,10 @@
 import { MapPin } from "lucide-react"
 
+import ListItemCard from "@/components/list-item-card"
 import OrderStatusBadge from "@/components/orders/order-status-badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
-  Card,
   CardAction,
   CardContent,
   CardDescription,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useInitials } from "@/hooks/use-initials"
+import { formatPrice } from "@/lib/utils"
 import type { ProviderOrder } from "@/types"
 
 interface OrderCardProps {
@@ -25,8 +26,8 @@ export default function OrderCard({ order }: OrderCardProps) {
   const hasActions = order.status === "pending" || order.status === "confirmed"
 
   return (
-    <Card className="gap-4 py-4">
-      <CardHeader className="px-4">
+    <ListItemCard>
+      <CardHeader>
         <div className="flex items-center gap-3">
           <Avatar size="lg">
             <AvatarFallback className="text-foreground text-xs font-semibold">
@@ -45,7 +46,7 @@ export default function OrderCard({ order }: OrderCardProps) {
         </CardAction>
       </CardHeader>
 
-      <CardContent className="grid gap-3 px-4">
+      <CardContent className="grid gap-3">
         <div className="grid gap-1">
           <p>
             {(order.amount ?? 1) > 1 && `${order.amount} × `}
@@ -64,12 +65,12 @@ export default function OrderCard({ order }: OrderCardProps) {
           ) : (
             <span />
           )}
-          <p className="text-lg font-semibold">${order.price}</p>
+          <p className="text-lg font-semibold">{formatPrice(order.price)}</p>
         </div>
       </CardContent>
 
       {hasActions && (
-        <CardFooter className="flex-col gap-4 px-4">
+        <CardFooter className="flex-col gap-4">
           <Separator />
           {order.status === "pending" ? (
             <div className="grid w-full grid-cols-2 gap-2">
@@ -87,6 +88,6 @@ export default function OrderCard({ order }: OrderCardProps) {
           )}
         </CardFooter>
       )}
-    </Card>
+    </ListItemCard>
   )
 }
