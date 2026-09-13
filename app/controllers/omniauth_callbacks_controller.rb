@@ -7,7 +7,6 @@ class OmniauthCallbacksController < InertiaController
   # This callback arrives as a GET from Google, so it doesn't apply here.
   def google_oauth2
     user = User.find_from_google(request.env["omniauth.auth"])
-    roles = user.roles
 
     if !user || user.roles.empty?
       # No permitir loguearse si el usuario no existe aún, o si no tiene roles disponibles
@@ -20,12 +19,14 @@ class OmniauthCallbacksController < InertiaController
 
     reset_session
 
-    @session = user.sessions.create! role: roles[0]
+    # Asignarle un rol aleatorio a la sesión (entre los que el usuario puede tener)
+    # y darle la opción al usuario si quiere tener otro
+    @session = user.sessions.create! role: user.roles[0]
 
     cookies.signed.permanent[:session_token] = { value: @session.id, httponly: true }
     cookies.delete(:accessing_role)
 
-    if roles.length == 1
+    if user.roles.length == 1
       redirect_to root_path, notice: t("flash.signed_in")
     else
       redirect_to edit_session_path(@session), notice: t("flash.signed_in")

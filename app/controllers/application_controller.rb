@@ -15,8 +15,9 @@ class ApplicationController < ActionController::Base
   def authenticate_role(role)
     authenticate
 
-    if Current.session && !Current.session.public_send("#{role}?")
+    if Current.session && Current.session.role != role.to_s
       redirect_to root_path, alert: t("flash.no_permission")
+      return
     end
   end
 
