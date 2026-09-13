@@ -14,7 +14,7 @@ Rails 8.1 + Inertia.js + React 19 + TypeScript, from the [Inertia Rails React St
 
 ## Commands
 
-The team runs everything through Docker Compose (`docs/guia-docker.md`): the app is on http://localhost:3001, and the commands below run inside the `web` container, e.g. `docker compose exec web bin/rspec`.
+The team runs everything through Docker Compose (`docs/guia-docker.md`): the app is on http://localhost:3001, and the commands below run inside the `web` container. **Run specs with `docker compose exec -e RAILS_ENV=test web bin/rspec`** — the container sets `RAILS_ENV=development`, and loading fixtures there wipes the development database.
 
 ```bash
 docker compose up --build                  # rails + vite + postgres
@@ -26,8 +26,10 @@ npm run lint:fix / format:fix / check      # eslint / prettier / tsc
 
 bin/rails typelizer:generate:refresh       # after touching a serializer or route
 bundle exec i18n export                    # after editing config/locales
-bin/rails db:seed                          # one user per role; not idempotent, run once on an empty db
+bin/rails db:seed:replant                  # empty every table and reload db/seeds.rb (one user per role)
 ```
+
+Vite's SSR server caches the module graph: after adding a page or a new export it can answer "Page not found" or "… is not a function" while the browser works fine. `docker compose restart web` clears it.
 
 ## Conventions that will surprise you
 
@@ -62,6 +64,8 @@ A missing page serializer is **silently ignored** — the page renders with only
 Forms use Inertia's `<Form>` / `useForm`, wired by `name` — never react-hook-form. The React Compiler runs via Babel in `vite.config.ts`, so skip manual memoization.
 
 **Read `COMPONENTS.md` before building UI.** It says which component to use for each case, lists what isn't installed yet, and maps the team's React prototype (Base UI, CSS Modules, native `Select`) onto this repo's shadcn setup — code copied from the prototype has to be rewritten, not pasted. A role's navigation is the `navItems` list in `components/app-sidebar.tsx`.
+
+Every signed-in screen is `AppLayout` > `PageContainer` (width, padding, `eyebrow`/`title`/`description`/`actions`). List items are `ListItemCard` in a `grid gap-4 md:grid-cols-2`, and prices go through `formatPrice`. Don't hand-write a page's `max-w-*`, padding or title styles; the details are under "Estructura de pantalla" in `COMPONENTS.md`.
 
 ## Testing
 

@@ -30,6 +30,55 @@ Del prototipo se reutiliza **qué componente corresponde a cada caso y cómo se 
 6. Íconos: `lucide-react`. Los decorativos llevan `aria-hidden="true"`; los botones que sólo muestran un ícono llevan `aria-label`.
 7. No se incorporan otras librerías de componentes (MUI, Chakra, Base UI, Headless UI, etc.). `@headlessui/react` ya está instalado, pero sólo lo usan pantallas de la plantilla (ver [pendientes](#patrones-de-este-repo-que-todavía-no-siguen-la-lista)); no se amplía su uso.
 8. Formularios: Inertia `<Form>` (o `useForm`) con `Field` e `Input` conectados por `name`. Nunca `react-hook-form` ni los `FormField`/`FormItem`/`FormMessage` de shadcn.
+9. **Toda pantalla sigue la [estructura de pantalla](#estructura-de-pantalla).** Una pantalla no define su propio ancho, márgenes ni estilo de título.
+
+## Estructura de pantalla
+
+Todas las pantallas con sesión iniciada comparten el mismo esqueleto. Las medidas viven en componentes compartidos: si hay que cambiarlas, se cambian ahí y se aplican a todas.
+
+```tsx
+<AppLayout breadcrumbs={breadcrumbs}>
+  <Head title="Pedidos" />
+  <PageContainer
+    eyebrow="Operación diaria"
+    title="Pedidos"
+    actions={<Button>Exportar</Button>}
+  >
+    <FiltrosDeLaPantalla />
+    <div className="grid gap-4 md:grid-cols-2">
+      {orders.map((order) => <OrderCard key={order.id} order={order} />)}
+    </div>
+  </PageContainer>
+</AppLayout>
+```
+
+| Qué | Se resuelve con | Resultado |
+|---|---|---|
+| Ancho y márgenes | `PageContainer` | Centrado, hasta 1200 px (`max-w-300`), con `p-5` |
+| Encabezado | `PageContainer` (por dentro usa `Heading`) | `eyebrow` opcional en mayúsculas, título en `text-xl font-semibold` y `description` opcional |
+| Botones del encabezado | Prop `actions` de `PageContainer` | A la derecha del título; debajo, si no entran |
+| Separaciones | `PageContainer` | `mb-8` entre el encabezado y el contenido, y `gap-4` entre cada hijo directo |
+| Título de la pestaña del navegador | `<Head title>` | El mismo texto que `title` |
+| Breadcrumbs | `breadcrumbs` de `AppLayout` | Al menos la sección actual |
+| Lista de tarjetas | `grid gap-4 md:grid-cols-2` | 1 columna en móvil, 2 desde tablet |
+| Cada ítem de la lista | `ListItemCard` | Tarjeta compacta: `py-4` y `gap-4`, con `px-4` en sus partes |
+| Lista vacía | `Empty className="border"` con `EmptyMedia variant="icon"` | Ver [Empty](#empty) |
+| Precios | `formatPrice` de `@/lib/utils` | `$300`, `$1.500`, `$320,50` |
+
+Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla y tiene su propio menú lateral.
+
+### Escala de texto
+
+| Uso | Clases |
+|---|---|
+| Título de pantalla | Lo pone `PageContainer`; no se escribe a mano |
+| Título de una sección dentro de la pantalla | `HeadingSmall` |
+| Título de tarjeta (persona, plato) | `CardTitle` |
+| Texto principal de una tarjeta | Tamaño por defecto, sin clases |
+| Texto secundario (notas, descripciones) | `text-sm text-muted-foreground` |
+| Datos chicos (código, hora, dirección) | `text-xs text-muted-foreground` |
+| Monto destacado en una tarjeta | `text-lg font-semibold` con `formatPrice` |
+| Estado | `Badge`, o el componente del estado (`OrderStatusBadge`) |
 
 ## Lista de componentes
 
@@ -78,7 +127,10 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | Componente | Importar desde | Usar para |
 |---|---|---|
 | `AppLayout` | `@/layouts/app-layout` | Toda pantalla con sesión iniciada; recibe `breadcrumbs` |
-| `Heading` | `@/components/heading` | Encabezado de pantalla: título, con `eyebrow` y `description` opcionales |
+| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description` y `actions` |
+| `ListItemCard` | `@/components/list-item-card` | Tarjeta compacta para cada ítem de una lista; acepta las mismas partes que `Card` |
+| `formatPrice` | `@/lib/utils` | Mostrar un precio: `formatPrice(300)` → `$300` |
+| `Heading` | `@/components/heading` | Encabezado con `eyebrow`, `description` y `actions` opcionales. En las pantallas se usa a través de `PageContainer` |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
 | `AlertError` | `@/components/alert-error` | `Alert` destructivo con una lista de errores |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
@@ -116,7 +168,7 @@ El prototipo repite estos patrones en varias pantallas. Acá no existen: se crea
 | Divisor con texto | Dos `Separator` y un `<span>` | `FieldSeparator` con texto | `FieldSeparator` |
 | `Avatar`, `Empty`, `Collapsible`, mensaje temporal | Pendientes de agregar | Instalados | Los del repo |
 | `Tabs`, `Switch`, `Progress` | Pendientes de agregar | No instalados | Los de shadcn, cuando se necesiten |
-| Encabezado de sección (`Header`, `ScreenHeader`) | Duplicado en cuatro pantallas | `Heading`, `HeadingSmall` | Los del repo |
+| Encabezado de sección (`Header`, `ScreenHeader`) | Duplicado en cuatro pantallas | `PageContainer` (encabezado de pantalla), `HeadingSmall` (secciones) | Los del repo |
 | Navegación lateral y barra inferior | Una por dashboard | `AppLayout` con sidebar por rol | `AppLayout` |
 | Mensaje temporal | `styles.toast` con `setTimeout` | Flash del servidor que muestra Sonner | Flash del servidor |
 | Colores de estado de pedidos | Duplicados | `OrderStatusBadge` | `OrderStatusBadge` |
@@ -178,7 +230,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 ```
 
 - `Card` sólo tiene padding vertical (`py-6`) y separa sus partes con `gap-6`. El padding horizontal lo agregan `CardHeader`, `CardContent` y `CardFooter`: el contenido puesto directamente dentro de `Card` queda pegado a los bordes.
-- No hay prop `size`. Para ítems de lista y métricas se compacta con `className`, como en el ejemplo. Si la misma tarjeta compacta aparece en dos lugares, se extrae (por ejemplo, `Stat` o [`MenuCard`](app/javascript/components/menus/menu-card.tsx)).
+- No hay prop `size`. Para cada ítem de una lista se usa `ListItemCard`, que ya trae la versión compacta y acepta las mismas partes (`CardHeader`, `CardContent`, …) sin agregarles padding. Otras tarjetas compactas, como las métricas, se compactan con `className`, como en el ejemplo, y al repetirse se extraen (por ejemplo, `Stat`).
 - `CardTitle` renderiza un `<div>`. Si el título debe ser un encabezado del documento, usar `<h2>`/`<h3>` dentro de `CardHeader`.
 - `CardAction` va dentro de `CardHeader` y se ubica arriba a la derecha.
 - `CardFooter` no trae borde. Con `className="border-t"` se le agrega el borde y el espacio superior.
@@ -511,11 +563,19 @@ import Heading from "@/components/heading"
 import HeadingSmall from "@/components/heading-small"
 ```
 
-Reemplazan los `Header` y `ScreenHeader` del prototipo. Ambos reciben `title` y `description` opcional. `Heading` renderiza un `<h2>` con margen inferior y va una vez por pantalla; `HeadingSmall` renderiza un `<h3>` y encabeza cada sección. `Heading` acepta además `eyebrow`, el texto chico en mayúsculas que va arriba del título («OPERACIÓN DIARIA»).
+Reemplazan los `Header` y `ScreenHeader` del prototipo. Ambos reciben `title` y `description` opcional.
+
+- **`Heading`** renderiza un `<h2>` con margen inferior. Acepta además `eyebrow`, el texto chico en mayúsculas que va arriba del título («OPERACIÓN DIARIA»), y `actions`, los botones a la derecha. **Las pantallas no lo usan directamente:** lo arma `PageContainer` con las mismas props. Solo `SettingsLayout` lo usa directo.
+- **`HeadingSmall`** renderiza un `<h3>` y encabeza cada sección dentro de una pantalla.
 
 ```tsx
-<Heading title="Tus platos" description="Los platos que podés publicar en tu menú." />
-<Heading eyebrow="Operación diaria" title="Pedidos" />
+<PageContainer
+  title="Tus platos"
+  description="Los platos que podés publicar en tu menú."
+  actions={<Button>Agregar plato</Button>}
+>
+  …
+</PageContainer>
 ```
 
 ### AppLayout y navegación
@@ -527,8 +587,8 @@ Reemplazan los `Header` y `ScreenHeader` del prototipo. Ambos reciben `title` y 
 
 ```tsx
 <AppLayout breadcrumbs={[{ title: "Platos", href: providerMenus.index().url }]}>
-  <Head title="Mis platos" />
-  …
+  <Head title="Platos" />
+  <PageContainer title="Platos">…</PageContainer>
 </AppLayout>
 ```
 
@@ -554,19 +614,25 @@ Reemplazan los `Header` y `ScreenHeader` del prototipo. Ambos reciben `title` y 
 
 ## Patrones de este repo que todavía no siguen la lista
 
-Relevamiento del 12/09/2026. Al migrar un patrón, borrar su fila.
+Relevamiento del 12/09/2026, actualizado el 13/09/2026 con la estructura de pantalla. Al migrar un patrón, borrar su fila.
 
 | Patrón | Dónde está hoy | Qué hacer |
 |---|---|---|
+| Contenedor y título propios (`max-w-300 p-5` con `<h1>`, `w-150`, `m-4`) | [`pages/provider/menus/index.tsx`](app/javascript/pages/provider/menus/index.tsx), [`show.tsx`](app/javascript/pages/provider/menus/show.tsx) y [`new.tsx`](app/javascript/pages/provider/menus/new.tsx) | `PageContainer`; «Agregar plato» va en `actions` |
+| Lista de platos siempre en 2 columnas y con `gap-2` | [`pages/provider/menus/index.tsx`](app/javascript/pages/provider/menus/index.tsx) | `grid gap-4 md:grid-cols-2` |
+| Tarjeta de plato con el relleno de shadcn y el precio como `300$` | [`components/menus/menu-card.tsx`](app/javascript/components/menus/menu-card.tsx) | `ListItemCard` y `formatPrice` |
+| Estado vacío sin borde ni ícono | [`pages/provider/menus/index.tsx`](app/javascript/pages/provider/menus/index.tsx) | `Empty className="border"` con `EmptyMedia variant="icon"` |
 | Errores de campo con `FieldDescription`; `FieldLabel htmlFor` sin `id` en el `Input`; sin `aria-invalid` | [`components/menus/new-menu-form.tsx`](app/javascript/components/menus/new-menu-form.tsx) | `FieldError`, `id` en el `Input` y `aria-invalid` |
 | Confirmación de borrado con el botón en `variant` por defecto y sin botón de cancelar | [`components/menus/delete-menu-dialog.tsx`](app/javascript/components/menus/delete-menu-dialog.tsx) | `variant="destructive"` y `DialogClose` con «Cancelar» |
 | Control segmentado armado con `<button>` a mano | [`components/appearance-tabs.tsx`](app/javascript/components/appearance-tabs.tsx) (plantilla) | `ToggleGroup` |
 | Aviso «Saved» con `Transition` de `@headlessui/react` | `pages/settings/profiles/show.tsx`, `passwords/show.tsx`, `emails/show.tsx` (plantilla) | Flash del servidor; al migrar los tres, evaluar quitar `@headlessui/react` |
 | `navItems` por rol definidos dos veces | [`components/app-sidebar.tsx`](app/javascript/components/app-sidebar.tsx) y [`components/app-header.tsx`](app/javascript/components/app-header.tsx) | Extraer una única lista compartida |
-| Dashboards con `PlaceholderPattern` | [`components/dashboard.tsx`](app/javascript/components/dashboard.tsx) | Reemplazar al construir cada dashboard |
+| Dashboards con `PlaceholderPattern` y `p-4` | [`components/dashboard.tsx`](app/javascript/components/dashboard.tsx) | Reemplazar al construir cada dashboard, dentro de `PageContainer` |
 
 ## Checklist para revisiones y agentes de IA
 
+- [ ] La pantalla es `AppLayout` > `PageContainer`, y no define ancho, márgenes ni estilo de título propios.
+- [ ] Las listas usan `ListItemCard` dentro de `grid gap-4 md:grid-cols-2`, los precios pasan por `formatPrice` y los textos siguen la [escala de texto](#escala-de-texto).
 - [ ] Botones, campos, tarjetas, badges, alertas y diálogos usan el componente de la lista.
 - [ ] No hay `<button>`, `<input>`, `<select>` ni `<textarea>` estilizados a mano que repliquen un componente de la lista.
 - [ ] Los imports salen de `@/components/ui/<componente>` (sin categorías) y no de `radix-ui` ni `@base-ui/react`.
