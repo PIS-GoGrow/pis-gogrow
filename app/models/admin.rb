@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Admin < ApplicationRecord
-    include SyncsUserRoles
+  include SyncsUserRoles
 
   belongs_to :company
   belongs_to :user
