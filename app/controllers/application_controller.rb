@@ -15,9 +15,10 @@ class ApplicationController < ActionController::Base
   def authenticate_role(role)
     authenticate
 
+    # No redirigir de vuelta si ya existe la sesión (ya se hizo en authenticate), solo
+    # si el rol no coincide con el rol activo en la sesión
     if Current.session && Current.session.role != role.to_s
       redirect_to root_path, alert: t("flash.no_permission")
-      return
     end
   end
 
