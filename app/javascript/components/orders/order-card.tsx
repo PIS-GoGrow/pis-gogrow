@@ -1,7 +1,7 @@
 import { Link } from "@inertiajs/react"
 import { useTranslation } from "react-i18next"
 
-import OrderStatusBadge from "@/components/orders/order-status-badge"
+import StatusBadge from "@/components/status-badge"
 import {
   Card,
   CardAction,
@@ -49,7 +49,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
           </span>
         </CardTitle>
         <CardAction>
-          <OrderStatusBadge status={order.status} />
+          <StatusBadge status={order.status} />
         </CardAction>
       </CardHeader>
 

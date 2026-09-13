@@ -63,6 +63,10 @@ class User < ApplicationRecord
   def consumer?
     consumer.present?
   end
+
+  def admin?
+    admin.present?
+  end
 end
 
 # == Schema Information

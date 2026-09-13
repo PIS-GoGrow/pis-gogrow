@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 jobs:
   scan_ruby:
@@ -83,7 +83,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:latest
+        image: postgres:17
         ports:
           - 5432:5432
         env:

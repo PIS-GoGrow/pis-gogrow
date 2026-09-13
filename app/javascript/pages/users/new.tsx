@@ -114,7 +114,7 @@ export default function Register() {
 
             <div className="text-muted-foreground text-center text-sm">
               {t("pages.users.new.have_account")}{" "}
-              <TextLink href={sessions.new()} tabIndex={6}>
+              <TextLink href={sessions.new({})} tabIndex={6}>
                 {t("common.log_in")}
               </TextLink>
             </div>

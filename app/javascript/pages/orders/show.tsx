@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
-import OrderStatusBadge from "@/components/orders/order-status-badge"
+import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -69,7 +69,7 @@ export default function Show({ order }: OrdersShow) {
               {order.menu_name ?? t("pages.orders.index.no_menu")}
             </CardTitle>
             <CardAction>
-              <OrderStatusBadge status={order.status} />
+              <StatusBadge status={order.status} />
             </CardAction>
           </CardHeader>
 
