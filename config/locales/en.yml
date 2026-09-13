@@ -51,6 +51,7 @@ en:
   nav:
     platform: "Platform"
     dashboard: "Dashboard"
+    menus: "Platos"
     menu: "Navigation Menu"
     settings:
       profile: "Profile"
@@ -86,6 +87,15 @@ en:
         shadcn: "shadcn/ui Components"
         react: "React Docs"
         rails: "Rails Guides"
+    consumer:
+      menus:
+        title: "Platos disponibles"
+        description: "Platos que podés pedir para hoy y los próximos días"
+        view: "Ver"
+        provider: "Por %{name}"
+        spots: "Cupo: %{count}"
+        empty_title: "No hay platos disponibles"
+        empty_description: "Los proveedores todavía no publicaron platos para los próximos días."
     dashboard:
       title: "Dashboard"
       roles:

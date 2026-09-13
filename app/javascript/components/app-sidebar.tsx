@@ -16,6 +16,7 @@ import {
 import {
   adminDashboard,
   consumerDashboard,
+  consumerMenus,
   providerDashboard,
   providerMenus,
 } from "@/routes"
@@ -52,6 +53,11 @@ export function AppSidebar() {
         title: t("nav.dashboard"),
         href: consumerDashboard.index().url,
         icon: LayoutGrid,
+      },
+      {
+        title: t("nav.menus"),
+        href: consumerMenus.index().url,
+        icon: Utensils,
       },
     ],
   }
