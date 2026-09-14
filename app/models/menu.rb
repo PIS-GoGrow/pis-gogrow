@@ -8,6 +8,7 @@ class Menu < ApplicationRecord
 
   # Hay que validar que este sea el comportamiento esperado
   has_many :schedules, dependent: :destroy
+  has_many :reviews, dependent: :destroy
 end
 
 # == Schema Information

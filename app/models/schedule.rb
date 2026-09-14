@@ -13,11 +13,11 @@ class Schedule < ApplicationRecord
     [ amount.to_i - orders.where(status: [ nil, :pending, :completed ]).sum(:amount), 0 ].max
   end
 
-  def available?
+  def available?(quantity: 1)
     # && significa "y": deben cumplirse las tres condiciones para poder reservar.
     # Date.current usa la fecha de la zona horaria configurada en Rails.
     # Esta regla todavía no considera el horario límite del proveedor.
-    date.present? && date >= Date.current && remaining_amount.positive?
+    date.present? && date >= Date.current && remaining_amount >= quantity
   end
 end
 

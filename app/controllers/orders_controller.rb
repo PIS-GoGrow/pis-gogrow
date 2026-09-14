@@ -1,36 +1,55 @@
 # frozen_string_literal: true
 
 class OrdersController < InertiaController
-  # Antes de ejecutar create, exige un perfil de empleado (Consumer).
-  # La clase base ya comprueba que exista una sesión iniciada.
   before_action :authenticate_consumer
 
-  # Acción que Rails ejecuta al recibir POST /orders.
   def create
-    # Solo acepta la oferta elegida y una nota opcional dentro de "order".
-    # El navegador no puede decidir el empleado, precio, cantidad ni estado.
-    attributes = params.expect(order: [ :schedule_id, :notes ])
-    # Schedule es un plato ofrecido para una fecha; find devuelve 404 si no existe.
-    schedule = Schedule.find(attributes[:schedule_id])
-    # Current.user es la cuenta de la sesión. Su consumer es el perfil de empleado.
-    # El modelo Order se encarga de comprobar el cupo y guardar la reserva.
-    order = Order.reserve(consumer: Current.user.consumer, schedule: schedule, notes: attributes[:notes])
+    consumer = Current.user.consumer
+    requested_items = order_params.fetch(:items)
+    benefit_percentage = active_benefit_for(consumer)&.percentage.to_i
+    raise ActiveRecord::RecordNotFound if requested_items.empty?
 
-    # persisted? indica si el pedido quedó guardado en la base de datos.
-    if order.persisted?
-      # Vuelve a la página de origen, o al dashboard si no hay origen.
-      # t busca el mensaje en las traducciones; 303 indica continuar con un GET.
-      redirect_back_or_to dashboard_path, notice: t("flash.order_created"), status: :see_other
-    else
-      # Devuelve los errores mediante Inertia para que el formulario los muestre.
-      redirect_back_or_to dashboard_path, inertia: { errors: order.errors }, status: :see_other
+    Order.transaction do
+      schedules = Schedule.includes(:menu).where(id: requested_items.pluck(:schedule_id), date: current_week).order(:id).lock.index_by(&:id)
+      raise ActiveRecord::RecordNotFound unless schedules.size == requested_items.size
+      raise ActiveRecord::RecordNotFound unless delivery_addresses(consumer).include?(order_params[:address])
+
+      requested_items.each do |item|
+        schedule = schedules.fetch(item[:schedule_id].to_i)
+        order = Order.reserve(
+          consumer:,
+          schedule:,
+          quantity: item[:quantity].to_i,
+          notes: item[:notes],
+          address: order_params[:address],
+          discount_percentage: benefit_percentage
+        )
+        raise ActiveRecord::RecordInvalid, order unless order.persisted?
+      end
     end
+
+    redirect_to dashboard_path, notice: "Pedido confirmado", status: :see_other
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound, KeyError
+    redirect_to dashboard_path, inertia: {
+      errors: { order_error: "Uno de los platos ya no tiene disponibilidad. Revisá el carrito e intentá nuevamente." }
+    }, status: :see_other
   end
 
   private
 
-  def authenticate_consumer
-    # Una cuenta sin perfil de empleado recibe 403 (acceso prohibido).
-    head :forbidden unless Current.user.consumer
+  def active_benefit_for(consumer)
+    consumer.benefits.where("due_date >= ?", Date.current).order(:due_date).first
+  end
+
+  def current_week
+    Date.current.beginning_of_week(:monday)..Date.current.beginning_of_week(:monday).advance(days: 4)
+  end
+
+  def delivery_addresses(consumer)
+    [ consumer.address, consumer.company.address ].compact_blank
+  end
+
+  def order_params
+    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes ] ] ])
   end
 end

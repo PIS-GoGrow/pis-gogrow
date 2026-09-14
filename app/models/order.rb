@@ -13,31 +13,19 @@ class Order < ApplicationRecord
   validates :discounted_price, comparison: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true
 
-  # Método de clase: se llama con Order.reserve y recibe argumentos con nombre.
-  # consumer es el empleado, schedule la oferta y notes una nota opcional.
-  def self.reserve(consumer:, schedule:, notes: nil)
-    # new prepara el pedido en memoria: todavía no lo guarda.
-    # Reserva una unidad, toma dirección y precio del servidor, y usa el estado
-    # pending que ya está definido como valor inicial en el enum de este modelo.
-    order = new(consumer: consumer, schedule: schedule, amount: 1, notes: notes,
-      address: consumer.address, price: schedule.menu.price)
+  def self.reserve(consumer:, schedule:, quantity: 1, notes: nil, address: consumer.address, discount_percentage: 0)
+    gross_price = schedule.menu.price * quantity
+    discounted_price = gross_price * (100 - discount_percentage.clamp(0, 100)) / 100
+    order = new(consumer:, schedule:, amount: quantity, notes:, address:, price: gross_price, discounted_price:)
 
-    # Abre una transacción y bloquea esta oferta hasta terminar la operación.
-    # Otra reserva de la misma oferta espera y luego comprueba el cupo actualizado.
     schedule.with_lock do
-      # available? exige una fecha válida y al menos una unidad restante.
-      if schedule.available?
-        # save ejecuta las validaciones del modelo y, si pasan, guarda el pedido.
-        # Si alguna falla, devuelve false y deja el motivo en order.errors.
+      if schedule.available?(quantity:)
         order.save
       else
-        # Asocia el error al campo de selección de oferta; no guarda el pedido.
         order.errors.add(:schedule_id, I18n.t("validations.schedule_unavailable"))
       end
     end
 
-    # Ruby devuelve la última expresión del método: aquí, el objeto del pedido.
-    # El controlador puede consultar persisted? y errors para decidir la respuesta.
     order
   end
 end

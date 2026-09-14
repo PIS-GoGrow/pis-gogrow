@@ -39,6 +39,8 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
+  resources :orders, only: :create
+
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
   end

@@ -40,7 +40,7 @@ class OmniauthCallbacksController < InertiaController
   private
 
   def determine_role(user)
-    role = cookies.signed[:accessing_role]
+    role = cookies.signed[:accessing_role]&.to_sym
 
     if (role == :provider || role == nil) && user.provider?
       :provider
