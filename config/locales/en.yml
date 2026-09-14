@@ -15,6 +15,7 @@ en:
     sign_up: "Sign up"
     settings: "Settings"
   flash:
+    order_created: "Your meal has been reserved"
     already_signed_in: "You are already signed in"
     email_changed: "Your email has been changed"
     email_verification_invalid: "That email verification link is invalid"
@@ -34,6 +35,7 @@ en:
     unverified_email: "You can't reset your password until you verify your email"
     user_deleted: "Your account has been deleted"
   validations:
+    schedule_unavailable: "This meal is no longer available for the selected date"
     password_challenge_invalid: "Password challenge is invalid"
   user_mailer:
     greeting: "Hey there,"

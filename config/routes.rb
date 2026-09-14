@@ -33,6 +33,9 @@ Rails.application.routes.draw do
   end
 
   resources :menus
+  # POST /orders llama a OrdersController#create para realizar una reserva.
+  # only limita esta ruta a crear pedidos; no agrega listado, edición ni borrado.
+  resources :orders, only: [ :create ]
 
   root "home#index"
 
