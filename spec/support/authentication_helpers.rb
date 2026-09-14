@@ -8,8 +8,8 @@ module AuthenticationHelpers
   end
 
   module Request
-    def sign_in(user)
-      session = user.sessions.create!
+    def sign_in(user, role: :provider)
+      session = user.sessions.create!(role: role)
       cookies[:session_token] = AuthenticationHelpers.signed_cookie(:session_token, session.id)
     end
 
@@ -19,8 +19,8 @@ module AuthenticationHelpers
   end
 
   module System
-    def sign_in(user)
-      session = user.sessions.create!
+    def sign_in(user, role: :provider)
+      session = user.sessions.create!(role: role)
       page.driver.set_cookie("session_token", AuthenticationHelpers.signed_cookie(:session_token, session.id))
     end
 

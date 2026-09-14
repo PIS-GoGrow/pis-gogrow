@@ -1,5 +1,5 @@
 import { Link, usePage } from "@inertiajs/react"
-import { LayoutGrid, Utensils } from "lucide-react"
+import { LayoutGrid, Percent, Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
@@ -14,6 +14,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
+  adminBenefitConfigurations,
   adminDashboard,
   consumerDashboard,
   providerDashboard,
@@ -45,6 +46,11 @@ export function AppSidebar() {
         title: t("nav.dashboard"),
         href: adminDashboard.index().url,
         icon: LayoutGrid,
+      },
+      {
+        title: t("nav.benefit_configurations"),
+        href: adminBenefitConfigurations.index().url,
+        icon: Percent,
       },
     ],
     consumer: [

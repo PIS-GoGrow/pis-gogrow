@@ -16,6 +16,7 @@ en:
     settings: "Settings"
   flash:
     already_signed_in: "You are already signed in"
+    benefit_configuration_created: "Configuración del beneficio general guardada"
     email_changed: "Your email has been changed"
     email_verification_invalid: "That email verification link is invalid"
     email_verification_sent: "We sent a verification email to your email address"
@@ -52,6 +53,7 @@ en:
     platform: "Platform"
     dashboard: "Dashboard"
     menu: "Navigation Menu"
+    benefit_configurations: "Beneficio general"
     settings:
       profile: "Profile"
       email: "Email"
@@ -75,6 +77,34 @@ en:
       confirm_title: "Are you sure you want to delete your account?"
       confirm_description: "Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account."
   pages:
+    admin:
+      benefit_configurations:
+        index:
+          title: "Beneficio general"
+          description: "Configurá el porcentaje de subsidio y el límite mensual de viandas que se aplican a los nuevos empleados."
+          current:
+            title: "Configuración vigente"
+            empty: "Todavía no configuraste el beneficio general."
+            subsidy_percentage: "Porcentaje de subsidio"
+            monthly_voucher_limit: "Límite mensual de viandas"
+            effective_from: "Vigente desde"
+            effective_until: "Vigente hasta"
+          form:
+            title: "Nueva configuración"
+            subsidy_percentage: "Porcentaje de subsidio"
+            monthly_voucher_limit: "Límite mensual de viandas"
+            effective_from: "Vigente desde"
+            submit: "Guardar configuración"
+          history:
+            title: "Historial de cambios"
+            empty: "Todavía no hay cambios registrados."
+            subsidy_percentage: "Porcentaje"
+            monthly_voucher_limit: "Límite de viandas"
+            effective_from: "Vigente desde"
+            effective_until: "Vigente hasta"
+            current: "Actual"
+            created_by: "Modificado por"
+            created_at: "Fecha del cambio"
     home:
       title: "Welcome"
       dashboard: "Dashboard"
