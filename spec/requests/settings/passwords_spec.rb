@@ -23,7 +23,7 @@ RSpec.describe "Settings::Passwords", type: :request do
           password_challenge: "Secret1*3*5*"
         }
         expect(response).to redirect_to(settings_password_path)
-        expect(flash[:notice]).to eq("Your password has been changed")
+        expect(flash[:notice]).to eq("Tu contraseña fue modificada")
       end
     end
 
