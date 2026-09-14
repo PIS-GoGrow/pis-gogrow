@@ -37,6 +37,7 @@
       }
     },
     "nav": {
+      "benefit_configurations": "Beneficio general",
       "dashboard": "Dashboard",
       "menu": "Navigation Menu",
       "platform": "Platform",
@@ -49,6 +50,40 @@
       }
     },
     "pages": {
+      "admin": {
+        "benefit_configurations": {
+          "index": {
+            "current": {
+              "effective_from": "Vigente desde",
+              "effective_until": "Vigente hasta",
+              "empty": "Todavía no configuraste el beneficio general.",
+              "monthly_voucher_limit": "Límite mensual de viandas",
+              "subsidy_percentage": "Porcentaje de subsidio",
+              "title": "Configuración vigente"
+            },
+            "description": "Configurá el porcentaje de subsidio y el límite mensual de viandas que se aplican a los nuevos empleados.",
+            "form": {
+              "effective_from": "Vigente desde",
+              "monthly_voucher_limit": "Límite mensual de viandas",
+              "submit": "Guardar configuración",
+              "subsidy_percentage": "Porcentaje de subsidio",
+              "title": "Nueva configuración"
+            },
+            "history": {
+              "created_at": "Fecha del cambio",
+              "created_by": "Modificado por",
+              "current": "Actual",
+              "effective_from": "Vigente desde",
+              "effective_until": "Vigente hasta",
+              "empty": "Todavía no hay cambios registrados.",
+              "monthly_voucher_limit": "Límite de viandas",
+              "subsidy_percentage": "Porcentaje",
+              "title": "Historial de cambios"
+            },
+            "title": "Beneficio general"
+          }
+        }
+      },
       "dashboard": {
         "roles": {
           "provider": "Provider panel"
