@@ -89,9 +89,10 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
       schedulesRoutes.create().url,
       { date: selectedDate, items },
       {
+        preserveState: true,
+        preserveScroll: true,
         onError: (errors) => {
-          // La selección se conserva a propósito (punto 12): no tocamos
-          // `selections` acá, así el proveedor no pierde lo que armó.
+          // seleccion se mantiene a proposito para no cambiar lo que el proveedor toco
           setError(Object.values(errors)[0] ?? "No se pudo publicar el menú.")
         },
         onFinish: () => setProcessing(false),
@@ -147,7 +148,11 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
-        {selectedDay?.published ? (
+        {!selectedDay ? (
+          <p className="text-sm text-muted-foreground">
+            No hay ninguna fecha seleccionada.
+          </p>
+        ) : selectedDay?.published ? (
           <PublishedDayView schedules={selectedDay.schedules} />
         ) : selectedDay?.publishable ? (
           <MenuSelectionList

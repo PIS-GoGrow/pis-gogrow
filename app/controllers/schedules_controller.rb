@@ -121,7 +121,7 @@ class SchedulesController < InertiaController
       end
     end
 
-    redirect_to schedules_path
+    redirect_to schedules_path(week_start: date.beginning_of_week(:monday).to_s)
   end
 
   def valid_initial_stock?(items)
