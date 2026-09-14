@@ -51,7 +51,7 @@ export default function ForgotPassword() {
         </Form>
         <div className="text-muted-foreground space-x-1 text-center text-sm">
           <span>{t("pages.password_resets.new.return_to")}</span>
-          <TextLink href={sessions.new()}>
+          <TextLink href={sessions.new({})}>
             {t("pages.password_resets.new.log_in")}
           </TextLink>
         </div>

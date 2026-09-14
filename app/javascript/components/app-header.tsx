@@ -1,5 +1,5 @@
 import { Link, usePage } from "@inertiajs/react"
-import { LayoutGrid, Menu, Search } from "lucide-react"
+import { LayoutGrid, Menu, Search, Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { Breadcrumbs } from "@/components/breadcrumbs"
@@ -27,7 +27,12 @@ import {
 import { UserMenuContent } from "@/components/user-menu-content"
 import { useInitials } from "@/hooks/use-initials"
 import { cn } from "@/lib/utils"
-import { dashboard } from "@/routes"
+import {
+  adminDashboard,
+  consumerDashboard,
+  providerDashboard,
+  providerMenus,
+} from "@/routes"
 import type { BreadcrumbItem, NavItem } from "@/types"
 
 import AppLogo from "./app-logo"
@@ -42,18 +47,41 @@ interface AppHeaderProps {
 
 export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
   const { t } = useTranslation()
-
-  const mainNavItems: NavItem[] = [
-    {
-      title: t("nav.dashboard"),
-      href: dashboard.index({}).url,
-      icon: LayoutGrid,
-    },
-  ]
-
   const page = usePage()
   const { auth } = page.props
+
+  const navItems: Record<string, NavItem[]> = {
+    provider: [
+      {
+        title: t("nav.dashboard"),
+        href: providerDashboard.index().url,
+        icon: LayoutGrid,
+      },
+      {
+        title: "Platos",
+        href: providerMenus.index().url,
+        icon: Utensils,
+      },
+    ],
+    admin: [
+      {
+        title: t("nav.dashboard"),
+        href: adminDashboard.index().url,
+        icon: LayoutGrid,
+      },
+    ],
+    consumer: [
+      {
+        title: t("nav.dashboard"),
+        href: consumerDashboard.index().url,
+        icon: LayoutGrid,
+      },
+    ],
+  }
+
+  const role = auth.session.role
   const getInitials = useInitials()
+
   return (
     <>
       <div className="border-sidebar-border/80 border-b">
@@ -81,7 +109,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
                 <div className="flex h-full flex-1 flex-col space-y-4 p-4">
                   <div className="flex h-full flex-col justify-between text-sm">
                     <div className="flex flex-col space-y-4">
-                      {mainNavItems.map((item) => (
+                      {navItems[role].map((item) => (
                         <Link
                           key={item.title}
                           href={item.href}
@@ -101,7 +129,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
           </div>
 
           <Link
-            href={dashboard.index({})}
+            href={navItems[role][0].href}
             prefetch
             className="flex items-center space-x-2"
           >
@@ -112,7 +140,7 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
           <div className="ml-6 hidden h-full items-center space-x-6 lg:flex">
             <NavigationMenu className="flex h-full items-stretch">
               <NavigationMenuList className="flex h-full items-stretch space-x-2">
-                {mainNavItems.map((item, index) => (
+                {navItems[role].map((item, index) => (
                   <NavigationMenuItem
                     key={index}
                     className="relative flex h-full items-center"

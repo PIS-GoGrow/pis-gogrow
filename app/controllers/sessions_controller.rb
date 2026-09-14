@@ -6,6 +6,7 @@ class SessionsController < InertiaController
   before_action :set_session, only: :destroy
 
   def new
+    cookies.signed[:accessing_role] = params[:role]
   end
 
   def create
