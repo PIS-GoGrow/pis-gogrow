@@ -1,6 +1,6 @@
 import { Head, Link, router } from "@inertiajs/react"
 import { Plus } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import MenuSelectionList from "@/components/schedules/menu-selection-list"
 import PublishBar from "@/components/schedules/publish-bar"
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import AppLayout from "@/layouts/app-layout"
 import { menus as menusRoutes, schedules as schedulesRoutes } from "@/routes"
 import type { BreadcrumbItem, SchedulesIndex } from "@/types"
+
 
 type SchedulesIndexProps = SchedulesIndex
 type ScheduleDay = SchedulesIndex["days"][number]
@@ -33,6 +34,10 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
   >({})
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  useEffect(() => {
+    setError(null)
+  }, [selectedDate, week.starts_on])
 
   const selectedDay = days.find((day) => day.date === selectedDate)
   const currentSelection = selections[selectedDate ?? ""] ?? {}
@@ -42,6 +47,8 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
   ]
 
   function toggleMenu(menuId: number) {
+    setError(null)
+
     if (!selectedDate) return
 
     setSelections((prev) => {
@@ -53,6 +60,8 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
   }
 
   function changeAmount(menuId: number, value: string) {
+    setError(null)
+
     if (!selectedDate) return
 
     setSelections((prev) => ({
@@ -64,21 +73,28 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
   function handlePublish() {
     if (!selectedDate) return
 
-    const items = Object.entries(currentSelection)
-      .filter(([, amount]) => amount !== "")
-      .map(([menuId, amount]) => ({
-        menu_id: Number(menuId),
-        amount: Number(amount),
-      }))
+    const selectedItems = Object.entries(currentSelection)
+
+    if (selectedItems.length === 0) {
+      setError("Seleccione al menos un plato.")
+      return
+    }
+
+    if (selectedItems.some(([, amount]) => amount === "")) {
+      setError("Todos los platos seleccionados deben tener un stock.")
+      return
+    }
+
+    const items = selectedItems.map(([menuId, amount]) => ({
+      menu_id: Number(menuId),
+      amount: Number(amount),
+    }))
 
     // Validaciones del punto 14 del documento: mejoran la UX, pero nunca
     // sustituyen las validaciones que Rails vuelve a hacer del lado del servidor.
-    if (items.length === 0) {
-      setError("No seleccionaste ningún plato.")
-      return
-    }
+
     if (items.some((item) => item.amount <= 0)) {
-      setError("El stock debe ser mayor que cero.")
+      setError("El stock de todos los platos debe ser mayor que cero.")
       return
     }
 
