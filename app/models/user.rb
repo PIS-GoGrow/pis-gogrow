@@ -56,16 +56,45 @@ class User < ApplicationRecord
     user
   end
 
+  def self.find_from_google(auth)
+    email = auth.info.email.to_s.downcase
+
+    find_by email: email
+  end
+
+  # Devuelve si el usuario es un proveedor
+  # Nota: En general, no habría que usar este método. Habría que consultar:
+  #   Current.session.provider?
+  # para ver qué rol tiene activo el usuario en esta sesión.
   def provider?
     provider.present?
   end
 
+  # Devuelve si el usuario es un consumidor
+  # Nota: En general, no habría que usar este método. Habría que consultar:
+  #   Current.session.consumer?
+  # para ver qué rol tiene activo el usuario en esta sesión.
   def consumer?
     consumer.present?
   end
 
+  # Devuelve si el usuario es un admin
+  # Nota: En general, no habría que usar este método. Habría que consultar:
+  #   Current.session.admin?
+  # para ver qué rol tiene activo el usuario en esta sesión.
   def admin?
     admin.present?
+  end
+
+  # Actualiza la columna roles para reflejar los datos reales de la base de
+  # datos. Se corre automáticamente cuando un Provider/Consumer/Admin se
+  # modifica
+  def sync_roles!
+    update_column(:roles, [
+      ("provider" if Provider.exists?(user_id: id)),
+      ("consumer" if Consumer.exists?(user_id: id)),
+      ("admin" if Admin.exists?(user_id: id))
+    ].compact)
   end
 end
 
