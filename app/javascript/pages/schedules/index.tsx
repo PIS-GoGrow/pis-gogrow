@@ -1,12 +1,14 @@
-import { Head, router } from "@inertiajs/react"
+import { Head, Link, router } from "@inertiajs/react"
+import { Plus } from "lucide-react"
 import { useState } from "react"
 
 import MenuSelectionList from "@/components/schedules/menu-selection-list"
 import PublishBar from "@/components/schedules/publish-bar"
 import PublishedDayView from "@/components/schedules/published-date-view"
 import WeekDayTabs from "@/components/schedules/week-day-tabs"
+import { Button } from "@/components/ui/button"
 import AppLayout from "@/layouts/app-layout"
-import { schedules as schedulesRoutes } from "@/routes"
+import { menus as menusRoutes, schedules as schedulesRoutes } from "@/routes"
 import type { BreadcrumbItem, SchedulesIndex } from "@/types"
 
 type SchedulesIndexProps = SchedulesIndex
@@ -102,11 +104,20 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
       <Head title="Publicar menú" />
 
       <div className="mx-auto flex w-full max-w-300 flex-col gap-4 p-5">
-        <div>
-          <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Publicación de menús
-          </p>
-          <h1 className="text-2xl font-bold">Publicar menú del día</h1>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+              Publicación de menús
+            </p>
+            <h1 className="text-2xl font-bold">Publicar menú del día</h1>
+          </div>
+
+          <Button asChild>
+            <Link href={menusRoutes.new().url}>
+              <Plus className="size-4" />
+              Nuevo plato
+            </Link>
+          </Button>
         </div>
 
         <WeekDayTabs

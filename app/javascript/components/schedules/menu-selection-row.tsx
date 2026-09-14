@@ -1,7 +1,6 @@
 import { UtensilsCrossed } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
@@ -25,8 +24,8 @@ export default function MenuSelectionRow({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-xl border p-4 cursor-pointer transition-colors",
-        checked ? "border-primary bg-primary/5" : "hover:border-primary/50"
+        "flex cursor-pointer flex-col gap-3 rounded-xl border p-4 transition-colors",
+        checked ? "border-primary bg-primary/5" : "hover:border-primary/50",
       )}
       onClick={() => onToggle(menu.id)}
     >
@@ -42,13 +41,6 @@ export default function MenuSelectionRow({
           <p className="font-medium">{menu.name}</p>
           <p className="text-sm text-muted-foreground">{menu.description}</p>
         </div>
-
-        <Checkbox
-          checked={checked}
-          // Deshabilitamos los eventos del mouse acá para que el clic lo maneje solo la tarjeta
-          className="pointer-events-none"
-          aria-label={`Seleccionar ${menu.name}`}
-        />
       </div>
 
       <div
