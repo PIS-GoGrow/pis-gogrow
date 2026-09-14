@@ -30,8 +30,8 @@ export default function MenuSelectionRow({
       onClick={() => onToggle(menu.id)}
     >
       <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
-          <UtensilsCrossed className="size-5 text-muted-foreground" />
+        <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-md">
+          <UtensilsCrossed className="text-muted-foreground size-5" />
         </div>
 
         <div className="flex-1">
@@ -39,7 +39,7 @@ export default function MenuSelectionRow({
             {checked ? "Seleccionado" : "Sin seleccionar"}
           </Badge>
           <p className="font-medium">{menu.name}</p>
-          <p className="text-sm text-muted-foreground">{menu.description}</p>
+          <p className="text-muted-foreground text-sm">{menu.description}</p>
         </div>
       </div>
 

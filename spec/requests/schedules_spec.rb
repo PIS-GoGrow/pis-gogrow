@@ -17,17 +17,19 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       get schedules_path
 
       expect(response).to have_http_status(:ok)
 
-      expect(response.body).to include("schedules/index")
-      expect(response.body).to include(
+      page = inertia_page
+
+      expect(page["component"]).to eq("schedules/index")
+      expect(page.dig("props", "week", "starts_on")).to eq(
         Date.current.beginning_of_week(:monday).to_s
       )
-      expect(response.body).to include(
+      expect(page.dig("props", "week", "ends_on")).to eq(
         Date.current.end_of_week(:monday).to_s
       )
     end
@@ -36,7 +38,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       week_start = Date.current.beginning_of_week(:monday) - 1.week
       week_end = week_start.end_of_week(:monday)
@@ -54,7 +56,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       week_start = Date.current.beginning_of_week(:monday) - 1.week
 
@@ -90,7 +92,7 @@ RSpec.describe "Schedules", type: :request do
         amount: 20
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       get schedules_path, params: {
         week_start: week_start.to_s
@@ -126,7 +128,7 @@ RSpec.describe "Schedules", type: :request do
         amount: 20
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       get schedules_path, params: {
         week_start: week_start.to_s
@@ -148,7 +150,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       week_start = Date.current.beginning_of_week(:monday) - 1.week
 
@@ -167,7 +169,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       last_allowed_date =
         Date.current.end_of_week(:monday) + 1.week
@@ -219,7 +221,7 @@ RSpec.describe "Schedules", type: :request do
         amount: 15
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       get schedules_path, params: {
         week_start: week_start.to_s
@@ -231,16 +233,24 @@ RSpec.describe "Schedules", type: :request do
         days.find { |day| day["date"] == published_date.to_s }
 
       expect(published_day["schedules"]).to contain_exactly(
-        {
+        a_hash_including(
           "id" => first_schedule.id,
           "menu_id" => first_menu.id,
-          "amount" => 20
-        },
-        {
+          "amount" => 20,
+          "menu" => a_hash_including(
+            "id" => first_menu.id,
+            "name" => "Milanesa"
+          )
+        ),
+        a_hash_including(
           "id" => second_schedule.id,
           "menu_id" => second_menu.id,
-          "amount" => 15
-        }
+          "amount" => 15,
+          "menu" => a_hash_including(
+            "id" => second_menu.id,
+            "name" => "Ravioles"
+          )
+        )
       )
     end
 
@@ -269,7 +279,7 @@ RSpec.describe "Schedules", type: :request do
         price: 300
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       get schedules_path
 
@@ -289,7 +299,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       requested_week =
         Date.current.beginning_of_week(:monday) + 2.weeks
@@ -310,7 +320,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       get schedules_path, params: {
         week_start: "banana"
@@ -337,7 +347,7 @@ RSpec.describe "Schedules", type: :request do
         price: 400
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       date = Date.current + 1.day
 
@@ -390,7 +400,7 @@ RSpec.describe "Schedules", type: :request do
         price: 400
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       date = Date.current + 1.day
 
@@ -417,7 +427,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       date = Date.current + 1.day
 
@@ -441,7 +451,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       date = Date.current + 1.day
 
@@ -465,7 +475,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       date = Date.current + 1.day
 
@@ -503,7 +513,7 @@ RSpec.describe "Schedules", type: :request do
         amount: 20
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       expect do
         post schedules_path, params: {
@@ -525,7 +535,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       date = Date.current - 1.day
 
@@ -549,7 +559,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       date = Date.current
 
@@ -578,7 +588,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       end_of_next_week = Date.current.end_of_week(:monday) + 1.week
       date = end_of_next_week + 1.day
@@ -603,7 +613,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user)
+      sign_in(user, role: :provider)
 
       date = Date.current.end_of_week(:monday) + 1.week
 
@@ -647,7 +657,7 @@ RSpec.describe "Schedules", type: :request do
         amount: 20
       )
 
-      sign_in(second_user)
+      sign_in(second_user, role: :provider)
 
       expect do
         post schedules_path, params: {
@@ -665,7 +675,7 @@ RSpec.describe "Schedules", type: :request do
 
     it "does not allow a non-provider user to publish schedules" do
       user = users(:one)
-      sign_in(user)
+      sign_in(user, role: :consumer)
 
       expect do
         post schedules_path, params: {

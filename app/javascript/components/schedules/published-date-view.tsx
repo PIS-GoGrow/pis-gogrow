@@ -1,21 +1,13 @@
-import { Badge } from "@/components/ui/badge"
 import { UtensilsCrossed } from "lucide-react"
 
-//schedules a publicar
-
-interface PublishedSchedule {
-  id: number
-  amount: number
-  menu: { id: number; name: string }
-}
+import { Badge } from "@/components/ui/badge"
+import type { Schedule } from "@/types"
 
 interface PublishedDayViewProps {
-  schedules: PublishedSchedule[]
+  schedules: Schedule[]
 }
 
-export default function PublishedDayView({
-  schedules,
-}: PublishedDayViewProps) {
+export default function PublishedDayView({ schedules }: PublishedDayViewProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {schedules.map((schedule) => (
@@ -23,8 +15,8 @@ export default function PublishedDayView({
           key={schedule.id}
           className="flex items-center gap-3 rounded-xl border p-4"
         >
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted">
-            <UtensilsCrossed className="size-5 text-muted-foreground" />
+          <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-md">
+            <UtensilsCrossed className="text-muted-foreground size-5" />
           </div>
 
           <div className="flex-1">
@@ -37,7 +29,7 @@ export default function PublishedDayView({
             <p className="font-medium">{schedule.menu.name}</p>
           </div>
 
-          <p className="text-sm font-medium text-muted-foreground">
+          <p className="text-muted-foreground text-sm font-medium">
             Stock: {schedule.amount}
           </p>
         </div>

@@ -78,17 +78,19 @@ export default function WeekDayTabs({
             key={day.date}
             value={day.date}
             className={cn(
-              "relative flex flex-1 h-[72px] flex-col items-center justify-center gap-0.5 rounded-xl border data-[state=on]:bg-primary data-[state=on]:text-primary-foreground",
+              "data-[state=on]:bg-primary data-[state=on]:text-primary-foreground relative flex h-[72px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border",
               !day.publishable && "text-muted-foreground",
             )}
           >
             <div className="flex flex-col items-center leading-tight">
-              <span className="text-xs uppercase">{weekdayLabel(day.date)}</span>
+              <span className="text-xs uppercase">
+                {weekdayLabel(day.date)}
+              </span>
               <span className="text-lg font-semibold">
                 {dayNumberLabel(day.date)}
               </span>
             </div>
-            
+
             {day.published && (
               <span className="text-[10px] font-medium text-green-600 data-[state=on]:text-green-400">
                 Publicado

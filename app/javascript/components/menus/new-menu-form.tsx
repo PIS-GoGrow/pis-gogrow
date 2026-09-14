@@ -3,7 +3,7 @@ import { useForm } from "@inertiajs/react"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { menus as menusRoutes } from "@/routes"
+import { providerMenus as menusRoutes } from "@/routes"
 
 interface NewMenuProps {
   formSuccess: () => void

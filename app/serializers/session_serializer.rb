@@ -2,6 +2,11 @@
 
 class SessionSerializer < ApplicationSerializer
   attributes :id, :user_agent, :ip_address, :created_at
+
+  typelize :string
+  attribute :role do |session|
+    session.role
+  end
 end
 
 # == Schema Information
@@ -10,6 +15,7 @@ end
 #
 #  id         :bigint           not null, primary key
 #  ip_address :string
+#  role       :integer          not null
 #  user_agent :string
 #  created_at :datetime         not null
 #  updated_at :datetime         not null

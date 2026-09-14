@@ -1,6 +1,6 @@
 import { Head, Link, router } from "@inertiajs/react"
 import { Plus } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import MenuSelectionList from "@/components/schedules/menu-selection-list"
 import PublishBar from "@/components/schedules/publish-bar"
@@ -8,12 +8,31 @@ import PublishedDayView from "@/components/schedules/published-date-view"
 import WeekDayTabs from "@/components/schedules/week-day-tabs"
 import { Button } from "@/components/ui/button"
 import AppLayout from "@/layouts/app-layout"
-import { menus as menusRoutes, schedules as schedulesRoutes } from "@/routes"
-import type { BreadcrumbItem, SchedulesIndex } from "@/types"
+import {
+  providerMenus as menusRoutes,
+  schedules as schedulesRoutes,
+} from "@/routes"
+import type { BreadcrumbItem, Menu, Schedule } from "@/types"
 
+interface ScheduleDay {
+  date: string
+  published: boolean
+  publishable: boolean
+  schedules: Schedule[]
+}
 
-type SchedulesIndexProps = SchedulesIndex
-type ScheduleDay = SchedulesIndex["days"][number]
+interface ScheduleWeek {
+  starts_on: string
+  ends_on: string
+  previous_week_start: string | null
+  next_week_start: string | null
+}
+
+interface SchedulesIndexProps {
+  week: ScheduleWeek
+  menus: Menu[]
+  days: ScheduleDay[]
+}
 
 function formatDateLabel(isoDate: string) {
   const date = new Date(`${isoDate}T00:00:00`)
@@ -34,10 +53,6 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
   >({})
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
-  useEffect(() => {
-    setError(null)
-  }, [selectedDate, week.starts_on])
 
   const selectedDay = days.find((day) => day.date === selectedDate)
   const currentSelection = selections[selectedDate ?? ""] ?? {}
@@ -45,6 +60,11 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
   const breadcrumbs: BreadcrumbItem[] = [
     { title: "Publicar menú", href: schedulesRoutes.index().url },
   ]
+
+  function handleSelectDate(date: string) {
+    setError(null)
+    setSelectedDate(date)
+  }
 
   function toggleMenu(menuId: number) {
     setError(null)
@@ -109,7 +129,9 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
         preserveScroll: true,
         onError: (errors) => {
           // seleccion se mantiene a proposito para no cambiar lo que el proveedor toco
-          setError(Object.values(errors)[0] ?? "No se pudo publicar el menú.")
+          setError(
+            Object.values(errors).flat()[0] ?? "No se pudo publicar el menú.",
+          )
         },
         onFinish: () => setProcessing(false),
       },
@@ -123,7 +145,7 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
       <div className="mx-auto flex w-full max-w-300 flex-col gap-4 p-5">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
+            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
               Publicación de menús
             </p>
             <h1 className="text-2xl font-bold">Publicar menú del día</h1>
@@ -140,7 +162,7 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
         <WeekDayTabs
           days={days}
           selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
+          onSelectDate={handleSelectDate}
           previousWeekStart={week.previous_week_start}
           nextWeekStart={week.next_week_start}
         />
@@ -162,10 +184,10 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
           />
         )}
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && <p className="text-destructive text-sm">{error}</p>}
 
         {!selectedDay ? (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             No hay ninguna fecha seleccionada.
           </p>
         ) : selectedDay?.published ? (
@@ -178,7 +200,7 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
             onAmountChange={changeAmount}
           />
         ) : (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             No se puede publicar en esta fecha.
           </p>
         )}

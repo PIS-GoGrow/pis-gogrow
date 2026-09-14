@@ -18,14 +18,17 @@ export default function PublishBar({
   onPublish,
 }: PublishBarProps) {
   return (
-    <div className="flex items-center justify-between rounded-xl border bg-card p-4">
+    <div className="bg-card flex items-center justify-between rounded-xl border p-4">
       <div>
         <p className="font-medium capitalize">{dateLabel}</p>
-        <p className="text-sm text-muted-foreground">{statusLabel}</p>
+        <p className="text-muted-foreground text-sm">{statusLabel}</p>
       </div>
 
       {canPublish && (
-        <Button disabled={selectedCount === 0 || processing} onClick={onPublish}>
+        <Button
+          disabled={selectedCount === 0 || processing}
+          onClick={onPublish}
+        >
           {processing ? "Publicando..." : "Publicar menú"}
         </Button>
       )}
