@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class SchedulesController < Provider::InertiaController
-  
   def index
     provider = Current.user.provider
     menus = provider.menus.order(:id)
