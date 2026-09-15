@@ -7,6 +7,12 @@ require "rails_helper"
 RSpec.describe "Schedules", type: :request do
   fixtures :users
 
+  def sign_in_with_role(user, role:)
+    session = user.sessions.create!(role: role)
+    cookies[:session_token] =
+      AuthenticationHelpers.signed_cookie(:session_token, session.id)
+  end
+
   def inertia_page
     document = Nokogiri::HTML(response.body)
     JSON.parse(document.at_css('script[data-page="app"]').text)
@@ -17,7 +23,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       get schedules_path
 
@@ -38,7 +44,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       week_start = Date.current.beginning_of_week(:monday) - 1.week
       week_end = week_start.end_of_week(:monday)
@@ -56,7 +62,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       week_start = Date.current.beginning_of_week(:monday) - 1.week
 
@@ -92,7 +98,7 @@ RSpec.describe "Schedules", type: :request do
         amount: 20
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       get schedules_path, params: {
         week_start: week_start.to_s
@@ -128,7 +134,7 @@ RSpec.describe "Schedules", type: :request do
         amount: 20
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       get schedules_path, params: {
         week_start: week_start.to_s
@@ -150,7 +156,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       week_start = Date.current.beginning_of_week(:monday) - 1.week
 
@@ -169,7 +175,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       last_allowed_date =
         Date.current.end_of_week(:monday) + 1.week
@@ -221,7 +227,7 @@ RSpec.describe "Schedules", type: :request do
         amount: 15
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       get schedules_path, params: {
         week_start: week_start.to_s
@@ -279,7 +285,7 @@ RSpec.describe "Schedules", type: :request do
         price: 300
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       get schedules_path
 
@@ -299,7 +305,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       requested_week =
         Date.current.beginning_of_week(:monday) + 2.weeks
@@ -320,7 +326,7 @@ RSpec.describe "Schedules", type: :request do
       user = users(:one)
       Provider.create!(user: user)
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       get schedules_path, params: {
         week_start: "banana"
@@ -347,7 +353,7 @@ RSpec.describe "Schedules", type: :request do
         price: 400
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       date = Date.current + 1.day
 
@@ -400,7 +406,7 @@ RSpec.describe "Schedules", type: :request do
         price: 400
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       date = Date.current + 1.day
 
@@ -427,7 +433,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       date = Date.current + 1.day
 
@@ -451,7 +457,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       date = Date.current + 1.day
 
@@ -475,7 +481,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       date = Date.current + 1.day
 
@@ -513,7 +519,7 @@ RSpec.describe "Schedules", type: :request do
         amount: 20
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       expect do
         post schedules_path, params: {
@@ -535,7 +541,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       date = Date.current - 1.day
 
@@ -559,7 +565,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       date = Date.current
 
@@ -588,7 +594,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       end_of_next_week = Date.current.end_of_week(:monday) + 1.week
       date = end_of_next_week + 1.day
@@ -613,7 +619,7 @@ RSpec.describe "Schedules", type: :request do
         price: 350
       )
 
-      sign_in(user, role: :provider)
+      sign_in_with_role(user, role: :provider)
 
       date = Date.current.end_of_week(:monday) + 1.week
 
@@ -657,7 +663,7 @@ RSpec.describe "Schedules", type: :request do
         amount: 20
       )
 
-      sign_in(second_user, role: :provider)
+      sign_in_with_role(second_user, role: :provider)
 
       expect do
         post schedules_path, params: {
@@ -685,7 +691,7 @@ RSpec.describe "Schedules", type: :request do
         company: company
       )
 
-      sign_in(user, role: :consumer)
+      sign_in_with_role(user, role: :consumer)
 
       expect do
         post schedules_path, params: {
