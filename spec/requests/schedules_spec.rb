@@ -675,6 +675,16 @@ RSpec.describe "Schedules", type: :request do
 
     it "does not allow a non-provider user to publish schedules" do
       user = users(:one)
+      company = Company.create!(
+        name: "Empresa de prueba",
+        address: "Dirección de prueba"
+      )
+
+      Consumer.create!(
+        user: user,
+        company: company
+      )
+
       sign_in(user, role: :consumer)
 
       expect do

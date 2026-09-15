@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Consumer < ApplicationRecord
+  include SyncsUserRoles
+
   belongs_to :company
   belongs_to :user
 

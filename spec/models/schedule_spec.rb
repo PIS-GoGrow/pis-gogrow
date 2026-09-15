@@ -3,7 +3,9 @@
 require "rails_helper"
 
 RSpec.describe Schedule, type: :model do
-  let(:provider) { Provider.create! }
+  fixtures :users
+
+  let(:provider) { Provider.create!(user: users(:one)) }
 
   let(:menu) do
     Menu.create!(
