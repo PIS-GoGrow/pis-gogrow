@@ -7,6 +7,7 @@ class Consumer::DashboardController < Consumer::InertiaController
     @schedules = schedule_data
     @benefit = benefit_data
     @addresses = address_data
+    @order_confirmation = order_confirmation_data
   end
 
   private
@@ -39,7 +40,10 @@ class Consumer::DashboardController < Consumer::InertiaController
           name: menu.name,
           description: menu.description,
           price: menu.price.to_f,
+          fillings: menu.fillings,
+          sauces: menu.sauces,
           provider_name: menu.provider.user&.name || "Proveedor",
+          home_delivery: menu.provider.home_delivery?,
           reviews: menu.reviews.order(created_at: :desc).limit(4).map do |review|
             {
               id: review.id,
@@ -73,5 +77,39 @@ class Consumer::DashboardController < Consumer::InertiaController
       { id: "office", label: "Oficina", address: @consumer.company.address },
       { id: "home", label: "Casa", address: @consumer.address }
     ].select { |address| address[:address].present? }
+  end
+
+  def order_confirmation_data
+    order_ids = Array(params[:confirmed_order_ids]).filter_map { |id| Integer(id, exception: false) }.uniq
+    return if order_ids.empty?
+
+    orders_by_id = @consumer.orders.includes(schedule: { menu: { provider: :user } }).where(id: order_ids).index_by(&:id)
+    return unless orders_by_id.size == order_ids.size
+
+    orders = order_ids.map { |id| orders_by_id.fetch(id) }
+
+    {
+      total: orders.sum(&:discounted_price).to_f,
+      orders: orders.map do |order|
+        menu = order.schedule.menu
+        {
+          id: order.id,
+          date: order.schedule.date.iso8601,
+          address: order.address,
+          address_label: delivery_label(order.address),
+          provider_name: menu.provider.user&.name || "Proveedor",
+          name: menu.name,
+          quantity: order.amount,
+          discounted_price: order.discounted_price.to_f
+        }
+      end
+    }
+  end
+
+  def delivery_label(address)
+    return "Oficina" if address == @consumer.company.address
+    return "Casa" if address == @consumer.address
+
+    "Entrega"
   end
 end

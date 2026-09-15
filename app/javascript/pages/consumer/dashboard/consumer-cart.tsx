@@ -1,5 +1,7 @@
-import { ChevronLeft, MapPin } from "lucide-react"
+import { ChevronLeft, MapPin, TriangleAlert } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
@@ -23,6 +25,7 @@ interface Props {
   error?: string | string[]
   back: () => void
   confirm: () => void
+  remove: (cartId: string) => void
 }
 
 export function ConsumerCart({
@@ -38,11 +41,20 @@ export function ConsumerCart({
   error,
   back,
   confirm,
+  remove,
 }: Props) {
-  const selected = addresses.find((item) => item.address === address)
-  const mixed =
-    selected?.label.toLowerCase().includes("casa") &&
-    cart.some((item) => item.menu.provider_name.toLowerCase().includes("noe"))
+  const { t } = useTranslation()
+  const office = addresses.find((item) => item.id === "office")
+  const officeOnlyProviders = [
+    ...new Set(
+      cart
+        .filter((item) => !item.menu.home_delivery)
+        .map((item) => item.menu.provider_name),
+    ),
+  ]
+  const missingOffice = officeOnlyProviders.length > 0 && !office
+  const showDeliveryWarning =
+    officeOnlyProviders.length > 0 && !!address && address !== office?.address
 
   return (
     <div className="mx-auto min-h-screen max-w-3xl bg-white px-6 pt-6 pb-8 md:my-8 md:min-h-0 md:rounded-2xl md:border md:border-[#e5e5e5] md:p-8">
@@ -51,22 +63,13 @@ export function ConsumerCart({
         variant="ghost"
         size="icon"
         onClick={back}
+        disabled={processing}
         aria-label="Volver"
         className="mb-3"
       >
         <ChevronLeft aria-hidden="true" className="size-5" />
       </Button>
       <h1 className="text-xl font-bold">Tu carrito</h1>
-      <p className="mt-1 text-xs text-[#888]">
-        Entrega:{" "}
-        {cart[0]
-          ? new Date(`${cart[0].date}T12:00:00`).toLocaleDateString("es-UY", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })
-          : "—"}
-      </p>
       <section className="mt-8 border-b border-[#e5e5e5] pb-4">
         <div className="mb-3 flex justify-between text-xs font-semibold">
           <h2>Dirección de entrega</h2>
@@ -83,6 +86,7 @@ export function ConsumerCart({
         <RadioGroup
           value={address}
           onValueChange={setAddress}
+          disabled={processing}
           className="gap-3"
         >
           {addresses.map((item) => (
@@ -111,24 +115,62 @@ export function ConsumerCart({
           <MapPin aria-hidden="true" className="size-4" />
           Ver mis direcciones
         </Button>
-        {mixed && (
-          <p className="mt-3 text-xs leading-5 text-[#d17a00]">
-            ⚠ Endulzate by Noe entrega en la Oficina. Sus viandas irán allí y
-            las demás a la dirección seleccionada.
-          </p>
+        {showDeliveryWarning && (
+          <Alert className="mt-3 border-0 bg-transparent p-0 text-amber-700">
+            <TriangleAlert aria-hidden="true" className="text-amber-500" />
+            <AlertDescription className="gap-1 text-amber-700">
+              {missingOffice ? (
+                <p>{t("pages.cart.office_address_missing")}</p>
+              ) : (
+                <>
+                  {officeOnlyProviders.map((provider) => (
+                    <p key={provider}>
+                      {t("pages.cart.office_delivery_warning", { provider })}
+                    </p>
+                  ))}
+                  {cart.some((item) => item.menu.home_delivery) && (
+                    <p>{t("pages.cart.other_deliveries")}</p>
+                  )}
+                </>
+              )}
+            </AlertDescription>
+          </Alert>
         )}
       </section>
       <section className="mt-6 border-b border-[#e5e5e5] pb-4 text-xs">
         {cart.map((item) => {
           const line = item.menu.price * item.quantity
           return (
-            <div key={item.id} className="mb-3 last:mb-0">
+            <div key={item.cartId} className="mb-3 last:mb-0">
+              <p className="mb-2 text-[#777]">
+                {t("pages.cart.delivery", {
+                  date: new Date(`${item.date}T12:00:00`).toLocaleDateString(
+                    "es-UY",
+                    {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    },
+                  ),
+                })}
+              </p>
               <div className="flex justify-between text-[#777]">
                 <span>
                   {item.menu.name} x{item.quantity}
                 </span>
                 <span>{money(line)}</span>
               </div>
+              {item.notes && <p className="mt-2 text-[#777]">{item.notes}</p>}
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={processing}
+                onClick={() => remove(item.cartId)}
+                className="mt-2"
+              >
+                {t("pages.cart.remove", { name: item.menu.name })}
+              </Button>
               <div className="mt-2 flex justify-between text-[#29944c]">
                 <span>Beneficio GoGrow ({percentage}%)</span>
                 <span>- {money((line * percentage) / 100)}</span>
@@ -150,7 +192,7 @@ export function ConsumerCart({
         compact
       />
       <Button
-        disabled={!cart.length || processing || !address}
+        disabled={!cart.length || processing || !address || missingOffice}
         onClick={confirm}
         className={cn(
           "mt-4 h-12 w-full bg-black text-white hover:bg-black/85 hover:text-white disabled:opacity-100",
@@ -167,9 +209,11 @@ export function ConsumerCart({
         )}
       </Button>
       {error && (
-        <p className="mt-3 text-sm text-red-600">
-          {Array.isArray(error) ? error.join(" ") : error}
-        </p>
+        <Alert variant="destructive" className="mt-3">
+          <AlertDescription>
+            {Array.isArray(error) ? error.join(" ") : error}
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   )

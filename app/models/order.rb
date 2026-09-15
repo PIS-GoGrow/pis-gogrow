@@ -15,7 +15,7 @@ class Order < ApplicationRecord
 
   def self.reserve(consumer:, schedule:, quantity: 1, notes: nil, address: consumer.address, discount_percentage: 0)
     gross_price = schedule.menu.price * quantity
-    discounted_price = gross_price * (100 - discount_percentage.clamp(0, 100)) / 100
+    discounted_price = (gross_price * (100 - discount_percentage.clamp(0, 100)) / 100).round(2)
     order = new(consumer:, schedule:, amount: quantity, notes:, address:, price: gross_price, discounted_price:)
 
     schedule.with_lock do

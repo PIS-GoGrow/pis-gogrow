@@ -9,9 +9,6 @@ import type { Schedule } from "./consumer-types"
 import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
 
-const fillings = ["Jamón y queso", "Caprese"]
-const sauces = ["Bolognesa", "Filetto", "Puerro", "Rosa"]
-
 interface Props {
   item: Schedule
   quantity: number
@@ -63,18 +60,22 @@ export function DishDetail({
         {item.menu.description}
       </p>
       <p className="mt-1 font-bold">{money(item.menu.price)}</p>
-      <Choices
-        title="Elige tu relleno"
-        choices={fillings}
-        value={filling}
-        setValue={setFilling}
-      />
-      <Choices
-        title="Elige tu salsa"
-        choices={sauces}
-        value={sauce}
-        setValue={setSauce}
-      />
+      {item.menu.fillings.length > 0 && (
+        <Choices
+          title="Elige tu relleno"
+          choices={item.menu.fillings}
+          value={filling}
+          setValue={setFilling}
+        />
+      )}
+      {item.menu.sauces.length > 0 && (
+        <Choices
+          title="Elige tu salsa"
+          choices={item.menu.sauces}
+          value={sauce}
+          setValue={setSauce}
+        />
+      )}
       <section className="border-b border-[#e5e5e5] py-5">
         <div className="flex justify-between text-xs font-semibold">
           <h2>Opiniones del plato</h2>
@@ -138,7 +139,7 @@ export function DishDetail({
           onChange={setQuantity}
         />
         <Button
-          disabled={!filling || !sauce || item.sold_out}
+          disabled={item.sold_out}
           onClick={add}
           className="h-12 flex-1 rounded-lg bg-[#999] text-white hover:bg-[#777] disabled:bg-[#e5e5e5] disabled:text-[#999]"
         >

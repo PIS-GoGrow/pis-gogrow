@@ -38,9 +38,8 @@ Rails.application.routes.draw do
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :orders, only: :create
   end
-
-  resources :orders, only: :create
 
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard

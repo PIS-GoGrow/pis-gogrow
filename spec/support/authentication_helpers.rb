@@ -8,8 +8,8 @@ module AuthenticationHelpers
   end
 
   module Request
-    def sign_in(user)
-      session = user.sessions.create!
+    def sign_in(user, **attributes)
+      session = user.sessions.create!(**attributes)
       cookies[:session_token] = AuthenticationHelpers.signed_cookie(:session_token, session.id)
     end
 

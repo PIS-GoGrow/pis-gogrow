@@ -2,21 +2,33 @@ import { Head, useForm, usePage } from "@inertiajs/react"
 import { useMemo, useState } from "react"
 
 import AppLayout from "@/layouts/app-layout"
-import { consumerDashboard, orders } from "@/routes"
+import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
 
 import { ConsumerCart } from "./consumer-cart"
 import type { CartItem, Schedule } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
+import { OrderConfirmation } from "./order-confirmation"
+import { OrderError } from "./order-error"
 import { WeeklyMenu } from "./weekly-menu"
 
-type View = "menu" | "detail" | "cart"
+type View = "menu" | "detail" | "cart" | "confirmation" | "error"
+type Confirmation = NonNullable<ConsumerDashboardIndex["order_confirmation"]>
+
+const totalFor = (items: CartItem[], percentage: number) => {
+  const subtotal = items.reduce(
+    (sum, item) => sum + item.menu.price * item.quantity,
+    0,
+  )
+  return subtotal - (subtotal * percentage) / 100
+}
 
 export default function Index({
   week,
   schedules,
   benefit,
   addresses,
+  order_confirmation,
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")
@@ -29,6 +41,7 @@ export default function Index({
   const [filling, setFilling] = useState("")
   const [sauce, setSauce] = useState("")
   const [address, setAddress] = useState(addresses[0]?.address ?? "")
+  const [confirmedOrder, setConfirmedOrder] = useState<Confirmation | null>(null)
   const form = useForm({
     address: "",
     order_error: "",
@@ -52,7 +65,7 @@ export default function Index({
     0,
   )
   const discount = (subtotal * benefit.percentage) / 100
-  const total = subtotal - discount
+  const total = totalFor(cart, benefit.percentage)
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   function openDetail(item: Schedule) {
@@ -69,10 +82,12 @@ export default function Index({
 
     const detail = [filling, sauce, notes].filter(Boolean).join(" · ")
     setCart((items) => {
-      const found = items.find((item) => item.id === selected.id)
+      const found = items.find(
+        (item) => item.id === selected.id && item.notes === detail,
+      )
       return found
         ? items.map((item) =>
-            item.id === selected.id
+            item.id === selected.id && item.notes === detail
               ? {
                   ...item,
                   quantity: Math.min(item.remaining, item.quantity + quantity),
@@ -84,6 +99,7 @@ export default function Index({
             ...items,
             {
               ...selected,
+              cartId: `${selected.id}-${detail}`,
               quantity: Math.min(selected.remaining, quantity),
               notes: detail,
             },
@@ -101,13 +117,25 @@ export default function Index({
       notes: item.notes,
     }))
     form.transform(() => ({ order: { address, items } }))
-    form.post(orders.create().url, {
-      onSuccess: () => {
+    form.post(consumerOrders.create().url, {
+      preserveState: true,
+      preserveScroll: false,
+      onSuccess: (page) => {
+        const confirmation = (
+          page.props as { order_confirmation?: Confirmation }
+        ).order_confirmation
+        if (!confirmation) return
+
+        setConfirmedOrder(confirmation)
         setCart([])
-        setView("menu")
+        setView("confirmation")
       },
+      onError: () => setView("error"),
     })
   }
+
+  const activeConfirmation = confirmedOrder ?? order_confirmation
+  const activeView = activeConfirmation ? "confirmation" : view
 
   return (
     <AppLayout
@@ -120,7 +148,7 @@ export default function Index({
       </style>
       <main className="min-h-svh bg-[#fafafa] text-[#151515] md:min-h-[calc(100svh-4rem)]">
         <Head title="Menú semanal" />
-        {view === "menu" && (
+        {activeView === "menu" && (
           <WeeklyMenu
             name={auth.user.name.split(" ")[0]}
             week={week}
@@ -138,7 +166,7 @@ export default function Index({
             openCart={() => setView("cart")}
           />
         )}
-        {view === "detail" && selected && (
+        {activeView === "detail" && selected && (
           <DishDetail
             item={selected}
             quantity={quantity}
@@ -154,7 +182,7 @@ export default function Index({
             add={addToCart}
           />
         )}
-        {view === "cart" && (
+        {activeView === "cart" && (
           <ConsumerCart
             cart={cart}
             addresses={addresses}
@@ -168,6 +196,25 @@ export default function Index({
             error={form.errors.order_error}
             back={() => setView("menu")}
             confirm={confirm}
+            remove={(cartId) => {
+              setCart((items) => items.filter((item) => item.cartId !== cartId))
+              form.clearErrors()
+            }}
+          />
+        )}
+        {activeView === "confirmation" && activeConfirmation && (
+          <OrderConfirmation
+            confirmation={activeConfirmation}
+            homeUrl={consumerDashboard.index().url}
+          />
+        )}
+        {activeView === "error" && (
+          <OrderError
+            retry={() => {
+              form.clearErrors()
+              setView("cart")
+            }}
+            homeUrl={consumerDashboard.index().url}
           />
         )}
       </main>

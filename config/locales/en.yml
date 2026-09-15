@@ -18,6 +18,7 @@ en:
     consumer: "Consumer"
     admin: "Admin"
   flash:
+    cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
     order_created: "Your meal has been reserved"
     already_signed_in: "You are already signed in"
     email_changed: "Your email has been changed"
@@ -43,6 +44,11 @@ en:
     no_permission: "You don't have permission to access this resource."
     not_signed_in: "You must be signed in to access this resource."
   validations:
+    office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
+    empty_cart: "Agregá al menos un plato al carrito."
+    invalid_address: "Seleccioná una dirección de entrega válida."
+    invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
+    cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "This meal is no longer available for the selected date"
     password_challenge_invalid: "Password challenge is invalid"
   user_mailer:
@@ -86,6 +92,12 @@ en:
       confirm_title: "Are you sure you want to delete your account?"
       confirm_description: "Once your account is deleted, all of its resources and data will also be permanently deleted. Please enter your password to confirm you would like to permanently delete your account."
   pages:
+    cart:
+      office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
+      other_deliveries: "Las demás viandas irán a la dirección seleccionada."
+      office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
+      remove: "Quitar %{name}"
+      delivery: "Entrega: %{date}"
     home:
       title: "Welcome"
       dashboard: "Dashboard"
