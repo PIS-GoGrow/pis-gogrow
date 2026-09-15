@@ -1,11 +1,5 @@
 import { Link, usePage } from "@inertiajs/react"
-import {
-  ClipboardList,
-  CreditCard,
-  LayoutGrid,
-  UserRound,
-  Utensils,
-} from "lucide-react"
+import { CalendarDays, LayoutGrid, Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
@@ -22,6 +16,7 @@ import {
 import {
   adminDashboard,
   consumerDashboard,
+  consumerMenus,
   providerDashboard,
   providerMenus,
 } from "@/routes"
@@ -55,27 +50,14 @@ export function AppSidebar() {
     ],
     consumer: [
       {
-        title: "Menú",
+        title: t("nav.dashboard"),
         href: consumerDashboard.index().url,
-        icon: Utensils,
+        icon: LayoutGrid,
       },
       {
-        title: "Pedidos",
-        href: consumerDashboard.index().url,
-        icon: ClipboardList,
-        disabled: true,
-      },
-      {
-        title: "Pagos",
-        href: consumerDashboard.index().url,
-        icon: CreditCard,
-        disabled: true,
-      },
-      {
-        title: "Cuenta",
-        href: consumerDashboard.index().url,
-        icon: UserRound,
-        disabled: true,
+        title: "Menú del día",
+        href: consumerMenus.index().url,
+        icon: CalendarDays,
       },
     ],
   }
