@@ -1,17 +1,9 @@
-import { SlidersHorizontal, UtensilsCrossed } from "lucide-react"
+import { UtensilsCrossed } from "lucide-react"
 import { useState } from "react"
 
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import {
   Empty,
   EmptyDescription,
@@ -19,13 +11,13 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import { Label } from "@/components/ui/label"
 import type { ConsumerDashboardIndex } from "@/types"
 
 import { BenefitCard } from "./benefit-card"
 import { ConsumerMobileNav } from "./consumer-mobile-nav"
 import type { CartItem, Schedule } from "./consumer-types"
 import { money } from "./formatters"
+import { ProviderFilterSheet } from "./provider-filter-sheet"
 
 interface Props {
   name: string
@@ -61,13 +53,7 @@ export function WeeklyMenu({
   openDetail,
   openCart,
 }: Props) {
-  const [filterOpen, setFilterOpen] = useState(false)
-  const [pendingProviders, setPendingProviders] = useState<Set<string>>(
-    new Set(),
-  )
-  const [activeProviders, setActiveProviders] = useState<Set<string>>(
-    new Set(),
-  )
+  const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set())
   const currentDate = today()
   const filteredSchedules =
     activeProviders.size === 0
@@ -78,25 +64,7 @@ export function WeeklyMenu({
   const filterLabel =
     activeProviders.size === 0
       ? "Todos"
-      : providers
-          .filter((provider) => activeProviders.has(provider))
-          .join(", ")
-
-  function openFilters() {
-    setPendingProviders(new Set(activeProviders))
-    setFilterOpen(true)
-  }
-
-  function toggleProvider(provider: string) {
-    setPendingProviders((selected) => {
-      const next = new Set(selected)
-
-      if (next.has(provider)) next.delete(provider)
-      else next.add(provider)
-
-      return next
-    })
-  }
+      : providers.filter((provider) => activeProviders.has(provider)).join(", ")
 
   return (
     <>
@@ -126,16 +94,11 @@ export function WeeklyMenu({
                   {filterLabel}
                 </span>
               </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Filtrar por proveedores"
-                className="ml-auto size-7 shrink-0"
-                onClick={openFilters}
-              >
-                <SlidersHorizontal aria-hidden="true" className="size-4" />
-              </Button>
+              <ProviderFilterSheet
+                providers={providers}
+                selectedProviders={activeProviders}
+                onApply={setActiveProviders}
+              />
             </div>
 
             {filteredSchedules.length === 0 ? (
@@ -206,59 +169,11 @@ export function WeeklyMenu({
           onClick={openCart}
           className="fixed inset-x-5 bottom-24 z-20 h-12 rounded-lg bg-black text-sm text-white shadow-lg hover:bg-black/85 hover:text-white md:hidden"
         >
-          Ver carrito · {count} · {money(total)}
+          Ver carrito
         </Button>
       )}
 
       <ConsumerMobileNav />
-
-      <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Filtrar por Proveedores</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-3 py-2">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="dashboard-filter-all"
-                checked={pendingProviders.size === 0}
-                onCheckedChange={() => setPendingProviders(new Set())}
-              />
-              <Label htmlFor="dashboard-filter-all">Todos</Label>
-            </div>
-            {providers.map((provider) => (
-              <div key={provider} className="flex items-center gap-2">
-                <Checkbox
-                  id={`dashboard-filter-${provider}`}
-                  checked={pendingProviders.has(provider)}
-                  onCheckedChange={() => toggleProvider(provider)}
-                />
-                <Label htmlFor={`dashboard-filter-${provider}`}>
-                  {provider}
-                </Label>
-              </div>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setFilterOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                setActiveProviders(new Set(pendingProviders))
-                setFilterOpen(false)
-              }}
-            >
-              Aplicar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }

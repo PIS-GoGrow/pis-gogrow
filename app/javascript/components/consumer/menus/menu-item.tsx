@@ -61,7 +61,10 @@ export default function MenuItem({
         aria-label={`Agregar ${name}`}
         className={cn(
           "size-8 shrink-0 rounded-full",
-          addedQuantity && "border-blue-700 bg-blue-700 text-white",
+          !addedQuantity &&
+            "bg-white hover:bg-white dark:bg-white dark:hover:bg-white",
+          addedQuantity &&
+            "border-blue-700 bg-blue-700 text-white hover:border-blue-700 hover:bg-blue-700 hover:text-white dark:border-blue-700 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-700",
         )}
       >
         {addedQuantity ?? <Plus aria-hidden="true" className="size-4" />}

@@ -77,18 +77,23 @@ export default function WeekNav({
 
       <ToggleGroup
         type="single"
+        spacing={2}
         value={date}
         onValueChange={(value) => value && onChange(value)}
-        className="flex-1 justify-between gap-2"
+        className="flex-1 justify-between"
       >
         {days.map((d) => (
           <ToggleGroupItem
             key={d}
             value={d}
-            className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground flex h-[72px] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl border"
+            className="data-[state=on]:bg-black data-[state=on]:text-white data-[state=on]:hover:bg-black flex h-[60px] flex-1 flex-col items-center justify-center gap-0.5 rounded-md border p-2.5"
           >
-            <span className="text-xs uppercase">{weekdayLabel(d)}</span>
-            <span className="text-lg font-semibold">{dayNumberLabel(d)}</span>
+            <span className="text-sm leading-5 font-bold tracking-normal capitalize">
+              {weekdayLabel(d)}
+            </span>
+            <span className="text-sm leading-5 font-bold tracking-normal">
+              {dayNumberLabel(d)}
+            </span>
           </ToggleGroupItem>
         ))}
       </ToggleGroup>

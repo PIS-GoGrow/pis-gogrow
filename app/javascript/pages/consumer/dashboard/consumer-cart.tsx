@@ -97,7 +97,10 @@ export function ConsumerCart({
                 address === item.address && "border-black bg-[#f5f5f5]",
               )}
             >
-              <RadioGroupItem value={item.address} className="mt-0.5" />
+              <RadioGroupItem
+                value={item.address}
+                className="mt-0.5 border-[#737373] bg-white text-black shadow-none data-[state=checked]:border-black data-[state=checked]:bg-white dark:bg-white dark:data-[state=checked]:bg-white [&_svg]:fill-black [&_svg]:text-black"
+              />
               <span className="text-xs">
                 <b>{item.label}</b>
                 <small className="mt-1 block text-[#888]">{item.address}</small>
