@@ -62,7 +62,7 @@ export default function MenuItem({
         className={cn(
           "size-8 shrink-0 rounded-full",
           !addedQuantity &&
-            "bg-white hover:bg-white dark:bg-white dark:hover:bg-white",
+            "border-[#e5e5e5] bg-white text-black hover:bg-white hover:text-black dark:border-[#e5e5e5] dark:bg-white dark:text-black dark:hover:bg-white dark:hover:text-black",
           addedQuantity &&
             "border-blue-700 bg-blue-700 text-white hover:border-blue-700 hover:bg-blue-700 hover:text-white dark:border-blue-700 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-700",
         )}

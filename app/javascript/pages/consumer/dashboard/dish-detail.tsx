@@ -41,6 +41,10 @@ export function DishDetail({
   const subtotal = item.menu.price * quantity
   const discount = (subtotal * percentage) / 100
   const reviews = item.menu.reviews
+  const choicesMissing =
+    (item.menu.fillings.length > 0 && !filling) ||
+    (item.menu.sauces.length > 0 && !sauce)
+  const addDisabled = item.sold_out || choicesMissing
 
   return (
     <div className="mx-auto min-h-screen max-w-3xl bg-white px-6 pt-6 pb-28 md:my-8 md:min-h-0 md:rounded-2xl md:border md:border-[#e5e5e5] md:p-8">
@@ -77,14 +81,14 @@ export function DishDetail({
         />
       )}
       <section className="border-b border-[#e5e5e5] py-5">
-        <div className="flex justify-between text-xs font-semibold">
+        <div className="flex justify-between text-sm font-medium">
           <h2>Opiniones del plato</h2>
-          <span>
+          <span className="text-xs leading-4">
             <Star className="mr-1 inline size-3 fill-black" />
             {reviews[0]?.rating ?? "4.8"}
           </span>
         </div>
-        <div className="mt-3 flex gap-2 overflow-x-auto">
+        <div className="mt-3 flex gap-4 overflow-x-auto">
           {(reviews.length
             ? reviews
             : [
@@ -98,16 +102,22 @@ export function DishDetail({
           ).map((review, index) => (
             <article
               key={review.id}
-              className="min-h-36 min-w-[260px] rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] p-3 text-[10px]"
+              className="flex h-[136px] w-[280px] shrink-0 flex-col gap-3 rounded-md border border-[#e5e5e5] bg-[#f5f5f5] p-4"
             >
-              <div className="flex justify-between">
-                <b>{index ? "Pedro" : "Lucía"}</b>
-                <span className="text-[#888]">28/07/26</span>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm leading-5 font-medium">
+                    {index ? "Pedro" : "Lucía"}
+                  </span>
+                  <span className="text-xs leading-4 text-[#888]">
+                    28/07/26
+                  </span>
+                </div>
+                <p className="text-xs leading-4">
+                  {"★".repeat(Math.round(review.rating ?? 5))}
+                </p>
               </div>
-              <p className="my-1">
-                {"★".repeat(Math.round(review.rating ?? 5))}
-              </p>
-              <p>{review.description}</p>
+              <p className="text-xs leading-4">{review.description}</p>
             </article>
           ))}
         </div>
@@ -122,7 +132,7 @@ export function DishDetail({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Escribe las notas que necesites..."
-          className="mt-3 h-20 w-full resize-none rounded-lg border border-[#e5e5e5] p-3 text-xs outline-none placeholder:text-[#999] focus:border-[#999]"
+          className="mt-3 h-20 w-full resize-none rounded-lg border-white bg-white p-3 text-xs outline-none placeholder:text-[#999] focus-visible:border-white focus-visible:ring-0 dark:border-white dark:bg-white"
         />
         <p className="text-right text-[10px] text-[#888]">{notes.length}/140</p>
       </section>
@@ -139,9 +149,9 @@ export function DishDetail({
           onChange={setQuantity}
         />
         <Button
-          disabled={item.sold_out}
+          disabled={addDisabled}
           onClick={add}
-          className="h-12 flex-1 rounded-lg bg-[#999] text-white hover:bg-[#777] disabled:bg-[#e5e5e5] disabled:text-[#999]"
+          className="h-12 flex-1 rounded-lg bg-[#171717] text-white hover:bg-[#171717]/90 disabled:bg-[#999] disabled:text-white disabled:opacity-100"
         >
           Agregar
         </Button>
