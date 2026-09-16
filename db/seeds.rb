@@ -30,7 +30,7 @@ schedule3 = Schedule.create! menu: menu3, date: date + 2.days, amount: 5
 past_schedule = Schedule.create! menu:, date: date - 7.days, amount: 7
 recent_past_schedule = Schedule.create! menu: menu2, date: date - 2.days, amount: 10
 
-consumer_user = User.create! email: "usuariopruebapis@gmail.com", name: "TuViandita", google_uid: "111721831687592318354", password_digest: "$2a$12$w4gRBetBMUY0nAyf0T3aU.Vzpk/.Wu75sHOcs3aGX4k.gF7qsG3/q", avatar_url: "https://lh3.googleusercontent.com/a/ACg8ocKtGT92NBBhunNX_WpKMt3SLxIf-dmL8soi3s0Bnwlrxn_Jig", verified: true
+consumer_user = User.create! email: "usuariopruebapis@gmail.com", name: "Juan Pérez", google_uid: "111721831687592318354", password_digest: "$2a$12$w4gRBetBMUY0nAyf0T3aU.Vzpk/.Wu75sHOcs3aGX4k.gF7qsG3/q", avatar_url: "https://lh3.googleusercontent.com/a/ACg8ocKtGT92NBBhunNX_WpKMt3SLxIf-dmL8soi3s0Bnwlrxn_Jig", verified: true
 consumer = Consumer.create! company:, address: "Julio Herrera y Reissig 565", user: consumer_user
 Benefit.create! consumer:, amount: 20, description: "Viandas mensuales", percentage: 50, due_date: date + 1.month
 

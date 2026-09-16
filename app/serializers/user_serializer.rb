@@ -8,16 +8,9 @@ class UserSerializer < ApplicationSerializer
     user.avatar_url
   end
 
-  # El frontend necesita el rol para no mezclar las experiencias: un proveedor
-  # no debe ver la navegación del empleado ni al revés.
-  typelize :boolean
-  attribute :provider do |user|
-    user.provider?
-  end
-
-  typelize :boolean
-  attribute :consumer do |user|
-    user.consumer?
+  typelize roles: "('consumer' | 'provider' | 'admin')[]"
+  attribute :roles do |user|
+    user.roles
   end
 end
 

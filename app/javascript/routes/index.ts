@@ -23,10 +23,10 @@ import _omniauthCallbacks from './OmniauthCallbacksController'
 import _consumerDashboard from './Consumer/DashboardController'
 import _identityPasswordResets from './Identity/PasswordResetsController'
 import _providerMenus from './Provider/MenusController'
+import _sessions from './SessionsController'
 import _identityEmailVerifications from './Identity/EmailVerificationsController'
 import _orders from './OrdersController'
 import _home from './HomeController'
-import _sessions from './SessionsController'
 import _Routes from './RoutesController'
 import _settingsEmails from './Settings/EmailsController'
 import _settingsPasswords from './Settings/PasswordsController'
@@ -39,6 +39,7 @@ export const authGoogleOauth2Callback = _omniauthCallbacks.googleOauth2
 export const dashboard = _consumerDashboard.index
 export const editIdentityPasswordReset = _identityPasswordResets.edit
 export const editProviderMenu = _providerMenus.edit
+export const editSession = _sessions.edit
 export const identityEmailVerification = _identityEmailVerifications.show
 export const identityPasswordReset = _identityPasswordResets.update
 export const newIdentityPasswordReset = _identityPasswordResets.new
@@ -46,7 +47,7 @@ export const newProviderMenu = _providerMenus.new
 export const order = _orders.show
 export const providerMenu = _providerMenus.show
 export const root = _home.index
-export const session = _sessions.destroy
+export const session = _sessions.update
 export const settingsAppearance = _Routes.settingsAppearance
 export const settingsEmail = _settingsEmails.show
 export const settingsPassword = _settingsPasswords.show

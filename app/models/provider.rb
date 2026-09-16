@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Provider < ApplicationRecord
-  belongs_to :user, optional: true
+  include SyncsUserRoles
 
   has_many :menus, dependent: :destroy
 end
