@@ -16,7 +16,6 @@ import {
 import {
   adminDashboard,
   consumerDashboard,
-  consumerMenus,
   providerDashboard,
   providerMenus,
 } from "@/routes"
@@ -50,13 +49,8 @@ export function AppSidebar() {
     ],
     consumer: [
       {
-        title: t("nav.dashboard"),
-        href: consumerDashboard.index().url,
-        icon: LayoutGrid,
-      },
-      {
         title: "Menú del día",
-        href: consumerMenus.index().url,
+        href: consumerDashboard.index().url,
         icon: CalendarDays,
       },
     ],

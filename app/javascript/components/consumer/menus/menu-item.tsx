@@ -2,29 +2,41 @@ import { Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import type { ConsumerSchedule } from "@/types"
 
 export default function MenuItem({
-  schedule,
+  providerName,
+  name,
+  price,
+  description,
+  soldOut,
   isPast = false,
+  addedQuantity,
+  onSelect,
 }: {
-  schedule: ConsumerSchedule
+  providerName: string
+  name: string
+  price: number
+  description?: string | null
+  soldOut: boolean
   isPast?: boolean
+  addedQuantity?: number
+  onSelect?: () => void
 }) {
-  const { menu, amount } = schedule
-  const soldOut = amount !== null && amount === 0
   const disabled = soldOut || isPast
 
   return (
     <div
       className={cn(
-        "flex items-center gap-4 rounded-xl border p-4 mb-3",
-        disabled && "opacity-50"
+        "mb-3 flex items-center gap-4 rounded-xl border p-4",
+        disabled && "opacity-50",
       )}
     >
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-1.5">
-          <span className="text-muted-foreground text-sm">{menu.provider.name}</span>
+          <span className="text-muted-foreground text-sm">{providerName}</span>
+          {addedQuantity && (
+            <span className="text-xs text-blue-600">• Agregado</span>
+          )}
           {soldOut && (
             <span className="text-destructive flex items-center gap-1 text-xs">
               <span className="bg-destructive inline-block size-1.5 rounded-full" />
@@ -33,12 +45,11 @@ export default function MenuItem({
           )}
         </div>
         <p className="font-semibold">
-          {menu.name}{" "}
-          <span className="font-normal">| ${menu.price}</span>
+          {name} <span className="font-normal">| ${price}</span>
         </p>
-        {menu.description && (
+        {description && (
           <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
-            {menu.description}
+            {description}
           </p>
         )}
       </div>
@@ -46,9 +57,14 @@ export default function MenuItem({
         size="icon"
         variant="outline"
         disabled={disabled}
-        className="size-8 shrink-0 rounded-full"
+        onClick={onSelect}
+        aria-label={`Agregar ${name}`}
+        className={cn(
+          "size-8 shrink-0 rounded-full",
+          addedQuantity && "border-blue-700 bg-blue-700 text-white",
+        )}
       >
-        <Plus className="size-4" />
+        {addedQuantity ?? <Plus aria-hidden="true" className="size-4" />}
       </Button>
     </div>
   )

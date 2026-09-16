@@ -46,9 +46,11 @@ function dayNumberLabel(isoDate: string) {
 export default function WeekNav({
   date,
   onChange,
+  showArrows = true,
 }: {
   date: string
   onChange: (date: string) => void
+  showArrows?: boolean
 }) {
   const days = getWeekDays(date)
 
@@ -62,13 +64,16 @@ export default function WeekNav({
 
   return (
     <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => onChange(toDateStr(prevMonday))}
-      >
-        <ChevronLeft className="size-4" />
-      </Button>
+      {showArrows && (
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Semana anterior"
+          onClick={() => onChange(toDateStr(prevMonday))}
+        >
+          <ChevronLeft aria-hidden="true" className="size-4" />
+        </Button>
+      )}
 
       <ToggleGroup
         type="single"
@@ -88,13 +93,16 @@ export default function WeekNav({
         ))}
       </ToggleGroup>
 
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => onChange(toDateStr(nextMonday))}
-      >
-        <ChevronRight className="size-4" />
-      </Button>
+      {showArrows && (
+        <Button
+          variant="outline"
+          size="icon"
+          aria-label="Semana siguiente"
+          onClick={() => onChange(toDateStr(nextMonday))}
+        >
+          <ChevronRight aria-hidden="true" className="size-4" />
+        </Button>
+      )}
     </div>
   )
 }

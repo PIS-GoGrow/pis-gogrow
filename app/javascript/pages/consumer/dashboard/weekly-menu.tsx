@@ -1,26 +1,38 @@
-import { Settings2 } from "lucide-react"
+import { SlidersHorizontal, UtensilsCrossed } from "lucide-react"
+import { useState } from "react"
 
+import MenuItem from "@/components/consumer/menus/menu-item"
+import WeekNav from "@/components/consumer/menus/week-nav"
 import { Button } from "@/components/ui/button"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { cn } from "@/lib/utils"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
+import { Label } from "@/components/ui/label"
 import type { ConsumerDashboardIndex } from "@/types"
 
 import { BenefitCard } from "./benefit-card"
 import { ConsumerMobileNav } from "./consumer-mobile-nav"
 import type { CartItem, Schedule } from "./consumer-types"
-import { money, weekday } from "./formatters"
-import { MenuCard } from "./menu-card"
-import { ProviderFilterSheet } from "./provider-filter-sheet"
+import { money } from "./formatters"
 
 interface Props {
   name: string
-  week: ConsumerDashboardIndex["week"]
   date: string
   setDate: (value: string) => void
   benefit: ConsumerDashboardIndex["benefit"]
   providers: string[]
-  provider: string
-  setProvider: (value: string) => void
   schedules: Schedule[]
   cart: CartItem[]
   count: number
@@ -29,15 +41,19 @@ interface Props {
   openCart: () => void
 }
 
+const today = () => {
+  const date = new Date()
+  const offset = date.getTimezoneOffset()
+
+  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 10)
+}
+
 export function WeeklyMenu({
   name,
-  week,
   date,
   setDate,
   benefit,
   providers,
-  provider,
-  setProvider,
   schedules,
   cart,
   count,
@@ -45,138 +61,136 @@ export function WeeklyMenu({
   openDetail,
   openCart,
 }: Props) {
-  const dateLabel = new Date(`${date}T12:00:00`).toLocaleDateString("es-UY", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  })
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [pendingProviders, setPendingProviders] = useState<Set<string>>(
+    new Set(),
+  )
+  const [activeProviders, setActiveProviders] = useState<Set<string>>(
+    new Set(),
+  )
+  const currentDate = today()
+  const filteredSchedules =
+    activeProviders.size === 0
+      ? schedules
+      : schedules.filter((schedule) =>
+          activeProviders.has(schedule.menu.provider_name),
+        )
+  const filterLabel =
+    activeProviders.size === 0
+      ? "Todos"
+      : providers
+          .filter((provider) => activeProviders.has(provider))
+          .join(", ")
+
+  function openFilters() {
+    setPendingProviders(new Set(activeProviders))
+    setFilterOpen(true)
+  }
+
+  function toggleProvider(provider: string) {
+    setPendingProviders((selected) => {
+      const next = new Set(selected)
+
+      if (next.has(provider)) next.delete(provider)
+      else next.add(provider)
+
+      return next
+    })
+  }
 
   return (
     <>
-      <div className="mx-auto max-w-[1240px] px-6 pt-7 pb-36 md:px-10 md:pb-12">
-        <header className="mb-4 md:flex md:justify-between md:border-b md:border-[#e5e5e5] md:pb-7">
-          <div>
-            <p className="hidden text-[#777] capitalize md:block">
-              {dateLabel}
-            </p>
-            <h1 className="text-xl font-bold md:mt-2 md:text-3xl md:font-medium">
-              Hola, {name} 👋
-            </h1>
-            <p className="mt-1 text-[11px] text-[#888] capitalize md:hidden">
-              {dateLabel}
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label="Preferencias del menú"
-            disabled
-            className="hidden size-11 rounded-xl bg-white md:inline-flex"
-          >
-            <Settings2 aria-hidden="true" className="size-5" />
-          </Button>
+      <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-10">
+        <header className="mb-6">
+          <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
+          <p className="text-muted-foreground text-sm">
+            {new Date(`${date}T00:00:00`).toLocaleDateString("es-UY", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+            })}
+          </p>
         </header>
-        <div className="md:grid md:grid-cols-[minmax(0,1fr)_330px] md:gap-7">
-          <section>
+
+        <div className="md:grid md:grid-cols-[minmax(0,1fr)_330px] md:gap-8">
+          <section className="min-w-0">
             <BenefitCard benefit={benefit} mobile />
-            <div className="mt-4 flex flex-col gap-4 md:mt-2">
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="hidden text-sm text-[#777] md:block">
-                    Elegí tu almuerzo
-                  </p>
-                  <h2 className="text-base font-bold md:mt-2 md:text-2xl md:font-medium">
-                    Menú semanal
-                  </h2>
-                </div>
-                <p className="hidden text-sm text-[#888] md:block">
-                  Semana del {week.days[0]?.day} al {week.days.at(-1)?.day}
-                </p>
-              </div>
-              <ToggleGroup
-                type="single"
-                variant="outline"
-                value={date}
-                onValueChange={(value) => value && setDate(value)}
-                className="grid h-[60px] w-full grid-cols-5 gap-3 md:h-auto md:max-w-[560px]"
+
+            <h2 className="mt-6 mb-3 text-base font-bold">Menú semanal</h2>
+            <WeekNav date={date} onChange={setDate} showArrows={false} />
+
+            <div className="mt-6 mb-3 flex items-center">
+              <span className="text-muted-foreground min-w-0 truncate text-sm">
+                Proveedores:{" "}
+                <span className="text-foreground font-medium">
+                  {filterLabel}
+                </span>
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                aria-label="Filtrar por proveedores"
+                className="ml-auto size-7 shrink-0"
+                onClick={openFilters}
               >
-                {week.days.map((day) => (
-                  <ToggleGroupItem
-                    key={day.date}
-                    value={day.date}
-                    aria-label={`${weekday(day.date)} ${day.day}`}
-                    className={cn(
-                      "flex h-[60px] min-w-0 flex-col items-center justify-center rounded-lg border border-[#e5e5e5] bg-white p-2.5 text-[10px] capitalize md:h-16 md:w-auto md:text-sm",
-                      date === day.date &&
-                        "border-black bg-black font-semibold text-white",
-                    )}
-                  >
-                    <span>{weekday(day.date)}</span>
-                    <b className="text-xs md:text-base">{day.day}</b>
-                  </ToggleGroupItem>
-                ))}
-              </ToggleGroup>
-              <div className="flex flex-col gap-3">
-                <div className="flex h-9 items-center justify-between md:rounded-xl md:bg-[#f2f2f1] md:p-1">
-                  <span className="text-[11px] text-[#555] md:hidden">
-                    Proveedores: {provider === "all" ? "Todos" : provider}
-                  </span>
-                  <ProviderFilterSheet
-                    providers={providers}
-                    provider={provider}
-                    setProvider={setProvider}
-                  />
-                  <ToggleGroup
-                    type="single"
-                    value={provider}
-                    onValueChange={(value) => value && setProvider(value)}
-                    className="hidden w-full grid-cols-3 md:grid"
-                  >
-                    {["all", ...providers].map((providerName) => (
-                      <ToggleGroupItem
-                        key={providerName}
-                        value={providerName}
-                        className={cn(
-                          "rounded-lg py-2 text-sm",
-                          provider === providerName && "bg-white shadow-sm",
-                        )}
-                      >
-                        {providerName === "all" ? "Todos" : providerName}
-                      </ToggleGroupItem>
-                    ))}
-                  </ToggleGroup>
-                </div>
-                <div className="grid gap-3 md:mt-1 md:grid-cols-2">
-                  {schedules.map((item) => (
-                    <MenuCard
-                      key={item.id}
-                      item={item}
-                      added={cart.find((cartItem) => cartItem.id === item.id)}
-                      openDetail={openDetail}
-                    />
-                  ))}
-                  {!schedules.length && (
-                    <p className="col-span-full rounded-xl border border-dashed p-8 text-center text-sm text-[#777]">
-                      No hay platos disponibles para este día.
-                    </p>
-                  )}
-                </div>
-              </div>
+                <SlidersHorizontal aria-hidden="true" className="size-4" />
+              </Button>
             </div>
+
+            {filteredSchedules.length === 0 ? (
+              <Empty className="mt-8">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <UtensilsCrossed aria-hidden="true" />
+                  </EmptyMedia>
+                  <EmptyTitle>Menú no disponible</EmptyTitle>
+                  <EmptyDescription>
+                    {schedules.length === 0
+                      ? "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde."
+                      : "No hay platos de los proveedores seleccionados para esta fecha. Probá cambiando el filtro."}
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : (
+              <div>
+                {filteredSchedules.map((item) => {
+                  const addedQuantity = cart
+                    .filter((cartItem) => cartItem.id === item.id)
+                    .reduce((sum, cartItem) => sum + cartItem.quantity, 0)
+
+                  return (
+                    <MenuItem
+                      key={item.id}
+                      providerName={item.menu.provider_name}
+                      name={item.menu.name}
+                      price={item.menu.price}
+                      description={item.menu.description}
+                      soldOut={item.sold_out}
+                      isPast={item.date < currentDate}
+                      addedQuantity={addedQuantity || undefined}
+                      onSelect={() => openDetail(item)}
+                    />
+                  )
+                })}
+              </div>
+            )}
           </section>
+
           <aside className="hidden space-y-4 md:block">
             <BenefitCard benefit={benefit} />
-            <div className="rounded-2xl border border-[#e5e5e5] bg-white p-5 shadow-sm">
-              <p className="text-sm text-[#888]">Tu carrito</p>
+            <div className="rounded-xl border bg-white p-5">
+              <p className="text-muted-foreground text-sm">Tu carrito</p>
               <h3 className="mt-8 text-lg">
                 {count} platos · {money(total)}
               </h3>
-              <p className="mt-4 text-sm text-[#888]">
+              <p className="text-muted-foreground mt-4 text-sm">
                 Agregá platos de distintos días y proveedores.
               </p>
               <Button
+                type="button"
                 onClick={openCart}
+                disabled={count === 0}
                 className="mt-8 w-full bg-black text-white hover:bg-black/85 hover:text-white"
               >
                 Ver carrito
@@ -185,16 +199,66 @@ export function WeeklyMenu({
           </aside>
         </div>
       </div>
+
       {count > 0 && (
         <Button
           type="button"
           onClick={openCart}
-          className="fixed inset-x-6 bottom-[92px] z-20 h-12 rounded-lg bg-black text-sm text-white md:hidden"
+          className="fixed inset-x-5 bottom-24 z-20 h-12 rounded-lg bg-black text-sm text-white shadow-lg hover:bg-black/85 hover:text-white md:hidden"
         >
-          Ver carrito
+          Ver carrito · {count} · {money(total)}
         </Button>
       )}
+
       <ConsumerMobileNav />
+
+      <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Filtrar por Proveedores</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-2">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="dashboard-filter-all"
+                checked={pendingProviders.size === 0}
+                onCheckedChange={() => setPendingProviders(new Set())}
+              />
+              <Label htmlFor="dashboard-filter-all">Todos</Label>
+            </div>
+            {providers.map((provider) => (
+              <div key={provider} className="flex items-center gap-2">
+                <Checkbox
+                  id={`dashboard-filter-${provider}`}
+                  checked={pendingProviders.has(provider)}
+                  onCheckedChange={() => toggleProvider(provider)}
+                />
+                <Label htmlFor={`dashboard-filter-${provider}`}>
+                  {provider}
+                </Label>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setFilterOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setActiveProviders(new Set(pendingProviders))
+                setFilterOpen(false)
+              }}
+            >
+              Aplicar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

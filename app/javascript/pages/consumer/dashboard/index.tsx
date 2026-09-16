@@ -33,7 +33,6 @@ export default function Index({
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")
   const [date, setDate] = useState(week.days[0]?.date ?? "")
-  const [provider, setProvider] = useState("all")
   const [selected, setSelected] = useState<Schedule | null>(null)
   const [cart, setCart] = useState<CartItem[]>([])
   const [quantity, setQuantity] = useState(1)
@@ -55,11 +54,7 @@ export default function Index({
     () => [...new Set(schedules.map((item) => item.menu.provider_name))],
     [schedules],
   )
-  const visibleSchedules = schedules.filter(
-    (item) =>
-      item.date === date &&
-      (provider === "all" || item.menu.provider_name === provider),
-  )
+  const visibleSchedules = schedules.filter((item) => item.date === date)
   const subtotal = cart.reduce(
     (sum, item) => sum + item.menu.price * item.quantity,
     0,
@@ -151,13 +146,10 @@ export default function Index({
         {activeView === "menu" && (
           <WeeklyMenu
             name={auth.user.name.split(" ")[0]}
-            week={week}
             date={date}
             setDate={setDate}
             benefit={benefit}
             providers={providers}
-            provider={provider}
-            setProvider={setProvider}
             schedules={visibleSchedules}
             cart={cart}
             count={count}

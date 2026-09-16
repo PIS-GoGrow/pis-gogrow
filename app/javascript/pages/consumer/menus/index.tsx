@@ -27,7 +27,6 @@ import { consumerMenus } from "@/routes"
 import type {
   BreadcrumbItem,
   ConsumerMenusIndex,
-  ConsumerProvider,
   SharedProps,
 } from "@/types"
 
@@ -153,7 +152,15 @@ export default function Index({ date, schedules, providers }: ConsumerMenusIndex
         ) : (
           <div>
             {filteredSchedules.map((schedule) => (
-              <MenuItem key={schedule.id} schedule={schedule} isPast={isPast} />
+              <MenuItem
+                key={schedule.id}
+                providerName={schedule.menu.provider.name}
+                name={schedule.menu.name ?? "Plato sin nombre"}
+                price={schedule.menu.price ?? 0}
+                description={schedule.menu.description}
+                soldOut={schedule.amount === 0}
+                isPast={isPast}
+              />
             ))}
           </div>
         )}
