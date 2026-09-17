@@ -3,8 +3,16 @@
 class Schedule < ApplicationRecord
   belongs_to :menu
 
-  # Hay que validar que este sea el comportamiento esperado
   has_many :orders, dependent: :nullify
+
+  validates :date, presence: true
+  validates :amount,
+            numericality: {
+              only_integer: true,
+              greater_than_or_equal_to: 0
+            }
+
+  validates :menu_id, uniqueness: { scope: :date }
 
   def remaining_amount
     # amount representa el cupo TOTAL de esta oferta; no lo descontamos al reservar.

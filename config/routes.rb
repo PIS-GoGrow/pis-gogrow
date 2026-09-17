@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   resources :sessions, only: [ :destroy, :edit, :update ]
   resource :users, only: [ :destroy ]
 
+
   # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the
   # OmniAuth middleware before it reaches the router — only the callback and
   # failure paths need a route.
@@ -44,6 +45,8 @@ Rails.application.routes.draw do
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
+
+  resources :schedules, only: %i[index create]
 
   root "home#index"
 
