@@ -1,7 +1,5 @@
 import { Link, usePage } from "@inertiajs/react"
-
-import { CalendarPlus, CalendarDays, LayoutGrid, Utensils } from "lucide-react"
-
+import { CalendarDays, CalendarPlus, LayoutGrid, Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
