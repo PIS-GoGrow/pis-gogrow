@@ -30,7 +30,7 @@ RSpec.describe "Identity::PasswordResets", type: :request do
           post identity_password_reset_path, params: { email: users(:one).email }
         }.not_to have_enqueued_mail(UserMailer, :password_reset)
         expect(response).to redirect_to(new_identity_password_reset_path)
-        expect(flash[:alert]).to eq("You can't reset your password until you verify your email")
+        expect(flash[:alert]).to eq("No puedes restablecer tu contraseña hasta que verifiques tu correo electrónico")
       end
     end
 
@@ -40,7 +40,7 @@ RSpec.describe "Identity::PasswordResets", type: :request do
           post identity_password_reset_path, params: { email: "missing@example.com" }
         }.not_to have_enqueued_mail(UserMailer, :password_reset)
         expect(response).to redirect_to(new_identity_password_reset_path)
-        expect(flash[:alert]).to eq("You can't reset your password until you verify your email")
+        expect(flash[:alert]).to eq("No puedes restablecer tu contraseña hasta que verifiques tu correo electrónico")
       end
     end
   end
@@ -80,7 +80,7 @@ RSpec.describe "Identity::PasswordResets", type: :request do
           password_confirmation: "NewPassword1*3*"
         }
         expect(response).to redirect_to(new_identity_password_reset_path)
-        expect(flash[:alert]).to eq("That password reset link is invalid")
+        expect(flash[:alert]).to eq("El enlace para restablecer la contraseña no es válido")
       end
     end
 

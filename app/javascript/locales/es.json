@@ -1,0 +1,157 @@
+{
+  "es": {
+    "common": {
+      "admin": "Admin",
+      "cancel": "Cancelar",
+      "confirm_password": "Confirmar contraseña",
+      "consumer": "Consumidor",
+      "current_password": "Contraseña actual",
+      "email_address": "Correo electrónico",
+      "email_placeholder": "correo@ejemplo.com",
+      "full_name": "Nombre completo",
+      "log_in": "Iniciar sesión",
+      "log_out": "Cerrar sesión",
+      "name": "Nombre",
+      "password": "Contraseña",
+      "provider": "Proveedor",
+      "save": "Guardar",
+      "saved": "Guardado",
+      "settings": "Configuración",
+      "sign_up": "Registrarse"
+    },
+    "components": {
+      "appearance": {
+        "dark": "Oscuro",
+        "light": "Claro",
+        "system": "Sistema",
+        "toggle_theme": "Cambiar tema"
+      },
+      "delete_account": {
+        "caution": "Procede con precaución, esta acción no se puede deshacer.",
+        "confirm_description": "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente.",
+        "confirm_title": "¿Seguro que quieres eliminar tu cuenta?",
+        "description": "Elimina tu cuenta y todos sus datos",
+        "title": "Eliminar cuenta",
+        "warning": "Advertencia"
+      },
+      "settings_layout": {
+        "description": "Administra tu perfil y la configuración de tu cuenta",
+        "title": "Configuración"
+      }
+    },
+    "nav": {
+      "change_to": "Cambiar a",
+      "dashboard": "Panel",
+      "menu": "Menú de navegación",
+      "platform": "Plataforma",
+      "settings": {
+        "appearance": "Apariencia",
+        "email": "Correo electrónico",
+        "password": "Contraseña",
+        "profile": "Perfil",
+        "sessions": "Sesiones"
+      }
+    },
+    "pages": {
+      "cart": {
+        "delivery": "Entrega: %{date}",
+        "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
+        "office_delivery_warning": "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina.",
+        "other_deliveries": "Las demás viandas irán a la dirección seleccionada.",
+        "remove": "Quitar %{name}"
+      },
+      "dashboard": {
+        "roles": {
+          "provider": "Panel del proveedor"
+        },
+        "title": "Panel"
+      },
+      "home": {
+        "dashboard": "Panel",
+        "learn_more": "Más información",
+        "resources": {
+          "inertia_rails": "Documentación de Inertia Rails",
+          "rails": "Guías de Rails",
+          "react": "Documentación de React",
+          "shadcn": "Componentes de shadcn/ui"
+        },
+        "resources_intro": "Estos son algunos recursos para empezar:",
+        "tagline": "Rails + Inertia.js + React + shadcn/ui",
+        "title": "Te damos la bienvenida"
+      },
+      "password_resets": {
+        "edit": {
+          "description": "Ingresa tu nueva contraseña",
+          "email": "Correo electrónico",
+          "submit": "Restablecer contraseña",
+          "title": "Restablecer contraseña"
+        },
+        "new": {
+          "description": "Ingresa tu correo para recibir un enlace de restablecimiento",
+          "log_in": "iniciar sesión",
+          "return_to": "O vuelve a",
+          "submit": "Enviar enlace de restablecimiento",
+          "title": "Olvidé mi contraseña"
+        }
+      },
+      "sessions": {
+        "edit": {
+          "description": "Tenés más de un rol disponible. Podés elegir cuál usar ahora, o cambiarlo después.",
+          "heading": "Elegir tu rol",
+          "title": "Elegir rol"
+        },
+        "new": {
+          "auth_error_title": "No pudimos iniciar tu sesión",
+          "continue_with_google": "Continuar con Google",
+          "description": "Ingresa con tu cuenta de Google para continuar",
+          "forgot_password": "¿Olvidaste tu contraseña?",
+          "heading": "Inicia sesión en tu cuenta",
+          "no_account": "¿No tienes una cuenta?",
+          "title": "Iniciar sesión"
+        }
+      },
+      "settings": {
+        "appearance": {
+          "description": "Actualiza la configuración de apariencia de tu cuenta",
+          "title": "Configuración de apariencia"
+        },
+        "email": {
+          "description": "Actualiza tu dirección de correo y verifícala",
+          "heading": "Actualizar correo electrónico",
+          "resend": "Haz clic aquí para reenviar el correo de verificación.",
+          "title": "Configuración de correo",
+          "unverified": "Tu dirección de correo no está verificada."
+        },
+        "password": {
+          "description": "Asegúrate de usar una contraseña larga y aleatoria para mantener tu cuenta segura",
+          "heading": "Actualizar contraseña",
+          "new_password": "Nueva contraseña",
+          "submit": "Guardar contraseña",
+          "title": "Configuración de contraseña"
+        },
+        "profile": {
+          "description": "Actualiza tu nombre",
+          "heading": "Información del perfil",
+          "title": "Configuración del perfil"
+        },
+        "sessions": {
+          "active_since": "Activa desde: %{time}",
+          "current": "Actual",
+          "description": "Administra tus sesiones activas en todos los dispositivos",
+          "ip": "IP: %{address}",
+          "log_out": "Cerrar sesión",
+          "title": "Sesiones"
+        }
+      },
+      "users": {
+        "new": {
+          "description": "Ingresa tus datos para crear tu cuenta",
+          "have_account": "¿Ya tienes una cuenta?",
+          "heading": "Crea una cuenta",
+          "submit": "Crear cuenta",
+          "title": "Registro"
+        }
+      }
+    }
+  }
+}
