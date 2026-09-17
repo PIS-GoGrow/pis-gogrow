@@ -11,11 +11,8 @@ class UsersController < InertiaController
     @user = User.new(user_params)
 
     if @user.save
-      session_record = @user.sessions.create!
-      cookies.signed.permanent[:session_token] = { value: session_record.id, httponly: true }
-
       send_email_verification
-      redirect_to dashboard_path, notice: t("flash.signed_up")
+      redirect_to sign_in_path, alert: t("flash.role_not_available")
     else
       redirect_to sign_up_path, inertia: { errors: @user.errors }
     end
