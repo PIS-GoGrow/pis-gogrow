@@ -1,20 +1,10 @@
 # frozen_string_literal: true
 
-# frozen_string_literal: true
+class ScheduleSerializer < ApplicationSerializer
+  typelize_from Schedule
 
-class Schedule < ApplicationRecord
-  belongs_to :menu
-
-  has_many :orders, dependent: :nullify
-
-  validates :date, presence: true
-  validates :amount,
-            numericality: {
-              only_integer: true,
-              greater_than_or_equal_to: 0
-            }
-
-  validates :menu_id, uniqueness: { scope: :date }
+  attributes :id, :menu_id, :amount
+  one :menu, resource: MenuSerializer
 end
 
 # == Schema Information
