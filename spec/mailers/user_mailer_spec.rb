@@ -13,7 +13,7 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "has the correct subject" do
-      expect(mail.subject).to eq("Verify your email")
+      expect(mail.subject).to eq("Verifica tu correo electrónico")
     end
   end
 
@@ -25,7 +25,7 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "has the correct subject" do
-      expect(mail.subject).to eq("Reset your password")
+      expect(mail.subject).to eq("Restablece tu contraseña")
     end
   end
 end

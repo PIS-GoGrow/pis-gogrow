@@ -8,7 +8,11 @@ module AuthenticationHelpers
   end
 
   module Request
-    def sign_in(user, role: :provider)
+    def sign_in(user, role: nil)
+      user.sync_roles!
+      role = (role || user.roles.first)&.to_sym
+      raise ArgumentError, "Cannot sign in #{user.email}: user has no profile/role assigned" unless role
+
       session = user.sessions.create!(role: role)
       cookies[:session_token] = AuthenticationHelpers.signed_cookie(:session_token, session.id)
     end
@@ -19,7 +23,11 @@ module AuthenticationHelpers
   end
 
   module System
-    def sign_in(user, role: :provider)
+    def sign_in(user, role: nil)
+      user.sync_roles!
+      role = (role || user.roles.first)&.to_sym
+      raise ArgumentError, "Cannot sign in #{user.email}: user has no profile/role assigned" unless role
+
       session = user.sessions.create!(role: role)
       page.driver.set_cookie("session_token", AuthenticationHelpers.signed_cookie(:session_token, session.id))
     end

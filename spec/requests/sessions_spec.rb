@@ -34,10 +34,18 @@ RSpec.describe "Sessions", type: :request do
       it "redirects back with an alert" do
         post sign_in_path, params: { email: users(:one).email, password: "wrongpassword" }
         expect(response).to redirect_to(sign_in_path)
-        expect(flash[:alert]).to eq("That email or password is incorrect")
+        expect(flash[:alert]).to eq("El correo electrónico o la contraseña son incorrectos")
 
         get dashboard_path
         expect(response).to redirect_to(sign_in_path)
+      end
+    end
+
+    context "when user has no profile" do
+      it "denies access and redirects to sign in" do
+        post sign_in_path, params: { email: users(:two).email, password: "Secret1*3*5*" }
+        expect(response).to redirect_to(sign_in_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.role_not_available"))
       end
     end
   end
@@ -47,7 +55,7 @@ RSpec.describe "Sessions", type: :request do
       sign_in users(:one)
       session_record = users(:one).sessions.last
       delete session_path(session_record)
-      expect(response).to redirect_to(settings_sessions_path)
+      expect(response).to redirect_to(root_path)
       expect(Session.exists?(session_record.id)).to be(false)
     end
   end
