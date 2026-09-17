@@ -1,8 +1,10 @@
 {
   "es": {
     "common": {
+      "admin": "Admin",
       "cancel": "Cancelar",
       "confirm_password": "Confirmar contraseña",
+      "consumer": "Consumidor",
       "current_password": "Contraseña actual",
       "email_address": "Correo electrónico",
       "email_placeholder": "correo@ejemplo.com",
@@ -11,6 +13,7 @@
       "log_out": "Cerrar sesión",
       "name": "Nombre",
       "password": "Contraseña",
+      "provider": "Proveedor",
       "save": "Guardar",
       "saved": "Guardado",
       "settings": "Configuración",
@@ -37,6 +40,7 @@
       }
     },
     "nav": {
+      "change_to": "Cambiar a",
       "dashboard": "Panel",
       "menu": "Menú de navegación",
       "platform": "Plataforma",
@@ -84,6 +88,11 @@
         }
       },
       "sessions": {
+        "edit": {
+          "description": "Tenés más de un rol disponible. Podés elegir cuál usar ahora, o cambiarlo después.",
+          "heading": "Elegir tu rol",
+          "title": "Elegir rol"
+        },
         "new": {
           "auth_error_title": "No pudimos iniciar tu sesión",
           "continue_with_google": "Continuar con Google",
