@@ -5,5 +5,6 @@ class HomeController < InertiaController
   before_action :perform_authentication
 
   def index
+    redirect_to dashboard_path if Current.session&.consumer?
   end
 end

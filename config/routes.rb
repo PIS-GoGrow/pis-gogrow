@@ -9,7 +9,6 @@ Rails.application.routes.draw do
   post "sign_up", to: "users#create"
 
   resources :sessions, only: [ :destroy, :edit, :update ]
-
   resource :users, only: [ :destroy ]
 
 
@@ -39,6 +38,8 @@ Rails.application.routes.draw do
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :menus, only: [ :index ]
+    resources :orders, only: [ :create ]
   end
 
   namespace :admin do

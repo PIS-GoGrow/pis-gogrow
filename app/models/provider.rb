@@ -11,6 +11,7 @@ end
 # Table name: providers
 #
 #  id             :bigint           not null, primary key
+#  home_delivery  :boolean          default(TRUE), not null
 #  order_deadline :time
 #  created_at     :datetime         not null
 #  updated_at     :datetime         not null
