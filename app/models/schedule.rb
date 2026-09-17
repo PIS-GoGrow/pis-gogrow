@@ -5,6 +5,8 @@ class Schedule < ApplicationRecord
 
   # Hay que validar que este sea el comportamiento esperado
   has_many :orders, dependent: :nullify
+
+  scope :available, -> { where(date: Date.current.., amount: 1..) }
 end
 
 # == Schema Information
