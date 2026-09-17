@@ -1,12 +1,5 @@
-# frozen_string_literal: true
-
-class Provider < ApplicationRecord
-  include SyncsUserRoles
-
-  has_many :menus, dependent: :destroy
-  has_many :accounts, dependent: :destroy
+class ProviderSerializer < ApplicationSerializer
 end
-
 # == Schema Information
 #
 # Table name: providers

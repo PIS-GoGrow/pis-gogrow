@@ -106,9 +106,12 @@ class Order < ApplicationRecord
   def assign_account
     return unless consumer
 
-    current_month = Date.current.beginning_of_month
+    # Obetener información de la cuenta a la que debería ser asignada la orden:
+    # el mes actual y la id del proveedor correspondiente a la orden.
+    month = Date.current.beginning_of_month
+    provider_id = Provider.joins(menus: { schedules: :orders }).where(orders: { id: }).pluck(:id).first
 
-    account = consumer.accounts.find_or_create_by month: current_month
+    account = consumer.accounts.find_or_create_by month: month, provider_id: provider_id
     accounts << account
 
     account.sync_amount!
