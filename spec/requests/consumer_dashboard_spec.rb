@@ -51,13 +51,14 @@ RSpec.describe "Consumer dashboard", type: :request do
   end
 
   it "rejects a session with a different role" do
-    user = consumer_user
-    session = user.sessions.create!(role: :provider)
+    provider_user = User.create!(email: "provider-role@gmail.com", name: "Provider", password: "password123456")
+    Provider.create!(user: provider_user)
+    session = provider_user.sessions.create!(role: :provider)
     cookies[:session_token] = AuthenticationHelpers.signed_cookie(:session_token, session.id)
 
     get dashboard_path
 
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(root_path)
   end
 
   it "selects the consumer role from the Google sign-in cookie" do

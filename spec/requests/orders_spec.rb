@@ -12,7 +12,7 @@ RSpec.describe "Orders", type: :request do
 
   def setup_consumer
     company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
-    user = users(:one)
+    user = User.create!(email: "order-consumer-#{SecureRandom.hex(4)}@gmail.com", name: "Sofía", password: "password123456")
     consumer = Consumer.create!(user:, company:, address: "Ellauri 1234")
     sign_in(user, role: :consumer)
     [ consumer, company ]
