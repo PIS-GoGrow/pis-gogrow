@@ -19,6 +19,7 @@ es:
     admin: "Admin"
   flash:
     already_signed_in: "Ya has iniciado sesión"
+    benefit_configuration_created: "Configuración del beneficio general guardada"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
     email_verification_sent: "Enviamos un correo de verificación a tu dirección"
@@ -60,6 +61,7 @@ es:
     platform: "Plataforma"
     dashboard: "Panel"
     menu: "Menú de navegación"
+    benefit_configurations: "Beneficio general"
     change_to: "Cambiar a"
     settings:
       profile: "Perfil"
@@ -84,6 +86,34 @@ es:
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
+    admin:
+      benefit_configurations:
+        index:
+          title: "Beneficio general"
+          description: "Configurá el porcentaje de subsidio y el límite mensual de viandas que se aplican a los nuevos empleados."
+          current:
+            title: "Configuración vigente"
+            empty: "Todavía no configuraste el beneficio general."
+            subsidy_percentage: "Porcentaje de subsidio"
+            monthly_voucher_limit: "Límite mensual de viandas"
+            effective_from: "Vigente desde"
+            effective_until: "Vigente hasta"
+          form:
+            title: "Nueva configuración"
+            subsidy_percentage: "Porcentaje de subsidio"
+            monthly_voucher_limit: "Límite mensual de viandas"
+            effective_from: "Vigente desde"
+            submit: "Guardar configuración"
+          history:
+            title: "Historial de cambios"
+            empty: "Todavía no hay cambios registrados."
+            subsidy_percentage: "Porcentaje"
+            monthly_voucher_limit: "Límite de viandas"
+            effective_from: "Vigente desde"
+            effective_until: "Vigente hasta"
+            current: "Actual"
+            created_by: "Modificado por"
+            created_at: "Fecha del cambio"
     home:
       title: "Te damos la bienvenida"
       dashboard: "Panel"

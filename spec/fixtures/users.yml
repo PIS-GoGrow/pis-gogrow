@@ -13,6 +13,13 @@ two:
   roles: "{}"
   verified: true
 
+admin:
+  email: admin@example.com
+  name: Admin User
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  roles: "{admin}"
+  verified: true
+
 # == Schema Information
 #
 # Table name: users

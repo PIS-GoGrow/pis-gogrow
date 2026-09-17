@@ -43,6 +43,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :benefit_configurations, only: [ :index, :create ]
   end
 
   resources :schedules, only: %i[index create]
