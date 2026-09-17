@@ -134,6 +134,29 @@ Benefit.create!(
   due_date: week_start + 1.month
 )
 
+# Cubren las dos secciones de "Mis pedidos": pendientes/próximos e historial,
+# incluida la orden sin schedule que deja el dependent: :nullify.
+past_schedule = Schedule.create!(
+  menu: Menu.first,
+  date: week_start - 7.days,
+  amount: 7
+)
+
+upcoming_schedules = Schedule.where("date >= ?", Date.current).order(:date)
+if (first_schedule = upcoming_schedules.first)
+  order = Order.create!(consumer:, schedule: first_schedule, status: :pending, price: 300.50, discounted_price: 150.25, amount: 1)
+  account = Account.create!(amount: 300, month: week_start, owner: consumer)
+  account.orders << order
+  Payment.create!(account:)
+end
+
+if (second_schedule = upcoming_schedules.second)
+  Order.create!(consumer:, schedule: second_schedule, status: :confirmed, price: 601.00, discounted_price: 300.50, amount: 2)
+end
+
+Order.create!(consumer:, schedule: past_schedule, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1)
+Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
+
 admin_user = User.create!(
   email: "rrhh.gogrow@gmail.com",
   name: "Juan Admin",

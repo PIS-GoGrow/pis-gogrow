@@ -59,7 +59,7 @@ class Consumer::DashboardController < Consumer::InertiaController
 
   def benefit_data
     benefit = active_benefit
-    used = @consumer.orders.where(created_at: Date.current.all_month).where.not(status: :canceled).sum(:amount)
+    used = @consumer.orders.where(created_at: Date.current.all_month).where.not(status: [ :cancelled, :rejected ]).sum(:amount)
 
     {
       limit: benefit&.amount.to_i,

@@ -43,6 +43,7 @@
       "change_to": "Cambiar a",
       "dashboard": "Panel",
       "menu": "Menú de navegación",
+      "orders": "Mis pedidos",
       "platform": "Plataforma",
       "settings": {
         "appearance": "Apariencia",
@@ -78,6 +79,44 @@
         "resources_intro": "Estos son algunos recursos para empezar:",
         "tagline": "Rails + Inertia.js + React + shadcn/ui",
         "title": "Te damos la bienvenida"
+      },
+      "orders": {
+        "index": {
+          "base_price": "Precio base: %{amount}",
+          "history_address": "Recibiste en: %{address}",
+          "history_empty_description": "Tus pedidos completados aparecerán aquí.",
+          "history_empty_title": "No tienes pedidos anteriores",
+          "history_tab": "Historial",
+          "no_address": "Sin dirección de entrega",
+          "no_date": "Sin fecha de entrega",
+          "no_menu": "Plato no disponible",
+          "no_price": "Importe no disponible",
+          "no_provider": "Proveedor no disponible",
+          "quantity": "x%{count}",
+          "title": "Mis pedidos",
+          "upcoming_address": "Recibes en: %{address}",
+          "upcoming_empty_description": "No tienes viandas en camino.",
+          "upcoming_empty_title": "No tienes pedidos próximos",
+          "upcoming_tab": "Próximos"
+        },
+        "show": {
+          "address": "Dirección de entrega",
+          "back": "Volver a mis pedidos",
+          "base_price": "Precio base",
+          "date": "Fecha de entrega",
+          "no_notes": "Sin notas",
+          "notes": "Notas",
+          "quantity": "Cantidad",
+          "subsidy": "Subsidio aplicado",
+          "title": "Detalle del pedido",
+          "total": "Importe final"
+        },
+        "statuses": {
+          "cancelled": "Cancelado",
+          "confirmed": "Confirmado",
+          "pending": "Pendiente",
+          "rejected": "Rechazado"
+        }
       },
       "password_resets": {
         "edit": {

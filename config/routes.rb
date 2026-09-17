@@ -36,17 +36,18 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
+  resources :orders, only: [ :index, :show ]
+  resources :schedules, only: [ :index, :create ]
+
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :menus, only: [ :index ]
-    resources :orders, only: [ :create ]
+    resources :orders, only: [ :create ], as: :consumer_orders
   end
 
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
-
-  resources :schedules, only: %i[index create]
 
   root "home#index"
 

@@ -22,6 +22,13 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  # Valida que haya un empleado logueado
+  def authenticate_consumer
+    authenticate
+
+    redirect_to sign_in_path if Current.session && !Current.user.consumer?
+  end
+
   def authenticate
     redirect_to sign_in_path, alert: t("flash.not_signed_in") unless perform_authentication
   end

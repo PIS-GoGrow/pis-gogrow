@@ -33,6 +33,8 @@ RSpec.describe "Consumer dashboard", type: :request do
   end
 
   it "renders the protected weekly menu with its server props" do
+    Order.delete_all
+    Schedule.delete_all
     user = consumer_user
     schedule = create_schedule
     Benefit.create!(consumer: user.consumer, amount: 5, percentage: 50, due_date: 1.month.from_now)

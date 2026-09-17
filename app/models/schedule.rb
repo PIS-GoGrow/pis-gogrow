@@ -16,9 +16,9 @@ class Schedule < ApplicationRecord
 
   def remaining_amount
     # amount representa el cupo TOTAL de esta oferta; no lo descontamos al reservar.
-    # Restamos las unidades de pedidos pendientes, completados y antiguos sin estado
-    # (nil). Los cancelados no ocupan cupo. El máximo con 0 evita devolver negativos.
-    [ amount.to_i - orders.where(status: [ nil, :pending, :completed ]).sum(:amount), 0 ].max
+    # Restamos las unidades de pedidos pendientes, confirmados y antiguos sin estado
+    # (nil). Los cancelados y rechazados no ocupan cupo. El máximo con 0 evita devolver negativos.
+    [ amount.to_i - orders.where(status: [ nil, :pending, :confirmed ]).sum(:amount), 0 ].max
   end
 
   def available?(quantity: 1)

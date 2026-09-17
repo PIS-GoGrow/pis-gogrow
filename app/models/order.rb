@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Order < ApplicationRecord
-  enum :status, { pending: 0, completed: 1, canceled: 2 }, default: :pending
+  enum :status, { pending: 0, confirmed: 1, cancelled: 2, rejected: 3 }, default: :pending
 
   belongs_to :consumer
   belongs_to :schedule
@@ -12,6 +12,25 @@ class Order < ApplicationRecord
   validates :amount, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :discounted_price, comparison: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true
+
+  # El corte entre ambas secciones es la fecha de entrega, no el estado: una
+  # orden confirmada sigue necesitando seguimiento hasta que la vianda llega.
+  # Cancelled y rejected son la excepción: ya no va a llegar ninguna vianda.
+  scope :upcoming, -> {
+    joins(:schedule)
+      .where.not(status: [ :cancelled, :rejected ])
+      .where(schedules: { date: Date.current.. })
+      .order(Schedule.arel_table[:date].asc)
+  }
+
+  # Definido como el complemento de upcoming para que las dos secciones
+  # particionen las órdenes: sin esto, una orden sin schedule (schedule_id es
+  # nullable por el dependent: :nullify) se caería de ambas listas.
+  scope :history, -> {
+    where.not(id: upcoming)
+      .left_joins(:schedule)
+      .order(Arel.sql("schedules.date DESC NULLS LAST"))
+  }
 
   def self.reserve(consumer:, schedule:, quantity: 1, notes: nil, address: consumer.address, discount_percentage: 0)
     gross_price = schedule.menu.price * quantity
@@ -28,6 +47,14 @@ class Order < ApplicationRecord
 
     order
   end
+
+  # El subsidio no se persiste: es lo que la empresa cubre, o sea la diferencia
+  # entre lo que vale la vianda y lo que termina pagando el empleado.
+  def subsidy
+    return if price.nil? || discounted_price.nil?
+
+    price - discounted_price
+  end
 end
 
 # == Schema Information
@@ -40,7 +67,7 @@ end
 #  discounted_price :decimal(10, 2)
 #  notes            :string
 #  price            :decimal(10, 2)
-#  status           :integer
+#  status           :integer          default(0), not null
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
 #  consumer_id      :bigint           not null
