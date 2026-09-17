@@ -4,6 +4,11 @@ class AccountSerializer < ApplicationSerializer
   attributes :id, :month, :amount, :provider_id
 
   many :payments, resource: PaymentSerializer
+
+  typelize :boolean
+  attribute :current do |account|
+    account.current?
+  end
 end
 
 # == Schema Information

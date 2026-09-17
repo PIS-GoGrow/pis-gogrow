@@ -2,16 +2,17 @@
 
 class Consumer::AccountsController < Consumer::InertiaController
   def index
-  	history = param[:type] == "history"
+  	history = params[:type] == "history"
   	providers = Provider.all
-  	
+  	current_month_spending = Current.user.consumer.current_month_spending
+
   	accounts = Current.user.consumer.accounts
   	if history
-  		accounts = accounts.history.includes(:orders, :payments)
+  		accounts = accounts.history.includes(:payments)
   	else
-  		accounts = accounts.pending.includes(:orders, :payments)
+  		accounts = accounts.pending.includes(:payments)
   	end
 
-  	render inertia: { accounts:, providers:, history: }
+  	render inertia: { accounts:, providers:, history:, current_month_spending: }
   end
 end

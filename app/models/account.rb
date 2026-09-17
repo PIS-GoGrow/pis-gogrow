@@ -27,6 +27,10 @@ class Account < ApplicationRecord
       .distinct
   }
 
+  def current?
+    month == Date.current.beginning_of_month
+  end
+
   # Sincroniza la deuda como la suma del precio de las órdenes asociadas
   # Si es una cuenta de consumidor, se suma el precio de las órdenes.
   # Si es de Empresa, se suma el precio descontado.

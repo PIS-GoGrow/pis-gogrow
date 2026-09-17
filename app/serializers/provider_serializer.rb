@@ -1,5 +1,14 @@
+# frozen_string_literal: true
+
 class ProviderSerializer < ApplicationSerializer
+  attributes :id
+
+  typelize :string
+  attribute :name do |provider|
+    provider.user.name
+  end
 end
+
 # == Schema Information
 #
 # Table name: providers
