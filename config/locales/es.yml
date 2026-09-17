@@ -18,6 +18,8 @@ es:
     consumer: "Consumidor"
     admin: "Admin"
   flash:
+    cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
+    order_created: "Tu vianda ha sido reservada."
     already_signed_in: "Ya has iniciado sesión"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
@@ -42,6 +44,12 @@ es:
     no_permission: "No tenés permiso para acceder a este recurso."
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
   validations:
+    office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
+    empty_cart: "Agregá al menos un plato al carrito."
+    invalid_address: "Seleccioná una dirección de entrega válida."
+    invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
+    cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
+    schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
     password_challenge_invalid: "La verificación de contraseña no es válida"
   user_mailer:
     greeting: "Hola,"
@@ -119,6 +127,12 @@ es:
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
+    cart:
+      office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
+      other_deliveries: "Las demás viandas irán a la dirección seleccionada."
+      office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
+      remove: "Quitar %{name}"
+      delivery: "Entrega: %{date}"
     home:
       title: "Te damos la bienvenida"
       dashboard: "Panel"

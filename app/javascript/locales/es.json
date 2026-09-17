@@ -54,6 +54,13 @@
       }
     },
     "pages": {
+      "cart": {
+        "delivery": "Entrega: %{date}",
+        "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
+        "office_delivery_warning": "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina.",
+        "other_deliveries": "Las demás viandas irán a la dirección seleccionada.",
+        "remove": "Quitar %{name}"
+      },
       "dashboard": {
         "roles": {
           "provider": "Panel del proveedor"

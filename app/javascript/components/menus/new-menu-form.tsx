@@ -10,12 +10,22 @@ interface NewMenuProps {
 }
 
 export default function NewMenuForm({ formSuccess }: NewMenuProps) {
-  const { data, setData, post, processing, errors, setError, clearErrors } =
-    useForm({
-      name: "",
-      description: "",
-      price: "",
-    })
+  const {
+    data,
+    setData,
+    post,
+    processing,
+    errors,
+    setError,
+    clearErrors,
+    transform,
+  } = useForm({
+    name: "",
+    description: "",
+    price: "",
+    fillings: "",
+    sauces: "",
+  })
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -23,12 +33,20 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
     // No validamos que exista descripción porque no se requiere
     if (data.name === "") setError("name", ["No puede estar vacío."])
     else if (data.price === "") setError("price", ["No puede estar vacío."])
-    else
+    else {
+      transform((data) => ({
+        menu: {
+          ...data,
+          fillings: optionsFrom(data.fillings),
+          sauces: optionsFrom(data.sauces),
+        },
+      }))
       post(menusRoutes.create().url, {
         onSuccess: () => {
           formSuccess()
         },
       })
+    }
   }
 
   return (
@@ -84,10 +102,47 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
             )}
           </Field>
         </div>
+        <div className="grid gap-2">
+          <Field>
+            <FieldLabel htmlFor="fillings">Rellenos disponibles</FieldLabel>
+            <Input
+              type="text"
+              name="fillings"
+              value={data.fillings}
+              onChange={(e) => setData("fillings", e.target.value)}
+              placeholder="Ricota y nuez, Ricota y espinaca"
+            />
+            <FieldDescription>
+              Separalos con comas. Dejalo vacío si no aplica.
+            </FieldDescription>
+          </Field>
+        </div>
+        <div className="grid gap-2">
+          <Field>
+            <FieldLabel htmlFor="sauces">Salsas disponibles</FieldLabel>
+            <Input
+              type="text"
+              name="sauces"
+              value={data.sauces}
+              onChange={(e) => setData("sauces", e.target.value)}
+              placeholder="Filetto, Bolognesa"
+            />
+            <FieldDescription>
+              Separalas con comas. Dejalo vacío si no aplica.
+            </FieldDescription>
+          </Field>
+        </div>
       </div>
       <Button type="submit" className="mt-4 w-full" disabled={processing}>
         {processing ? "Creando..." : "Crear"}
       </Button>
     </form>
   )
+}
+
+function optionsFrom(value: string) {
+  return value
+    .split(",")
+    .map((option) => option.trim())
+    .filter(Boolean)
 }
