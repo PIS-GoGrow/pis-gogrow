@@ -33,13 +33,13 @@ function getWeekDays(dateStr: string): string[] {
 
 function weekdayLabel(isoDate: string) {
   return new Intl.DateTimeFormat("es-UY", { weekday: "short" }).format(
-    toLocalDate(isoDate)
+    toLocalDate(isoDate),
   )
 }
 
 function dayNumberLabel(isoDate: string) {
   return new Intl.DateTimeFormat("es-UY", { day: "numeric" }).format(
-    toLocalDate(isoDate)
+    toLocalDate(isoDate),
   )
 }
 
@@ -86,7 +86,7 @@ export default function WeekNav({
           <ToggleGroupItem
             key={d}
             value={d}
-            className="data-[state=on]:bg-black data-[state=on]:text-white data-[state=on]:hover:bg-black flex h-[60px] flex-1 flex-col items-center justify-center gap-0.5 rounded-md border p-2.5"
+            className="flex h-[60px] flex-1 flex-col items-center justify-center gap-0.5 rounded-md border p-2.5 data-[state=on]:bg-black data-[state=on]:text-white data-[state=on]:hover:bg-black"
           >
             <span className="text-sm leading-5 font-bold tracking-normal capitalize">
               {weekdayLabel(d)}

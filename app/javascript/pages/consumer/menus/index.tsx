@@ -24,11 +24,7 @@ import {
 import { Label } from "@/components/ui/label"
 import AppLayout from "@/layouts/app-layout"
 import { consumerMenus } from "@/routes"
-import type {
-  BreadcrumbItem,
-  ConsumerMenusIndex,
-  SharedProps,
-} from "@/types"
+import type { BreadcrumbItem, ConsumerMenusIndex, SharedProps } from "@/types"
 
 function formatDateHeading(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00")
@@ -49,18 +45,20 @@ function todayStr(): string {
   ].join("-")
 }
 
-export default function Index({ date, schedules, providers }: ConsumerMenusIndex) {
+export default function Index({
+  date,
+  schedules,
+  providers,
+}: ConsumerMenusIndex) {
   const { auth } = usePage<SharedProps>().props
   const firstName = auth.user.name.split(" ")[0]
   const isPast = date < todayStr()
 
   const [filterOpen, setFilterOpen] = useState(false)
   const [pendingProviders, setPendingProviders] = useState<Set<number>>(
-    new Set()
+    new Set(),
   )
-  const [activeProviders, setActiveProviders] = useState<Set<number>>(
-    new Set()
-  )
+  const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
 
   function handleFilterOpen() {
     setPendingProviders(new Set(activeProviders))
@@ -90,7 +88,7 @@ export default function Index({ date, schedules, providers }: ConsumerMenusIndex
     router.get(
       consumerMenus.index().url,
       { date: newDate },
-      { preserveScroll: true }
+      { preserveScroll: true },
     )
   }
 

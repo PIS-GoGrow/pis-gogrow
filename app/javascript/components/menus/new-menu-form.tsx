@@ -10,14 +10,22 @@ interface NewMenuProps {
 }
 
 export default function NewMenuForm({ formSuccess }: NewMenuProps) {
-  const { data, setData, post, processing, errors, setError, clearErrors, transform } =
-    useForm({
-      name: "",
-      description: "",
-      price: "",
-      fillings: "",
-      sauces: "",
-    })
+  const {
+    data,
+    setData,
+    post,
+    processing,
+    errors,
+    setError,
+    clearErrors,
+    transform,
+  } = useForm({
+    name: "",
+    description: "",
+    price: "",
+    fillings: "",
+    sauces: "",
+  })
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -133,5 +141,8 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
 }
 
 function optionsFrom(value: string) {
-  return value.split(",").map((option) => option.trim()).filter(Boolean)
+  return value
+    .split(",")
+    .map((option) => option.trim())
+    .filter(Boolean)
 }

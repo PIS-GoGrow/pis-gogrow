@@ -40,7 +40,9 @@ export default function Index({
   const [filling, setFilling] = useState("")
   const [sauce, setSauce] = useState("")
   const [address, setAddress] = useState(addresses[0]?.address ?? "")
-  const [confirmedOrder, setConfirmedOrder] = useState<Confirmation | null>(null)
+  const [confirmedOrder, setConfirmedOrder] = useState<Confirmation | null>(
+    null,
+  )
   const form = useForm({
     address: "",
     order_error: "",
