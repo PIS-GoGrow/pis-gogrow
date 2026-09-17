@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Admin::BenefitConfigurations", type: :request do
   fixtures :users, :companies, :admins
 
-  let(:admin_user) { users(:one) }
+  let(:admin_user) { users(:admin) }
   let(:company) { companies(:gogrow) }
 
   before { sign_in admin_user, role: :admin }

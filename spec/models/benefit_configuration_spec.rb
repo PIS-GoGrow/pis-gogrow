@@ -6,7 +6,7 @@ RSpec.describe BenefitConfiguration, type: :model do
   fixtures :users, :companies
 
   let(:company) { companies(:gogrow) }
-  let(:admin_user) { users(:one) }
+  let(:admin_user) { users(:admin) }
 
   def build_configuration(**attrs)
     BenefitConfiguration.new(
