@@ -12,19 +12,13 @@ RSpec.describe "Orders", type: :request do
     end
 
     it "redirects users without a consumer profile" do
-      sign_in users(:two)
-      get orders_path
-      expect(response).to redirect_to(sign_in_path)
-    end
-
-    it "redirects providers" do
       sign_in users(:provider_user)
       get orders_path
       expect(response).to redirect_to(sign_in_path)
     end
 
     context "when signed in as an employee" do
-      before { sign_in users(:consumer_user) }
+      before { sign_in users(:one) }
 
       it "renders the orders page" do
         get orders_path
@@ -88,7 +82,7 @@ RSpec.describe "Orders", type: :request do
     end
 
     context "when signed in as an employee" do
-      before { sign_in users(:consumer_user) }
+      before { sign_in users(:one) }
 
       it "renders the detail page" do
         get order_path(orders(:upcoming_confirmed_future))

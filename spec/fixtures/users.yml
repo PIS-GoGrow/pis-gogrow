@@ -3,12 +3,14 @@ one:
   email: one@example.com
   name: Test User
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  roles: "{consumer}"
   verified: true
 
 two:
   email: two@example.com
   name: Another User
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  roles: "{}"
   verified: true
 
 consumer_user:
@@ -30,6 +32,25 @@ other_consumer_user:
   verified: true
 
 # == Schema Information
+#
+# Table name: users
+#
+#  id              :bigint           not null, primary key
+#  avatar_url      :string
+#  email           :string           not null
+#  google_uid      :string
+#  name            :string           not null
+#  password_digest :string           not null
+#  roles           :string           default([]), not null, is an Array
+#  verified        :boolean          default(FALSE), not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#
+# Indexes
+#
+#  index_users_on_email       (email) UNIQUE
+#  index_users_on_google_uid  (google_uid) UNIQUE
+#
 #
 # Table name: users
 #

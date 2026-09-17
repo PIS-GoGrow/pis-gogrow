@@ -22,7 +22,7 @@ RSpec.describe "Settings::Emails", type: :request do
           password_challenge: "Secret1*3*5*"
         }
         expect(response).to redirect_to(settings_email_path)
-        expect(flash[:notice]).to eq("Your email has been changed")
+        expect(flash[:notice]).to eq("Tu correo electrónico fue modificado")
         expect(users(:one).reload.email).to eq("updated@example.com")
       end
     end
@@ -34,7 +34,7 @@ RSpec.describe "Settings::Emails", type: :request do
           password_challenge: "wrongpassword"
         }
         expect(response).to redirect_to(settings_email_path)
-        expect(session[:inertia_errors]).to eq(password_challenge: [ "is invalid" ])
+        expect(session[:inertia_errors]).to eq(password_challenge: [ I18n.t("errors.messages.invalid") ])
         expect(users(:one).reload.email).to eq("one@example.com")
       end
     end

@@ -15,3 +15,4 @@ translations:
       - "!*.time.*"
       - "!*.support.*"
       - "!*.datetime.*"
+      - "!*.i18n.*"

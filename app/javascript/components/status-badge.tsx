@@ -18,11 +18,13 @@ const statusStyles: Record<OrderStatus, string> = {
 }
 
 interface StatusBadgeProps {
-  status: OrderStatus
+  status?: OrderStatus | null
 }
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
   const { t } = useTranslation()
+
+  if (!status) return null
 
   return (
     <Badge
