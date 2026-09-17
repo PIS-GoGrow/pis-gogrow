@@ -58,6 +58,7 @@ class User < ApplicationRecord
 
   def self.find_from_google(auth)
     email = auth.info.email.to_s.downcase
+    raise DomainNotAllowed unless google_allowed_domains.include?(email.split("@").last)
 
     find_by email: email
   end

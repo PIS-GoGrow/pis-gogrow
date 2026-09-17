@@ -3,12 +3,14 @@ one:
   email: one@example.com
   name: Test User
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  roles: "{consumer}"
   verified: true
 
 two:
   email: two@example.com
   name: Another User
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  roles: "{}"
   verified: true
 
 # == Schema Information

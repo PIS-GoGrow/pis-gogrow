@@ -9,8 +9,16 @@ class SessionsController < InertiaController
   end
 
   def create
-    if user = User.authenticate_by(email: params[:email], password: params[:password])
-      @session = user.sessions.create!
+    if (user = User.authenticate_by(email: params[:email], password: params[:password]))
+      user.sync_roles!
+
+      if user.roles.empty?
+        redirect_to sign_in_path, alert: t("flash.role_not_available")
+        return
+      end
+
+      role = user.roles.first.to_sym
+      @session = user.sessions.create!(role: role)
       cookies.signed.permanent[:session_token] = { value: @session.id, httponly: true }
 
       redirect_to dashboard_path, notice: t("flash.signed_in")
