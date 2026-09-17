@@ -7,6 +7,11 @@ class Order < ApplicationRecord
 
   enum :status, { pending: 0, confirmed: 1, cancelled: 2, rejected: 3 }, default: :pending
   enum :status_before_cancellation, { pending: 0, confirmed: 1 }, prefix: :before_cancellation
+  
+  # Esta línea tiene que estar antes de has_many :order_accounts.
+  # Antes de que se borre la orden, se tiene que registrar sus cuentas
+  # asociadas para que estas actualicen su monto.
+  before_destroy :remember_accounts
 
   belongs_to :consumer
   belongs_to :schedule
@@ -37,6 +42,10 @@ class Order < ApplicationRecord
       .left_joins(:schedule)
       .order(Arel.sql("schedules.date DESC NULLS LAST"))
   }
+
+  after_create_commit :assign_account
+  after_update_commit -> { accounts.each(&:sync_amount!) }
+  after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
 
   def self.reserve(consumer:, schedule:, quantity: 1, notes: nil, address: consumer.address, discount_percentage: 0)
     gross_price = schedule.menu.price * quantity
@@ -88,6 +97,25 @@ class Order < ApplicationRecord
 
       update(status_before_cancellation: status, status: :cancelled, cancelled_at: Time.current, cancelled_by: by)
     end
+  end
+  
+  private
+
+  # Asignarse a la cuenta actual del usuario, o crearla si no existiera
+  # Forzar a que la cuenta recalcule su valor calculado.
+  def assign_account
+    return unless consumer
+
+    current_month = Date.current.beginning_of_month
+
+    account = consumer.accounts.find_or_create_by month: current_month
+    accounts << account
+
+    account.sync_amount!
+  end
+
+  def remember_accounts
+    @accounts_to_sync = accounts.to_a
   end
 end
 
