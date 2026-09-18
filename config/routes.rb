@@ -44,6 +44,7 @@ Rails.application.routes.draw do
     resources :collections, only: [ :index, :show ]
     resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :payments, only: [:index, :update]
   end
 
   resources :schedules, only: [ :index, :create ] do
@@ -63,6 +64,7 @@ Rails.application.routes.draw do
     end
 
     resources :accounts, only: [ :index, :show ]
+    resources :payments, only: [:index]
   end
 
   namespace :admin do
