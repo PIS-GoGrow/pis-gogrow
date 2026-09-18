@@ -27,7 +27,7 @@ export default function MenuItem({
   return (
     <div
       className={cn(
-        "mb-3 flex items-center gap-4 rounded-xl border p-4",
+        "border-border bg-card mb-3 flex items-center gap-4 rounded-xl border p-4",
         disabled && "opacity-50",
       )}
     >
@@ -35,7 +35,7 @@ export default function MenuItem({
         <div className="mb-1 flex items-center gap-1.5">
           <span className="text-muted-foreground text-sm">{providerName}</span>
           {addedQuantity && (
-            <span className="text-xs text-blue-600">• Agregado</span>
+            <span className="text-foreground text-xs">• Agregado</span>
           )}
           {soldOut && (
             <span className="text-destructive flex items-center gap-1 text-xs">
@@ -62,9 +62,9 @@ export default function MenuItem({
         className={cn(
           "size-8 shrink-0 rounded-full",
           !addedQuantity &&
-            "border-[#e5e5e5] bg-white text-black hover:bg-white hover:text-black dark:border-[#e5e5e5] dark:bg-white dark:text-black dark:hover:bg-white dark:hover:text-black",
+            "border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground",
           addedQuantity &&
-            "border-blue-700 bg-blue-700 text-white hover:border-blue-700 hover:bg-blue-700 hover:text-white dark:border-blue-700 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-700",
+            "border-primary bg-primary text-primary-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground dark:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:border-primary dark:hover:bg-primary dark:hover:text-primary-foreground",
         )}
       >
         {addedQuantity ?? <Plus aria-hidden="true" className="size-4" />}

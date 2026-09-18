@@ -11,7 +11,7 @@ interface Props {
 
 export function QuantityInput({ value, min = 1, max, onChange }: Props) {
   return (
-    <div className="flex h-12 items-center rounded-lg bg-[#f0f0f0]">
+    <div className="bg-secondary text-secondary-foreground flex h-12 items-center rounded-lg">
       <Button
         type="button"
         variant="ghost"
@@ -19,7 +19,7 @@ export function QuantityInput({ value, min = 1, max, onChange }: Props) {
         aria-label="Quitar uno"
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="h-full rounded-r-none"
+        className="hover:bg-primary hover:text-primary-foreground dark:hover:!bg-primary dark:hover:!text-primary-foreground h-full rounded-r-none"
       >
         <Minus aria-hidden="true" className="size-3" />
       </Button>
@@ -31,7 +31,7 @@ export function QuantityInput({ value, min = 1, max, onChange }: Props) {
         aria-label="Agregar uno"
         disabled={value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
-        className="h-full rounded-l-none"
+        className="hover:bg-primary hover:text-primary-foreground dark:hover:!bg-primary dark:hover:!text-primary-foreground h-full rounded-l-none"
       >
         <Plus aria-hidden="true" className="size-3" />
       </Button>

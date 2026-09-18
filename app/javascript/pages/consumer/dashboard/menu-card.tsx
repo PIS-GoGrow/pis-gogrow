@@ -16,14 +16,14 @@ export function MenuCard({ item, added, openDetail }: Props) {
   return (
     <article
       className={cn(
-        "relative min-h-[132px] rounded-lg border border-[#e5e5e5] bg-white p-4 pr-14 md:min-h-32 md:p-5 md:pr-16",
+        "border-border bg-card relative min-h-[132px] rounded-lg border p-4 pr-14 md:min-h-32 md:p-5 md:pr-16",
         item.sold_out && "opacity-55",
       )}
     >
-      <p className="flex items-center gap-2 text-[11px] text-[#858585] md:text-xs">
+      <p className="text-muted-foreground flex items-center gap-2 text-[11px] md:text-xs">
         {item.menu.provider_name}
         {added && (
-          <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] text-blue-600">
+          <span className="bg-muted text-foreground rounded-full px-2 py-0.5 text-[9px]">
             • Agregado
           </span>
         )}
@@ -35,7 +35,7 @@ export function MenuCard({ item, added, openDetail }: Props) {
         {item.menu.name}{" "}
         <span className="font-normal">| {money(item.menu.price)}</span>
       </h3>
-      <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-[#777] md:text-sm md:leading-5">
+      <p className="text-muted-foreground mt-1 line-clamp-2 text-[11px] leading-4 md:text-sm md:leading-5">
         {item.menu.description}
       </p>
       {item.sold_out ? (
