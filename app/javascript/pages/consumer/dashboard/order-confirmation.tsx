@@ -48,7 +48,7 @@ export function OrderConfirmation({ confirmation, homeUrl }: Props) {
   const primaryDelivery = deliveries[0]
 
   return (
-    <div className="relative mx-auto flex min-h-screen max-w-3xl flex-col bg-white px-6 pt-6 pb-8 text-[#151515] md:my-8 md:min-h-0 md:rounded-2xl md:border md:border-[#e5e5e5] md:p-8">
+    <div className="bg-background border-border text-foreground relative mx-auto flex min-h-screen max-w-3xl flex-col px-6 pt-6 pb-8 md:my-8 md:min-h-0 md:rounded-2xl md:border md:p-8">
       <Button
         asChild
         type="button"
@@ -60,16 +60,16 @@ export function OrderConfirmation({ confirmation, homeUrl }: Props) {
           <X aria-hidden="true" className="size-5" />
         </Link>
       </Button>
-      <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-[#171717] text-white">
+      <div className="bg-primary text-primary-foreground mx-auto flex size-20 items-center justify-center rounded-full">
         <Check aria-hidden="true" className="size-10" strokeWidth={2.5} />
       </div>
       <h1 className="mt-7 text-center text-2xl font-bold">¡Pedido recibido!</h1>
-      <p className="mt-2 text-center text-base leading-6 text-[#888]">
+      <p className="text-muted-foreground mt-2 text-center text-base leading-6">
         Te notificaremos cuando el proveedor confirme tu pedido.
       </p>
 
-      <section className="mt-7 rounded-lg border border-[#e5e5e5] bg-[#fafafa] p-4 text-sm">
-        <p className="text-[#777]">Entrega</p>
+      <section className="border-border bg-muted mt-7 rounded-lg border p-4 text-sm">
+        <p className="text-muted-foreground">Entrega</p>
         <p className="mt-1 font-semibold capitalize">{deliveryDates[0]}</p>
         {primaryDelivery && (
           <p className="mt-1 font-medium">
@@ -77,10 +77,12 @@ export function OrderConfirmation({ confirmation, homeUrl }: Props) {
           </p>
         )}
 
-        <div className="mt-4 space-y-4 border-t border-[#b5b5b5] pt-4">
+        <div className="border-border mt-4 space-y-4 border-t pt-4">
           {deliveries.map((delivery) => (
             <section key={`${delivery.label}-${delivery.address}`}>
-              <p className="text-[#777]">{delivery.items[0]?.provider_name}</p>
+              <p className="text-muted-foreground">
+                {delivery.items[0]?.provider_name}
+              </p>
               <div className="mt-2 space-y-2">
                 {delivery.items.map((item) => (
                   <div
@@ -89,7 +91,7 @@ export function OrderConfirmation({ confirmation, homeUrl }: Props) {
                   >
                     <p className="min-w-0">
                       <span className="font-medium">{item.name}</span>
-                      <span className="text-[#777]">
+                      <span className="text-muted-foreground">
                         {" "}
                         | {money(item.discounted_price / item.quantity)}
                       </span>
@@ -104,15 +106,15 @@ export function OrderConfirmation({ confirmation, homeUrl }: Props) {
           ))}
         </div>
 
-        <div className="mt-4 border-t border-[#b5b5b5] pt-4">
-          <p className="text-[#777]">Monto a pagar</p>
+        <div className="border-border mt-4 border-t pt-4">
+          <p className="text-muted-foreground">Monto a pagar</p>
           <p className="mt-1 text-lg font-bold">{money(confirmation.total)}</p>
         </div>
       </section>
 
       <Button
         type="button"
-        className="mt-auto h-12 w-full bg-black text-white hover:bg-black/85 hover:text-white"
+        className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-auto h-12 w-full"
       >
         Ir a Mis pedidos
       </Button>

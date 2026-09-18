@@ -142,7 +142,7 @@ export function WeeklyMenu({
 
           <aside className="hidden space-y-4 md:block">
             <BenefitCard benefit={benefit} />
-            <div className="rounded-xl border bg-white p-5">
+            <div className="border-border bg-card rounded-xl border p-5">
               <p className="text-muted-foreground text-sm">Tu carrito</p>
               <h3 className="mt-8 text-lg">
                 {count} platos · {money(total)}
@@ -154,7 +154,7 @@ export function WeeklyMenu({
                 type="button"
                 onClick={openCart}
                 disabled={count === 0}
-                className="mt-8 w-full bg-black text-white hover:bg-black/85 hover:text-white"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-8 w-full"
               >
                 Ver carrito
               </Button>
@@ -167,7 +167,7 @@ export function WeeklyMenu({
         <Button
           type="button"
           onClick={openCart}
-          className="fixed inset-x-5 bottom-24 z-20 h-12 rounded-lg bg-black text-sm text-white shadow-lg hover:bg-black/85 hover:text-white md:hidden"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed inset-x-5 bottom-24 z-20 h-12 rounded-lg text-sm shadow-lg md:hidden"
         >
           Ver carrito
         </Button>
