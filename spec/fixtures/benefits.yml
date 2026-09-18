@@ -1,0 +1,6 @@
+one:
+  consumer: one
+  amount: 5000
+  description: Beneficio mensual de almuerzo
+  due_date: <%= Date.current.end_of_month.iso8601 %>
+  percentage: 50

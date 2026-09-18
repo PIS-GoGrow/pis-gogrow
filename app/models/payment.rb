@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Payment < ApplicationRecord
+  enum :status, { pending: 0, paid: 1 }, default: :pending
+
   belongs_to :account
 end
 

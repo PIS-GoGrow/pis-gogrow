@@ -3,7 +3,13 @@
 require "rails_helper"
 
 RSpec.describe Account, type: :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+  fixtures :accounts, :payments, :consumers, :companies, :users
+
+  describe ".pending" do
+    it "includes accounts with no payment, or none accredited, and excludes settled ones" do
+      expect(Account.pending).to contain_exactly(accounts(:unpaid), accounts(:failed_payment))
+    end
+  end
 end
 
 # == Schema Information

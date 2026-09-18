@@ -3,9 +3,14 @@
 class Account < ApplicationRecord
   belongs_to :owner, polymorphic: true
 
-  has_many :payment
-  has_many :order_accounts
+  has_many :payments, dependent: :destroy
+  has_many :order_accounts, dependent: :destroy
   has_many :orders, through: :order_accounts
+
+  # Deuda pendiente: cuentas que todavía no tienen ningún pago acreditado.
+  scope :pending, -> {
+    where.not(id: joins(:payments).merge(Payment.paid).select(:id))
+  }
 end
 
 # == Schema Information
