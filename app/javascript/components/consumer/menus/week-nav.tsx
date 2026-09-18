@@ -86,7 +86,7 @@ export default function WeekNav({
           <ToggleGroupItem
             key={d}
             value={d}
-            className="flex h-[60px] flex-1 flex-col items-center justify-center gap-0.5 rounded-md border p-2.5 data-[state=on]:bg-black data-[state=on]:text-white data-[state=on]:hover:bg-black"
+            className="border-border data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary flex h-[60px] flex-1 flex-col items-center justify-center gap-0.5 rounded-md border p-2.5"
           >
             <span className="text-sm leading-5 font-bold tracking-normal capitalize">
               {weekdayLabel(d)}

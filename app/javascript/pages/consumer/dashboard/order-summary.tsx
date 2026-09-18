@@ -21,7 +21,7 @@ export function OrderSummary({
     <div className={cn("pt-4 text-xs", !compact && "space-y-3")}>
       {!compact && (
         <>
-          <div className="flex justify-between text-[#777]">
+          <div className="text-muted-foreground flex justify-between">
             <span>Precio vianda</span>
             <span>{money(subtotal)}</span>
           </div>
@@ -34,7 +34,7 @@ export function OrderSummary({
       <div
         className={cn(
           "flex justify-between text-base font-bold",
-          !compact && "border-t border-[#e5e5e5] pt-3",
+          !compact && "border-border border-t pt-3",
         )}
       >
         <span>Monto a pagar</span>
