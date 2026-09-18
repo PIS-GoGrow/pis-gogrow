@@ -34,6 +34,7 @@ Rails.application.routes.draw do
   namespace :provider do
     resources :menus
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :payments, only: [:index, :update]
   end
 
   resources :orders, only: [ :index, :show ]
@@ -43,6 +44,7 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :menus, only: [ :index ]
     resources :orders, only: [ :create ], as: :consumer_orders
+    resources :payments, only: [:index]
   end
 
   namespace :admin do
