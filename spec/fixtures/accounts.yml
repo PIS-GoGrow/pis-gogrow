@@ -1,0 +1,14 @@
+unpaid:
+  owner: one (Consumer)
+  month: <%= Date.current.beginning_of_month.iso8601 %>
+  amount: 300.50
+
+paid:
+  owner: one (Consumer)
+  month: <%= 1.month.ago.beginning_of_month.iso8601 %>
+  amount: 150.25
+
+failed_payment:
+  owner: one (Consumer)
+  month: <%= 2.months.ago.beginning_of_month.iso8601 %>
+  amount: 100.00

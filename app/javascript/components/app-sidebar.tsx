@@ -4,6 +4,7 @@ import {
   CalendarPlus,
   ClipboardList,
   LayoutGrid,
+  Users,
   Utensils,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -20,6 +21,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
+  adminConsumers,
   adminDashboard,
   consumerDashboard,
   orders,
@@ -58,6 +60,11 @@ export function AppSidebar() {
         title: t("nav.dashboard"),
         href: adminDashboard.index().url,
         icon: LayoutGrid,
+      },
+      {
+        title: t("pages.admin.consumers.index.title"),
+        href: adminConsumers.index().url,
+        icon: Users,
       },
     ],
     consumer: [

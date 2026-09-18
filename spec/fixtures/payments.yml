@@ -1,0 +1,7 @@
+paid:
+  account: paid
+  status: paid
+
+failed:
+  account: failed_payment
+  status: pending
