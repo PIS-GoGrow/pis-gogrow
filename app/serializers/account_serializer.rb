@@ -1,13 +1,33 @@
 # frozen_string_literal: true
 
 class AccountSerializer < ApplicationSerializer
-  attributes :id, :month, :amount, :provider_id
+  attributes :id, :amount, :provider_id
 
   many :payments, resource: PaymentSerializer
 
   typelize :boolean
   attribute :current do |account|
     account.current?
+  end
+
+  typelize :string
+  attribute :month do |account|
+    I18n.l(account.month, format: :month_year)
+  end
+
+  typelize :string
+  attribute :due_date do |account|
+    account.due_date.strftime("%d/%m/%y")
+  end
+
+  typelize :boolean
+  attribute :due_date_passed do |account|
+    Date.current < account.due_date
+  end
+
+  typelize :number
+  attribute :orders_placed do |account|
+    account.orders.count
   end
 end
 

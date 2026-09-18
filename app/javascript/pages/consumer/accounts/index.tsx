@@ -1,18 +1,18 @@
 import { Head } from "@inertiajs/react"
 
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+
 import { Card, CardTitle, CardHeader, CardDescription, CardContent } from "@/components/ui/card"
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty"
 import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
 import type { Account, Provider, BreadcrumbItem } from "@/types"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  CircleCheck, TriangleAlert, Eye
+} from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+
 interface AccountProps {
   accounts: Account[]
   providers: Provider[]
@@ -22,10 +22,33 @@ interface AccountProps {
 
 function AccountCard({ account }: { account: Account }) {
   return (
-    <Card className="bg-gray-50">
-      <CardHeader>
-        <CardTitle>{account.month}</CardTitle>
-        <CardDescription>${account.amount}</CardDescription>
+    <Card className="bg-zinc-50 dark:bg-zinc-900">
+      <CardHeader className="grid gap-4">
+        <CardDescription className="flex">
+          {account.month}
+          
+          <Badge variant="ghost" className={account.due_date_passed ? "ml-auto text-red-600 dark:text-red-400" : "ml-auto text-amber-600 dark:text-amber-400"}>
+            <TriangleAlert />
+            Vence: {account.due_date}
+          </Badge>
+        </CardDescription>
+
+        <Separator />
+
+        <CardTitle className="flex items-center">
+          <span>
+            ${account.amount}
+            <span className="text-zinc-500 dark:text-zinc-400">
+              {" | "}
+              {account.orders_placed} {account.orders_placed == 1 ? "vianda" : "viandas"}
+            </span>
+          </span>
+          <Button className="ml-auto" variant="ghost"> <Eye /> Ver detalle </Button>
+        </CardTitle>
+
+        <Separator />
+
+        <Button> Subir comprobante de pago </Button>
       </CardHeader>
     </Card>
   )
@@ -53,22 +76,22 @@ export default function Index({ accounts, providers, history, current_month_spen
     );
   });
 
-  console.log(providers);
-
-  const providersJSX = providers.map(p => {
-    (
-      <Card key={p.id}>
+  const providersJSX = providers.map(p => (
+      <Card key={p.id} className="w-full">
         <CardHeader>
           <CardTitle>{p.name}</CardTitle>
-          <CardDescription>${current_month_spending}</CardDescription>
         </CardHeader>
 
         <CardContent>
-          {accountsJSX[p.id]}
+          {accountsJSX[p.id] ? accountsJSX[p.id] : (
+            <div className="flex items-center text-emerald-600 dark:text-emerald-400">
+            <CircleCheck className="mr-2" size={16}/> ¡Sin deudas pendientes con este proveedor!
+            </div>
+          )}
         </CardContent>
       </Card>
     )
-  })
+  )
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -76,25 +99,30 @@ export default function Index({ accounts, providers, history, current_month_spen
 
       <div className="mx-auto grid w-full max-w-150 gap-2 p-5">
         <h1> Pagos </h1>
-        <Card className="bg-gray-50">
+        <Card className="bg-zinc-50 dark:bg-zinc-900">
           <CardHeader>
-            <CardTitle>Tu Consumo</CardTitle>
+            <CardTitle className="flex">
+              Tu Consumo
+
+              <Badge variant="outline" className="ml-auto">
+                Este mes
+              </Badge>
+            </CardTitle>
             <CardDescription>${current_month_spending}</CardDescription>
           </CardHeader>
         </Card>
 
         <h1> Pagos </h1>
 
-        <Tabs defaultValue="pending" className="w-[400px]">
-          <TabsList>
+        <Tabs defaultValue="pending" className="w-full">
+          <TabsList className="w-full">
             <TabsTrigger value="pending">Pendientes</TabsTrigger>
             <TabsTrigger value="history">Historia</TabsTrigger>
           </TabsList>
-          <TabsContent value="pending">
+          <TabsContent className="w-full grid gap-2" value="pending">
             {providersJSX}
           </TabsContent>
           <TabsContent value="history">
-            Change your password here.
           </TabsContent>
         </Tabs>
       </div>

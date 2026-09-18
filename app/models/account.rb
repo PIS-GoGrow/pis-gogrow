@@ -8,7 +8,7 @@ class Account < ApplicationRecord
   has_many :order_accounts, dependent: :destroy
 
   has_many :orders, through: :order_accounts
-  belongs_to :providerr
+  belongs_to :provider
 
   before_create :correct_month
 
@@ -29,6 +29,10 @@ class Account < ApplicationRecord
 
   def current?
     month == Date.current.beginning_of_month
+  end
+
+  def due_date
+    month + 1.month + 4.days
   end
 
   # Sincroniza la deuda como la suma del precio de las órdenes asociadas

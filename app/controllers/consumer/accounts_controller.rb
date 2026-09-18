@@ -13,6 +13,11 @@ class Consumer::AccountsController < Consumer::InertiaController
   		accounts = accounts.pending.includes(:payments)
   	end
 
-  	render inertia: { accounts:, providers:, history:, current_month_spending: }
+  	render inertia: {
+      accounts: AccountSerializer.new(accounts).as_json,
+      providers: ProviderSerializer.new(providers).as_json,
+      history:,
+      current_month_spending:
+    }
   end
 end
