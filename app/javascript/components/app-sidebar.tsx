@@ -1,4 +1,5 @@
 import { Link, usePage } from "@inertiajs/react"
+<<<<<<< HEAD
 import {
   CalendarDays,
   CalendarPlus,
@@ -6,6 +7,9 @@ import {
   LayoutGrid,
   Utensils,
 } from "lucide-react"
+=======
+import { LayoutGrid, Utensils, CreditCard } from "lucide-react"
+>>>>>>> a323dbe (Integrar pantalla a sidebar)
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
@@ -23,6 +27,7 @@ import {
   adminDashboard,
   consumerDashboard,
   orders,
+  consumerAccounts,
   providerDashboard,
   providerMenus,
   schedules,
@@ -70,6 +75,11 @@ export function AppSidebar() {
         title: t("nav.orders"),
         href: orders.index().url,
         icon: ClipboardList,
+      },
+      {
+        title: "Pagos",
+        href: consumerAccounts.index().url,
+        icon: CreditCard,
       },
     ],
   }
