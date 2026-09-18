@@ -39,11 +39,11 @@ class Account < ApplicationRecord
   # Si es una cuenta de consumidor, se suma el precio de las órdenes.
   # Si es de Empresa, se suma el precio descontado.
   def sync_amount!
-    # TODO: falta tener en cuenta solo órdenes concretadas
+    # TODO: Habría que validar que se tengan solo en cuenta las órdenes confirmadas
     if owner_type == "Consumer"
-      update amount: orders.sum(:price)
+      update amount: orders.confirmed.sum(:price)
     else
-      update amount: orders.sum(:discounted_price)
+      update amount: orders.confirmed.sum(:discounted_price)
     end
   end
 

@@ -1,5 +1,6 @@
 import { Head } from "@inertiajs/react"
 import { CircleCheck, Eye, TriangleAlert } from "lucide-react"
+import { useState } from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,6 +16,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
 import type { Account, BreadcrumbItem, Provider } from "@/types"
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 interface AccountProps {
   accounts: Account[]
@@ -23,7 +44,74 @@ interface AccountProps {
   current_month_spending: number
 }
 
-function AccountCard({ account }: { account: Account }) {
+interface AccountDetail {
+  orders: SimplifiedOrder[]
+  month: string
+  amount: number
+}
+function OrdersTable({ orders, month, amount }: AccountDetail) {
+  if (!orders)
+    return
+
+  return (
+    <div className="mx-auto mt-2 max-w-150">
+      <h1 className="text-l mb-2 font-bold">Consumos {month}</h1>
+
+      <div className="overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Fecha</TableHead>
+              <TableHead>Plato</TableHead>
+              <TableHead>Cantidad</TableHead>
+              <TableHead className="text-right">Monto</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell>{order.date}</TableCell>
+                <TableCell>{order.menu_name}</TableCell>
+                <TableCell>{order.amount}</TableCell>
+                <TableCell className="text-right">{order.price}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={3}>Total</TableCell>
+              <TableCell className="text-right">{amount}</TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </div>
+    </div>
+  )
+}
+
+
+function AccountCard({ account, setDetail, setLoading }) {
+  async function handleClick() {
+    setLoading(true);
+    try {
+      const response = await fetch(consumerAccounts.show(account.id).url, {
+        headers: { Accept: "application/json" },
+      });
+
+
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}`);
+    }
+
+    const data = await response.json();
+    setDetail(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <Card className="bg-zinc-50 dark:bg-zinc-900">
       <CardHeader className="grid gap-4">
@@ -54,10 +142,12 @@ function AccountCard({ account }: { account: Account }) {
               {account.orders_placed == 1 ? "vianda" : "viandas"}
             </span>
           </span>
-          <Button className="ml-auto" variant="ghost">
-            {" "}
-            <Eye /> Ver detalle{" "}
-          </Button>
+          <SheetTrigger asChild>
+            <Button onClick={handleClick} className="ml-auto" variant="ghost">
+              {" "}
+              <Eye /> Ver detalle{" "}
+            </Button>
+          </SheetTrigger>
         </CardTitle>
 
         <Separator />
@@ -74,6 +164,9 @@ export default function Index({
   history,
   current_month_spending,
 }: AccountProps) {
+  const [loading, setLoading] = useState(false);
+  const [detail, setDetail] = useState<AccountDetail | null>(null);
+
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: "Pagos",
@@ -91,9 +184,11 @@ export default function Index({
     }
 
     accountsJSX[providerId].push(
-      <AccountCard key={account.id} account={account} />,
+      <AccountCard key={account.id} setDetail={setDetail} setLoading={setLoading} account={account} />,
     )
   })
+
+  console.log(detail)
 
   const providersJSX = providers.map((p) => (
     <Card key={p.id} className="w-full">
@@ -134,16 +229,29 @@ export default function Index({
 
         <h1> Pagos </h1>
 
-        <Tabs defaultValue={history ? "history" : "pending"} className="w-full">
-          <TabsList className="w-full">
-            <TabsTrigger value="pending">Pendientes</TabsTrigger>
-            <TabsTrigger value="history">Historia</TabsTrigger>
-          </TabsList>
-          <TabsContent className="grid w-full gap-2" value="pending">
-            {providersJSX}
-          </TabsContent>
-          <TabsContent value="history"></TabsContent>
-        </Tabs>
+        <Sheet>
+          <Tabs
+            defaultValue={history ? "history" : "pending"}
+            className="w-full"
+          >
+            <TabsList className="w-full">
+              <TabsTrigger value="pending">Pendientes</TabsTrigger>
+              <TabsTrigger value="history">Historia</TabsTrigger>
+            </TabsList>
+            <TabsContent className="grid w-full gap-2" value="pending">
+              {providersJSX}
+            </TabsContent>
+            <TabsContent value="history"></TabsContent>
+          </Tabs>
+
+          <SheetContent>
+            <OrdersTable className="m-2" orders={detail?.orders} month={detail?.month} amount={detail?.amount}/>
+            <SheetFooter>
+              <Button type="submit">Save changes</Button>
+              <SheetClose render={<Button variant="outline">Close</Button>} />
+            </SheetFooter>
+          </SheetContent>
+        </Sheet>
       </div>
     </AppLayout>
   )

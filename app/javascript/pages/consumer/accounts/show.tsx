@@ -23,58 +23,52 @@ import {
 } from "@/components/ui/table"
 import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
-import type { Account, BreadcrumbItem, Provider } from "@/types"
+import type { SimplifiedOrder, BreadcrumbItem } from "@/types"
 
 interface AccountProps {
-  orders: Order[]
+  orders: SimplifiedOrder[]
+  month: string
+  amount: number
 }
 
-function OrderRow({ order }: { order: Order }) {
+function OrdersTable({ orders, month, amount }: AccountProps) {
   return (
-    <Card className="bg-zinc-50 dark:bg-zinc-900">
-      <CardHeader className="grid gap-4">
-        <CardDescription className="flex">
-          {account.month}
+    <div className="mx-auto mt-2 max-w-150">
+      <h1 className="text-l mb-2 font-bold">Consumos {month}</h1>
 
-          <Badge
-            variant="ghost"
-            className={
-              account.due_date_passed
-                ? "ml-auto text-red-600 dark:text-red-400"
-                : "ml-auto text-amber-600 dark:text-amber-400"
-            }
-          >
-            <TriangleAlert />
-            Vence: {account.due_date}
-          </Badge>
-        </CardDescription>
-
-        <Separator />
-
-        <CardTitle className="flex items-center">
-          <span>
-            ${account.amount}
-            <span className="text-zinc-500 dark:text-zinc-400">
-              {" | "}
-              {account.orders_placed}{" "}
-              {account.orders_placed == 1 ? "vianda" : "viandas"}
-            </span>
-          </span>
-          <Button className="ml-auto" variant="ghost">
-            {" "}
-            <Eye /> Ver detalle{" "}
-          </Button>
-        </CardTitle>
-
-        <Separator />
-
-        <Button> Subir comprobante de pago </Button>
-      </CardHeader>
-    </Card>
+      <div className="overflow-hidden rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Fecha</TableHead>
+              <TableHead>Plato</TableHead>
+              <TableHead>Cantidad</TableHead>
+              <TableHead className="text-right">Monto</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {orders.map((order) => (
+              <TableRow key={order.id}>
+                <TableCell>{order.date}</TableCell>
+                <TableCell>{order.menu_name}</TableCell>
+                <TableCell>{order.amount}</TableCell>
+                <TableCell className="text-right">{order.price}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell colSpan={3}>Total</TableCell>
+              <TableCell className="text-right">{amount}</TableCell>
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </div>
+    </div>
   )
 }
 
-export default function Show({ orders }: AccountProps) {
+export default function Show({ orders, month, amount }: AccountProps) {
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: "Pagos",
@@ -84,28 +78,7 @@ export default function Show({ orders }: AccountProps) {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-
-    <Table>
-      <TableCaption>A list of your recent invoices.</TableCaption>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[100px]">Invoice</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Method</TableHead>
-          <TableHead className="text-right">Amount</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody> 
-              
-      </TableBody>
-      <TableFooter>
-        <TableRow>
-          <TableCell colSpan={3}>Total</TableCell>
-          <TableCell className="text-right">$2,500.00</TableCell>
-        </TableRow>
-      </TableFooter>
-    </Table>
-
+      <OrdersTable orders={orders} month={month} amount={amount} />
     </AppLayout>
   )
 }

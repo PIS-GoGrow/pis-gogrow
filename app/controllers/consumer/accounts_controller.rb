@@ -23,6 +23,20 @@ class Consumer::AccountsController < Consumer::InertiaController
   end
 
   def show
+    orders = @account.orders.confirmed
+    month = I18n.l(@account.month, format: :month_year)
+    amount = @account.amount
+
+    data = {
+      orders: SimplifiedOrderSerializer.new(orders).as_json,
+      month:,
+      amount:
+    }
+
+    respond_to do |format|
+      format.json { render json: data }
+      format.html { render inertia: data }
+    end
   end
 
   private
