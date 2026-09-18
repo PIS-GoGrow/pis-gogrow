@@ -1,0 +1,68 @@
+# frozen_string_literal: true
+
+class Consumer::OrdersController < Consumer::InertiaController
+  def create
+    consumer = Current.user.consumer
+    requested_items = order_params.fetch(:items)
+    benefit_percentage = active_benefit_for(consumer)&.percentage.to_i
+    return reject_order(:empty_cart) if requested_items.empty?
+    return reject_order(:invalid_address) unless delivery_addresses(consumer).include?(order_params[:address])
+    return reject_order(:invalid_quantity) unless requested_items.all? { |item| item[:quantity].to_s.match?(/\A[1-9]\d*\z/) }
+
+    created_orders = []
+
+    Order.transaction do
+      schedule_ids = requested_items.pluck(:schedule_id)
+      schedules = Schedule.includes(menu: :provider).where(id: schedule_ids.uniq, date: current_week).order(:id).lock.index_by(&:id)
+      raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
+
+      requested_items.each do |item|
+        schedule = schedules.fetch(item[:schedule_id].to_i)
+        address = schedule.menu.provider.home_delivery? ? order_params[:address] : consumer.company.address
+        if address.blank?
+          reject_order(:office_address_required)
+          raise ActiveRecord::Rollback
+        end
+        order = Order.reserve(
+          consumer:,
+          schedule:,
+          quantity: item[:quantity].to_i,
+          notes: item[:notes],
+          address:,
+          discount_percentage: benefit_percentage
+        )
+        raise ActiveRecord::RecordInvalid, order unless order.persisted?
+
+        created_orders << order
+      end
+    end
+
+    redirect_to dashboard_path(confirmed_order_ids: created_orders.map(&:id)), notice: t("flash.cart_confirmed"), status: :see_other unless performed?
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound, KeyError
+    reject_order(:cart_unavailable)
+  end
+
+  private
+
+  def reject_order(reason)
+    redirect_to dashboard_path, inertia: {
+      errors: { order_error: t("validations.#{reason}") }
+    }, status: :see_other
+  end
+
+  def active_benefit_for(consumer)
+    consumer.benefits.where("due_date >= ?", Date.current).order(:due_date).first
+  end
+
+  def current_week
+    Date.current.beginning_of_week(:monday)..Date.current.beginning_of_week(:monday).advance(days: 4)
+  end
+
+  def delivery_addresses(consumer)
+    [ consumer.address, consumer.company.address ].compact_blank
+  end
+
+  def order_params
+    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes ] ] ])
+  end
+end

@@ -3,7 +3,7 @@
 class MenuSerializer < ApplicationSerializer
   typelize_from Menu
 
-  attributes :id, :name, :description, :price, :created_at, :updated_at
+  attributes :id, :name, :description, :price, :fillings, :sauces, :created_at, :updated_at
 end
 
 # == Schema Information
@@ -12,8 +12,10 @@ end
 #
 #  id          :bigint           not null, primary key
 #  description :string
+#  fillings    :string           default([]), not null, is an Array
 #  name        :string
 #  price       :decimal(10, 2)
+#  sauces      :string           default([]), not null, is an Array
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  provider_id :bigint           not null

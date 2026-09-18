@@ -18,6 +18,8 @@ es:
     consumer: "Consumidor"
     admin: "Admin"
   flash:
+    cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
+    order_created: "Tu vianda ha sido reservada."
     already_signed_in: "Ya has iniciado sesión"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
@@ -42,6 +44,12 @@ es:
     no_permission: "No tenés permiso para acceder a este recurso."
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
   validations:
+    office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
+    empty_cart: "Agregá al menos un plato al carrito."
+    invalid_address: "Seleccioná una dirección de entrega válida."
+    invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
+    cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
+    schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
     password_challenge_invalid: "La verificación de contraseña no es válida"
   user_mailer:
     greeting: "Hola,"
@@ -59,6 +67,7 @@ es:
   nav:
     platform: "Plataforma"
     dashboard: "Panel"
+    orders: "Mis pedidos"
     menu: "Menú de navegación"
     change_to: "Cambiar a"
     settings:
@@ -84,6 +93,46 @@ es:
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
+    orders:
+      index:
+        title: "Mis pedidos"
+        upcoming_tab: "Próximos"
+        history_tab: "Historial"
+        upcoming_empty_title: "No tienes pedidos próximos"
+        upcoming_empty_description: "No tienes viandas en camino."
+        history_empty_title: "No tienes pedidos anteriores"
+        history_empty_description: "Tus pedidos completados aparecerán aquí."
+        quantity: "x%{count}"
+        upcoming_address: "Recibes en: %{address}"
+        history_address: "Recibiste en: %{address}"
+        no_date: "Sin fecha de entrega"
+        no_price: "Importe no disponible"
+        base_price: "Precio base: %{amount}"
+        no_address: "Sin dirección de entrega"
+        no_menu: "Plato no disponible"
+        no_provider: "Proveedor no disponible"
+      show:
+        title: "Detalle del pedido"
+        back: "Volver a mis pedidos"
+        quantity: "Cantidad"
+        date: "Fecha de entrega"
+        address: "Dirección de entrega"
+        base_price: "Precio base"
+        subsidy: "Subsidio aplicado"
+        total: "Importe final"
+        notes: "Notas"
+        no_notes: "Sin notas"
+      statuses:
+        pending: "Pendiente"
+        confirmed: "Confirmado"
+        cancelled: "Cancelado"
+        rejected: "Rechazado"
+    cart:
+      office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
+      other_deliveries: "Las demás viandas irán a la dirección seleccionada."
+      office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
+      remove: "Quitar %{name}"
+      delivery: "Entrega: %{date}"
     home:
       title: "Te damos la bienvenida"
       dashboard: "Panel"

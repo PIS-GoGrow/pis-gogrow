@@ -20,14 +20,22 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
         {items.map((item) => (
           <SidebarMenuItem key={item.title}>
             <SidebarMenuButton
-              asChild
-              isActive={page.url.startsWith(item.href)}
+              asChild={!item.disabled}
+              disabled={item.disabled}
+              isActive={!item.disabled && page.url.startsWith(item.href)}
               tooltip={{ children: item.title }}
             >
-              <Link href={item.href} prefetch>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
-              </Link>
+              {item.disabled ? (
+                <>
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                </>
+              ) : (
+                <Link href={item.href} prefetch>
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                </Link>
+              )}
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}
