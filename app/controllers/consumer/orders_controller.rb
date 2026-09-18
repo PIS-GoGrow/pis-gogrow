@@ -1,6 +1,19 @@
 # frozen_string_literal: true
 
 class Consumer::OrdersController < Consumer::InertiaController
+  def index
+    orders = Current.user.consumer.orders.preload(schedule: { menu: { provider: :user } })
+
+    @upcoming_orders = orders.upcoming
+    @past_orders = orders.history
+  end
+
+  def show
+    # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
+    # tiene que ser un 404, no una página ajena.
+    @order = Current.user.consumer.orders.preload(schedule: { menu: { provider: :user } }).find(params[:id])
+  end
+
   def create
     consumer = Current.user.consumer
     requested_items = order_params.fetch(:items)

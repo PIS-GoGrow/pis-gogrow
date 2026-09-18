@@ -22,7 +22,7 @@ import {
 import {
   adminDashboard,
   consumerDashboard,
-  orders,
+  consumerOrders,
   providerDashboard,
   providerMenus,
   schedules,
@@ -68,7 +68,7 @@ export function AppSidebar() {
       },
       {
         title: t("nav.orders"),
-        href: orders.index().url,
+        href: consumerOrders.index().url,
         icon: ClipboardList,
       },
     ],
