@@ -1,12 +1,16 @@
 import { Link } from "@inertiajs/react"
+import { X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import CancelOrderSheet from "@/components/orders/cancel-order-sheet"
 import StatusBadge from "@/components/status-badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -82,6 +86,28 @@ export default function OrderCard({ order, section }: OrderCardProps) {
           )}
         </p>
       </CardContent>
+
+      {/* El ::after de la tarjeta cubre todo para hacerla clickeable, así que
+          las acciones necesitan quedar por encima para poder tocarlas. */}
+      {section === "upcoming" && (
+        <CardFooter className="relative z-10 flex-col items-stretch gap-2 px-4">
+          {order.cancellable ? (
+            <CancelOrderSheet order={order} />
+          ) : (
+            <>
+              <Button type="button" variant="outline" size="sm" disabled>
+                <X aria-hidden="true" />
+                {t("pages.orders.index.cancel")}
+              </Button>
+              <p className="text-muted-foreground text-xs">
+                {t(
+                  `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
+                )}
+              </p>
+            </>
+          )}
+        </CardFooter>
+      )}
     </Card>
   )
 }

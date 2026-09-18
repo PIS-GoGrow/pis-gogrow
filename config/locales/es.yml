@@ -20,6 +20,7 @@ es:
   flash:
     cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
+    order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
     already_signed_in: "Ya has iniciado sesión"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
@@ -50,6 +51,7 @@ es:
     invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
+    order_not_cancellable: "Este pedido ya no se puede cancelar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
   user_mailer:
     greeting: "Hola,"
@@ -111,6 +113,16 @@ es:
         no_address: "Sin dirección de entrega"
         no_menu: "Plato no disponible"
         no_provider: "Proveedor no disponible"
+        cancel: "Cancelar"
+        cancel_dialog:
+          title: "¿Cancelar pedido?"
+          description: "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras."
+          back: "Volver"
+          confirm: "Cancelar pedido"
+        cannot_cancel:
+          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar desde la app."
+          already_closed: "Este pedido ya está cerrado."
+          unavailable: "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
       show:
         title: "Detalle del pedido"
         back: "Volver a mis pedidos"

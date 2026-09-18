@@ -83,6 +83,18 @@
       "orders": {
         "index": {
           "base_price": "Precio base: %{amount}",
+          "cancel": "Cancelar",
+          "cancel_dialog": {
+            "back": "Volver",
+            "confirm": "Cancelar pedido",
+            "description": "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras.",
+            "title": "¿Cancelar pedido?"
+          },
+          "cannot_cancel": {
+            "already_closed": "Este pedido ya está cerrado.",
+            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar desde la app.",
+            "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
+          },
           "history_address": "Recibiste en: %{address}",
           "history_empty_description": "Tus pedidos completados aparecerán aquí.",
           "history_empty_title": "No tienes pedidos anteriores",
