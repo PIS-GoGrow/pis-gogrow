@@ -1,15 +1,12 @@
 import { Link, usePage } from "@inertiajs/react"
-<<<<<<< HEAD
 import {
   CalendarDays,
   CalendarPlus,
   ClipboardList,
   LayoutGrid,
   Utensils,
+  CreditCard,
 } from "lucide-react"
-=======
-import { LayoutGrid, Utensils, CreditCard } from "lucide-react"
->>>>>>> a323dbe (Integrar pantalla a sidebar)
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"

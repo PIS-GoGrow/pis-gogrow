@@ -46,7 +46,7 @@ Rails.application.routes.draw do
       patch :cancel, on: :member
     end
     resources :orders, only: [ :create ], as: :consumer_orders
-    resources :accounts, only: [ :index ]
+    resources :accounts, only: [ :index, :show ]
   end
 
   namespace :admin do

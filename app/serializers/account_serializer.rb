@@ -27,7 +27,7 @@ class AccountSerializer < ApplicationSerializer
 
   typelize :number
   attribute :orders_placed do |account|
-    account.orders.count
+    account.orders.sum :amount
   end
 end
 

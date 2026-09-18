@@ -1,17 +1,20 @@
 import { Head } from "@inertiajs/react"
+import { CircleCheck, Eye, TriangleAlert } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-
-import { Card, CardTitle, CardHeader, CardDescription, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
-import type { Account, Provider, BreadcrumbItem } from "@/types"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  CircleCheck, TriangleAlert, Eye
-} from "lucide-react"
-import { Separator } from "@/components/ui/separator"
+import type { Account, BreadcrumbItem, Provider } from "@/types"
 
 interface AccountProps {
   accounts: Account[]
@@ -26,8 +29,15 @@ function AccountCard({ account }: { account: Account }) {
       <CardHeader className="grid gap-4">
         <CardDescription className="flex">
           {account.month}
-          
-          <Badge variant="ghost" className={account.due_date_passed ? "ml-auto text-red-600 dark:text-red-400" : "ml-auto text-amber-600 dark:text-amber-400"}>
+
+          <Badge
+            variant="ghost"
+            className={
+              account.due_date_passed
+                ? "ml-auto text-red-600 dark:text-red-400"
+                : "ml-auto text-amber-600 dark:text-amber-400"
+            }
+          >
             <TriangleAlert />
             Vence: {account.due_date}
           </Badge>
@@ -40,10 +50,14 @@ function AccountCard({ account }: { account: Account }) {
             ${account.amount}
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
-              {account.orders_placed} {account.orders_placed == 1 ? "vianda" : "viandas"}
+              {account.orders_placed}{" "}
+              {account.orders_placed == 1 ? "vianda" : "viandas"}
             </span>
           </span>
-          <Button className="ml-auto" variant="ghost"> <Eye /> Ver detalle </Button>
+          <Button className="ml-auto" variant="ghost">
+            {" "}
+            <Eye /> Ver detalle{" "}
+          </Button>
         </CardTitle>
 
         <Separator />
@@ -54,7 +68,12 @@ function AccountCard({ account }: { account: Account }) {
   )
 }
 
-export default function Index({ accounts, providers, history, current_month_spending }: AccountProps) {
+export default function Index({
+  accounts,
+  providers,
+  history,
+  current_month_spending,
+}: AccountProps) {
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: "Pagos",
@@ -62,36 +81,38 @@ export default function Index({ accounts, providers, history, current_month_spen
     },
   ]
 
-  const accountsJSX: Record<string | number, JSX.Element[]> = {};
+  const accountsJSX: Record<string | number, JSX.Element[]> = {}
 
   accounts.forEach((account: Account) => {
-    const providerId = account.provider_id;
+    const providerId = account.provider_id
 
     if (!accountsJSX[providerId]) {
-      accountsJSX[providerId] = [];
+      accountsJSX[providerId] = []
     }
 
     accountsJSX[providerId].push(
-      <AccountCard key={account.id} account={account} />
-    );
-  });
-
-  const providersJSX = providers.map(p => (
-      <Card key={p.id} className="w-full">
-        <CardHeader>
-          <CardTitle>{p.name}</CardTitle>
-        </CardHeader>
-
-        <CardContent>
-          {accountsJSX[p.id] ? accountsJSX[p.id] : (
-            <div className="flex items-center text-emerald-600 dark:text-emerald-400">
-            <CircleCheck className="mr-2" size={16}/> ¡Sin deudas pendientes con este proveedor!
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <AccountCard key={account.id} account={account} />,
     )
-  )
+  })
+
+  const providersJSX = providers.map((p) => (
+    <Card key={p.id} className="w-full">
+      <CardHeader>
+        <CardTitle>{p.name}</CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        {accountsJSX[p.id] ? (
+          accountsJSX[p.id]
+        ) : (
+          <div className="flex items-center text-emerald-600 dark:text-emerald-400">
+            <CircleCheck className="mr-2" size={16} /> ¡Sin deudas pendientes
+            con este proveedor!
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  ))
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -103,7 +124,6 @@ export default function Index({ accounts, providers, history, current_month_spen
           <CardHeader>
             <CardTitle className="flex">
               Tu Consumo
-
               <Badge variant="outline" className="ml-auto">
                 Este mes
               </Badge>
@@ -114,16 +134,15 @@ export default function Index({ accounts, providers, history, current_month_spen
 
         <h1> Pagos </h1>
 
-        <Tabs defaultValue="pending" className="w-full">
+        <Tabs defaultValue={history ? "history" : "pending"} className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="pending">Pendientes</TabsTrigger>
             <TabsTrigger value="history">Historia</TabsTrigger>
           </TabsList>
-          <TabsContent className="w-full grid gap-2" value="pending">
+          <TabsContent className="grid w-full gap-2" value="pending">
             {providersJSX}
           </TabsContent>
-          <TabsContent value="history">
-          </TabsContent>
+          <TabsContent value="history"></TabsContent>
         </Tabs>
       </div>
     </AppLayout>
