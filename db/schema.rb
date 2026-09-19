@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_204500) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,6 +22,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_204500) do
     t.string "owner_type", null: false
     t.datetime "updated_at", null: false
     t.index ["owner_type", "owner_id"], name: "index_accounts_on_owner"
+  end
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
   create_table "admins", force: :cascade do |t|
@@ -119,9 +147,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_204500) do
   create_table "payments", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
-    t.integer "status"
+    t.bigint "provider_id"
+    t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_payments_on_account_id"
+    t.index ["provider_id"], name: "index_payments_on_provider_id"
   end
 
   create_table "providers", force: :cascade do |t|
@@ -358,6 +388,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_204500) do
     t.index ["google_uid"], name: "index_users_on_google_uid", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "admins", "companies"
   add_foreign_key "admins", "users"
   add_foreign_key "benefit_configurations", "companies"
@@ -371,6 +403,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_204500) do
   add_foreign_key "orders", "consumers"
   add_foreign_key "orders", "schedules"
   add_foreign_key "payments", "accounts"
+  add_foreign_key "payments", "providers"
   add_foreign_key "providers", "users", on_delete: :nullify
   add_foreign_key "reviews", "menus"
   add_foreign_key "schedules", "menus"

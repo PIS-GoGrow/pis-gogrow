@@ -42,6 +42,7 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :menus, only: [ :index ]
     resources :orders, only: [ :index, :show, :create ]
+    resources :payments, only: [ :update ]
   end
 
   namespace :admin do

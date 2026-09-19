@@ -43,6 +43,7 @@ es:
     role_set: "Rol cambiado exitosamente."
     no_permission: "No tenés permiso para acceder a este recurso."
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
+    payment_receipt_submitted: "Comprobante enviado para su validacion."
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -51,6 +52,16 @@ es:
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
     password_challenge_invalid: "La verificación de contraseña no es válida"
+    payment_closed: "Este pago ya fue aprobado y no puede modificarse."
+  activerecord:
+    errors:
+      models:
+        payment:
+          attributes:
+            receipt:
+              required: "debe adjuntarse para enviar el pago"
+              invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
+              too_large: "no puede superar los 10 MB"
   user_mailer:
     greeting: "Hola,"
     support: "¿Tienes dudas o necesitas ayuda? Responde este correo y nuestro equipo de soporte te ayudará a resolverlo."
