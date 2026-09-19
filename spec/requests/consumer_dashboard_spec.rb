@@ -52,6 +52,24 @@ RSpec.describe "Consumer dashboard", type: :request do
     }
   end
 
+  it "reports the five meal weekly allowance using delivery dates" do
+    Order.delete_all
+    Schedule.delete_all
+    user = consumer_user
+    schedule = create_schedule
+    benefit = Benefit.create!(consumer: user.consumer, amount: 20, percentage: 50, due_date: 1.month.from_now)
+    Order.create!(consumer: user.consumer, schedule:, amount: 2, price: 600, discounted_price: 300)
+
+    next_week_schedule = Schedule.create!(menu: schedule.menu, date: schedule.date + 1.week, amount: 5)
+    Order.create!(consumer: user.consumer, schedule: next_week_schedule, amount: 3, price: 900, discounted_price: 450)
+    sign_in_as_consumer(user)
+
+    get dashboard_path
+
+    expect(benefit.amount).to eq(20)
+    expect(inertia).to have_props(benefit: { limit: 5, used: 2, percentage: 50 })
+  end
+
   it "rejects a session with a different role" do
     provider_user = User.create!(email: "provider-role@gmail.com", name: "Provider", password: "password123456")
     Provider.create!(user: provider_user)

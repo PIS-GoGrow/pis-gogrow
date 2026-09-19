@@ -61,19 +61,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
     t.index ["user_id"], name: "index_admins_on_user_id"
   end
 
-  create_table "benefit_configurations", force: :cascade do |t|
-    t.bigint "company_id", null: false
-    t.datetime "created_at", null: false
-    t.bigint "created_by_id", null: false
-    t.date "effective_from", null: false
-    t.integer "monthly_voucher_limit", null: false
-    t.integer "subsidy_percentage", null: false
-    t.datetime "updated_at", null: false
-    t.index ["company_id", "effective_from"], name: "index_benefit_configurations_on_company_id_and_effective_from", unique: true
-    t.index ["company_id"], name: "index_benefit_configurations_on_company_id"
-    t.index ["created_by_id"], name: "index_benefit_configurations_on_created_by_id"
-  end
-
   create_table "benefits", force: :cascade do |t|
     t.integer "amount"
     t.bigint "consumer_id", null: false
@@ -132,6 +119,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
   create_table "orders", force: :cascade do |t|
     t.string "address"
     t.integer "amount"
+    t.datetime "cancelled_at"
+    t.bigint "cancelled_by_id"
     t.bigint "consumer_id", null: false
     t.datetime "created_at", null: false
     t.decimal "discounted_price", precision: 10, scale: 2
@@ -139,7 +128,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
     t.decimal "price", precision: 10, scale: 2
     t.bigint "schedule_id"
     t.integer "status", default: 0, null: false
+    t.integer "status_before_cancellation"
     t.datetime "updated_at", null: false
+    t.index ["cancelled_by_id"], name: "index_orders_on_cancelled_by_id"
     t.index ["consumer_id"], name: "index_orders_on_consumer_id"
     t.index ["schedule_id"], name: "index_orders_on_schedule_id"
   end
@@ -392,8 +383,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "admins", "companies"
   add_foreign_key "admins", "users"
-  add_foreign_key "benefit_configurations", "companies"
-  add_foreign_key "benefit_configurations", "users", column: "created_by_id"
   add_foreign_key "benefits", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
@@ -402,6 +391,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
   add_foreign_key "order_accounts", "orders"
   add_foreign_key "orders", "consumers"
   add_foreign_key "orders", "schedules"
+  add_foreign_key "orders", "users", column: "cancelled_by_id"
   add_foreign_key "payments", "accounts"
   add_foreign_key "payments", "providers"
   add_foreign_key "providers", "users", on_delete: :nullify

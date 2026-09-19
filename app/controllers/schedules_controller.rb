@@ -26,7 +26,7 @@ class SchedulesController < Provider::InertiaController
       return
     end
 
-    week_end = week_start.end_of_week(:monday)
+    week_end = week_start + 4.days
 
     schedules =
         Schedule
@@ -54,6 +54,7 @@ class SchedulesController < Provider::InertiaController
           date: date,
           published: published,
           publishable: (
+            date.on_weekday? &&
             date >= Date.current &&
             date <= maximum_publish_date &&
             !published
@@ -87,6 +88,12 @@ class SchedulesController < Provider::InertiaController
     if date < Date.current
       redirect_to schedules_path,
                   inertia: { errors: { date: [ "No se puede publicar un menú para una fecha pasada" ] } }
+      return
+    end
+
+    unless date.on_weekday?
+      redirect_to schedules_path,
+                  inertia: { errors: { date: [ "Solo se pueden publicar menús de lunes a viernes" ] } }
       return
     end
 
@@ -137,10 +144,10 @@ class SchedulesController < Provider::InertiaController
   end
 
   def maximum_publish_date
-    Date.current.end_of_week(:monday) + 1.week
+    Date.current.next_week(:monday) + 4.days
   end
 
-    private
+  private
 
   def requested_week_start
     return Date.current.beginning_of_week(:monday) if params[:week_start].blank?

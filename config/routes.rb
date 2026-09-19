@@ -36,12 +36,15 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
+  resources :orders, only: [ :index, :show ]
   resources :schedules, only: [ :index, :create ]
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :menus, only: [ :index ]
-    resources :orders, only: [ :index, :show, :create ]
+    resources :orders, only: [ :create ], as: :consumer_orders do
+      patch :cancel, on: :member
+    end
     resources :payments, only: [ :update ]
   end
 

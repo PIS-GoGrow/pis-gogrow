@@ -47,7 +47,7 @@ export function DishDetail({
   const addDisabled = item.sold_out || choicesMissing
 
   return (
-    <div className="mx-auto min-h-screen max-w-3xl bg-white px-6 pt-6 pb-28 md:my-8 md:min-h-0 md:rounded-2xl md:border md:border-[#e5e5e5] md:p-8">
+    <div className="bg-background border-border mx-auto min-h-screen max-w-3xl px-6 pt-6 pb-28 md:my-8 md:min-h-0 md:rounded-2xl md:border md:p-8">
       <Button
         type="button"
         variant="ghost"
@@ -58,9 +58,9 @@ export function DishDetail({
       >
         <ChevronLeft aria-hidden="true" className="size-5" />
       </Button>
-      <p className="text-xs text-[#777]">{item.menu.provider_name}</p>
+      <p className="text-muted-foreground text-xs">{item.menu.provider_name}</p>
       <h1 className="mt-1 text-xl font-bold">{item.menu.name}</h1>
-      <p className="mt-2 text-xs leading-5 text-[#777]">
+      <p className="text-muted-foreground mt-2 text-xs leading-5">
         {item.menu.description}
       </p>
       <p className="mt-1 font-bold">{money(item.menu.price)}</p>
@@ -80,11 +80,11 @@ export function DishDetail({
           setValue={setSauce}
         />
       )}
-      <section className="border-b border-[#e5e5e5] py-5">
+      <section className="border-border border-b py-5">
         <div className="flex justify-between text-sm font-medium">
           <h2>Opiniones del plato</h2>
           <span className="text-xs leading-4">
-            <Star className="mr-1 inline size-3 fill-black" />
+            <Star className="fill-foreground mr-1 inline size-3" />
             {reviews[0]?.rating ?? "4.8"}
           </span>
         </div>
@@ -102,14 +102,14 @@ export function DishDetail({
           ).map((review, index) => (
             <article
               key={review.id}
-              className="flex h-[136px] w-[280px] shrink-0 flex-col gap-3 rounded-md border border-[#e5e5e5] bg-[#f5f5f5] p-4"
+              className="border-border bg-muted flex h-[136px] w-[280px] shrink-0 flex-col gap-3 rounded-md border p-4"
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm leading-5 font-medium">
                     {index ? "Pedro" : "Lucía"}
                   </span>
-                  <span className="text-xs leading-4 text-[#888]">
+                  <span className="text-muted-foreground text-xs leading-4">
                     28/07/26
                   </span>
                 </div>
@@ -122,7 +122,7 @@ export function DishDetail({
           ))}
         </div>
       </section>
-      <section className="border-b border-[#e5e5e5] py-4">
+      <section className="border-border border-b py-4">
         <label htmlFor="notes" className="text-xs font-semibold">
           Notas para este plato
         </label>
@@ -132,9 +132,11 @@ export function DishDetail({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Escribe las notas que necesites..."
-          className="mt-3 h-20 w-full resize-none rounded-lg border-white bg-white p-3 text-xs outline-none placeholder:text-[#999] focus-visible:border-white focus-visible:ring-0 dark:border-white dark:bg-white"
+          className="mt-3 h-20 resize-none rounded-lg p-3 text-xs"
         />
-        <p className="text-right text-[10px] text-[#888]">{notes.length}/140</p>
+        <p className="text-muted-foreground text-right text-[10px]">
+          {notes.length}/140
+        </p>
       </section>
       <OrderSummary
         subtotal={subtotal}
@@ -142,7 +144,7 @@ export function DishDetail({
         total={subtotal - discount}
         percentage={percentage}
       />
-      <div className="fixed inset-x-0 bottom-0 flex gap-2 border-t border-[#e5e5e5] bg-white p-6 md:static md:mt-5 md:border-0 md:p-0">
+      <div className="bg-background border-border fixed inset-x-0 bottom-0 flex gap-2 border-t p-6 md:static md:mt-5 md:border-0 md:p-0">
         <QuantityInput
           value={quantity}
           max={item.remaining}
@@ -151,7 +153,7 @@ export function DishDetail({
         <Button
           disabled={addDisabled}
           onClick={add}
-          className="h-12 flex-1 rounded-lg bg-[#171717] text-white hover:bg-[#171717]/90 disabled:bg-[#999] disabled:text-white disabled:opacity-100"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
         >
           Agregar
         </Button>
@@ -169,7 +171,7 @@ interface ChoicesProps {
 
 function Choices({ title, choices, value, setValue }: ChoicesProps) {
   return (
-    <section className="border-b border-[#e5e5e5] py-5">
+    <section className="border-border border-b py-5">
       <h2 className="text-xs font-semibold">{title}</h2>
       <RadioGroup
         value={value}

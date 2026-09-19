@@ -143,7 +143,7 @@ export default function Index({
           '@media (max-width: 767px) { [data-slot="sidebar-inset"] > header { display: none; } }'
         }
       </style>
-      <main className="min-h-svh bg-[#fafafa] text-[#151515] md:min-h-[calc(100svh-4rem)]">
+      <main className="bg-background text-foreground min-h-svh md:min-h-[calc(100svh-4rem)]">
         <Head title="Menú semanal" />
         {activeView === "menu" && (
           <WeeklyMenu
