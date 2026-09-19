@@ -66,6 +66,11 @@ export function AppSidebar() {
         href: providerOrders.index().url,
         icon: Package,
       },
+      {
+        title: "Validar pagos",
+        href: providerPayments.index().url, 
+        icon: FileCheck,
+      },
     ],
     admin: [
       {
