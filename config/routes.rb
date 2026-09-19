@@ -42,7 +42,9 @@ Rails.application.routes.draw do
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :menus, only: [ :index ]
-    resources :orders, only: [ :create ], as: :consumer_orders
+    resources :orders, only: [ :create ], as: :consumer_orders do
+      patch :cancel, on: :member
+    end
   end
 
   namespace :admin do
