@@ -58,10 +58,10 @@ RSpec.describe "Consumer dashboard", type: :request do
     user = consumer_user
     schedule = create_schedule
     benefit = Benefit.create!(consumer: user.consumer, amount: 20, percentage: 50, due_date: 1.month.from_now)
-    Order.create!(consumer: user.consumer, schedule:, amount: 2, price: 600, discounted_price: 300)
+    Order.create!(consumer: user.consumer, schedule:, amount: 2, price: 600, discounted_price: 300, address: user.consumer.address, delivery_method: :home)
 
     next_week_schedule = Schedule.create!(menu: schedule.menu, date: schedule.date + 1.week, amount: 5)
-    Order.create!(consumer: user.consumer, schedule: next_week_schedule, amount: 3, price: 900, discounted_price: 450)
+    Order.create!(consumer: user.consumer, schedule: next_week_schedule, amount: 3, price: 900, discounted_price: 450, address: user.consumer.address, delivery_method: :home)
     sign_in_as_consumer(user)
 
     get dashboard_path

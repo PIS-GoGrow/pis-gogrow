@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_15_204500) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_18_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -112,8 +112,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_15_204500) do
     t.bigint "schedule_id"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.integer "delivery_method", null: false
     t.index ["consumer_id"], name: "index_orders_on_consumer_id"
     t.index ["schedule_id"], name: "index_orders_on_schedule_id"
+    t.check_constraint "delivery_method <> 1 OR address IS NOT NULL AND btrim(address::text) <> ''::text", name: "orders_home_delivery_requires_address"
   end
 
   create_table "payments", force: :cascade do |t|

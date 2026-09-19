@@ -1,6 +1,7 @@
 import { Link } from "@inertiajs/react"
 import { Check, X } from "lucide-react"
 import { useMemo } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import type { ConsumerDashboardIndex } from "@/types"
@@ -15,19 +16,25 @@ interface Props {
 }
 
 export function OrderConfirmation({ confirmation, homeUrl }: Props) {
+  const { t } = useTranslation()
+
   const deliveries = useMemo(() => {
     return Object.values(
       confirmation.orders.reduce<
         Record<
           string,
-          { address: string; label: string; items: Confirmation["orders"] }
+          {
+            address: string
+            deliveryMethod: string
+            items: Confirmation["orders"]
+          }
         >
       >((groups, item) => {
-        const key = `${item.provider_name}-${item.address}`
+        const key = `${item.provider_name}-${item.delivery_method}-${item.address}`
 
         groups[key] ??= {
           address: item.address,
-          label: item.address_label,
+          deliveryMethod: item.delivery_method,
           items: [],
         }
         groups[key].items.push(item)
@@ -73,13 +80,18 @@ export function OrderConfirmation({ confirmation, homeUrl }: Props) {
         <p className="mt-1 font-semibold capitalize">{deliveryDates[0]}</p>
         {primaryDelivery && (
           <p className="mt-1 font-medium">
-            {primaryDelivery.label} | {primaryDelivery.address}
+            {t(
+              `pages.orders.delivery_methods.${primaryDelivery.deliveryMethod}`,
+            )}{" "}
+            | {primaryDelivery.address}
           </p>
         )}
 
         <div className="border-border mt-4 space-y-4 border-t pt-4">
           {deliveries.map((delivery) => (
-            <section key={`${delivery.label}-${delivery.address}`}>
+            <section
+              key={`${delivery.items[0]?.provider_name}-${delivery.deliveryMethod}-${delivery.address}`}
+            >
               <p className="text-muted-foreground">
                 {delivery.items[0]?.provider_name}
               </p>

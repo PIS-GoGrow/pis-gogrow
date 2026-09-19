@@ -15,6 +15,11 @@ past:
   date: <%= Date.current - 5 %>
   amount: 7
 
+office:
+  menu: office_menu
+  date: <%= Date.current + 1 %>
+  amount: 5
+
 # == Schema Information
 #
 # Table name: schedules
