@@ -133,6 +133,10 @@ class Order < ApplicationRecord
     account.sync_amount!
   end
 
+  def sync_accounts
+    accounts.each(&:sync_amount!)
+  end
+
   def remember_accounts
     @accounts_to_sync = accounts.to_a
   end
