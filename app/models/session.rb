@@ -3,11 +3,25 @@
 class Session < ApplicationRecord
   belongs_to :user
 
-  enum :role, { provider: 0, admin: 1, consumer: 2 }
-
   before_create do
     self.user_agent = Current.user_agent
     self.ip_address = Current.ip_address
+  end
+
+  enum :role, { provider: 0, admin: 1, consumer: 2 }
+
+  validate :role_available_for_user
+
+  private
+
+  # Validar que el rol con el que se va a iniciar la sesión sea válido
+  # para el usuario.
+  def role_available_for_user
+    return if role.blank? || user.blank?
+
+    unless user.public_send("#{role}?")
+      errors.add(:role, "no está disponible para este usuario")
+    end
   end
 end
 

@@ -1,8 +1,9 @@
 import { Head } from "@inertiajs/react"
 import { Package } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
-import OrderCard from "@/components/orders/order-card"
+import ProviderOrderCard from "@/components/orders/provider-order-card"
 import PageContainer from "@/components/page-container"
 import {
   Empty,
@@ -18,15 +19,16 @@ import type { BreadcrumbItem, OrderStatus, ProviderOrdersIndex } from "@/types"
 
 type StatusFilter = "all" | OrderStatus
 
-const filters: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "Todos" },
-  { value: "pending", label: "Pendientes" },
-  { value: "confirmed", label: "Confirmados" },
-  { value: "delivered", label: "Entregados" },
-  { value: "cancelled", label: "Cancelados" },
+const filters: StatusFilter[] = [
+  "all",
+  "pending",
+  "confirmed",
+  "cancelled",
+  "rejected",
 ]
 
 export default function Index({ orders }: ProviderOrdersIndex) {
+  const { t } = useTranslation()
   const [filter, setFilter] = useState<StatusFilter>("all")
 
   const visibleOrders =
@@ -36,16 +38,19 @@ export default function Index({ orders }: ProviderOrdersIndex) {
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      title: "Pedidos",
+      title: t("pages.provider_orders.index.title"),
       href: providerOrders.index().url,
     },
   ]
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Pedidos" />
+      <Head title={t("pages.provider_orders.index.title")} />
 
-      <PageContainer eyebrow="Operación diaria" title="Pedidos">
+      <PageContainer
+        eyebrow={t("pages.provider_orders.index.eyebrow")}
+        title={t("pages.provider_orders.index.title")}
+      >
         <div className="overflow-x-auto pb-1">
           <ToggleGroup
             type="single"
@@ -54,15 +59,15 @@ export default function Index({ orders }: ProviderOrdersIndex) {
             spacing={2}
             value={filter}
             onValueChange={(value) => value && setFilter(value as StatusFilter)}
-            aria-label="Filtrar pedidos por estado"
+            aria-label={t("pages.provider_orders.index.filter_label")}
           >
-            {filters.map(({ value, label }) => (
+            {filters.map((value) => (
               <ToggleGroupItem
                 key={value}
                 value={value}
                 className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:hover:text-primary-foreground rounded-full px-4"
               >
-                {label}
+                {t(`pages.provider_orders.index.filters.${value}`)}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
@@ -74,18 +79,20 @@ export default function Index({ orders }: ProviderOrdersIndex) {
               <EmptyMedia variant="icon">
                 <Package aria-hidden="true" />
               </EmptyMedia>
-              <EmptyTitle>No hay pedidos</EmptyTitle>
+              <EmptyTitle>
+                {t("pages.provider_orders.index.empty_title")}
+              </EmptyTitle>
               <EmptyDescription>
                 {filter === "all"
-                  ? "Todavía no recibiste pedidos para hoy."
-                  : "No tenés pedidos con este estado para hoy."}
+                  ? t("pages.provider_orders.index.empty_description")
+                  : t("pages.provider_orders.index.empty_filtered_description")}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {visibleOrders.map((order) => (
-              <OrderCard key={order.id} order={order} />
+              <ProviderOrderCard key={order.id} order={order} />
             ))}
           </div>
         )}

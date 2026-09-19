@@ -7,6 +7,11 @@ class UserSerializer < ApplicationSerializer
   attribute :avatar do |user|
     user.avatar_url
   end
+
+  typelize roles: "('consumer' | 'provider' | 'admin')[]"
+  attribute :roles do |user|
+    user.roles
+  end
 end
 
 # == Schema Information
@@ -19,6 +24,7 @@ end
 #  google_uid      :string
 #  name            :string           not null
 #  password_digest :string           not null
+#  roles           :string           default([]), not null, is an Array
 #  verified        :boolean          default(FALSE), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null

@@ -1,27 +1,108 @@
-pending_today:
-  consumer: martina
-  schedule: wok_today
+# Cubren la matriz completa del corte entre secciones: estado x fecha, más la
+# orden sin schedule que el dependent: :nullify de Schedule puede dejar.
+upcoming_pending_future:
+  consumer: one
+  schedule: future
   status: pending
-  amount: 2
-  price: 300
-  notes: Sin picante
-  created_at: <%= Time.current.change(hour: 12, min: 30) %>
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
 
-confirmed_today:
-  consumer: martina
-  schedule: wok_today
+upcoming_confirmed_future:
+  consumer: one
+  schedule: future
+  status: confirmed
+  amount: 2
+  price: 601.00
+  discounted_price: 300.50
+  address: Julio Herrera y Reissig 565
+
+upcoming_pending_today:
+  consumer: one
+  schedule: today
+  status: pending
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+history_cancelled_future:
+  consumer: one
+  schedule: future
+  status: cancelled
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+history_rejected_future:
+  consumer: one
+  schedule: future
+  status: rejected
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+history_confirmed_past:
+  consumer: one
+  schedule: past
   status: confirmed
   amount: 1
-  price: 300
-  address: Oficina GoGrow
-  created_at: <%= Time.current.change(hour: 13, min: 0) %>
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
 
-tomorrow:
-  consumer: martina
-  schedule: wok_tomorrow
-  price: 300
+history_pending_past:
+  consumer: one
+  schedule: past
+  status: pending
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
 
-other_provider_today:
-  consumer: martina
-  schedule: curry_today
-  price: 360
+history_without_schedule:
+  consumer: one
+  status: pending
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Julio Herrera y Reissig 565
+
+other_consumer_upcoming:
+  consumer: other
+  schedule: future
+  status: confirmed
+  amount: 1
+  price: 300.50
+  discounted_price: 150.25
+  address: Bulevar Artigas 1234
+
+# == Schema Information
+#
+# Table name: orders
+#
+#  id               :bigint           not null, primary key
+#  address          :string
+#  amount           :integer
+#  discounted_price :decimal(10, 2)
+#  notes            :string
+#  price            :decimal(10, 2)
+#  status           :integer          default(0), not null
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  consumer_id      :bigint           not null
+#  schedule_id      :bigint
+#
+# Indexes
+#
+#  index_orders_on_consumer_id  (consumer_id)
+#  index_orders_on_schedule_id  (schedule_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (consumer_id => consumers.id)
+#  fk_rails_...  (schedule_id => schedules.id)
+#

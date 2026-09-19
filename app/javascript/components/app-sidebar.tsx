@@ -1,5 +1,12 @@
 import { Link, usePage } from "@inertiajs/react"
-import { LayoutGrid, Package, Utensils } from "lucide-react"
+import {
+  CalendarDays,
+  CalendarPlus,
+  ClipboardList,
+  LayoutGrid,
+  Package,
+  Utensils,
+} from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
@@ -16,9 +23,11 @@ import {
 import {
   adminDashboard,
   consumerDashboard,
+  orders,
   providerDashboard,
   providerMenus,
   providerOrders,
+  schedules,
 } from "@/routes"
 import type { NavItem } from "@/types"
 
@@ -41,6 +50,11 @@ export function AppSidebar() {
         icon: Utensils,
       },
       {
+        title: "Publicar menús",
+        href: schedules.index().url,
+        icon: CalendarPlus,
+      },
+      {
         title: "Pedidos",
         href: providerOrders.index().url,
         icon: Package,
@@ -55,9 +69,14 @@ export function AppSidebar() {
     ],
     consumer: [
       {
-        title: t("nav.dashboard"),
+        title: "Menú del día",
         href: consumerDashboard.index().url,
-        icon: LayoutGrid,
+        icon: CalendarDays,
+      },
+      {
+        title: t("nav.orders"),
+        href: orders.index().url,
+        icon: ClipboardList,
       },
     ],
   }

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_13_210343) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_15_204500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -31,6 +31,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_210343) do
     t.bigint "user_id", null: false
     t.index ["company_id"], name: "index_admins_on_company_id"
     t.index ["user_id"], name: "index_admins_on_user_id"
+  end
+
+  create_table "benefit_configurations", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.date "effective_from", null: false
+    t.integer "monthly_voucher_limit", null: false
+    t.integer "subsidy_percentage", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "effective_from"], name: "index_benefit_configurations_on_company_id_and_effective_from", unique: true
+    t.index ["company_id"], name: "index_benefit_configurations_on_company_id"
+    t.index ["created_by_id"], name: "index_benefit_configurations_on_created_by_id"
   end
 
   create_table "benefits", force: :cascade do |t|
@@ -64,9 +77,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_210343) do
   create_table "menus", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "description"
+    t.string "fillings", default: [], null: false, array: true
     t.string "name"
     t.decimal "price", precision: 10, scale: 2
     t.bigint "provider_id", null: false
+    t.string "sauces", default: [], null: false, array: true
     t.datetime "updated_at", null: false
     t.index ["provider_id"], name: "index_menus_on_provider_id"
   end
@@ -111,6 +126,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_210343) do
 
   create_table "providers", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.boolean "home_delivery", default: true, null: false
     t.time "order_deadline"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
@@ -127,12 +143,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_210343) do
   end
 
   create_table "schedules", force: :cascade do |t|
-    t.integer "amount"
+    t.integer "amount", null: false
     t.datetime "created_at", null: false
-    t.date "date"
+    t.date "date", null: false
     t.bigint "menu_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["menu_id", "date"], name: "index_schedules_on_menu_id_and_date", unique: true
     t.index ["menu_id"], name: "index_schedules_on_menu_id"
+    t.check_constraint "amount >= 0", name: "schedules_amount_non_negative"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -333,6 +351,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_210343) do
     t.string "google_uid"
     t.string "name", null: false
     t.string "password_digest", null: false
+    t.string "roles", default: [], null: false, array: true
     t.datetime "updated_at", null: false
     t.boolean "verified", default: false, null: false
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -341,6 +360,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_13_210343) do
 
   add_foreign_key "admins", "companies"
   add_foreign_key "admins", "users"
+  add_foreign_key "benefit_configurations", "companies"
+  add_foreign_key "benefit_configurations", "users", column: "created_by_id"
   add_foreign_key "benefits", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"

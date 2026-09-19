@@ -12,44 +12,30 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(response).to redirect_to(sign_in_path)
     end
 
-    it "redirects a consumer to sign in" do
-      sign_in users(:two), role: :consumer
+    it "redirects a consumer to the home page" do
+      sign_in users(:one), role: :consumer
 
       get provider_orders_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(root_path)
     end
 
-    it "lists only today's orders of the signed-in provider, newest first" do
-      sign_in users(:one), role: :provider
+    it "lists only today's orders of the signed-in provider" do
+      sign_in users(:provider_user), role: :provider
 
       get provider_orders_path
 
       expect(inertia).to render_component("provider/orders/index")
-      expect(inertia).to have_props(orders: [
-        {
-          id: orders(:confirmed_today).id,
-          status: "confirmed",
-          amount: 1,
-          notes: nil,
-          price: 300.0,
-          time: "13:00",
-          consumer_name: "Another User",
-          menu_name: "Wok de verduras",
-          address: "Oficina GoGrow"
-        },
-        {
-          id: orders(:pending_today).id,
-          status: "pending",
-          amount: 2,
-          notes: "Sin picante",
-          price: 300.0,
-          time: "12:30",
-          consumer_name: "Another User",
-          menu_name: "Wok de verduras",
-          address: "Av. Brasil 2145"
-        }
-      ])
+      expect(inertia).to have_props { |props|
+        listed = props.deep_symbolize_keys[:orders]
+
+        listed.pluck(:id) == [ orders(:upcoming_pending_today).id ] &&
+          listed.first[:status] == "pending" &&
+          listed.first[:amount] == 1 &&
+          listed.first[:consumer_name] == "Test User" &&
+          listed.first[:menu_name] == "Milanesa con papas fritas" &&
+          listed.first[:address] == "Julio Herrera y Reissig 565"
+      }
     end
   end
 end

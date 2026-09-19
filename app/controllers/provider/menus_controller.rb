@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 class Provider::MenusController < Provider::InertiaController
-  before_action :authenticate_provider
-
   def index
     provider = Current.user.provider
     menus = provider.menus.order created_at: :desc
@@ -49,6 +47,6 @@ class Provider::MenusController < Provider::InertiaController
   private
 
   def menu_params
-    params.expect(menu: [ :name, :price, :description ])
+    params.expect(menu: [ :name, :price, :description, fillings: [], sauces: [] ])
   end
 end

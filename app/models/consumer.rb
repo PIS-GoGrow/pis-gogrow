@@ -1,10 +1,12 @@
 # frozen_string_literal: true
 
 class Consumer < ApplicationRecord
+  include SyncsUserRoles
+
   belongs_to :company
   belongs_to :user
 
-  has_many :orders
+  has_many :orders, dependent: :destroy
   has_many :benefits
   has_many :accounts, as: :owner
   has_many :user_notifications, as: :user

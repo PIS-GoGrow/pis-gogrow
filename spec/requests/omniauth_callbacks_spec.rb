@@ -16,32 +16,54 @@ RSpec.describe "OmniauthCallbacks", type: :request do
   after { OmniAuth.config.mock_auth[:google_oauth2] = nil }
 
   describe "GET /auth/google_oauth2/callback" do
-    it "creates the account, links a provider profile, and signs in" do
-      auth = mock_google_auth(email: "new-provider@gmail.com")
+    it "rejects login if the user does not exist" do
+      auth = mock_google_auth(email: "nonexistent@gmail.com")
       OmniAuth.config.mock_auth[:google_oauth2] = auth
 
       get "/auth/google_oauth2/callback"
 
-      user = User.find_by(email: "new-provider@gmail.com")
-      expect(user).to be_present
-      expect(user.google_uid).to eq(auth.uid)
-      expect(user.provider).to be_present
+      expect(User.find_by(email: "nonexistent@gmail.com")).to be_nil
+      expect(response).to redirect_to(sign_in_path)
+    end
 
-      expect(response).to redirect_to(dashboard_path("provider"))
+    it "rejects login if the user has no roles" do
+      user = users(:two)
+      user.update!(email: "noroles@gmail.com")
+
+      auth = mock_google_auth(email: user.email)
+      OmniAuth.config.mock_auth[:google_oauth2] = auth
+
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "signs in and redirects to root when user has a single role" do
+      user = users(:one)
+      user.update!(email: "singlerole@gmail.com")
+
+      auth = mock_google_auth(email: user.email)
+      OmniAuth.config.mock_auth[:google_oauth2] = auth
+
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to(root_path)
       expect(cookies[:session_token]).to be_present
     end
 
-    it "reuses the same account and provider profile on a later login" do
-      auth = mock_google_auth(email: "repeat@gmail.com")
+    it "signs in and redirects to edit session when user has multiple roles" do
+      user = users(:one)
+      user.update!(email: "multirole@gmail.com")
+      Provider.create!(user: user)
+      user.sync_roles!
+
+      auth = mock_google_auth(email: user.email)
       OmniAuth.config.mock_auth[:google_oauth2] = auth
-      get "/auth/google_oauth2/callback"
-      user = User.find_by(email: "repeat@gmail.com")
-      provider = user.provider
 
       get "/auth/google_oauth2/callback"
 
-      expect(User.where(email: "repeat@gmail.com").count).to eq(1)
-      expect(user.reload.provider).to eq(provider)
+      session = user.sessions.last
+      expect(response).to redirect_to(edit_session_path(session))
     end
 
     context "with a domain that isn't allowlisted" do
@@ -57,14 +79,24 @@ RSpec.describe "OmniauthCallbacks", type: :request do
     end
 
     context "with the gogrow.com domain" do
-      it "allows the login" do
+      it "allows the login for an existing user" do
+        company = Company.first || Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+        user = User.create!(
+          name: "GoGrow Staff",
+          email: "someone@gogrow.com",
+          password: "Secret1*3*5*123",
+          verified: true
+        )
+        Consumer.create!(user: user, company: company, address: "Julio Herrera y Reissig 565")
+        user.sync_roles!
+
         auth = mock_google_auth(email: "someone@gogrow.com")
         OmniAuth.config.mock_auth[:google_oauth2] = auth
 
         get "/auth/google_oauth2/callback"
 
-        expect(User.find_by(email: "someone@gogrow.com")).to be_present
-        expect(response).to redirect_to(dashboard_path("provider"))
+        expect(response).to redirect_to(root_path)
+        expect(cookies[:session_token]).to be_present
       end
     end
   end
@@ -77,21 +109,21 @@ RSpec.describe "OmniauthCallbacks", type: :request do
     end
   end
 
-  describe "GET /dashboard/provider" do
+  describe "GET /provider/dashboard" do
     it "rejects a signed-in user with no linked provider" do
-      sign_in users(:one)
+      sign_in users(:one), role: :consumer
 
-      get dashboard_path("provider")
+      get provider_dashboard_path
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(root_path)
     end
 
     it "accepts a user linked to a provider profile" do
-      auth = mock_google_auth(email: "linked-provider@gmail.com")
-      OmniAuth.config.mock_auth[:google_oauth2] = auth
-      get "/auth/google_oauth2/callback"
+      user = users(:one)
+      Provider.create!(user: user)
+      sign_in user, role: :provider
 
-      get dashboard_path("provider")
+      get provider_dashboard_path
 
       expect(response).to have_http_status(:success)
     end

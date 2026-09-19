@@ -1,93 +1,87 @@
-import { MapPin } from "lucide-react"
+import { Link } from "@inertiajs/react"
+import { useTranslation } from "react-i18next"
 
-import ListItemCard from "@/components/list-item-card"
-import OrderStatusBadge from "@/components/orders/order-status-badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import StatusBadge from "@/components/status-badge"
 import {
+  Card,
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { useInitials } from "@/hooks/use-initials"
-import { formatPrice } from "@/lib/utils"
-import type { ProviderOrder } from "@/types"
+import { useFormatters } from "@/hooks/use-formatters"
+import { orders as ordersRoutes } from "@/routes"
+import type { Order } from "@/types"
 
 interface OrderCardProps {
-  order: ProviderOrder
+  order: Order
+  section: "upcoming" | "history"
 }
 
-export default function OrderCard({ order }: OrderCardProps) {
-  const getInitials = useInitials()
-  const hasActions = order.status === "pending" || order.status === "confirmed"
+export default function OrderCard({ order, section }: OrderCardProps) {
+  const { t } = useTranslation()
+  const { formatMoney } = useFormatters()
+
+  // El empleado paga el precio ya subsidiado; el base se muestra al lado solo
+  // cuando el subsidio efectivamente lo bajó.
+  const charged = order.discounted_price ?? order.price
+  const basePrice =
+    order.price != null && order.price !== charged ? order.price : null
 
   return (
-    <ListItemCard>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <Avatar size="lg">
-            <AvatarFallback className="text-foreground text-xs font-semibold">
-              {getInitials(order.consumer_name)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="grid gap-1">
-            <CardTitle>{order.consumer_name}</CardTitle>
-            <CardDescription className="text-xs">
-              PED-{order.id} · {order.time}
-            </CardDescription>
-          </div>
-        </div>
+    <Card className="hover:bg-accent/40 focus-within:ring-ring/50 relative gap-2 py-4 transition-colors focus-within:ring-[3px]">
+      <CardHeader className="gap-1 px-4">
+        <CardDescription>
+          {order.provider_name ?? t("pages.orders.index.no_provider")}
+        </CardDescription>
+        <CardTitle>
+          {/* El ::after estirado hace clickeable toda la tarjeta sin duplicar
+              enlaces ni anidar el badge dentro del link. */}
+          <Link
+            href={ordersRoutes.show(order.id).url}
+            className="after:absolute after:inset-0 hover:underline"
+          >
+            {order.menu_name ?? t("pages.orders.index.no_menu")}
+          </Link>{" "}
+          <span className="text-muted-foreground font-normal">
+            {t("pages.orders.index.quantity", { count: order.amount ?? 0 })}
+          </span>
+        </CardTitle>
         <CardAction>
-          <OrderStatusBadge status={order.status} />
+          <StatusBadge status={order.status} />
         </CardAction>
       </CardHeader>
 
-      <CardContent className="grid gap-3">
-        <div className="grid gap-1">
-          <p>
-            {(order.amount ?? 1) > 1 && `${order.amount} × `}
-            {order.menu_name}
-          </p>
-          {order.notes && (
-            <p className="text-muted-foreground text-sm">{order.notes}</p>
-          )}
-        </div>
-        <div className="flex items-end justify-between gap-4">
-          {order.address ? (
-            <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-              <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
-              {order.address}
-            </p>
-          ) : (
-            <span />
-          )}
-          <p className="text-lg font-semibold">{formatPrice(order.price)}</p>
-        </div>
-      </CardContent>
+      <CardContent className="flex items-baseline justify-between gap-3 px-4">
+        <p className="text-muted-foreground text-sm">
+          {order.address
+            ? t(`pages.orders.index.${section}_address`, {
+                address: order.address,
+              })
+            : t("pages.orders.index.no_address")}
+        </p>
 
-      {hasActions && (
-        <CardFooter className="flex-col gap-4">
-          <Separator />
-          {order.status === "pending" ? (
-            <div className="grid w-full grid-cols-2 gap-2">
-              <Button type="button" variant="outline" size="lg">
-                Cancelar
-              </Button>
-              <Button type="button" size="lg">
-                Confirmar
-              </Button>
-            </div>
+        <p className="shrink-0 text-sm font-medium">
+          {charged == null ? (
+            t("pages.orders.index.no_price")
           ) : (
-            <Button type="button" size="lg" className="w-full">
-              Marcar como entregado
-            </Button>
+            <>
+              {basePrice != null && (
+                <span
+                  className="text-muted-foreground me-1.5 font-normal line-through"
+                  aria-label={t("pages.orders.index.base_price", {
+                    amount: formatMoney(basePrice),
+                  })}
+                >
+                  {formatMoney(basePrice)}
+                </span>
+              )}
+              {formatMoney(charged)}
+            </>
           )}
-        </CardFooter>
-      )}
-    </ListItemCard>
+        </p>
+      </CardContent>
+    </Card>
   )
 }

@@ -23,7 +23,7 @@ RSpec.describe "Settings::Passwords", type: :request do
           password_challenge: "Secret1*3*5*"
         }
         expect(response).to redirect_to(settings_password_path)
-        expect(flash[:notice]).to eq("Your password has been changed")
+        expect(flash[:notice]).to eq("Tu contraseña fue modificada")
       end
     end
 
@@ -35,7 +35,7 @@ RSpec.describe "Settings::Passwords", type: :request do
           password_challenge: "wrongpassword"
         }
         expect(response).to redirect_to(settings_password_path)
-        expect(session[:inertia_errors]).to eq(password_challenge: [ "is invalid" ])
+        expect(session[:inertia_errors]).to eq(password_challenge: [ I18n.t("errors.messages.invalid") ])
       end
     end
   end

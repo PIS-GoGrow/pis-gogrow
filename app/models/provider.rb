@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Provider < ApplicationRecord
-  belongs_to :user, optional: true
+  include SyncsUserRoles
 
   has_many :menus, dependent: :destroy
   has_many :schedules, through: :menus
@@ -13,6 +13,7 @@ end
 # Table name: providers
 #
 #  id             :bigint           not null, primary key
+#  home_delivery  :boolean          default(TRUE), not null
 #  order_deadline :time
 #  created_at     :datetime         not null
 #  updated_at     :datetime         not null
