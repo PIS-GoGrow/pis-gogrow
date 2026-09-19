@@ -3,6 +3,7 @@ import {
   CalendarDays,
   CalendarPlus,
   ClipboardList,
+  CreditCard,
   LayoutGrid,
   Utensils,
 } from "lucide-react"
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/sidebar"
 import {
   adminDashboard,
+  consumerAccounts,
   consumerDashboard,
   orders,
   providerDashboard,
@@ -70,6 +72,11 @@ export function AppSidebar() {
         title: t("nav.orders"),
         href: orders.index().url,
         icon: ClipboardList,
+      },
+      {
+        title: t("nav.payments"),
+        href: consumerAccounts.index().url,
+        icon: CreditCard,
       },
     ],
   }
