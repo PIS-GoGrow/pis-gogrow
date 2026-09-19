@@ -153,7 +153,7 @@ if (second_schedule = upcoming_schedules.second)
 end
 
 Order.create!(consumer:, schedule: past_schedule, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1)
-Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
+#Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 
 admin_user = User.create!(
   email: "rrhh.gogrow@gmail.com",

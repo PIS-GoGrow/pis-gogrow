@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_18_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_19_193218) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,6 +22,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_120000) do
     t.string "owner_type", null: false
     t.bigint "provider_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id", "provider_id", "month"], name: "idx_on_owner_type_owner_id_provider_id_month_49d9020441", unique: true
     t.index ["owner_type", "owner_id"], name: "index_accounts_on_owner"
     t.index ["provider_id"], name: "index_accounts_on_provider_id"
   end

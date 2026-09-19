@@ -1,5 +1,10 @@
 # frozen_string_literal: true
 
+# Representa una relación entre un consumidor/compañía con un proveedor,
+# almacenando todas las órdenes que le van a tener que ser pagadas a ese
+# proveedor. Además, registra los pagos hechos para esas órdenes.
+# El atributo month dice para qué mes es válida la cuenta. Este atributo
+# siempre es igual al primer día de un mes, esto se hace automáticamente.
 class Account < ApplicationRecord
   belongs_to :owner, polymorphic: true
 
@@ -13,16 +18,15 @@ class Account < ApplicationRecord
   before_create :correct_month
 
   scope :current, -> { where(month: Date.current.beginning_of_month) }
+
+  # Los dos scopes de abajo asumen que Payment.account_id no es NULL
+  # TODO: Hay que cambiar según qué estado sea el que se elija para pagos
+  # aprobados.
   scope :pending, -> {
-    left_outer_joins(:payments)
-      .where("(payments.id IS NULL OR payments.status != ?)", 0)
-      .where.not(amount: ..0)
-      .distinct
+    where.not(id: Payment.where(status: 0).select(:account_id)).where.not(amount: ..0)
   }
   scope :history, -> {
-    joins(:payments)
-      .where(payments: { status: 0 })
-      .distinct
+    where(id: Payment.where(status: 0).select(:account_id))
   }
 
   def current?
@@ -39,9 +43,9 @@ class Account < ApplicationRecord
   def sync_amount!
     # TODO: Habría que validar que se tengan solo en cuenta las órdenes confirmadas
     if owner_type == "Consumer"
-      update amount: orders.confirmed.sum(:price)
+      update! amount: orders.confirmed.sum(:price)
     else
-      update amount: orders.confirmed.sum(:discounted_price)
+      update! amount: orders.confirmed.sum(:discounted_price)
     end
   end
 
@@ -97,8 +101,9 @@ end
 #
 # Indexes
 #
-#  index_accounts_on_owner        (owner_type,owner_id)
-#  index_accounts_on_provider_id  (provider_id)
+#  idx_on_owner_type_owner_id_provider_id_month_49d9020441  (owner_type,owner_id,provider_id,month) UNIQUE
+#  index_accounts_on_owner                                  (owner_type,owner_id)
+#  index_accounts_on_provider_id                            (provider_id)
 #
 # Foreign Keys
 #

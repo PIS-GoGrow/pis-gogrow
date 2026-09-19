@@ -3,7 +3,8 @@
 # Representa un pedido hecho por un consumidor a un menú. Se relaciona con la
 # publicación de ese menú (su schedule) y no con el menú en sí.
 # Antes crearse, debería relacionarse con un schedule y un consumer. Si es así,
-# la cuenta se le asigna automáticamente.
+# la cuenta se le asigna automáticamente. Las cuentas de una orden no deberían
+# asignarse manualmente.
 class Order < ApplicationRecord
   # La migración 20260911234117 usa el modelo Order, así que al reconstruir la
   # base desde cero el enum se evalúa antes de que exista su columna.
@@ -20,6 +21,8 @@ class Order < ApplicationRecord
   belongs_to :consumer
   belongs_to :schedule
   belongs_to :cancelled_by, class_name: "User", optional: true
+  has_one :menu, through: :schedule
+  has_one :provider, through: :menu
 
   has_many :order_accounts, dependent: :destroy
   has_many :accounts, through: :order_accounts
@@ -47,8 +50,9 @@ class Order < ApplicationRecord
       .order(Arel.sql("schedules.date DESC NULLS LAST"))
   }
 
-  after_create_commit :assign_account
-  after_update_commit -> { accounts.each(&:sync_amount!) }
+  after_create :assign_account
+  after_update_commit :sync_accounts,
+    if: -> { saved_change_to_status? || saved_change_to_price? || saved_change_to_discounted_price? }
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
 
   def self.reserve(consumer:, schedule:, quantity: 1, notes: nil, address: consumer.address, discount_percentage: 0)
@@ -108,8 +112,6 @@ class Order < ApplicationRecord
   # Asignarse a la cuenta actual del usuario, o crearla si no existiera
   # Forzar a que la cuenta recalcule su valor calculado.
   def assign_account
-    return unless consumer
-
     unless accounts.empty?
       accounts.each &:sync_amount!
       return
@@ -122,11 +124,10 @@ class Order < ApplicationRecord
     # la siguiente línea por:
     #   month = Schedule.date.beginning_of_month
     month = Date.current.beginning_of_month
-    provider_id = Provider.joins(menus: { schedules: :orders }).where(orders: { id: }).pluck(:id).first
+    provider =
+      self.provider or raise "La orden #{id} no tiene proveedor. Puede ser que no tenga un schedule asignado, que su schedule no tenga un menú o que ese menú no tenga un proveedor"
 
-    return unless provider_id
-
-    account = consumer.accounts.find_or_create_by month: month, provider_id: provider_id
+    account = consumer.accounts.find_or_create_by! month: month, provider: provider
     accounts << account
 
     account.sync_amount!

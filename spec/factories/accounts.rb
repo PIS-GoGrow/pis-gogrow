@@ -23,8 +23,9 @@ end
 #
 # Indexes
 #
-#  index_accounts_on_owner        (owner_type,owner_id)
-#  index_accounts_on_provider_id  (provider_id)
+#  idx_on_owner_type_owner_id_provider_id_month_49d9020441  (owner_type,owner_id,provider_id,month) UNIQUE
+#  index_accounts_on_owner                                  (owner_type,owner_id)
+#  index_accounts_on_provider_id                            (provider_id)
 #
 # Foreign Keys
 #
