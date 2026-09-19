@@ -6,6 +6,7 @@ class Order < ApplicationRecord
   attribute :status_before_cancellation, :integer
 
   enum :status, { pending: 0, confirmed: 1, cancelled: 2, rejected: 3 }, default: :pending
+  enum :delivery_method, { office: 0, home: 1 }
   enum :status_before_cancellation, { pending: 0, confirmed: 1 }, prefix: :before_cancellation
 
   belongs_to :consumer
@@ -18,6 +19,9 @@ class Order < ApplicationRecord
   validates :amount, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :discounted_price, comparison: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true
+  validates :address, presence: true, if: :home?
+  validates :delivery_method, presence: true
+  validate :delivery_method_allowed_by_provider, on: :create
 
   # El corte entre ambas secciones es la fecha de entrega, no el estado: una
   # orden confirmada sigue necesitando seguimiento hasta que la vianda llega.
@@ -38,10 +42,12 @@ class Order < ApplicationRecord
       .order(Arel.sql("schedules.date DESC NULLS LAST"))
   }
 
-  def self.reserve(consumer:, schedule:, quantity: 1, notes: nil, address: consumer.address, discount_percentage: 0)
+  def self.reserve(consumer:, schedule:, delivery_method:, address:, quantity: 1, notes: nil, discount_percentage: 0)
     gross_price = schedule.menu.price * quantity
     discounted_price = (gross_price * (100 - discount_percentage.clamp(0, 100)) / 100).round(2)
-    order = new(consumer:, schedule:, amount: quantity, notes:, address:, price: gross_price, discounted_price:)
+    order = new(consumer:, schedule:, amount: quantity, notes:, address:, price: gross_price, discounted_price:, delivery_method:)
+
+    return order unless order.valid?
 
     schedule.with_lock do
       if schedule.available?(quantity:)
@@ -52,6 +58,13 @@ class Order < ApplicationRecord
     end
 
     order
+  end
+
+  def delivery_method_allowed_by_provider
+    return if delivery_method.blank? || schedule.blank?
+    return if schedule.menu.provider.allows_delivery_method?(delivery_method)
+
+    errors.add(:delivery_method, I18n.t("validations.delivery_method_not_allowed"))
   end
 
   # El subsidio no se persiste: es lo que la empresa cubre, o sea la diferencia
@@ -99,6 +112,7 @@ end
 #  address                    :string
 #  amount                     :integer
 #  cancelled_at               :datetime
+#  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
 #  notes                      :string
 #  price                      :decimal(10, 2)

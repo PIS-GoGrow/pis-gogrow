@@ -81,6 +81,10 @@
         "title": "Te damos la bienvenida"
       },
       "orders": {
+        "delivery_methods": {
+          "home": "Domicilio",
+          "office": "Oficina"
+        },
         "index": {
           "base_price": "Precio base: %{amount}",
           "cancel": "Cancelar",
@@ -95,7 +99,7 @@
             "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar desde la app.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
           },
-          "history_address": "Recibiste en: %{address}",
+          "history_address": "Recibiste en: %{address} (%{delivery_method})",
           "history_empty_description": "Tus pedidos completados aparecerán aquí.",
           "history_empty_title": "No tienes pedidos anteriores",
           "history_tab": "Historial",
@@ -106,7 +110,7 @@
           "no_provider": "Proveedor no disponible",
           "quantity": "x%{count}",
           "title": "Mis pedidos",
-          "upcoming_address": "Recibes en: %{address}",
+          "upcoming_address": "Recibes en: %{address} (%{delivery_method})",
           "upcoming_empty_description": "No tienes viandas en camino.",
           "upcoming_empty_title": "No tienes pedidos próximos",
           "upcoming_tab": "Próximos"
@@ -116,6 +120,7 @@
           "back": "Volver a mis pedidos",
           "base_price": "Precio base",
           "date": "Fecha de entrega",
+          "delivery_method": "Modalidad de entrega",
           "no_notes": "Sin notas",
           "notes": "Notas",
           "quantity": "Cantidad",
