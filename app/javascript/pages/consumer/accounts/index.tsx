@@ -1,6 +1,7 @@
 import { Head } from "@inertiajs/react"
 import { CircleCheck } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import AccountCard from "@/components/consumer/accounts/account-card"
 import OrdersTable from "@/components/consumer/accounts/orders-table"
@@ -47,13 +48,15 @@ export default function Index({
   current_month_spending,
   total_debt,
 }: AccountProps) {
+  const { t } = useTranslation()
   const isMobile = useIsMobile()
+
   const [loading, setLoading] = useState(false)
   const [detail, setDetail] = useState<AccountDetail | null>(null)
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      title: "Pagos",
+      title: t("pages.accounts.index.payments"),
       href: consumerAccounts.index().url,
     },
   ]
@@ -88,8 +91,8 @@ export default function Index({
           accountsJSX[p.id]
         ) : (
           <div className="flex items-center text-emerald-600 dark:text-emerald-400">
-            <CircleCheck className="mr-2" size={16} /> ¡Sin deudas pendientes
-            con este proveedor!
+            <CircleCheck className="mr-2" size={16} />
+            {t("pages.accounts.index.no_debt")}
           </div>
         )}
       </CardContent>
@@ -98,23 +101,23 @@ export default function Index({
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Pagos" />
+      <Head title={t("pages.accounts.index.payments")} />
 
       <div className="mx-auto grid w-full max-w-128 gap-6 p-5">
-        <h1 className="text-2xl font-bold"> Pagos </h1>
+        <h1 className="text-2xl font-bold"> {t("pages.accounts.index.payments")} </h1>
         <Card className="bg-zinc-50 dark:bg-zinc-900">
           <CardHeader>
             <CardDescription className="flex">
-              Tu Consumo
+              {t("pages.accounts.index.spending")}
               <Badge variant="outline" className="ml-auto">
-                Este mes
+                {t("pages.accounts.index.this_month")}
               </Badge>
             </CardDescription>
             <CardTitle>${current_month_spending}</CardTitle>
           </CardHeader>
         </Card>
 
-        <h1 className="text-xl font-bold"> Pagos </h1>
+        <h1 className="text-xl font-bold"> {t("pages.accounts.index.payments")} </h1>
 
         <Sheet>
           <Tabs
@@ -122,16 +125,16 @@ export default function Index({
             className="w-full"
           >
             <TabsList className="w-full">
-              <TabsTrigger value="pending">Pendientes</TabsTrigger>
-              <TabsTrigger value="history">Historial</TabsTrigger>
+              <TabsTrigger value="pending">{t("pages.accounts.index.pending")}</TabsTrigger>
+              <TabsTrigger value="history">{t("pages.accounts.index.history")}</TabsTrigger>
             </TabsList>
             <TabsContent className="grid w-full gap-2" value="pending">
               <Card className="bg-zinc-50 dark:bg-zinc-900">
                 <CardHeader>
                   <CardDescription className="flex">
-                    Pagos pendientes
+                    {t("pages.accounts.index.pending_payments")}
                     <Badge variant="outline" className="ml-auto">
-                      Deuda total
+                      {t("pages.accounts.index.total_debt")}
                     </Badge>
                   </CardDescription>
                   <CardTitle>${total_debt}</CardTitle>
@@ -156,7 +159,7 @@ export default function Index({
 
             <SheetFooter>
               <SheetClose asChild>
-                <Button>Cerrar</Button>
+                <Button>{t("common.close")}</Button>
               </SheetClose>
             </SheetFooter>
           </SheetContent>

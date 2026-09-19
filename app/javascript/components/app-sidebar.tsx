@@ -74,7 +74,7 @@ export function AppSidebar() {
         icon: ClipboardList,
       },
       {
-        title: "Pagos",
+        title: t("nav.payments"),
         href: consumerAccounts.index().url,
         icon: CreditCard,
       },

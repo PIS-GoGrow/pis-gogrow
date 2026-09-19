@@ -1,4 +1,5 @@
 import { Eye, TriangleAlert } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -30,6 +31,8 @@ export default function AccountCard({
   setDetail,
   setLoading,
 }: AccountCardProps) {
+  const { t } = useTranslation()
+
   async function handleClick() {
     setLoading(true)
     try {
@@ -65,7 +68,7 @@ export default function AccountCard({
             }
           >
             <TriangleAlert />
-            Vence: {account.due_date}
+            {t("pages.accounts.show.due") + account.due_date}
           </Badge>
         </CardDescription>
 
@@ -77,7 +80,7 @@ export default function AccountCard({
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
               {account.orders_amount_sum}{" "}
-              {account.orders_placed == 1 ? "vianda" : "viandas"}
+              {account.orders_placed == 1 ? t("pages.accounts.show.lunch") : t("pages.accounts.show.lunches")}
             </span>
           </span>
           <SheetTrigger asChild>
@@ -89,14 +92,14 @@ export default function AccountCard({
               variant="ghost"
             >
               {" "}
-              <Eye /> Ver detalle{" "}
+              <Eye /> {t("pages.accounts.show.see_detail") + " "}
             </Button>
           </SheetTrigger>
         </CardTitle>
 
         <Separator />
 
-        <Button> Subir comprobante de pago </Button>
+        <Button> {t("pages.accounts.show.receipt")} </Button>
       </CardHeader>
     </Card>
   )
