@@ -1,19 +1,9 @@
 import { Head } from "@inertiajs/react"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-
+import OrdersTable from "@/components/consumer/accounts/orders-table"
 import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
 import type { BreadcrumbItem, SimplifiedOrder } from "@/types"
-import OrdersTable from "@/components/consumer/accounts/orders-table"
 
 interface AccountProps {
   orders: SimplifiedOrder[]

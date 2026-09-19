@@ -3,6 +3,9 @@ import { CircleCheck } from "lucide-react"
 import { useState } from "react"
 
 import AccountCard from "@/components/consumer/accounts/account-card"
+import OrdersTable from "@/components/consumer/accounts/orders-table"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -10,24 +13,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import {
   Sheet,
   SheetClose,
   SheetContent,
   SheetFooter,
 } from "@/components/ui/sheet"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsMobile } from "@/hooks/use-mobile"
 import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
 import type { Account, BreadcrumbItem, Provider } from "@/types"
-
-import OrdersTable from "@/components/consumer/accounts/orders-table"
 
 interface AccountProps {
   accounts: Account[]
@@ -48,7 +45,7 @@ export default function Index({
   providers,
   history,
   current_month_spending,
-  total_debt
+  total_debt,
 }: AccountProps) {
   const isMobile = useIsMobile()
   const [loading, setLoading] = useState(false)

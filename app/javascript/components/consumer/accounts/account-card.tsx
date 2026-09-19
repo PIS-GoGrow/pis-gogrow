@@ -1,28 +1,35 @@
-import { CircleCheck, Eye, TriangleAlert } from "lucide-react"
+import { Eye, TriangleAlert } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+import { SheetTrigger } from "@/components/ui/sheet"
 import { consumerAccounts } from "@/routes"
+import type { Account, SimplifiedOrder } from "@/types"
 
-export default function AccountCard({ account, setDetail, setLoading }) {
+interface AccountDetail {
+  orders: SimplifiedOrder[]
+  month: string
+  amount: number
+}
+
+interface AccountCardProps {
+  account: Account
+  setDetail: React.Dispatch<React.SetStateAction<AccountDetail | null>>
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>
+}
+
+export default function AccountCard({
+  account,
+  setDetail,
+  setLoading,
+}: AccountCardProps) {
   async function handleClick() {
     setLoading(true)
     try {
@@ -34,7 +41,7 @@ export default function AccountCard({ account, setDetail, setLoading }) {
         throw new Error(`Error ${response.status}`)
       }
 
-      const data = await response.json()
+      const data = (await response.json()) as AccountDetail
       setDetail(data)
     } catch (err) {
       console.error(err)
@@ -74,7 +81,13 @@ export default function AccountCard({ account, setDetail, setLoading }) {
             </span>
           </span>
           <SheetTrigger asChild>
-            <Button onClick={handleClick} className="ml-auto" variant="ghost">
+            <Button
+              onClick={() => {
+                void handleClick()
+              }}
+              className="ml-auto"
+              variant="ghost"
+            >
               {" "}
               <Eye /> Ver detalle{" "}
             </Button>

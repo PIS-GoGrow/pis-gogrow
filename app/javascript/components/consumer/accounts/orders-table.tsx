@@ -7,10 +7,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import type { SimplifiedOrder } from "@/types"
 
-import AppLayout from "@/layouts/app-layout"
-import { consumerAccounts } from "@/routes"
-import type { BreadcrumbItem, SimplifiedOrder } from "@/types"
+interface AccountProps {
+  orders: SimplifiedOrder[]
+  month: string
+  amount: number
+}
 
 function truncate(text: string, maxLength = 20): string {
   if (text.length <= maxLength) return text
