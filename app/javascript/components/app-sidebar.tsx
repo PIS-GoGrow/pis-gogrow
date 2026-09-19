@@ -8,6 +8,7 @@ import {
   Package,
   Percent,
   Utensils,
+  FileCheck,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -32,6 +33,8 @@ import {
   providerMenus,
   providerOrders,
   schedules,
+  providerPayments,
+  consumerPayments,
 } from "@/routes"
 import type { NavItem } from "@/types"
 
@@ -91,6 +94,11 @@ export function AppSidebar() {
         title: t("nav.payments"),
         href: consumerAccounts.index().url,
         icon: CreditCard,
+      },
+      {
+        title: "Mis pagos",
+        href: consumerPayments.index().url,
+        icon: FileCheck,
       },
     ],
   }
