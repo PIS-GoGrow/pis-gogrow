@@ -140,8 +140,8 @@ export default function RejectPaymentDialog({
 
         <DialogFooter className="sm:justify-start">
           <Button
-            variant="destructive"
-            disabled={!canSubmit || processing}
+            className="flex-1 bg-black text-white hover:bg-black/90" 
+            size="sm"
             onClick={handleReject}
           >
             {processing ? "Rechazando..." : "Rechazar comprobante"}
