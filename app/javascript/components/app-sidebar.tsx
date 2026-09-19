@@ -5,6 +5,7 @@ import {
   ClipboardList,
   LayoutGrid,
   Utensils,
+  FileCheck,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -26,6 +27,8 @@ import {
   providerDashboard,
   providerMenus,
   schedules,
+  providerPayments,
+  consumerPayments,
 } from "@/routes"
 import type { NavItem } from "@/types"
 
@@ -52,6 +55,11 @@ export function AppSidebar() {
         href: schedules.index().url,
         icon: CalendarPlus,
       },
+      {
+        title: "Validar pagos",
+        href: providerPayments.index().url, 
+        icon: FileCheck,
+      },
     ],
     admin: [
       {
@@ -70,6 +78,11 @@ export function AppSidebar() {
         title: t("nav.orders"),
         href: orders.index().url,
         icon: ClipboardList,
+      },
+      {
+        title: "Mis pagos",
+        href: consumerPayments.index().url,
+        icon: FileCheck,
       },
     ],
   }
