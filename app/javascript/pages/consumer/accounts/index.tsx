@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -26,7 +27,7 @@ import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
 import type { Account, BreadcrumbItem, Provider } from "@/types"
 
-import { OrdersTable } from "./show"
+import OrdersTable from "@/components/consumer/accounts/orders-table"
 
 interface AccountProps {
   accounts: Account[]
@@ -147,7 +148,7 @@ export default function Index({
 
           <SheetContent side={isMobile ? "bottom" : "right"} className="pt-8">
             {loading ? (
-              "Cargando"
+              <Spinner className="mx-auto size-8" />
             ) : (
               <OrdersTable
                 orders={detail?.orders}

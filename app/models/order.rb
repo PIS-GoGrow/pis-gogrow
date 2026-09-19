@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# Representa un pedido hecho por un consumidor a un menú. Se relaciona con la
+# publicación de ese menú (su schedule) y no con el menú en sí.
+# Antes crearse, debería relacionarse con un schedule y un consumer. Si es así,
+# la cuenta se le asigna automáticamente.
 class Order < ApplicationRecord
   # La migración 20260911234117 usa el modelo Order, así que al reconstruir la
   # base desde cero el enum se evalúa antes de que exista su columna.
@@ -113,6 +117,10 @@ class Order < ApplicationRecord
 
     # Obetener información de la cuenta a la que debería ser asignada la orden:
     # el mes actual y la id del proveedor correspondiente a la orden.
+    # Habría que validar si queremos que el pedido se descuente en el mes en el que
+    # será enviado, que puede ser distinto del actual. En ese caso, habría que cambiar
+    # la siguiente línea por:
+    #   month = Schedule.date.beginning_of_month
     month = Date.current.beginning_of_month
     provider_id = Provider.joins(menus: { schedules: :orders }).where(orders: { id: }).pluck(:id).first
 
