@@ -80,7 +80,9 @@ export default function AccountCard({
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
               {account.orders_amount_sum}{" "}
-              {account.orders_placed == 1 ? t("pages.accounts.show.lunch") : t("pages.accounts.show.lunches")}
+              {account.orders_amount_sum == 1
+                ? t("pages.accounts.show.lunch")
+                : t("pages.accounts.show.lunches")}
             </span>
           </span>
           <SheetTrigger asChild>

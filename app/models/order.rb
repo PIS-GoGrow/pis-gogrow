@@ -102,7 +102,7 @@ class Order < ApplicationRecord
       update(status_before_cancellation: status, status: :cancelled, cancelled_at: Time.current, cancelled_by: by)
     end
   end
-  
+
   private
 
   # Asignarse a la cuenta actual del usuario, o crearla si no existiera

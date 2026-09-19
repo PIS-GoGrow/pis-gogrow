@@ -1,6 +1,7 @@
 import { Head } from "@inertiajs/react"
 import { CircleCheck } from "lucide-react"
 import { useState } from "react"
+import type { JSX } from "react"
 import { useTranslation } from "react-i18next"
 
 import AccountCard from "@/components/consumer/accounts/account-card"
@@ -25,7 +26,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsMobile } from "@/hooks/use-mobile"
 import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
-import type { Account, BreadcrumbItem, Provider } from "@/types"
+import type {
+  Account,
+  BreadcrumbItem,
+  Provider,
+  SimplifiedOrder,
+} from "@/types"
 
 interface AccountProps {
   accounts: Account[]
@@ -104,7 +110,10 @@ export default function Index({
       <Head title={t("pages.accounts.index.payments")} />
 
       <div className="mx-auto grid w-full max-w-128 gap-6 p-5">
-        <h1 className="text-2xl font-bold"> {t("pages.accounts.index.payments")} </h1>
+        <h1 className="text-2xl font-bold">
+          {" "}
+          {t("pages.accounts.index.payments")}{" "}
+        </h1>
         <Card className="bg-zinc-50 dark:bg-zinc-900">
           <CardHeader>
             <CardDescription className="flex">
@@ -117,7 +126,10 @@ export default function Index({
           </CardHeader>
         </Card>
 
-        <h1 className="text-xl font-bold"> {t("pages.accounts.index.payments")} </h1>
+        <h1 className="text-xl font-bold">
+          {" "}
+          {t("pages.accounts.index.payments")}{" "}
+        </h1>
 
         <Sheet>
           <Tabs
@@ -125,8 +137,12 @@ export default function Index({
             className="w-full"
           >
             <TabsList className="w-full">
-              <TabsTrigger value="pending">{t("pages.accounts.index.pending")}</TabsTrigger>
-              <TabsTrigger value="history">{t("pages.accounts.index.history")}</TabsTrigger>
+              <TabsTrigger value="pending">
+                {t("pages.accounts.index.pending")}
+              </TabsTrigger>
+              <TabsTrigger value="history">
+                {t("pages.accounts.index.history")}
+              </TabsTrigger>
             </TabsList>
             <TabsContent className="grid w-full gap-2" value="pending">
               <Card className="bg-zinc-50 dark:bg-zinc-900">
@@ -151,9 +167,9 @@ export default function Index({
               <Spinner className="mx-auto size-8" />
             ) : (
               <OrdersTable
-                orders={detail?.orders}
-                month={detail?.month}
-                amount={detail?.amount}
+                orders={detail ? detail.orders : []}
+                month={String(detail?.month)}
+                amount={Number(detail?.amount)}
               />
             )}
 
