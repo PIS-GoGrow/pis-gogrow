@@ -349,4 +349,79 @@ RSpec.describe "Orders", type: :request do
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.office_address_required") })
     end
   end
+  describe "PATCH /orders/:id/cancel" do
+    it "redirects visitors to the sign in page" do
+      patch cancel_consumer_order_path(orders(:upcoming_pending_future))
+
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "rejects a session with a different active role" do
+      sign_in users(:provider_user), role: :provider
+
+      patch cancel_consumer_order_path(orders(:upcoming_pending_future))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_future).reload).to be_pending
+    end
+
+    context "when signed in as an employee" do
+      before { sign_in users(:one) }
+
+      it "cancels a pending order and moves it to the history" do
+        order = orders(:upcoming_pending_future)
+
+        patch cancel_consumer_order_path(order)
+
+        expect(order.reload).to be_cancelled
+        expect(response).to redirect_to(orders_path)
+
+        follow_redirect!
+        expect(inertia).to have_flash(notice: I18n.t("flash.order_cancelled"))
+        expect(inertia.props[:past_orders].pluck(:id)).to include(order.id)
+        expect(inertia.props[:upcoming_orders].pluck(:id)).not_to include(order.id)
+      end
+
+      it "cancels a confirmed order whose delivery day is still ahead" do
+        order = orders(:upcoming_confirmed_future)
+
+        patch cancel_consumer_order_path(order)
+
+        expect(order.reload).to be_cancelled
+        expect(order.cancelled_by).to eq(users(:one))
+      end
+
+      it "refuses to cancel a confirmed order on its delivery day" do
+        order = orders(:upcoming_pending_today)
+        order.update!(status: :confirmed)
+
+        patch cancel_consumer_order_path(order)
+
+        expect(order.reload).to be_confirmed
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
+      end
+
+      it "refuses a direct request against a pending order whose delivery day already passed" do
+        order = orders(:history_pending_past)
+
+        patch cancel_consumer_order_path(order)
+
+        expect(order.reload).to be_pending
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
+      end
+
+      it "does not cancel another employee's order" do
+        order = orders(:other_consumer_upcoming)
+
+        patch cancel_consumer_order_path(order)
+
+        expect(response).to have_http_status(:not_found)
+        expect(order.reload).to be_confirmed
+      end
+    end
+  end
 end

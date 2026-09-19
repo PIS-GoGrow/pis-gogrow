@@ -1,11 +1,17 @@
 # frozen_string_literal: true
 
 class Order < ApplicationRecord
+  # La migración 20260911234117 usa el modelo Order, así que al reconstruir la
+  # base desde cero el enum se evalúa antes de que exista su columna.
+  attribute :status_before_cancellation, :integer
+
   enum :status, { pending: 0, confirmed: 1, cancelled: 2, rejected: 3 }, default: :pending
   enum :delivery_method, { office: 0, home: 1 }
+  enum :status_before_cancellation, { pending: 0, confirmed: 1 }, prefix: :before_cancellation
 
   belongs_to :consumer
   belongs_to :schedule
+  belongs_to :cancelled_by, class_name: "User", optional: true
 
   has_many :order_accounts, dependent: :destroy
   has_many :accounts, through: :order_accounts
@@ -68,32 +74,65 @@ class Order < ApplicationRecord
 
     price - discounted_price
   end
+
+  # RN-12 y RN-13: un pedido pendiente de confirmación se cancela hasta el día de
+  # la entrega inclusive; uno ya confirmado, solo mientras la entrega siga siendo
+  # para un día futuro. Devuelve el motivo del bloqueo para que la pantalla lo
+  # explique. La fecha se mira en los dos estados porque esto es la única guarda
+  # del endpoint: que la pantalla esconda el botón no frena un PATCH directo.
+  def cancellation_block_reason
+    return "already_closed" unless pending? || confirmed?
+    return "unavailable" if schedule.nil?
+    return if schedule.date.after?(Date.current)
+    return if pending? && schedule.date.today?
+
+    schedule.date.today? ? "confirmed_for_today" : "already_closed"
+  end
+
+  def cancellable?
+    cancellation_block_reason.nil?
+  end
+
+  # El lock no es por dinero: evita que un doble envío cancele dos veces y pise
+  # el registro de quién y cuándo lo hizo.
+  def cancel(by:)
+    with_lock do
+      return false unless cancellable?
+
+      update(status_before_cancellation: status, status: :cancelled, cancelled_at: Time.current, cancelled_by: by)
+    end
+  end
 end
 
 # == Schema Information
 #
 # Table name: orders
 #
-#  id               :bigint           not null, primary key
-#  address          :string
-#  amount           :integer
-#  delivery_method  :integer          not null
-#  discounted_price :decimal(10, 2)
-#  notes            :string
-#  price            :decimal(10, 2)
-#  status           :integer          default(0), not null
-#  created_at       :datetime         not null
-#  updated_at       :datetime         not null
-#  consumer_id      :bigint           not null
-#  schedule_id      :bigint
+#  id                         :bigint           not null, primary key
+#  address                    :string
+#  amount                     :integer
+#  cancelled_at               :datetime
+#  delivery_method            :integer          not null
+#  discounted_price           :decimal(10, 2)
+#  notes                      :string
+#  price                      :decimal(10, 2)
+#  status                     :integer          default(0), not null
+#  status_before_cancellation :integer
+#  created_at                 :datetime         not null
+#  updated_at                 :datetime         not null
+#  cancelled_by_id            :bigint
+#  consumer_id                :bigint           not null
+#  schedule_id                :bigint
 #
 # Indexes
 #
-#  index_orders_on_consumer_id  (consumer_id)
-#  index_orders_on_schedule_id  (schedule_id)
+#  index_orders_on_cancelled_by_id  (cancelled_by_id)
+#  index_orders_on_consumer_id      (consumer_id)
+#  index_orders_on_schedule_id      (schedule_id)
 #
 # Foreign Keys
 #
+#  fk_rails_...  (cancelled_by_id => users.id)
 #  fk_rails_...  (consumer_id => consumers.id)
 #  fk_rails_...  (schedule_id => schedules.id)
 #
