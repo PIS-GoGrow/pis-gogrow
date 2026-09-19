@@ -15,6 +15,10 @@ class Consumer < ApplicationRecord
   def current_month_spending
     accounts.current.sum :amount
   end
+
+  def total_debt
+    accounts.pending.sum :amount
+  end
 end
 
 # == Schema Information

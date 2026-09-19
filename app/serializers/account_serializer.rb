@@ -22,12 +22,17 @@ class AccountSerializer < ApplicationSerializer
 
   typelize :boolean
   attribute :due_date_passed do |account|
-    Date.current < account.due_date
+    Date.current > account.due_date
   end
 
   typelize :number
-  attribute :orders_placed do |account|
-    account.orders.sum :amount
+  attribute :orders_amount_sum do |account|
+    params[:orders_sum]&.dig(account.id, :amount) || 0
+  end
+
+  typelize :number
+  attribute :orders_price_sum do |account|
+    params[:orders_sum]&.dig(account.id, :price) || 0
   end
 end
 

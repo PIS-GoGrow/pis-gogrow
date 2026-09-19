@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class Consumer::AccountsController < Consumer::InertiaController
-  before_action :set_account, only: [:show]
+  before_action :set_account, only: [ :show ]
   def index
     history = params[:type] == "history"
-    providers = Provider.all
+    providers = Provider.includes(:user).all
     current_month_spending = Current.user.consumer.current_month_spending
 
     accounts = Current.user.consumer.accounts
@@ -12,13 +12,18 @@ class Consumer::AccountsController < Consumer::InertiaController
       accounts = accounts.history.includes(:payments)
     else
       accounts = accounts.pending.includes(:payments)
+
+      @total_debt = accounts.sum &:amount
+      @sums = Account.amount_and_price_sum(accounts.map(&:id))
     end
 
+
     render inertia: {
-      accounts: AccountSerializer.new(accounts).as_json,
+      accounts: AccountSerializer.new(accounts, params: { orders_sum: @sums }).as_json,
       providers: ProviderSerializer.new(providers).as_json,
       history:,
-      current_month_spending:
+      current_month_spending:,
+      total_debt: @total_debt
     }
   end
 

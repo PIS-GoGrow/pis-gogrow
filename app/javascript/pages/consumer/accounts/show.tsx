@@ -1,29 +1,18 @@
 import { Head } from "@inertiajs/react"
-import { CircleCheck, Eye, TriangleAlert } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+
 import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
-import type { SimplifiedOrder, BreadcrumbItem } from "@/types"
+import type { BreadcrumbItem, SimplifiedOrder } from "@/types"
 
 interface AccountProps {
   orders: SimplifiedOrder[]
@@ -31,9 +20,17 @@ interface AccountProps {
   amount: number
 }
 
-function OrdersTable({ orders, month, amount }: AccountProps) {
+function truncate(text: string, maxLength = 20): string {
+  if (text.length <= maxLength) return text
+  return text.slice(0, maxLength) + "..."
+}
+
+export function OrdersTable({ orders, month, amount }: AccountProps) {
+  if (!orders) return
+
   return (
-    <div className="mx-auto mt-2 max-w-150">
+    <div className="mx-auto mt-2 max-w-100">
+      <Head title={"Consumos " + month} />
       <h1 className="text-l mb-2 font-bold">Consumos {month}</h1>
 
       <div className="overflow-hidden rounded-md border">
@@ -42,7 +39,7 @@ function OrdersTable({ orders, month, amount }: AccountProps) {
             <TableRow>
               <TableHead>Fecha</TableHead>
               <TableHead>Plato</TableHead>
-              <TableHead>Cantidad</TableHead>
+              <TableHead>Cant.</TableHead>
               <TableHead className="text-right">Monto</TableHead>
             </TableRow>
           </TableHeader>
@@ -50,7 +47,7 @@ function OrdersTable({ orders, month, amount }: AccountProps) {
             {orders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell>{order.date}</TableCell>
-                <TableCell>{order.menu_name}</TableCell>
+                <TableCell>{truncate(order.menu_name)}</TableCell>
                 <TableCell>{order.amount}</TableCell>
                 <TableCell className="text-right">{order.price}</TableCell>
               </TableRow>

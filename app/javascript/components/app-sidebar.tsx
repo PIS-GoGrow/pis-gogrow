@@ -3,9 +3,9 @@ import {
   CalendarDays,
   CalendarPlus,
   ClipboardList,
+  CreditCard,
   LayoutGrid,
   Utensils,
-  CreditCard,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/sidebar"
 import {
   adminDashboard,
+  consumerAccounts,
   consumerDashboard,
   orders,
-  consumerAccounts,
   providerDashboard,
   providerMenus,
   schedules,

@@ -7,7 +7,7 @@ class Order < ApplicationRecord
 
   enum :status, { pending: 0, confirmed: 1, cancelled: 2, rejected: 3 }, default: :pending
   enum :status_before_cancellation, { pending: 0, confirmed: 1 }, prefix: :before_cancellation
-  
+
   # Esta línea tiene que estar antes de has_many :order_accounts.
   # Antes de que se borre la orden, se tiene que registrar sus cuentas
   # asociadas para que estas actualicen su monto.
@@ -106,10 +106,17 @@ class Order < ApplicationRecord
   def assign_account
     return unless consumer
 
+    unless accounts.empty?
+      accounts.each &:sync_amount!
+      return
+    end
+
     # Obetener información de la cuenta a la que debería ser asignada la orden:
     # el mes actual y la id del proveedor correspondiente a la orden.
     month = Date.current.beginning_of_month
     provider_id = Provider.joins(menus: { schedules: :orders }).where(orders: { id: }).pluck(:id).first
+
+    return unless provider_id
 
     account = consumer.accounts.find_or_create_by month: month, provider_id: provider_id
     accounts << account
