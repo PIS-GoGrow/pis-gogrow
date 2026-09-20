@@ -3,7 +3,27 @@
 require "rails_helper"
 
 RSpec.describe Consumer, type: :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+  fixtures :consumers, :companies, :providers
+
+  let(:consumer) { consumers(:one) }
+  let(:company_address) { companies(:gogrow).address }
+
+  describe "#delivery_for" do
+    it "derives office when the company address is chosen" do
+      expect(consumer.delivery_for(providers(:tuviandita), company_address))
+        .to eq({ delivery_method: "office", address: company_address })
+    end
+
+    it "derives home when another address is chosen and the provider delivers home" do
+      expect(consumer.delivery_for(providers(:tuviandita), consumer.address))
+        .to eq({ delivery_method: "home", address: consumer.address })
+    end
+
+    it "forces office with the company address for an office-only provider" do
+      expect(consumer.delivery_for(providers(:office_provider), consumer.address))
+        .to eq({ delivery_method: "office", address: company_address })
+    end
+  end
 end
 
 # == Schema Information

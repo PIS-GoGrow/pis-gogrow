@@ -68,7 +68,8 @@ RSpec.describe Account, type: :model do
         amount: 1,
         price: 300,
         discounted_price: 150,
-        address: consumer.address,
+        address: consumer.company.address,
+        delivery_method: :office,
         status: :confirmed
       )
       order2 = Order.create!(
@@ -77,7 +78,8 @@ RSpec.describe Account, type: :model do
         amount: 2,
         price: 600,
         discounted_price: 300,
-        address: consumer.address,
+        address: consumer.company.address,
+        delivery_method: :office,
         status: :confirmed
       )
       Order.create!(
@@ -86,7 +88,8 @@ RSpec.describe Account, type: :model do
         amount: 1,
         price: 300,
         discounted_price: 150,
-        address: consumer.address,
+        address: consumer.company.address,
+        delivery_method: :office,
         status: :cancelled
       )
 
@@ -111,7 +114,8 @@ RSpec.describe Account, type: :model do
         amount: 2,
         price: 700,
         discounted_price: 350,
-        address: consumer.address,
+        address: consumer.company.address,
+        delivery_method: :office,
         status: :confirmed
       )
       order2 = Order.create!(
@@ -120,7 +124,8 @@ RSpec.describe Account, type: :model do
         amount: 1,
         price: 350,
         discounted_price: 175,
-        address: consumer.address,
+        address: consumer.company.address,
+        delivery_method: :office,
         status: :confirmed
       )
       OrderAccount.find_or_create_by!(order: order1, account: account)

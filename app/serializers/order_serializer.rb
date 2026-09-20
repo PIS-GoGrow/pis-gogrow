@@ -3,7 +3,7 @@
 class OrderSerializer < ApplicationSerializer
   typelize_from Order
 
-  attributes :id, :status, :amount, :notes, :address
+  attributes :id, :status, :delivery_method, :amount, :notes, :address
 
   typelize :string?
   attribute :date do |order|
@@ -57,6 +57,7 @@ end
 #  address                    :string
 #  amount                     :integer
 #  cancelled_at               :datetime
+#  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
 #  notes                      :string
 #  price                      :decimal(10, 2)
