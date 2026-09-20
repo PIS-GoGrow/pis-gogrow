@@ -94,6 +94,24 @@
         },
         "title": "Panel"
       },
+      "errors": {
+        "internal_server_error": {
+          "back_home": "Volver al inicio",
+          "description": "Hubo un problema al procesar tu solicitud. Intentá de nuevo.",
+          "heading": "¡Ups! Algo salió mal",
+          "retry": "Reintentar",
+          "title": "Algo salió mal"
+        },
+        "not_found": {
+          "back_home": "Volver al inicio",
+          "description": "La dirección que buscás no está disponible o fue movida.",
+          "go_to_menu": "Ir a mi menú",
+          "go_to_panel": "Ir a mi panel",
+          "heading": "¡Ups! Esta página no existe",
+          "sign_in": "Iniciar sesión",
+          "title": "Página no encontrada"
+        }
+      },
       "home": {
         "dashboard": "Panel",
         "learn_more": "Más información",

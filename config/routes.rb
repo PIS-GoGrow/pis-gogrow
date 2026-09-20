@@ -46,7 +46,6 @@ Rails.application.routes.draw do
     resources :orders, only: [ :create ], as: :consumer_orders do
       patch :cancel, on: :member
     end
-    resources :orders, only: [ :create ], as: :consumer_orders
     resources :accounts, only: [ :index, :show ]
   end
 
@@ -58,4 +57,7 @@ Rails.application.routes.draw do
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   get "up" => "rails/health#show", as: :rails_health_check
+
+  match "500", to: "errors#internal_server_error", via: :all, format: false
+  get "*unmatched_path", to: "errors#not_found", format: false
 end
