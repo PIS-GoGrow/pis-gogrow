@@ -56,7 +56,7 @@ RSpec.describe Account, type: :model do
   end
 
   describe "#sync_amount!" do
-    it "updates the account amount with the sum of prices of confirmed orders" do
+    it "updates the account amount with the sum of final discounted prices of confirmed orders" do
       menu = Menu.create!(provider:, name: "Tarta", description: "Pascualina", price: 300)
       schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
 
@@ -94,12 +94,12 @@ RSpec.describe Account, type: :model do
       account.orders = [ order1, order2 ]
       account.sync_amount!
 
-      expect(account.reload.amount).to eq(900.to_d)
+      expect(account.reload.amount).to eq(450.to_d)
     end
   end
 
   describe ".amount_and_price_sum" do
-    it "aggregates total amounts and prices for confirmed orders of the given accounts" do
+    it "aggregates total amounts and final discounted prices for confirmed orders of the given accounts" do
       menu = Menu.create!(provider:, name: "Milanesa", description: "Con puré", price: 350)
       schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 15)
 
@@ -130,7 +130,7 @@ RSpec.describe Account, type: :model do
 
       expect(sums[account.id]).to eq({
         amount: 3,
-        price: 1050.to_d
+        price: 525.to_d
       })
     end
   end
@@ -185,3 +185,27 @@ RSpec.describe Account, type: :model do
     end
   end
 end
+
+# == Schema Information
+#
+# Table name: accounts
+#
+#  id          :bigint           not null, primary key
+#  amount      :decimal(10, 2)
+#  month       :date
+#  owner_type  :string           not null
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  owner_id    :bigint           not null
+#  provider_id :bigint           not null
+#
+# Indexes
+#
+#  idx_on_owner_type_owner_id_provider_id_month_49d9020441  (owner_type,owner_id,provider_id,month) UNIQUE
+#  index_accounts_on_owner                                  (owner_type,owner_id)
+#  index_accounts_on_provider_id                            (provider_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (provider_id => providers.id)
+#

@@ -3,7 +3,12 @@
 class SimplifiedOrderSerializer < ApplicationSerializer
   typelize_from Order
 
-  attributes :id, :amount, :price
+  attributes :id, :amount
+
+  typelize :number?
+  attribute :price do |order|
+    (order.discounted_price || order.price)&.to_f
+  end
 
   typelize :string?
   attribute :date do |order|

@@ -37,15 +37,15 @@ class Account < ApplicationRecord
     month + 1.month + 4.days
   end
 
-  # Sincroniza la deuda como la suma del precio de las órdenes asociadas
-  # Si es una cuenta de consumidor, se suma el precio de las órdenes.
-  # Si es de Empresa, se suma el precio descontado.
+  # Sincroniza la deuda como la suma del importe final (con subsidio aplicado)
+  # de las órdenes asociadas para el consumidor.
+  # Si es de Empresa, se suma el subsidio (diferencia entre precio base y precio con descuento).
   def sync_amount!
     # TODO: Habría que validar que se tengan solo en cuenta las órdenes confirmadas
     if owner_type == "Consumer"
-      update! amount: orders.confirmed.sum(:price)
+      update! amount: orders.confirmed.sum("COALESCE(orders.discounted_price, orders.price)")
     else
-      update! amount: orders.confirmed.sum(:discounted_price)
+      update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
     end
   end
 
@@ -66,7 +66,7 @@ class Account < ApplicationRecord
            .pluck(
              Arel.sql("order_accounts.account_id"),
              Arel.sql("SUM(orders.amount)"),
-             Arel.sql("SUM(orders.price)")
+             Arel.sql("SUM(COALESCE(orders.discounted_price, orders.price))")
            )
 
     # Devolvemos el arreglo, pero convertido a un hash de la forma:

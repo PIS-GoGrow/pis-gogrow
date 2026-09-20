@@ -65,13 +65,13 @@ RSpec.describe "Consumer Accounts", type: :request do
       expect(inertia).to render_component("consumer/accounts/index")
       expect(inertia).to have_props { |props|
         p = props.deep_symbolize_keys
-        p[:current_month_spending].to_d == 1100.to_d &&
-          p[:total_debt].to_d == 1100.to_d &&
+        p[:current_month_spending].to_d == 550.to_d &&
+          p[:total_debt].to_d == 550.to_d &&
           p[:history] == false &&
           p[:accounts].one? &&
-          p[:accounts].first[:amount].to_d == 1100.to_d &&
+          p[:accounts].first[:amount].to_d == 550.to_d &&
           p[:accounts].first[:orders_amount_sum] == 3 &&
-          p[:accounts].first[:orders_price_sum].to_d == 1100.to_d
+          p[:accounts].first[:orders_price_sum].to_d == 550.to_d
       }
     end
 
@@ -83,10 +83,10 @@ RSpec.describe "Consumer Accounts", type: :request do
 
       sign_in(user, role: :consumer)
 
-      # Orders with provider 1 ($350 * 2 = $700, 2 viandas)
+      # Orders with provider 1 ($350 * 2 = $700 base, 50% discount = $350 final, 2 viandas)
       create_order(consumer:, provider: provider1, price: 350, amount: 2, status: :confirmed)
 
-      # Orders with provider 2 ($250 * 1 = $250, 1 vianda)
+      # Orders with provider 2 ($250 * 1 = $250 base, 50% discount = $125 final, 1 vianda)
       create_order(consumer:, provider: provider2, price: 250, amount: 1, status: :confirmed)
 
       get accounts_path
@@ -98,14 +98,14 @@ RSpec.describe "Consumer Accounts", type: :request do
         provider1_account = p[:accounts].find { |a| a[:provider_id] == provider1.id }
         provider2_account = p[:accounts].find { |a| a[:provider_id] == provider2.id }
 
-        p[:current_month_spending].to_d == 950.to_d &&
-          p[:total_debt].to_d == 950.to_d &&
-          provider1_account[:amount].to_d == 700.to_d &&
+        p[:current_month_spending].to_d == 475.to_d &&
+          p[:total_debt].to_d == 475.to_d &&
+          provider1_account[:amount].to_d == 350.to_d &&
           provider1_account[:orders_amount_sum] == 2 &&
-          provider1_account[:orders_price_sum].to_d == 700.to_d &&
-          provider2_account[:amount].to_d == 250.to_d &&
+          provider1_account[:orders_price_sum].to_d == 350.to_d &&
+          provider2_account[:amount].to_d == 125.to_d &&
           provider2_account[:orders_amount_sum] == 1 &&
-          provider2_account[:orders_price_sum].to_d == 250.to_d &&
+          provider2_account[:orders_price_sum].to_d == 125.to_d &&
           p[:providers].map { |pr| pr[:id] }.include?(provider_sin_deuda.id)
       }
     end
@@ -115,7 +115,7 @@ RSpec.describe "Consumer Accounts", type: :request do
       provider = setup_provider
       sign_in(user, role: :consumer)
 
-      # Current month order
+      # Current month order ($400 base, $200 discounted)
       create_order(consumer:, provider:, price: 400, amount: 1, status: :confirmed)
 
       # Pending debt from previous month
@@ -131,8 +131,8 @@ RSpec.describe "Consumer Accounts", type: :request do
       expect(response).to have_http_status(:ok)
       expect(inertia).to have_props { |props|
         p = props.deep_symbolize_keys
-        p[:current_month_spending].to_d == 400.to_d &&
-          p[:total_debt].to_d == 1000.to_d &&
+        p[:current_month_spending].to_d == 200.to_d &&
+          p[:total_debt].to_d == 800.to_d &&
           p[:accounts].map { |a| a[:id] }.include?(past_account.id)
       }
     end
@@ -151,8 +151,8 @@ RSpec.describe "Consumer Accounts", type: :request do
       expect(response).to have_http_status(:ok)
       expect(inertia).to have_props { |props|
         p = props.deep_symbolize_keys
-        p[:current_month_spending].to_d == 500.to_d &&
-          p[:total_debt].to_d == 500.to_d &&
+        p[:current_month_spending].to_d == 250.to_d &&
+          p[:total_debt].to_d == 250.to_d &&
           p[:accounts].one?
       }
     end
@@ -175,11 +175,12 @@ RSpec.describe "Consumer Accounts", type: :request do
       expect(response).to have_http_status(:ok)
       json = JSON.parse(response.body)
 
-      expect(json["amount"].to_d).to eq(800.to_d)
+      expect(json["amount"].to_d).to eq(400.to_d)
       expect(json["month"]).to be_present
       expect(json["orders"].size).to eq(2)
       expect(json["orders"].map { |o| o["id"] }).to contain_exactly(order1.id, order2.id)
       expect(json["orders"].first).to include("id", "amount", "price", "date", "menu_name")
+      expect(json["orders"].first["price"].to_d).to be_in([ 300.to_d, 100.to_d ])
     end
 
     it "returns not found when a consumer tries to view an account of another consumer" do
