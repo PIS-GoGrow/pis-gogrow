@@ -111,6 +111,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_193218) do
     t.bigint "cancelled_by_id"
     t.bigint "consumer_id", null: false
     t.datetime "created_at", null: false
+    t.integer "delivery_method", null: false
     t.decimal "discounted_price", precision: 10, scale: 2
     t.string "notes"
     t.decimal "price", precision: 10, scale: 2
@@ -121,6 +122,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_193218) do
     t.index ["cancelled_by_id"], name: "index_orders_on_cancelled_by_id"
     t.index ["consumer_id"], name: "index_orders_on_consumer_id"
     t.index ["schedule_id"], name: "index_orders_on_schedule_id"
+    t.check_constraint "delivery_method <> 1 OR address IS NOT NULL AND btrim(address::text) <> ''::text", name: "orders_home_delivery_requires_address"
   end
 
   create_table "payments", force: :cascade do |t|

@@ -144,15 +144,34 @@ past_schedule = Schedule.create!(
 
 upcoming_schedules = Schedule.where("date >= ?", Date.current).order(:date)
 if (first_schedule = upcoming_schedules.first)
-  order = Order.create!(consumer:, schedule: first_schedule, status: :pending, price: 300.50, discounted_price: 150.25, amount: 1)
+  order = Order.create!(
+    consumer:,
+    schedule: first_schedule,
+    status: :pending,
+    price: 300.50,
+    discounted_price: 150.25,
+    amount: 1,
+    address: company.address,
+    delivery_method: :office
+  )
   # Payment.create!(account: order.accounts.first)
 end
 
 if (second_schedule = upcoming_schedules.second)
-  Order.create!(consumer:, schedule: second_schedule, status: :confirmed, price: 601.00, discounted_price: 300.50, amount: 2)
+  Order.create!(consumer:, schedule: second_schedule, status: :confirmed, price: 601.00, discounted_price: 300.50, amount: 2, address: company.address, delivery_method: :office)
 end
 
-Order.create!(consumer:, schedule: past_schedule, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1)
+Order.create!(
+  consumer:,
+  schedule: past_schedule,
+  status: :confirmed,
+  price: 300.50,
+  discounted_price: 150.25,
+  amount: 1,
+  address: company.address,
+  delivery_method: :office
+)
+
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 
 admin_user = User.create!(

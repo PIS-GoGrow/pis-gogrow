@@ -62,6 +62,9 @@ export default function OrderCard({ order, section }: OrderCardProps) {
           {order.address
             ? t(`pages.orders.index.${section}_address`, {
                 address: order.address,
+                delivery_method: t(
+                  `pages.orders.delivery_methods.${order.delivery_method}`,
+                ),
               })
             : t("pages.orders.index.no_address")}
         </p>
