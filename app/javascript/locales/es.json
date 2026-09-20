@@ -3,6 +3,7 @@
     "common": {
       "admin": "Admin",
       "cancel": "Cancelar",
+      "close": "Cerrar",
       "confirm_password": "Confirmar contraseña",
       "consumer": "Consumidor",
       "current_password": "Contraseña actual",
@@ -44,6 +45,7 @@
       "dashboard": "Panel",
       "menu": "Menú de navegación",
       "orders": "Mis pedidos",
+      "payments": "Pagos",
       "platform": "Plataforma",
       "settings": {
         "appearance": "Apariencia",
@@ -54,6 +56,31 @@
       }
     },
     "pages": {
+      "accounts": {
+        "index": {
+          "history": "Historial",
+          "no_debt": "¡Sin deudas pendientes con este proveedor!",
+          "payments": "Pagos",
+          "pending": "Pendientes",
+          "pending_payments": "Pagos pendientes",
+          "spending": "Tu consumo",
+          "this_month": "Este mes",
+          "total_debt": "Deuda total"
+        },
+        "show": {
+          "amount": "Cant.",
+          "date": "Fecha",
+          "due": "Vence: ",
+          "lunch": "vianda",
+          "lunches": "viandas",
+          "menu": "Plato",
+          "price": "Monto",
+          "receipt": "Subir comprobante de pago",
+          "see_detail": "Ver detalle",
+          "spending": "Consumo",
+          "total": "Total"
+        }
+      },
       "cart": {
         "delivery": "Entrega: %{date}",
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",

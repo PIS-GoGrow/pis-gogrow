@@ -1,17 +1,11 @@
 # frozen_string_literal: true
 
-class Provider < ApplicationRecord
-  include SyncsUserRoles
+class ProviderSerializer < ApplicationSerializer
+  attributes :id
 
-  has_many :menus, dependent: :destroy
-  has_many :accounts, dependent: :destroy
-
-  def delivery_methods
-    home_delivery? ? Order.delivery_methods.keys : [ "office" ]
-  end
-
-  def allows_delivery_method?(method)
-    delivery_methods.include?(method.to_s)
+  typelize :string
+  attribute :name do |provider|
+    provider.user.name
   end
 end
 
