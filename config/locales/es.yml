@@ -95,6 +95,21 @@ es:
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
+    errors:
+      internal_server_error:
+        title: "Algo salió mal"
+        heading: "¡Ups! Algo salió mal"
+        description: "Hubo un problema al procesar tu solicitud. Intentá de nuevo."
+        retry: "Reintentar"
+        back_home: "Volver al inicio"
+      not_found:
+        title: "Página no encontrada"
+        heading: "¡Ups! Esta página no existe"
+        description: "La dirección que buscás no está disponible o fue movida."
+        go_to_menu: "Ir a mi menú"
+        go_to_panel: "Ir a mi panel"
+        sign_in: "Iniciar sesión"
+        back_home: "Volver al inicio"
     orders:
       index:
         title: "Mis pedidos"
