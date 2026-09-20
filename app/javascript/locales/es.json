@@ -94,6 +94,24 @@
         },
         "title": "Panel"
       },
+      "errors": {
+        "internal_server_error": {
+          "back_home": "Volver al inicio",
+          "description": "Hubo un problema al procesar tu solicitud. Intentá de nuevo.",
+          "heading": "¡Ups! Algo salió mal",
+          "retry": "Reintentar",
+          "title": "Algo salió mal"
+        },
+        "not_found": {
+          "back_home": "Volver al inicio",
+          "description": "La dirección que buscás no está disponible o fue movida.",
+          "go_to_menu": "Ir a mi menú",
+          "go_to_panel": "Ir a mi panel",
+          "heading": "¡Ups! Esta página no existe",
+          "sign_in": "Iniciar sesión",
+          "title": "Página no encontrada"
+        }
+      },
       "home": {
         "dashboard": "Panel",
         "learn_more": "Más información",
@@ -175,6 +193,28 @@
           "return_to": "O vuelve a",
           "submit": "Enviar enlace de restablecimiento",
           "title": "Olvidé mi contraseña"
+        }
+      },
+      "provider_orders": {
+        "index": {
+          "cancel": "Cancelar",
+          "code": "PED-%{id}",
+          "confirm": "Confirmar",
+          "empty_description": "Todavía no recibiste pedidos para hoy.",
+          "empty_filtered_description": "No tenés pedidos con este estado para hoy.",
+          "empty_title": "No hay pedidos",
+          "eyebrow": "Operación diaria",
+          "filter_label": "Filtrar pedidos por estado",
+          "filters": {
+            "all": "Todos",
+            "cancelled": "Cancelados",
+            "confirmed": "Confirmados",
+            "pending": "Pendientes",
+            "rejected": "Rechazados"
+          },
+          "no_address": "Sin dirección de entrega",
+          "quantity": "x%{count}",
+          "title": "Pedidos"
         }
       },
       "sessions": {

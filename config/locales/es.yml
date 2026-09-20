@@ -98,6 +98,21 @@ es:
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
+    errors:
+      internal_server_error:
+        title: "Algo salió mal"
+        heading: "¡Ups! Algo salió mal"
+        description: "Hubo un problema al procesar tu solicitud. Intentá de nuevo."
+        retry: "Reintentar"
+        back_home: "Volver al inicio"
+      not_found:
+        title: "Página no encontrada"
+        heading: "¡Ups! Esta página no existe"
+        description: "La dirección que buscás no está disponible o fue movida."
+        go_to_menu: "Ir a mi menú"
+        go_to_panel: "Ir a mi panel"
+        sign_in: "Iniciar sesión"
+        back_home: "Volver al inicio"
     accounts:
       index:
         payments: "Pagos"
@@ -106,7 +121,7 @@ es:
         pending_payments: "Pagos pendientes"
         total_debt: "Deuda total"
         pending: "Pendientes"
-        history: "Historial" 
+        history: "Historial"
         no_debt: "¡Sin deudas pendientes con este proveedor!"
       show:
         see_detail: "Ver detalle"
@@ -168,6 +183,25 @@ es:
       delivery_methods:
         office: "Oficina"
         home: "Domicilio"
+    provider_orders:
+      index:
+        title: "Pedidos"
+        eyebrow: "Operación diaria"
+        filter_label: "Filtrar pedidos por estado"
+        filters:
+          all: "Todos"
+          pending: "Pendientes"
+          confirmed: "Confirmados"
+          cancelled: "Cancelados"
+          rejected: "Rechazados"
+        empty_title: "No hay pedidos"
+        empty_description: "Todavía no recibiste pedidos para hoy."
+        empty_filtered_description: "No tenés pedidos con este estado para hoy."
+        code: "PED-%{id}"
+        quantity: "x%{count}"
+        no_address: "Sin dirección de entrega"
+        cancel: "Cancelar"
+        confirm: "Confirmar"
     cart:
       office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
       other_deliveries: "Las demás viandas irán a la dirección seleccionada."
