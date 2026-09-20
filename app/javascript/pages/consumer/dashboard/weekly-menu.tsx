@@ -71,8 +71,8 @@ export function WeeklyMenu({
       <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-10">
         <header className="mb-6">
           <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
-          <p className="text-muted-foreground text-sm">
-            {new Date(`${date}T00:00:00`).toLocaleDateString("es-UY", {
+          <p className="text-muted-foreground text-sm capitalize">
+            {new Date(`${currentDate}T00:00:00`).toLocaleDateString("es-UY", {
               weekday: "long",
               day: "numeric",
               month: "long",

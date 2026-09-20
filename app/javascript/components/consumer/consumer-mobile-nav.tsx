@@ -7,7 +7,6 @@ import {
 import { HugeiconsIcon } from "@hugeicons/react"
 import { Link, usePage } from "@inertiajs/react"
 
-import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
   consumerAccounts,
@@ -39,7 +38,7 @@ const links = [
     label: "Cuenta",
     icon: UserIcon,
     href: settingsProfiles.show().url,
-    activePrefix: "/settings/",
+    activePrefix: "/settings",
   },
 ]
 
@@ -47,30 +46,31 @@ export function ConsumerMobileNav() {
   const { url } = usePage()
 
   return (
-    <nav className="border-border bg-background/95 fixed inset-x-6 bottom-4 z-30 flex h-[60px] items-center justify-around rounded-full border p-1 shadow-lg md:hidden">
+    <nav className="fixed bottom-4 left-1/2 z-30 flex h-[60px] w-[354px] max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center justify-center rounded-full border-y border-white bg-white/80 p-1 shadow-[0px_0px_24px_rgba(10,10,10,0.1),inset_0px_6px_6px_rgba(255,255,255,0.3)] backdrop-blur-[5px] md:hidden dark:border-white/10 dark:bg-neutral-900/80 dark:shadow-[0px_0px_24px_rgba(0,0,0,0.4),inset_0px_1px_1px_rgba(255,255,255,0.1)]">
       {links.map(({ label, icon, href, activePrefix }) => {
         const isActive = url.startsWith(activePrefix)
 
         return (
-          <Button
-            variant="ghost"
-            size="sm"
+          <Link
             key={label}
-            asChild
+            href={href}
+            prefetch
+            aria-current={isActive ? "page" : undefined}
             className={cn(
-              "text-foreground h-[52px] min-w-0 flex-1 flex-col items-center gap-0.5 rounded-full p-1 text-xs leading-4 font-medium",
-              isActive && "bg-muted hover:bg-muted",
+              "flex h-[52px] w-[86.5px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full p-1 text-[12px] leading-4 font-medium text-[#0A0A0A] transition-colors dark:text-neutral-100",
+              isActive
+                ? "bg-[#E5E5E5] dark:bg-neutral-800"
+                : "hover:bg-[#E5E5E5]/50 dark:hover:bg-neutral-800/50",
             )}
           >
-            <Link
-              href={href}
-              prefetch
-              aria-current={isActive ? "page" : undefined}
-            >
-              <HugeiconsIcon icon={icon} size={24} aria-hidden="true" />
-              {label}
-            </Link>
-          </Button>
+            <HugeiconsIcon
+              icon={icon}
+              size={24}
+              strokeWidth={2}
+              aria-hidden="true"
+            />
+            <span>{label}</span>
+          </Link>
         )
       })}
     </nav>

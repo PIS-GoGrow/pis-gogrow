@@ -13,7 +13,12 @@ export function AppSidebarHeader({
   const { auth } = usePage().props
 
   return (
-    <header className="border-sidebar-border/50 flex h-16 shrink-0 items-center gap-2 border-b px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
+    <header
+      className={cn(
+        "border-sidebar-border/50 flex h-16 shrink-0 items-center gap-2 border-b px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4",
+        auth.session.role === "consumer" && "hidden md:flex",
+      )}
+    >
       <div className="flex items-center gap-2">
         <SidebarTrigger
           className={cn(
