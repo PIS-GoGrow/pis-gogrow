@@ -1,18 +1,25 @@
 # frozen_string_literal: true
 
 class AccountSerializer < ApplicationSerializer
-  attributes :id, :amount, :provider_id
+  typelize_from Account
 
-  many :payments, resource: PaymentSerializer
+  attributes :id, :provider_id
+
+  # to_f y no el decimal crudo: Alba serializa BigDecimal como string y el tipo
+  # generado diría number. En el cliente solo se formatea, no se opera.
+  typelize :number?
+  attribute :amount do |account|
+    account.amount&.to_f
+  end
 
   typelize :boolean
   attribute :current do |account|
     account.current?
   end
 
-  typelize :string
+  typelize :string?
   attribute :month do |account|
-    I18n.l(account.month, format: :month_year)
+    account.month ? I18n.l(account.month, format: :month_year) : nil
   end
 
   typelize :string
@@ -34,28 +41,6 @@ class AccountSerializer < ApplicationSerializer
   attribute :orders_price_sum do |account|
     params[:orders_sum]&.dig(account.id, :price) || 0
   end
-end
 
-# == Schema Information
-#
-# Table name: accounts
-#
-#  id          :bigint           not null, primary key
-#  amount      :decimal(10, 2)
-#  month       :date
-#  owner_type  :string           not null
-#  created_at  :datetime         not null
-#  updated_at  :datetime         not null
-#  owner_id    :bigint           not null
-#  provider_id :bigint           not null
-#
-# Indexes
-#
-#  idx_on_owner_type_owner_id_provider_id_month_49d9020441  (owner_type,owner_id,provider_id,month) UNIQUE
-#  index_accounts_on_owner                                  (owner_type,owner_id)
-#  index_accounts_on_provider_id                            (provider_id)
-#
-# Foreign Keys
-#
-#  fk_rails_...  (provider_id => providers.id)
-#
+  many :payments, resource: PaymentSerializer
+end

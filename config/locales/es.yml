@@ -223,6 +223,31 @@ es:
       title: "Panel"
       roles:
         provider: "Panel del proveedor"
+    admin:
+      consumers:
+        index:
+          title: "Empleados"
+          search_placeholder: "Buscar por nombre, correo o empresa"
+          search_button: "Buscar"
+          empty_title: "No se encontraron empleados"
+          empty_description: "Probá con otro nombre, correo o empresa."
+        show:
+          title: "Detalle del empleado"
+          back: "Volver a empleados"
+          orders_tab: "Pedidos"
+          benefits_tab: "Beneficios"
+          payments_tab: "Pagos"
+          debts_tab: "Deudas"
+          orders_empty: "Todavía no hizo pedidos."
+          benefits_empty: "No tiene beneficios asignados."
+          payments_empty: "No registra pagos."
+          debts_empty: "No tiene deudas pendientes."
+          benefit_percentage: "%{percentage}% de subsidio"
+          benefit_due_date: "Vence: %{date}"
+          debt_month: "Mes: %{month}"
+        payment_statuses:
+          pending: "Pendiente"
+          paid: "Pagado"
     sessions:
       new:
         title: "Iniciar sesión"

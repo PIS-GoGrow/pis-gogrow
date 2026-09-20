@@ -8,25 +8,22 @@
 class Account < ApplicationRecord
   belongs_to :owner, polymorphic: true
 
-  # TODO: Habría que validar que los dependent: :destroy son esperables
+  belongs_to :provider
+
   has_many :payments, dependent: :destroy
   has_many :order_accounts, dependent: :destroy
-
   has_many :orders, through: :order_accounts
-  belongs_to :provider
 
   before_create :correct_month
 
   scope :current, -> { where(month: Date.current.beginning_of_month) }
 
-  # Los dos scopes de abajo asumen que Payment.account_id no es NULL
-  # TODO: Hay que cambiar según qué estado sea el que se elija para pagos
-  # aprobados.
+  # Deuda pendiente: cuentas con importe positivo que todavía no tienen ningún pago acreditado.
   scope :pending, -> {
-    where.not(id: Payment.where(status: 0).select(:account_id)).where.not(amount: ..0)
+    where.not(id: Payment.paid.select(:account_id)).where.not(amount: ..0)
   }
   scope :history, -> {
-    where(id: Payment.where(status: 0).select(:account_id))
+    where(id: Payment.paid.select(:account_id))
   }
 
   def current?

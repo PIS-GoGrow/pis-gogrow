@@ -81,6 +81,36 @@
           "total": "Total"
         }
       },
+      "admin": {
+        "consumers": {
+          "index": {
+            "empty_description": "Probá con otro nombre, correo o empresa.",
+            "empty_title": "No se encontraron empleados",
+            "search_button": "Buscar",
+            "search_placeholder": "Buscar por nombre, correo o empresa",
+            "title": "Empleados"
+          },
+          "payment_statuses": {
+            "paid": "Pagado",
+            "pending": "Pendiente"
+          },
+          "show": {
+            "back": "Volver a empleados",
+            "benefit_due_date": "Vence: %{date}",
+            "benefit_percentage": "%{percentage}% de subsidio",
+            "benefits_empty": "No tiene beneficios asignados.",
+            "benefits_tab": "Beneficios",
+            "debt_month": "Mes: %{month}",
+            "debts_empty": "No tiene deudas pendientes.",
+            "debts_tab": "Deudas",
+            "orders_empty": "Todavía no hizo pedidos.",
+            "orders_tab": "Pedidos",
+            "payments_empty": "No registra pagos.",
+            "payments_tab": "Pagos",
+            "title": "Detalle del empleado"
+          }
+        }
+      },
       "cart": {
         "delivery": "Entrega: %{date}",
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
