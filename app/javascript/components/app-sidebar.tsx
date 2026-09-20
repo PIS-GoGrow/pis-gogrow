@@ -5,6 +5,7 @@ import {
   ClipboardList,
   CreditCard,
   LayoutGrid,
+  Package,
   Utensils,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -27,6 +28,7 @@ import {
   orders,
   providerDashboard,
   providerMenus,
+  providerOrders,
   schedules,
 } from "@/routes"
 import type { NavItem } from "@/types"
@@ -53,6 +55,11 @@ export function AppSidebar() {
         title: "Publicar menús",
         href: schedules.index().url,
         icon: CalendarPlus,
+      },
+      {
+        title: "Pedidos",
+        href: providerOrders.index().url,
+        icon: Package,
       },
     ],
     admin: [

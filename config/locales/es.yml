@@ -168,6 +168,25 @@ es:
       delivery_methods:
         office: "Oficina"
         home: "Domicilio"
+    provider_orders:
+      index:
+        title: "Pedidos"
+        eyebrow: "Operación diaria"
+        filter_label: "Filtrar pedidos por estado"
+        filters:
+          all: "Todos"
+          pending: "Pendientes"
+          confirmed: "Confirmados"
+          cancelled: "Cancelados"
+          rejected: "Rechazados"
+        empty_title: "No hay pedidos"
+        empty_description: "Todavía no recibiste pedidos para hoy."
+        empty_filtered_description: "No tenés pedidos con este estado para hoy."
+        code: "PED-%{id}"
+        quantity: "x%{count}"
+        no_address: "Sin dirección de entrega"
+        cancel: "Cancelar"
+        confirm: "Confirmar"
     cart:
       office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
       other_deliveries: "Las demás viandas irán a la dirección seleccionada."

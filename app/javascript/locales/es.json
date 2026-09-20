@@ -177,6 +177,28 @@
           "title": "Olvidé mi contraseña"
         }
       },
+      "provider_orders": {
+        "index": {
+          "cancel": "Cancelar",
+          "code": "PED-%{id}",
+          "confirm": "Confirmar",
+          "empty_description": "Todavía no recibiste pedidos para hoy.",
+          "empty_filtered_description": "No tenés pedidos con este estado para hoy.",
+          "empty_title": "No hay pedidos",
+          "eyebrow": "Operación diaria",
+          "filter_label": "Filtrar pedidos por estado",
+          "filters": {
+            "all": "Todos",
+            "cancelled": "Cancelados",
+            "confirmed": "Confirmados",
+            "pending": "Pendientes",
+            "rejected": "Rechazados"
+          },
+          "no_address": "Sin dirección de entrega",
+          "quantity": "x%{count}",
+          "title": "Pedidos"
+        }
+      },
       "sessions": {
         "edit": {
           "description": "Tenés más de un rol disponible. Podés elegir cuál usar ahora, o cambiarlo después.",
