@@ -32,7 +32,7 @@ Rails.application.routes.draw do
 
   namespace :provider do
     resources :menus
-    resources :orders, only: [ :index ]
+    resources :orders, only: [ :index, :show ]
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
