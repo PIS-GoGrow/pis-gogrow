@@ -12,7 +12,9 @@ export default function New() {
         <CardTitle> Crear plato </CardTitle>
         <NewMenuForm
           formSuccess={() => {
-            /* En principio no es necesario hacer nada acá */
+            /* En principio no es necesario hacer nada acá,
+               esta acción está pensada para cuando el formulario
+               se muestre desde index.tsx */
           }}
         />
       </Card>

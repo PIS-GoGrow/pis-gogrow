@@ -562,29 +562,31 @@ RSpec.describe "Schedules", type: :request do
     end
 
     it "publishes a menu for today" do
-      user = users(:one)
-      provider = Provider.create!(user: user)
+      travel_to(Date.current.beginning_of_week(:monday)) do
+        user = users(:one)
+        provider = Provider.create!(user: user)
 
-      menu = provider.menus.create!(
-        name: "Milanesa",
-        description: "Milanesa con puré",
-        price: 350
-      )
+        menu = provider.menus.create!(
+          name: "Milanesa",
+          description: "Milanesa con puré",
+          price: 350
+        )
 
-      sign_in_with_role(user, role: :provider)
+        sign_in_with_role(user, role: :provider)
 
-      date = Date.current
+        date = Date.current
 
-      expect do
-        post schedules_path, params: {
-          date: date.to_s,
-          items: [
-            { menu_id: menu.id, amount: 20 }
-          ]
-        }
-      end.to change(Schedule, :count).by(1)
+        expect do
+          post schedules_path, params: {
+            date: date.to_s,
+            items: [
+              { menu_id: menu.id, amount: 20 }
+            ]
+          }
+        end.to change(Schedule, :count).by(1)
 
-      expect(Schedule.find_by!(menu: menu, date: date).amount).to eq(20)
+        expect(Schedule.find_by!(menu: menu, date: date).amount).to eq(20)
+      end
     end
 
     #-------------------------------------------------------------------------#

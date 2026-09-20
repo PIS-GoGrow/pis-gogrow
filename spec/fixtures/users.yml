@@ -31,6 +31,12 @@ other_consumer_user:
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
   verified: true
 
+office_provider_user:
+  email: office-provider@example.com
+  name: Office Provider User
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  verified: true
+
 # == Schema Information
 #
 # Table name: users
