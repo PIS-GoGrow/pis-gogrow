@@ -1,6 +1,7 @@
 import { UtensilsCrossed } from "lucide-react"
 import { useState } from "react"
 
+import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
 import { Button } from "@/components/ui/button"
@@ -14,7 +15,6 @@ import {
 import type { ConsumerDashboardIndex } from "@/types"
 
 import { BenefitCard } from "./benefit-card"
-import { ConsumerMobileNav } from "./consumer-mobile-nav"
 import type { CartItem, Schedule } from "./consumer-types"
 import { money } from "./formatters"
 import { ProviderFilterSheet } from "./provider-filter-sheet"
