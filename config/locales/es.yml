@@ -1,6 +1,7 @@
 es:
   common:
     cancel: "Cancelar"
+    close: "Cerrar"
     confirm_password: "Confirmar contraseña"
     current_password: "Contraseña actual"
     email_address: "Correo electrónico"
@@ -20,6 +21,7 @@ es:
   flash:
     cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
+    order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
     already_signed_in: "Ya has iniciado sesión"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
@@ -50,6 +52,8 @@ es:
     invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
+    delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
+    order_not_cancellable: "Este pedido ya no se puede cancelar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
   user_mailer:
     greeting: "Hola,"
@@ -76,6 +80,7 @@ es:
       password: "Contraseña"
       sessions: "Sesiones"
       appearance: "Apariencia"
+    payments: "Pagos"
   components:
     appearance:
       toggle_theme: "Cambiar tema"
@@ -93,6 +98,43 @@ es:
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
+    errors:
+      internal_server_error:
+        title: "Algo salió mal"
+        heading: "¡Ups! Algo salió mal"
+        description: "Hubo un problema al procesar tu solicitud. Intentá de nuevo."
+        retry: "Reintentar"
+        back_home: "Volver al inicio"
+      not_found:
+        title: "Página no encontrada"
+        heading: "¡Ups! Esta página no existe"
+        description: "La dirección que buscás no está disponible o fue movida."
+        go_to_menu: "Ir a mi menú"
+        go_to_panel: "Ir a mi panel"
+        sign_in: "Iniciar sesión"
+        back_home: "Volver al inicio"
+    accounts:
+      index:
+        payments: "Pagos"
+        spending: "Tu consumo"
+        this_month: "Este mes"
+        pending_payments: "Pagos pendientes"
+        total_debt: "Deuda total"
+        pending: "Pendientes"
+        history: "Historial"
+        no_debt: "¡Sin deudas pendientes con este proveedor!"
+      show:
+        see_detail: "Ver detalle"
+        spending: "Consumo"
+        lunch: "vianda"
+        lunches: "viandas"
+        due: "Vence: "
+        receipt: "Subir comprobante de pago"
+        date: "Fecha"
+        menu: "Plato"
+        amount: "Cant."
+        price: "Monto"
+        total: "Total"
     orders:
       index:
         title: "Mis pedidos"
@@ -103,20 +145,31 @@ es:
         history_empty_title: "No tienes pedidos anteriores"
         history_empty_description: "Tus pedidos completados aparecerán aquí."
         quantity: "x%{count}"
-        upcoming_address: "Recibes en: %{address}"
-        history_address: "Recibiste en: %{address}"
+        upcoming_address: "Recibes en: %{address} (%{delivery_method})"
+        history_address: "Recibiste en: %{address} (%{delivery_method})"
         no_date: "Sin fecha de entrega"
         no_price: "Importe no disponible"
         base_price: "Precio base: %{amount}"
         no_address: "Sin dirección de entrega"
         no_menu: "Plato no disponible"
         no_provider: "Proveedor no disponible"
+        cancel: "Cancelar"
+        cancel_dialog:
+          title: "¿Cancelar pedido?"
+          description: "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras."
+          back: "Volver"
+          confirm: "Cancelar pedido"
+        cannot_cancel:
+          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar desde la app."
+          already_closed: "Este pedido ya está cerrado."
+          unavailable: "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
       show:
         title: "Detalle del pedido"
         back: "Volver a mis pedidos"
         quantity: "Cantidad"
         date: "Fecha de entrega"
         address: "Dirección de entrega"
+        delivery_method: "Modalidad de entrega"
         base_price: "Precio base"
         subsidy: "Subsidio aplicado"
         total: "Importe final"
@@ -127,6 +180,28 @@ es:
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
+      delivery_methods:
+        office: "Oficina"
+        home: "Domicilio"
+    provider_orders:
+      index:
+        title: "Pedidos"
+        eyebrow: "Operación diaria"
+        filter_label: "Filtrar pedidos por estado"
+        filters:
+          all: "Todos"
+          pending: "Pendientes"
+          confirmed: "Confirmados"
+          cancelled: "Cancelados"
+          rejected: "Rechazados"
+        empty_title: "No hay pedidos"
+        empty_description: "Todavía no recibiste pedidos para hoy."
+        empty_filtered_description: "No tenés pedidos con este estado para hoy."
+        code: "PED-%{id}"
+        quantity: "x%{count}"
+        no_address: "Sin dirección de entrega"
+        cancel: "Cancelar"
+        confirm: "Confirmar"
     cart:
       office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
       other_deliveries: "Las demás viandas irán a la dirección seleccionada."
@@ -232,3 +307,7 @@ es:
         ip: "IP: %{address}"
         active_since: "Activa desde: %{time}"
         log_out: "Cerrar sesión"
+  date:
+    formats:
+      month_year: "%B de %Y"
+    month_names: [~, Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Setiembre, Octubre, Noviembre, Diciembre]

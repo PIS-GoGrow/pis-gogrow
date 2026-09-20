@@ -100,7 +100,7 @@ class Consumer::DashboardController < Consumer::InertiaController
           id: order.id,
           date: order.schedule.date.iso8601,
           address: order.address,
-          address_label: delivery_label(order.address),
+          delivery_method: order.delivery_method,
           provider_name: menu.provider.user&.name || "Proveedor",
           name: menu.name,
           quantity: order.amount,
@@ -108,12 +108,5 @@ class Consumer::DashboardController < Consumer::InertiaController
         }
       end
     }
-  end
-
-  def delivery_label(address)
-    return "Oficina" if address == @consumer.company.address
-    return "Casa" if address == @consumer.address
-
-    "Entrega"
   end
 end

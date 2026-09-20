@@ -1,14 +1,18 @@
 unpaid:
   owner: one (Consumer)
+  provider: tuviandita
   month: <%= Date.current.beginning_of_month.iso8601 %>
   amount: 300.50
 
 paid:
   owner: one (Consumer)
+  provider: tuviandita
   month: <%= 1.month.ago.beginning_of_month.iso8601 %>
   amount: 150.25
 
 failed_payment:
   owner: one (Consumer)
+  provider: tuviandita
   month: <%= 2.months.ago.beginning_of_month.iso8601 %>
   amount: 100.00
+

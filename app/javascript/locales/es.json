@@ -3,6 +3,7 @@
     "common": {
       "admin": "Admin",
       "cancel": "Cancelar",
+      "close": "Cerrar",
       "confirm_password": "Confirmar contraseña",
       "consumer": "Consumidor",
       "current_password": "Contraseña actual",
@@ -44,6 +45,7 @@
       "dashboard": "Panel",
       "menu": "Menú de navegación",
       "orders": "Mis pedidos",
+      "payments": "Pagos",
       "platform": "Plataforma",
       "settings": {
         "appearance": "Apariencia",
@@ -54,6 +56,31 @@
       }
     },
     "pages": {
+      "accounts": {
+        "index": {
+          "history": "Historial",
+          "no_debt": "¡Sin deudas pendientes con este proveedor!",
+          "payments": "Pagos",
+          "pending": "Pendientes",
+          "pending_payments": "Pagos pendientes",
+          "spending": "Tu consumo",
+          "this_month": "Este mes",
+          "total_debt": "Deuda total"
+        },
+        "show": {
+          "amount": "Cant.",
+          "date": "Fecha",
+          "due": "Vence: ",
+          "lunch": "vianda",
+          "lunches": "viandas",
+          "menu": "Plato",
+          "price": "Monto",
+          "receipt": "Subir comprobante de pago",
+          "see_detail": "Ver detalle",
+          "spending": "Consumo",
+          "total": "Total"
+        }
+      },
       "admin": {
         "consumers": {
           "index": {
@@ -97,6 +124,24 @@
         },
         "title": "Panel"
       },
+      "errors": {
+        "internal_server_error": {
+          "back_home": "Volver al inicio",
+          "description": "Hubo un problema al procesar tu solicitud. Intentá de nuevo.",
+          "heading": "¡Ups! Algo salió mal",
+          "retry": "Reintentar",
+          "title": "Algo salió mal"
+        },
+        "not_found": {
+          "back_home": "Volver al inicio",
+          "description": "La dirección que buscás no está disponible o fue movida.",
+          "go_to_menu": "Ir a mi menú",
+          "go_to_panel": "Ir a mi panel",
+          "heading": "¡Ups! Esta página no existe",
+          "sign_in": "Iniciar sesión",
+          "title": "Página no encontrada"
+        }
+      },
       "home": {
         "dashboard": "Panel",
         "learn_more": "Más información",
@@ -111,9 +156,25 @@
         "title": "Te damos la bienvenida"
       },
       "orders": {
+        "delivery_methods": {
+          "home": "Domicilio",
+          "office": "Oficina"
+        },
         "index": {
           "base_price": "Precio base: %{amount}",
-          "history_address": "Recibiste en: %{address}",
+          "cancel": "Cancelar",
+          "cancel_dialog": {
+            "back": "Volver",
+            "confirm": "Cancelar pedido",
+            "description": "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras.",
+            "title": "¿Cancelar pedido?"
+          },
+          "cannot_cancel": {
+            "already_closed": "Este pedido ya está cerrado.",
+            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar desde la app.",
+            "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
+          },
+          "history_address": "Recibiste en: %{address} (%{delivery_method})",
           "history_empty_description": "Tus pedidos completados aparecerán aquí.",
           "history_empty_title": "No tienes pedidos anteriores",
           "history_tab": "Historial",
@@ -124,7 +185,7 @@
           "no_provider": "Proveedor no disponible",
           "quantity": "x%{count}",
           "title": "Mis pedidos",
-          "upcoming_address": "Recibes en: %{address}",
+          "upcoming_address": "Recibes en: %{address} (%{delivery_method})",
           "upcoming_empty_description": "No tienes viandas en camino.",
           "upcoming_empty_title": "No tienes pedidos próximos",
           "upcoming_tab": "Próximos"
@@ -134,6 +195,7 @@
           "back": "Volver a mis pedidos",
           "base_price": "Precio base",
           "date": "Fecha de entrega",
+          "delivery_method": "Modalidad de entrega",
           "no_notes": "Sin notas",
           "notes": "Notas",
           "quantity": "Cantidad",
@@ -161,6 +223,28 @@
           "return_to": "O vuelve a",
           "submit": "Enviar enlace de restablecimiento",
           "title": "Olvidé mi contraseña"
+        }
+      },
+      "provider_orders": {
+        "index": {
+          "cancel": "Cancelar",
+          "code": "PED-%{id}",
+          "confirm": "Confirmar",
+          "empty_description": "Todavía no recibiste pedidos para hoy.",
+          "empty_filtered_description": "No tenés pedidos con este estado para hoy.",
+          "empty_title": "No hay pedidos",
+          "eyebrow": "Operación diaria",
+          "filter_label": "Filtrar pedidos por estado",
+          "filters": {
+            "all": "Todos",
+            "cancelled": "Cancelados",
+            "confirmed": "Confirmados",
+            "pending": "Pendientes",
+            "rejected": "Rechazados"
+          },
+          "no_address": "Sin dirección de entrega",
+          "quantity": "x%{count}",
+          "title": "Pedidos"
         }
       },
       "sessions": {

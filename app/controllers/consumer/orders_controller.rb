@@ -18,18 +18,15 @@ class Consumer::OrdersController < Consumer::InertiaController
 
       requested_items.each do |item|
         schedule = schedules.fetch(item[:schedule_id].to_i)
-        address = schedule.menu.provider.home_delivery? ? order_params[:address] : consumer.company.address
-        if address.blank?
+        delivery = consumer.delivery_for(schedule.menu.provider, order_params[:address])
+        if delivery[:address].blank?
           reject_order(:office_address_required)
           raise ActiveRecord::Rollback
         end
         order = Order.reserve(
-          consumer:,
-          schedule:,
-          quantity: item[:quantity].to_i,
-          notes: item[:notes],
-          address:,
-          discount_percentage: benefit_percentage
+          consumer:, schedule:, quantity: item[:quantity].to_i, notes: item[:notes],
+          discount_percentage: benefit_percentage,
+          **delivery
         )
         raise ActiveRecord::RecordInvalid, order unless order.persisted?
 
@@ -40,6 +37,16 @@ class Consumer::OrdersController < Consumer::InertiaController
     redirect_to dashboard_path(confirmed_order_ids: created_orders.map(&:id)), notice: t("flash.cart_confirmed"), status: :see_other unless performed?
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound, KeyError
     reject_order(:cart_unavailable)
+  end
+
+  def cancel
+    order = Current.user.consumer.orders.find(params[:id])
+
+    if order.cancel(by: Current.user)
+      redirect_to orders_path, notice: t("flash.order_cancelled"), status: :see_other
+    else
+      redirect_to orders_path, alert: t("validations.order_not_cancellable"), status: :see_other
+    end
   end
 
   private

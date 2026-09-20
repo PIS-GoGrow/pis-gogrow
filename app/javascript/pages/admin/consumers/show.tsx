@@ -51,10 +51,12 @@ export default function Show({
   const { locale } = usePage().props
   const { formatMoney, formatDeliveryDate } = useFormatters()
 
-  const formatMonth = (month: string) =>
-    new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(
-      new Date(month),
-    )
+  const formatMonth = (month: string) => {
+    const date = new Date(month)
+    return Number.isNaN(date.getTime())
+      ? month
+      : new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(date)
+  }
 
   const formatDate = (date: string) =>
     new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
