@@ -1,6 +1,12 @@
 tuviandita:
   user: provider_user
   order_deadline: "10:00"
+  home_delivery: true
+
+office_provider:
+  user: office_provider_user
+  order_deadline: "10:00"
+  home_delivery: false
 
 # == Schema Information
 #

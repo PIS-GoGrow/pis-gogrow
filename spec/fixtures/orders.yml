@@ -8,6 +8,7 @@ upcoming_pending_future:
   price: 300.50
   discounted_price: 150.25
   address: Julio Herrera y Reissig 565
+  delivery_method: home
 
 upcoming_confirmed_future:
   consumer: one
@@ -16,7 +17,8 @@ upcoming_confirmed_future:
   amount: 2
   price: 601.00
   discounted_price: 300.50
-  address: Julio Herrera y Reissig 565
+  address: 18 de Julio 1006
+  delivery_method: office
 
 upcoming_pending_today:
   consumer: one
@@ -26,6 +28,7 @@ upcoming_pending_today:
   price: 300.50
   discounted_price: 150.25
   address: Julio Herrera y Reissig 565
+  delivery_method: home
 
 history_cancelled_future:
   consumer: one
@@ -35,6 +38,7 @@ history_cancelled_future:
   price: 300.50
   discounted_price: 150.25
   address: Julio Herrera y Reissig 565
+  delivery_method: home
 
 history_rejected_future:
   consumer: one
@@ -44,6 +48,7 @@ history_rejected_future:
   price: 300.50
   discounted_price: 150.25
   address: Julio Herrera y Reissig 565
+  delivery_method: home
 
 history_confirmed_past:
   consumer: one
@@ -53,6 +58,7 @@ history_confirmed_past:
   price: 300.50
   discounted_price: 150.25
   address: Julio Herrera y Reissig 565
+  delivery_method: home
 
 history_pending_past:
   consumer: one
@@ -62,6 +68,7 @@ history_pending_past:
   price: 300.50
   discounted_price: 150.25
   address: Julio Herrera y Reissig 565
+  delivery_method: home
 
 history_without_schedule:
   consumer: one
@@ -70,6 +77,7 @@ history_without_schedule:
   price: 300.50
   discounted_price: 150.25
   address: Julio Herrera y Reissig 565
+  delivery_method: home
 
 other_consumer_upcoming:
   consumer: other
@@ -79,30 +87,37 @@ other_consumer_upcoming:
   price: 300.50
   discounted_price: 150.25
   address: Bulevar Artigas 1234
+  delivery_method: home
 
 # == Schema Information
 #
 # Table name: orders
 #
-#  id               :bigint           not null, primary key
-#  address          :string
-#  amount           :integer
-#  discounted_price :decimal(10, 2)
-#  notes            :string
-#  price            :decimal(10, 2)
-#  status           :integer          default(0), not null
-#  created_at       :datetime         not null
-#  updated_at       :datetime         not null
-#  consumer_id      :bigint           not null
-#  schedule_id      :bigint
+#  id                         :bigint           not null, primary key
+#  address                    :string
+#  amount                     :integer
+#  cancelled_at               :datetime
+#  delivery_method            :integer          not null
+#  discounted_price           :decimal(10, 2)
+#  notes                      :string
+#  price                      :decimal(10, 2)
+#  status                     :integer          default(0), not null
+#  status_before_cancellation :integer
+#  created_at                 :datetime         not null
+#  updated_at                 :datetime         not null
+#  cancelled_by_id            :bigint
+#  consumer_id                :bigint           not null
+#  schedule_id                :bigint
 #
 # Indexes
 #
-#  index_orders_on_consumer_id  (consumer_id)
-#  index_orders_on_schedule_id  (schedule_id)
+#  index_orders_on_cancelled_by_id  (cancelled_by_id)
+#  index_orders_on_consumer_id      (consumer_id)
+#  index_orders_on_schedule_id      (schedule_id)
 #
 # Foreign Keys
 #
+#  fk_rails_...  (cancelled_by_id => users.id)
 #  fk_rails_...  (consumer_id => consumers.id)
 #  fk_rails_...  (schedule_id => schedules.id)
 #

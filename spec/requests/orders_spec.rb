@@ -50,10 +50,11 @@ RSpec.describe "Orders", type: :request do
 
         expect(order).to include(
           status: "confirmed",
+          delivery_method: "office",
           menu_name: "Milanesa con papas fritas",
           provider_name: "Provider User",
           date: (Date.current + 3).iso8601,
-          address: "Julio Herrera y Reissig 565",
+          address: "18 de Julio 1006",
           price: 601.0,
           discounted_price: 300.50
         )
@@ -64,7 +65,7 @@ RSpec.describe "Orders", type: :request do
 
         order = inertia.props[:past_orders].find { |o| o[:id] == orders(:history_without_schedule).id }
 
-        expect(order).to include(date: nil, menu_name: nil, provider_name: nil)
+        expect(order).to include(date: nil, menu_name: nil, provider_name: nil, delivery_method: "home")
       end
 
       it "hides orders belonging to another employee" do
@@ -95,10 +96,11 @@ RSpec.describe "Orders", type: :request do
 
         expect(inertia.props[:order]).to include(
           status: "confirmed",
+          delivery_method: "office",
           menu_name: "Milanesa con papas fritas",
           provider_name: "Provider User",
           date: (Date.current + 3).iso8601,
-          address: "Julio Herrera y Reissig 565",
+          address: "18 de Julio 1006",
           amount: 2,
           price: 601.0,
           subsidy: 300.50,
@@ -154,6 +156,7 @@ RSpec.describe "Orders", type: :request do
         schedule:,
         amount: 2,
         address: company.address,
+        delivery_method: "office",
         price: 600.to_d,
         discounted_price: 300.to_d,
         notes: "Sin salsa"
@@ -171,7 +174,7 @@ RSpec.describe "Orders", type: :request do
             id: order.id,
             date: Date.current.iso8601,
             address: company.address,
-            address_label: "Oficina",
+            delivery_method: "office",
             provider_name: users(:two).name,
             name: "Milanesa",
             quantity: 2,
@@ -185,7 +188,7 @@ RSpec.describe "Orders", type: :request do
       consumer, = setup_consumer
       available = create_schedule
       unavailable = create_schedule(amount: 1)
-      Order.create!(consumer:, schedule: unavailable, amount: 1, price: unavailable.menu.price)
+      Order.create!(consumer:, schedule: unavailable, amount: 1, price: unavailable.menu.price, address: consumer.address, delivery_method: :home)
 
       expect do
         post orders_path, params: {
@@ -311,13 +314,13 @@ RSpec.describe "Orders", type: :request do
 
       expect do
         post orders_path, params: { order: { address: consumer.address, items: [
-          { schedule_id: office_only.id, quantity: 1, address: consumer.address, home_delivery: true },
+          { schedule_id: office_only.id, quantity: 1 },
           { schedule_id: home_schedule.id, quantity: 1 }
         ] } }
       end.to change(Order, :count).by(2)
 
-      expect(consumer.orders.find_by!(schedule: office_only).address).to eq(company.address)
-      expect(consumer.orders.find_by!(schedule: home_schedule).address).to eq(consumer.address)
+      expect(consumer.orders.find_by!(schedule: office_only)).to have_attributes(address: company.address, delivery_method: "office")
+      expect(consumer.orders.find_by!(schedule: home_schedule)).to have_attributes(address: consumer.address, delivery_method: "home")
       follow_redirect!
       expect(inertia).to render_component("consumer/dashboard/index")
     end
@@ -344,6 +347,81 @@ RSpec.describe "Orders", type: :request do
 
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.office_address_required") })
+    end
+  end
+  describe "PATCH /orders/:id/cancel" do
+    it "redirects visitors to the sign in page" do
+      patch cancel_consumer_order_path(orders(:upcoming_pending_future))
+
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "rejects a session with a different active role" do
+      sign_in users(:provider_user), role: :provider
+
+      patch cancel_consumer_order_path(orders(:upcoming_pending_future))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_future).reload).to be_pending
+    end
+
+    context "when signed in as an employee" do
+      before { sign_in users(:one) }
+
+      it "cancels a pending order and moves it to the history" do
+        order = orders(:upcoming_pending_future)
+
+        patch cancel_consumer_order_path(order)
+
+        expect(order.reload).to be_cancelled
+        expect(response).to redirect_to(orders_path)
+
+        follow_redirect!
+        expect(inertia).to have_flash(notice: I18n.t("flash.order_cancelled"))
+        expect(inertia.props[:past_orders].pluck(:id)).to include(order.id)
+        expect(inertia.props[:upcoming_orders].pluck(:id)).not_to include(order.id)
+      end
+
+      it "cancels a confirmed order whose delivery day is still ahead" do
+        order = orders(:upcoming_confirmed_future)
+
+        patch cancel_consumer_order_path(order)
+
+        expect(order.reload).to be_cancelled
+        expect(order.cancelled_by).to eq(users(:one))
+      end
+
+      it "refuses to cancel a confirmed order on its delivery day" do
+        order = orders(:upcoming_pending_today)
+        order.update!(status: :confirmed)
+
+        patch cancel_consumer_order_path(order)
+
+        expect(order.reload).to be_confirmed
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
+      end
+
+      it "refuses a direct request against a pending order whose delivery day already passed" do
+        order = orders(:history_pending_past)
+
+        patch cancel_consumer_order_path(order)
+
+        expect(order.reload).to be_pending
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
+      end
+
+      it "does not cancel another employee's order" do
+        order = orders(:other_consumer_upcoming)
+
+        patch cancel_consumer_order_path(order)
+
+        expect(response).to have_http_status(:not_found)
+        expect(order.reload).to be_confirmed
+      end
     end
   end
 end
