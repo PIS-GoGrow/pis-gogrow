@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 
 import AccountCard from "@/components/consumer/accounts/account-card"
 import OrdersTable from "@/components/consumer/accounts/orders-table"
+import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -109,7 +110,7 @@ export default function Index({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.accounts.index.payments")} />
 
-      <div className="mx-auto grid w-full max-w-128 gap-6 p-5">
+      <div className="mx-auto grid w-full max-w-128 gap-6 p-5 pb-24 md:pb-5">
         <h1 className="text-2xl font-bold">
           {" "}
           {t("pages.accounts.index.payments")}{" "}
@@ -181,6 +182,8 @@ export default function Index({
           </SheetContent>
         </Sheet>
       </div>
+
+      <ConsumerMobileNav />
     </AppLayout>
   )
 }

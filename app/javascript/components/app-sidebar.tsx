@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { ConsumerAppLogo } from "@/components/consumer/consumer-app-logo"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -91,13 +92,17 @@ export function AppSidebar() {
   const role = auth.session.role
 
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar
+      collapsible="icon"
+      variant="inset"
+      hideOnMobile={role === "consumer"}
+    >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href={navItems[role][0]?.href} prefetch>
-                <AppLogo />
+                {role === "consumer" ? <ConsumerAppLogo /> : <AppLogo />}
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
