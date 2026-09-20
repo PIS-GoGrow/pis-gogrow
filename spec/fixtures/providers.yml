@@ -1,0 +1,29 @@
+tuviandita:
+  user: provider_user
+  order_deadline: "10:00"
+  home_delivery: true
+
+office_provider:
+  user: office_provider_user
+  order_deadline: "10:00"
+  home_delivery: false
+
+# == Schema Information
+#
+# Table name: providers
+#
+#  id             :bigint           not null, primary key
+#  home_delivery  :boolean          default(TRUE), not null
+#  order_deadline :time
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  user_id        :bigint
+#
+# Indexes
+#
+#  index_providers_on_user_id  (user_id) UNIQUE
+#
+# Foreign Keys
+#
+#  fk_rails_...  (user_id => users.id) ON DELETE => nullify
+#

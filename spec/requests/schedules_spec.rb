@@ -2,7 +2,11 @@
 
 require "rails_helper"
 
-
+def next_publishable_date
+  date = Date.current + 1.day
+  date += 1.day until date.on_weekday?
+  date
+end
 
 RSpec.describe "Schedules", type: :request do
   fixtures :users
@@ -32,11 +36,13 @@ RSpec.describe "Schedules", type: :request do
       page = inertia_page
 
       expect(page["component"]).to eq("schedules/index")
+
       expect(page.dig("props", "week", "starts_on")).to eq(
         Date.current.beginning_of_week(:monday).to_s
       )
+
       expect(page.dig("props", "week", "ends_on")).to eq(
-        Date.current.end_of_week(:monday).to_s
+        (Date.current.beginning_of_week(:monday) + 4.days).to_s
       )
     end
 
@@ -47,7 +53,7 @@ RSpec.describe "Schedules", type: :request do
       sign_in_with_role(user, role: :provider)
 
       week_start = Date.current.beginning_of_week(:monday) - 1.week
-      week_end = week_start.end_of_week(:monday)
+      week_end = week_start + 4.days
 
       get schedules_path, params: {
         week_start: week_start.to_s
@@ -58,7 +64,7 @@ RSpec.describe "Schedules", type: :request do
       expect(response.body).to include(week_end.to_s)
     end
 
-    it "returns the seven days of the requested week" do
+    it "returns the five weekdays of the requested week" do
       user = users(:one)
       Provider.create!(user: user)
 
@@ -76,7 +82,7 @@ RSpec.describe "Schedules", type: :request do
       days = page.dig("props", "days")
 
       expect(days.map { |day| day["date"] }).to eq(
-        (week_start..week_start + 6.days).map(&:to_s)
+        (week_start..week_start + 4.days).map(&:to_s)
       )
     end
 
@@ -178,7 +184,7 @@ RSpec.describe "Schedules", type: :request do
       sign_in_with_role(user, role: :provider)
 
       last_allowed_date =
-        Date.current.end_of_week(:monday) + 1.week
+        Date.current.next_week(:monday) + 4.days
 
       week_start =
         last_allowed_date.beginning_of_week(:monday)
@@ -355,7 +361,7 @@ RSpec.describe "Schedules", type: :request do
 
       sign_in_with_role(user, role: :provider)
 
-      date = Date.current + 1.day
+      date = next_publishable_date
 
       expect do
         post schedules_path, params: {
@@ -408,7 +414,7 @@ RSpec.describe "Schedules", type: :request do
 
       sign_in_with_role(user, role: :provider)
 
-      date = Date.current + 1.day
+      date = next_publishable_date
 
       expect do
         post schedules_path, params: {
@@ -435,7 +441,7 @@ RSpec.describe "Schedules", type: :request do
 
       sign_in_with_role(user, role: :provider)
 
-      date = Date.current + 1.day
+      date = next_publishable_date
 
       expect do
         post schedules_path, params: {
@@ -459,7 +465,7 @@ RSpec.describe "Schedules", type: :request do
 
       sign_in_with_role(user, role: :provider)
 
-      date = Date.current + 1.day
+      date = next_publishable_date
 
       expect do
         post schedules_path, params: {
@@ -483,7 +489,7 @@ RSpec.describe "Schedules", type: :request do
 
       sign_in_with_role(user, role: :provider)
 
-      date = Date.current + 1.day
+      date = next_publishable_date
 
       expect do
         post schedules_path, params: {
@@ -512,7 +518,7 @@ RSpec.describe "Schedules", type: :request do
         price: 400
       )
 
-      date = Date.current + 1.day
+      date = next_publishable_date
 
       first_menu.schedules.create!(
         date: date,
@@ -556,29 +562,31 @@ RSpec.describe "Schedules", type: :request do
     end
 
     it "publishes a menu for today" do
-      user = users(:one)
-      provider = Provider.create!(user: user)
+      travel_to(Date.current.beginning_of_week(:monday)) do
+        user = users(:one)
+        provider = Provider.create!(user: user)
 
-      menu = provider.menus.create!(
-        name: "Milanesa",
-        description: "Milanesa con puré",
-        price: 350
-      )
+        menu = provider.menus.create!(
+          name: "Milanesa",
+          description: "Milanesa con puré",
+          price: 350
+        )
 
-      sign_in_with_role(user, role: :provider)
+        sign_in_with_role(user, role: :provider)
 
-      date = Date.current
+        date = Date.current
 
-      expect do
-        post schedules_path, params: {
-          date: date.to_s,
-          items: [
-            { menu_id: menu.id, amount: 20 }
-          ]
-        }
-      end.to change(Schedule, :count).by(1)
+        expect do
+          post schedules_path, params: {
+            date: date.to_s,
+            items: [
+              { menu_id: menu.id, amount: 20 }
+            ]
+          }
+        end.to change(Schedule, :count).by(1)
 
-      expect(Schedule.find_by!(menu: menu, date: date).amount).to eq(20)
+        expect(Schedule.find_by!(menu: menu, date: date).amount).to eq(20)
+      end
     end
 
     #-------------------------------------------------------------------------#
@@ -596,8 +604,8 @@ RSpec.describe "Schedules", type: :request do
 
       sign_in_with_role(user, role: :provider)
 
-      end_of_next_week = Date.current.end_of_week(:monday) + 1.week
-      date = end_of_next_week + 1.day
+      end_of_next_week = Date.current.next_week(:monday) + 4.days
+      date = Date.current.next_week(:monday) + 1.week
 
       expect do
         post schedules_path, params: {
@@ -621,7 +629,7 @@ RSpec.describe "Schedules", type: :request do
 
       sign_in_with_role(user, role: :provider)
 
-      date = Date.current.end_of_week(:monday) + 1.week
+      date = Date.current.next_week(:monday) + 4.days
 
       expect do
         post schedules_path, params: {
@@ -656,7 +664,7 @@ RSpec.describe "Schedules", type: :request do
         price: 400
       )
 
-      date = Date.current + 1.day
+      date = next_publishable_date
 
       first_menu.schedules.create!(
         date: date,
@@ -698,6 +706,58 @@ RSpec.describe "Schedules", type: :request do
           date: Date.current.to_s,
           items: [
             { menu_id: 999, amount: 20 }
+          ]
+        }
+      end.not_to change(Schedule, :count)
+
+      expect(response).to have_http_status(:redirect)
+    end
+
+    it "does not publish a menu on Saturday" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+
+      menu = provider.menus.create!(
+        name: "Milanesa",
+        description: "Milanesa con puré",
+        price: 350
+      )
+
+      sign_in_with_role(user, role: :provider)
+
+      saturday = Date.current.next_week(:monday) + 5.days
+
+      expect do
+        post schedules_path, params: {
+          date: saturday.to_s,
+          items: [
+            { menu_id: menu.id, amount: 20 }
+          ]
+        }
+      end.not_to change(Schedule, :count)
+
+      expect(response).to have_http_status(:redirect)
+    end
+
+    it "does not publish a menu on Sunday" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+
+      menu = provider.menus.create!(
+        name: "Milanesa",
+        description: "Milanesa con puré",
+        price: 350
+      )
+
+      sign_in_with_role(user, role: :provider)
+
+      sunday = Date.current.next_week(:monday) + 6.days
+
+      expect do
+        post schedules_path, params: {
+          date: sunday.to_s,
+          items: [
+            { menu_id: menu.id, amount: 20 }
           ]
         }
       end.not_to change(Schedule, :count)

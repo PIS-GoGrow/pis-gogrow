@@ -4,6 +4,15 @@ class Provider < ApplicationRecord
   include SyncsUserRoles
 
   has_many :menus, dependent: :destroy
+  has_many :accounts, dependent: :destroy
+
+  def delivery_methods
+    home_delivery? ? Order.delivery_methods.keys : [ "office" ]
+  end
+
+  def allows_delivery_method?(method)
+    delivery_methods.include?(method.to_s)
+  end
 end
 
 # == Schema Information
@@ -11,6 +20,7 @@ end
 # Table name: providers
 #
 #  id             :bigint           not null, primary key
+#  home_delivery  :boolean          default(TRUE), not null
 #  order_deadline :time
 #  created_at     :datetime         not null
 #  updated_at     :datetime         not null

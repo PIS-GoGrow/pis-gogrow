@@ -3,6 +3,7 @@
     "common": {
       "admin": "Admin",
       "cancel": "Cancelar",
+      "close": "Cerrar",
       "confirm_password": "Confirmar contraseña",
       "consumer": "Consumidor",
       "current_password": "Contraseña actual",
@@ -44,6 +45,8 @@
       "change_to": "Cambiar a",
       "dashboard": "Panel",
       "menu": "Menú de navegación",
+      "orders": "Mis pedidos",
+      "payments": "Pagos",
       "platform": "Plataforma",
       "settings": {
         "appearance": "Apariencia",
@@ -94,6 +97,39 @@
           }
         }
       },
+      "accounts": {
+        "index": {
+          "history": "Historial",
+          "no_debt": "¡Sin deudas pendientes con este proveedor!",
+          "payments": "Pagos",
+          "pending": "Pendientes",
+          "pending_payments": "Pagos pendientes",
+          "spending": "Tu consumo",
+          "this_month": "Este mes",
+          "total_debt": "Deuda total"
+        },
+        "show": {
+          "amount": "Cant.",
+          "date": "Fecha",
+          "due": "Vence: ",
+          "lunch": "vianda",
+          "lunches": "viandas",
+          "menu": "Plato",
+          "price": "Monto",
+          "receipt": "Subir comprobante de pago",
+          "see_detail": "Ver detalle",
+          "spending": "Consumo",
+          "total": "Total"
+        }
+      },
+      "cart": {
+        "delivery": "Entrega: %{date}",
+        "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
+        "office_delivery_warning": "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina.",
+        "other_deliveries": "Las demás viandas irán a la dirección seleccionada.",
+        "remove": "Quitar %{name}"
+      },
+
       "dashboard": {
         "roles": {
           "provider": "Panel del proveedor"
@@ -112,6 +148,61 @@
         "resources_intro": "Estos son algunos recursos para empezar:",
         "tagline": "Rails + Inertia.js + React + shadcn/ui",
         "title": "Te damos la bienvenida"
+      },
+      "orders": {
+        "delivery_methods": {
+          "home": "Domicilio",
+          "office": "Oficina"
+        },
+        "index": {
+          "base_price": "Precio base: %{amount}",
+          "cancel": "Cancelar",
+          "cancel_dialog": {
+            "back": "Volver",
+            "confirm": "Cancelar pedido",
+            "description": "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras.",
+            "title": "¿Cancelar pedido?"
+          },
+          "cannot_cancel": {
+            "already_closed": "Este pedido ya está cerrado.",
+            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar desde la app.",
+            "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
+          },
+          "history_address": "Recibiste en: %{address} (%{delivery_method})",
+          "history_empty_description": "Tus pedidos completados aparecerán aquí.",
+          "history_empty_title": "No tienes pedidos anteriores",
+          "history_tab": "Historial",
+          "no_address": "Sin dirección de entrega",
+          "no_date": "Sin fecha de entrega",
+          "no_menu": "Plato no disponible",
+          "no_price": "Importe no disponible",
+          "no_provider": "Proveedor no disponible",
+          "quantity": "x%{count}",
+          "title": "Mis pedidos",
+          "upcoming_address": "Recibes en: %{address} (%{delivery_method})",
+          "upcoming_empty_description": "No tienes viandas en camino.",
+          "upcoming_empty_title": "No tienes pedidos próximos",
+          "upcoming_tab": "Próximos"
+        },
+        "show": {
+          "address": "Dirección de entrega",
+          "back": "Volver a mis pedidos",
+          "base_price": "Precio base",
+          "date": "Fecha de entrega",
+          "delivery_method": "Modalidad de entrega",
+          "no_notes": "Sin notas",
+          "notes": "Notas",
+          "quantity": "Cantidad",
+          "subsidy": "Subsidio aplicado",
+          "title": "Detalle del pedido",
+          "total": "Importe final"
+        },
+        "statuses": {
+          "cancelled": "Cancelado",
+          "confirmed": "Confirmado",
+          "pending": "Pendiente",
+          "rejected": "Rechazado"
+        }
       },
       "password_resets": {
         "edit": {

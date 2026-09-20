@@ -20,6 +20,30 @@ admin:
   roles: "{admin}"
   verified: true
 
+consumer_user:
+  email: consumer@example.com
+  name: Consumer User
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  verified: true
+
+provider_user:
+  email: provider@example.com
+  name: Provider User
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  verified: true
+
+other_consumer_user:
+  email: other-consumer@example.com
+  name: Other Consumer User
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  verified: true
+
+office_provider_user:
+  email: office-provider@example.com
+  name: Office Provider User
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  verified: true
+
 # == Schema Information
 #
 # Table name: users
@@ -31,24 +55,6 @@ admin:
 #  name            :string           not null
 #  password_digest :string           not null
 #  roles           :string           default([]), not null, is an Array
-#  verified        :boolean          default(FALSE), not null
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
-#
-# Indexes
-#
-#  index_users_on_email       (email) UNIQUE
-#  index_users_on_google_uid  (google_uid) UNIQUE
-#
-#
-# Table name: users
-#
-#  id              :bigint           not null, primary key
-#  avatar_url      :string
-#  email           :string           not null
-#  google_uid      :string
-#  name            :string           not null
-#  password_digest :string           not null
 #  verified        :boolean          default(FALSE), not null
 #  created_at      :datetime         not null
 #  updated_at      :datetime         not null

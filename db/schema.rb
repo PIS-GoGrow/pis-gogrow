@@ -20,8 +20,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_190000) do
     t.date "month"
     t.bigint "owner_id", null: false
     t.string "owner_type", null: false
+    t.bigint "provider_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id", "provider_id", "month"], name: "idx_on_owner_type_owner_id_provider_id_month_49d9020441", unique: true
     t.index ["owner_type", "owner_id"], name: "index_accounts_on_owner"
+    t.index ["provider_id"], name: "index_accounts_on_provider_id"
   end
 
   create_table "admins", force: :cascade do |t|
@@ -105,16 +108,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_190000) do
   create_table "orders", force: :cascade do |t|
     t.string "address"
     t.integer "amount"
+    t.datetime "cancelled_at"
+    t.bigint "cancelled_by_id"
     t.bigint "consumer_id", null: false
     t.datetime "created_at", null: false
+    t.integer "delivery_method", null: false
     t.decimal "discounted_price", precision: 10, scale: 2
     t.string "notes"
     t.decimal "price", precision: 10, scale: 2
     t.bigint "schedule_id"
-    t.integer "status"
+    t.integer "status", default: 0, null: false
+    t.integer "status_before_cancellation"
     t.datetime "updated_at", null: false
+    t.index ["cancelled_by_id"], name: "index_orders_on_cancelled_by_id"
     t.index ["consumer_id"], name: "index_orders_on_consumer_id"
     t.index ["schedule_id"], name: "index_orders_on_schedule_id"
+    t.check_constraint "delivery_method <> 1 OR address IS NOT NULL AND btrim(address::text) <> ''::text", name: "orders_home_delivery_requires_address"
   end
 
   create_table "payments", force: :cascade do |t|
@@ -359,6 +368,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_190000) do
     t.index ["google_uid"], name: "index_users_on_google_uid", unique: true
   end
 
+  add_foreign_key "accounts", "providers"
   add_foreign_key "admins", "companies"
   add_foreign_key "admins", "users"
   add_foreign_key "benefit_configurations", "companies"
@@ -371,6 +381,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_20_190000) do
   add_foreign_key "order_accounts", "orders"
   add_foreign_key "orders", "consumers"
   add_foreign_key "orders", "schedules"
+  add_foreign_key "orders", "users", column: "cancelled_by_id"
   add_foreign_key "payments", "accounts"
   add_foreign_key "providers", "users", on_delete: :nullify
   add_foreign_key "reviews", "menus"

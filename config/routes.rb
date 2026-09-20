@@ -9,9 +9,7 @@ Rails.application.routes.draw do
   post "sign_up", to: "users#create"
 
   resources :sessions, only: [ :destroy, :edit, :update ]
-
   resource :users, only: [ :destroy ]
-
 
   # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the
   # OmniAuth middleware before it reaches the router — only the callback and
@@ -37,16 +35,24 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
+  resources :orders, only: [ :index, :show ]
+  resources :schedules, only: [ :index, :create ]
+
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
+
+    resources :menus, only: [ :index ]
+    resources :orders, only: [ :create ], as: :consumer_orders do
+      patch :cancel, on: :member
+    end
+    resources :orders, only: [ :create ], as: :consumer_orders
+    resources :accounts, only: [ :index, :show ]
   end
 
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
   end
-
-  resources :schedules, only: %i[index create]
 
   root "home#index"
 

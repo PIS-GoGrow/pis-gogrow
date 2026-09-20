@@ -1,5 +1,13 @@
 import { Link, usePage } from "@inertiajs/react"
-import { CalendarPlus, LayoutGrid, Percent, Utensils } from "lucide-react"
+import {
+  CalendarDays,
+  CalendarPlus,
+  ClipboardList,
+  CreditCard,
+  LayoutGrid,
+  Percent,
+  Utensils,
+} from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { NavMain } from "@/components/nav-main"
@@ -16,7 +24,9 @@ import {
 import {
   adminBenefitConfigurations,
   adminDashboard,
+  consumerAccounts,
   consumerDashboard,
+  orders,
   providerDashboard,
   providerMenus,
   schedules,
@@ -61,9 +71,19 @@ export function AppSidebar() {
     ],
     consumer: [
       {
-        title: t("nav.dashboard"),
+        title: "Menú del día",
         href: consumerDashboard.index().url,
-        icon: LayoutGrid,
+        icon: CalendarDays,
+      },
+      {
+        title: t("nav.orders"),
+        href: orders.index().url,
+        icon: ClipboardList,
+      },
+      {
+        title: t("nav.payments"),
+        href: consumerAccounts.index().url,
+        icon: CreditCard,
       },
     ],
   }
