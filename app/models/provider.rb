@@ -5,6 +5,8 @@ class Provider < ApplicationRecord
 
   has_many :menus, dependent: :destroy
   has_many :accounts, dependent: :destroy
+  has_many :schedules, through: :menus
+  has_many :orders, through: :schedules
 
   def delivery_methods
     home_delivery? ? Order.delivery_methods.keys : [ "office" ]

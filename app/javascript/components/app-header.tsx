@@ -1,5 +1,5 @@
 import { Link, usePage } from "@inertiajs/react"
-import { LayoutGrid, Menu, Search, Utensils } from "lucide-react"
+import { LayoutGrid, Menu, Package, Search, Utensils } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { Breadcrumbs } from "@/components/breadcrumbs"
@@ -32,6 +32,7 @@ import {
   consumerDashboard,
   providerDashboard,
   providerMenus,
+  providerOrders,
 } from "@/routes"
 import type { BreadcrumbItem, NavItem } from "@/types"
 
@@ -61,6 +62,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
         title: "Platos",
         href: providerMenus.index().url,
         icon: Utensils,
+      },
+      {
+        title: "Pedidos",
+        href: providerOrders.index().url,
+        icon: Package,
       },
     ],
     admin: [
