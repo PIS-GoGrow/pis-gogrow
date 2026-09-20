@@ -8,6 +8,10 @@ office_provider:
   order_deadline: "10:00"
   home_delivery: false
 
+endulzate:
+  user: other_provider_user
+  order_deadline: "11:00"
+
 # == Schema Information
 #
 # Table name: providers

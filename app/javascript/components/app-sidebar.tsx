@@ -10,7 +10,6 @@ import {
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import { ConsumerAppLogo } from "@/components/consumer/consumer-app-logo"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -102,7 +101,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href={navItems[role][0]?.href} prefetch>
-                {role === "consumer" ? <ConsumerAppLogo /> : <AppLogo />}
+                <AppLogo />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

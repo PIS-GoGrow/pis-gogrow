@@ -1,3 +1,4 @@
+import { Link } from "@inertiajs/react"
 import { MapPin } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -16,6 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
+import { providerOrders } from "@/routes"
 import type { ProviderOrder } from "@/types"
 
 interface ProviderOrderCardProps {
@@ -28,7 +30,7 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
   const { formatMoney } = useFormatters()
 
   return (
-    <ListItemCard>
+    <ListItemCard className="relative">
       <CardHeader>
         <div className="flex items-center gap-3">
           <Avatar size="lg">
@@ -37,7 +39,14 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
             </AvatarFallback>
           </Avatar>
           <div className="grid gap-1">
-            <CardTitle>{order.consumer_name}</CardTitle>
+            <CardTitle>
+              <Link
+                href={providerOrders.show(order.id).url}
+                className="after:absolute after:inset-0 hover:underline"
+              >
+                {order.consumer_name}
+              </Link>
+            </CardTitle>
             <CardDescription className="text-xs">
               {t("pages.provider_orders.index.code", { id: order.id })} ·{" "}
               {order.time}
@@ -75,7 +84,7 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
       {order.status === "pending" && (
         <CardFooter className="flex-col gap-4">
           <Separator />
-          <div className="grid w-full grid-cols-2 gap-2">
+          <div className="relative grid w-full grid-cols-2 gap-2">
             <Button type="button" variant="outline" size="lg">
               {t("pages.provider_orders.index.cancel")}
             </Button>
