@@ -14,6 +14,7 @@ RSpec.describe BenefitConfiguration, type: :model do
         company: company,
         created_by: admin_user,
         subsidy_percentage: 50,
+        max_voucher_price: 150,
         monthly_voucher_limit: 20,
         effective_from: Date.current
       }.merge(attrs)
@@ -34,6 +35,18 @@ RSpec.describe BenefitConfiguration, type: :model do
 
   it "rejects a negative monthly voucher limit" do
     expect(build_configuration(monthly_voucher_limit: -1)).not_to be_valid
+  end
+
+  it "rejects a max_voucher_price of zero" do
+    expect(build_configuration(max_voucher_price: 0)).not_to be_valid
+  end
+
+  it "rejects a negative max_voucher_price" do
+    expect(build_configuration(max_voucher_price: -1)).not_to be_valid
+  end
+
+  it "rejects a missing max_voucher_price" do
+    expect(build_configuration(max_voucher_price: nil)).not_to be_valid
   end
 
   it "rejects an effective_from date in the past" do

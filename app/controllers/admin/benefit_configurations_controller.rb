@@ -12,6 +12,7 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
     company = Current.user.admin.company
     benefit_configuration = company.benefit_configurations.new(benefit_configuration_params)
     benefit_configuration.created_by = Current.user
+    benefit_configuration.effective_from = next_period_effective_from
 
     if benefit_configuration.save
       redirect_to admin_benefit_configurations_path, notice: t("flash.benefit_configuration_created")
@@ -23,6 +24,13 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
   private
 
   def benefit_configuration_params
-    params.expect(benefit_configuration: [ :subsidy_percentage, :monthly_voucher_limit, :effective_from ])
+    params.expect(benefit_configuration: [ :subsidy_percentage, :monthly_voucher_limit, :max_voucher_price ])
+  end
+
+  # RRHH ya no elige la fecha de vigencia: el cambio se aplica siempre a
+  # partir del primer día del próximo período (mes), como quedó definido en
+  # el Figma ("Los cambios se aplicarán en el próximo período").
+  def next_period_effective_from
+    Date.current.next_month.beginning_of_month
   end
 end

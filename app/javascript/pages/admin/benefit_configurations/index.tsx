@@ -1,16 +1,18 @@
-import { Form, Head } from "@inertiajs/react"
+import { Head } from "@inertiajs/react"
+import { PencilIcon, PlusIcon } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import EditBenefitConfigurationDialog from "@/components/benefit-configurations/edit-benefit-configuration-dialog"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { DialogTrigger } from "@/components/ui/dialog"
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import {
   Table,
   TableBody,
@@ -78,10 +80,36 @@ export default function Index({
             <CardTitle>
               {t("pages.admin.benefit_configurations.index.current.title")}
             </CardTitle>
+
+            <CardAction>
+              <EditBenefitConfigurationDialog
+                currentBenefitConfiguration={current_benefit_configuration}
+              >
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    {current_benefit_configuration ? (
+                      <>
+                        <PencilIcon />
+                        {t(
+                          "pages.admin.benefit_configurations.index.current.edit",
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <PlusIcon />
+                        {t(
+                          "pages.admin.benefit_configurations.index.current.configure",
+                        )}
+                      </>
+                    )}
+                  </Button>
+                </DialogTrigger>
+              </EditBenefitConfigurationDialog>
+            </CardAction>
           </CardHeader>
           <CardContent>
             {current_benefit_configuration ? (
-              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <div>
                   <dt className="text-muted-foreground text-sm">
                     {t(
@@ -90,6 +118,16 @@ export default function Index({
                   </dt>
                   <dd className="text-lg font-semibold">
                     {current_benefit_configuration.subsidy_percentage}%
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground text-sm">
+                    {t(
+                      "pages.admin.benefit_configurations.index.current.max_voucher_price",
+                    )}
+                  </dt>
+                  <dd className="text-lg font-semibold">
+                    ${current_benefit_configuration.max_voucher_price}
                   </dd>
                 </div>
                 <div>
@@ -143,90 +181,6 @@ export default function Index({
         <Card>
           <CardHeader>
             <CardTitle>
-              {t("pages.admin.benefit_configurations.index.form.title")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form
-              action={adminBenefitConfigurations.create()}
-              options={{ preserveScroll: true }}
-            >
-              {({ errors, processing }) => (
-                <FieldGroup>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <Field data-invalid={!!errors.subsidy_percentage}>
-                      <FieldLabel htmlFor="subsidy_percentage">
-                        {t(
-                          "pages.admin.benefit_configurations.index.form.subsidy_percentage",
-                        )}
-                      </FieldLabel>
-                      <Input
-                        id="subsidy_percentage"
-                        name="subsidy_percentage"
-                        type="number"
-                        min="0"
-                        max="100"
-                        aria-invalid={!!errors.subsidy_percentage}
-                      />
-                      <FieldError
-                        errors={errors.subsidy_percentage?.map((message) => ({
-                          message,
-                        }))}
-                      />
-                    </Field>
-
-                    <Field data-invalid={!!errors.monthly_voucher_limit}>
-                      <FieldLabel htmlFor="monthly_voucher_limit">
-                        {t(
-                          "pages.admin.benefit_configurations.index.form.monthly_voucher_limit",
-                        )}
-                      </FieldLabel>
-                      <Input
-                        id="monthly_voucher_limit"
-                        name="monthly_voucher_limit"
-                        type="number"
-                        min="0"
-                        aria-invalid={!!errors.monthly_voucher_limit}
-                      />
-                      <FieldError
-                        errors={errors.monthly_voucher_limit?.map(
-                          (message) => ({ message }),
-                        )}
-                      />
-                    </Field>
-
-                    <Field data-invalid={!!errors.effective_from}>
-                      <FieldLabel htmlFor="effective_from">
-                        {t(
-                          "pages.admin.benefit_configurations.index.form.effective_from",
-                        )}
-                      </FieldLabel>
-                      <Input
-                        id="effective_from"
-                        name="effective_from"
-                        type="date"
-                        aria-invalid={!!errors.effective_from}
-                      />
-                      <FieldError
-                        errors={errors.effective_from?.map((message) => ({
-                          message,
-                        }))}
-                      />
-                    </Field>
-                  </div>
-
-                  <Button type="submit" disabled={processing}>
-                    {t("pages.admin.benefit_configurations.index.form.submit")}
-                  </Button>
-                </FieldGroup>
-              )}
-            </Form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
               {t("pages.admin.benefit_configurations.index.history.title")}
             </CardTitle>
           </CardHeader>
@@ -248,6 +202,11 @@ export default function Index({
                     <TableHead>
                       {t(
                         "pages.admin.benefit_configurations.index.history.subsidy_percentage",
+                      )}
+                    </TableHead>
+                    <TableHead>
+                      {t(
+                        "pages.admin.benefit_configurations.index.history.max_voucher_price",
                       )}
                     </TableHead>
                     <TableHead>
@@ -287,6 +246,9 @@ export default function Index({
                       <TableRow key={configuration.id}>
                         <TableCell>
                           {configuration.subsidy_percentage}%
+                        </TableCell>
+                        <TableCell>
+                          ${configuration.max_voucher_price}
                         </TableCell>
                         <TableCell>
                           {configuration.monthly_voucher_limit}

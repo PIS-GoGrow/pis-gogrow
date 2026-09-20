@@ -90,24 +90,30 @@ es:
       benefit_configurations:
         index:
           title: "Beneficio general"
-          description: "Configurá el porcentaje de subsidio y el límite mensual de viandas que se aplican a los nuevos empleados."
+          description: "Configurá el porcentaje de subsidio, el precio tope por vianda y el límite mensual de viandas que se aplican a los nuevos empleados."
           current:
             title: "Configuración vigente"
             empty: "Todavía no configuraste el beneficio general."
+            edit: "Editar"
+            configure: "Configurar"
             subsidy_percentage: "Porcentaje de subsidio"
+            max_voucher_price: "Precio tope por vianda"
             monthly_voucher_limit: "Límite mensual de viandas"
             effective_from: "Vigente desde"
             effective_until: "Vigente hasta"
-          form:
-            title: "Nueva configuración"
-            subsidy_percentage: "Porcentaje de subsidio"
-            monthly_voucher_limit: "Límite mensual de viandas"
-            effective_from: "Vigente desde"
-            submit: "Guardar configuración"
+          edit:
+            title: "Subsidio Base"
+            subsidy_percentage: "Se descuenta (%)"
+            max_voucher_price: "Cuando el precio por vianda es (≤ $)"
+            monthly_voucher_limit: "Hasta un límite por empleado de (viandas)"
+            notice: "Los cambios se aplicarán en el próximo período."
+            cancel: "Cancelar"
+            submit: "Guardar cambios"
           history:
             title: "Historial de cambios"
             empty: "Todavía no hay cambios registrados."
             subsidy_percentage: "Porcentaje"
+            max_voucher_price: "Precio tope"
             monthly_voucher_limit: "Límite de viandas"
             effective_from: "Vigente desde"
             effective_until: "Vigente hasta"

@@ -58,20 +58,25 @@
         "benefit_configurations": {
           "index": {
             "current": {
+              "configure": "Configurar",
+              "edit": "Editar",
               "effective_from": "Vigente desde",
               "effective_until": "Vigente hasta",
               "empty": "Todavía no configuraste el beneficio general.",
+              "max_voucher_price": "Precio tope por vianda",
               "monthly_voucher_limit": "Límite mensual de viandas",
               "subsidy_percentage": "Porcentaje de subsidio",
               "title": "Configuración vigente"
             },
-            "description": "Configurá el porcentaje de subsidio y el límite mensual de viandas que se aplican a los nuevos empleados.",
-            "form": {
-              "effective_from": "Vigente desde",
-              "monthly_voucher_limit": "Límite mensual de viandas",
-              "submit": "Guardar configuración",
-              "subsidy_percentage": "Porcentaje de subsidio",
-              "title": "Nueva configuración"
+            "description": "Configurá el porcentaje de subsidio, el precio tope por vianda y el límite mensual de viandas que se aplican a los nuevos empleados.",
+            "edit": {
+              "cancel": "Cancelar",
+              "max_voucher_price": "Cuando el precio por vianda es (≤ $)",
+              "monthly_voucher_limit": "Hasta un límite por empleado de (viandas)",
+              "notice": "Los cambios se aplicarán en el próximo período.",
+              "submit": "Guardar cambios",
+              "subsidy_percentage": "Se descuenta (%)",
+              "title": "Subsidio Base"
             },
             "history": {
               "created_at": "Fecha del cambio",
@@ -80,6 +85,7 @@
               "effective_from": "Vigente desde",
               "effective_until": "Vigente hasta",
               "empty": "Todavía no hay cambios registrados.",
+              "max_voucher_price": "Precio tope",
               "monthly_voucher_limit": "Límite de viandas",
               "subsidy_percentage": "Porcentaje",
               "title": "Historial de cambios"
