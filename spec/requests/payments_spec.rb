@@ -2,6 +2,8 @@
 
 require "rails_helper"
 
+raise "Payment request specs must run in RAILS_ENV=test" unless Rails.env.test?
+
 RSpec.describe "Payments", type: :request do
   self.fixture_table_names = []
 

@@ -87,7 +87,7 @@ export default function AccountCard({
 
         <CardTitle className="flex items-center">
           <span>
-            ${account.orders_price_sum}
+            ${account.amount}
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
               {account.orders_amount_sum}{" "}
