@@ -20,10 +20,12 @@ export default function AuthSplitLayout({
         <div className="absolute inset-0 bg-zinc-900" />
         <Link
           href={home.index()}
-          className="relative z-20 flex items-center text-lg font-medium"
+          className="relative z-20 flex items-center gap-2 text-lg font-medium"
         >
-          <AppLogoIcon className="mr-2 size-8 fill-current text-white" />
-          {import.meta.env.VITE_APP_NAME ?? "Rails Inertia Base"}
+          <div className="flex size-8 items-center justify-center rounded-md bg-white text-black">
+            <AppLogoIcon size={20} />
+          </div>
+          Viandas GoGrow
         </Link>
         <div className="relative z-20 mt-auto">
           <blockquote className="space-y-2">
@@ -42,7 +44,9 @@ export default function AuthSplitLayout({
             href={home.index()}
             className="relative z-20 flex items-center justify-center lg:hidden"
           >
-            <AppLogoIcon className="h-10 fill-current text-black sm:h-12" />
+            <div className="flex size-12 items-center justify-center rounded-xl bg-black text-white dark:bg-white dark:text-black">
+              <AppLogoIcon size={28} />
+            </div>
           </Link>
           <div className="flex flex-col items-start gap-2 text-left sm:items-center sm:text-center">
             <h1 className="text-xl font-medium">{title}</h1>
