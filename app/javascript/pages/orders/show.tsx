@@ -85,6 +85,10 @@ export default function Show({ order }: OrdersShow) {
                   : t("pages.orders.index.no_date")}
               </Row>
 
+              <Row label={t("pages.orders.show.delivery_method")}>
+                {t(`pages.orders.delivery_methods.${order.delivery_method}`)}
+              </Row>
+
               <Row label={t("pages.orders.show.address")}>
                 {order.address ?? t("pages.orders.index.no_address")}
               </Row>
