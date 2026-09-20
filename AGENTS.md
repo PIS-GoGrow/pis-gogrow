@@ -14,7 +14,7 @@ Rails 8.1 + Inertia.js + React 19 + TypeScript, from the [Inertia Rails React St
 
 ## Commands
 
-The team runs everything through Docker Compose (`docs/guia-docker.md`): the app is on http://localhost:3001, and the commands below run inside the `web` container, e.g. `docker compose exec web bin/rspec`.
+The team runs everything through Docker Compose (`docs/guia-docker.md`): the app is on http://localhost:3001, and the commands below run inside the `web` container. **Run specs with `docker compose exec -e RAILS_ENV=test web bin/rspec`** — the container sets `RAILS_ENV=development`, and loading fixtures there wipes the development database.
 
 ```bash
 docker compose up --build                  # rails + vite + postgres
@@ -26,8 +26,10 @@ npm run lint:fix / format:fix / check      # eslint / prettier / tsc
 
 bin/rails typelizer:generate:refresh       # after touching a serializer or route
 bundle exec i18n export                    # after editing config/locales
-bin/rails db:seed                          # one user per role; not idempotent, run once on an empty db
+bin/rails db:seed:replant                  # empty every table and reload db/seeds.rb (one user per role)
 ```
+
+Vite's SSR server caches the module graph: after adding a page or a new export it can answer "Page not found" or "… is not a function" while the browser works fine. `docker compose restart web` clears it.
 
 ## Conventions that will surprise you
 
@@ -39,13 +41,17 @@ A missing page serializer is **silently ignored** — the page renders with only
 
 **Two generated trees are checked in**, from Typelizer: `app/javascript/types/serializers/` and `app/javascript/routes/` (typed route helpers — use them over URL strings). Regenerate and commit; never hand-edit — CI fails if any of them drift. Outside development the generator needs `TYPELIZER=true`, or explicit `typelize` annotations silently degrade to `unknown`. Same for `app/javascript/components/ui/` (shadcn) and `app/javascript/locales/` (i18n export).
 
-**Translations start in Rails.** `config/locales/en.yml` is the source; i18n-js exports it to `app/javascript/locales/en.json`, which i18next reads. Add a key there, not a string in a component. `flash`, `validations` and `user_mailer` are excluded from the export because the server resolves them. i18next is configured for Rails' `%{name}` placeholders, so one syntax works on both sides.
+**Translations start in Rails.** `config/locales/es.yml` is the source (the app is Spanish-only); i18n-js exports it to `app/javascript/locales/es.json`, which i18next reads. Add a key there, not a string in a component. `flash`, `validations` and `user_mailer` are excluded from the export because the server resolves them. i18next is configured for Rails' `%{name}` placeholders, so one syntax works on both sides.
 
 **A brand-new dependency will fail to install.** `Gemfile` sets `cooldown: 7` and `.npmrc` sets `min-release-age=7`, refusing versions published in the last week. The package isn't broken, it's too new — wait, or bypass with `npm install --min-release-age=0`. `engine-strict=true` also hard-fails outside Node >= 24 / npm >= 11.10.
 
+**Order statuses are fixed team-wide:** `enum :status, { pending: 0, confirmed: 1, cancelled: 2, rejected: 3 }`, default `pending`. `cancelled` is the employee cancelling, `rejected` the provider declining; there is no "delivered" state yet, so a provider can't close an order. The frontend gets them as the generated `OrderStatus` type, and `components/status-badge.tsx` owns their labels (from `es.yml`) and colors.
+
+**Time zone is Montevideo** (`config.time_zone`). Use `Date.current` / `Time.current`, never `Date.today` / `Time.now`, or "today" flips at 21:00 local time. Format times on the server when they're rendered: SSR runs in UTC and a browser-side format won't match the hydrated HTML.
+
 **Auth**: `Current` holds `session` and delegates `user`. `ApplicationController` authenticates every request from a signed cookie; opt out with `skip_before_action :authenticate`. On validation failure, controllers redirect back with `inertia: { errors: @record.errors }` — PRG, not `render`.
 
-**Sign-in is Google-only, and a user needs a profile to get in.** `OmniauthCallbacksController` finds or creates the `User` by email (domains limited by `GOOGLE_ALLOWED_DOMAINS`, default `gmail.com,gogrow.com`) but never creates a `Provider`, `Consumer` or `Admin`; without one of those the login is rejected with "Rol no disponible". The chosen role is stored on `Session` (`enum :role`) and reaches the frontend as `auth.session.role`. Each role area is a namespace (`Provider::`, `Consumer::`, `Admin::`) whose `InertiaController` runs `authenticate_provider` / `authenticate_consumer` / `authenticate_admin`; put new role screens there. The starter's email/password routes still exist, but nothing links to them and they don't set a role. Local OAuth needs `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `.env`, with `http://localhost:3001/auth/google_oauth2/callback` as the authorized redirect URI; restart `web` after changing `.env`.
+**Sign-in is Google-only, and a user needs a profile to get in.** `OmniauthCallbacksController` finds or creates the `User` by email (domains limited by `GOOGLE_ALLOWED_DOMAINS`, default `gmail.com,gogrow.com`) but never creates a `Provider`, `Consumer` or `Admin`; without one of those the login is rejected with "Rol no disponible". The chosen role is stored on `Session` (`enum :role`) and reaches the frontend as `auth.session.role`. Each role area is a namespace (`Provider::`, `Consumer::`, `Admin::`) whose `InertiaController` runs `authenticate_role(:provider)` and friends; put new role screens there. A wrong role is sent to the root path with a flash, not to the sign-in page. The starter's email/password routes still exist, but nothing links to them and they don't set a role. In request specs, `sign_in(user, role: :provider)` picks the session role; without `role:` it syncs the user's profiles and takes the first one, and raises if the user has none. Local OAuth needs `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` in `.env`, with `http://localhost:3001/auth/google_oauth2/callback` as the authorized redirect URI; restart `web` after changing `.env`.
 
 **SSR is on** (`ssr_enabled` in `config/initializers/inertia_rails.rb`), served by the `:inertia_ssr` Puma plugin. Production images need `--build-arg SSR_ENABLED=true`.
 
@@ -58,6 +64,8 @@ A missing page serializer is **silently ignored** — the page renders with only
 Forms use Inertia's `<Form>` / `useForm`, wired by `name` — never react-hook-form. The React Compiler runs via Babel in `vite.config.ts`, so skip manual memoization.
 
 **Read `COMPONENTS.md` before building UI.** It says which component to use for each case, lists what isn't installed yet, and maps the team's React prototype (Base UI, CSS Modules, native `Select`) onto this repo's shadcn setup — code copied from the prototype has to be rewritten, not pasted. A role's navigation is the `navItems` list in `components/app-sidebar.tsx`.
+
+Every signed-in screen is `AppLayout` > `PageContainer` (width, padding, `eyebrow`/`title`/`description`/`actions`). List items are `ListItemCard` in a `grid gap-4 md:grid-cols-2`, and money goes through `formatMoney` from `hooks/use-formatters`. UI text is Spanish and lives in `config/locales/es.yml`, read with `t()` — never a literal in a component. Don't hand-write a page's `max-w-*`, padding or title styles; the details are under "Estructura de pantalla" in `COMPONENTS.md`.
 
 ## Testing
 
