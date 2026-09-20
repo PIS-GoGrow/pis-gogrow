@@ -4,6 +4,12 @@ milanesa:
   description: Opción de carne o pollo
   price: 300.50
 
+office_menu:
+  provider: office_provider
+  name: Ensalada de quinoa
+  description: Con vegetales de estación
+  price: 250
+
 # == Schema Information
 #
 # Table name: menus

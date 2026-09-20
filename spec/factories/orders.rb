@@ -8,6 +8,7 @@ FactoryBot.define do
     amount { 1 }
     notes { "MyString" }
     status { 1 }
+    delivery_method { :office }
     consumer { nil }
     schedule { nil }
   end
@@ -21,6 +22,7 @@ end
 #  address                    :string
 #  amount                     :integer
 #  cancelled_at               :datetime
+#  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
 #  notes                      :string
 #  price                      :decimal(10, 2)
