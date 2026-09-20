@@ -145,9 +145,7 @@ past_schedule = Schedule.create!(
 upcoming_schedules = Schedule.where("date >= ?", Date.current).order(:date)
 if (first_schedule = upcoming_schedules.first)
   order = Order.create!(consumer:, schedule: first_schedule, status: :pending, price: 300.50, discounted_price: 150.25, amount: 1)
-  account = Account.create!(amount: 300, month: week_start, owner: consumer)
-  account.orders << order
-  Payment.create!(account:)
+  # Payment.create!(account: order.accounts.first)
 end
 
 if (second_schedule = upcoming_schedules.second)
@@ -155,7 +153,7 @@ if (second_schedule = upcoming_schedules.second)
 end
 
 Order.create!(consumer:, schedule: past_schedule, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1)
-Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
+# Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 
 admin_user = User.create!(
   email: "rrhh.gogrow@gmail.com",
