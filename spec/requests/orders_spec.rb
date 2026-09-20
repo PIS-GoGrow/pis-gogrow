@@ -50,10 +50,11 @@ RSpec.describe "Orders", type: :request do
 
         expect(order).to include(
           status: "confirmed",
+          delivery_method: "office",
           menu_name: "Milanesa con papas fritas",
           provider_name: "Provider User",
           date: (Date.current + 3).iso8601,
-          address: "Julio Herrera y Reissig 565",
+          address: "18 de Julio 1006",
           price: 601.0,
           discounted_price: 300.50
         )
@@ -64,7 +65,7 @@ RSpec.describe "Orders", type: :request do
 
         order = inertia.props[:past_orders].find { |o| o[:id] == orders(:history_without_schedule).id }
 
-        expect(order).to include(date: nil, menu_name: nil, provider_name: nil)
+        expect(order).to include(date: nil, menu_name: nil, provider_name: nil, delivery_method: "home")
       end
 
       it "hides orders belonging to another employee" do
@@ -95,10 +96,11 @@ RSpec.describe "Orders", type: :request do
 
         expect(inertia.props[:order]).to include(
           status: "confirmed",
+          delivery_method: "office",
           menu_name: "Milanesa con papas fritas",
           provider_name: "Provider User",
           date: (Date.current + 3).iso8601,
-          address: "Julio Herrera y Reissig 565",
+          address: "18 de Julio 1006",
           amount: 2,
           price: 601.0,
           subsidy: 300.50,
@@ -154,6 +156,7 @@ RSpec.describe "Orders", type: :request do
         schedule:,
         amount: 2,
         address: company.address,
+        delivery_method: "office",
         price: 600.to_d,
         discounted_price: 300.to_d,
         notes: "Sin salsa"
@@ -171,7 +174,7 @@ RSpec.describe "Orders", type: :request do
             id: order.id,
             date: Date.current.iso8601,
             address: company.address,
-            address_label: "Oficina",
+            delivery_method: "office",
             provider_name: users(:two).name,
             name: "Milanesa",
             quantity: 2,
@@ -185,7 +188,7 @@ RSpec.describe "Orders", type: :request do
       consumer, = setup_consumer
       available = create_schedule
       unavailable = create_schedule(amount: 1)
-      Order.create!(consumer:, schedule: unavailable, amount: 1, price: unavailable.menu.price)
+      Order.create!(consumer:, schedule: unavailable, amount: 1, price: unavailable.menu.price, address: consumer.address, delivery_method: :home)
 
       expect do
         post orders_path, params: {
@@ -311,13 +314,13 @@ RSpec.describe "Orders", type: :request do
 
       expect do
         post orders_path, params: { order: { address: consumer.address, items: [
-          { schedule_id: office_only.id, quantity: 1, address: consumer.address, home_delivery: true },
+          { schedule_id: office_only.id, quantity: 1 },
           { schedule_id: home_schedule.id, quantity: 1 }
         ] } }
       end.to change(Order, :count).by(2)
 
-      expect(consumer.orders.find_by!(schedule: office_only).address).to eq(company.address)
-      expect(consumer.orders.find_by!(schedule: home_schedule).address).to eq(consumer.address)
+      expect(consumer.orders.find_by!(schedule: office_only)).to have_attributes(address: company.address, delivery_method: "office")
+      expect(consumer.orders.find_by!(schedule: home_schedule)).to have_attributes(address: consumer.address, delivery_method: "home")
       follow_redirect!
       expect(inertia).to render_component("consumer/dashboard/index")
     end

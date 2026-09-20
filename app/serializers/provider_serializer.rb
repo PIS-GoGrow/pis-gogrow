@@ -1,12 +1,13 @@
-tuviandita:
-  user: provider_user
-  order_deadline: "10:00"
-  home_delivery: true
+# frozen_string_literal: true
 
-office_provider:
-  user: office_provider_user
-  order_deadline: "10:00"
-  home_delivery: false
+class ProviderSerializer < ApplicationSerializer
+  attributes :id
+
+  typelize :string
+  attribute :name do |provider|
+    provider.user.name
+  end
+end
 
 # == Schema Information
 #

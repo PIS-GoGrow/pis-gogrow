@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_19_193218) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,8 +20,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
     t.date "month"
     t.bigint "owner_id", null: false
     t.string "owner_type", null: false
+    t.bigint "provider_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["owner_type", "owner_id", "provider_id", "month"], name: "idx_on_owner_type_owner_id_provider_id_month_49d9020441", unique: true
     t.index ["owner_type", "owner_id"], name: "index_accounts_on_owner"
+    t.index ["provider_id"], name: "index_accounts_on_provider_id"
   end
 
   create_table "active_storage_attachments", force: :cascade do |t|
@@ -123,6 +126,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
     t.bigint "cancelled_by_id"
     t.bigint "consumer_id", null: false
     t.datetime "created_at", null: false
+    t.integer "delivery_method", null: false
     t.decimal "discounted_price", precision: 10, scale: 2
     t.string "notes"
     t.decimal "price", precision: 10, scale: 2
@@ -133,6 +137,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
     t.index ["cancelled_by_id"], name: "index_orders_on_cancelled_by_id"
     t.index ["consumer_id"], name: "index_orders_on_consumer_id"
     t.index ["schedule_id"], name: "index_orders_on_schedule_id"
+    t.check_constraint "delivery_method <> 1 OR address IS NOT NULL AND btrim(address::text) <> ''::text", name: "orders_home_delivery_requires_address"
   end
 
   create_table "payments", force: :cascade do |t|
@@ -379,6 +384,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_210000) do
     t.index ["google_uid"], name: "index_users_on_google_uid", unique: true
   end
 
+  add_foreign_key "accounts", "providers"
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "admins", "companies"

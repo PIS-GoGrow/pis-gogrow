@@ -1,6 +1,7 @@
 es:
   common:
     cancel: "Cancelar"
+    close: "Cerrar"
     confirm_password: "Confirmar contraseña"
     current_password: "Contraseña actual"
     email_address: "Correo electrónico"
@@ -52,6 +53,7 @@ es:
     invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
+    delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
@@ -89,6 +91,7 @@ es:
       password: "Contraseña"
       sessions: "Sesiones"
       appearance: "Apariencia"
+    payments: "Pagos"
   components:
     appearance:
       toggle_theme: "Cambiar tema"
@@ -106,6 +109,39 @@ es:
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
+    accounts:
+      index:
+        payments: "Pagos"
+        spending: "Tu consumo"
+        this_month: "Este mes"
+        pending_payments: "Pagos pendientes"
+        total_debt: "Deuda total"
+        pending: "Pendientes"
+        history: "Historial"
+        no_debt: "¡Sin deudas pendientes con este proveedor!"
+      show:
+        see_detail: "Ver detalle"
+        spending: "Consumo"
+        lunch: "vianda"
+        lunches: "viandas"
+        due: "Vence: "
+        receipt: "Subir comprobante de pago"
+        receipt_title: "Subir comprobante"
+        receipt_description: "Adjuntá el comprobante correspondiente a este pago."
+        receipt_file: "Seleccionar archivo"
+        receipt_formats: "PDF, JPG o PNG. Tamaño máximo: 10 MB."
+        receipt_uploading: "Subiendo comprobante..."
+        receipt_approved: "Pago aprobado"
+        receipt_unavailable: "Comprobante no disponible"
+        receipt_preview: "Vista previa del comprobante"
+        receipt_view_edit: "Ver o editar comprobante"
+        receipt_replace: "Reemplazar archivo"
+        receipt_update: "Actualizar comprobante"
+        date: "Fecha"
+        menu: "Plato"
+        amount: "Cant."
+        price: "Monto"
+        total: "Total"
     orders:
       index:
         title: "Mis pedidos"
@@ -116,8 +152,8 @@ es:
         history_empty_title: "No tienes pedidos anteriores"
         history_empty_description: "Tus pedidos completados aparecerán aquí."
         quantity: "x%{count}"
-        upcoming_address: "Recibes en: %{address}"
-        history_address: "Recibiste en: %{address}"
+        upcoming_address: "Recibes en: %{address} (%{delivery_method})"
+        history_address: "Recibiste en: %{address} (%{delivery_method})"
         no_date: "Sin fecha de entrega"
         no_price: "Importe no disponible"
         base_price: "Precio base: %{amount}"
@@ -140,6 +176,7 @@ es:
         quantity: "Cantidad"
         date: "Fecha de entrega"
         address: "Dirección de entrega"
+        delivery_method: "Modalidad de entrega"
         base_price: "Precio base"
         subsidy: "Subsidio aplicado"
         total: "Importe final"
@@ -150,6 +187,9 @@ es:
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
+      delivery_methods:
+        office: "Oficina"
+        home: "Domicilio"
     cart:
       office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
       other_deliveries: "Las demás viandas irán a la dirección seleccionada."
@@ -230,3 +270,7 @@ es:
         ip: "IP: %{address}"
         active_since: "Activa desde: %{time}"
         log_out: "Cerrar sesión"
+  date:
+    formats:
+      month_year: "%B de %Y"
+    month_names: [~, Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Setiembre, Octubre, Noviembre, Diciembre]

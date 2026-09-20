@@ -3,6 +3,19 @@
 class Consumer::PaymentsController < Consumer::InertiaController
   before_action :set_payment, only: :update
 
+  def create
+    # La cuenta se busca dentro de las cuentas del consumidor autenticado. Esto
+    # evita que un account_id enviado desde el navegador cree pagos para otro empleado.
+    account = consumer_accounts.find(payment_params[:account_id])
+    @payment = account.payments.build(
+      provider: account.provider,
+      receipt: payment_params[:receipt],
+      status: :submitted
+    )
+
+    persist_payment
+  end
+
   def update
     if @payment.approved?
       return redirect_back fallback_location: dashboard_path, inertia: {
@@ -10,14 +23,12 @@ class Consumer::PaymentsController < Consumer::InertiaController
       }, status: :see_other
     end
 
-    @payment.assign_attributes(payment_params)
+    # Active Storage reemplaza el comprobante anterior, manteniendo el mismo
+    # Payment y, por lo tanto, su asociación original con Account.
+    @payment.assign_attributes(receipt: payment_params[:receipt])
     @payment.status = :submitted
 
-    if @payment.save
-      redirect_back fallback_location: dashboard_path, notice: t("flash.payment_receipt_submitted"), status: :see_other
-    else
-      redirect_back fallback_location: dashboard_path, inertia: { errors: @payment.errors.to_hash }, status: :see_other
-    end
+    persist_payment
   end
 
   private
@@ -27,10 +38,24 @@ class Consumer::PaymentsController < Consumer::InertiaController
   end
 
   def consumer_payments
-    Payment.where(account: Current.user.consumer.accounts).where.not(provider_id: nil)
+    Payment.where(account: consumer_accounts)
+  end
+
+  def consumer_accounts
+    # El provider de la cuenta determina quién debe validar el comprobante.
+    Current.user.consumer.accounts.where.not(provider_id: nil)
   end
 
   def payment_params
-    params.fetch(:payment, {}).permit(:receipt)
+    params.fetch(:payment, {}).permit(:account_id, :receipt)
+  end
+
+  def persist_payment
+    # Payment valida tipo, tamaño y presencia del adjunto antes de impactar la BD.
+    if @payment.save
+      redirect_back fallback_location: accounts_path, notice: t("flash.payment_receipt_submitted"), status: :see_other
+    else
+      redirect_back fallback_location: accounts_path, inertia: { errors: @payment.errors.to_hash }, status: :see_other
+    end
   end
 end

@@ -31,18 +31,15 @@ class Consumer::OrdersController < Consumer::InertiaController
 
       requested_items.each do |item|
         schedule = schedules.fetch(item[:schedule_id].to_i)
-        address = schedule.menu.provider.home_delivery? ? order_params[:address] : consumer.company.address
-        if address.blank?
+        delivery = consumer.delivery_for(schedule.menu.provider, order_params[:address])
+        if delivery[:address].blank?
           reject_order(:office_address_required)
           raise ActiveRecord::Rollback
         end
         order = Order.reserve(
-          consumer:,
-          schedule:,
-          quantity: item[:quantity].to_i,
-          notes: item[:notes],
-          address:,
-          discount_percentage: benefit_percentage
+          consumer:, schedule:, quantity: item[:quantity].to_i, notes: item[:notes],
+          discount_percentage: benefit_percentage,
+          **delivery
         )
         raise ActiveRecord::RecordInvalid, order unless order.persisted?
 
