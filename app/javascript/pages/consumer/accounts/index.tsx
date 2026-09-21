@@ -131,7 +131,9 @@ export default function Index({
               ${current_month_debt}
               <span className="text-zinc-500 dark:text-zinc-400">
                 {" | "}
-                {current_month_ordered}{" de "}{benefit_available}{" "}
+                {current_month_ordered}
+                {" de "}
+                {benefit_available}{" "}
                 {benefit_available == 1
                   ? t("pages.accounts.show.lunch")
                   : t("pages.accounts.show.lunches")}

@@ -1,9 +1,11 @@
 import { Head } from "@inertiajs/react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import CreateMenuDialog from "@/components/menus/create-menu-dialog"
 import DeleteMenuDialog from "@/components/menus/delete-menu-dialog"
 import MenuCard from "@/components/menus/menu-card"
+import PageContainer from "@/components/page-container"
 import { Button } from "@/components/ui/button"
 import { DialogTrigger } from "@/components/ui/dialog"
 import {
@@ -28,6 +30,8 @@ export default function Index({ menus }: MenuProps) {
     name: string
   }>({ id: null, name: "" })
 
+  const { t } = useTranslation()
+
   const menusJSX = menus.map((menu: Menu) => (
     <MenuCard
       key={menu.id}
@@ -48,16 +52,17 @@ export default function Index({ menus }: MenuProps) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Mis Platos" />
 
-      <div className="mx-auto grid w-full max-w-300 gap-2 p-5">
+      <CreateMenuDialog>
         {/* Agregamos un diálogo al lado del título para mostrar el formulario de crear platos */}
-        <CreateMenuDialog>
-          <div className="mb-5 flex items-center">
-            <h1 className="text-xl font-bold">Tus platos</h1>
+        <PageContainer
+          eyebrow="Vista de todos los platos"
+          title="Mis platos"
+          actions={
             <DialogTrigger className="ml-auto" asChild>
               <Button>Agregar plato</Button>
             </DialogTrigger>
-          </div>
-
+          }
+        >
           {/* Listamos los platos y creamos un diálogo para confirmar si eliminarlos. */}
           {menus.length == 0 ? (
             <Empty>
@@ -79,8 +84,8 @@ export default function Index({ menus }: MenuProps) {
               <div className="grid grid-cols-2 gap-2">{menusJSX}</div>
             </DeleteMenuDialog>
           )}
-        </CreateMenuDialog>
-      </div>
+        </PageContainer>
+      </CreateMenuDialog>
     </AppLayout>
   )
 }
