@@ -11,6 +11,31 @@ two:
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
   verified: true
 
+# Usuarios con perfil, para specs que necesitan un rol concreto (sessions.role es NOT NULL).
+empleado:
+  email: empleado@example.com
+  name: Lucia Empleada
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  verified: true
+
+otro_empleado:
+  email: otro.empleado@example.com
+  name: Martin Empleado
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  verified: true
+
+proveedor_sabores:
+  email: sabores@example.com
+  name: Sabores del Sur
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  verified: true
+
+proveedor_verde:
+  email: verde@example.com
+  name: Cocina Verde
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  verified: true
+
 # == Schema Information
 #
 # Table name: users
