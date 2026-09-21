@@ -87,7 +87,10 @@ export default function EditBenefitConfigurationForm({
   return (
     <form onSubmit={handleSubmit}>
       <FieldGroup>
-        <Field orientation="horizontal" data-invalid={!!errors.subsidy_percentage}>
+        <Field
+          orientation="horizontal"
+          data-invalid={!!errors.subsidy_percentage}
+        >
           <FieldLabel htmlFor="subsidy_percentage" className="font-normal">
             {t(
               "pages.admin.benefit_configurations.index.current.subsidy_percentage",
@@ -122,7 +125,10 @@ export default function EditBenefitConfigurationForm({
           </FieldContent>
         </Field>
 
-        <Field orientation="horizontal" data-invalid={!!errors.max_voucher_price}>
+        <Field
+          orientation="horizontal"
+          data-invalid={!!errors.max_voucher_price}
+        >
           <FieldLabel htmlFor="max_voucher_price" className="font-normal">
             {t(
               "pages.admin.benefit_configurations.index.current.max_voucher_price",
@@ -157,7 +163,10 @@ export default function EditBenefitConfigurationForm({
           </FieldContent>
         </Field>
 
-        <Field orientation="horizontal" data-invalid={!!errors.monthly_voucher_limit}>
+        <Field
+          orientation="horizontal"
+          data-invalid={!!errors.monthly_voucher_limit}
+        >
           <FieldLabel htmlFor="monthly_voucher_limit" className="font-normal">
             {t(
               "pages.admin.benefit_configurations.index.current.monthly_voucher_limit",
@@ -182,7 +191,9 @@ export default function EditBenefitConfigurationForm({
                 }}
               />
               <span className="text-muted-foreground">
-                {t("pages.admin.benefit_configurations.index.current.monthly_voucher_limit_unit")}
+                {t(
+                  "pages.admin.benefit_configurations.index.current.monthly_voucher_limit_unit",
+                )}
               </span>
             </div>
             <FieldError
@@ -252,7 +263,9 @@ export default function EditBenefitConfigurationForm({
           <>
             <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500">
               <TriangleAlert className="size-4 shrink-0" />
-              <span>{t("pages.admin.benefit_configurations.index.current.notice")}</span>
+              <span>
+                {t("pages.admin.benefit_configurations.index.current.notice")}
+              </span>
             </div>
 
             <div className="flex justify-end gap-2">

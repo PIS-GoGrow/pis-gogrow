@@ -122,15 +122,14 @@ export default function Index({
                   max_voucher_price:
                     current_benefit_configuration?.max_voucher_price ?? "",
                   monthly_voucher_limit:
-                    current_benefit_configuration?.monthly_voucher_limit ??
-                    "",
+                    current_benefit_configuration?.monthly_voucher_limit ?? "",
                 }}
                 pendingBenefitConfiguration={pendingBenefitConfiguration}
                 onCancel={() => setIsEditing(false)}
                 onSuccess={() => setIsEditing(false)}
               />
             ) : current_benefit_configuration ? (
-              <dl className="divide-y divide-border rounded-lg bg-muted px-4">
+              <dl className="divide-border bg-muted divide-y rounded-lg px-4">
                 <div className="flex items-center justify-between py-3">
                   <dt className="text-muted-foreground">
                     {t(
