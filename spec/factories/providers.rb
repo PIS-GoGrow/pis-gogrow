@@ -2,9 +2,7 @@
 
 FactoryBot.define do
   factory :provider do
-    email { "MyString" }
-    username { "MyString" }
-    order_deadline { "2026-09-03 20:54:50" }
+    order_deadline { "10:00" }
   end
 end
 

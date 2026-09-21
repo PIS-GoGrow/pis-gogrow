@@ -2,9 +2,9 @@
 
 FactoryBot.define do
   factory :schedule do
-    date { "2026-09-03" }
-    amount { 1 }
-    menu { nil }
+    date { Date.current }
+    amount { 10 }
+    menu
   end
 end
 

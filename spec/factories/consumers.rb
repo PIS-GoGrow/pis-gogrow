@@ -2,10 +2,8 @@
 
 FactoryBot.define do
   factory :consumer do
-    email { "MyString" }
-    username { "MyString" }
-    address { "MyString" }
-    company { nil }
+    address { Faker::Address.street_address }
+    company
   end
 end
 

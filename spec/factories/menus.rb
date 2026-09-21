@@ -2,10 +2,10 @@
 
 FactoryBot.define do
   factory :menu do
-    name { "MyString" }
-    description { "MyString" }
-    price { "9.99" }
-    provider { nil }
+    name { Faker::Food.dish }
+    description { Faker::Food.description }
+    price { 250.0 }
+    provider
   end
 end
 
