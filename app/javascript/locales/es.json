@@ -57,46 +57,6 @@
       }
     },
     "pages": {
-      "admin": {
-        "benefit_configurations": {
-          "index": {
-            "current": {
-              "configure": "Configurar",
-              "edit": "Editar",
-              "effective_from": "Vigente desde",
-              "effective_until": "Vigente hasta",
-              "empty": "Todavía no configuraste el beneficio general.",
-              "max_voucher_price": "Precio tope por vianda",
-              "monthly_voucher_limit": "Límite mensual de viandas",
-              "subsidy_percentage": "Porcentaje de subsidio",
-              "title": "Configuración vigente"
-            },
-            "description": "Configurá el porcentaje de subsidio, el precio tope por vianda y el límite mensual de viandas que se aplican a los nuevos empleados.",
-            "edit": {
-              "cancel": "Cancelar",
-              "max_voucher_price": "Cuando el precio por vianda es (≤ $)",
-              "monthly_voucher_limit": "Hasta un límite por empleado de (viandas)",
-              "notice": "Los cambios se aplicarán en el próximo período.",
-              "submit": "Guardar cambios",
-              "subsidy_percentage": "Se descuenta (%)",
-              "title": "Subsidio Base"
-            },
-            "history": {
-              "created_at": "Fecha del cambio",
-              "created_by": "Modificado por",
-              "current": "Actual",
-              "effective_from": "Vigente desde",
-              "effective_until": "Vigente hasta",
-              "empty": "Todavía no hay cambios registrados.",
-              "max_voucher_price": "Precio tope",
-              "monthly_voucher_limit": "Límite de viandas",
-              "subsidy_percentage": "Porcentaje",
-              "title": "Historial de cambios"
-            },
-            "title": "Beneficio general"
-          }
-        }
-      },
       "accounts": {
         "index": {
           "history": "Historial",
@@ -122,6 +82,37 @@
           "total": "Total"
         }
       },
+      "admin": {
+        "benefit_configurations": {
+          "index": {
+            "current": {
+              "cancel": "Cancelar",
+              "edit": "Editar",
+              "empty": "Todavía no configuraste el beneficio general.",
+              "max_voucher_price": "Cuando el precio por vianda es",
+              "monthly_voucher_limit": "Hasta un límite por empleado de",
+              "monthly_voucher_limit_unit": "viandas",
+              "notice": "Los cambios se aplicarán en el próximo período.",
+              "pending_conflict": {
+                "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
+                "keep": "Mantener el programado",
+                "replace": "Reemplazar por este",
+                "title": "Ya hay un cambio programado para el próximo período"
+              },
+              "scheduled_banner": {
+                "description": "La nueva configuración de subsidios se aplicará a partir del próximo período.",
+                "dismiss": "Cerrar aviso",
+                "title": "Tus cambios están programados"
+              },
+              "submit": "Programar Subsidio",
+              "subsidy_percentage": "Se descuenta",
+              "title": "Subsidio Base"
+            },
+            "description": "Gestioná los subsidios de tu compañía",
+            "title": "Subsidios"
+          }
+        }
+      },
       "cart": {
         "delivery": "Entrega: %{date}",
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
@@ -129,7 +120,6 @@
         "other_deliveries": "Las demás viandas irán a la dirección seleccionada.",
         "remove": "Quitar %{name}"
       },
-
       "dashboard": {
         "roles": {
           "provider": "Panel del proveedor"

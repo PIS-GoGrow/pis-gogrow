@@ -113,5 +113,46 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       follow_redirect!
       expect(inertia.props[:errors]).to have_key(:effective_from)
     end
+
+    it "replaces the pending change when replace_pending is sent" do
+      pending = BenefitConfiguration.create!(
+        company: company, created_by: admin_user,
+        subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20,
+        effective_from: Date.current.next_month.beginning_of_month
+      )
+
+      post admin_benefit_configurations_path, params: {
+        benefit_configuration: { subsidy_percentage: 60, max_voucher_price: 200, monthly_voucher_limit: 25 },
+        replace_pending: true
+      }
+
+      expect(response).to redirect_to(admin_benefit_configurations_path)
+      expect(BenefitConfiguration.exists?(pending.id)).to be false
+
+      new_pending = BenefitConfiguration.find_by(effective_from: Date.current.next_month.beginning_of_month)
+      expect(new_pending.subsidy_percentage).to eq(60)
+      expect(new_pending.max_voucher_price).to eq(200)
+      expect(new_pending.monthly_voucher_limit).to eq(25)
+    end
+
+    it "does not touch an already-effective configuration when replacing the pending one" do
+      current = BenefitConfiguration.create!(
+        company: company, created_by: admin_user,
+        subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20,
+        effective_from: Date.current
+      )
+      BenefitConfiguration.create!(
+        company: company, created_by: admin_user,
+        subsidy_percentage: 55, max_voucher_price: 160, monthly_voucher_limit: 22,
+        effective_from: Date.current.next_month.beginning_of_month
+      )
+
+      post admin_benefit_configurations_path, params: {
+        benefit_configuration: { subsidy_percentage: 60, max_voucher_price: 200, monthly_voucher_limit: 25 },
+        replace_pending: true
+      }
+
+      expect(current.reload.subsidy_percentage).to eq(50)
+    end
   end
 end

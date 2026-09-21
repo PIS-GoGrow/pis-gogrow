@@ -1,4 +1,11 @@
 es:
+  activerecord:
+    errors:
+      models:
+        benefit_configuration:
+          attributes:
+            effective_from:
+              taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
   common:
     cancel: "Cancelar"
     close: "Cerrar"
@@ -23,7 +30,7 @@ es:
     order_created: "Tu vianda ha sido reservada."
     order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
     already_signed_in: "Ya has iniciado sesión"
-    benefit_configuration_created: "Configuración del beneficio general guardada"
+    benefit_configuration_created: "Subsidio programado para el próximo período"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
     email_verification_sent: "Enviamos un correo de verificación a tu dirección"
@@ -103,37 +110,28 @@ es:
     admin:
       benefit_configurations:
         index:
-          title: "Beneficio general"
-          description: "Configurá el porcentaje de subsidio, el precio tope por vianda y el límite mensual de viandas que se aplican a los nuevos empleados."
+          title: "Subsidios"
+          description: "Gestioná los subsidios de tu compañía"
           current:
-            title: "Configuración vigente"
+            title: "Subsidio Base"
             empty: "Todavía no configuraste el beneficio general."
             edit: "Editar"
-            configure: "Configurar"
-            subsidy_percentage: "Porcentaje de subsidio"
-            max_voucher_price: "Precio tope por vianda"
-            monthly_voucher_limit: "Límite mensual de viandas"
-            effective_from: "Vigente desde"
-            effective_until: "Vigente hasta"
-          edit:
-            title: "Subsidio Base"
-            subsidy_percentage: "Se descuenta (%)"
-            max_voucher_price: "Cuando el precio por vianda es (≤ $)"
-            monthly_voucher_limit: "Hasta un límite por empleado de (viandas)"
+            subsidy_percentage: "Se descuenta"
+            max_voucher_price: "Cuando el precio por vianda es"
+            monthly_voucher_limit: "Hasta un límite por empleado de"
+            monthly_voucher_limit_unit: "viandas"
             notice: "Los cambios se aplicarán en el próximo período."
             cancel: "Cancelar"
-            submit: "Guardar cambios"
-          history:
-            title: "Historial de cambios"
-            empty: "Todavía no hay cambios registrados."
-            subsidy_percentage: "Porcentaje"
-            max_voucher_price: "Precio tope"
-            monthly_voucher_limit: "Límite de viandas"
-            effective_from: "Vigente desde"
-            effective_until: "Vigente hasta"
-            current: "Actual"
-            created_by: "Modificado por"
-            created_at: "Fecha del cambio"
+            submit: "Programar Subsidio"
+            scheduled_banner:
+              title: "Tus cambios están programados"
+              description: "La nueva configuración de subsidios se aplicará a partir del próximo período."
+              dismiss: "Cerrar aviso"
+            pending_conflict:
+              title: "Ya hay un cambio programado para el próximo período"
+              description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
+              keep: "Mantener el programado"
+              replace: "Reemplazar por este"
     accounts:
       index:
         payments: "Pagos"

@@ -1,8 +1,10 @@
-import { Head } from "@inertiajs/react"
-import { PencilIcon, PlusIcon } from "lucide-react"
+import { Head, usePage } from "@inertiajs/react"
+import { AlertCircleIcon, PencilIcon, XIcon } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import EditBenefitConfigurationDialog from "@/components/benefit-configurations/edit-benefit-configuration-dialog"
+import EditBenefitConfigurationForm from "@/components/benefit-configurations/edit-benefit-configuration-form"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -11,43 +13,31 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { DialogTrigger } from "@/components/ui/dialog"
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import AppLayout from "@/layouts/app-layout"
 import { adminBenefitConfigurations } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 import type { AdminBenefitConfigurationsIndex } from "@/types/serializers"
 
-// La fecha de fin de vigencia no se guarda: se calcula como el día anterior a
-// que arranque la siguiente configuración (o "sin fin todavía" si es la más
-// reciente). `benefit_configurations` ya viene ordenada de más nueva a más
-// vieja (ver BenefitConfiguration.ordered), así que la siguiente en el tiempo
-// es la de índice anterior en el array.
-function effectiveUntil(
-  index: number,
-  configurations: { effective_from: string }[],
-) {
-  if (index === 0) return null
-
-  const nextEffectiveFrom = configurations[index - 1].effective_from
-  const dayBefore = new Date(`${nextEffectiveFrom}T00:00:00Z`)
-  dayBefore.setUTCDate(dayBefore.getUTCDate() - 1)
-  return dayBefore.toISOString().slice(0, 10)
-}
-
 export default function Index({
-  current_benefit_configuration,
   benefit_configurations,
+  current_benefit_configuration,
 }: AdminBenefitConfigurationsIndex) {
   const { t } = useTranslation()
+  const { flash } = usePage()
+  const [isEditing, setIsEditing] = useState(false)
+
+  // El cartel de "Tus cambios estan programados" solo se muestra justo
+  // despues de programar un cambio (cuando el redirect del create trae un
+  // flash.notice), no cada vez que se entra a la pantalla con un cambio
+  // pendiente -- asi lo pidio Fran. flash.notice desaparece solo en la
+  // proxima visita/recarga (Rails lo descarta despues de leerlo una vez),
+  // asi que no hace falta un estado "dismissed" separado para eso.
+  const [showScheduledBanner, setShowScheduledBanner] = useState(false)
+
+  useEffect(() => {
+    if (flash.notice) setShowScheduledBanner(true)
+  }, [flash.notice])
 
   const title = t("pages.admin.benefit_configurations.index.title")
 
@@ -55,13 +45,13 @@ export default function Index({
     { title, href: adminBenefitConfigurations.index().url },
   ]
 
-  const currentIndex = benefit_configurations.findIndex(
-    (configuration) => configuration.id === current_benefit_configuration?.id,
+  // Hay un cambio programado (todavia no vigente) cuando existe una fila
+  // con effective_from en el futuro -- por la validacion de unicidad del
+  // modelo solo puede haber una a la vez.
+  const today = new Date().toISOString().slice(0, 10)
+  const pendingBenefitConfiguration = benefit_configurations.find(
+    (benefitConfiguration) => benefitConfiguration.effective_from > today,
   )
-  const currentUntil =
-    currentIndex === -1
-      ? null
-      : effectiveUntil(currentIndex, benefit_configurations)
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -75,43 +65,72 @@ export default function Index({
           </p>
         </div>
 
+        {showScheduledBanner && (
+          <Alert>
+            <AlertCircleIcon />
+            <AlertTitle className="font-bold">
+              {t(
+                "pages.admin.benefit_configurations.index.current.scheduled_banner.title",
+              )}
+            </AlertTitle>
+            <AlertDescription>
+              {t(
+                "pages.admin.benefit_configurations.index.current.scheduled_banner.description",
+              )}
+            </AlertDescription>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="absolute top-3 right-3"
+              aria-label={t(
+                "pages.admin.benefit_configurations.index.current.scheduled_banner.dismiss",
+              )}
+              onClick={() => setShowScheduledBanner(false)}
+            >
+              <XIcon />
+            </Button>
+          </Alert>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle>
               {t("pages.admin.benefit_configurations.index.current.title")}
             </CardTitle>
 
-            <CardAction>
-              <EditBenefitConfigurationDialog
-                currentBenefitConfiguration={current_benefit_configuration}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    {current_benefit_configuration ? (
-                      <>
-                        <PencilIcon />
-                        {t(
-                          "pages.admin.benefit_configurations.index.current.edit",
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <PlusIcon />
-                        {t(
-                          "pages.admin.benefit_configurations.index.current.configure",
-                        )}
-                      </>
-                    )}
-                  </Button>
-                </DialogTrigger>
-              </EditBenefitConfigurationDialog>
-            </CardAction>
+            {!isEditing && (
+              <CardAction>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <PencilIcon />
+                  {t("pages.admin.benefit_configurations.index.current.edit")}
+                </Button>
+              </CardAction>
+            )}
           </CardHeader>
           <CardContent>
-            {current_benefit_configuration ? (
-              <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                <div>
-                  <dt className="text-muted-foreground text-sm">
+            {isEditing ? (
+              <EditBenefitConfigurationForm
+                defaultValues={{
+                  subsidy_percentage:
+                    current_benefit_configuration?.subsidy_percentage ?? "",
+                  max_voucher_price:
+                    current_benefit_configuration?.max_voucher_price ?? "",
+                  monthly_voucher_limit:
+                    current_benefit_configuration?.monthly_voucher_limit ??
+                    "",
+                }}
+                pendingBenefitConfiguration={pendingBenefitConfiguration}
+                onCancel={() => setIsEditing(false)}
+                onSuccess={() => setIsEditing(false)}
+              />
+            ) : current_benefit_configuration ? (
+              <dl className="divide-y divide-border rounded-lg bg-muted px-4">
+                <div className="flex items-center justify-between py-3">
+                  <dt className="text-muted-foreground">
                     {t(
                       "pages.admin.benefit_configurations.index.current.subsidy_percentage",
                     )}
@@ -120,47 +139,24 @@ export default function Index({
                     {current_benefit_configuration.subsidy_percentage}%
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-muted-foreground text-sm">
+                <div className="flex items-center justify-between py-3">
+                  <dt className="text-muted-foreground">
                     {t(
                       "pages.admin.benefit_configurations.index.current.max_voucher_price",
                     )}
                   </dt>
                   <dd className="text-lg font-semibold">
-                    ${current_benefit_configuration.max_voucher_price}
+                    ≤${current_benefit_configuration.max_voucher_price}
                   </dd>
                 </div>
-                <div>
-                  <dt className="text-muted-foreground text-sm">
+                <div className="flex items-center justify-between py-3">
+                  <dt className="text-muted-foreground">
                     {t(
                       "pages.admin.benefit_configurations.index.current.monthly_voucher_limit",
                     )}
                   </dt>
                   <dd className="text-lg font-semibold">
                     {current_benefit_configuration.monthly_voucher_limit}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground text-sm">
-                    {t(
-                      "pages.admin.benefit_configurations.index.current.effective_from",
-                    )}
-                  </dt>
-                  <dd className="text-lg font-semibold">
-                    {current_benefit_configuration.effective_from}
-                  </dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground text-sm">
-                    {t(
-                      "pages.admin.benefit_configurations.index.current.effective_until",
-                    )}
-                  </dt>
-                  <dd className="text-lg font-semibold">
-                    {currentUntil ??
-                      t(
-                        "pages.admin.benefit_configurations.index.history.current",
-                      )}
                   </dd>
                 </div>
               </dl>
@@ -174,103 +170,6 @@ export default function Index({
                   </EmptyTitle>
                 </EmptyHeader>
               </Empty>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {t("pages.admin.benefit_configurations.index.history.title")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {benefit_configurations.length === 0 ? (
-              <Empty>
-                <EmptyHeader>
-                  <EmptyTitle>
-                    {t(
-                      "pages.admin.benefit_configurations.index.history.empty",
-                    )}
-                  </EmptyTitle>
-                </EmptyHeader>
-              </Empty>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      {t(
-                        "pages.admin.benefit_configurations.index.history.subsidy_percentage",
-                      )}
-                    </TableHead>
-                    <TableHead>
-                      {t(
-                        "pages.admin.benefit_configurations.index.history.max_voucher_price",
-                      )}
-                    </TableHead>
-                    <TableHead>
-                      {t(
-                        "pages.admin.benefit_configurations.index.history.monthly_voucher_limit",
-                      )}
-                    </TableHead>
-                    <TableHead>
-                      {t(
-                        "pages.admin.benefit_configurations.index.history.effective_from",
-                      )}
-                    </TableHead>
-                    <TableHead>
-                      {t(
-                        "pages.admin.benefit_configurations.index.history.effective_until",
-                      )}
-                    </TableHead>
-                    <TableHead>
-                      {t(
-                        "pages.admin.benefit_configurations.index.history.created_by",
-                      )}
-                    </TableHead>
-                    <TableHead>
-                      {t(
-                        "pages.admin.benefit_configurations.index.history.created_at",
-                      )}
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {benefit_configurations.map((configuration, index) => {
-                    const until = effectiveUntil(index, benefit_configurations)
-                    const isCurrent =
-                      current_benefit_configuration?.id === configuration.id
-
-                    return (
-                      <TableRow key={configuration.id}>
-                        <TableCell>
-                          {configuration.subsidy_percentage}%
-                        </TableCell>
-                        <TableCell>
-                          ${configuration.max_voucher_price}
-                        </TableCell>
-                        <TableCell>
-                          {configuration.monthly_voucher_limit}
-                        </TableCell>
-                        <TableCell>{configuration.effective_from}</TableCell>
-                        <TableCell>
-                          {until ??
-                            (isCurrent
-                              ? t(
-                                  "pages.admin.benefit_configurations.index.history.current",
-                                )
-                              : "—")}
-                        </TableCell>
-                        <TableCell>{configuration.created_by_name}</TableCell>
-                        <TableCell>
-                          {new Date(configuration.created_at).toLocaleString()}
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
             )}
           </CardContent>
         </Card>
