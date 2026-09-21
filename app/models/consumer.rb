@@ -11,6 +11,7 @@ class Consumer < ApplicationRecord
   has_many :accounts, as: :owner
   has_many :user_notifications, as: :user
   has_many :notification_configurations, through: :user_notifications, source: :notification_configuration
+  
   # La modalidad se deriva de la dirección elegida: la de la oficina es entrega en
   # oficina y cualquier otra es domicilio. Un proveedor que no entrega a domicilio
   # fuerza oficina, y el carrito se lo avisa al empleado.
@@ -22,12 +23,12 @@ class Consumer < ApplicationRecord
     end
   end
 
-  def current_month_spending
-    accounts.current.sum :amount
-  end
-
   def total_debt
     accounts.pending.sum :amount
+  end
+
+  def benefit_available
+    benefits.current.monthly.first.amount
   end
 end
 

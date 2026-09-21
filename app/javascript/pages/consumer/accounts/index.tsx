@@ -38,8 +38,10 @@ interface AccountProps {
   accounts: Account[]
   providers: Provider[]
   history: boolean
-  current_month_spending: number
+  current_month_debt: number
+  current_month_ordered: number
   total_debt: number
+  benefit_available: number
 }
 
 interface AccountDetail {
@@ -52,8 +54,10 @@ export default function Index({
   accounts,
   providers,
   history,
-  current_month_spending,
+  current_month_debt,
+  current_month_ordered,
   total_debt,
+  benefit_available,
 }: AccountProps) {
   const { t } = useTranslation()
   const isMobile = useIsMobile()
@@ -123,7 +127,16 @@ export default function Index({
                 {t("pages.accounts.index.this_month")}
               </Badge>
             </CardDescription>
-            <CardTitle>${current_month_spending}</CardTitle>
+            <CardTitle>
+              ${current_month_debt}
+              <span className="text-zinc-500 dark:text-zinc-400">
+                {" | "}
+                {current_month_ordered}{" de "}{benefit_available}{" "}
+                {benefit_available == 1
+                  ? t("pages.accounts.show.lunch")
+                  : t("pages.accounts.show.lunches")}
+              </span>
+            </CardTitle>
           </CardHeader>
         </Card>
 

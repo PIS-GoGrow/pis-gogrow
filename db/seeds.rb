@@ -31,15 +31,15 @@ endulzate = Provider.create!(
 )
 
 menus = [
-  {
-    provider: tu_viandita,
-    name: "Milanesa con papas fritas",
-    description: "Opción de carne o pollo",
-    price: 300,
-    sauces: [ "Mayonesa de ajo", "Ketchup" ],
-    day: 0,
-    amount: 7
-  },
+#  {
+#    provider: tu_viandita,
+#    name: "Milanesa con papas fritas",
+#    description: "Opción de carne o pollo",
+#    price: 300,
+#    sauces: [ "Mayonesa de ajo", "Ketchup" ],
+#    day: 0,
+#    amount: 7
+#  },
   {
     provider: tu_viandita,
     name: "Empanadas de carne",
@@ -80,7 +80,7 @@ menus = [
     price: 300,
     fillings: [ "Ricota y nuez", "Ricota y espinaca" ],
     sauces: [ "Filetto", "Bolognesa", "Rosa" ],
-    day: 0,
+    day: 3,
     amount: 8
   },
   {
@@ -111,15 +111,15 @@ end
 Review.create!(
   description: "Muy buena opción para el almuerzo.",
   rating: 5,
-  menu: tu_viandita.menus.find_by!(name: "Milanesa con papas fritas")
+  menu: tu_viandita.menus.find_by!(name: "Bowl de lentejas y vegetales")
 )
 
 consumer_user = User.create!(
-  email: "usuariopruebapis@gmail.com",
-  name: "Juan Pérez",
+  email: "olmedo.juanandres5@gmail.com",
+  name: "Juan Andrés Olmedo",
   password_digest: "$2a$12$w4gRBetBMUY0nAyf0T3aU.Vzpk/.Wu75sHOcs3aGX4k.gF7qsG3/q",
   verified: true,
-  google_uid: "111721831687592318354"
+  google_uid: "102930033563007478886"
 )
 consumer = Consumer.create!(
   company:,
@@ -174,14 +174,14 @@ Order.create!(
 
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 
-admin_user = User.create!(
-  email: "rrhh.gogrow@gmail.com",
-  name: "Juan Admin",
-  password_digest: "$2a$12$kDAZOZpncJzrsfYTgpE.Xu47ZCiUJWL/a4TI5WcI0Q1LeecxlSsMe",
-  verified: true,
-  google_uid: "101425658623552684238"
-)
-Admin.create!(user: admin_user, company:)
+#admin_user = User.create!(
+#  email: "rrhh.gogrow@gmail.com",
+#  name: "Juan Admin",
+#  password_digest: "$2a$12$kDAZOZpncJzrsfYTgpE.Xu47ZCiUJWL/a4TI5WcI0Q1LeecxlSsMe",
+#  verified: true,
+#  google_uid: "101425658623552684238"
+#)
+Admin.create!(user: consumer_user, company:)
 
 notification_configuration = NotificationConfiguration.create!(
   description: "Notificaciones de orden en camino"
