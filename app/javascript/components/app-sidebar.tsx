@@ -5,6 +5,7 @@ import {
   ClipboardList,
   CreditCard,
   LayoutGrid,
+  Package,
   Percent,
   Utensils,
 } from "lucide-react"
@@ -29,6 +30,7 @@ import {
   orders,
   providerDashboard,
   providerMenus,
+  providerOrders,
   schedules,
 } from "@/routes"
 import type { NavItem } from "@/types"
@@ -55,6 +57,11 @@ export function AppSidebar() {
         title: "Publicar menús",
         href: schedules.index().url,
         icon: CalendarPlus,
+      },
+      {
+        title: "Pedidos",
+        href: providerOrders.index().url,
+        icon: Package,
       },
     ],
     admin: [
@@ -91,7 +98,11 @@ export function AppSidebar() {
   const role = auth.session.role
 
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar
+      collapsible="icon"
+      variant="inset"
+      hideOnMobile={role === "consumer"}
+    >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

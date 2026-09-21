@@ -2,6 +2,7 @@ import { Link, usePage } from "@inertiajs/react"
 import type { PropsWithChildren } from "react"
 import { useTranslation } from "react-i18next"
 
+import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import Heading from "@/components/heading"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -17,7 +18,8 @@ import type { NavItem } from "@/types"
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
   const { t } = useTranslation()
-  const { url } = usePage()
+  const { url, props } = usePage()
+  const isConsumer = props.auth.session.role === "consumer"
 
   const sidebarNavItems: NavItem[] = [
     {
@@ -48,7 +50,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
   ]
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 pb-24 md:pb-6">
       <Heading
         title={t("components.settings_layout.title")}
         description={t("components.settings_layout.description")}
@@ -82,6 +84,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
           <section className="max-w-xl space-y-12">{children}</section>
         </div>
       </div>
+
+      {isConsumer && <ConsumerMobileNav />}
     </div>
   )
 }
