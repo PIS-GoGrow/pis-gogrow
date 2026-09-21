@@ -79,6 +79,8 @@ group :development, :test do
   gem "faker"
 
   gem "dotenv-rails"
+
+  gem "simplecov", require: false
 end
 
 group :development do
