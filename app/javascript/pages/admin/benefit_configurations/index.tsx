@@ -1,6 +1,6 @@
 import { Head, usePage } from "@inertiajs/react"
 import { AlertCircleIcon, PencilIcon, XIcon } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import EditBenefitConfigurationForm from "@/components/benefit-configurations/edit-benefit-configuration-form"
@@ -34,10 +34,12 @@ export default function Index({
   // proxima visita/recarga (Rails lo descarta despues de leerlo una vez),
   // asi que no hace falta un estado "dismissed" separado para eso.
   const [showScheduledBanner, setShowScheduledBanner] = useState(false)
+  const [previousFlashNotice, setPreviousFlashNotice] = useState(flash.notice)
 
-  useEffect(() => {
+  if (flash.notice !== previousFlashNotice) {
+    setPreviousFlashNotice(flash.notice)
     if (flash.notice) setShowScheduledBanner(true)
-  }, [flash.notice])
+  }
 
   const title = t("pages.admin.benefit_configurations.index.title")
 
