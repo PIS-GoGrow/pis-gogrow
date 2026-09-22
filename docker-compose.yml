@@ -54,6 +54,35 @@ services:
       - "3001:3000" # Rails → http://localhost:3001
       - "5173:5173" # Vite dev server (el navegador le pide assets directo)
 
+  motoradmin-db:
+    profiles: ["motoradmin"]
+    image: postgres:17
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: motoradmin
+    volumes:
+      - motoradmin_db_data:/var/lib/postgresql/data
+      - ./motoradmin_seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  motoradmin:
+    profiles: ["motoradmin"]
+    depends_on:
+      motoradmin-db:
+        condition: service_healthy
+    image: 'motoradmin/motoradmin:latest'
+    ports:
+      - '3002:3000'
+    environment:
+      SECRET_KEY_BASE: 6b4e51938c588d7bacf7f2a25365586b28b4f8031dd9753fc920753f042c2c481c6106ea03158044fae89437b306fc7da3c2be72fd7054971829a59856d347ca
+      DATABASE_URL: postgresql://postgres:postgres@motoradmin-db:5432/motoradmin
+
 volumes:
   dev_db_data:
   dev_node_modules:
+  motoradmin_db_data:
