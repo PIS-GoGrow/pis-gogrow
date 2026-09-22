@@ -16,7 +16,9 @@ class Consumer::AccountsController < Consumer::InertiaController
     # Ordenar los proveedores por nombre, y traernos a sus usuarios correspondientes
     # para evitar repetir la consulta para obtener su nombre.
     providers = Provider.eager_load(:user).order("LOWER(users.name)")
-    history = params[:type] == "history" # Esto hay que cambiarlo en una historia posterior
+    history = params[:type] == "history" # Esto hay que borrarlo?
+    history_accounts = consumer.accounts.history.includes(:payments).order(month: :desc)
+    history_sums = Account.amount_and_price_sum(history_accounts.map(&:id))
 
     # La suma de la deuda total se calcula en memoria en el controlador, para no hacer
     # una consulta más redundante a la base de datos.
@@ -33,6 +35,7 @@ class Consumer::AccountsController < Consumer::InertiaController
       accounts: AccountSerializer.new(accounts, params: { orders_sum: sums }).as_json,
       providers: ProviderSerializer.new(providers).as_json,
       history:,
+      history_accounts: AccountSerializer.new(history_accounts, params: { orders_sum: history_sums }).as_json,
       current_month_debt:,
       current_month_ordered:,
       total_debt:,

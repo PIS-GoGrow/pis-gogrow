@@ -23,7 +23,7 @@ class Account < ApplicationRecord
   # TODO: Hay que cambiar según qué estado sea el que se elija para pagos
   # aprobados.
   scope :pending, -> {
-    where.not(id: Payment.where(status: 0).select(:account_id)).where.not(amount: ..0)
+    where.not(id: Payment.where(status: 1).select(:account_id)).where.not(amount: ..0)
   }
   scope :history, -> {
     where(id: Payment.where(status: 0).select(:account_id))

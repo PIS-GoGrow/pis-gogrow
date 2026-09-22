@@ -186,6 +186,7 @@ es:
         pending: "Pendientes"
         history: "Historial"
         no_debt: "¡Sin deudas pendientes con este proveedor!"
+        history_empty: "Todavía no hiciste ningún pago."
       show:
         see_detail: "Ver detalle"
         spending: "Consumo"
@@ -209,6 +210,10 @@ es:
         amount: "Cant."
         price: "Monto"
         total: "Total"
+        download_receipt: "Descargar comprobante de pago"
+        status_pending: "Pendiente"
+        status_accepted: "Aceptado"
+        status_rejected: "Rechazado"
     orders:
       index:
         title: "Mis pedidos"
