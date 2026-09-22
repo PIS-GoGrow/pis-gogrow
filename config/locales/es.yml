@@ -22,6 +22,7 @@ es:
     cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
     order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
+    order_updated: "Pedido actualizado."
     already_signed_in: "Ya has iniciado sesión"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
@@ -55,6 +56,7 @@ es:
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
+    order_not_modifiable: "Este pedido ya no se puede modificar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
   activerecord:
@@ -197,6 +199,24 @@ es:
         total: "Importe final"
         notes: "Notas"
         no_notes: "Sin notas"
+        edit: "Modificar pedido"
+        edit_dialog:
+          title: "Modificar pedido"
+          description: "Podés cambiar la cantidad, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo."
+          quantity: "Cantidad"
+          address: "Dirección de entrega"
+          notes: "Notas"
+          notes_placeholder: "Sin salsa, sin cebolla…"
+          remaining: "Quedan %{count} disponibles para esta fecha"
+          back: "Volver"
+          confirm: "Guardar cambios"
+        cannot_edit:
+          already_confirmed: "El proveedor ya confirmó este pedido, así que no se puede modificar."
+          already_closed: "Este pedido ya está cerrado."
+          unavailable: "Este pedido no tiene fecha de entrega, así que no se puede modificar."
+      addresses:
+        office: "Oficina"
+        home: "Casa"
       statuses:
         pending: "Pendiente"
         confirmed: "Confirmado"

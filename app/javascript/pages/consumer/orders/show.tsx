@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import EditOrderSheet from "@/components/orders/edit-order-sheet"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,6 +11,7 @@ import {
   CardAction,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -28,7 +30,11 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-export default function Show({ order }: ConsumerOrdersShow) {
+export default function Show({
+  order,
+  delivery_addresses,
+  max_quantity,
+}: ConsumerOrdersShow) {
   const { t } = useTranslation()
   const { formatMoney, formatDeliveryDate } = useFormatters()
 
@@ -123,6 +129,22 @@ export default function Show({ order }: ConsumerOrdersShow) {
               </p>
             </div>
           </CardContent>
+
+          <CardFooter className="flex-col items-stretch gap-2">
+            {order.modifiable ? (
+              <EditOrderSheet
+                order={order}
+                addresses={delivery_addresses}
+                maxQuantity={max_quantity}
+              />
+            ) : (
+              <p className="text-muted-foreground text-xs">
+                {t(
+                  `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+                )}
+              </p>
+            )}
+          </CardFooter>
         </Card>
       </div>
     </AppLayout>
