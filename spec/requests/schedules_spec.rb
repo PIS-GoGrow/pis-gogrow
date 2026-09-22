@@ -477,6 +477,31 @@ RSpec.describe "Schedules", type: :request do
       end.not_to change(Schedule, :count)
     end
 
+    it "does not publish a menu with stock greater than the integer limit" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+
+      menu = provider.menus.create!(
+        name: "Milanesa",
+        description: "Milanesa con puré",
+        price: 350
+      )
+
+      sign_in_with_role(user, role: :provider)
+
+      date = next_publishable_date
+
+      expect do
+        post schedules_path, params: {
+          date: date.to_s,
+          items: [
+            { menu_id: menu.id, amount: Schedule::MAX_AMOUNT + 1 }
+          ]
+        }
+      end.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+    end
     it "does not publish the same menu twice for the same date" do
       user = users(:one)
       provider = Provider.create!(user: user)
