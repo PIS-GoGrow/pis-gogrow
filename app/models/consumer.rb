@@ -30,7 +30,7 @@ class Consumer < ApplicationRecord
   end
 
   def benefit_available
-    benefits.current.monthly.first.amount
+    benefits.current.monthly.first&.amount || 0
   end
 
   def subsidized_meals_used_this_month
@@ -42,7 +42,7 @@ class Consumer < ApplicationRecord
   end
 
   def remaining_subsidized_meals
-    [SUBSIDIZED_MEALS_LIMIT - subsidized_meals_used_this_month, 0].max
+    [ SUBSIDIZED_MEALS_LIMIT - subsidized_meals_used_this_month, 0 ].max
   end
 end
 

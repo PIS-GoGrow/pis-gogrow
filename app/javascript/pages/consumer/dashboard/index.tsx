@@ -31,8 +31,7 @@ const pricingFor = (
   items.forEach((item) => {
     const lineSubtotal = item.menu.price * item.quantity
     const subsidized = Math.min(item.quantity, remaining)
-    const lineDiscount =
-      (item.menu.price * subsidized * percentage) / 100
+    const lineDiscount = (item.menu.price * subsidized * percentage) / 100
 
     subtotal += lineSubtotal
     discount += lineDiscount
@@ -103,14 +102,14 @@ export default function Index({
   } = pricing
 
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
-    function openDetail(item: Schedule) {
-      setSelected(item)
-      setQuantity(1)
-      setNotes("")
-      setFilling("")
-      setSauce("")
-      setView("detail")
-    }
+  function openDetail(item: Schedule) {
+    setSelected(item)
+    setQuantity(1)
+    setNotes("")
+    setFilling("")
+    setSauce("")
+    setView("detail")
+  }
 
   function addToCart() {
     if (!selected) return

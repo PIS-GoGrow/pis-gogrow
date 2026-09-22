@@ -40,16 +40,11 @@ export function DishDetail({
   back,
   add,
 }: Props) {
-
   const subtotal = item.menu.price * quantity
 
-  const subsidizedQuantity = Math.min(
-    quantity,
-    Math.max(monthlyRemaining, 0),
-  )
+  const subsidizedQuantity = Math.min(quantity, Math.max(monthlyRemaining, 0))
 
-  const discount =
-    (item.menu.price * subsidizedQuantity * percentage) / 100
+  const discount = (item.menu.price * subsidizedQuantity * percentage) / 100
 
   const total = subtotal - discount
   const reviews = item.menu.reviews

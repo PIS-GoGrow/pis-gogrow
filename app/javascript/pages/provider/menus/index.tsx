@@ -1,6 +1,5 @@
 import { Head } from "@inertiajs/react"
 import { useState } from "react"
-import { useTranslation } from "react-i18next"
 
 import CreateMenuDialog from "@/components/menus/create-menu-dialog"
 import DeleteMenuDialog from "@/components/menus/delete-menu-dialog"
@@ -29,8 +28,6 @@ export default function Index({ menus }: MenuProps) {
     id: number | null
     name: string
   }>({ id: null, name: "" })
-
-  const { t } = useTranslation()
 
   const menusJSX = menus.map((menu: Menu) => (
     <MenuCard

@@ -1,5 +1,4 @@
-import { Head, Link, router } from "@inertiajs/react"
-import { Plus } from "lucide-react"
+import { Head, router } from "@inertiajs/react"
 import { useState } from "react"
 
 import CreateMenuDialog from "@/components/menus/create-menu-dialog"
@@ -12,7 +11,6 @@ import { Button } from "@/components/ui/button"
 import { DialogTrigger } from "@/components/ui/dialog"
 import AppLayout from "@/layouts/app-layout"
 import {
-  providerMenus as menusRoutes,
   schedules as schedulesRoutes,
 } from "@/routes"
 import type { BreadcrumbItem, Menu, Schedule } from "@/types"
