@@ -29,6 +29,10 @@ class Consumer < ApplicationRecord
     accounts.pending.sum :amount
   end
 
+  def current_month_spending
+    accounts.current.sum :amount
+  end
+
   def benefit_available
     benefits.current.monthly.first&.amount || 0
   end
