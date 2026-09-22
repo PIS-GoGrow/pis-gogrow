@@ -10,9 +10,7 @@ import WeekDayTabs from "@/components/schedules/week-day-tabs"
 import { Button } from "@/components/ui/button"
 import { DialogTrigger } from "@/components/ui/dialog"
 import AppLayout from "@/layouts/app-layout"
-import {
-  schedules as schedulesRoutes,
-} from "@/routes"
+import { schedules as schedulesRoutes } from "@/routes"
 import type { BreadcrumbItem, Menu, Schedule } from "@/types"
 
 interface ScheduleDay {
