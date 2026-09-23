@@ -65,7 +65,9 @@ export default function ProviderDashboard({ provider }: Props) {
                   <FieldGroup>
                     <Field>
                       <FieldLabel htmlFor="order_deadline">
-                        {t("pages.provider_dashboard.index.order_deadline.label")}
+                        {t(
+                          "pages.provider_dashboard.index.order_deadline.label",
+                        )}
                       </FieldLabel>
                       <Input
                         id="order_deadline"
@@ -75,7 +77,9 @@ export default function ProviderDashboard({ provider }: Props) {
                         aria-invalid={!!errors.order_deadline}
                       />
                       <FieldDescription>
-                        {t("pages.provider_dashboard.index.order_deadline.help")}
+                        {t(
+                          "pages.provider_dashboard.index.order_deadline.help",
+                        )}
                       </FieldDescription>
                       <FieldError
                         errors={errors.order_deadline?.map((message) => ({
