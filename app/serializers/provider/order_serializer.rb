@@ -10,6 +10,19 @@ class Provider::OrderSerializer < ApplicationSerializer
     order.price.to_f
   end
 
+  typelize :string, nullable: true
+  attribute :delivery_date do |order|
+    date = order.schedule.date
+    
+    if date == Date.current
+      I18n.t("pages.provider_orders.index.today") 
+    elsif date == Date.current + 1.day
+      I18n.t("pages.provider_orders.index.tomorrow")
+    else
+      date.strftime(I18n.t("pages.provider_orders.index.date"))
+    end
+  end
+
   typelize :string
   attribute :time do |order|
     order.created_at.strftime("%H:%M")

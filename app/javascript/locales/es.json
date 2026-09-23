@@ -200,9 +200,11 @@
           "cancel": "Cancelar",
           "code": "PED-%{id}",
           "confirm": "Confirmar",
+          "date": "el %d/%m/%Y",
+          "deliver": "a entregar",
           "detail": "Ver detalle",
-          "empty_description": "Todavía no recibiste pedidos para hoy.",
-          "empty_filtered_description": "No tenés pedidos con este estado para hoy.",
+          "empty_description": "Todavía no recibiste pedidos para los próximos días.",
+          "empty_filtered_description": "No tenés pedidos próximos con este estado.",
           "empty_title": "No hay pedidos",
           "eyebrow": "Operación diaria",
           "filter_label": "Filtrar pedidos por estado",
@@ -215,7 +217,9 @@
           },
           "no_address": "Sin dirección de entrega",
           "quantity": "x%{count}",
-          "title": "Pedidos"
+          "title": "Pedidos",
+          "today": "hoy",
+          "tomorrow": "mañana"
         },
         "show": {
           "amounts": "Importe",

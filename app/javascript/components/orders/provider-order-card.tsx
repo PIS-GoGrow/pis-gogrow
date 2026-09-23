@@ -76,6 +76,7 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
           <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
             <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
             {order.address ?? t("pages.provider_orders.index.no_address")}
+            {", " + t("pages.provider_orders.index.deliver") + " " + order.delivery_date}
           </p>
           <p className="text-lg font-semibold">{formatMoney(order.price)}</p>
         </div>
