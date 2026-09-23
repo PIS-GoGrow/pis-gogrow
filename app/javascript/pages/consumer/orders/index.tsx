@@ -1,6 +1,7 @@
 import { Head } from "@inertiajs/react"
 import { useTranslation } from "react-i18next"
 
+import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import OrderCard from "@/components/orders/order-card"
 import {
   Empty,
@@ -79,7 +80,7 @@ export default function Index({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.orders.index.title")} />
 
-      <div className="mx-auto grid w-full max-w-128 gap-6 p-5">
+      <div className="mx-auto grid w-full max-w-128 gap-6 p-5 pb-24 md:pb-5">
         <h1 className="text-2xl font-bold">{t("pages.orders.index.title")}</h1>
 
         <Tabs defaultValue="upcoming" className="gap-6">
@@ -101,6 +102,8 @@ export default function Index({
           </TabsContent>
         </Tabs>
       </div>
+
+      <ConsumerMobileNav />
     </AppLayout>
   )
 }

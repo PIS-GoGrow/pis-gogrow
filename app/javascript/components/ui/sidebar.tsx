@@ -153,6 +153,7 @@ function Sidebar({
   side = "left",
   variant = "sidebar",
   collapsible = "offcanvas",
+  hideOnMobile = false,
   className,
   children,
   ...props
@@ -160,6 +161,7 @@ function Sidebar({
   side?: "left" | "right"
   variant?: "sidebar" | "floating" | "inset"
   collapsible?: "offcanvas" | "icon" | "none"
+  hideOnMobile?: boolean
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
 
@@ -179,6 +181,10 @@ function Sidebar({
   }
 
   if (isMobile) {
+    if (hideOnMobile) {
+      return null
+    }
+
     return (
       <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
         <SheetContent

@@ -67,7 +67,16 @@ RSpec.describe "Consumer dashboard", type: :request do
     get dashboard_path
 
     expect(benefit.amount).to eq(20)
-    expect(inertia).to have_props(benefit: { limit: 5, used: 2, percentage: 50 })
+    expect(inertia).to have_props(
+      benefit: {
+        limit: 5,
+        used: 2,
+        percentage: 50,
+        monthly_limit: 20,
+        monthly_used: 5,
+        monthly_remaining: 15
+      }
+    )
   end
 
   it "rejects a session with a different role" do

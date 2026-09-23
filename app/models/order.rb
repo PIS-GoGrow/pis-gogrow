@@ -59,10 +59,40 @@ class Order < ApplicationRecord
     if: -> { saved_change_to_status? || saved_change_to_price? || saved_change_to_discounted_price? }
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
 
-  def self.reserve(consumer:, schedule:, delivery_method:, address:, quantity: 1, notes: nil, discount_percentage: 0)
-    gross_price = schedule.menu.price * quantity
-    discounted_price = (gross_price * (100 - discount_percentage.clamp(0, 100)) / 100).round(2)
-    order = new(consumer:, schedule:, amount: quantity, notes:, address:, price: gross_price, discounted_price:, delivery_method:)
+  def self.reserve(
+    consumer:,
+    schedule:,
+    delivery_method:,
+    address:,
+    quantity: 1,
+    notes: nil,
+    discount_percentage: 0,
+    subsidized_quantity: nil
+  )
+    subsidized_quantity = quantity if subsidized_quantity.nil?
+    subsidized_quantity = subsidized_quantity.clamp(0, quantity)
+
+    unit_price = schedule.menu.price
+    gross_price = unit_price * quantity
+
+    discounted_unit_price =
+      unit_price * (100 - discount_percentage.clamp(0, 100)) / 100
+
+    discounted_price = (
+      discounted_unit_price * subsidized_quantity +
+      unit_price * (quantity - subsidized_quantity)
+    ).round(2)
+
+    order = new(
+      consumer:,
+      schedule:,
+      amount: quantity,
+      notes:,
+      address:,
+      price: gross_price,
+      discounted_price:,
+      delivery_method:
+    )
 
     return order unless order.valid?
 
@@ -70,7 +100,10 @@ class Order < ApplicationRecord
       if schedule.available?(quantity:)
         order.save
       else
-        order.errors.add(:schedule_id, I18n.t("validations.schedule_unavailable"))
+        order.errors.add(
+          :schedule_id,
+          I18n.t("validations.schedule_unavailable")
+        )
       end
     end
 
