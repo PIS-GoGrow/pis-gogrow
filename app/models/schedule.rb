@@ -22,10 +22,14 @@ class Schedule < ApplicationRecord
   end
 
   def available?(quantity: 1)
-    # && significa "y": deben cumplirse las tres condiciones para poder reservar.
-    # Date.current usa la fecha de la zona horaria configurada en Rails.
-    # Esta regla todavía no considera el horario límite del proveedor.
-    date.present? && date >= Date.current && remaining_amount >= quantity
+    date.present? && date >= Date.current && !order_deadline_passed? && remaining_amount >= quantity
+  end
+
+  def order_deadline_passed?
+    deadline = menu.provider.order_deadline
+    return false unless date == Date.current && deadline.present?
+
+    Time.current >= Time.zone.local(date.year, date.month, date.day, deadline.hour, deadline.min, deadline.sec)
   end
 end
 

@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -9,6 +10,7 @@ export default function MenuItem({
   price,
   description,
   soldOut,
+  ordersClosed = false,
   isPast = false,
   addedQuantity,
   onSelect,
@@ -18,11 +20,13 @@ export default function MenuItem({
   price: number
   description?: string | null
   soldOut: boolean
+  ordersClosed?: boolean
   isPast?: boolean
   addedQuantity?: number
   onSelect?: () => void
 }) {
-  const disabled = soldOut || isPast
+  const { t } = useTranslation()
+  const disabled = soldOut || ordersClosed || isPast
 
   return (
     <div
@@ -36,6 +40,12 @@ export default function MenuItem({
           <span className="text-muted-foreground text-sm">{providerName}</span>
           {addedQuantity && (
             <span className="text-foreground text-xs">• Agregado</span>
+          )}
+          {ordersClosed && (
+            <span className="text-destructive flex items-center gap-1 text-xs">
+              <span className="bg-destructive inline-block size-1.5 rounded-full" />
+              {t("pages.consumer_dashboard.index.orders_closed")}
+            </span>
           )}
           {soldOut && (
             <span className="text-destructive flex items-center gap-1 text-xs">

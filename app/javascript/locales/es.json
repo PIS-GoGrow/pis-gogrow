@@ -88,6 +88,11 @@
         "other_deliveries": "Las demás viandas irán a la dirección seleccionada.",
         "remove": "Quitar %{name}"
       },
+      "consumer_dashboard": {
+        "index": {
+          "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
+        }
+      },
       "dashboard": {
         "roles": {
           "provider": "Panel del proveedor"
@@ -193,6 +198,19 @@
           "return_to": "O vuelve a",
           "submit": "Enviar enlace de restablecimiento",
           "title": "Olvidé mi contraseña"
+        }
+      },
+      "provider_dashboard": {
+        "index": {
+          "description": "Administrá la recepción de pedidos de tus menús.",
+          "eyebrow": "Operación diaria",
+          "order_deadline": {
+            "description": "Definí hasta qué hora aceptás pedidos para hoy.",
+            "help": "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos.",
+            "label": "Hora límite",
+            "title": "Recepción de pedidos"
+          },
+          "title": "Panel del proveedor"
         }
       },
       "provider_orders": {

@@ -75,7 +75,7 @@ export default function Index({
   }
 
   function addToCart() {
-    if (!selected) return
+    if (!selected || selected.sold_out || selected.orders_closed) return
 
     const detail = [filling, sauce, notes].filter(Boolean).join(" · ")
     setCart((items) => {

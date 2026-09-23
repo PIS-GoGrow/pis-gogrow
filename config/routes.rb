@@ -33,6 +33,7 @@ Rails.application.routes.draw do
   namespace :provider do
     resources :menus
     resources :orders, only: [ :index, :show ]
+    resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 

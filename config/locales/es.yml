@@ -45,6 +45,7 @@ es:
     role_set: "Rol cambiado exitosamente."
     no_permission: "No tenés permiso para acceder a este recurso."
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
+    order_deadline_updated: "La hora límite de pedidos fue actualizada."
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -52,9 +53,11 @@ es:
     invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
+    order_deadline_passed: "Este proveedor ya cerró la recepción de pedidos para hoy."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
+    invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
   user_mailer:
     greeting: "Hola,"
     support: "¿Tienes dudas o necesitas ayuda? Responde este correo y nuestro equipo de soporte te ayudará a resolverlo."
@@ -258,6 +261,19 @@ es:
       title: "Panel"
       roles:
         provider: "Panel del proveedor"
+    provider_dashboard:
+      index:
+        eyebrow: "Operación diaria"
+        title: "Panel del proveedor"
+        description: "Administrá la recepción de pedidos de tus menús."
+        order_deadline:
+          title: "Recepción de pedidos"
+          description: "Definí hasta qué hora aceptás pedidos para hoy."
+          label: "Hora límite"
+          help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
+    consumer_dashboard:
+      index:
+        orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
     sessions:
       new:
         title: "Iniciar sesión"

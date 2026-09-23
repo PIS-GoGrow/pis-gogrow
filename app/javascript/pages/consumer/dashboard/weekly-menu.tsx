@@ -130,6 +130,7 @@ export function WeeklyMenu({
                       price={item.menu.price}
                       description={item.menu.description}
                       soldOut={item.sold_out}
+                      ordersClosed={item.orders_closed}
                       isPast={item.date < currentDate}
                       addedQuantity={addedQuantity || undefined}
                       onSelect={() => openDetail(item)}

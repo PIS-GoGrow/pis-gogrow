@@ -35,7 +35,9 @@ class Consumer::OrdersController < Consumer::InertiaController
     end
 
     redirect_to dashboard_path(confirmed_order_ids: created_orders.map(&:id)), notice: t("flash.cart_confirmed"), status: :see_other unless performed?
-  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound, KeyError
+  rescue ActiveRecord::RecordInvalid => error
+    reject_order(order_error_reason(error.record))
+  rescue ActiveRecord::RecordNotFound, KeyError
     reject_order(:cart_unavailable)
   end
 
@@ -55,6 +57,12 @@ class Consumer::OrdersController < Consumer::InertiaController
     redirect_to dashboard_path, inertia: {
       errors: { order_error: t("validations.#{reason}") }
     }, status: :see_other
+  end
+
+  def order_error_reason(order)
+    return :order_deadline_passed if order.errors[:schedule_id].include?(t("validations.order_deadline_passed"))
+
+    :cart_unavailable
   end
 
   def active_benefit_for(consumer)
