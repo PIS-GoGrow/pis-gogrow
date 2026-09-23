@@ -22,7 +22,7 @@ export default function PublishedDayView({ schedules }: PublishedDayViewProps) {
           <div className="flex-1">
             <Badge
               variant="secondary"
-              className="mb-1 bg-green-100 text-green-700"
+              className="mb-1 bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400"
             >
               Publicado
             </Badge>

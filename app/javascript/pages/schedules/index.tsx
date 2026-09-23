@@ -17,6 +17,7 @@ interface ScheduleDay {
   date: string
   published: boolean
   publishable: boolean
+  editable: boolean
   schedules: Schedule[]
 }
 
@@ -50,6 +51,7 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
   const [selections, setSelections] = useState<
     Record<string, Record<number, string>>
   >({})
+  const [isEditingPublished, setIsEditingPublished] = useState(false)
   const [processing, setProcessing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -62,7 +64,21 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
 
   function handleSelectDate(date: string) {
     setError(null)
+    setIsEditingPublished(false)
     setSelectedDate(date)
+  }
+
+  function handleStartEditing(schedules: Schedule[]) {
+    if (!selectedDate) return
+
+    const currentAmounts: Record<number, string> = {}
+    schedules.forEach((schedule) => {
+      currentAmounts[schedule.menu.id] = String(schedule.amount)
+    })
+
+    setSelections((prev) => ({ ...prev, [selectedDate]: currentAmounts }))
+    setIsEditingPublished(true)
+    setError(null)
   }
 
   function toggleMenu(menuId: number) {
@@ -120,12 +136,25 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
     setProcessing(true)
     setError(null)
 
-    router.post(
-      schedulesRoutes.create().url,
+    const url = isEditingPublished
+      ? schedulesRoutes.updateByDate().url
+      : schedulesRoutes.create().url
+    const method = isEditingPublished ? "patch" : "post"
+
+    router[method](
+      url,
       { date: selectedDate, items },
       {
         preserveState: true,
         preserveScroll: true,
+        onSuccess: () => {
+          setSelections((prev) => {
+            const next = { ...prev }
+            delete next[selectedDate]
+            return next
+          })
+          setIsEditingPublished(false)
+        },
         onError: (errors) => {
           // seleccion se mantiene a proposito para no cambiar lo que el proveedor toco
           setError(
@@ -163,13 +192,24 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
             <PublishBar
               dateLabel={formatDateLabel(selectedDay.date)}
               statusLabel={
-                selectedDay.published
-                  ? "Publicado"
-                  : selectedDay.publishable
-                    ? "Sin publicar"
-                    : "Fuera de rango de publicación"
+                isEditingPublished
+                  ? "Editando menú publicado"
+                  : selectedDay.published
+                    ? "Publicado"
+                    : selectedDay.publishable
+                      ? "Sin publicar"
+                      : "Fuera de rango de publicación"
               }
-              canPublish={selectedDay.publishable && !selectedDay.published}
+              canPublish={
+                (selectedDay.publishable && !selectedDay.published) ||
+                (selectedDay.published && isEditingPublished)
+              }
+              canEdit={
+                selectedDay.published &&
+                selectedDay.editable &&
+                !isEditingPublished
+              }
+              onEdit={() => handleStartEditing(selectedDay.schedules)}
               selectedCount={Object.keys(currentSelection).length}
               processing={processing}
               onPublish={handlePublish}
@@ -182,9 +222,9 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
             <p className="text-muted-foreground text-sm">
               No hay ninguna fecha seleccionada.
             </p>
-          ) : selectedDay?.published ? (
+          ) : selectedDay.published && !isEditingPublished ? (
             <PublishedDayView schedules={selectedDay.schedules} />
-          ) : selectedDay?.publishable ? (
+          ) : selectedDay.publishable || isEditingPublished ? (
             <MenuSelectionList
               menus={menus}
               selection={currentSelection}

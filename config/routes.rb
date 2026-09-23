@@ -37,7 +37,9 @@ Rails.application.routes.draw do
   end
 
   resources :orders, only: [ :index, :show ]
-  resources :schedules, only: [ :index, :create ]
+  resources :schedules, only: [ :index, :create ] do
+    patch :update_by_date, on: :collection
+  end
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
