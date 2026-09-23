@@ -204,7 +204,11 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
                 (selectedDay.publishable && !selectedDay.published) ||
                 (selectedDay.published && isEditingPublished)
               }
-              canEdit={selectedDay.published && selectedDay.editable && !isEditingPublished}
+              canEdit={
+                selectedDay.published &&
+                selectedDay.editable &&
+                !isEditingPublished
+              }
               onEdit={() => handleStartEditing(selectedDay.schedules)}
               selectedCount={Object.keys(currentSelection).length}
               processing={processing}

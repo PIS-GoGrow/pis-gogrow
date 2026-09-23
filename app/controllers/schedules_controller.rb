@@ -59,7 +59,7 @@ class SchedulesController < Provider::InertiaController
             date <= maximum_publish_date &&
             !published
           ),
-          editable: published && date >= Date.current, 
+          editable: published && date >= Date.current,
           schedules: day_schedules.map do |schedule|
             ScheduleSerializer.new(schedule).to_inertia
           end
