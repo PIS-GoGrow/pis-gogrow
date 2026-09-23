@@ -166,7 +166,16 @@ RSpec.describe "Orders", type: :request do
       follow_redirect!
       expect(inertia).to render_component("consumer/dashboard/index")
       expect(inertia).to have_flash(notice: I18n.t("flash.cart_confirmed"))
-      expect(inertia).to have_props(benefit: { limit: 5, used: 2, percentage: 50 })
+      expect(inertia).to have_props(
+        benefit: {
+          limit: 5,
+          used: 2,
+          percentage: 50,
+          monthly_limit: 20,
+          monthly_used: 2,
+          monthly_remaining: 18
+        }
+      )
       expect(inertia).to have_props(order_confirmation: {
         total: 300.0,
         orders: [

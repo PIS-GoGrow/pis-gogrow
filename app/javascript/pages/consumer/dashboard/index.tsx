@@ -15,12 +15,41 @@ import { WeeklyMenu } from "./weekly-menu"
 type View = "menu" | "detail" | "cart" | "confirmation" | "error"
 type Confirmation = NonNullable<ConsumerDashboardIndex["order_confirmation"]>
 
-const totalFor = (items: CartItem[], percentage: number) => {
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.menu.price * item.quantity,
-    0,
-  )
-  return subtotal - (subtotal * percentage) / 100
+const pricingFor = (
+  items: CartItem[],
+  percentage: number,
+  monthlyRemaining: number,
+) => {
+  let remaining = percentage > 0 ? Math.max(monthlyRemaining, 0) : 0
+  let subtotal = 0
+  let discount = 0
+  let subsidizedQuantity = 0
+  let fullPriceQuantity = 0
+
+  const lineDiscounts: Record<string, number> = {}
+
+  items.forEach((item) => {
+    const lineSubtotal = item.menu.price * item.quantity
+    const subsidized = Math.min(item.quantity, remaining)
+    const lineDiscount = (item.menu.price * subsidized * percentage) / 100
+
+    subtotal += lineSubtotal
+    discount += lineDiscount
+    subsidizedQuantity += subsidized
+    fullPriceQuantity += item.quantity - subsidized
+    remaining -= subsidized
+
+    lineDiscounts[item.cartId] = lineDiscount
+  })
+
+  return {
+    subtotal,
+    discount,
+    total: subtotal - discount,
+    subsidizedQuantity,
+    fullPriceQuantity,
+    lineDiscounts,
+  }
 }
 
 export default function Index({
@@ -57,14 +86,22 @@ export default function Index({
     [schedules],
   )
   const visibleSchedules = schedules.filter((item) => item.date === date)
-  const subtotal = cart.reduce(
-    (sum, item) => sum + item.menu.price * item.quantity,
-    0,
+  const pricing = pricingFor(
+    cart,
+    benefit.percentage,
+    benefit.monthly_remaining,
   )
-  const discount = (subtotal * benefit.percentage) / 100
-  const total = totalFor(cart, benefit.percentage)
-  const count = cart.reduce((sum, item) => sum + item.quantity, 0)
 
+  const {
+    subtotal,
+    discount,
+    total,
+    subsidizedQuantity,
+    fullPriceQuantity,
+    lineDiscounts,
+  } = pricing
+
+  const count = cart.reduce((sum, item) => sum + item.quantity, 0)
   function openDetail(item: Schedule) {
     setSelected(item)
     setQuantity(1)
@@ -174,10 +211,16 @@ export default function Index({
             percentage={benefit.percentage}
             back={() => setView("menu")}
             add={addToCart}
+            monthlyRemaining={benefit.monthly_remaining}
           />
         )}
         {activeView === "cart" && (
           <ConsumerCart
+            monthlyLimit={benefit.monthly_limit}
+            monthlyRemaining={benefit.monthly_remaining}
+            subsidizedQuantity={subsidizedQuantity}
+            fullPriceQuantity={fullPriceQuantity}
+            lineDiscounts={lineDiscounts}
             cart={cart}
             addresses={addresses}
             address={address}

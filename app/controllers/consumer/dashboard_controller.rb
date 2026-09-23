@@ -61,15 +61,19 @@ class Consumer::DashboardController < Consumer::InertiaController
   def benefit_data
     benefit = active_benefit
     start_date = Date.current.beginning_of_week(:monday)
-    used = @consumer.orders.joins(:schedule)
-                    .where(schedules: { date: start_date..(start_date + 4.days) })
-                    .where.not(status: [ :cancelled, :rejected ])
-                    .sum(:amount)
+
+    weekly_used = @consumer.orders.joins(:schedule)
+                          .where(schedules: { date: start_date..(start_date + 4.days) })
+                          .where.not(status: [ :cancelled, :rejected ])
+                          .sum(:amount)
 
     {
       limit: 5,
-      used:,
-      percentage: benefit&.percentage.to_i.clamp(0, 100)
+      used: weekly_used,
+      percentage: benefit&.percentage.to_i.clamp(0, 100),
+      monthly_limit: Consumer::SUBSIDIZED_MEALS_LIMIT,
+      monthly_used: @consumer.subsidized_meals_used_this_month,
+      monthly_remaining: @consumer.remaining_subsidized_meals
     }
   end
 
