@@ -178,10 +178,18 @@
         }
       },
       "provider_orders": {
-        "index": {
-          "cancel": "Cancelar",
-          "code": "PED-%{id}",
+        "actions": {
           "confirm": "Confirmar",
+          "reject": "Rechazar",
+          "reject_dialog": {
+            "back": "Volver",
+            "confirm": "Rechazar pedido",
+            "description": "El empleado va a ver el pedido como rechazado y no vas a poder volver atrás.",
+            "title": "¿Rechazar el pedido %{code}?"
+          }
+        },
+        "index": {
+          "code": "PED-%{id}",
           "detail": "Ver detalle",
           "empty_description": "Todavía no recibiste pedidos para hoy.",
           "empty_filtered_description": "No tenés pedidos con este estado para hoy.",

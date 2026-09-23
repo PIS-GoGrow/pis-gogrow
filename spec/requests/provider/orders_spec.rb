@@ -107,4 +107,80 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  describe "PATCH /provider/orders/:id/confirm" do
+    it "redirects to sign in without a session" do
+      patch confirm_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(sign_in_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
+    it "rejects a session with a different active role" do
+      sign_in users(:one), role: :consumer
+
+      patch confirm_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
+    it "confirms a pending order" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch confirm_provider_order_path(order)
+
+      expect(order.reload).to be_confirmed
+      expect(response).to redirect_to(provider_orders_path)
+
+      follow_redirect!
+      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+    end
+
+    it "leaves an order that is no longer pending as it was" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_cancelled_future)
+
+      patch confirm_provider_order_path(order)
+
+      expect(order.reload).to be_cancelled
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_not_pending"))
+    end
+
+    it "responds with not found for an order of another provider" do
+      sign_in users(:provider_user), role: :provider
+
+      patch confirm_provider_order_path(other_provider_order)
+
+      expect(response).to have_http_status(:not_found)
+      expect(other_provider_order.reload).to be_pending
+    end
+  end
+
+  describe "PATCH /provider/orders/:id/reject" do
+    it "rejects a pending order" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch reject_provider_order_path(order)
+
+      expect(order.reload).to be_rejected
+      expect(response).to redirect_to(provider_orders_path)
+
+      follow_redirect!
+      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+    end
+
+    it "responds with not found for an order of another provider" do
+      sign_in users(:provider_user), role: :provider
+
+      patch reject_provider_order_path(other_provider_order)
+
+      expect(response).to have_http_status(:not_found)
+      expect(other_provider_order.reload).to be_pending
+    end
+  end
 end

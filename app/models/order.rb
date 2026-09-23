@@ -109,6 +109,17 @@ class Order < ApplicationRecord
     cancellation_block_reason.nil?
   end
 
+  # La decisión del proveedor solo corre sobre pedidos pendientes: confirmar o
+  # rechazar uno ya resuelto pisaría la cancelación del empleado. El lock es por
+  # el doble envío, igual que en cancel.
+  def decide(status)
+    with_lock do
+      return false unless pending?
+
+      update(status: status)
+    end
+  end
+
   # El lock no es por dinero: evita que un doble envío cancele dos veces y pise
   # el registro de quién y cuándo lo hizo.
   def cancel(by:)

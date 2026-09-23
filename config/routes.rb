@@ -32,7 +32,12 @@ Rails.application.routes.draw do
 
   namespace :provider do
     resources :menus
-    resources :orders, only: [ :index, :show ]
+    resources :orders, only: [ :index, :show ] do
+      member do
+        patch :confirm
+        patch :reject
+      end
+    end
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 

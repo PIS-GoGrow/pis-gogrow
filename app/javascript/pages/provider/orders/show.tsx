@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import HeadingSmall from "@/components/heading-small"
+import ProviderOrderActions from "@/components/orders/provider-order-actions"
 import PageContainer from "@/components/page-container"
 import StatusBadge from "@/components/status-badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -148,6 +149,8 @@ export default function Show({ order }: ProviderOrdersShow) {
             </span>
           </Row>
         </Section>
+
+        <ProviderOrderActions order={order} className="sm:ml-auto sm:w-80" />
       </PageContainer>
     </AppLayout>
   )

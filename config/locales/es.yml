@@ -22,6 +22,8 @@ es:
     cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
     order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
+    order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
+    order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     already_signed_in: "Ya has iniciado sesión"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
@@ -54,6 +56,7 @@ es:
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
+    order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
   user_mailer:
     greeting: "Hola,"
@@ -169,6 +172,14 @@ es:
         office: "Oficina"
         home: "Domicilio"
     provider_orders:
+      actions:
+        confirm: "Confirmar"
+        reject: "Rechazar"
+        reject_dialog:
+          title: "¿Rechazar el pedido %{code}?"
+          description: "El empleado va a ver el pedido como rechazado y no vas a poder volver atrás."
+          back: "Volver"
+          confirm: "Rechazar pedido"
       index:
         title: "Pedidos"
         eyebrow: "Operación diaria"
@@ -185,8 +196,6 @@ es:
         code: "PED-%{id}"
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"
-        cancel: "Cancelar"
-        confirm: "Confirmar"
         detail: "Ver detalle"
       show:
         eyebrow: "Pedido"
