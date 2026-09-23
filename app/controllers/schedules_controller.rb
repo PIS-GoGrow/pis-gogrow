@@ -59,7 +59,8 @@ class SchedulesController < Provider::InertiaController
             date <= maximum_publish_date &&
             !published
           ),
-           schedules: day_schedules.map do |schedule|
+          editable: published && date >= Date.current, 
+          schedules: day_schedules.map do |schedule|
             ScheduleSerializer.new(schedule).to_inertia
           end
       }
@@ -129,6 +130,64 @@ class SchedulesController < Provider::InertiaController
     redirect_to schedules_path(week_start: date.beginning_of_week(:monday).to_s)
   end
 
+  def update_by_date
+    provider = Current.user.provider
+    date = Date.iso8601(params.require(:date))
+    items = params.require(:items)
+
+    if date < Date.current
+      redirect_to schedules_path,
+                  inertia: { errors: { date: [ "No se puede editar un menú de una fecha pasada" ] } }
+      return
+    end
+
+    unless valid_initial_stock?(items)
+      redirect_to schedules_path,
+                  inertia: { errors: { amount: [ "El stock inicial debe ser mayor a 0" ] } }
+      return
+    end
+
+    Schedule.transaction do
+      new_menu_ids = items.map { |item| item.require(:menu_id).to_i }
+
+      existing_schedules = Schedule.joins(:menu)
+                                    .where(menus: { provider_id: provider.id }, date: date)
+
+      removed_schedules = existing_schedules.where.not(menu_id: new_menu_ids).to_a
+
+      # Si el proveedor saca un plato que ya tenía pedidos, esos pedidos se
+      # cancelan automáticamente antes de borrar la publicación del plato.
+      removed_schedules.each do |schedule|
+        schedule.orders.where(status: [ :pending, :confirmed ]).each do |order|
+          order.withdraw!(by: Current.user)
+        end
+      end
+
+      Schedule.where(id: removed_schedules.map(&:id)).destroy_all
+
+      items.each do |item|
+        menu_id = item.require(:menu_id).to_i
+        amount = item.require(:amount)
+
+        schedule = existing_schedules.find_by(menu_id: menu_id)
+
+        if schedule
+          # Si el plato ya estaba publicado, SOLO actualizamos el stock.
+          # Esto preserva el mismo ID del Schedule y evita romper los pedidos existentes.
+          schedule.update!(amount: amount)
+        else
+          menu = provider.menus.find(menu_id)
+          menu.schedules.create!(date: date, amount: amount)
+        end
+      end
+    end
+
+    redirect_to schedules_path(week_start: date.beginning_of_week(:monday).to_s),
+                notice: "Menú actualizado con éxito."
+  end
+
+  private
+
   def valid_initial_stock?(items)
     items.all? do |item|
       amount = Integer(item.require(:amount), exception: false)
@@ -146,8 +205,6 @@ class SchedulesController < Provider::InertiaController
   def maximum_publish_date
     Date.current.next_week(:monday) + 4.days
   end
-
-  private
 
   def requested_week_start
     return Date.current.beginning_of_week(:monday) if params[:week_start].blank?

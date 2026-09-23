@@ -152,6 +152,19 @@ class Order < ApplicationRecord
     end
   end
 
+  # El proveedor retira el plato de una publicación (p. ej. se quedó sin
+  # insumos y no puede ofrecerlo). A diferencia de #cancel, esto no respeta la
+  # ventana de RN-12/13: esas reglas son sobre cuándo puede cancelar el
+  # consumidor, y acá quien decide es el proveedor, por un motivo distinto.
+  # Solo protegemos contra cancelar dos veces un pedido ya cerrado.
+  def withdraw!(by:)
+    with_lock do
+      return false if cancelled? || rejected?
+
+      update!(status_before_cancellation: status, status: :cancelled, cancelled_at: Time.current, cancelled_by: by)
+    end
+  end
+
   private
 
   # Asignarse a la cuenta actual del usuario, o crearla si no existiera
