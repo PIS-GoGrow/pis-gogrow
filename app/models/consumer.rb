@@ -3,6 +3,8 @@
 class Consumer < ApplicationRecord
   include SyncsUserRoles
 
+  SUBSIDIZED_MEALS_LIMIT = 20
+
   belongs_to :company
   belongs_to :user
 
@@ -11,6 +13,7 @@ class Consumer < ApplicationRecord
   has_many :accounts, as: :owner
   has_many :user_notifications, as: :user
   has_many :notification_configurations, through: :user_notifications, source: :notification_configuration
+
   # La modalidad se deriva de la dirección elegida: la de la oficina es entrega en
   # oficina y cualquier otra es domicilio. Un proveedor que no entrega a domicilio
   # fuerza oficina, y el carrito se lo avisa al empleado.
@@ -22,12 +25,28 @@ class Consumer < ApplicationRecord
     end
   end
 
+  def total_debt
+    accounts.pending.sum :amount
+  end
+
   def current_month_spending
     accounts.current.sum :amount
   end
 
-  def total_debt
-    accounts.pending.sum :amount
+  def benefit_available
+    benefits.current.monthly.first&.amount || 0
+  end
+
+  def subsidized_meals_used_this_month
+    orders
+      .joins(:schedule)
+      .where(schedules: { date: Date.current.all_month })
+      .where.not(status: [ :cancelled, :rejected ])
+      .sum(:amount)
+  end
+
+  def remaining_subsidized_meals
+    [ SUBSIDIZED_MEALS_LIMIT - subsidized_meals_used_this_month, 0 ].max
   end
 end
 

@@ -18,17 +18,25 @@ class Consumer::AccountsController < Consumer::InertiaController
     providers = Provider.eager_load(:user).order("LOWER(users.name)")
     history = params[:type] == "history" # Esto hay que cambiarlo en una historia posterior
 
-    current_month_spending = consumer.current_month_spending
     # La suma de la deuda total se calcula en memoria en el controlador, para no hacer
     # una consulta más redundante a la base de datos.
     total_debt = accounts.sum(&:amount)
+
+    current_accounts = consumer.accounts.current.pluck(:id)
+    current_sums = Account.amount_and_price_sum(current_accounts).values
+
+    current_month_ordered = current_sums.reduce(0) { |acc, x| acc + x[:amount] }
+    current_month_debt = current_sums.reduce(0) { |acc, x| acc + x[:price] }
+    benefit_available = consumer.benefit_available
 
     render inertia: {
       accounts: AccountSerializer.new(accounts, params: { orders_sum: sums }).as_json,
       providers: ProviderSerializer.new(providers).as_json,
       history:,
-      current_month_spending:,
-      total_debt:
+      current_month_debt:,
+      current_month_ordered:,
+      total_debt:,
+      benefit_available:
     }
   end
 

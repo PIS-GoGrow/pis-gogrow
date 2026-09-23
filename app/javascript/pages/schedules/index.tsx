@@ -1,17 +1,16 @@
-import { Head, Link, router } from "@inertiajs/react"
-import { Plus } from "lucide-react"
+import { Head, router } from "@inertiajs/react"
 import { useState } from "react"
 
+import CreateMenuDialog from "@/components/menus/create-menu-dialog"
+import PageContainer from "@/components/page-container"
 import MenuSelectionList from "@/components/schedules/menu-selection-list"
 import PublishBar from "@/components/schedules/publish-bar"
 import PublishedDayView from "@/components/schedules/published-date-view"
 import WeekDayTabs from "@/components/schedules/week-day-tabs"
 import { Button } from "@/components/ui/button"
+import { DialogTrigger } from "@/components/ui/dialog"
 import AppLayout from "@/layouts/app-layout"
-import {
-  providerMenus as menusRoutes,
-  schedules as schedulesRoutes,
-} from "@/routes"
+import { schedules as schedulesRoutes } from "@/routes"
 import type { BreadcrumbItem, Menu, Schedule } from "@/types"
 
 interface ScheduleDay {
@@ -142,69 +141,63 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Publicar menú" />
 
-      <div className="mx-auto flex w-full max-w-300 flex-col gap-4 p-5">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-              Publicación de menús
+      <CreateMenuDialog>
+        <PageContainer
+          eyebrow="Publicación de menús"
+          title="Publicar menú del día"
+          actions={
+            <DialogTrigger className="ml-auto" asChild>
+              <Button>Agregar plato</Button>
+            </DialogTrigger>
+          }
+        >
+          <WeekDayTabs
+            days={days}
+            selectedDate={selectedDate}
+            onSelectDate={handleSelectDate}
+            previousWeekStart={week.previous_week_start}
+            nextWeekStart={week.next_week_start}
+          />
+
+          {selectedDay && (
+            <PublishBar
+              dateLabel={formatDateLabel(selectedDay.date)}
+              statusLabel={
+                selectedDay.published
+                  ? "Publicado"
+                  : selectedDay.publishable
+                    ? "Sin publicar"
+                    : "Fuera de rango de publicación"
+              }
+              canPublish={selectedDay.publishable && !selectedDay.published}
+              selectedCount={Object.keys(currentSelection).length}
+              processing={processing}
+              onPublish={handlePublish}
+            />
+          )}
+
+          {error && <p className="text-destructive text-sm">{error}</p>}
+
+          {!selectedDay ? (
+            <p className="text-muted-foreground text-sm">
+              No hay ninguna fecha seleccionada.
             </p>
-            <h1 className="text-2xl font-bold">Publicar menú del día</h1>
-          </div>
-
-          <Button asChild>
-            <Link href={menusRoutes.new().url}>
-              <Plus className="size-4" />
-              Nuevo plato
-            </Link>
-          </Button>
-        </div>
-
-        <WeekDayTabs
-          days={days}
-          selectedDate={selectedDate}
-          onSelectDate={handleSelectDate}
-          previousWeekStart={week.previous_week_start}
-          nextWeekStart={week.next_week_start}
-        />
-
-        {selectedDay && (
-          <PublishBar
-            dateLabel={formatDateLabel(selectedDay.date)}
-            statusLabel={
-              selectedDay.published
-                ? "Publicado"
-                : selectedDay.publishable
-                  ? "Sin publicar"
-                  : "Fuera de rango de publicación"
-            }
-            canPublish={selectedDay.publishable && !selectedDay.published}
-            selectedCount={Object.keys(currentSelection).length}
-            processing={processing}
-            onPublish={handlePublish}
-          />
-        )}
-
-        {error && <p className="text-destructive text-sm">{error}</p>}
-
-        {!selectedDay ? (
-          <p className="text-muted-foreground text-sm">
-            No hay ninguna fecha seleccionada.
-          </p>
-        ) : selectedDay?.published ? (
-          <PublishedDayView schedules={selectedDay.schedules} />
-        ) : selectedDay?.publishable ? (
-          <MenuSelectionList
-            menus={menus}
-            selection={currentSelection}
-            onToggle={toggleMenu}
-            onAmountChange={changeAmount}
-          />
-        ) : (
-          <p className="text-muted-foreground text-sm">
-            No se puede publicar en esta fecha.
-          </p>
-        )}
-      </div>
+          ) : selectedDay?.published ? (
+            <PublishedDayView schedules={selectedDay.schedules} />
+          ) : selectedDay?.publishable ? (
+            <MenuSelectionList
+              menus={menus}
+              selection={currentSelection}
+              onToggle={toggleMenu}
+              onAmountChange={changeAmount}
+            />
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              No se puede publicar en esta fecha.
+            </p>
+          )}
+        </PageContainer>
+      </CreateMenuDialog>
     </AppLayout>
   )
 }

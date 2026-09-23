@@ -5,6 +5,7 @@ class Consumer::OrdersController < Consumer::InertiaController
     consumer = Current.user.consumer
     requested_items = order_params.fetch(:items)
     benefit_percentage = active_benefit_for(consumer)&.percentage.to_i
+    remaining_subsidized = benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
     return reject_order(:empty_cart) if requested_items.empty?
     return reject_order(:invalid_address) unless delivery_addresses(consumer).include?(order_params[:address])
     return reject_order(:invalid_quantity) unless requested_items.all? { |item| item[:quantity].to_s.match?(/\A[1-9]\d*\z/) }
@@ -12,11 +13,22 @@ class Consumer::OrdersController < Consumer::InertiaController
     created_orders = []
 
     Order.transaction do
+      consumer.lock!
+
+      remaining_subsidized =
+        benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
       schedule_ids = requested_items.pluck(:schedule_id)
       schedules = Schedule.includes(menu: :provider).where(id: schedule_ids.uniq, date: current_week).order(:id).lock.index_by(&:id)
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
       requested_items.each do |item|
+        quantity = item[:quantity].to_i
+
+        subsidized_quantity = [
+          quantity,
+          remaining_subsidized
+        ].min
+
         schedule = schedules.fetch(item[:schedule_id].to_i)
         delivery = consumer.delivery_for(schedule.menu.provider, order_params[:address])
         if delivery[:address].blank?
@@ -24,12 +36,17 @@ class Consumer::OrdersController < Consumer::InertiaController
           raise ActiveRecord::Rollback
         end
         order = Order.reserve(
-          consumer:, schedule:, quantity: item[:quantity].to_i, notes: item[:notes],
+          consumer:,
+          schedule:,
+          quantity:,
+          notes: item[:notes],
           discount_percentage: benefit_percentage,
+          subsidized_quantity:,
           **delivery
         )
         raise ActiveRecord::RecordInvalid, order unless order.persisted?
 
+        remaining_subsidized -= subsidized_quantity
         created_orders << order
       end
     end
