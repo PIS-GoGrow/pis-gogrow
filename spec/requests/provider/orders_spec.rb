@@ -34,23 +34,35 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    it "lists only today's orders of the signed-in provider" do
+    it "lists today's and future orders of the signed-in provider" do
       other_provider_order
       sign_in users(:provider_user), role: :provider
 
       get provider_orders_path
 
       expect(inertia).to render_component("provider/orders/index")
-      expect(inertia).to have_props { |props|
-        listed = props.deep_symbolize_keys[:orders]
 
-        listed.pluck(:id) == [ orders(:upcoming_pending_today).id ] &&
-          listed.first[:status] == "pending" &&
-          listed.first[:amount] == 1 &&
-          listed.first[:consumer_name] == "Test User" &&
-          listed.first[:menu_name] == "Milanesa con papas fritas" &&
-          listed.first[:address] == "Julio Herrera y Reissig 565"
-      }
+      listed = inertia.props.deep_symbolize_keys[:orders]
+
+      expect(listed.pluck(:id)).to match_array(
+        %i[
+          upcoming_pending_today
+          upcoming_pending_future
+          upcoming_confirmed_future
+          history_cancelled_future
+          history_rejected_future
+          other_consumer_upcoming
+        ].map { |name| orders(name).id }
+      )
+
+      today = listed.find { |o| o[:id] == orders(:upcoming_pending_today).id }
+      expect(today).to include(
+        status: "pending",
+        amount: 1,
+        consumer_name: "Test User",
+        menu_name: "Milanesa con papas fritas",
+        address: "Julio Herrera y Reissig 565"
+      )
     end
   end
 
