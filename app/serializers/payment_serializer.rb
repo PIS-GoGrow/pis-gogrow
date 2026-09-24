@@ -7,8 +7,7 @@ class PaymentSerializer < ApplicationSerializer
   attribute :receipt_url do |payment|
     next unless payment.receipt.attached?
 
-    # Se entrega una URL firmada por Active Storage; el archivo no se duplica en el frontend.
-    Rails.application.routes.url_helpers.rails_blob_path(payment.receipt, disposition: "inline", only_path: true)
+    Rails.application.routes.url_helpers.receipt_payment_path(payment)
   end
 
   typelize :string?

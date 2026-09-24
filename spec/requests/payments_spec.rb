@@ -57,7 +57,11 @@ RSpec.describe "Payments", type: :request do
   it "updates an existing rejected payment with a new receipt" do
     user, account, provider = setup_payment_account
     payment = account.payments.create!(provider:, status: :rejected)
-    payment.receipt.attach(io: StringIO.new("old receipt"), filename: "old.png", content_type: "image/png")
+    payment.receipt.attach(
+      io: StringIO.new("old receipt"),
+      filename: "old.png",
+      content_type: "image/png"
+    )
     original_blob_id = payment.receipt.blob_id
     sign_in(user, role: :consumer)
 
@@ -78,11 +82,30 @@ RSpec.describe "Payments", type: :request do
 
   it "does not create a payment for an account owned by another consumer" do
     user, = setup_payment_account
-    other_user = User.create!(email: "other-payment-consumer@gmail.com", name: "Other consumer", password: "password123456")
-    other_consumer = Consumer.create!(user: other_user, company: Company.first, address: "Colonia 1234")
-    other_provider_user = User.create!(email: "other-payment-provider@gmail.com", name: "Other provider", password: "password123456")
+
+    other_user = User.create!(
+      email: "other-payment-consumer@gmail.com",
+      name: "Other consumer",
+      password: "password123456"
+    )
+    other_consumer = Consumer.create!(
+      user: other_user,
+      company: Company.first,
+      address: "Colonia 1234"
+    )
+    other_provider_user = User.create!(
+      email: "other-payment-provider@gmail.com",
+      name: "Other provider",
+      password: "password123456"
+    )
     other_provider = Provider.create!(user: other_provider_user)
-    other_account = Account.create!(owner: other_consumer, provider: other_provider, month: Date.current, amount: 250)
+    other_account = Account.create!(
+      owner: other_consumer,
+      provider: other_provider,
+      month: Date.current,
+      amount: 250
+    )
+
     sign_in(user, role: :consumer)
 
     expect {
@@ -97,8 +120,13 @@ RSpec.describe "Payments", type: :request do
   it "does not replace the receipt of an approved payment" do
     user, account, provider = setup_payment_account
     payment = account.payments.create!(provider:, status: :approved)
-    payment.receipt.attach(io: StringIO.new("approved receipt"), filename: "approved.png", content_type: "image/png")
+    payment.receipt.attach(
+      io: StringIO.new("approved receipt"),
+      filename: "approved.png",
+      content_type: "image/png"
+    )
     original_blob_id = payment.receipt.blob_id
+
     sign_in(user, role: :consumer)
 
     patch payment_path(payment), params: {
@@ -108,5 +136,67 @@ RSpec.describe "Payments", type: :request do
     expect(response).to redirect_to(accounts_path)
     expect(payment.reload).to be_approved
     expect(payment.receipt.blob_id).to eq(original_blob_id)
+  end
+
+  it "allows the owner to access the receipt" do
+    user, account, provider = setup_payment_account
+
+    payment = account.payments.create!(provider:, status: :pending)
+    payment.receipt.attach(
+      io: StringIO.new("owner receipt"),
+      filename: "owner.png",
+      content_type: "image/png"
+    )
+
+    sign_in(user, role: :consumer)
+
+    get receipt_payment_path(payment)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to eq("owner receipt")
+  end
+
+  it "does not allow unauthenticated access to the receipt" do
+    _user, account, provider = setup_payment_account
+
+    payment = account.payments.create!(provider:, status: :pending)
+    payment.receipt.attach(
+      io: StringIO.new("private receipt"),
+      filename: "private.png",
+      content_type: "image/png"
+    )
+
+    get receipt_payment_path(payment)
+
+    expect(response).to redirect_to(sign_in_path)
+  end
+
+  it "does not allow another consumer to access the receipt" do
+    _user, account, provider = setup_payment_account
+
+    payment = account.payments.create!(provider:, status: :pending)
+    payment.receipt.attach(
+      io: StringIO.new("private receipt"),
+      filename: "private.png",
+      content_type: "image/png"
+    )
+
+    other_user = User.create!(
+      email: "other-receipt-consumer@gmail.com",
+      name: "Other consumer",
+      password: "password123456"
+    )
+
+    Consumer.create!(
+      user: other_user,
+      company: Company.first,
+      address: "Colonia 1234"
+    )
+
+    sign_in(other_user, role: :consumer)
+
+    get receipt_payment_path(payment)
+
+    expect(response).to have_http_status(:not_found)
   end
 end

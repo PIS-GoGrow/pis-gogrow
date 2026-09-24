@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Consumer::PaymentsController < Consumer::InertiaController
-  before_action :set_payment, only: :update
+  before_action :set_payment, only: [ :update, :receipt ]
 
   def create
     # La cuenta se busca dentro de las cuentas del consumidor autenticado. Esto
@@ -29,6 +29,17 @@ class Consumer::PaymentsController < Consumer::InertiaController
     @payment.status = :submitted
 
     persist_payment
+  end
+
+  def receipt
+    return head :not_found unless @payment.receipt.attached?
+
+    send_data(
+      @payment.receipt.download,
+      filename: @payment.receipt.filename.to_s,
+      type: @payment.receipt.content_type,
+      disposition: "inline"
+    )
   end
 
   private
