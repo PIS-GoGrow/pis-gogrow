@@ -2,6 +2,7 @@ import { Link } from "@inertiajs/react"
 import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { MobileCard, BottomAction } from "@/components/consumer/mobile-card"
 
 interface Props {
   retry: () => void

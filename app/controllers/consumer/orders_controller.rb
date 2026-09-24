@@ -48,7 +48,7 @@ class Consumer::OrdersController < Consumer::InertiaController
         # entregue en la oficina. En el carrito ya se le avisó al consumidor que la entrega
         # se iba a hacer en la oficina.
         delivery = consumer.delivery_for(schedule.menu.provider, order_params[:address])
-        
+
         # Si en este punto la dirección es blank, es porque no hay una dirección para la
         # empresa.
         if delivery[:address].blank?
@@ -73,7 +73,7 @@ class Consumer::OrdersController < Consumer::InertiaController
       end
     end
 
-    redirect_to dashboard_path(confirmed_order_ids: created_orders.map(&:id)), notice: t("flash.cart_confirmed"), status: :see_other unless performed?
+    redirect_to dashboard_confirmation_path(confirmed_order_ids: created_orders.map(&:id)), notice: t("flash.cart_confirmed"), status: :see_other unless performed?
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound, KeyError
     reject_order(:cart_unavailable)
   end

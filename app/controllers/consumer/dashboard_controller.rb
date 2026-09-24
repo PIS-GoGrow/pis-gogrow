@@ -7,7 +7,13 @@ class Consumer::DashboardController < Consumer::InertiaController
     @schedules = schedule_data
     @benefit = benefit_data
     @addresses = address_data
-    @order_confirmation = order_confirmation_data
+  end
+
+  def confirmation
+    @consumer = Current.user.consumer
+    order_confirmation = order_confirmation_data
+    @total = order_confirmation[:total]
+    @orders = order_confirmation[:orders]
   end
 
   private
@@ -82,10 +88,8 @@ class Consumer::DashboardController < Consumer::InertiaController
     order_ids = Array(params[:confirmed_order_ids]).filter_map { |id| Integer(id, exception: false) }.uniq
     return if order_ids.empty?
 
-    orders_by_id = @consumer.orders.includes(schedule: { menu: { provider: :user } }).where(id: order_ids).index_by(&:id)
-    return unless orders_by_id.size == order_ids.size
-
-    orders = order_ids.map { |id| orders_by_id.fetch(id) }
+    orders = @consumer.orders.includes(schedule: { menu: { provider: :user } }).where(id: order_ids)
+    return unless orders.size == order_ids.size
 
     {
       total: orders.sum(&:discounted_price).to_f,

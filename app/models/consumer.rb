@@ -28,19 +28,21 @@ class Consumer < ApplicationRecord
     current_benefit&.amount || 0
   end
 
+  # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes
   def subsidized_meals_used_this_month
     orders
       .joins(:schedule)
       .where(schedules: { date: Date.current.all_month })
-      .where(status: [ :confirmed ])
+      .where(status: [ :rejected, :cancelled ])
       .sum(:amount)
   end
 
+  # Devuelve la cantidad de viandas compradas en órdenes confirmadas esta semana
   def subsidized_meals_used_this_week
     orders
       .joins(:schedule)
       .where(schedules: { date: Date.current.all_week })
-      .where(status: :confirmed)
+      .where.not(status: [ :rejected, :cancelled ])
       .sum(:amount)
   end
 

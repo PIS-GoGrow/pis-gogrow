@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import type { Schedule } from "./consumer-types"
 import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
+import { MobileCard, BottomAction } from "@/components/consumer/mobile-card"
 
 interface Props {
   item: Schedule
@@ -54,7 +55,7 @@ export function DishDetail({
   const addDisabled = item.sold_out || choicesMissing
 
   return (
-    <div className="bg-background border-border mx-auto min-h-screen max-w-3xl px-6 pt-6 pb-28 md:my-8 md:min-h-0 md:rounded-2xl md:border md:p-8">
+    <MobileCard>
       <Button
         type="button"
         variant="ghost"
@@ -151,7 +152,7 @@ export function DishDetail({
         total={total}
         percentage={percentage}
       />
-      <div className="bg-background border-border fixed inset-x-0 bottom-0 flex gap-2 border-t p-6 md:static md:mt-5 md:border-0 md:p-0">
+      <BottomAction className="flex">
         <QuantityInput
           value={quantity}
           max={item.remaining}
@@ -164,8 +165,8 @@ export function DishDetail({
         >
           Agregar
         </Button>
-      </div>
-    </div>
+      </BottomAction>
+    </MobileCard>
   )
 }
 

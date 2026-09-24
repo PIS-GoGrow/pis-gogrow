@@ -7,6 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 import type { ConsumerDashboardIndex } from "@/types"
+import { MobileCard, BottomAction } from "@/components/consumer/mobile-card"
 
 import type { CartItem } from "./consumer-types"
 import { money } from "./formatters"
@@ -67,7 +68,7 @@ export function ConsumerCart({
     officeOnlyProviders.length > 0 && !!address && address !== office?.address
 
   return (
-    <div className="bg-background border-border mx-auto min-h-screen max-w-3xl px-6 pt-6 pb-8 md:my-8 md:min-h-0 md:rounded-2xl md:border md:p-8">
+    <MobileCard>
       <Button
         type="button"
         variant="ghost"
@@ -174,7 +175,7 @@ export function ConsumerCart({
         </Alert>
       )}
 
-      <section className="border-border mt-6 border-b pb-4 text-xs">
+      <section className="border-border mt-6 md:border-b pb-4 text-xs">
         {cart.map((item) => {
           const line = item.menu.price * item.quantity
           return (
@@ -225,6 +226,7 @@ export function ConsumerCart({
           </p>
         )}
       </section>
+      <BottomAction>
       <OrderSummary
         subtotal={subtotal}
         discount={discount}
@@ -249,6 +251,7 @@ export function ConsumerCart({
           "Confirmar pedido"
         )}
       </Button>
+    </BottomAction>
       {error && (
         <Alert variant="destructive" className="mt-3">
           <AlertDescription>
@@ -256,6 +259,6 @@ export function ConsumerCart({
           </AlertDescription>
         </Alert>
       )}
-    </div>
+    </MobileCard>
   )
 }
