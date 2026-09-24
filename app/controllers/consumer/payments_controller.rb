@@ -6,7 +6,7 @@ class Consumer::PaymentsController < Consumer::InertiaController
   def create
     # La cuenta se busca dentro de las cuentas del consumidor autenticado. Esto
     # evita que un account_id enviado desde el navegador cree pagos para otro empleado.
-    account = consumer_accounts.find(payment_params[:account_id])
+    account = consumer_accounts.find(payment_account_id)
     @payment = account.payments.build(
       provider: account.provider,
       receipt: payment_params[:receipt],
@@ -47,7 +47,11 @@ class Consumer::PaymentsController < Consumer::InertiaController
   end
 
   def payment_params
-    params.fetch(:payment, {}).permit(:account_id, :receipt)
+    params.require(:payment).permit(:receipt)
+  end
+
+  def payment_account_id
+    params.require(:payment).fetch(:account_id)
   end
 
   def persist_payment

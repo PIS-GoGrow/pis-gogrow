@@ -12,10 +12,10 @@ RSpec.describe "Orders", type: :request do
       expect(response).to redirect_to(sign_in_path)
     end
 
-    it "redirects users without a consumer profile" do
+    it "redirects users with a different active role to the home page" do
       sign_in users(:provider_user)
       get orders_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(root_path)
     end
 
     context "when signed in as an employee" do
