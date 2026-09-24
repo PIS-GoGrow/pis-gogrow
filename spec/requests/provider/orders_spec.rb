@@ -34,6 +34,16 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    it "redirects an admin to the home page" do
+      user = User.create!(name: "Admin User", email: "admin-provider-orders@gogrow.com", password: "password123456")
+      Admin.create!(user:, company: companies(:gogrow))
+      sign_in user, role: :admin
+
+      get provider_orders_path
+
+      expect(response).to redirect_to(root_path)
+    end
+
     it "lists today's and future orders of the signed-in provider" do
       other_provider_order
       sign_in users(:provider_user), role: :provider
@@ -182,6 +192,17 @@ RSpec.describe "Provider::Orders", type: :request do
       get provider_order_path(other_provider_order)
 
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "shows order details for a cancelled order" do
+      sign_in users(:provider_user), role: :provider
+
+      get provider_order_path(orders(:history_cancelled_future))
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to have_props { |props|
+        props.deep_symbolize_keys.dig(:order, :status) == "cancelled"
+      }
     end
   end
 end
