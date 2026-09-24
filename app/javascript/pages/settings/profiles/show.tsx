@@ -7,12 +7,13 @@ import HeadingSmall from "@/components/heading-small"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import AppLayout from "@/layouts/app-layout"
 import SettingsLayout from "@/layouts/settings/layout"
 import { settingsProfiles } from "@/routes"
-import type { BreadcrumbItem } from "@/types"
+import type { BreadcrumbItem, SettingsProfilesShow } from "@/types"
 
-export default function Profile() {
+export default function Profile({ provider }: SettingsProfilesShow) {
   const { t } = useTranslation()
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -60,6 +61,25 @@ export default function Profile() {
                     errors={errors.name?.map((message) => ({ message }))}
                   />
                 </Field>
+
+                {provider && (
+                  <div className="space-y-4">
+                    <HeadingSmall
+                      title={t("pages.settings.profile.home_delivery.heading")}
+                    />
+
+                    <Field orientation="horizontal">
+                      <FieldLabel htmlFor="home_delivery">
+                        {t("pages.settings.profile.home_delivery.label")}
+                      </FieldLabel>
+                      <Switch
+                        id="home_delivery"
+                        name="home_delivery"
+                        defaultChecked={provider.home_delivery}
+                      />
+                    </Field>
+                  </div>
+                )}
 
                 <div className="flex items-center gap-4">
                   <Button disabled={processing}>{t("common.save")}</Button>

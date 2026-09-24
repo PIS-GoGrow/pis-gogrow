@@ -291,6 +291,10 @@
         "profile": {
           "description": "Actualiza tu nombre",
           "heading": "Información del perfil",
+          "home_delivery": {
+            "heading": "Editar información de pedidos",
+            "label": "También realizo entregas a domicilio"
+          },
           "title": "Configuración del perfil"
         },
         "sessions": {

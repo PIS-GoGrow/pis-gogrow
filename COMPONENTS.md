@@ -96,6 +96,7 @@ Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla
 | `Textarea` | `@/components/ui/textarea` | Texto multilínea |
 | `Label` | `@/components/ui/label` | Etiqueta suelta fuera de un `Field` |
 | `Checkbox` | `@/components/ui/checkbox` | Selección múltiple o casilla sí/no |
+| `Switch` | `@/components/ui/switch` | Activar o desactivar una opción |
 | `RadioGroup`, `RadioGroupItem` | `@/components/ui/radio-group` | Selección única con título y descripción |
 | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `SelectGroup`, `SelectLabel`, `SelectSeparator` | `@/components/ui/select` | Elegir una opción de una lista |
 | `ToggleGroup`, `ToggleGroupItem`, `Toggle` | `@/components/ui/toggle-group`, `@/components/ui/toggle` | Filtros, días, control segmentado |
@@ -121,7 +122,6 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 
 | Componente | Comando | Usar para | API de shadcn (Radix) |
 |---|---|---|---|
-| `Switch` | `add switch` | Activar o desactivar una opción | `checked`, `onCheckedChange`, `name` |
 
 ### Componentes propios (`components/`)
 
