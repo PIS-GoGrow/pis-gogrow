@@ -1,5 +1,6 @@
 import { ChevronLeft, Star } from "lucide-react"
 
+import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -8,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea"
 import type { Schedule } from "./consumer-types"
 import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
-import { MobileCard, BottomAction } from "@/components/consumer/mobile-card"
 
 interface Props {
   item: Schedule

@@ -4,7 +4,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   def create
     consumer = Current.user.consumer
     requested_items = order_params.fetch(:items)
-    
+
     # Rechazamos si no hay carrito o si las cantidades no son numéricas.
     return reject_order(:empty_cart) if requested_items.empty?
     return reject_order(:invalid_quantity) unless requested_items.all? { |item| item[:quantity].to_s.match?(/\A[1-9]\d*\z/) }
@@ -13,7 +13,7 @@ class Consumer::OrdersController < Consumer::InertiaController
 
     Order.transaction do
       consumer.lock!
-    
+
       benefit_percentage = consumer.current_benefit&.percentage.to_i
       remaining_subsidized = benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
       order_params[:address] = consumer.company.address
@@ -24,12 +24,12 @@ class Consumer::OrdersController < Consumer::InertiaController
         reject_order(:invalid_address)
         raise ActiveRecord::Rollback
       end
-      
+
       # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos todos
       # los schedules correspondientes.
       schedule_ids = requested_items.pluck(:schedule_id).uniq
       schedules = Schedule.includes(menu: :provider).where(id: schedule_ids, date: allowed_dates).order(:id).lock.index_by(&:id)
-      
+
       # Tiramos error si alguno de los schedules no existen o si están fuera del rango de fechas permitidas
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.size
 

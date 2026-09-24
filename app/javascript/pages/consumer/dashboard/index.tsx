@@ -12,7 +12,6 @@ import { OrderError } from "./order-error"
 import { WeeklyMenu } from "./weekly-menu"
 
 type View = "menu" | "detail" | "cart" | "confirmation" | "error"
-type Confirmation = NonNullable<ConsumerDashboardIndex["order_confirmation"]>
 
 const pricingFor = (
   items: CartItem[],
@@ -56,7 +55,6 @@ export default function Index({
   schedules,
   benefit,
   addresses,
-  order_confirmation,
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")

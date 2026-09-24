@@ -17,6 +17,7 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   private
+
   # TODO: Eventualmente habría que mover todos los métodos siguientes que están acá
   # a serializers aparte. Esto permetiría reutilizarlos y hacer todo un poco más legible
   # (es difícil ver qué información tiene schedule_data)

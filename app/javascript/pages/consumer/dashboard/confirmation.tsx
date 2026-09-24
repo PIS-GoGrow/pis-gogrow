@@ -2,22 +2,14 @@ import { Link } from "@inertiajs/react"
 import { Check, X } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
-import AppLayout from "@/layouts/app-layout"
 
+import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Button } from "@/components/ui/button"
-import { MobileCard, BottomAction } from "@/components/consumer/mobile-card"
+import AppLayout from "@/layouts/app-layout"
+import { consumerDashboard, orders as ordersRoutes } from "@/routes"
 import type { ConsumerDashboardConfirmation } from "@/types"
 
 import { money } from "./formatters"
-import { consumerDashboard, orders as ordersRoutes } from "@/routes"
-
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 
 type Confirmation = ConsumerDashboardConfirmation
 
@@ -49,14 +41,13 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
     )
   }, [orders])
 
-  const deliveryDates = [
-    ...new Set(orders.map((item) => item.date)),
-  ].map((date) =>
-    new Date(`${date}T12:00:00`).toLocaleDateString("es-UY", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    }),
+  const deliveryDates = [...new Set(orders.map((item) => item.date))].map(
+    (date) =>
+      new Date(`${date}T12:00:00`).toLocaleDateString("es-UY", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }),
   )
 
   const primaryDelivery = deliveries[0]
@@ -77,7 +68,12 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
           size="icon"
           className="ml-auto"
         >
-          <Link href={consumerDashboard.index()} preserveState={false} aria-label="Cerrar" prefetch>
+          <Link
+            href={consumerDashboard.index()}
+            preserveState={false}
+            aria-label="Cerrar"
+            prefetch
+          >
             <X aria-hidden="true" className="size-5" />
           </Link>
         </Button>
@@ -86,7 +82,9 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
           <Check aria-hidden="true" className="size-10" strokeWidth={2.5} />
         </div>
 
-        <h1 className="mt-3 text-center text-2xl font-bold">¡Pedido recibido!</h1>
+        <h1 className="mt-3 text-center text-2xl font-bold">
+          ¡Pedido recibido!
+        </h1>
         <p className="text-muted-foreground text-center text-base leading-6">
           Te notificaremos cuando el proveedor confirme tu pedido.
         </p>
