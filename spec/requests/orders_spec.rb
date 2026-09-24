@@ -217,6 +217,39 @@ RSpec.describe "Orders", type: :request do
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
     end
 
+    # IBP-003, criterio 3: "los platos agotados o no disponibles ... no pueden
+    # pedirse". Que la pantalla deshabilite el botón no es la regla: la guarda
+    # real es Order.reserve, y es la que se prueba acá con el pedido directo.
+    it "rejects a dish whose whole quota is already ordered" do
+      consumer, = setup_consumer
+      schedule = create_schedule(amount: 1)
+      Order.create!(consumer:, schedule:, amount: 1, price: schedule.menu.price, address: consumer.address, delivery_method: :home)
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      end.not_to change(Order, :count)
+
+      expect(schedule.reload.remaining_amount).to eq(0)
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
+    end
+
+    # Borde del cupo: N entra, N+1 no.
+    it "accepts exactly the remaining quota and rejects one unit more" do
+      consumer, = setup_consumer
+      schedule = create_schedule(amount: 2)
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 3 } ] } }
+      end.not_to change(Order, :count)
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 2 } ] } }
+      end.to change(Order, :count).by(1)
+
+      expect(schedule.reload.remaining_amount).to eq(0)
+    end
+
     it "rejects an empty cart" do
       consumer, = setup_consumer
 
