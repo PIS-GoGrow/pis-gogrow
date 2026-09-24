@@ -199,6 +199,26 @@ RSpec.describe "Consumer dashboard", type: :request do
       expect(inertia.props[:schedules].first).to include(sold_out: false, remaining: 1)
     end
 
+    it "does not count rejected orders against the quota" do
+      schedule = publish(menus(:milanesa), monday, amount: 1)
+      order_for(schedule, 1).update!(status: :rejected)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(inertia.props[:schedules].first).to include(sold_out: false, remaining: 1)
+    end
+
+    it "filters out home address when the consumer does not have one registered" do
+      consumers(:one).update!(address: nil)
+      publish(menus(:milanesa), monday)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(inertia.props[:addresses].pluck(:id)).to eq([ "office" ])
+    end
+
     # Criterio 4: estado vacío. Del lado del server, la lista vacía sin error.
     it "responds with no dishes when nothing is published for the week" do
       publish(menus(:milanesa), monday - 1)
