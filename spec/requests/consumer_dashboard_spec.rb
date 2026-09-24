@@ -235,6 +235,126 @@ RSpec.describe "Consumer dashboard", type: :request do
     end
   end
 
+  # Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
+  # plato, para tomar una decisión informada."
+  #
+  # Acá se verifica que el server entregue cada dato, y que lo ausente viaje
+  # como ausente. Cómo se pinta eso en pantalla —y qué se muestra cuando falta—
+  # se cubre en app/javascript/pages/consumer/dashboard/dish-detail.test.tsx.
+  describe "GET /dashboard — información de cada plato" do
+    fixtures :users, :consumers, :companies, :providers, :menus, :reviews
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
+    end
+
+    let(:monday) { Date.current.beginning_of_week(:monday) }
+
+    before do
+      Order.delete_all
+      Schedule.delete_all
+    end
+
+    def publish(menu, date, amount: 5)
+      Schedule.create!(menu:, date:, amount:)
+    end
+
+    # Criterio 1: los cinco datos que la historia enumera, en una sola respuesta.
+    it "exposes the name, provider, price, description and availability of a dish" do
+      publish(menus(:sorrentinos), monday, amount: 4)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      dish = inertia.props[:schedules].first
+      expect(dish).to include(sold_out: false, remaining: 4)
+      expect(dish[:menu]).to include(
+        name: "Sorrentinos artesanales",
+        provider_name: users(:other_provider_user).name,
+        price: 320.0,
+        description: "Pasta rellena a elección"
+      )
+    end
+
+    # Criterio 1: las reseñas son parte de la información del plato, y hasta
+    # ahora ningún spec las tocaba — no existían ni fixtures.
+    it "exposes the four most recent reviews of a dish, newest first" do
+      publish(menus(:sorrentinos), monday)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      reviews = inertia.props[:schedules].first.dig(:menu, :reviews)
+      expect(reviews.pluck(:description)).to eq([
+        "Mi plato fijo de los miércoles",
+        "La salsa filetto es la mejor",
+        "Llegaron calientes",
+        "Porción generosa"
+      ])
+      expect(reviews.first).to include(rating: 5, created_at: "2026-09-20")
+      expect(reviews.pluck(:description)).not_to include("Estaban bien, nada del otro mundo")
+    end
+
+    # Criterio 3: sin reseñas, la lista viaja vacía. Que la pantalla invente una
+    # a partir de esto es un defecto aparte, no algo que el server insinúe.
+    it "exposes an empty review list for a dish nobody reviewed" do
+      publish(menus(:milanesa), monday)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(inertia.props[:schedules].first.dig(:menu, :reviews)).to eq([])
+    end
+
+    # Criterio 3: un dato opcional ausente viaja como ausente, no como texto
+    # inventado ni como cadena vacía que la pantalla pueda confundir con un dato.
+    it "sends optional data that was never filled in as null" do
+      menus(:milanesa).update!(description: nil)
+      publish(menus(:milanesa), monday)
+      publish(menus(:office_menu), monday)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      by_name = inertia.props[:schedules].map { |s| s[:menu] }.index_by { |m| m[:name] }
+      expect(by_name.fetch("Milanesa con papas fritas")[:description]).to be_nil
+
+      review = by_name.fetch("Ensalada de quinoa")[:reviews].first
+      expect(review).to include(description: nil, rating: nil)
+    end
+
+    it "sends the toppings of a dish that has none as an empty list" do
+      publish(menus(:milanesa), monday)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(inertia.props[:schedules].first[:menu]).to include(fillings: [], sauces: [])
+    end
+
+    # Criterio 2: el cupo subsidiado se cuenta por mes de entrega. Lo que se fija
+    # acá es esa regla; que el mismo número se aplique a los días de la semana
+    # que ya caen en el mes siguiente es un defecto, y está anotado como
+    # TODO(integración) en el system spec de la historia.
+    it "counts the monthly quota by delivery date inside the current month" do
+      this_month = publish(menus(:milanesa), monday, amount: 30)
+      next_month = publish(menus(:sorrentinos), Date.new(2026, 10, 1), amount: 30)
+      Benefit.create!(consumer: consumers(:one), amount: 20, percentage: 50, due_date: 1.month.from_now)
+      [ [ this_month, 3 ], [ next_month, 7 ] ].each do |schedule, quantity|
+        Order.create!(
+          consumer: consumers(:one), schedule:, amount: quantity,
+          price: schedule.menu.price * quantity,
+          address: consumers(:one).company.address, delivery_method: :office
+        )
+      end
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(inertia.props[:benefit]).to include(monthly_used: 3, monthly_remaining: 17)
+    end
+  end
+
   it "rejects a session with a different role" do
     provider_user = User.create!(email: "provider-role@gmail.com", name: "Provider", password: "password123456")
     Provider.create!(user: provider_user)
