@@ -69,7 +69,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
           '@media (max-width: 767px) { [data-slot="sidebar-inset"] > header { display: none; } }'
         }
       </style>
-      <MobileCard>
+      <MobileCard className="grid">
         <Button
           asChild
           type="button"

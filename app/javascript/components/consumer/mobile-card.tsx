@@ -19,9 +19,16 @@ export function BottomAction({
   )
 }
 
-export function MobileCard({ children, ...props } : ComponentProps<"div">) {
+export function MobileCard({
+  children,
+  className,
+  ...props
+}: ComponentProps<"div">) {
 	return (
-		<div className="min-h-screen max-w-128 p-6 gap-2 pb-28 bg-background rounded-xl border-border mx-auto md:min-h-0 md:my-8 md:border md:pb-6" {...props}>
+		<div className={cn(
+			"min-h-screen max-w-128 p-6 gap-2 pb-28 bg-background rounded-xl border-border mx-auto md:min-h-0 md:my-8 md:border md:pb-6",
+			className
+		)} {...props}>
 			{children}
 		</div>
 	)
