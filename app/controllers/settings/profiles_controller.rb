@@ -28,7 +28,7 @@ class Settings::ProfilesController < InertiaController
   end
 
   def update_provider
-    return true unless @provider
+    return true unless @provider && params.key?(:home_delivery)
 
     @provider.update(home_delivery: params[:home_delivery])
   end

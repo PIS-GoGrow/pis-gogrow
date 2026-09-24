@@ -37,6 +37,16 @@ RSpec.describe "Settings::Profiles", type: :request do
       expect(other_provider.reload.home_delivery).to be(true)
     end
 
+    it "keeps home delivery unchanged when updating the provider's name" do
+      provider = providers(:tuviandita)
+      sign_in provider.user, role: :provider
+
+      patch settings_profile_path, params: { name: "Nuevo nombre" }
+
+      expect(response).to redirect_to(settings_profile_path)
+      expect(provider.reload.home_delivery).to be(true)
+    end
+
     it "ignores home delivery updates outside a provider session" do
       provider = providers(:tuviandita)
       sign_in users(:one), role: :consumer
