@@ -123,6 +123,60 @@ RSpec.describe Schedule, type: :model do
 
     expect(another_day).to be_valid
   end
+
+  describe "#order_deadline_passed?" do
+    let(:today) { Date.new(2026, 9, 14) }
+    let(:schedule) { described_class.create!(date: today, amount: 10, menu: menu) }
+
+    def at(hour, min, sec = 0, &)
+      travel_to(Time.zone.local(today.year, today.month, today.day, hour, min, sec), &)
+    end
+
+    before { provider.update!(order_deadline: "12:00") }
+
+    it "is false one second before the deadline" do
+      at(11, 59, 59) do
+        expect(schedule.order_deadline_passed?).to be false
+        expect(schedule).to be_available
+      end
+    end
+
+    it "is true exactly at the deadline" do
+      at(12, 0) do
+        expect(schedule.order_deadline_passed?).to be true
+        expect(schedule).not_to be_available
+      end
+    end
+
+    it "is true after the deadline" do
+      at(18, 0) { expect(schedule.order_deadline_passed?).to be true }
+    end
+
+    it "does not close a schedule for another day" do
+      tomorrow = described_class.create!(date: today + 1, amount: 10, menu: menu)
+
+      at(18, 0) do
+        expect(tomorrow.order_deadline_passed?).to be false
+        expect(tomorrow).to be_available
+      end
+    end
+
+    it "is false when the provider has no deadline" do
+      provider.update!(order_deadline: nil)
+
+      at(23, 59) { expect(schedule.order_deadline_passed?).to be false }
+    end
+
+    it "follows a deadline changed after the schedule was loaded" do
+      at(11, 0) do
+        expect(schedule.order_deadline_passed?).to be false
+
+        provider.update!(order_deadline: "10:30")
+
+        expect(schedule.reload.order_deadline_passed?).to be true
+      end
+    end
+  end
 end
 
 
