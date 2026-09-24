@@ -3,13 +3,16 @@
 class Schedule < ApplicationRecord
   belongs_to :menu
 
+  MAX_AMOUNT = 2_147_483_647
+
   has_many :orders, dependent: :nullify
 
   validates :date, presence: true
   validates :amount,
             numericality: {
               only_integer: true,
-              greater_than_or_equal_to: 0
+              greater_than_or_equal_to: 0,
+              less_than_or_equal_to: MAX_AMOUNT
             }
 
   validates :menu_id, uniqueness: { scope: :date }
