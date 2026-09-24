@@ -59,5 +59,6 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   match "500", to: "errors#internal_server_error", via: :all, format: false
-  get "*unmatched_path", to: "errors#not_found", format: false
+  get "*unmatched_path", to: "errors#not_found", format: false,
+      constraints: ->(request) { !request.path.start_with?("/rails/active_storage") }
 end
