@@ -451,6 +451,12 @@ RSpec.describe "Schedules", type: :request do
           ]
         }
       end.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
+      )
     end
 
     it "does not publish a menu with negative initial stock" do
@@ -475,6 +481,12 @@ RSpec.describe "Schedules", type: :request do
           ]
         }
       end.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
+      )
     end
 
     it "does not publish a menu with stock greater than the integer limit" do
@@ -501,6 +513,105 @@ RSpec.describe "Schedules", type: :request do
       end.not_to change(Schedule, :count)
 
       expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
+      )
+    end
+
+    it "publishes a menu with stock equal to the maximum allowed" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+
+      menu = provider.menus.create!(
+        name: "Milanesa",
+        description: "Milanesa con puré",
+        price: 350
+      )
+
+      sign_in_with_role(user, role: :provider)
+
+      date = next_publishable_date
+
+      expect do
+        post schedules_path, params: {
+          date: date.to_s,
+          items: [
+            { menu_id: menu.id, amount: Schedule::MAX_AMOUNT }
+          ]
+        }
+      end.to change(Schedule, :count).by(1)
+
+      schedule = Schedule.find_by!(menu: menu, date: date)
+      expect(schedule.amount).to eq(Schedule::MAX_AMOUNT)
+      expect(response).to redirect_to(schedules_path(week_start: date.beginning_of_week(:monday).to_s))
+    end
+
+    it "does not publish any menu when at least one item exceeds the maximum allowed stock" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+
+      first_menu = provider.menus.create!(
+        name: "Milanesa",
+        description: "Milanesa con puré",
+        price: 350
+      )
+
+      second_menu = provider.menus.create!(
+        name: "Ravioles",
+        description: "Ravioles con salsa",
+        price: 400
+      )
+
+      sign_in_with_role(user, role: :provider)
+
+      date = next_publishable_date
+
+      expect do
+        post schedules_path, params: {
+          date: date.to_s,
+          items: [
+            { menu_id: first_menu.id, amount: 20 },
+            { menu_id: second_menu.id, amount: Schedule::MAX_AMOUNT + 1 }
+          ]
+        }
+      end.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
+      )
+    end
+
+    it "does not publish a menu with non-integer stock" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+
+      menu = provider.menus.create!(
+        name: "Milanesa",
+        description: "Milanesa con puré",
+        price: 350
+      )
+
+      sign_in_with_role(user, role: :provider)
+
+      date = next_publishable_date
+
+      expect do
+        post schedules_path, params: {
+          date: date.to_s,
+          items: [
+            { menu_id: menu.id, amount: "10.5" }
+          ]
+        }
+      end.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
+      )
     end
     it "does not publish the same menu twice for the same date" do
       user = users(:one)
