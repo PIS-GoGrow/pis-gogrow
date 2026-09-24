@@ -56,6 +56,42 @@ RSpec.describe Schedule, type: :model do
     expect(schedule).to be_valid
   end
 
+  it "allows an amount equal to the maximum limit" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: described_class::MAX_AMOUNT,
+      menu: menu
+    )
+
+    expect(schedule).to be_valid
+  end
+
+  it "does not allow an amount greater than the maximum limit" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: described_class::MAX_AMOUNT + 1,
+      menu: menu
+    )
+
+    expect(schedule).not_to be_valid
+    expect(schedule.errors[:amount]).to include(
+      I18n.t("errors.messages.less_than_or_equal_to", count: described_class::MAX_AMOUNT)
+    )
+  end
+
+  it "does not allow a non-integer amount" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: 10.5,
+      menu: menu
+    )
+
+    expect(schedule).not_to be_valid
+    expect(schedule.errors[:amount]).to include(
+      I18n.t("errors.messages.not_an_integer")
+    )
+  end
+
   it "does not allow the same menu twice on the same date" do
     described_class.create!(
       date: Date.current,

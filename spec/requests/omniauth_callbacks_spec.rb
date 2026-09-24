@@ -51,6 +51,35 @@ RSpec.describe "OmniauthCallbacks", type: :request do
       expect(cookies[:session_token]).to be_present
     end
 
+    it "signs in a provider user and creates a provider session" do
+      provider_user = User.create!(name: "Panadería Provider", email: "panaderia@gmail.com", password: "password123456")
+      Provider.create!(user: provider_user)
+      provider_user.sync_roles!
+
+      auth = mock_google_auth(email: provider_user.email, name: provider_user.name)
+      OmniAuth.config.mock_auth[:google_oauth2] = auth
+
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to(root_path)
+      expect(provider_user.sessions.last).to be_provider
+    end
+
+    it "signs in an admin (RRHH) user and creates an admin session" do
+      company = Company.first || Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+      admin_user = User.create!(name: "RRHH Admin", email: "rrhh-login@gogrow.com", password: "password123456")
+      Admin.create!(user: admin_user, company:)
+      admin_user.sync_roles!
+
+      auth = mock_google_auth(email: admin_user.email, name: admin_user.name)
+      OmniAuth.config.mock_auth[:google_oauth2] = auth
+
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to(root_path)
+      expect(admin_user.sessions.last).to be_admin
+    end
+
     it "signs in and redirects to edit session when user has multiple roles" do
       user = users(:one)
       user.update!(email: "multirole@gmail.com")

@@ -34,23 +34,110 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    it "lists only today's orders of the signed-in provider" do
+    it "redirects an admin to the home page" do
+      user = User.create!(name: "Admin User", email: "admin-provider-orders@gogrow.com", password: "password123456")
+      Admin.create!(user:, company: companies(:gogrow))
+      sign_in user, role: :admin
+
+      get provider_orders_path
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "lists today's and future orders of the signed-in provider" do
       other_provider_order
       sign_in users(:provider_user), role: :provider
 
       get provider_orders_path
 
       expect(inertia).to render_component("provider/orders/index")
-      expect(inertia).to have_props { |props|
-        listed = props.deep_symbolize_keys[:orders]
 
-        listed.pluck(:id) == [ orders(:upcoming_pending_today).id ] &&
-          listed.first[:status] == "pending" &&
-          listed.first[:amount] == 1 &&
-          listed.first[:consumer_name] == "Test User" &&
-          listed.first[:menu_name] == "Milanesa con papas fritas" &&
-          listed.first[:address] == "Julio Herrera y Reissig 565"
-      }
+      listed = inertia.props.deep_symbolize_keys[:orders]
+
+      expect(listed.pluck(:id)).to match_array(
+        %i[
+          upcoming_pending_today
+          upcoming_pending_future
+          upcoming_confirmed_future
+          history_cancelled_future
+          history_rejected_future
+          other_consumer_upcoming
+        ].map { |name| orders(name).id }
+      )
+
+      today = listed.find { |o| o[:id] == orders(:upcoming_pending_today).id }
+      expect(today).to include(
+        status: "pending",
+        amount: 1,
+        consumer_name: "Test User",
+        menu_name: "Milanesa con papas fritas",
+        address: "Julio Herrera y Reissig 565",
+        delivery_date: "hoy"
+      )
+    end
+
+    it "orders orders by delivery date ascending and creation time descending" do
+      sign_in users(:provider_user), role: :provider
+
+      older_today = orders(:upcoming_pending_today)
+      older_today.update!(created_at: 2.hours.ago)
+
+      newer_today = Order.create!(
+        consumer: consumers(:one),
+        schedule: schedules(:today),
+        status: :pending,
+        delivery_method: :home,
+        amount: 1,
+        price: 300.50,
+        discounted_price: 150.25,
+        address: "Julio Herrera y Reissig 565",
+        created_at: 5.minutes.ago
+      )
+
+      tomorrow_schedule = Schedule.create!(
+        menu: menus(:milanesa),
+        date: Date.current + 1.day,
+        amount: 5
+      )
+      order_tomorrow = Order.create!(
+        consumer: consumers(:one),
+        schedule: tomorrow_schedule,
+        status: :pending,
+        delivery_method: :home,
+        amount: 1,
+        price: 300.50,
+        discounted_price: 150.25,
+        address: "Julio Herrera y Reissig 565",
+        created_at: 1.minute.ago
+      )
+
+      get provider_orders_path
+
+      expect(inertia).to render_component("provider/orders/index")
+
+      listed = inertia.props.deep_symbolize_keys[:orders]
+      ids = listed.pluck(:id)
+
+      expect(ids.index(newer_today.id)).to be < ids.index(older_today.id)
+      expect(ids.index(older_today.id)).to be < ids.index(order_tomorrow.id)
+      expect(ids.index(order_tomorrow.id)).to be < ids.index(orders(:upcoming_pending_future).id)
+    end
+
+    it "excludes past orders, orders without schedule, and orders of other providers" do
+      other_provider_order
+      sign_in users(:provider_user), role: :provider
+
+      get provider_orders_path
+
+      listed = inertia.props.deep_symbolize_keys[:orders]
+      ids = listed.pluck(:id)
+
+      expect(ids).not_to include(
+        orders(:history_confirmed_past).id,
+        orders(:history_pending_past).id,
+        orders(:history_without_schedule).id,
+        other_provider_order.id
+      )
     end
   end
 
@@ -105,6 +192,17 @@ RSpec.describe "Provider::Orders", type: :request do
       get provider_order_path(other_provider_order)
 
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "shows order details for a cancelled order" do
+      sign_in users(:provider_user), role: :provider
+
+      get provider_order_path(orders(:history_cancelled_future))
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to have_props { |props|
+        props.deep_symbolize_keys.dig(:order, :status) == "cancelled"
+      }
     end
   end
 end

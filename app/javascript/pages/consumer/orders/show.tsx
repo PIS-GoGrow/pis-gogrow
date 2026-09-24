@@ -16,8 +16,8 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
-import { orders as ordersRoutes } from "@/routes"
-import type { BreadcrumbItem, OrdersShow } from "@/types"
+import { consumerOrders } from "@/routes"
+import type { BreadcrumbItem, ConsumerOrdersShow } from "@/types"
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -28,18 +28,18 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-export default function Show({ order }: OrdersShow) {
+export default function Show({ order }: ConsumerOrdersShow) {
   const { t } = useTranslation()
   const { formatMoney, formatDeliveryDate } = useFormatters()
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: t("pages.orders.index.title"),
-      href: ordersRoutes.index().url,
+      href: consumerOrders.index().url,
     },
     {
       title: t("pages.orders.show.title"),
-      href: ordersRoutes.show(order.id).url,
+      href: consumerOrders.show(order.id).url,
     },
   ]
 
@@ -54,7 +54,7 @@ export default function Show({ order }: OrdersShow) {
           className="justify-self-start"
           asChild
         >
-          <Link href={ordersRoutes.index().url}>
+          <Link href={consumerOrders.index().url}>
             <ArrowLeft />
             {t("pages.orders.show.back")}
           </Link>
