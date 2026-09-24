@@ -144,21 +144,37 @@ past_schedule = Schedule.create!(
 
 upcoming_schedules = Schedule.where("date >= ?", Date.current).order(:date)
 if (first_schedule = upcoming_schedules.first)
-  order = Order.create!(
+  Order.create!(
     consumer:,
     schedule: first_schedule,
     status: :pending,
-    price: 300.50,
-    discounted_price: 150.25,
+    price: first_schedule.menu.price,
+    discounted_price: first_schedule.menu.price / 2,
     amount: 1,
     address: company.address,
     delivery_method: :office
   )
-  # Payment.create!(account: order.accounts.first)
 end
 
-if (second_schedule = upcoming_schedules.second)
-  Order.create!(consumer:, schedule: second_schedule, status: :confirmed, price: 601.00, discounted_price: 300.50, amount: 2, address: company.address, delivery_method: :office)
+# Una orden confirmada por proveedor genera las cuentas que aparecen en Pagos
+# pendientes. El Payment se crea recién cuando el empleado sube el comprobante.
+[ tu_viandita, endulzate ].each do |provider|
+  schedule = Schedule.joins(:menu)
+                     .where(menus: { provider_id: provider.id })
+                     .order(date: :desc)
+                     .first
+  next unless schedule
+
+  Order.create!(
+    consumer:,
+    schedule:,
+    status: :confirmed,
+    price: schedule.menu.price,
+    discounted_price: schedule.menu.price / 2,
+    amount: 1,
+    address: company.address,
+    delivery_method: :office
+  )
 end
 
 Order.create!(

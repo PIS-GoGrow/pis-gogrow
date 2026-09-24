@@ -12,10 +12,10 @@ RSpec.describe "Orders", type: :request do
       expect(response).to redirect_to(sign_in_path)
     end
 
-    it "redirects users without a consumer profile" do
+    it "redirects users with a different active role to the home page" do
       sign_in users(:provider_user)
       get orders_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(root_path)
     end
 
     context "when signed in as an employee" do
@@ -23,7 +23,7 @@ RSpec.describe "Orders", type: :request do
 
       it "renders the orders page" do
         get orders_path
-        expect(inertia).to render_component("orders/index")
+        expect(inertia).to render_component("consumer/orders/index")
       end
 
       it "splits the employee's orders between upcoming and history" do
@@ -88,7 +88,7 @@ RSpec.describe "Orders", type: :request do
 
       it "renders the detail page" do
         get order_path(orders(:upcoming_confirmed_future))
-        expect(inertia).to render_component("orders/show")
+        expect(inertia).to render_component("consumer/orders/show")
       end
 
       it "exposes the breakdown the employee needs to check the order" do
