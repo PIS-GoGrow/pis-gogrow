@@ -12,7 +12,7 @@ RSpec.describe "Settings::Profiles", type: :request do
       get settings_profile_path
 
       expect(inertia).to render_component("settings/profiles/show")
-      expect(inertia).to have_props(provider: hash_including(home_delivery: true))
+      expect(inertia).to have_props { |props| props["provider"]["home_delivery"] == true }
     end
 
     it "does not expose delivery settings to consumers" do
@@ -20,7 +20,16 @@ RSpec.describe "Settings::Profiles", type: :request do
 
       get settings_profile_path
 
-      expect(inertia).to have_props(provider: nil)
+      expect(inertia).to have_props { |props| props["provider"].nil? }
+    end
+
+    it "falls back to the default locale when the locale is invalid" do
+      sign_in providers(:tuviandita).user, role: :provider
+
+      get settings_profile_path, params: { locale: :provider }
+
+      expect(response).to have_http_status(:ok)
+      expect(inertia).to have_props { |props| props["provider"]["home_delivery"] == true }
     end
   end
 

@@ -4,7 +4,7 @@ class Settings::ProfilesController < InertiaController
   before_action :set_user
 
   def show
-    @provider = Current.user.provider if Current.session.provider?
+    @provider = Current.session.provider? ? Current.user.provider : nil
   end
 
   def update
