@@ -12,9 +12,11 @@ class Provider::OrderSerializer < ApplicationSerializer
 
   typelize :string, nullable: true
   attribute :delivery_date do |order|
-    date = order.schedule.date
+    date = order.schedule&.date
 
-    if date == Date.current
+    if date.nil?
+      nil
+    elsif date == Date.current
       I18n.t("pages.provider_orders.index.today")
     elsif date == Date.current + 1.day
       I18n.t("pages.provider_orders.index.tomorrow")
