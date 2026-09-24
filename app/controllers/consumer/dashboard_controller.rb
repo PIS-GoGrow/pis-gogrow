@@ -4,8 +4,8 @@ class Consumer::DashboardController < Consumer::InertiaController
   def index
     @consumer = Current.user.consumer
     @week = week_data
-    @schedules = schedule_data
-    @benefit = benefit_data
+    @schedules = schedule_data(@week)
+    @benefit = benefit_data(@week)
     @addresses = address_data
     @order_confirmation = order_confirmation_data
   end
@@ -13,7 +13,13 @@ class Consumer::DashboardController < Consumer::InertiaController
   private
 
   def week_data
-    start_date = Date.current.beginning_of_week(:monday)
+    # Si hoy es sábado o domingo, queremos mostrar los menús para la semana que viene.
+    # Si no, mostramos los de esta
+    if Date.current.saturday? || Date.current.sunday?
+      start_date = Date.current.next_week(:monday)
+    else
+      start_date = Date.current.beginning_of_week(:monday)
+    end
 
     {
       start_date: start_date.iso8601,
@@ -24,10 +30,11 @@ class Consumer::DashboardController < Consumer::InertiaController
     }
   end
 
-  def schedule_data
-    range = Date.iso8601(@week[:start_date])..Date.iso8601(@week[:end_date])
+  def schedule_data(week)
+    range = Date.iso8601(week[:start_date])..Date.iso8601(week[:end_date])
+    schedules = Schedule.includes(:orders, menu: [ :reviews, { provider: :user } ]).where(date: range).order(:date, :id)
 
-    Schedule.includes(:orders, menu: [ :reviews, { provider: :user } ]).where(date: range).order(:date, :id).map do |schedule|
+    schedules.map do |schedule|
       menu = schedule.menu
 
       {
@@ -44,7 +51,7 @@ class Consumer::DashboardController < Consumer::InertiaController
           sauces: menu.sauces,
           provider_name: menu.provider.user&.name || "Proveedor",
           home_delivery: menu.provider.home_delivery?,
-          reviews: menu.reviews.order(created_at: :desc).limit(4).map do |review|
+          reviews: menu.reviews.first(4).map do |review|
             {
               id: review.id,
               description: review.description,
@@ -57,20 +64,14 @@ class Consumer::DashboardController < Consumer::InertiaController
     end
   end
 
-  def benefit_data
-    benefit = active_benefit
-    start_date = Date.current.beginning_of_week(:monday)
-
-    weekly_used = @consumer.orders.joins(:schedule)
-                          .where(schedules: { date: start_date..(start_date + 4.days) })
-                          .where.not(status: [ :cancelled, :rejected ])
-                          .sum(:amount)
+  def benefit_data(week)
+    range = Date.iso8601(week[:start_date])..Date.iso8601(week[:end_date])
 
     {
-      limit: 5,
-      used: weekly_used,
-      percentage: benefit&.percentage.to_i.clamp(0, 100),
-      monthly_limit: Consumer::SUBSIDIZED_MEALS_LIMIT,
+      limit: @consumer.benefit_available / 4,
+      used: @consumer.subsidized_meals_used_this_week,
+      percentage: @consumer.current_benefit&.percentage.to_i.clamp(0, 100),
+      monthly_limit: @consumer.benefit_available,
       monthly_used: @consumer.subsidized_meals_used_this_month,
       monthly_remaining: @consumer.remaining_subsidized_meals
     }

@@ -7,7 +7,7 @@ class Menu < ApplicationRecord
   belongs_to :provider
 
   has_many :schedules, dependent: :destroy
-  has_many :reviews, dependent: :destroy
+  has_many :reviews, -> { order(created_at: :desc) }, dependent: :destroy
 end
 
 # == Schema Information

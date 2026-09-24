@@ -3,8 +3,6 @@
 class Consumer < ApplicationRecord
   include SyncsUserRoles
 
-  SUBSIDIZED_MEALS_LIMIT = 20
-
   belongs_to :company
   belongs_to :user
 
@@ -33,20 +31,32 @@ class Consumer < ApplicationRecord
     accounts.current.sum :amount
   end
 
+  def current_benefit
+    benefits.current.monthly.first
+  end
+
   def benefit_available
-    benefits.current.monthly.first&.amount || 0
+    current_benefit&.amount || 0
   end
 
   def subsidized_meals_used_this_month
     orders
       .joins(:schedule)
       .where(schedules: { date: Date.current.all_month })
-      .where.not(status: [ :cancelled, :rejected ])
+      .where(status: [ :confirmed ])
+      .sum(:amount)
+  end
+
+  def subsidized_meals_used_this_week
+    orders
+      .joins(:schedule)
+      .where(schedules: { date: Date.current.all_week })
+      .where(status: :confirmed)
       .sum(:amount)
   end
 
   def remaining_subsidized_meals
-    [ SUBSIDIZED_MEALS_LIMIT - subsidized_meals_used_this_month, 0 ].max
+    [ benefit_available - subsidized_meals_used_this_month, 0 ].max
   end
 end
 

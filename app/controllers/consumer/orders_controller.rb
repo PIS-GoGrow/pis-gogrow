@@ -4,7 +4,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   def create
     consumer = Current.user.consumer
     requested_items = order_params.fetch(:items)
-    benefit_percentage = active_benefit_for(consumer)&.percentage.to_i
+    benefit_percentage = consumer.current_benefit&.percentage.to_i
     remaining_subsidized = benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
     return reject_order(:empty_cart) if requested_items.empty?
     return reject_order(:invalid_address) unless delivery_addresses(consumer).include?(order_params[:address])
@@ -18,7 +18,7 @@ class Consumer::OrdersController < Consumer::InertiaController
       remaining_subsidized =
         benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
       schedule_ids = requested_items.pluck(:schedule_id)
-      schedules = Schedule.includes(menu: :provider).where(id: schedule_ids.uniq, date: current_week).order(:id).lock.index_by(&:id)
+      schedules = Schedule.includes(menu: :provider).where(id: schedule_ids.uniq, date: allowed_dates).order(:id).lock.index_by(&:id)
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
       requested_items.each do |item|
@@ -74,12 +74,9 @@ class Consumer::OrdersController < Consumer::InertiaController
     }, status: :see_other
   end
 
-  def active_benefit_for(consumer)
-    consumer.benefits.where("due_date >= ?", Date.current).order(:due_date).first
-  end
-
-  def current_week
-    Date.current.beginning_of_week(:monday)..Date.current.beginning_of_week(:monday).advance(days: 4)
+  # Permitir hacer pedidos entre hoy y el viernes siguiente.
+  def allowed_dates
+    Date.current..Date.current.next_week(:friday)
   end
 
   def delivery_addresses(consumer)
