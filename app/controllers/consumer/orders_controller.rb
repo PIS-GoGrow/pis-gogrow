@@ -8,6 +8,10 @@ class Consumer::OrdersController < Consumer::InertiaController
     # Rechazamos si no hay carrito o si las cantidades no son numéricas.
     return reject_order(:empty_cart) if requested_items.empty?
     return reject_order(:invalid_quantity) unless requested_items.all? { |item| item[:quantity].to_s.match?(/\A[1-9]\d*\z/) }
+    # Rechazamos si la dirección es invalida
+    # delivery_addresses ya verifica que la dirección no sea blank, por lo que acá
+    # está manejado el caso de que no haya dirección de envío.
+    return reject_order(:invalid_address) unless consumer.delivery_addresses.include?(order_params[:address])
 
     created_orders = []
 
@@ -16,14 +20,6 @@ class Consumer::OrdersController < Consumer::InertiaController
 
       benefit_percentage = consumer.current_benefit&.percentage.to_i
       remaining_subsidized = benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
-      order_params[:address] = consumer.company.address
-
-      # delivery_addresses ya verifica que la dirección no sea blank, por lo que acá
-      # está manejado el caso de que no haya dirección de envío.
-      unless consumer.delivery_addresses.include?(order_params[:address])
-        reject_order(:invalid_address)
-        raise ActiveRecord::Rollback
-      end
 
       # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos todos
       # los schedules correspondientes.
