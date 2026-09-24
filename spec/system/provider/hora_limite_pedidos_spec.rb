@@ -4,9 +4,9 @@
 # cierre de recepción de pedidos (criterios 1, 3 y 4 del lado del proveedor) antes
 # de poder testear que el proveedor ve el tiempo restante, que se actualiza solo y
 # que al llegar al límite muestra "recepción cerrada" en vez de un tiempo negativo.
-# El cliente todavía no definió en qué pantalla va; no asumir /provider/dashboard.
-# Historia: "Como PROVEEDOR, quiero ver cuánto tiempo falta para el cierre de
-# recepción de pedidos". Defecto: DEFECT-proveedor-sin-tiempo-restante-cierre-24-09-2026.
+# Queda para IBP-067, que es la historia dueña de esa pantalla; no asumir
+# /provider/dashboard como ubicación. Historia: "Como PROVEEDOR, quiero ver cuánto
+# tiempo falta para el cierre de recepción de pedidos".
 
 require "rails_helper"
 

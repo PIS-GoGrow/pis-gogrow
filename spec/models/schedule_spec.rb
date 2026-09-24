@@ -167,6 +167,16 @@ RSpec.describe Schedule, type: :model do
       at(23, 59) { expect(schedule.order_deadline_passed?).to be false }
     end
 
+    it "uses Uruguay's time even when it is already the next day in UTC" do
+      provider.update!(order_deadline: "22:00")
+
+      at(21, 59) do
+        expect(Time.current.utc.to_date).to eq(today + 1)
+        expect(schedule.order_deadline_passed?).to be false
+      end
+      at(22, 0) { expect(schedule.order_deadline_passed?).to be true }
+    end
+
     it "follows a deadline changed after the schedule was loaded" do
       at(11, 0) do
         expect(schedule.order_deadline_passed?).to be false
