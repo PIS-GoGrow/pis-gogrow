@@ -1,0 +1,13 @@
+one:
+  consumer: one
+  percentage: 50
+  description: "Viandas mensuales"
+  amount: 20
+  due_date: <%= Date.current + 5 %>
+
+two:
+  consumer: other
+  percentage: 50
+  amount: 20
+  description: "Viandas mensuales"
+  due_date: <%= Date.current + 5 %>

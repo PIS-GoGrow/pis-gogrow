@@ -21,7 +21,7 @@ class Schedule < ApplicationRecord
     # amount representa el cupo TOTAL de esta oferta; no lo descontamos al reservar.
     # Restamos las unidades de pedidos pendientes, confirmados y antiguos sin estado
     # (nil). Los cancelados y rechazados no ocupan cupo. El máximo con 0 evita devolver negativos.
-    reserved = orders.select { |o| [ nil, :pending, :confirmed ].include?(o.status) }
+    reserved = orders.select { |o| [ nil, "pending", "confirmed" ].include?(o.status) }
                      .sum { |o| o.amount.to_i }
 
     [ amount.to_i - reserved, 0 ].max

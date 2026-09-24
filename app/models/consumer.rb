@@ -7,7 +7,7 @@ class Consumer < ApplicationRecord
   belongs_to :user
 
   has_many :orders, dependent: :destroy
-  has_many :benefits
+  has_many :benefits, dependent: :destroy
   has_many :accounts, as: :owner
   has_many :user_notifications, as: :user
   has_many :notification_configurations, through: :user_notifications, source: :notification_configuration
@@ -33,7 +33,7 @@ class Consumer < ApplicationRecord
     orders
       .joins(:schedule)
       .where(schedules: { date: Date.current.all_month })
-      .where(status: [ :rejected, :cancelled ])
+      .where.not(status: [ :rejected, :cancelled ])
       .sum(:amount)
   end
 
