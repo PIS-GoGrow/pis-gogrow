@@ -29,11 +29,18 @@ module AuthenticationHelpers
       raise ArgumentError, "Cannot sign in #{user.email}: user has no profile/role assigned" unless role
 
       session = user.sessions.create!(role: role)
-      page.driver.set_cookie("session_token", AuthenticationHelpers.signed_cookie(:session_token, session.id))
+      # El driver de Selenium no tiene set_cookie (eso es de rack_test), y para
+      # colgar una cookie el browser necesita estar parado en el dominio: de ahí
+      # el visit previo.
+      visit "/"
+      page.driver.browser.manage.add_cookie(
+        name: "session_token",
+        value: AuthenticationHelpers.signed_cookie(:session_token, session.id)
+      )
     end
 
     def sign_out
-      page.driver.set_cookie("session_token", "")
+      page.driver.browser.manage.delete_cookie("session_token")
     end
   end
 end

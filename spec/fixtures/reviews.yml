@@ -1,0 +1,40 @@
+# Cinco reseñas sobre el mismo plato: el dashboard muestra solo las cuatro más
+# recientes, así que la más vieja existe para que se note el corte. Las fechas
+# son absolutas porque lo que se verifica es el orden entre ellas.
+sorrentinos_mas_vieja:
+  menu: sorrentinos
+  description: Estaban bien, nada del otro mundo
+  rating: 3
+  created_at: 2026-09-01 12:00:00
+
+sorrentinos_cuarta:
+  menu: sorrentinos
+  description: Porción generosa
+  rating: 4
+  created_at: 2026-09-05 12:00:00
+
+sorrentinos_tercera:
+  menu: sorrentinos
+  description: Llegaron calientes
+  rating: 4
+  created_at: 2026-09-10 12:00:00
+
+sorrentinos_segunda:
+  menu: sorrentinos
+  description: La salsa filetto es la mejor
+  rating: 5
+  created_at: 2026-09-15 12:00:00
+
+sorrentinos_mas_nueva:
+  menu: sorrentinos
+  description: Mi plato fijo de los miércoles
+  rating: 5
+  created_at: 2026-09-20 12:00:00
+
+# Una reseña sin puntaje ni texto: las dos columnas son nullable y la pantalla
+# tiene que poder recibirlas vacías.
+office_menu_sin_datos:
+  menu: office_menu
+  description:
+  rating:
+  created_at: 2026-09-18 12:00:00

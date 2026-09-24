@@ -104,18 +104,27 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
       return
     }
 
+    const MAX_STOCK = 2_147_483_647
+
+    if (
+      selectedItems.some(([, amount]) => {
+        const parsedAmount = Number(amount)
+
+        return (
+          !Number.isInteger(parsedAmount) ||
+          parsedAmount <= 0 ||
+          parsedAmount > MAX_STOCK
+        )
+      })
+    ) {
+      setError(`El stock debe ser un entero entre 1 y ${MAX_STOCK}.`)
+      return
+    }
+
     const items = selectedItems.map(([menuId, amount]) => ({
       menu_id: Number(menuId),
       amount: Number(amount),
     }))
-
-    // Validaciones del punto 14 del documento: mejoran la UX, pero nunca
-    // sustituyen las validaciones que Rails vuelve a hacer del lado del servidor.
-
-    if (items.some((item) => item.amount <= 0)) {
-      setError("El stock de todos los platos debe ser mayor que cero.")
-      return
-    }
 
     setProcessing(true)
     setError(null)

@@ -3,7 +3,26 @@
 require "rails_helper"
 
 RSpec.describe Review, type: :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+  fixtures :menus, :reviews
+
+  it "belongs to a menu" do
+    expect(reviews(:sorrentinos_mas_nueva).menu).to eq(menus(:sorrentinos))
+  end
+
+  it "is invalid without a menu" do
+    review = described_class.new(description: "Rico", rating: 5)
+    expect(review).not_to be_valid
+  end
+
+  it "is valid with a menu and optional fields blank" do
+    review = described_class.new(menu: menus(:milanesa), description: nil, rating: nil)
+    expect(review).to be_valid
+  end
+
+  it "is valid with a description and rating" do
+    review = described_class.new(menu: menus(:milanesa), description: "Muy rico", rating: 5)
+    expect(review).to be_valid
+  end
 end
 
 # == Schema Information
