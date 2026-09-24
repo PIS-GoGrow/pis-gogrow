@@ -8,6 +8,10 @@ class Menu < ApplicationRecord
 
   has_many :schedules, dependent: :destroy
   has_many :reviews, -> { order(created_at: :desc) }, dependent: :destroy
+
+  def provider_name
+    provider.user&.name || "Proveedor"
+  end
 end
 
 # == Schema Information

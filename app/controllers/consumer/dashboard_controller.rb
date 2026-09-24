@@ -4,35 +4,31 @@ class Consumer::DashboardController < Consumer::InertiaController
   def index
     @consumer = Current.user.consumer
     @week = week_data
-    @schedules = schedule_data(@week)
-    @benefit = benefit_data(@week)
+    @schedules = schedule_data
+    @benefit = benefit_data
     @addresses = address_data
     @order_confirmation = order_confirmation_data
   end
 
   private
+  # TODO: Eventualmente habría que mover todos los métodos siguientes que están acá
+  # a serializers aparte. Esto permetiría reutilizarlos y hacer todo un poco más legible
+  # (es difícil ver qué información tiene schedule_data)
 
   def week_data
-    # Si hoy es sábado o domingo, queremos mostrar los menús para la semana que viene.
-    # Si no, mostramos los de esta
-    if Date.current.saturday? || Date.current.sunday?
-      start_date = Date.current.next_week(:monday)
-    else
-      start_date = Date.current.beginning_of_week(:monday)
-    end
-
     {
-      start_date: start_date.iso8601,
-      end_date: (start_date + 4.days).iso8601,
-      days: (start_date..(start_date + 4.days)).map do |date|
+      start_date: week_range.first.iso8601,
+      end_date: week_range.last.iso8601,
+      days: week_range.map do |date|
         { date: date.iso8601, weekday: I18n.l(date, format: "%a"), day: date.day }
       end
     }
   end
 
-  def schedule_data(week)
-    range = Date.iso8601(week[:start_date])..Date.iso8601(week[:end_date])
-    schedules = Schedule.includes(:orders, menu: [ :reviews, { provider: :user } ]).where(date: range).order(:date, :id)
+  def schedule_data
+    schedules = Schedule.includes(:orders, menu: [ :reviews, { provider: :user } ])
+                        .where(date: week_range)
+                        .order(:date, :id)
 
     schedules.map do |schedule|
       menu = schedule.menu
@@ -49,7 +45,7 @@ class Consumer::DashboardController < Consumer::InertiaController
           price: menu.price.to_f,
           fillings: menu.fillings,
           sauces: menu.sauces,
-          provider_name: menu.provider.user&.name || "Proveedor",
+          provider_name: menu.provider_name,
           home_delivery: menu.provider.home_delivery?,
           reviews: menu.reviews.first(4).map do |review|
             {
@@ -64,9 +60,7 @@ class Consumer::DashboardController < Consumer::InertiaController
     end
   end
 
-  def benefit_data(week)
-    range = Date.iso8601(week[:start_date])..Date.iso8601(week[:end_date])
-
+  def benefit_data
     {
       limit: @consumer.benefit_available / 4,
       used: @consumer.subsidized_meals_used_this_week,
@@ -75,10 +69,6 @@ class Consumer::DashboardController < Consumer::InertiaController
       monthly_used: @consumer.subsidized_meals_used_this_month,
       monthly_remaining: @consumer.remaining_subsidized_meals
     }
-  end
-
-  def active_benefit
-    @consumer.benefits.where("due_date >= ?", Date.current).order(:due_date).first
   end
 
   def address_data
@@ -106,12 +96,21 @@ class Consumer::DashboardController < Consumer::InertiaController
           date: order.schedule.date.iso8601,
           address: order.address,
           delivery_method: order.delivery_method,
-          provider_name: menu.provider.user&.name || "Proveedor",
+          provider_name: menu.provider_name,
           name: menu.name,
           quantity: order.amount,
           discounted_price: order.discounted_price.to_f
         }
       end
     }
+  end
+
+  # Si hoy es sábado o domingo, queremos mostrar los menús para la semana que viene.
+  # Si no, mostramos los de esta.
+  def week_range
+    @week_range ||= begin
+      start = Date.current.on_weekend? ? Date.current.next_week(:monday) : Date.current.beginning_of_week(:monday)
+      start..(start + 4.days)
+    end
   end
 end
