@@ -171,6 +171,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
     t.bigint "provider_id"
+    t.text "rejection_reason"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_payments_on_account_id"

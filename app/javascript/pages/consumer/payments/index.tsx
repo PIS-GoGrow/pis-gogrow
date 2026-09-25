@@ -3,7 +3,8 @@ import { Receipt } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import AppLayout from "@/layouts/app-layout"
-import type { BreadcrumbItem } from "@/types"
+import { consumerPayments } from "@/routes"
+import type { BreadcrumbItem, PaymentStatus } from "@/types"
 
 // Definimos la interfaz de los datos que nos manda el mock del controlador
 interface Payment {
@@ -11,8 +12,9 @@ interface Payment {
   date: string
   provider_name: string
   amount: number
-  status: "pending" | "accepted" | "rejected"
+  status: PaymentStatus
   rejection_reason?: string
+  receipt_url: string | null
 }
 
 interface Props {
@@ -21,20 +23,21 @@ interface Props {
 
 export default function Index({ payments }: Props) {
   const breadcrumbs: BreadcrumbItem[] = [
-    { title: "Historial de Pagos", href: "/employee/payments" },
+  { title: "Historial de Pagos", href: consumerPayments.index().url },
   ]
-
   // Función auxiliar para renderizar el badge correcto según el estado
   const renderStatus = (status: Payment["status"]) => {
-    switch (status) {
-      case "accepted":
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-200">Aceptado</Badge>
-      case "rejected":
-        return <Badge variant="destructive">Rechazado</Badge>
-      default:
-        return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-200">Pendiente</Badge>
-    }
+  switch (status) {
+    case "approved":
+      return <Badge className="bg-green-100 text-green-700 hover:bg-green-200">Aprobado</Badge>
+    case "rejected":
+      return <Badge variant="destructive">Rechazado</Badge>
+    case "submitted":
+      return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-200">En revisión</Badge>
+    default:
+      return <Badge variant="secondary">Pendiente</Badge>
   }
+}
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
