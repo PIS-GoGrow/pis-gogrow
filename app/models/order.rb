@@ -8,6 +8,7 @@
 class Order < ApplicationRecord
   # La migración 20260911234117 usa el modelo Order, así que al reconstruir la
   # base desde cero el enum se evalúa antes de que exista su columna.
+  attribute :delivery_method, :integer
   attribute :status_before_cancellation, :integer
 
   enum :status, { pending: 0, confirmed: 1, cancelled: 2, rejected: 3 }, default: :pending

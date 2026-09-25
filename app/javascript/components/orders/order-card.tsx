@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useFormatters } from "@/hooks/use-formatters"
-import { orders as ordersRoutes } from "@/routes"
+import { consumerOrders } from "@/routes"
 import type { Order } from "@/types"
 
 interface OrderCardProps {
@@ -43,7 +43,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
           {/* El ::after estirado hace clickeable toda la tarjeta sin duplicar
               enlaces ni anidar el badge dentro del link. */}
           <Link
-            href={ordersRoutes.show(order.id).url}
+            href={consumerOrders.show(order.id).url}
             className="after:absolute after:inset-0 hover:underline"
           >
             {order.menu_name ?? t("pages.orders.index.no_menu")}
