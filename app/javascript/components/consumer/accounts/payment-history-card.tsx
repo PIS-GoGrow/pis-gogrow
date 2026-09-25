@@ -3,7 +3,12 @@ import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { SheetTrigger } from "@/components/ui/sheet"
 import { consumerAccounts } from "@/routes"
@@ -31,7 +36,8 @@ export default function PaymentHistoryCard({
   // Un Account puede tener varios Payment (ej: uno rechazado y luego uno
   // nuevo); mostramos el estado del más reciente.
   const latestPayment = [...account.payments].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    (a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   )[0]
 
   async function handleSeeDetail() {
@@ -90,11 +96,17 @@ export default function PaymentHistoryCard({
 
         <Separator />
 
-        {/* TODO(IBP-019): habilitar cuando Payment tenga el archivo del
-            comprobante adjunto; hoy no existe ese campo en el modelo. */}
-        <Button variant="outline" disabled>
-          <Download /> {t("pages.accounts.show.download_receipt")}
-        </Button>
+        {latestPayment?.receipt_url ? (
+          <Button variant="outline" asChild>
+            <a href={latestPayment.receipt_url} download>
+              <Download /> {t("pages.accounts.show.download_receipt")}
+            </a>
+          </Button>
+        ) : (
+          <Button variant="outline" disabled>
+            <Download /> {t("pages.accounts.show.download_receipt")}
+          </Button>
+        )}
       </CardHeader>
     </Card>
   )

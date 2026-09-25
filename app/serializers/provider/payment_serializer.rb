@@ -28,4 +28,9 @@ class Provider::PaymentSerializer < ApplicationSerializer
 
     Rails.application.routes.url_helpers.receipt_provider_payment_path(payment)
   end
+
+  typelize :string, nullable: true
+  attribute :receipt_content_type do |payment|
+    payment.receipt.content_type if payment.receipt.attached?
+  end
 end

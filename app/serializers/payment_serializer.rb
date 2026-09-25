@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class PaymentSerializer < ApplicationSerializer
-  attributes :id, :status, :created_at
+  attributes :id, :status, :created_at, :rejection_reason
 
   typelize :string?
   attribute :receipt_url do |payment|

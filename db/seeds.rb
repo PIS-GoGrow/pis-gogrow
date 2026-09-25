@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+# Para agregar cuentas de meses pasados
+# Por como funciona la creacion de accounts solo se crean para el mes actual, por lo que si se quiere agregar cuentas de meses pasados hay que hacerlo manualmente
+# Con esto le podes hacer creer al sistema que esta en un mes anterior
+require "active_support/testing/time_helpers"
+include ActiveSupport::Testing::TimeHelpers
+
 week_start = Date.current.beginning_of_week(:monday)
 
 company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
@@ -187,6 +193,35 @@ Order.create!(
   address: company.address,
   delivery_method: :office
 )
+
+
+# Cuentas pendientes de pago de meses anteriores (para probar el historial de pagos)
+[
+  { provider: tu_viandita, months_ago: 2 },
+  { provider: tu_viandita, months_ago: 3 }
+].each do |data|
+  provider = data[:provider]
+  menu = provider.menus.first
+
+  travel_to(data[:months_ago].months.ago.beginning_of_month + 3.days) do
+    schedule = Schedule.create!(
+      menu:,
+      date: Date.current,
+      amount: 5
+    )
+
+    Order.create!(
+      consumer:,
+      schedule:,
+      status: :confirmed,
+      price: menu.price,
+      discounted_price: menu.price / 2,
+      amount: 1,
+      address: company.address,
+      delivery_method: :office
+    )
+  end
+end
 
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 

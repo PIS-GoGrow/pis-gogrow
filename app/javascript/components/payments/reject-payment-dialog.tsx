@@ -110,7 +110,9 @@ export default function RejectPaymentDialog({
           <label
             className={cn(
               "flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition-colors",
-              isOther ? "border-primary bg-primary/5" : "hover:border-primary/50",
+              isOther
+                ? "border-primary bg-primary/5"
+                : "hover:border-primary/50",
             )}
           >
             <input
@@ -140,7 +142,7 @@ export default function RejectPaymentDialog({
 
         <DialogFooter className="sm:justify-start">
           <Button
-            className="flex-1 bg-black text-white hover:bg-black/90" 
+            className="flex-1 bg-black text-white hover:bg-black/90"
             size="sm"
             onClick={handleReject}
           >

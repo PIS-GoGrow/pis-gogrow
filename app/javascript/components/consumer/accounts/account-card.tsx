@@ -1,4 +1,4 @@
-import { Eye, TriangleAlert } from "lucide-react"
+import { CircleX, Eye, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
@@ -111,6 +111,18 @@ export default function AccountCard({
         </CardTitle>
 
         <Separator />
+
+        {payment?.status === "rejected" && (
+          <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
+            <CircleX className="mt-0.5 size-4 shrink-0" />
+            <p>
+              <span className="font-medium">
+                {t("pages.accounts.show.status_rejected")}:
+              </span>{" "}
+              {payment.rejection_reason}
+            </p>
+          </div>
+        )}
 
         <PaymentReceiptDialog accountId={account.id} payment={payment} />
       </CardHeader>
