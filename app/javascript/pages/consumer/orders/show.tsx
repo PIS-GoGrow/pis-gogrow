@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import EditOrderSheet from "@/components/orders/edit-order-sheet"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,14 +11,15 @@ import {
   CardAction,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
-import { orders as ordersRoutes } from "@/routes"
-import type { BreadcrumbItem, OrdersShow } from "@/types"
+import { consumerOrders } from "@/routes"
+import type { BreadcrumbItem, ConsumerOrdersShow } from "@/types"
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -28,18 +30,22 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-export default function Show({ order }: OrdersShow) {
+export default function Show({
+  order,
+  delivery_addresses,
+  max_quantity,
+}: ConsumerOrdersShow) {
   const { t } = useTranslation()
   const { formatMoney, formatDeliveryDate } = useFormatters()
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: t("pages.orders.index.title"),
-      href: ordersRoutes.index().url,
+      href: consumerOrders.index().url,
     },
     {
       title: t("pages.orders.show.title"),
-      href: ordersRoutes.show(order.id).url,
+      href: consumerOrders.show(order.id).url,
     },
   ]
 
@@ -54,7 +60,7 @@ export default function Show({ order }: OrdersShow) {
           className="justify-self-start"
           asChild
         >
-          <Link href={ordersRoutes.index().url}>
+          <Link href={consumerOrders.index().url}>
             <ArrowLeft />
             {t("pages.orders.show.back")}
           </Link>
@@ -123,6 +129,22 @@ export default function Show({ order }: OrdersShow) {
               </p>
             </div>
           </CardContent>
+
+          <CardFooter className="flex-col items-stretch gap-2">
+            {order.modifiable ? (
+              <EditOrderSheet
+                order={order}
+                addresses={delivery_addresses}
+                maxQuantity={max_quantity}
+              />
+            ) : (
+              <p className="text-muted-foreground text-xs">
+                {t(
+                  `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+                )}
+              </p>
+            )}
+          </CardFooter>
         </Card>
       </div>
     </AppLayout>

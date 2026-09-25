@@ -201,7 +201,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
     it "does not count rejected orders against the quota" do
       schedule = publish(menus(:milanesa), monday, amount: 1)
-      order_for(schedule, 1).update!(status: :rejected)
+      order_for(schedule, 1).update!(status: :rejected, rejection_reason: :out_of_stock)
       sign_in users(:one)
 
       get dashboard_path

@@ -51,7 +51,8 @@ RSpec.describe Consumer, type: :model do
       )
       Order.create!(
         consumer:, schedule: today_schedule, amount: 1,
-        price: 300, address: consumer.company.address, delivery_method: :office, status: :rejected
+        price: 300, address: consumer.company.address, delivery_method: :office, status: :rejected,
+        rejection_reason: :out_of_stock
       )
 
       expect(consumer.subsidized_meals_used_this_month).to eq(0)

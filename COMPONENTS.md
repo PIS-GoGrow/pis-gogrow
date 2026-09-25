@@ -406,7 +406,6 @@ Reemplaza los botones con `aria-pressed` del prototipo para filtros, días y el 
 </ToggleGroup>
 ```
 
-<<<<<<< HEAD
 ### Tabs
 
 ```tsx
