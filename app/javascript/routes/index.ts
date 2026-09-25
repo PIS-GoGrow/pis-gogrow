@@ -49,6 +49,7 @@ export const authFailure = _omniauthCallbacks.failure
 export const authGoogleOauth2Callback = _omniauthCallbacks.googleOauth2
 export const cancelConsumerOrder = _consumerOrders.cancel
 export const dashboard = _consumerDashboard.index
+export const dashboardConfirmation = _consumerDashboard.confirmation
 export const editIdentityPasswordReset = _identityPasswordResets.edit
 export const editProviderMenu = _providerMenus.edit
 export const editSession = _sessions.edit

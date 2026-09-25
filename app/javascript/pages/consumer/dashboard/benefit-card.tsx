@@ -17,7 +17,7 @@ export function BenefitCard({ benefit, mobile = false }: Props) {
     <div
       className={cn(
         "flex flex-col justify-between gap-4 rounded-lg border border-[#E5E5E5] bg-[#F5F5F5] p-4 dark:border-neutral-800 dark:bg-neutral-900",
-        mobile ? "w-full md:hidden" : "w-full",
+        mobile ? "w-full lg:hidden" : "w-full",
       )}
     >
       <div className="flex flex-col gap-3">

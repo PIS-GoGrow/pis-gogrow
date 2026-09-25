@@ -7,7 +7,8 @@ RSpec.describe "Consumer dashboard", type: :request do
   def consumer_user
     company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
     user = User.create!(email: "consumer-menu@gmail.com", name: "Sofía", password: "password123456")
-    Consumer.create!(user:, company:, address: "Ellauri 1234")
+    consumer = Consumer.create!(user:, company:, address: "Ellauri 1234")
+    consumer.benefits.create!(description: "Viandas mensuales", amount: 20, percentage: 50, due_date: Date.current + 3.days)
     user
   end
 

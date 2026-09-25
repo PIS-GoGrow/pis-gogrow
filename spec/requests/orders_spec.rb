@@ -138,7 +138,7 @@ RSpec.describe "Orders", type: :request do
     it "creates the cart atomically with server prices, benefit and delivery address" do
       consumer, company = setup_consumer
       schedule = create_schedule
-      Benefit.create!(consumer:, amount: 5, percentage: 50, due_date: 1.month.from_now)
+      Benefit.create!(consumer:, description: "Viandas mensuales", amount: 10, percentage: 50, due_date: 1.month.from_now)
 
       expect do
         post orders_path, params: {
@@ -150,7 +150,7 @@ RSpec.describe "Orders", type: :request do
       end.to change(Order, :count).by(1)
 
       order = Order.last
-      expect(response).to redirect_to(dashboard_path(confirmed_order_ids: [ order.id ]))
+      expect(response).to redirect_to(dashboard_confirmation_path(confirmed_order_ids: [ order.id ]))
       expect(order).to have_attributes(
         consumer:,
         schedule:,
@@ -164,20 +164,10 @@ RSpec.describe "Orders", type: :request do
       expect(order).to be_pending
       expect(schedule.reload.remaining_amount).to eq(3)
       follow_redirect!
-      expect(inertia).to render_component("consumer/dashboard/index")
+      expect(inertia).to render_component("consumer/dashboard/confirmation")
       expect(inertia).to have_flash(notice: I18n.t("flash.cart_confirmed"))
-      expect(inertia).to have_props(
-        benefit: {
-          limit: 5,
-          used: 2,
-          percentage: 50,
-          monthly_limit: 20,
-          monthly_used: 2,
-          monthly_remaining: 18
-        }
-      )
-      expect(inertia).to have_props(order_confirmation: {
-        total: 300.0,
+      expect(inertia).to have_props(total: 300.0)
+      expect(inertia).to have_props({
         orders: [
           {
             id: order.id,
@@ -191,6 +181,18 @@ RSpec.describe "Orders", type: :request do
           }
         ]
       })
+
+      get dashboard_path
+      expect(inertia).to have_props(
+        benefit: {
+          limit: 2,
+          used: 2,
+          percentage: 50,
+          monthly_limit: 10,
+          monthly_used: 2,
+          monthly_remaining: 8
+        }
+      )
     end
 
     it "does not create a partial cart when one item is unavailable" do
@@ -364,7 +366,7 @@ RSpec.describe "Orders", type: :request do
       expect(consumer.orders.find_by!(schedule: office_only)).to have_attributes(address: company.address, delivery_method: "office")
       expect(consumer.orders.find_by!(schedule: home_schedule)).to have_attributes(address: consumer.address, delivery_method: "home")
       follow_redirect!
-      expect(inertia).to render_component("consumer/dashboard/index")
+      expect(inertia).to render_component("consumer/dashboard/confirmation")
     end
 
     it "keeps office delivery when the employee selects the office" do

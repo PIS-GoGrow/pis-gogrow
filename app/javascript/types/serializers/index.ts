@@ -4,6 +4,7 @@
 export type { OrderDeliveryMethod, OrderStatus, PaymentStatus, SessionRole } from './Enums'
 export type { Account } from './Account'
 export type { Auth } from './Auth'
+export type { ConsumerDashboardConfirmation } from './ConsumerDashboardConfirmation'
 export type { ConsumerDashboardIndex } from './ConsumerDashboardIndex'
 export type { ConsumerMenuWithProvider } from './ConsumerMenuWithProvider'
 export type { ConsumerMenusIndex } from './ConsumerMenusIndex'

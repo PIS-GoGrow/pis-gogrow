@@ -80,7 +80,7 @@ export function WeeklyMenu({
           </p>
         </header>
 
-        <div className="md:grid md:grid-cols-[minmax(0,1fr)_330px] md:gap-8">
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_330px] lg:gap-8">
           <section className="min-w-0">
             <BenefitCard benefit={benefit} mobile />
 
@@ -140,7 +140,7 @@ export function WeeklyMenu({
             )}
           </section>
 
-          <aside className="hidden space-y-4 md:block">
+          <aside className="hidden space-y-4 lg:block">
             <BenefitCard benefit={benefit} />
             <div className="border-border bg-card rounded-xl border p-5">
               <p className="text-muted-foreground text-sm">Tu carrito</p>
