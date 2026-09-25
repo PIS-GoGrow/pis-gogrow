@@ -1,24 +1,56 @@
 # frozen_string_literal: true
 
 class Payment < ApplicationRecord
+  enum :status, { pending: 0, submitted: 1, approved: 2, rejected: 3 }, default: :pending
+
   belongs_to :account
+  belongs_to :provider, optional: true
+
+  has_one_attached :receipt
+
+  validate :receipt_is_attached_when_submitted
+  validate :receipt_has_allowed_type
+  validate :receipt_is_within_size_limit
+
+  private
+
+  def receipt_is_attached_when_submitted
+    errors.add(:receipt, :required) if submitted? && !receipt.attached?
+  end
+
+  def receipt_has_allowed_type
+    return unless receipt.attached?
+    return if receipt.blob.content_type.in?([ "application/pdf", "image/jpeg", "image/png" ])
+
+    errors.add(:receipt, :invalid_content_type)
+  end
+
+  def receipt_is_within_size_limit
+    return unless receipt.attached?
+    return unless receipt.blob.byte_size > 10.megabytes
+
+    errors.add(:receipt, :too_large)
+  end
 end
 
 # == Schema Information
 #
 # Table name: payments
 #
-#  id         :bigint           not null, primary key
-#  status     :integer
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  account_id :bigint           not null
+#  id          :bigint           not null, primary key
+#  status      :integer          default(0), not null
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  account_id  :bigint           not null
+#  provider_id :bigint
 #
 # Indexes
 #
-#  index_payments_on_account_id  (account_id)
+#  index_payments_on_account_id   (account_id)
+#  index_payments_on_provider_id  (provider_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (account_id => accounts.id)
+#  fk_rails_...  (provider_id => providers.id)
 #

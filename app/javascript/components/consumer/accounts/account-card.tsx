@@ -14,6 +14,8 @@ import { SheetTrigger } from "@/components/ui/sheet"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
 
+import PaymentReceiptDialog from "./payment-receipt-dialog"
+
 interface AccountDetail {
   orders: SimplifiedOrder[]
   month: string
@@ -32,6 +34,15 @@ export default function AccountCard({
   setLoading,
 }: AccountCardProps) {
   const { t } = useTranslation()
+  const payment =
+    [...account.payments]
+      .sort(
+        (first, second) =>
+          new Date(second.created_at).getTime() -
+          new Date(first.created_at).getTime(),
+      )
+      .find(({ status }) => status !== "approved") ??
+    account.payments.find(({ status }) => status === "approved")
 
   async function handleClick() {
     setLoading(true)
@@ -76,7 +87,7 @@ export default function AccountCard({
 
         <CardTitle className="flex items-center">
           <span>
-            ${account.orders_price_sum}
+            ${account.amount}
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
               {account.orders_amount_sum}{" "}
@@ -101,7 +112,7 @@ export default function AccountCard({
 
         <Separator />
 
-        <Button> {t("pages.accounts.show.receipt")} </Button>
+        <PaymentReceiptDialog accountId={account.id} payment={payment} />
       </CardHeader>
     </Card>
   )

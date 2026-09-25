@@ -76,6 +76,17 @@
           "menu": "Plato",
           "price": "Monto",
           "receipt": "Subir comprobante de pago",
+          "receipt_approved": "Pago aprobado",
+          "receipt_description": "Adjuntá el comprobante correspondiente a este pago.",
+          "receipt_file": "Seleccionar archivo",
+          "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
+          "receipt_preview": "Vista previa del comprobante",
+          "receipt_replace": "Reemplazar archivo",
+          "receipt_title": "Subir comprobante",
+          "receipt_unavailable": "Comprobante no disponible",
+          "receipt_update": "Actualizar comprobante",
+          "receipt_uploading": "Subiendo comprobante...",
+          "receipt_view_edit": "Ver o editar comprobante",
           "see_detail": "Ver detalle",
           "spending": "Consumo",
           "total": "Total"
@@ -126,6 +137,10 @@
         "title": "Te damos la bienvenida"
       },
       "orders": {
+        "addresses": {
+          "home": "Casa",
+          "office": "Oficina"
+        },
         "delivery_methods": {
           "home": "Domicilio",
           "office": "Oficina"
@@ -164,8 +179,25 @@
           "address": "Dirección de entrega",
           "back": "Volver a mis pedidos",
           "base_price": "Precio base",
+          "cannot_edit": {
+            "already_closed": "Este pedido ya está cerrado.",
+            "already_confirmed": "El proveedor ya confirmó este pedido, así que no se puede modificar.",
+            "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede modificar."
+          },
           "date": "Fecha de entrega",
           "delivery_method": "Modalidad de entrega",
+          "edit": "Modificar pedido",
+          "edit_dialog": {
+            "address": "Dirección de entrega",
+            "back": "Volver",
+            "confirm": "Guardar cambios",
+            "description": "Podés cambiar la cantidad, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo.",
+            "notes": "Notas",
+            "notes_placeholder": "Sin salsa, sin cebolla…",
+            "quantity": "Cantidad",
+            "remaining": "Quedan %{count} disponibles para esta fecha",
+            "title": "Modificar pedido"
+          },
           "no_notes": "Sin notas",
           "notes": "Notas",
           "quantity": "Cantidad",
@@ -196,13 +228,28 @@
         }
       },
       "provider_orders": {
+        "actions": {
+          "confirm": "Confirmar",
+          "reject": "Rechazar",
+          "reject_dialog": {
+            "back": "Volver",
+            "confirm": "Rechazar pedido",
+            "description": "Seleccioná el motivo de la cancelación. El empleado va a ver el cambio en sus pedidos.",
+            "details_label": "Describí el motivo",
+            "details_placeholder": "Ingresá el motivo…",
+            "reason_label": "Motivo",
+            "title": "¿Rechazar el pedido %{code}?"
+          }
+        },
         "index": {
           "cancel": "Cancelar",
           "code": "PED-%{id}",
           "confirm": "Confirmar",
+          "date": "el %d/%m/%Y",
+          "deliver": "a entregar",
           "detail": "Ver detalle",
-          "empty_description": "Todavía no recibiste pedidos para hoy.",
-          "empty_filtered_description": "No tenés pedidos con este estado para hoy.",
+          "empty_description": "Todavía no recibiste pedidos para los próximos días.",
+          "empty_filtered_description": "No tenés pedidos próximos con este estado.",
           "empty_title": "No hay pedidos",
           "eyebrow": "Operación diaria",
           "filter_label": "Filtrar pedidos por estado",
@@ -215,7 +262,16 @@
           },
           "no_address": "Sin dirección de entrega",
           "quantity": "x%{count}",
-          "title": "Pedidos"
+          "title": "Pedidos",
+          "today": "hoy",
+          "tomorrow": "mañana"
+        },
+        "rejection_reasons": {
+          "customer_request": "Solicitud del cliente",
+          "duplicate_order": "Pedido duplicado",
+          "order_error": "Error en el pedido",
+          "other": "Otro motivo",
+          "out_of_stock": "Sin stock disponible"
         },
         "show": {
           "amounts": "Importe",
@@ -244,6 +300,8 @@
           "ordered_at": "Hora del pedido",
           "preparation": "Preparación",
           "quantity": "Cantidad",
+          "rejection_details": "Detalle del rechazo",
+          "rejection_reason": "Motivo de rechazo",
           "sauces": "Salsas",
           "status": "Estado",
           "stock": "Cupo del día",
