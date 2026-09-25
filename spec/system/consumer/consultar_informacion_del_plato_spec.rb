@@ -35,7 +35,7 @@ RSpec.describe "Consultar la información de un plato" do
   let(:wednesday) { monday + 2 }
 
   before do
-    Order.delete_all
+    Order.destroy_all
     Schedule.delete_all
   end
 

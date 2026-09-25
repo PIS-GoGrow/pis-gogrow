@@ -27,7 +27,8 @@ RSpec.describe Consumer, type: :model do
 
   describe "subsidized meals calculations" do
     before do
-      Order.delete_all
+      # destroy_all y no delete_all: las órdenes cuelgan de cuentas.
+      Order.destroy_all
       Schedule.delete_all
     end
 
@@ -104,6 +105,10 @@ RSpec.describe Consumer, type: :model do
 
   describe "debt and spending" do
     let(:provider) { providers(:tuviandita) }
+
+    # Las cuentas de este bloque se arman a mano con montos exactos, así que
+    # tiene que partir sin las que traigan las fixtures.
+    before { consumer.accounts.destroy_all }
 
     it "sums pending accounts for total debt" do
       Account.create!(owner: consumer, provider:, month: 1.month.ago.beginning_of_month, amount: 300)

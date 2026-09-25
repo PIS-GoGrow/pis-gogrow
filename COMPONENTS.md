@@ -57,6 +57,7 @@ Todas las pantallas con sesión iniciada comparten el mismo esqueleto. Las medid
 | Ancho y márgenes | `PageContainer` | Centrado, hasta 1200 px (`max-w-300`), con `p-5` |
 | Encabezado | `PageContainer` (por dentro usa `Heading`) | `eyebrow` opcional en mayúsculas, título en `text-xl font-semibold` y `description` opcional |
 | Botones del encabezado | Prop `actions` de `PageContainer` | A la derecha del título; debajo, si no entran |
+| Volver a la pantalla anterior | Prop `back` de `PageContainer` | Arriba del título y pegado a la izquierda. No va en `actions`: el volver no es una acción de la pantalla |
 | Separaciones | `PageContainer` | `mb-8` entre el encabezado y el contenido, y `gap-4` entre cada hijo directo |
 | Título de la pestaña del navegador | `<Head title>` | El mismo texto que `title` |
 | Breadcrumbs | `breadcrumbs` de `AppLayout` | Al menos la sección actual |
@@ -128,12 +129,13 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | Componente | Importar desde | Usar para |
 |---|---|---|
 | `AppLayout` | `@/layouts/app-layout` | Toda pantalla con sesión iniciada; recibe `breadcrumbs` |
-| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description` y `actions` |
+| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `actions` y `back` |
 | `ListItemCard` | `@/components/list-item-card` | Tarjeta compacta para cada ítem de una lista; acepta las mismas partes que `Card` |
 | `Heading` | `@/components/heading` | Encabezado con `eyebrow`, `description` y `actions` opcionales. En las pantallas se usa a través de `PageContainer` |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
 | `AlertError` | `@/components/alert-error` | `Alert` destructivo con una lista de errores |
-| `StatusBadge` | `@/components/status-badge` | Estado de un pedido: `Badge variant="outline"` con `data-status` y color por estado |
+| `StatusBadge` | `@/components/status-badge` | Estado de un pedido o de un pago: `Badge variant="outline"` con `data-status` y color por estado |
+| `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail` y `badge` opcionales |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
@@ -147,9 +149,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 
 El prototipo repite estos patrones en varias pantallas. Acá no existen: se crean como componente compartido al portar la primera pantalla que los use, y su fila pasa a la tabla anterior.
 
-| Componente | Archivo | Cómo se arma |
-|---|---|---|
-| `Stat` (tarjeta de métrica) | `components/stat.tsx` | `Card` compacta: etiqueta en `CardDescription`, valor y detalle en `CardContent` |
+Por ahora no queda ninguno pendiente.
 
 ## Superposiciones con el prototipo
 
@@ -597,12 +597,35 @@ Reemplaza los `<details>` del prototipo.
 import StatusBadge from "@/components/status-badge"
 ```
 
-Envuelve `Badge variant="outline"` y resuelve el color a partir del estado, con un punto del mismo color antes del texto. El texto sale de `pages.orders.statuses.<estado>`, así que la pantalla sólo pasa el estado.
+Envuelve `Badge variant="outline"` y resuelve el color a partir del estado, con un punto del mismo color antes del texto. El texto sale de las traducciones, así que la pantalla sólo pasa el estado.
 
-El mapa de estilos está tipado con `OrderStatus`: agregar un estado al enum de Rails rompe la compilación hasta definir cómo se ve. También expone `data-status`, para poder apuntarle desde los tests o desde una clase del contenedor.
+Sirve para los dos enums de estado que tiene la aplicación, y `kind` elige cuál: `"order"` (el valor por defecto, textos de `pages.orders.statuses.*`) o `"payment"` (textos de `pages.provider_collections.statuses.*`). El discriminador es obligatorio porque `pending` y `rejected` existen en ambos enums y el valor solo no alcanza para saber qué corresponde.
+
+Cada mapa de estilos está tipado con su enum de Rails: agregar un estado rompe la compilación hasta definir cómo se ve. También expone `data-status`, para poder apuntarle desde los tests o desde una clase del contenedor.
 
 ```tsx
 <StatusBadge status={order.status} />
+<StatusBadge status={account.status} kind="payment" />
+```
+
+### Stat
+
+```tsx
+import Stat from "@/components/stat"
+```
+
+Tarjeta de métrica sobre fondo gris: la etiqueta en `CardDescription`, un `badge` opcional arriba a la derecha (el período, por ejemplo), y el valor en `text-2xl` con un `detail` opcional a su lado. Se usa para los totales que encabezan una pantalla.
+
+- `value`, `detail` y `badge` son `ReactNode`: aceptan un importe ya formateado con `formatMoney` o un `Badge`.
+- No define su ancho: las métricas se acomodan con el `grid` de la pantalla (`grid gap-4 md:grid-cols-2`).
+
+```tsx
+<Stat
+  label={t("pages.provider_collections.index.sales")}
+  badge={<Badge variant="secondary">{t("pages.provider_collections.index.this_month")}</Badge>}
+  value={formatMoney(sales.total)}
+  detail={`| ${t("pages.provider_collections.index.confirmed_meals", { count: sales.meals })}`}
+/>
 ```
 
 ### Progress

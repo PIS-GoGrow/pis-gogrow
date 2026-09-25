@@ -33,7 +33,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   end
 
   it "renders the protected weekly menu with its server props" do
-    Order.delete_all
+    Order.destroy_all
     Schedule.delete_all
     user = consumer_user
     schedule = create_schedule
@@ -53,7 +53,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   end
 
   it "reports the five meal weekly allowance using delivery dates" do
-    Order.delete_all
+    Order.destroy_all
     Schedule.delete_all
     user = consumer_user
     schedule = create_schedule
@@ -106,7 +106,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       # Los fixtures publican platos con fechas relativas a la fecha real, que
       # bajo travel_to caen en cualquier lado. Se limpia para que cada ejemplo
       # declare exactamente lo que espera ver.
-      Order.delete_all
+      Order.destroy_all
       Schedule.delete_all
     end
 
@@ -271,7 +271,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     let(:monday) { Date.current.beginning_of_week(:monday) }
 
     before do
-      Order.delete_all
+      Order.destroy_all
       Schedule.delete_all
     end
 

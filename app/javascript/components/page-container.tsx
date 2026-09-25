@@ -7,6 +7,7 @@ interface PageContainerProps {
   eyebrow?: string
   description?: string
   actions?: ReactNode
+  back?: ReactNode
   children: ReactNode
 }
 
@@ -15,6 +16,7 @@ export default function PageContainer({
   eyebrow,
   description,
   actions,
+  back,
   children,
 }: PageContainerProps) {
   return (
@@ -24,6 +26,7 @@ export default function PageContainer({
         eyebrow={eyebrow}
         description={description}
         actions={actions}
+        back={back}
       />
       <div className="flex flex-col gap-4">{children}</div>
     </div>

@@ -39,6 +39,7 @@ Rails.application.routes.draw do
         patch :reject
       end
     end
+    resources :collections, only: [ :index, :show ]
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
