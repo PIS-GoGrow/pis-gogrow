@@ -25,7 +25,7 @@ import {
   adminDashboard,
   consumerAccounts,
   consumerDashboard,
-  orders,
+  consumerOrders,
   providerDashboard,
   providerMenus,
   providerOrders,
@@ -77,7 +77,7 @@ export function AppSidebar() {
       },
       {
         title: t("nav.orders"),
-        href: orders.index().url,
+        href: consumerOrders.index().url,
         icon: ClipboardList,
       },
       {
@@ -91,7 +91,11 @@ export function AppSidebar() {
   const role = auth.session.role
 
   return (
-    <Sidebar collapsible="icon" variant="inset">
+    <Sidebar
+      collapsible="icon"
+      variant="inset"
+      hideOnMobile={role === "consumer"}
+    >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

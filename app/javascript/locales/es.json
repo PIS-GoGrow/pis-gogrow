@@ -76,6 +76,17 @@
           "menu": "Plato",
           "price": "Monto",
           "receipt": "Subir comprobante de pago",
+          "receipt_approved": "Pago aprobado",
+          "receipt_description": "Adjuntá el comprobante correspondiente a este pago.",
+          "receipt_file": "Seleccionar archivo",
+          "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
+          "receipt_preview": "Vista previa del comprobante",
+          "receipt_replace": "Reemplazar archivo",
+          "receipt_title": "Subir comprobante",
+          "receipt_unavailable": "Comprobante no disponible",
+          "receipt_update": "Actualizar comprobante",
+          "receipt_uploading": "Subiendo comprobante...",
+          "receipt_view_edit": "Ver o editar comprobante",
           "see_detail": "Ver detalle",
           "spending": "Consumo",
           "total": "Total"
@@ -93,6 +104,24 @@
           "provider": "Panel del proveedor"
         },
         "title": "Panel"
+      },
+      "errors": {
+        "internal_server_error": {
+          "back_home": "Volver al inicio",
+          "description": "Hubo un problema al procesar tu solicitud. Intentá de nuevo.",
+          "heading": "¡Ups! Algo salió mal",
+          "retry": "Reintentar",
+          "title": "Algo salió mal"
+        },
+        "not_found": {
+          "back_home": "Volver al inicio",
+          "description": "La dirección que buscás no está disponible o fue movida.",
+          "go_to_menu": "Ir a mi menú",
+          "go_to_panel": "Ir a mi panel",
+          "heading": "¡Ups! Esta página no existe",
+          "sign_in": "Iniciar sesión",
+          "title": "Página no encontrada"
+        }
       },
       "home": {
         "dashboard": "Panel",
@@ -189,10 +218,14 @@
           }
         },
         "index": {
+          "cancel": "Cancelar",
           "code": "PED-%{id}",
+          "confirm": "Confirmar",
+          "date": "el %d/%m/%Y",
+          "deliver": "a entregar",
           "detail": "Ver detalle",
-          "empty_description": "Todavía no recibiste pedidos para hoy.",
-          "empty_filtered_description": "No tenés pedidos con este estado para hoy.",
+          "empty_description": "Todavía no recibiste pedidos para los próximos días.",
+          "empty_filtered_description": "No tenés pedidos próximos con este estado.",
           "empty_title": "No hay pedidos",
           "eyebrow": "Operación diaria",
           "filter_label": "Filtrar pedidos por estado",
@@ -205,7 +238,9 @@
           },
           "no_address": "Sin dirección de entrega",
           "quantity": "x%{count}",
-          "title": "Pedidos"
+          "title": "Pedidos",
+          "today": "hoy",
+          "tomorrow": "mañana"
         },
         "show": {
           "amounts": "Importe",

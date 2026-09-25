@@ -14,6 +14,7 @@ class ApplicationController < ActionController::Base
   # Valida que el usuario esté logueado y tenga el rol que se indica
   def authenticate_role(role)
     authenticate
+    return if performed?
 
     # No redirigir de vuelta si ya existe la sesión (ya se hizo en authenticate), solo
     # si el rol no coincide con el rol activo en la sesión
@@ -25,6 +26,7 @@ class ApplicationController < ActionController::Base
   # Valida que haya un empleado logueado
   def authenticate_consumer
     authenticate
+    return if performed?
 
     redirect_to sign_in_path if Current.session && !Current.user.consumer?
   end
@@ -42,6 +44,11 @@ class ApplicationController < ActionController::Base
 
   def perform_authentication
     Current.session ||= Session.find_by_id(cookies.signed[:session_token])
+    return Current.session if Current.user
+
+    Current.session = nil
+    cookies.delete(:session_token)
+    nil
   end
 
   def switch_locale(&action)

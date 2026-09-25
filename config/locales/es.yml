@@ -47,6 +47,7 @@ es:
     role_set: "Rol cambiado exitosamente."
     no_permission: "No tenés permiso para acceder a este recurso."
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
+    payment_receipt_submitted: "Comprobante enviado para su validacion."
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -58,6 +59,16 @@ es:
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
+    payment_closed: "Este pago ya fue aprobado y no puede modificarse."
+  activerecord:
+    errors:
+      models:
+        payment:
+          attributes:
+            receipt:
+              required: "debe adjuntarse para enviar el pago"
+              invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
+              too_large: "no puede superar los 10 MB"
   user_mailer:
     greeting: "Hola,"
     support: "¿Tienes dudas o necesitas ayuda? Responde este correo y nuestro equipo de soporte te ayudará a resolverlo."
@@ -101,6 +112,21 @@ es:
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
+    errors:
+      internal_server_error:
+        title: "Algo salió mal"
+        heading: "¡Ups! Algo salió mal"
+        description: "Hubo un problema al procesar tu solicitud. Intentá de nuevo."
+        retry: "Reintentar"
+        back_home: "Volver al inicio"
+      not_found:
+        title: "Página no encontrada"
+        heading: "¡Ups! Esta página no existe"
+        description: "La dirección que buscás no está disponible o fue movida."
+        go_to_menu: "Ir a mi menú"
+        go_to_panel: "Ir a mi panel"
+        sign_in: "Iniciar sesión"
+        back_home: "Volver al inicio"
     accounts:
       index:
         payments: "Pagos"
@@ -109,7 +135,7 @@ es:
         pending_payments: "Pagos pendientes"
         total_debt: "Deuda total"
         pending: "Pendientes"
-        history: "Historial" 
+        history: "Historial"
         no_debt: "¡Sin deudas pendientes con este proveedor!"
       show:
         see_detail: "Ver detalle"
@@ -118,6 +144,17 @@ es:
         lunches: "viandas"
         due: "Vence: "
         receipt: "Subir comprobante de pago"
+        receipt_title: "Subir comprobante"
+        receipt_description: "Adjuntá el comprobante correspondiente a este pago."
+        receipt_file: "Seleccionar archivo"
+        receipt_formats: "PDF, JPG o PNG. Tamaño máximo: 10 MB."
+        receipt_uploading: "Subiendo comprobante..."
+        receipt_approved: "Pago aprobado"
+        receipt_unavailable: "Comprobante no disponible"
+        receipt_preview: "Vista previa del comprobante"
+        receipt_view_edit: "Ver o editar comprobante"
+        receipt_replace: "Reemplazar archivo"
+        receipt_update: "Actualizar comprobante"
         date: "Fecha"
         menu: "Plato"
         amount: "Cant."
@@ -191,12 +228,18 @@ es:
           cancelled: "Cancelados"
           rejected: "Rechazados"
         empty_title: "No hay pedidos"
-        empty_description: "Todavía no recibiste pedidos para hoy."
-        empty_filtered_description: "No tenés pedidos con este estado para hoy."
+        empty_description: "Todavía no recibiste pedidos para los próximos días."
+        empty_filtered_description: "No tenés pedidos próximos con este estado."
         code: "PED-%{id}"
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"
+        cancel: "Cancelar"
+        confirm: "Confirmar"
         detail: "Ver detalle"
+        deliver: "a entregar"
+        today: "hoy"
+        tomorrow: "mañana"
+        date: "el %d/%m/%Y"
       show:
         eyebrow: "Pedido"
         title: "Pedido %{code}"

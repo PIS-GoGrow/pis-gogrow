@@ -22,6 +22,7 @@ interface Props {
   percentage: number
   back: () => void
   add: () => void
+  monthlyRemaining: number
 }
 
 export function DishDetail({
@@ -35,11 +36,17 @@ export function DishDetail({
   sauce,
   setSauce,
   percentage,
+  monthlyRemaining,
   back,
   add,
 }: Props) {
   const subtotal = item.menu.price * quantity
-  const discount = (subtotal * percentage) / 100
+
+  const subsidizedQuantity = Math.min(quantity, Math.max(monthlyRemaining, 0))
+
+  const discount = (item.menu.price * subsidizedQuantity * percentage) / 100
+
+  const total = subtotal - discount
   const reviews = item.menu.reviews
   const choicesMissing =
     (item.menu.fillings.length > 0 && !filling) ||
@@ -141,7 +148,7 @@ export function DishDetail({
       <OrderSummary
         subtotal={subtotal}
         discount={discount}
-        total={subtotal - discount}
+        total={total}
         percentage={percentage}
       />
       <div className="bg-background border-border fixed inset-x-0 bottom-0 flex gap-2 border-t p-6 md:static md:mt-5 md:border-0 md:p-0">

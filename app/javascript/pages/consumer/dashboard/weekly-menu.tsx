@@ -1,6 +1,7 @@
 import { UtensilsCrossed } from "lucide-react"
 import { useState } from "react"
 
+import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
 import { Button } from "@/components/ui/button"
@@ -14,7 +15,6 @@ import {
 import type { ConsumerDashboardIndex } from "@/types"
 
 import { BenefitCard } from "./benefit-card"
-import { ConsumerMobileNav } from "./consumer-mobile-nav"
 import type { CartItem, Schedule } from "./consumer-types"
 import { money } from "./formatters"
 import { ProviderFilterSheet } from "./provider-filter-sheet"
@@ -71,8 +71,8 @@ export function WeeklyMenu({
       <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-10">
         <header className="mb-6">
           <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
-          <p className="text-muted-foreground text-sm">
-            {new Date(`${date}T00:00:00`).toLocaleDateString("es-UY", {
+          <p className="text-muted-foreground text-sm capitalize">
+            {new Date(`${currentDate}T00:00:00`).toLocaleDateString("es-UY", {
               weekday: "long",
               day: "numeric",
               month: "long",

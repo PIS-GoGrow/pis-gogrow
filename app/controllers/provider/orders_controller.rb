@@ -2,7 +2,12 @@
 
 class Provider::OrdersController < Provider::InertiaController
   def index
-    @orders = provider_orders.where(schedules: { date: Date.current }).order(created_at: :desc)
+    # Al proveedor le aparecen las órdenes ordenadas según el día de entrega,
+    # y según cuándo se hicieron. Una orden para hoy que se hizo recién, se muestra
+    # primero.
+    @orders =
+      provider_orders.where(schedules: { date: Date.current.. })
+                     .order("schedules.date ASC, orders.created_at DESC")
   end
 
   # El find va sobre los pedidos del proveedor y no sobre Order: pedir el de

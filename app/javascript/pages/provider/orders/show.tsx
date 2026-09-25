@@ -149,7 +149,6 @@ export default function Show({ order }: ProviderOrdersShow) {
             </span>
           </Row>
         </Section>
-
         <ProviderOrderActions order={order} className="sm:ml-auto sm:w-80" />
       </PageContainer>
     </AppLayout>
