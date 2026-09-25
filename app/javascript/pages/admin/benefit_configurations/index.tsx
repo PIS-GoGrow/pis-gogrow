@@ -33,12 +33,14 @@ export default function Index({
   // pendiente -- asi lo pidio Fran. flash.notice desaparece solo en la
   // proxima visita/recarga (Rails lo descarta despues de leerlo una vez),
   // asi que no hace falta un estado "dismissed" separado para eso.
-  const [showScheduledBanner, setShowScheduledBanner] = useState(false)
+  const [showScheduledBanner, setShowScheduledBanner] = useState(
+    Boolean(flash.notice),
+  )
   const [previousFlashNotice, setPreviousFlashNotice] = useState(flash.notice)
 
   if (flash.notice !== previousFlashNotice) {
     setPreviousFlashNotice(flash.notice)
-    if (flash.notice) setShowScheduledBanner(true)
+    setShowScheduledBanner(Boolean(flash.notice))
   }
 
   const title = t("pages.admin.benefit_configurations.index.title")
