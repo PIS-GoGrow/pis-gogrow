@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_19_193218) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_25_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -62,6 +62,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_193218) do
     t.bigint "user_id", null: false
     t.index ["company_id"], name: "index_admins_on_company_id"
     t.index ["user_id"], name: "index_admins_on_user_id"
+  end
+
+  create_table "benefit_configurations", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.date "effective_from", null: false
+    t.integer "monthly_voucher_limit", null: false
+    t.integer "subsidy_percentage", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "effective_from"], name: "index_benefit_configurations_on_company_id_and_effective_from", unique: true
+    t.index ["company_id"], name: "index_benefit_configurations_on_company_id"
+    t.index ["created_by_id"], name: "index_benefit_configurations_on_created_by_id"
   end
 
   create_table "benefits", force: :cascade do |t|
@@ -128,6 +141,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_193218) do
     t.datetime "created_at", null: false
     t.integer "delivery_method", null: false
     t.decimal "discounted_price", precision: 10, scale: 2
+    t.datetime "modified_at"
+    t.bigint "modified_by_id"
     t.string "notes"
     t.decimal "price", precision: 10, scale: 2
     t.bigint "schedule_id"
@@ -136,6 +151,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_193218) do
     t.datetime "updated_at", null: false
     t.index ["cancelled_by_id"], name: "index_orders_on_cancelled_by_id"
     t.index ["consumer_id"], name: "index_orders_on_consumer_id"
+    t.index ["modified_by_id"], name: "index_orders_on_modified_by_id"
     t.index ["schedule_id"], name: "index_orders_on_schedule_id"
     t.check_constraint "delivery_method <> 1 OR address IS NOT NULL AND btrim(address::text) <> ''::text", name: "orders_home_delivery_requires_address"
   end
@@ -389,6 +405,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_193218) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "admins", "companies"
   add_foreign_key "admins", "users"
+  add_foreign_key "benefit_configurations", "companies"
+  add_foreign_key "benefit_configurations", "users", column: "created_by_id"
   add_foreign_key "benefits", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
@@ -398,6 +416,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_193218) do
   add_foreign_key "orders", "consumers"
   add_foreign_key "orders", "schedules"
   add_foreign_key "orders", "users", column: "cancelled_by_id"
+  add_foreign_key "orders", "users", column: "modified_by_id"
   add_foreign_key "payments", "accounts"
   add_foreign_key "payments", "providers"
   add_foreign_key "providers", "users", on_delete: :nullify
