@@ -23,6 +23,7 @@ class Order < ApplicationRecord
   belongs_to :consumer
   belongs_to :schedule
   belongs_to :cancelled_by, class_name: "User", optional: true
+  belongs_to :modified_by, class_name: "User", optional: true
   has_one :menu, through: :schedule
   has_one :provider, through: :menu
 
@@ -59,6 +60,20 @@ class Order < ApplicationRecord
     if: -> { saved_change_to_status? || saved_change_to_price? || saved_change_to_discounted_price? }
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
 
+  # Solo las unidades subsidizadas llevan el descuento; el resto se cobra al
+  # precio de lista. subsidized_quantity nil significa todas.
+  def self.price_breakdown(unit_price:, quantity:, subsidized_quantity:, discount_percentage:)
+    subsidized_quantity = quantity if subsidized_quantity.nil?
+    subsidized_quantity = subsidized_quantity.clamp(0, quantity)
+
+    discounted_unit_price = unit_price * (100 - discount_percentage.clamp(0, 100)) / 100
+
+    [
+      unit_price * quantity,
+      (discounted_unit_price * subsidized_quantity + unit_price * (quantity - subsidized_quantity)).round(2)
+    ]
+  end
+
   def self.reserve(
     consumer:,
     schedule:,
@@ -69,19 +84,12 @@ class Order < ApplicationRecord
     discount_percentage: 0,
     subsidized_quantity: nil
   )
-    subsidized_quantity = quantity if subsidized_quantity.nil?
-    subsidized_quantity = subsidized_quantity.clamp(0, quantity)
-
-    unit_price = schedule.menu.price
-    gross_price = unit_price * quantity
-
-    discounted_unit_price =
-      unit_price * (100 - discount_percentage.clamp(0, 100)) / 100
-
-    discounted_price = (
-      discounted_unit_price * subsidized_quantity +
-      unit_price * (quantity - subsidized_quantity)
-    ).round(2)
+    gross_price, discounted_price = price_breakdown(
+      unit_price: schedule.menu.price,
+      quantity:,
+      subsidized_quantity:,
+      discount_percentage:
+    )
 
     order = new(
       consumer:,
@@ -154,6 +162,57 @@ class Order < ApplicationRecord
     end
   end
 
+  # RN-12: modificar equivale a cancelar y volver a pedir, así que rige la misma
+  # ventana. Una orden ya confirmada queda fuera: el proveedor la aceptó con
+  # esos datos. Devuelve el motivo del bloqueo para que la pantalla lo explique.
+  def modification_block_reason
+    return "already_confirmed" if confirmed?
+    return "already_closed" unless pending?
+    return "unavailable" if schedule.nil?
+    return if schedule.date >= Date.current
+
+    "already_closed"
+  end
+
+  def modifiable?
+    modification_block_reason.nil?
+  end
+
+  # El cupo del schedule y el tope mensual de viandas subsidiadas ya cuentan las
+  # unidades de esta orden, así que hay que devolvérselas antes de validar y de
+  # repartir el subsidio sobre el total nuevo: sin eso, pasar de 2 a 3 se
+  # rechazaría contra su propio consumo.
+  def modify(by:, quantity:, notes:, delivery:, discount_percentage: 0, remaining_subsidized: 0)
+    with_lock do
+      return false unless modifiable?
+
+      schedule.with_lock do
+        if schedule.remaining_amount + amount.to_i < quantity
+          errors.add(:base, I18n.t("validations.schedule_unavailable"))
+          return false
+        end
+
+        subsidized_quantity = [ quantity, remaining_subsidized + subsidized_units_held ].min
+        price, discounted_price = self.class.price_breakdown(
+          unit_price: schedule.menu.price,
+          quantity:,
+          subsidized_quantity:,
+          discount_percentage:
+        )
+
+        update(
+          amount: quantity,
+          notes:,
+          price:,
+          discounted_price:,
+          modified_at: Time.current,
+          modified_by: by,
+          **delivery
+        )
+      end
+    end
+  end
+
   # El lock no es por dinero: evita que un doble envío cancele dos veces y pise
   # el registro de quién y cuándo lo hizo.
   def cancel(by:)
@@ -165,6 +224,14 @@ class Order < ApplicationRecord
   end
 
   private
+
+  # El tope mensual solo mira las entregas del mes en curso, así que una orden
+  # para el mes que viene no tiene unidades que devolver.
+  def subsidized_units_held
+    return 0 unless schedule&.date&.then { Date.current.all_month.cover?(it) }
+
+    amount.to_i
+  end
 
   # Asignarse a la cuenta actual del usuario, o crearla si no existiera
   # Forzar a que la cuenta recalcule su valor calculado.
@@ -209,6 +276,7 @@ end
 #  cancelled_at               :datetime
 #  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
+#  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
 #  status                     :integer          default(0), not null
@@ -217,17 +285,20 @@ end
 #  updated_at                 :datetime         not null
 #  cancelled_by_id            :bigint
 #  consumer_id                :bigint           not null
+#  modified_by_id             :bigint
 #  schedule_id                :bigint
 #
 # Indexes
 #
 #  index_orders_on_cancelled_by_id  (cancelled_by_id)
 #  index_orders_on_consumer_id      (consumer_id)
+#  index_orders_on_modified_by_id   (modified_by_id)
 #  index_orders_on_schedule_id      (schedule_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (cancelled_by_id => users.id)
 #  fk_rails_...  (consumer_id => consumers.id)
+#  fk_rails_...  (modified_by_id => users.id)
 #  fk_rails_...  (schedule_id => schedules.id)
 #

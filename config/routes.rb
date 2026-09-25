@@ -48,7 +48,7 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :menus, only: [ :index ]
 
-    resources :orders, only: [ :index, :show, :create ] do
+    resources :orders, only: [ :index, :show, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer
     end
 

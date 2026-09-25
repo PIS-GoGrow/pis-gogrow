@@ -137,6 +137,10 @@
         "title": "Te damos la bienvenida"
       },
       "orders": {
+        "addresses": {
+          "home": "Casa",
+          "office": "Oficina"
+        },
         "delivery_methods": {
           "home": "Domicilio",
           "office": "Oficina"
@@ -175,8 +179,25 @@
           "address": "Dirección de entrega",
           "back": "Volver a mis pedidos",
           "base_price": "Precio base",
+          "cannot_edit": {
+            "already_closed": "Este pedido ya está cerrado.",
+            "already_confirmed": "El proveedor ya confirmó este pedido, así que no se puede modificar.",
+            "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede modificar."
+          },
           "date": "Fecha de entrega",
           "delivery_method": "Modalidad de entrega",
+          "edit": "Modificar pedido",
+          "edit_dialog": {
+            "address": "Dirección de entrega",
+            "back": "Volver",
+            "confirm": "Guardar cambios",
+            "description": "Podés cambiar la cantidad, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo.",
+            "notes": "Notas",
+            "notes_placeholder": "Sin salsa, sin cebolla…",
+            "quantity": "Cantidad",
+            "remaining": "Quedan %{count} disponibles para esta fecha",
+            "title": "Modificar pedido"
+          },
           "no_notes": "Sin notas",
           "notes": "Notas",
           "quantity": "Cantidad",
