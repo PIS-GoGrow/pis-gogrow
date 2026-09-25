@@ -9,14 +9,6 @@ import { SheetTrigger } from "@/components/ui/sheet"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
 
-// TODO: confirmar estos tres valores contra el enum real una vez que el
-// equipo lo defina en Payment (hoy `status` es un integer suelto). `pending`
-// en 0 ya coincide con el scope existente en Account; accepted/rejected
-// son un supuesto a confirmar.
-const STATUS_PENDING = 0
-const STATUS_ACCEPTED = 1
-const STATUS_REJECTED = 2
-
 interface AccountDetail {
   orders: SimplifiedOrder[]
   month: string

@@ -58,6 +58,8 @@ es:
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
     order_deadline_updated: "La hora límite de pedidos fue actualizada."
     payment_receipt_submitted: "Comprobante enviado para su validacion."
+    payment_approved: "Comprobante aprobado."
+    payment_rejected: "Comprobante rechazado."
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -73,6 +75,7 @@ es:
     password_challenge_invalid: "La verificación de contraseña no es válida"
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
+    payment_not_reviewable: "Este comprobante ya fue revisado."
   activerecord:
     errors:
       models:
@@ -82,6 +85,8 @@ es:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
+            rejection_reason:
+              blank: "es obligatorio para rechazar un comprobante"
         order:
           attributes:
             rejection_reason:

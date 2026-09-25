@@ -16,6 +16,17 @@ class Consumer::PaymentsController < Consumer::InertiaController
     persist_payment
   end
 
+  def index
+    payments = consumer_payments.where.not(status: :pending)
+                                .with_attached_receipt
+                                .includes(account: { provider: :user })
+                                .order(created_at: :desc)
+
+    render inertia: "consumer/payments/index", props: {
+      payments: Consumer::PaymentSerializer.new(payments).as_json
+    }
+  end
+
   def update
     if @payment.approved?
       return redirect_back fallback_location: dashboard_path, inertia: {

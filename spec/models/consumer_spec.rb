@@ -109,7 +109,7 @@ RSpec.describe Consumer, type: :model do
       Account.create!(owner: consumer, provider:, month: 1.month.ago.beginning_of_month, amount: 300)
       Account.create!(owner: consumer, provider:, month: Date.current.beginning_of_month, amount: 450)
       paid_account = Account.create!(owner: consumer, provider:, month: 2.months.ago.beginning_of_month, amount: 200)
-      Payment.create!(account: paid_account, status: 0)
+      Payment.create!(account: paid_account, status: :approved)
 
       expect(consumer.total_debt).to eq(750)
     end

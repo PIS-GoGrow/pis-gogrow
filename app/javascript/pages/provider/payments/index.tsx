@@ -7,6 +7,7 @@ import { DialogTrigger } from "@/components/ui/dialog"
 import RejectPaymentDialog from "@/components/payments/reject-payment-dialog"
 import AppLayout from "@/layouts/app-layout"
 import type { BreadcrumbItem } from "@/types"
+import { providerPayments } from "@/routes"
 
 interface Payment {
   id: number
@@ -25,32 +26,21 @@ export default function Index({ payments }: Props) {
   const [processingId, setProcessingId] = useState<number | null>(null)
 
   const breadcrumbs: BreadcrumbItem[] = [
-    { title: "Revisar Comprobantes", href: "/provider/payments" },
+    { title: "Revisar Comprobantes", href: providerPayments.index().url },
   ]
 
-  const handleUpdateStatus = (id: number, newStatus: "accepted" | "rejected") => {
-    let reason = ""
-    
-    // Si rechaza, le pedimos un motivo básico con un prompt (MVP). 
-    // Más adelante se puede cambiar por un Modal (Dialog de Shadcn).
-    if (newStatus === "rejected") {
-      const input = window.prompt("Por favor, indica el motivo del rechazo:")
-      if (input === null) return // El usuario canceló el prompt
-      reason = input
-    }
+  const handleApprove = (id: number) => {
+  setProcessingId(id)
 
-    setProcessingId(id)
-
-    // Hacemos la petición al backend para actualizar el estado
-    router.patch(
-      `/provider/payments/${id}`, // Asume que la ruta de update está configurada
-      { status: newStatus, rejection_reason: reason },
-      {
-        preserveScroll: true,
-        onFinish: () => setProcessingId(null),
-      }
-    )
-  }
+  router.patch(
+    providerPayments.update(id).url,
+    { status: "approved" },
+    {
+      preserveScroll: true,
+      onFinish: () => setProcessingId(null),
+    },
+  )
+}
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -84,12 +74,14 @@ export default function Index({ payments }: Props) {
                   </div>
                   
                   {/* Botón para ver imagen (abre en otra pestaña) */}
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={payment.file_url} target="_blank" rel="noopener noreferrer">
-                      <Eye className="mr-2 size-4" />
-                      Ver imagen
-                    </a>
-                  </Button>
+                  {payment.file_url && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={payment.file_url} target="_blank" rel="noopener noreferrer">
+                        <Eye className="mr-2 size-4" />
+                        Ver imagen
+                      </a>
+                    </Button>
+                  )}
                 </div>
 
                 <div className="mt-2 flex gap-2 pt-4 border-t">
@@ -110,7 +102,7 @@ export default function Index({ payments }: Props) {
                     className="flex-1 bg-white text-black hover:bg-accent hover:text-accent-foreground"
                     size="sm"
                     disabled={processingId === payment.id}
-                    onClick={() => handleUpdateStatus(payment.id, "accepted")}
+                    onClick={() => handleApprove(payment.id)}
                   >
                     <Check className="mr-2 size-4" />
                     Aprobar
