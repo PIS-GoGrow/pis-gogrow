@@ -39,6 +39,7 @@ Rails.application.routes.draw do
         patch :reject
       end
     end
+    resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
