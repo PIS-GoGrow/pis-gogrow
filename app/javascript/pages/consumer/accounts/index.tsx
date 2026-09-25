@@ -4,9 +4,9 @@ import { useState } from "react"
 import type { JSX } from "react"
 import { useTranslation } from "react-i18next"
 
-import PaymentHistoryCard from "@/components/consumer/accounts/payment-history-card"
 import AccountCard from "@/components/consumer/accounts/account-card"
 import OrdersTable from "@/components/consumer/accounts/orders-table"
+import PaymentHistoryCard from "@/components/consumer/accounts/payment-history-card"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,7 +27,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useIsMobile } from "@/hooks/use-mobile"
 import AppLayout from "@/layouts/app-layout"
-import { account, consumerAccounts } from "@/routes"
+import { consumerAccounts } from "@/routes"
 import type {
   Account,
   BreadcrumbItem,
@@ -180,7 +180,7 @@ export default function Index({
             </TabsContent>
             <TabsContent className="grid w-full gap-2" value="history">
               {history_accounts.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t("pages.accounts.index.history_empty")}
                 </p>
               ) : (

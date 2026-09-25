@@ -56,12 +56,11 @@ Rails.application.routes.draw do
       patch :cancel, on: :member, as: :cancel_consumer
     end
 
-    resources :payments, only: [ :index, :create, :update ] do
+    resources :payments, only: [ :create, :update ] do
       get :receipt, on: :member
     end
 
     resources :accounts, only: [ :index, :show ]
-    resources :payments, only: [:index]
   end
 
   namespace :admin do

@@ -4,11 +4,11 @@ import {
   CalendarPlus,
   ClipboardList,
   CreditCard,
+  FileCheck,
   LayoutGrid,
   Package,
   Percent,
   Utensils,
-  FileCheck,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -32,9 +32,8 @@ import {
   providerDashboard,
   providerMenus,
   providerOrders,
-  schedules,
   providerPayments,
-  consumerPayments,
+  schedules,
 } from "@/routes"
 import type { NavItem } from "@/types"
 
@@ -68,7 +67,7 @@ export function AppSidebar() {
       },
       {
         title: "Validar pagos",
-        href: providerPayments.index().url, 
+        href: providerPayments.index().url,
         icon: FileCheck,
       },
     ],
@@ -99,11 +98,6 @@ export function AppSidebar() {
         title: t("nav.payments"),
         href: consumerAccounts.index().url,
         icon: CreditCard,
-      },
-      {
-        title: "Mis pagos",
-        href: consumerPayments.index().url,
-        icon: FileCheck,
       },
     ],
   }
