@@ -44,6 +44,7 @@ history_rejected_future:
   consumer: one
   schedule: future
   status: rejected
+  rejection_reason: out_of_stock
   amount: 1
   price: 300.50
   discounted_price: 150.25
@@ -102,6 +103,8 @@ other_consumer_upcoming:
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  rejection_details          :string
+#  rejection_reason           :integer
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null

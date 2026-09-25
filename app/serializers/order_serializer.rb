@@ -72,6 +72,8 @@ end
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  rejection_details          :string
+#  rejection_reason           :integer
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null

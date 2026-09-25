@@ -67,7 +67,7 @@ describe("ProviderOrderActions", () => {
     )
   })
 
-  it("opens reject confirmation dialog and triggers reject patch on confirmation", async () => {
+  it("opens reject confirmation dialog with confirm button disabled until reason is chosen", async () => {
     const user = userEvent.setup()
     render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
 
@@ -80,11 +80,72 @@ describe("ProviderOrderActions", () => {
     const confirmRejectBtn = screen.getByRole("button", {
       name: "Rechazar pedido",
     })
+    expect(confirmRejectBtn).toBeDisabled()
+
+    // Radio options are visible
+    expect(screen.getByLabelText("Sin stock disponible")).toBeInTheDocument()
+    expect(screen.getByLabelText("Pedido duplicado")).toBeInTheDocument()
+    expect(screen.getByLabelText("Solicitud del cliente")).toBeInTheDocument()
+    expect(screen.getByLabelText("Error en el pedido")).toBeInTheDocument()
+    expect(screen.getByLabelText("Otro motivo")).toBeInTheDocument()
+  })
+
+  it("triggers reject patch with reason when selecting a predefined reason", async () => {
+    const user = userEvent.setup()
+    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+
+    await user.click(screen.getByRole("button", { name: /rechazar/i }))
+
+    await user.click(screen.getByLabelText("Sin stock disponible"))
+
+    const confirmRejectBtn = screen.getByRole("button", {
+      name: "Rechazar pedido",
+    })
+    expect(confirmRejectBtn).toBeEnabled()
     await user.click(confirmRejectBtn)
 
     expect(patchMock).toHaveBeenCalledWith(
       expect.objectContaining({ url: "/provider/orders/42/reject" }),
-      {},
+      {
+        reason: "out_of_stock",
+        details: null,
+      },
+      expect.objectContaining({ preserveScroll: true }),
+    )
+  })
+
+  it("requires text details when 'Otro motivo' is selected before enabling reject button", async () => {
+    const user = userEvent.setup()
+    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+
+    await user.click(screen.getByRole("button", { name: /rechazar/i }))
+
+    await user.click(screen.getByLabelText("Otro motivo"))
+
+    const confirmRejectBtn = screen.getByRole("button", {
+      name: "Rechazar pedido",
+    })
+    // Text input appears and confirm is disabled because textarea is empty
+    const textarea = screen.getByPlaceholderText("Ingresá el motivo…")
+    expect(textarea).toBeInTheDocument()
+    expect(confirmRejectBtn).toBeDisabled()
+
+    // Typing spaces only still disables
+    await user.type(textarea, "   ")
+    expect(confirmRejectBtn).toBeDisabled()
+
+    // Typing valid text enables confirm button
+    await user.type(textarea, "Cocina cerrada por reformas")
+    expect(confirmRejectBtn).toBeEnabled()
+
+    await user.click(confirmRejectBtn)
+
+    expect(patchMock).toHaveBeenCalledWith(
+      expect.objectContaining({ url: "/provider/orders/42/reject" }),
+      {
+        reason: "other",
+        details: "Cocina cerrada por reformas",
+      },
       expect.objectContaining({ preserveScroll: true }),
     )
   })

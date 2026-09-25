@@ -70,6 +70,18 @@ export default function Show({ order }: ProviderOrdersShow) {
           <Row label={t("pages.provider_orders.show.status")}>
             <StatusBadge status={order.status} />
           </Row>
+          {order.rejection_reason && (
+            <Row label={t("pages.provider_orders.show.rejection_reason")}>
+              {t(
+                `pages.provider_orders.rejection_reasons.${order.rejection_reason}`,
+              )}
+            </Row>
+          )}
+          {order.rejection_details && (
+            <Row label={t("pages.provider_orders.show.rejection_details")}>
+              {order.rejection_details}
+            </Row>
+          )}
           <Row label={t("pages.provider_orders.show.delivery_date")}>
             {order.date
               ? formatDeliveryDate(order.date)

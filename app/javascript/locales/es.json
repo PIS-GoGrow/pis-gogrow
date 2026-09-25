@@ -234,7 +234,10 @@
           "reject_dialog": {
             "back": "Volver",
             "confirm": "Rechazar pedido",
-            "description": "El empleado va a ver el pedido como rechazado y no vas a poder volver atrás.",
+            "description": "Seleccioná el motivo de la cancelación. El empleado va a ver el cambio en sus pedidos.",
+            "details_label": "Describí el motivo",
+            "details_placeholder": "Ingresá el motivo…",
+            "reason_label": "Motivo",
             "title": "¿Rechazar el pedido %{code}?"
           }
         },
@@ -263,6 +266,13 @@
           "today": "hoy",
           "tomorrow": "mañana"
         },
+        "rejection_reasons": {
+          "customer_request": "Solicitud del cliente",
+          "duplicate_order": "Pedido duplicado",
+          "order_error": "Error en el pedido",
+          "other": "Otro motivo",
+          "out_of_stock": "Sin stock disponible"
+        },
         "show": {
           "amounts": "Importe",
           "back": "Volver a pedidos",
@@ -290,6 +300,8 @@
           "ordered_at": "Hora del pedido",
           "preparation": "Preparación",
           "quantity": "Cantidad",
+          "rejection_details": "Detalle del rechazo",
+          "rejection_reason": "Motivo de rechazo",
           "sauces": "Salsas",
           "status": "Estado",
           "stock": "Cupo del día",
