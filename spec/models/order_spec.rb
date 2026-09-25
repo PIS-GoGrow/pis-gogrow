@@ -7,6 +7,62 @@ RSpec.describe Order, type: :model do
 
   it { is_expected.to define_enum_for(:status).with_values(pending: 0, confirmed: 1, cancelled: 2, rejected: 3) }
   it { is_expected.to define_enum_for(:delivery_method).with_values(office: 0, home: 1) }
+  it do
+    expect(subject).to define_enum_for(:rejection_reason)
+      .with_values(out_of_stock: 0, duplicate_order: 1, customer_request: 2, order_error: 3, other: 4)
+      .with_prefix(:rejection_reason)
+  end
+
+  describe "rejection reason validations" do
+    let(:order) { orders(:upcoming_pending_today) }
+
+    it "is valid without rejection reason while pending, confirmed or cancelled" do
+      expect(order).to be_valid
+
+      order.status = :confirmed
+      expect(order).to be_valid
+
+      order.status = :cancelled
+      expect(order).to be_valid
+    end
+
+    it "requires a rejection reason when rejected" do
+      order.status = :rejected
+      order.rejection_reason = nil
+
+      expect(order).not_to be_valid
+      expect(order.errors[:rejection_reason]).to include(
+        I18n.t("activerecord.errors.models.order.attributes.rejection_reason.blank")
+      )
+    end
+
+    it "is valid with a standard rejection reason without details" do
+      order.status = :rejected
+      order.rejection_reason = :out_of_stock
+      order.rejection_details = nil
+
+      expect(order).to be_valid
+    end
+
+    it "requires rejection_details when reason is other" do
+      order.status = :rejected
+      order.rejection_reason = :other
+      order.rejection_details = nil
+
+      expect(order).not_to be_valid
+      expect(order.errors[:rejection_details]).to include(
+        I18n.t("activerecord.errors.models.order.attributes.rejection_details.blank")
+      )
+    end
+
+    it "is valid with other reason and details present" do
+      order.status = :rejected
+      order.rejection_reason = :other
+      order.rejection_details = "Sin insumos"
+
+      expect(order).to be_valid
+    end
+  end
 
   describe "delivery method by provider" do
     it "rejects home for an office-only provider" do
@@ -206,6 +262,77 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "#decide" do
+    it "confirms a pending order and returns true" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:confirmed)).to be(true)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "rejects a pending order with a valid reason and returns true" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(true)
+      expect(order.reload).to be_rejected
+      expect(order.rejection_reason).to eq("out_of_stock")
+      expect(order.rejection_details).to be_nil
+    end
+
+    it "rejects a pending order with 'other' reason and details" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:rejected, reason: :other, details: "Cocina cerrada")).to be(true)
+      expect(order.reload).to be_rejected
+      expect(order.rejection_reason).to eq("other")
+      expect(order.rejection_details).to eq("Cocina cerrada")
+    end
+
+    it "refuses to reject without a reason" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:rejected)).to be(false)
+      expect(order.reload).to be_pending
+      expect(order.errors[:rejection_reason]).to be_present
+    end
+
+    it "refuses to reject with 'other' reason when details are missing" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:rejected, reason: :other)).to be(false)
+      expect(order.reload).to be_pending
+      expect(order.errors[:rejection_details]).to be_present
+    end
+
+    it "gives reserved units back to the schedule when rejected" do
+      order = orders(:upcoming_pending_today)
+
+      expect { order.decide(:rejected, reason: :out_of_stock) }
+        .to change { order.schedule.reload.remaining_amount }.by(order.amount)
+    end
+
+    it "refuses to decide an already confirmed order and returns false" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect(order.decide(:rejected)).to be(false)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "refuses to decide an already cancelled order and returns false" do
+      order = orders(:history_cancelled_future)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(order.reload).to be_cancelled
+    end
+
+    it "refuses to decide an already rejected order and returns false" do
+      order = orders(:history_rejected_future)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(order.reload).to be_rejected
+    end
+  end
+
   it "splits every order between the two sections" do
     expect(described_class.upcoming.ids & described_class.history.ids).to be_empty
     expect(described_class.upcoming.count + described_class.history.count).to eq(described_class.count)
@@ -225,6 +352,8 @@ end
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  rejection_details          :string
+#  rejection_reason           :integer
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null

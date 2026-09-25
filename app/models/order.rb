@@ -14,6 +14,13 @@ class Order < ApplicationRecord
   enum :status, { pending: 0, confirmed: 1, cancelled: 2, rejected: 3 }, default: :pending
   enum :delivery_method, { office: 0, home: 1 }
   enum :status_before_cancellation, { pending: 0, confirmed: 1 }, prefix: :before_cancellation
+  enum :rejection_reason, {
+    out_of_stock: 0,
+    duplicate_order: 1,
+    customer_request: 2,
+    order_error: 3,
+    other: 4
+  }, prefix: :rejection_reason
 
   # Esta línea tiene que estar antes de has_many :order_accounts.
   # Antes de que se borre la orden, se tiene que registrar sus cuentas
@@ -35,6 +42,8 @@ class Order < ApplicationRecord
   validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true
   validates :address, presence: true, if: :home?
   validates :delivery_method, presence: true
+  validates :rejection_reason, presence: true, if: :rejected?
+  validates :rejection_details, presence: true, if: -> { rejected? && rejection_reason_other? }
   validate :delivery_method_allowed_by_provider, on: :create
 
   # El corte entre ambas secciones es la fecha de entrega, no el estado: una
@@ -149,6 +158,23 @@ class Order < ApplicationRecord
 
   def cancellable?
     cancellation_block_reason.nil?
+  end
+
+  # La decisión del proveedor solo corre sobre pedidos pendientes: confirmar o
+  # rechazar uno ya resuelto pisaría la cancelación del empleado. El lock es por
+  # el doble envío, igual que en cancel.
+  def decide(status, reason: nil, details: nil)
+    with_lock do
+      return false unless pending?
+
+      attrs = { status: status }
+      if status.to_s == "rejected"
+        attrs[:rejection_reason] = reason
+        attrs[:rejection_details] = details
+      end
+
+      update(attrs)
+    end
   end
 
   # RN-12: modificar equivale a cancelar y volver a pedir, así que rige la misma
@@ -268,6 +294,8 @@ end
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  rejection_details          :string
+#  rejection_reason           :integer
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null

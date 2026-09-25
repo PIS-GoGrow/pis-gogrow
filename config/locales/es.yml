@@ -22,6 +22,8 @@ es:
     cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
     order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
+    order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
+    order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     order_updated: "Pedido actualizado."
     already_signed_in: "Ya has iniciado sesión"
     email_changed: "Tu correo electrónico fue modificado"
@@ -56,6 +58,7 @@ es:
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
+    order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
     order_not_modifiable: "Este pedido ya no se puede modificar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
@@ -68,6 +71,16 @@ es:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
+        order:
+          attributes:
+            rejection_reason:
+              blank: "debe seleccionarse al rechazar el pedido"
+            rejection_details:
+              blank: "debe especificarse al seleccionar otro motivo"
+    attributes:
+      order:
+        rejection_reason: "Motivo"
+        rejection_details: "Detalle del motivo"
   user_mailer:
     greeting: "Hola,"
     support: "¿Tienes dudas o necesitas ayuda? Responde este correo y nuestro equipo de soporte te ayudará a resolverlo."
@@ -226,6 +239,23 @@ es:
         office: "Oficina"
         home: "Domicilio"
     provider_orders:
+      actions:
+        confirm: "Confirmar"
+        reject: "Rechazar"
+        reject_dialog:
+          title: "¿Rechazar el pedido %{code}?"
+          description: "Seleccioná el motivo de la cancelación. El empleado va a ver el cambio en sus pedidos."
+          reason_label: "Motivo"
+          details_label: "Describí el motivo"
+          details_placeholder: "Ingresá el motivo…"
+          back: "Volver"
+          confirm: "Rechazar pedido"
+      rejection_reasons:
+        out_of_stock: "Sin stock disponible"
+        duplicate_order: "Pedido duplicado"
+        customer_request: "Solicitud del cliente"
+        order_error: "Error en el pedido"
+        other: "Otro motivo"
       index:
         title: "Pedidos"
         eyebrow: "Operación diaria"
@@ -257,6 +287,8 @@ es:
         delivery_date: "Fecha de entrega"
         ordered_at: "Hora del pedido"
         status: "Estado"
+        rejection_reason: "Motivo de rechazo"
+        rejection_details: "Detalle del rechazo"
         customer: "Cliente"
         name: "Nombre"
         company: "Empresa"
