@@ -223,6 +223,17 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(orders(:upcoming_pending_today).reload).to be_pending
     end
 
+    it "rejects an admin session" do
+      user = User.create!(name: "Admin User", email: "admin-confirm-order@gogrow.com", password: "password123456")
+      Admin.create!(user:, company: companies(:gogrow))
+      sign_in user, role: :admin
+
+      patch confirm_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
     it "confirms a pending order" do
       sign_in users(:provider_user), role: :provider
       order = orders(:upcoming_pending_today)
@@ -234,6 +245,16 @@ RSpec.describe "Provider::Orders", type: :request do
 
       follow_redirect!
       expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+    end
+
+    it "redirects back to the order detail when deciding from the detail page" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch confirm_provider_order_path(order), headers: { "HTTP_REFERER" => provider_order_url(order) }
+
+      expect(order.reload).to be_confirmed
+      expect(response).to redirect_to(provider_order_url(order))
     end
 
     it "leaves an order that is no longer pending as it was" do
@@ -259,6 +280,33 @@ RSpec.describe "Provider::Orders", type: :request do
   end
 
   describe "PATCH /provider/orders/:id/reject" do
+    it "redirects to sign in without a session" do
+      patch reject_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(sign_in_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
+    it "rejects a session with a different active role" do
+      sign_in users(:one), role: :consumer
+
+      patch reject_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
+    it "rejects an admin session" do
+      user = User.create!(name: "Admin User", email: "admin-reject-order@gogrow.com", password: "password123456")
+      Admin.create!(user:, company: companies(:gogrow))
+      sign_in user, role: :admin
+
+      patch reject_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
     it "rejects a pending order" do
       sign_in users(:provider_user), role: :provider
       order = orders(:upcoming_pending_today)
@@ -270,6 +318,28 @@ RSpec.describe "Provider::Orders", type: :request do
 
       follow_redirect!
       expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+    end
+
+    it "redirects back to the order detail when rejecting from the detail page" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch reject_provider_order_path(order), headers: { "HTTP_REFERER" => provider_order_url(order) }
+
+      expect(order.reload).to be_rejected
+      expect(response).to redirect_to(provider_order_url(order))
+    end
+
+    it "leaves an order that is no longer pending as it was" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_cancelled_future)
+
+      patch reject_provider_order_path(order)
+
+      expect(order.reload).to be_cancelled
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_not_pending"))
     end
 
     it "responds with not found for an order of another provider" do

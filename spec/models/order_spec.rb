@@ -206,6 +206,50 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "#decide" do
+    it "confirms a pending order and returns true" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:confirmed)).to be(true)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "rejects a pending order and returns true" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:rejected)).to be(true)
+      expect(order.reload).to be_rejected
+    end
+
+    it "gives reserved units back to the schedule when rejected" do
+      order = orders(:upcoming_pending_today)
+
+      expect { order.decide(:rejected) }
+        .to change { order.schedule.reload.remaining_amount }.by(order.amount)
+    end
+
+    it "refuses to decide an already confirmed order and returns false" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect(order.decide(:rejected)).to be(false)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "refuses to decide an already cancelled order and returns false" do
+      order = orders(:history_cancelled_future)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(order.reload).to be_cancelled
+    end
+
+    it "refuses to decide an already rejected order and returns false" do
+      order = orders(:history_rejected_future)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(order.reload).to be_rejected
+    end
+  end
+
   it "splits every order between the two sections" do
     expect(described_class.upcoming.ids & described_class.history.ids).to be_empty
     expect(described_class.upcoming.count + described_class.history.count).to eq(described_class.count)
