@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class ProviderSerializer < ApplicationSerializer
-  attributes :id
+  attributes :id, :home_delivery
 
   typelize :string
   attribute :name do |provider|

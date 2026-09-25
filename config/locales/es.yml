@@ -344,6 +344,9 @@ es:
         title: "Configuración del perfil"
         heading: "Información del perfil"
         description: "Actualiza tu nombre"
+        home_delivery:
+          heading: "Editar información de pedidos"
+          label: "También realizo entregas a domicilio"
       password:
         title: "Configuración de contraseña"
         heading: "Actualizar contraseña"
