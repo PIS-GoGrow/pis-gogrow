@@ -29,6 +29,9 @@ es:
     cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
     order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
+    order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
+    order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
+    order_updated: "Pedido actualizado."
     already_signed_in: "Ya has iniciado sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
     email_changed: "Tu correo electrónico fue modificado"
@@ -53,6 +56,8 @@ es:
     role_set: "Rol cambiado exitosamente."
     no_permission: "No tenés permiso para acceder a este recurso."
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
+    order_deadline_updated: "La hora límite de pedidos fue actualizada."
+    payment_receipt_submitted: "Comprobante enviado para su validacion."
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -60,9 +65,33 @@ es:
     invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
+    order_deadline_passed: "Este proveedor ya cerró la recepción de pedidos para hoy."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
+    order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
+    order_not_modifiable: "Este pedido ya no se puede modificar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
+    invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
+    payment_closed: "Este pago ya fue aprobado y no puede modificarse."
+  activerecord:
+    errors:
+      models:
+        payment:
+          attributes:
+            receipt:
+              required: "debe adjuntarse para enviar el pago"
+              invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
+              too_large: "no puede superar los 10 MB"
+        order:
+          attributes:
+            rejection_reason:
+              blank: "debe seleccionarse al rechazar el pedido"
+            rejection_details:
+              blank: "debe especificarse al seleccionar otro motivo"
+    attributes:
+      order:
+        rejection_reason: "Motivo"
+        rejection_details: "Detalle del motivo"
   user_mailer:
     greeting: "Hola,"
     support: "¿Tienes dudas o necesitas ayuda? Responde este correo y nuestro equipo de soporte te ayudará a resolverlo."
@@ -164,6 +193,17 @@ es:
         lunches: "viandas"
         due: "Vence: "
         receipt: "Subir comprobante de pago"
+        receipt_title: "Subir comprobante"
+        receipt_description: "Adjuntá el comprobante correspondiente a este pago."
+        receipt_file: "Seleccionar archivo"
+        receipt_formats: "PDF, JPG o PNG. Tamaño máximo: 10 MB."
+        receipt_uploading: "Subiendo comprobante..."
+        receipt_approved: "Pago aprobado"
+        receipt_unavailable: "Comprobante no disponible"
+        receipt_preview: "Vista previa del comprobante"
+        receipt_view_edit: "Ver o editar comprobante"
+        receipt_replace: "Reemplazar archivo"
+        receipt_update: "Actualizar comprobante"
         date: "Fecha"
         menu: "Plato"
         amount: "Cant."
@@ -209,6 +249,24 @@ es:
         total: "Importe final"
         notes: "Notas"
         no_notes: "Sin notas"
+        edit: "Modificar pedido"
+        edit_dialog:
+          title: "Modificar pedido"
+          description: "Podés cambiar la cantidad, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo."
+          quantity: "Cantidad"
+          address: "Dirección de entrega"
+          notes: "Notas"
+          notes_placeholder: "Sin salsa, sin cebolla…"
+          remaining: "Quedan %{count} disponibles para esta fecha"
+          back: "Volver"
+          confirm: "Guardar cambios"
+        cannot_edit:
+          already_confirmed: "El proveedor ya confirmó este pedido, así que no se puede modificar."
+          already_closed: "Este pedido ya está cerrado."
+          unavailable: "Este pedido no tiene fecha de entrega, así que no se puede modificar."
+      addresses:
+        office: "Oficina"
+        home: "Casa"
       statuses:
         pending: "Pendiente"
         confirmed: "Confirmado"
@@ -218,6 +276,23 @@ es:
         office: "Oficina"
         home: "Domicilio"
     provider_orders:
+      actions:
+        confirm: "Confirmar"
+        reject: "Rechazar"
+        reject_dialog:
+          title: "¿Rechazar el pedido %{code}?"
+          description: "Seleccioná el motivo de la cancelación. El empleado va a ver el cambio en sus pedidos."
+          reason_label: "Motivo"
+          details_label: "Describí el motivo"
+          details_placeholder: "Ingresá el motivo…"
+          back: "Volver"
+          confirm: "Rechazar pedido"
+      rejection_reasons:
+        out_of_stock: "Sin stock disponible"
+        duplicate_order: "Pedido duplicado"
+        customer_request: "Solicitud del cliente"
+        order_error: "Error en el pedido"
+        other: "Otro motivo"
       index:
         title: "Pedidos"
         eyebrow: "Operación diaria"
@@ -229,14 +304,18 @@ es:
           cancelled: "Cancelados"
           rejected: "Rechazados"
         empty_title: "No hay pedidos"
-        empty_description: "Todavía no recibiste pedidos para hoy."
-        empty_filtered_description: "No tenés pedidos con este estado para hoy."
+        empty_description: "Todavía no recibiste pedidos para los próximos días."
+        empty_filtered_description: "No tenés pedidos próximos con este estado."
         code: "PED-%{id}"
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"
         cancel: "Cancelar"
         confirm: "Confirmar"
         detail: "Ver detalle"
+        deliver: "a entregar"
+        today: "hoy"
+        tomorrow: "mañana"
+        date: "el %d/%m/%Y"
       show:
         eyebrow: "Pedido"
         title: "Pedido %{code}"
@@ -245,6 +324,8 @@ es:
         delivery_date: "Fecha de entrega"
         ordered_at: "Hora del pedido"
         status: "Estado"
+        rejection_reason: "Motivo de rechazo"
+        rejection_details: "Detalle del rechazo"
         customer: "Cliente"
         name: "Nombre"
         company: "Empresa"
@@ -292,6 +373,19 @@ es:
       title: "Panel"
       roles:
         provider: "Panel del proveedor"
+    provider_dashboard:
+      index:
+        eyebrow: "Operación diaria"
+        title: "Panel del proveedor"
+        description: "Administrá la recepción de pedidos de tus menús."
+        order_deadline:
+          title: "Recepción de pedidos"
+          description: "Definí hasta qué hora aceptás pedidos para hoy."
+          label: "Hora límite"
+          help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
+    consumer_dashboard:
+      index:
+        orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
     sessions:
       new:
         title: "Iniciar sesión"

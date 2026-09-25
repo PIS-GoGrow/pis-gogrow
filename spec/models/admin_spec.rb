@@ -3,7 +3,37 @@
 require "rails_helper"
 
 RSpec.describe Admin, type: :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+  fixtures :users, :companies
+
+  let(:company) { companies(:gogrow) }
+  let(:user) { users(:one) }
+
+  describe "associations" do
+    it "belongs to a company and a user" do
+      admin = described_class.new(company:, user:)
+      expect(admin.company).to eq(company)
+      expect(admin.user).to eq(user)
+    end
+
+    it "is invalid without a company" do
+      admin = described_class.new(company: nil, user:)
+      expect(admin).not_to be_valid
+    end
+
+    it "is invalid without a user" do
+      admin = described_class.new(company:, user: nil)
+      expect(admin).not_to be_valid
+    end
+  end
+
+  describe "role synchronization" do
+    it "syncs the admin role into the user upon creation" do
+      new_user = User.create!(name: "RRHH Admin", email: "rrhh@gogrow.com", password: "password123456")
+      described_class.create!(company:, user: new_user)
+
+      expect(new_user.reload.roles).to include("admin")
+    end
+  end
 end
 
 # == Schema Information

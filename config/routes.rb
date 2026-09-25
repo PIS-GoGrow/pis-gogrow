@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   resources :sessions, only: [ :destroy, :edit, :update ]
   resource :users, only: [ :destroy ]
 
+
   # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the
   # OmniAuth middleware before it reaches the router — only the callback and
   # failure paths need a route.
@@ -32,20 +33,30 @@ Rails.application.routes.draw do
 
   namespace :provider do
     resources :menus
-    resources :orders, only: [ :index, :show ]
+    resources :orders, only: [ :index, :show ] do
+      member do
+        patch :confirm
+        patch :reject
+      end
+    end
+    resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
-  resources :orders, only: [ :index, :show ]
   resources :schedules, only: [ :index, :create ]
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
-
     resources :menus, only: [ :index ]
-    resources :orders, only: [ :create ], as: :consumer_orders do
-      patch :cancel, on: :member
+
+    resources :orders, only: [ :index, :show, :create, :update ] do
+      patch :cancel, on: :member, as: :cancel_consumer
     end
+
+    resources :payments, only: [ :create, :update ] do
+      get :receipt, on: :member
+    end
+
     resources :accounts, only: [ :index, :show ]
   end
 
@@ -60,5 +71,6 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   match "500", to: "errors#internal_server_error", via: :all, format: false
-  get "*unmatched_path", to: "errors#not_found", format: false
+  get "*unmatched_path", to: "errors#not_found", format: false,
+      constraints: ->(request) { !request.path.start_with?("/rails/active_storage") }
 end

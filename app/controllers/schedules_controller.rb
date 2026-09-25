@@ -105,7 +105,7 @@ class SchedulesController < Provider::InertiaController
 
     unless valid_initial_stock?(items)
       redirect_to schedules_path,
-                  inertia: { errors: { amount: [ "El stock inicial debe ser mayor a 0" ] } }
+                  inertia: { errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] } }
       return
     end
 
@@ -132,7 +132,9 @@ class SchedulesController < Provider::InertiaController
   def valid_initial_stock?(items)
     items.all? do |item|
       amount = Integer(item.require(:amount), exception: false)
-      amount.present? && amount.positive?
+      amount.present? &&
+        amount.positive? &&
+        amount <= Schedule::MAX_AMOUNT
     end
   end
 
