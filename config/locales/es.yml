@@ -1,4 +1,11 @@
 es:
+  activerecord:
+    errors:
+      models:
+        benefit_configuration:
+          attributes:
+            effective_from:
+              taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
   common:
     cancel: "Cancelar"
     close: "Cerrar"
@@ -26,6 +33,7 @@ es:
     order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     order_updated: "Pedido actualizado."
     already_signed_in: "Ya has iniciado sesión"
+    benefit_configuration_created: "Subsidio programado para el próximo período"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
     email_verification_sent: "Enviamos un correo de verificación a tu dirección"
@@ -102,6 +110,7 @@ es:
     dashboard: "Panel"
     orders: "Mis pedidos"
     menu: "Menú de navegación"
+    benefit_configurations: "Beneficio general"
     change_to: "Cambiar a"
     settings:
       profile: "Perfil"
@@ -127,6 +136,31 @@ es:
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
+    admin:
+      benefit_configurations:
+        index:
+          title: "Subsidios"
+          description: "Gestioná los subsidios de tu compañía"
+          current:
+            title: "Subsidio Base"
+            empty: "Todavía no configuraste el beneficio general."
+            edit: "Editar"
+            subsidy_percentage: "Se descuenta"
+            max_voucher_price: "Cuando el precio por vianda es"
+            monthly_voucher_limit: "Hasta un límite por empleado de"
+            monthly_voucher_limit_unit: "viandas"
+            notice: "Los cambios se aplicarán en el próximo período."
+            cancel: "Cancelar"
+            submit: "Programar Subsidio"
+            scheduled_banner:
+              title: "Tus cambios están programados"
+              description: "La nueva configuración de subsidios se aplicará a partir del próximo período."
+              dismiss: "Cerrar aviso"
+            pending_conflict:
+              title: "Ya hay un cambio programado para el próximo período"
+              description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
+              keep: "Mantener el programado"
+              replace: "Reemplazar por este"
     errors:
       internal_server_error:
         title: "Algo salió mal"

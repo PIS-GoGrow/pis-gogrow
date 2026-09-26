@@ -41,6 +41,7 @@
       }
     },
     "nav": {
+      "benefit_configurations": "Beneficio general",
       "change_to": "Cambiar a",
       "dashboard": "Panel",
       "menu": "Menú de navegación",
@@ -90,6 +91,37 @@
           "see_detail": "Ver detalle",
           "spending": "Consumo",
           "total": "Total"
+        }
+      },
+      "admin": {
+        "benefit_configurations": {
+          "index": {
+            "current": {
+              "cancel": "Cancelar",
+              "edit": "Editar",
+              "empty": "Todavía no configuraste el beneficio general.",
+              "max_voucher_price": "Cuando el precio por vianda es",
+              "monthly_voucher_limit": "Hasta un límite por empleado de",
+              "monthly_voucher_limit_unit": "viandas",
+              "notice": "Los cambios se aplicarán en el próximo período.",
+              "pending_conflict": {
+                "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
+                "keep": "Mantener el programado",
+                "replace": "Reemplazar por este",
+                "title": "Ya hay un cambio programado para el próximo período"
+              },
+              "scheduled_banner": {
+                "description": "La nueva configuración de subsidios se aplicará a partir del próximo período.",
+                "dismiss": "Cerrar aviso",
+                "title": "Tus cambios están programados"
+              },
+              "submit": "Programar Subsidio",
+              "subsidy_percentage": "Se descuenta",
+              "title": "Subsidio Base"
+            },
+            "description": "Gestioná los subsidios de tu compañía",
+            "title": "Subsidios"
+          }
         }
       },
       "cart": {
