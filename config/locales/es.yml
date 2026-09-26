@@ -1,4 +1,11 @@
 es:
+  activerecord:
+    errors:
+      models:
+        benefit_configuration:
+          attributes:
+            effective_from:
+              taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
   common:
     cancel: "Cancelar"
     close: "Cerrar"
@@ -26,6 +33,7 @@ es:
     order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     order_updated: "Pedido actualizado."
     already_signed_in: "Ya has iniciado sesión"
+    benefit_configuration_created: "Subsidio programado para el próximo período"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
     email_verification_sent: "Enviamos un correo de verificación a tu dirección"
@@ -48,6 +56,7 @@ es:
     role_set: "Rol cambiado exitosamente."
     no_permission: "No tenés permiso para acceder a este recurso."
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
+    order_deadline_updated: "La hora límite de pedidos fue actualizada."
     payment_receipt_submitted: "Comprobante enviado para su validacion."
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
@@ -56,11 +65,13 @@ es:
     invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
+    order_deadline_passed: "Este proveedor ya cerró la recepción de pedidos para hoy."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
     order_not_modifiable: "Este pedido ya no se puede modificar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
+    invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
   activerecord:
     errors:
@@ -99,6 +110,7 @@ es:
     dashboard: "Panel"
     orders: "Mis pedidos"
     menu: "Menú de navegación"
+    benefit_configurations: "Beneficio general"
     change_to: "Cambiar a"
     settings:
       profile: "Perfil"
@@ -125,6 +137,31 @@ es:
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
+    admin:
+      benefit_configurations:
+        index:
+          title: "Subsidios"
+          description: "Gestioná los subsidios de tu compañía"
+          current:
+            title: "Subsidio Base"
+            empty: "Todavía no configuraste el beneficio general."
+            edit: "Editar"
+            subsidy_percentage: "Se descuenta"
+            max_voucher_price: "Cuando el precio por vianda es"
+            monthly_voucher_limit: "Hasta un límite por empleado de"
+            monthly_voucher_limit_unit: "viandas"
+            notice: "Los cambios se aplicarán en el próximo período."
+            cancel: "Cancelar"
+            submit: "Programar Subsidio"
+            scheduled_banner:
+              title: "Tus cambios están programados"
+              description: "La nueva configuración de subsidios se aplicará a partir del próximo período."
+              dismiss: "Cerrar aviso"
+            pending_conflict:
+              title: "Ya hay un cambio programado para el próximo período"
+              description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
+              keep: "Mantener el programado"
+              replace: "Reemplazar por este"
     errors:
       internal_server_error:
         title: "Algo salió mal"
@@ -393,6 +430,19 @@ es:
       title: "Panel"
       roles:
         provider: "Panel del proveedor"
+    provider_dashboard:
+      index:
+        eyebrow: "Operación diaria"
+        title: "Panel del proveedor"
+        description: "Administrá la recepción de pedidos de tus menús."
+        order_deadline:
+          title: "Recepción de pedidos"
+          description: "Definí hasta qué hora aceptás pedidos para hoy."
+          label: "Hora límite"
+          help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
+    consumer_dashboard:
+      index:
+        orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
     sessions:
       new:
         title: "Iniciar sesión"

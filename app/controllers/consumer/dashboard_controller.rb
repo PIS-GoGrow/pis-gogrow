@@ -34,7 +34,8 @@ class Consumer::DashboardController < Consumer::InertiaController
         id: schedule.id,
         date: schedule.date.iso8601,
         remaining: schedule.remaining_amount,
-        sold_out: !schedule.available?,
+        sold_out: schedule.remaining_amount.zero?,
+        orders_closed: schedule.order_deadline_passed?,
         menu: {
           id: menu.id,
           name: menu.name,

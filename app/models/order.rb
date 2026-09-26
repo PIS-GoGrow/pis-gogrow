@@ -114,7 +114,9 @@ class Order < ApplicationRecord
     return order unless order.valid?
 
     schedule.with_lock do
-      if schedule.available?(quantity:)
+      if schedule.order_deadline_passed?
+        order.errors.add(:schedule_id, I18n.t("validations.order_deadline_passed"))
+      elsif schedule.available?(quantity:)
         order.save
       else
         order.errors.add(

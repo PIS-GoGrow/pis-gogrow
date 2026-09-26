@@ -111,6 +111,7 @@ Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla
 | `Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent` | `@/components/ui/empty` | Estado vacío de una lista o sección |
 | `Skeleton` | `@/components/ui/skeleton` | Espacio reservado mientras carga contenido |
 | `Spinner` | `@/components/ui/spinner` | Indicador de acción en curso (dentro de un botón) |
+| `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption` | `@/components/ui/table` | Listas tabulares (historial de cambios, filas con varias columnas) |
 | `Progress` | `@/components/ui/progress` | Barra de progreso de beneficios y métricas |
 | `Toaster` | `@/components/ui/sonner` | Ya montado en `PersistentLayout`; no se vuelve a montar |
 
@@ -635,6 +636,40 @@ import { Progress } from "@/components/ui/progress"
 ```
 
 Recibe `value` entre 0 y 100. Se usa para comunicar avance de beneficios y métricas; el tamaño se ajusta con `className`.
+
+### Table
+
+```tsx
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+```
+
+Para listas tabulares simples (historial de cambios, filas con varias columnas). El componente no pagina ni ordena por sí mismo; eso lo resuelve quien lo usa.
+
+```tsx
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Fecha</TableHead>
+      <TableHead>Valor</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {rows.map((row) => (
+      <TableRow key={row.id}>
+        <TableCell>{row.date}</TableCell>
+        <TableCell>{row.value}</TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
+```
 
 ### Heading y HeadingSmall
 

@@ -69,6 +69,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
     t.date "effective_from", null: false
+    t.decimal "max_voucher_price", precision: 10, scale: 2, null: false
     t.integer "monthly_voucher_limit", null: false
     t.integer "subsidy_percentage", null: false
     t.datetime "updated_at", null: false
