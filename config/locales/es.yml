@@ -119,6 +119,7 @@ es:
       sessions: "Sesiones"
       appearance: "Apariencia"
     payments: "Pagos"
+    collections: "Cobros"
   components:
     appearance:
       toggle_theme: "Cambiar tema"
@@ -275,6 +276,62 @@ es:
       delivery_methods:
         office: "Oficina"
         home: "Domicilio"
+    provider_collections:
+      statuses:
+        pending: "Pendiente"
+        submitted: "Por revisar"
+        approved: "Confirmado"
+        rejected: "Rechazado"
+      meals_one: "%{count} vianda"
+      meals_other: "%{count} viandas"
+      index:
+        title: "Cobros"
+        sales: "Ventas"
+        this_month: "Este mes"
+        confirmed_meals_one: "%{count} vianda confirmada"
+        confirmed_meals_other: "%{count} viandas confirmadas"
+        outstanding: "Cobros pendientes"
+        total_debt: "Deuda total"
+        delivered_meals_one: "%{count} vianda entregada"
+        delivered_meals_other: "%{count} viandas entregadas"
+        section: "Cobros"
+        pending_tab: "Pendientes"
+        history_tab: "Historial"
+        clients: "Clientes:"
+        all_clients: "Todos"
+        filter_clients: "Filtrar por cliente"
+        empty_pending_title: "Sin deudas pendientes"
+        empty_pending_all: "Por ahora no hay deudas pendientes de ningún cliente seleccionado. Volvé a consultar el mes que viene."
+        empty_pending_client: "Por ahora no hay deudas pendientes de este cliente. Volvé a consultar el mes que viene."
+        empty_history_title: "Sin cobros confirmados"
+        empty_history_all: "Todavía no hay meses cobrados por completo."
+        empty_history_client: "Todavía no hay meses cobrados por completo de este cliente."
+      group:
+        total: "Total a cobrar"
+        confirmed: "%{amount} en cobros confirmados"
+        awaiting_one: "%{count} cobro pendiente de confirmación"
+        awaiting_other: "%{count} cobros pendientes de confirmación"
+        rejected_one: "%{count} cobro rechazado"
+        rejected_other: "%{count} cobros rechazados"
+        employees: "Empleados"
+        company: "Empresa"
+        due: "Vence: %{date}"
+        detail: "Ver detalle"
+      show:
+        eyebrow: "Cobro"
+        title: "Cobro a %{name}"
+        back: "Volver a cobros"
+        summary: "Resumen"
+        period: "Período"
+        status: "Estado"
+        amount: "Importe a cobrar"
+        due_date: "Vencimiento"
+        orders: "Pedidos"
+        orders_empty: "Todavía no hay pedidos confirmados en este período."
+        payments: "Pagos"
+        payments_empty: "Todavía no se informó ningún pago."
+        quantity: "x%{count}"
+        no_date: "Sin fecha de entrega"
     provider_orders:
       actions:
         confirm: "Confirmar"
@@ -448,4 +505,5 @@ es:
   date:
     formats:
       month_year: "%B de %Y"
-    month_names: [~, Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Setiembre, Octubre, Noviembre, Diciembre]
+      month_name_year: "%B %Y"
+    month_names: [~, Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Septiembre, Octubre, Noviembre, Diciembre]

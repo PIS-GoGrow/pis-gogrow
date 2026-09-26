@@ -40,6 +40,7 @@ Rails.application.routes.draw do
       end
     end
     resource :order_deadline, only: [ :update ]
+    resources :collections, only: [ :index, :show ]
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
