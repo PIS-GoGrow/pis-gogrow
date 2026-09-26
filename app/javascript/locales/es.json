@@ -42,11 +42,24 @@
     },
     "nav": {
       "change_to": "Cambiar a",
+      "consumer": {
+        "menu": "Menú del día"
+      },
       "dashboard": "Panel",
       "menu": "Menú de navegación",
       "orders": "Mis pedidos",
       "payments": "Pagos",
       "platform": "Plataforma",
+      "provider": {
+        "account": "Cuenta",
+        "dishes": "Platos",
+        "home": "Inicio",
+        "menu": "Menú",
+        "menus": "Publicar menús",
+        "mobile_navigation": "Navegación del proveedor",
+        "orders": "Pedidos",
+        "payments": "Cobros"
+      },
       "settings": {
         "appearance": "Apariencia",
         "email": "Correo electrónico",
@@ -204,6 +217,41 @@
           "return_to": "O vuelve a",
           "submit": "Enviar enlace de restablecimiento",
           "title": "Olvidé mi contraseña"
+        }
+      },
+      "provider_dashboard": {
+        "index": {
+          "coming_soon": "Próximamente",
+          "greeting": "Hola, %{name} 👋",
+          "insights": {
+            "description": "Los hallazgos basados en las valoraciones estarán disponibles próximamente.",
+            "dishes": "Platos",
+            "generated": "Generado por IA",
+            "orders": "Pedidos",
+            "rating": "Valoración",
+            "title": "Hallazgos del mes"
+          },
+          "orders": {
+            "confirmed": "Confirmados",
+            "deadline": "Recibiendo pedidos hasta %{time}",
+            "home": "Envío a domicilio",
+            "office": "Envío a oficina",
+            "pending": "Pendientes",
+            "title": "Pedidos",
+            "today": "Hoy",
+            "view": "Ver pedidos"
+          },
+          "payments": {
+            "description": "Los cobros pendientes aparecerán acá próximamente.",
+            "pending": "Cobros pendientes",
+            "title": "Resumen de cobros",
+            "total": "Deuda total"
+          },
+          "profile": {
+            "description": "La configuración de los pasos estará disponible próximamente.",
+            "title": "Completá tu cuenta"
+          },
+          "title": "Inicio"
         }
       },
       "provider_orders": {

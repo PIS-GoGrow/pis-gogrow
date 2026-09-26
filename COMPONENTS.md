@@ -149,7 +149,6 @@ El prototipo repite estos patrones en varias pantallas. Acá no existen: se crea
 
 | Componente | Archivo | Cómo se arma |
 |---|---|---|
-| `Stat` (tarjeta de métrica) | `components/stat.tsx` | `Card` compacta: etiqueta en `CardDescription`, valor y detalle en `CardContent` |
 
 ## Superposiciones con el prototipo
 

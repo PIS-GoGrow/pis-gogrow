@@ -1,15 +1,7 @@
 import { Link, usePage } from "@inertiajs/react"
-import {
-  CalendarDays,
-  CalendarPlus,
-  ClipboardList,
-  CreditCard,
-  LayoutGrid,
-  Package,
-  Utensils,
-} from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { getNavigationItems } from "@/components/app-navigation"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -21,17 +13,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import {
-  adminDashboard,
-  consumerAccounts,
-  consumerDashboard,
-  consumerOrders,
-  providerDashboard,
-  providerMenus,
-  providerOrders,
-  schedules,
-} from "@/routes"
-import type { NavItem } from "@/types"
 
 import AppLogo from "./app-logo"
 
@@ -39,62 +20,14 @@ export function AppSidebar() {
   const { t } = useTranslation()
   const { auth } = usePage().props
 
-  const navItems: Record<string, NavItem[]> = {
-    provider: [
-      {
-        title: t("nav.dashboard"),
-        href: providerDashboard.index().url,
-        icon: LayoutGrid,
-      },
-      {
-        title: "Platos",
-        href: providerMenus.index().url,
-        icon: Utensils,
-      },
-      {
-        title: "Publicar menús",
-        href: schedules.index().url,
-        icon: CalendarPlus,
-      },
-      {
-        title: "Pedidos",
-        href: providerOrders.index().url,
-        icon: Package,
-      },
-    ],
-    admin: [
-      {
-        title: t("nav.dashboard"),
-        href: adminDashboard.index().url,
-        icon: LayoutGrid,
-      },
-    ],
-    consumer: [
-      {
-        title: "Menú del día",
-        href: consumerDashboard.index().url,
-        icon: CalendarDays,
-      },
-      {
-        title: t("nav.orders"),
-        href: consumerOrders.index().url,
-        icon: ClipboardList,
-      },
-      {
-        title: t("nav.payments"),
-        href: consumerAccounts.index().url,
-        icon: CreditCard,
-      },
-    ],
-  }
-
   const role = auth.session.role
+  const navItems = getNavigationItems(t)
 
   return (
     <Sidebar
       collapsible="icon"
       variant="inset"
-      hideOnMobile={role === "consumer"}
+      hideOnMobile={role === "consumer" || role === "provider"}
     >
       <SidebarHeader>
         <SidebarMenu>
