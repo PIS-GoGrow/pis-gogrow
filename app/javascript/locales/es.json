@@ -230,15 +230,14 @@
       },
       "provider_collections": {
         "group": {
-          "awaiting_one": "%{count} cobro pendiente de confirmación",
-          "awaiting_other": "%{count} cobros pendientes de confirmación",
           "company": "Empresa",
           "confirmed": "%{amount} en cobros confirmados",
+          "pending": "%{amount} en cobros pendientes",
+          "submitted": "%{amount} en cobros informados",
+          "rejected": "%{amount} en cobros rechazados",
           "detail": "Ver detalle",
           "due": "Vence: %{date}",
           "employees": "Empleados",
-          "rejected_one": "%{count} cobro rechazado",
-          "rejected_other": "%{count} cobros rechazados",
           "total": "Total a cobrar"
         },
         "index": {

@@ -62,13 +62,16 @@ function OwnerGroup({
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
           <Icon className="size-5" aria-hidden="true" />
         </span>
+
         <span className="grid flex-1 justify-items-start gap-1">
           <span className="text-sm font-semibold">{title}</span>
           <StatusBadge status={status} kind="payment" />
         </span>
+
         <span className="font-semibold">{formatMoney(amount)}</span>
         <Chevron />
       </CollapsibleTrigger>
+
       <CollapsibleContent className="grid gap-2 pt-2">
         {children}
       </CollapsibleContent>
@@ -84,8 +87,34 @@ export default function CollectionGroupCard({
   const { formatMoney } = useFormatters()
   const getInitials = useInitials()
 
+  const accounts = [
+    ...(group.company ? [group.company] : []),
+    ...group.employees,
+  ]
+
+  const amountsByStatus: Record<PaymentStatus, number> = {
+    pending: 0,
+    submitted: 0,
+    approved: 0,
+    rejected: 0,
+  }
+
+  accounts.forEach((account) => {
+    if (account.status) {
+      amountsByStatus[account.status] += account.amount
+    }
+  })
+
+  const employeeStatuses = group.employees.map((employee) => employee.status)
+
+  const employeesStatus =
+    employeeStatuses.length > 0 &&
+    employeeStatuses.every((status) => status === employeeStatuses[0])
+      ? employeeStatuses[0]
+      : null
+
   const progress =
-    group.total > 0 ? (group.confirmed_total / group.total) * 100 : 0
+    group.total > 0 ? (amountsByStatus.approved / group.total) * 100 : 0
 
   return (
     <Card className="gap-4 py-4">
@@ -96,6 +125,7 @@ export default function CollectionGroupCard({
               {getInitials(group.client_name)}
             </AvatarFallback>
           </Avatar>
+
           <CardTitle className="text-lg">{group.client_name}</CardTitle>
         </div>
       </CardHeader>
@@ -106,10 +136,13 @@ export default function CollectionGroupCard({
             <span className="text-muted-foreground text-sm">
               {t("pages.provider_collections.group.total")}
             </span>
+
             <Badge variant="secondary">{group.month}</Badge>
           </div>
+
           <p>
             <strong className="text-2xl">{formatMoney(group.total)}</strong>
+
             <span className="text-muted-foreground text-sm">
               {" | "}
               {t("pages.provider_collections.index.delivered_meals", {
@@ -117,6 +150,7 @@ export default function CollectionGroupCard({
               })}
             </span>
           </p>
+
           <Progress value={progress} className="h-2" />
         </div>
 
@@ -124,22 +158,33 @@ export default function CollectionGroupCard({
           <li className="flex items-center gap-2 text-green-700 dark:text-green-400">
             <CircleCheck className="size-4" aria-hidden="true" />
             {t("pages.provider_collections.group.confirmed", {
-              amount: formatMoney(group.confirmed_total),
+              amount: formatMoney(amountsByStatus.approved),
             })}
           </li>
-          {group.awaiting_count > 0 && (
+
+          {amountsByStatus.pending > 0 && (
             <li className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
               <TriangleAlert className="size-4" aria-hidden="true" />
-              {t("pages.provider_collections.group.awaiting", {
-                count: group.awaiting_count,
+              {t("pages.provider_collections.group.pending", {
+                amount: formatMoney(amountsByStatus.pending),
               })}
             </li>
           )}
-          {group.rejected_count > 0 && (
+
+          {amountsByStatus.submitted > 0 && (
+            <li className="flex items-center gap-2 text-sky-700 dark:text-sky-400">
+              <TriangleAlert className="size-4" aria-hidden="true" />
+              {t("pages.provider_collections.group.submitted", {
+                amount: formatMoney(amountsByStatus.submitted),
+              })}
+            </li>
+          )}
+
+          {amountsByStatus.rejected > 0 && (
             <li className="flex items-center gap-2 text-red-700 dark:text-red-400">
               <TriangleAlert className="size-4" aria-hidden="true" />
               {t("pages.provider_collections.group.rejected", {
-                count: group.rejected_count,
+                amount: formatMoney(amountsByStatus.rejected),
               })}
             </li>
           )}
@@ -149,10 +194,11 @@ export default function CollectionGroupCard({
           {group.employees.length > 0 && (
             <>
               <Separator />
+
               <OwnerGroup
                 icon={Users}
                 title={t("pages.provider_collections.group.employees")}
-                status={group.employees_status}
+                status={employeesStatus}
                 amount={group.employees_total}
               >
                 {group.employees.map((employee) => (
@@ -161,6 +207,7 @@ export default function CollectionGroupCard({
                       <span className="flex-1 text-sm">
                         {employee.owner_name}
                       </span>
+
                       {settled ? (
                         <span className="text-muted-foreground text-xs">
                           {employee.paid_on}
@@ -168,8 +215,10 @@ export default function CollectionGroupCard({
                       ) : (
                         <StatusBadge status={employee.status} kind="payment" />
                       )}
+
                       <Chevron />
                     </CollapsibleTrigger>
+
                     <CollapsibleContent className="px-3 pb-3">
                       <CollectionAccountPanel
                         account={employee}
@@ -185,6 +234,7 @@ export default function CollectionGroupCard({
           {group.company && (
             <>
               <Separator />
+
               <OwnerGroup
                 icon={Building2}
                 title={t("pages.provider_collections.group.company")}
