@@ -60,6 +60,7 @@
       "accounts": {
         "index": {
           "history": "Historial",
+          "history_empty": "Todavía no hiciste ningún pago.",
           "no_debt": "¡Sin deudas pendientes con este proveedor!",
           "payments": "Pagos",
           "pending": "Pendientes",
@@ -71,6 +72,7 @@
         "show": {
           "amount": "Cant.",
           "date": "Fecha",
+          "download_receipt": "Descargar comprobante de pago",
           "due": "Vence: ",
           "lunch": "vianda",
           "lunches": "viandas",
@@ -90,6 +92,10 @@
           "receipt_view_edit": "Ver o editar comprobante",
           "see_detail": "Ver detalle",
           "spending": "Consumo",
+          "status_accepted": "Aceptado",
+          "status_pending": "Pendiente",
+          "status_rejected": "Rechazado",
+          "status_submitted": "Enviado",
           "total": "Total"
         }
       },

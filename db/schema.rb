@@ -64,6 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
     t.index ["user_id"], name: "index_admins_on_user_id"
   end
 
+<<<<<<< HEAD
   create_table "benefit_configurations", force: :cascade do |t|
     t.bigint "company_id", null: false
     t.datetime "created_at", null: false
@@ -78,6 +79,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
     t.index ["created_by_id"], name: "index_benefit_configurations_on_created_by_id"
   end
 
+=======
+>>>>>>> 77952f0 (agregar estado a los pedidos pendientes rechazados o enviados)
   create_table "benefits", force: :cascade do |t|
     t.integer "amount"
     t.bigint "consumer_id", null: false
@@ -163,6 +166,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
     t.bigint "provider_id"
+    t.text "rejection_reason"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_payments_on_account_id"
@@ -408,8 +412,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "admins", "companies"
   add_foreign_key "admins", "users"
-  add_foreign_key "benefit_configurations", "companies"
-  add_foreign_key "benefit_configurations", "users", column: "created_by_id"
   add_foreign_key "benefits", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"

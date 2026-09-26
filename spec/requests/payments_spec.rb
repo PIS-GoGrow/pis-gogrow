@@ -56,7 +56,7 @@ RSpec.describe "Payments", type: :request do
 
   it "updates an existing rejected payment with a new receipt" do
     user, account, provider = setup_payment_account
-    payment = account.payments.create!(provider:, status: :rejected)
+    payment = account.payments.create!(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
     payment.receipt.attach(
       io: StringIO.new("old receipt"),
       filename: "old.png",

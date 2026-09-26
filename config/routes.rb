@@ -41,6 +41,9 @@ Rails.application.routes.draw do
     end
     resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :payments, only: [ :index, :update ] do
+      get :receipt, on: :member
+    end
   end
 
   resources :schedules, only: [ :index, :create ]

@@ -154,7 +154,7 @@ RSpec.describe Account, type: :model do
         month: 1.month.ago,
         amount: 300
       )
-      Payment.create!(account: paid_account, status: 0)
+      Payment.create!(account: paid_account, status: :approved)
 
       zero_account = Account.create!(
         owner: consumer,

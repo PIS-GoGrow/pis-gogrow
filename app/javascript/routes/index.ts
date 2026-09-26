@@ -17,6 +17,7 @@ export { default as providerDashboard } from './Provider/DashboardController'
 export { default as providerMenus } from './Provider/MenusController'
 export { default as providerOrderDeadlines } from './Provider/OrderDeadlinesController'
 export { default as providerOrders } from './Provider/OrdersController'
+export { default as providerPayments } from './Provider/PaymentsController'
 export { default as schedules } from './SchedulesController'
 export { default as sessions } from './SessionsController'
 export { default as settingsEmails } from './Settings/EmailsController'
@@ -29,7 +30,6 @@ export { default as users } from './UsersController'
 import _consumerAccounts from './Consumer/AccountsController'
 import _omniauthCallbacks from './OmniauthCallbacksController'
 import _consumerOrders from './Consumer/OrdersController'
-import _providerOrders from './Provider/OrdersController'
 import _consumerDashboard from './Consumer/DashboardController'
 import _identityPasswordResets from './Identity/PasswordResetsController'
 import _providerMenus from './Provider/MenusController'
@@ -38,6 +38,8 @@ import _identityEmailVerifications from './Identity/EmailVerificationsController
 import _consumerMenus from './Consumer/MenusController'
 import _consumerPayments from './Consumer/PaymentsController'
 import _providerOrderDeadlines from './Provider/OrderDeadlinesController'
+import _providerOrders from './Provider/OrdersController'
+import _providerPayments from './Provider/PaymentsController'
 import _home from './HomeController'
 import _Routes from './RoutesController'
 import _settingsEmails from './Settings/EmailsController'
@@ -70,6 +72,8 @@ export const providerOrder = _providerOrders.show
 export const providerOrderDeadline = _providerOrderDeadlines.update
 export const receiptPayment = _consumerPayments.receipt
 export const rejectProviderOrder = _providerOrders.reject
+export const providerPayment = _providerPayments.update
+export const receiptProviderPayment = _providerPayments.receipt
 export const root = _home.index
 export const session = _sessions.update
 export const settingsAppearance = _Routes.settingsAppearance

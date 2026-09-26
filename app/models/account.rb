@@ -21,12 +21,13 @@ class Account < ApplicationRecord
 
   # Los dos scopes de abajo asumen que Payment.account_id no es NULL
   # TODO: Hay que cambiar según qué estado sea el que se elija para pagos
-  # aprobados.
+  # Cuentas con deuda que no tienen un pago aprobado
   scope :pending, -> {
-    where.not(id: Payment.where(status: 0).select(:account_id)).where.not(amount: ..0)
+    where.not(id: Payment.approved.select(:account_id)).where.not(amount: ..0)
   }
+  # Cuentas con pago aprobado
   scope :history, -> {
-    where(id: Payment.where(status: 0).select(:account_id))
+    where(id: Payment.approved.select(:account_id))
   }
 
   def current?

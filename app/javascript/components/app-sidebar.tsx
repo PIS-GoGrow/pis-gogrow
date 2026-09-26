@@ -4,6 +4,7 @@ import {
   CalendarPlus,
   ClipboardList,
   CreditCard,
+  FileCheck,
   LayoutGrid,
   Package,
   Percent,
@@ -31,6 +32,7 @@ import {
   providerDashboard,
   providerMenus,
   providerOrders,
+  providerPayments,
   schedules,
 } from "@/routes"
 import type { NavItem } from "@/types"
@@ -62,6 +64,11 @@ export function AppSidebar() {
         title: "Pedidos",
         href: providerOrders.index().url,
         icon: Package,
+      },
+      {
+        title: "Validar pagos",
+        href: providerPayments.index().url,
+        icon: FileCheck,
       },
     ],
     admin: [
