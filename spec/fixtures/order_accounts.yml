@@ -1,0 +1,46 @@
+# Cada orden confirmada cuelga de dos cuentas: la del empleado que paga su
+# parte y la de su empresa, que paga el subsidio.
+one_confirmed_future_employee:
+  order: upcoming_confirmed_future
+  account: one_tuviandita_current
+
+one_confirmed_future_company:
+  order: upcoming_confirmed_future
+  account: gogrow_tuviandita_current
+
+one_confirmed_past_employee:
+  order: history_confirmed_past
+  account: one_tuviandita_current
+
+one_confirmed_past_company:
+  order: history_confirmed_past
+  account: gogrow_tuviandita_current
+
+other_confirmed_future_employee:
+  order: other_consumer_upcoming
+  account: other_tuviandita_current
+
+other_confirmed_future_company:
+  order: other_consumer_upcoming
+  account: gogrow_tuviandita_current
+
+# == Schema Information
+#
+# Table name: order_accounts
+#
+#  id         :bigint           not null, primary key
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#  account_id :bigint           not null
+#  order_id   :bigint           not null
+#
+# Indexes
+#
+#  index_order_accounts_on_account_id  (account_id)
+#  index_order_accounts_on_order_id    (order_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (account_id => accounts.id)
+#  fk_rails_...  (order_id => orders.id)
+#

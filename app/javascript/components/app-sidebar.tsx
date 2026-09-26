@@ -8,6 +8,7 @@ import {
   Package,
   Percent,
   Utensils,
+  Wallet,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -28,6 +29,7 @@ import {
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
+  providerCollections,
   providerDashboard,
   providerMenus,
   providerOrders,
@@ -62,6 +64,11 @@ export function AppSidebar() {
         title: "Pedidos",
         href: providerOrders.index().url,
         icon: Package,
+      },
+      {
+        title: t("nav.collections"),
+        href: providerCollections.index().url,
+        icon: Wallet,
       },
     ],
     admin: [

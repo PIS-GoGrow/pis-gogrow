@@ -64,7 +64,7 @@ class Order < ApplicationRecord
       .left_joins(:schedule)
       .order(Arel.sql("schedules.date DESC NULLS LAST"))
   }
-  after_create :assign_account
+  after_create :ensure_accounts!
   after_update_commit :sync_accounts,
     if: -> { saved_change_to_status? || saved_change_to_price? || saved_change_to_discounted_price? }
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
@@ -240,7 +240,38 @@ class Order < ApplicationRecord
     end
   end
 
+  # Asigna la orden a las dos cuentas que le corresponden y las hace recalcular
+  # su monto: la del empleado, que paga su parte, y la de su empresa, que paga el
+  # subsidio. Es idempotente, así que sirve también para completar las cuentas de
+  # órdenes viejas: una orden cuelga siempre de una sola cuenta de cada dueño.
+  def ensure_accounts!
+    # El mes es el de cuando se hizo el pedido, no el de hoy: si no, completar una
+    # orden vieja la colgaría también de una cuenta de este mes.
+    # Habría que validar si queremos que el pedido se descuente en el mes en el que
+    # será enviado. En ese caso, habría que cambiar la siguiente línea por:
+    #   month = schedule.date.beginning_of_month
+    month = created_at.to_date.beginning_of_month
+    provider =
+      self.provider or raise "La orden #{id} no tiene proveedor. Puede ser que no tenga un schedule asignado, que su schedule no tenga un menú o que ese menú no tenga un proveedor"
+
+    [ consumer, consumer.company ].each do |owner|
+      account = accounts.find { it.owner_type == owner.class.name && it.owner_id == owner.id } ||
+                account_of(owner, month:, provider:)
+      accounts << account unless accounts.include?(account)
+
+      account.sync_amount!
+    end
+  end
+
   private
+
+  # La cuenta de la empresa la comparten todos sus empleados, así que dos pedidos
+  # simultáneos pueden intentar crearla a la vez. create_or_find_by! inserta en un
+  # savepoint: si el índice único rechaza el segundo INSERT, busca la que creó el
+  # otro sin abortar la transacción del pedido.
+  def account_of(owner, month:, provider:)
+    owner.accounts.find_by(month:, provider:) || owner.accounts.create_or_find_by!(month:, provider:)
+  end
 
   # El tope mensual solo mira las entregas del mes en curso, así que una orden
   # para el mes que viene no tiene unidades que devolver.
@@ -248,30 +279,6 @@ class Order < ApplicationRecord
     return 0 unless schedule&.date&.then { Date.current.all_month.cover?(it) }
 
     amount.to_i
-  end
-
-  # Asignarse a la cuenta actual del usuario, o crearla si no existiera
-  # Forzar a que la cuenta recalcule su valor calculado.
-  def assign_account
-    unless accounts.empty?
-      accounts.each &:sync_amount!
-      return
-    end
-
-    # Obetener información de la cuenta a la que debería ser asignada la orden:
-    # el mes actual y la id del proveedor correspondiente a la orden.
-    # Habría que validar si queremos que el pedido se descuente en el mes en el que
-    # será enviado, que puede ser distinto del actual. En ese caso, habría que cambiar
-    # la siguiente línea por:
-    #   month = Schedule.date.beginning_of_month
-    month = Date.current.beginning_of_month
-    provider =
-      self.provider or raise "La orden #{id} no tiene proveedor. Puede ser que no tenga un schedule asignado, que su schedule no tenga un menú o que ese menú no tenga un proveedor"
-
-    account = consumer.accounts.find_or_create_by! month: month, provider: provider
-    accounts << account
-
-    account.sync_amount!
   end
 
   def sync_accounts

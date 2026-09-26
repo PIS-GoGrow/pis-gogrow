@@ -15,6 +15,7 @@ RSpec.describe "Cierre de recepción de pedidos visto por el empleado" do
   end
 
   before do
+    OrderAccount.delete_all
     Order.delete_all
     Schedule.delete_all
     providers(:endulzate).update!(order_deadline: nil)
