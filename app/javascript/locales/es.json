@@ -95,6 +95,7 @@
           "status_accepted": "Aceptado",
           "status_pending": "Pendiente",
           "status_rejected": "Rechazado",
+          "status_submitted": "Enviado",
           "total": "Total"
         }
       },

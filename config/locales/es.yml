@@ -219,6 +219,7 @@ es:
         status_pending: "Pendiente"
         status_accepted: "Aceptado"
         status_rejected: "Rechazado"
+        status_submitted: "Enviado"
     orders:
       index:
         title: "Mis pedidos"
