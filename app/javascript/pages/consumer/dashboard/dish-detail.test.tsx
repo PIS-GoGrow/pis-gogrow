@@ -24,6 +24,7 @@ const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
   date: "2026-09-16",
   remaining: 5,
   sold_out: false,
+  orders_closed: false,
   menu: {
     id: 10,
     name: "Sorrentinos artesanales",

@@ -41,6 +41,7 @@
       }
     },
     "nav": {
+      "benefit_configurations": "Beneficio general",
       "change_to": "Cambiar a",
       "dashboard": "Panel",
       "menu": "Menú de navegación",
@@ -92,12 +93,48 @@
           "total": "Total"
         }
       },
+      "admin": {
+        "benefit_configurations": {
+          "index": {
+            "current": {
+              "cancel": "Cancelar",
+              "edit": "Editar",
+              "empty": "Todavía no configuraste el beneficio general.",
+              "max_voucher_price": "Cuando el precio por vianda es",
+              "monthly_voucher_limit": "Hasta un límite por empleado de",
+              "monthly_voucher_limit_unit": "viandas",
+              "notice": "Los cambios se aplicarán en el próximo período.",
+              "pending_conflict": {
+                "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
+                "keep": "Mantener el programado",
+                "replace": "Reemplazar por este",
+                "title": "Ya hay un cambio programado para el próximo período"
+              },
+              "scheduled_banner": {
+                "description": "La nueva configuración de subsidios se aplicará a partir del próximo período.",
+                "dismiss": "Cerrar aviso",
+                "title": "Tus cambios están programados"
+              },
+              "submit": "Programar Subsidio",
+              "subsidy_percentage": "Se descuenta",
+              "title": "Subsidio Base"
+            },
+            "description": "Gestioná los subsidios de tu compañía",
+            "title": "Subsidios"
+          }
+        }
+      },
       "cart": {
         "delivery": "Entrega: %{date}",
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning": "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina.",
         "other_deliveries": "Las demás viandas irán a la dirección seleccionada.",
         "remove": "Quitar %{name}"
+      },
+      "consumer_dashboard": {
+        "index": {
+          "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
+        }
       },
       "dashboard": {
         "roles": {
@@ -225,6 +262,19 @@
           "return_to": "O vuelve a",
           "submit": "Enviar enlace de restablecimiento",
           "title": "Olvidé mi contraseña"
+        }
+      },
+      "provider_dashboard": {
+        "index": {
+          "description": "Administrá la recepción de pedidos de tus menús.",
+          "eyebrow": "Operación diaria",
+          "order_deadline": {
+            "description": "Definí hasta qué hora aceptás pedidos para hoy.",
+            "help": "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos.",
+            "label": "Hora límite",
+            "title": "Recepción de pedidos"
+          },
+          "title": "Panel del proveedor"
         }
       },
       "provider_orders": {
