@@ -44,6 +44,22 @@ export default function AccountCard({
       .find(({ status }) => status !== "approved") ??
     account.payments.find(({ status }) => status === "approved")
 
+  // Sin comprobante todavía = pendiente; el mismo estado "submitted" cubre
+  // tanto el primer envío como un reenvío luego de un rechazo.
+  const statusLabel =
+    payment?.status === "rejected"
+      ? t("pages.accounts.show.status_rejected")
+      : payment?.status === "submitted"
+        ? t("pages.accounts.show.status_submitted")
+        : t("pages.accounts.show.status_pending")
+
+  const statusBadgeClassName =
+    payment?.status === "rejected"
+      ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
+      : payment?.status === "submitted"
+        ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400"
+        : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+
   async function handleClick() {
     setLoading(true)
     try {
@@ -67,8 +83,10 @@ export default function AccountCard({
   return (
     <Card className="bg-zinc-50 dark:bg-zinc-900">
       <CardHeader className="grid gap-4">
-        <CardDescription className="flex">
+        <CardDescription className="flex items-center gap-2">
           {account.month}
+
+          <Badge className={statusBadgeClassName}>{statusLabel}</Badge>
 
           <Badge
             variant="ghost"
