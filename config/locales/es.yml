@@ -309,10 +309,9 @@ es:
       group:
         total: "Total a cobrar"
         confirmed: "%{amount} en cobros confirmados"
-        awaiting_one: "%{count} cobro pendiente de confirmación"
-        awaiting_other: "%{count} cobros pendientes de confirmación"
-        rejected_one: "%{count} cobro rechazado"
-        rejected_other: "%{count} cobros rechazados"
+        pending: "%{amount} en cobros pendientes"
+        submitted: "%{amount} en cobros informados"
+        rejected: "%{amount} en cobros rechazados"
         employees: "Empleados"
         company: "Empresa"
         due: "Vence: %{date}"

@@ -269,12 +269,12 @@
         "group": {
           "company": "Empresa",
           "confirmed": "%{amount} en cobros confirmados",
-          "pending": "%{amount} en cobros pendientes",
-          "submitted": "%{amount} en cobros informados",
-          "rejected": "%{amount} en cobros rechazados",
           "detail": "Ver detalle",
           "due": "Vence: %{date}",
           "employees": "Empleados",
+          "pending": "%{amount} en cobros pendientes",
+          "rejected": "%{amount} en cobros rechazados",
+          "submitted": "%{amount} en cobros informados",
           "total": "Total a cobrar"
         },
         "index": {
@@ -338,7 +338,6 @@
           "title": "Panel del proveedor"
         }
       },
-
       "provider_orders": {
         "actions": {
           "confirm": "Confirmar",
