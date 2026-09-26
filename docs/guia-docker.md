@@ -160,6 +160,8 @@ docker compose build
 docker compose up
 ```
 
+Si cambia `package-lock.json`, al próximo arranque del contenedor el volumen de `node_modules` se actualiza automáticamente. Si el entorno ya estaba corriendo, usá `docker compose restart web`; no hace falta instalar dependencias a mano.
+
 **Correr comandos de Rails dentro del contenedor**
 
 Por ejemplo, para correr migraciones o la consola de Rails:
@@ -189,7 +191,7 @@ Se eliminan todas las imágenes y contenedores. Tu máquina queda sin ningún ra
 
 **Cambié algo en el código y no se refleja en localhost:3001**
 
-Los cambios en archivos de Rails (controladores, vistas, modelos) se reflejan automáticamente sin reiniciar nada. Si cambiaste el `Gemfile` o el `Dockerfile.dev`, necesitás reconstruir la imagen con `docker compose build`.
+Los cambios en archivos de Rails (controladores, vistas, modelos) se reflejan automáticamente sin reiniciar nada. Si cambiaste el `Gemfile` o el `Dockerfile.dev`, necesitás reconstruir la imagen con `docker compose build`. Si cambió `package-lock.json`, reiniciá `web` con `docker compose restart web` para que actualice las dependencias de Node.
 
 **El puerto 3001 ya está en uso**
 
@@ -213,7 +215,7 @@ Una cosa importante sobre el almacenamiento: si eliminás una imagen, Docker la 
 
 **`Dockerfile.dev`**
 
-Es la receta que le dice a Docker cómo construir la imagen del servidor Rails para desarrollo. Parte de la imagen `ruby:4.0.5-slim` (que ya tiene Ruby instalado), instala las dependencias del sistema (herramientas para compilar gemas, el cliente de PostgreSQL, libvips) y Node.js 24.16.0 para Vite, y define que el código vive en `/rails` dentro del contenedor. Al arrancar el contenedor, prepara la base (`db:prepare`) y levanta Rails y Vite juntos. La imagen se construye una sola vez, y no se vuelve a construir a menos que hagas `docker compose build`.
+Es la receta que le dice a Docker cómo construir la imagen del servidor Rails para desarrollo. Parte de la imagen `ruby:4.0.5-slim` (que ya tiene Ruby instalado), instala las dependencias del sistema (herramientas para compilar gemas, el cliente de PostgreSQL, libvips) y Node.js 24.16.0 para Vite, y define que el código vive en `/rails` dentro del contenedor. Al arrancar, compara `package-lock.json` con la versión usada en el volumen de `node_modules`: si cambió, ejecuta `npm ci`; después prepara la base (`db:prepare`) y levanta Rails y Vite juntos. La imagen se construye una sola vez, y no se vuelve a construir a menos que hagas `docker compose build`.
 
 **`docker-compose.yml`**
 
@@ -235,5 +237,6 @@ Cuando corrés `docker compose up` por primera vez, Docker lee el `docker-compos
 
 | Versión | Fecha | Cambios |
 |---|---|---|
+| v2.1 | 2026-09-24 | El volumen persistente de `node_modules` se sincroniza automáticamente cuando cambia `package-lock.json`. |
 | v1.0 | 2026-08-27 | Versión inicial del documento, basada en repositorio temporal de prueba. |
 | v2.0 | 2026-09-02 y 2026-09-03 | Se reemplaza el repositorio temporal por el repositorio real del proyecto (`pis-gogrow`). Se documenta `Dockerfile.dev` como imagen separada del `Dockerfile` de producción. Se agrega el puerto de Vite (5173) y el volumen nombrado de `node_modules`. Se actualizan versiones de Ruby (4.0.5), Node (24.16.0) y PostgreSQL (17). Se elimina el Anexo B (Inertia.js ya integrado). Se documenta la corrección de line-endings en `.gitattributes`. El 2026-09-03 se añadió la URL en vez de `<url-de-pis-gogrow>` y en la primera parte de la verificación se corrigió que la pantalla que se despliega es verde. |
