@@ -37,15 +37,35 @@ class Account < ApplicationRecord
     month + 1.month + 4.days
   end
 
+  # Se busca en memoria para que un preload(:payments) evite una consulta por
+  # cuenta. El id desempata dos pagos del mismo instante.
+  def last_payment
+    payments.max_by { |payment| [ payment.created_at, payment.id ] }
+  end
+
+  # El comprobante cubre la cuenta entera, así que el estado del cobro vive acá
+  # y no en cada pago. Si hubo varios intentos manda el último; un pago en
+  # pending es un estado intermedio, no un comprobante informado.
+  def collection_status
+    last = last_payment
+    return "pending" if last.nil? || last.pending?
+
+    last.status
+  end
+
   # Sincroniza la deuda como la suma del importe final (con subsidio aplicado)
   # de las órdenes asociadas para el consumidor.
   # Si es de Empresa, se suma el subsidio (diferencia entre precio base y precio con descuento).
+  # El lock es necesario: sobre la cuenta de una empresa escriben en paralelo
+  # los pedidos de todos sus empleados a ese proveedor.
   def sync_amount!
     # TODO: Habría que validar que se tengan solo en cuenta las órdenes confirmadas
-    if owner_type == "Consumer"
-      update! amount: orders.confirmed.sum("COALESCE(orders.discounted_price, orders.price)")
-    else
-      update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
+    with_lock do
+      if owner_type == "Consumer"
+        update! amount: orders.confirmed.sum("COALESCE(orders.discounted_price, orders.price)")
+      else
+        update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
+      end
     end
   end
 
