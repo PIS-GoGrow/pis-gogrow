@@ -145,7 +145,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   def allowed_dates
     Date.current..Date.current.next_week(:friday)
   end
-  
+
   def order_error_reason(order)
     return :order_deadline_passed if order.errors[:schedule_id].include?(t("validations.order_deadline_passed"))
 
