@@ -56,6 +56,11 @@ class Consumer < ApplicationRecord
   def birthday
     Date.current - 1.day
   end
+
+  # TODO: Cómo obtenemos el onboarding del empleado?
+  def onboarding_date
+    Date.current - 1.day
+  end
 end
 
 # == Schema Information

@@ -11,13 +11,6 @@ class BenefitConfiguration < ApplicationRecord
 
   validates :subsidy_percentage, presence: true,
     numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
-  validates :monthly_voucher_limit, presence: true,
-    numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-  validates :max_voucher_price, presence: true,
-    numericality: { greater_than: 0 }
-  validates :effective_from, presence: true,
-    comparison: { greater_than_or_equal_to: -> { Date.current } }
-  validates :effective_from, uniqueness: { scope: :company_id }
 
   scope :ordered, -> { order(effective_from: :desc, created_at: :desc) }
 

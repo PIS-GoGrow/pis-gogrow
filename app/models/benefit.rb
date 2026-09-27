@@ -10,7 +10,7 @@ class Benefit < ApplicationRecord
   has_many :orders, through: :order_benefits, source: :order
   belongs_to :benefit_configuration
 
-  # Es importante que active sea 0
+  # Es importante que current sea 0
   enum :status, { current: 0, expired: 1 }
 
   scope :monthly, -> {

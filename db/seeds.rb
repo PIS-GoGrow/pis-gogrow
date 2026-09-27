@@ -126,12 +126,27 @@ consumer = Consumer.create!(
   address: "Julio Herrera y Reissig 565",
   user: consumer_user
 )
+
+
+admin_user = User.create!(
+  email: "rrhh.gogrow@gmail.com",
+  name: "Juan Admin",
+  password_digest: "$2a$12$kDAZOZpncJzrsfYTgpE.Xu47ZCiUJWL/a4TI5WcI0Q1LeecxlSsMe",
+  verified: true,
+  google_uid: "101425658623552684238"
+)
+Admin.create!(user: admin_user, company:)
+
+benefit_config = BenefitConfiguration.create! subsidy_percentage: 50, name: "Subsidio base", company:, created_by: admin_user
+benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: Date.current, type: "MonthlyBenefit"
+
 Benefit.create!(
   consumer:,
   amount: 20,
   description: "Viandas mensuales",
   percentage: 50,
-  due_date: week_start + 1.month
+  benefit_configuration: benefit_config,
+  due_date: Date.current.end_of_month
 )
 
 # Cubren las dos secciones de "Mis pedidos": pendientes/próximos e historial,
@@ -189,15 +204,6 @@ Order.create!(
 )
 
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
-
-admin_user = User.create!(
-  email: "rrhh.gogrow@gmail.com",
-  name: "Juan Admin",
-  password_digest: "$2a$12$kDAZOZpncJzrsfYTgpE.Xu47ZCiUJWL/a4TI5WcI0Q1LeecxlSsMe",
-  verified: true,
-  google_uid: "101425658623552684238"
-)
-Admin.create!(user: admin_user, company:)
 
 notification_configuration = NotificationConfiguration.create!(
   description: "Notificaciones de orden en camino"
