@@ -26,6 +26,7 @@ import {
 import {
   adminBenefitConfigurations,
   adminDashboard,
+  adminPayments,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
@@ -81,6 +82,11 @@ export function AppSidebar() {
         title: t("nav.benefit_configurations"),
         href: adminBenefitConfigurations.index().url,
         icon: Percent,
+      },
+      {
+        title: t("nav.payments"),
+        href: adminPayments.index().url,
+        icon: CreditCard,
       },
     ],
     consumer: [

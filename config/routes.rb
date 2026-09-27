@@ -64,6 +64,7 @@ Rails.application.routes.draw do
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
+    resources :payments, only: [ :index, :show ]
   end
 
   root "home#index"
