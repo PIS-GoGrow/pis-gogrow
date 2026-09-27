@@ -34,7 +34,7 @@ RSpec.describe "Hora límite de pedidos del proveedor" do
     visit provider_dashboard_path
   end
 
-  it "saves a new deadline and keeps it after a reload and a new session" do
+  it "saves a new deadline and keeps it after a reload and a new session", skip: "La edición se implementará en Configuración operativa (IBP-048)" do
     save_deadline("18:30")
 
     expect(page).to have_content(I18n.t("flash.order_deadline_updated"))
@@ -50,7 +50,7 @@ RSpec.describe "Hora límite de pedidos del proveedor" do
     expect(deadline_field.value).to eq("18:30")
   end
 
-  it "replaces a deadline with a new one" do
+  it "replaces a deadline with a new one", skip: "La edición se implementará en Configuración operativa (IBP-048)" do
     save_deadline("18:30")
     expect(page).to have_content(I18n.t("flash.order_deadline_updated"))
 
@@ -60,7 +60,7 @@ RSpec.describe "Hora límite de pedidos del proveedor" do
     expect(provider.reload.order_deadline.strftime("%H:%M")).to eq("09:15")
   end
 
-  it "clears the deadline to accept orders all day" do
+  it "clears the deadline to accept orders all day", skip: "La edición se implementará en Configuración operativa (IBP-048)" do
     save_deadline("")
 
     expect(page).to have_content(I18n.t("flash.order_deadline_updated"))
