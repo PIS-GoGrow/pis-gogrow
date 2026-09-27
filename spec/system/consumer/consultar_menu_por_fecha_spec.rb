@@ -41,7 +41,7 @@ RSpec.describe "Consultar el menú disponible por fecha" do
     # Los fixtures publican con fechas relativas a la fecha real; bajo travel_to
     # caen fuera de la semana mostrada. Se limpia para que cada ejemplo declare
     # exactamente lo que espera ver en pantalla.
-    Order.delete_all
+    Order.destroy_all
     Schedule.delete_all
   end
 

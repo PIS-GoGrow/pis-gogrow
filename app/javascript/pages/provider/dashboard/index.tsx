@@ -9,7 +9,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import AppLayout from "@/layouts/app-layout"
 import { cn } from "@/lib/utils"
-import { providerDashboard, providerOrders } from "@/routes"
+import {
+  providerCollections,
+  providerDashboard,
+  providerOrders,
+} from "@/routes"
 import type { BreadcrumbItem, ProviderDashboardIndex } from "@/types"
 
 type Props = ProviderDashboardIndex
@@ -201,6 +205,7 @@ export default function ProviderDashboard({
               <DashboardSectionButton
                 id="payments-title"
                 title={t("pages.provider_dashboard.index.payments.title")}
+                href={providerCollections.index().url}
               />
               <Card className="dark:border-border dark:bg-muted gap-3 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] p-4 shadow-none">
                 <CardContent className="flex items-center justify-between gap-2 px-0">
@@ -228,19 +233,34 @@ export default function ProviderDashboard({
   )
 }
 
-function DashboardSectionButton({ id, title }: { id: string; title: string }) {
+function DashboardSectionButton({
+  id,
+  title,
+  href,
+}: {
+  id: string
+  title: string
+  href?: string
+}) {
+  const content = (
+    <>
+      <span className="group-hover:underline">{title}</span>
+      <ChevronRight
+        className="size-4 transition-transform group-hover:translate-x-0.5"
+        aria-hidden="true"
+      />
+    </>
+  )
+
   return (
     <h3 id={id}>
       <Button
-        type="button"
+        asChild={!!href}
+        type={href ? undefined : "button"}
         variant="ghost"
         className="group hover:text-foreground h-auto w-full cursor-pointer justify-between p-0 text-base font-semibold hover:bg-transparent has-[>svg]:px-0"
       >
-        <span className="group-hover:underline">{title}</span>
-        <ChevronRight
-          className="size-4 transition-transform group-hover:translate-x-0.5"
-          aria-hidden="true"
-        />
+        {href ? <Link href={href}>{content}</Link> : content}
       </Button>
     </h3>
   )

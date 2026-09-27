@@ -20,6 +20,7 @@ export function ProviderMobileNav() {
   const dashboard = providerItems.find((item) => item.key === "dashboard")
   const menus = providerItems.find((item) => item.key === "menus")
   const orders = providerItems.find((item) => item.key === "orders")
+  const collections = providerItems.find((item) => item.key === "collections")
 
   const links = [
     {
@@ -40,6 +41,7 @@ export function ProviderMobileNav() {
     {
       label: t("nav.provider.payments"),
       icon: CreditCardPosIcon,
+      href: collections?.href,
     },
     {
       label: t("nav.provider.account"),

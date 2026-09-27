@@ -205,4 +205,198 @@ RSpec.describe "Provider::Orders", type: :request do
       }
     end
   end
+
+  describe "PATCH /provider/orders/:id/confirm" do
+    it "redirects to sign in without a session" do
+      patch confirm_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(sign_in_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
+    it "rejects a session with a different active role" do
+      sign_in users(:one), role: :consumer
+
+      patch confirm_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
+    it "rejects an admin session" do
+      user = User.create!(name: "Admin User", email: "admin-confirm-order@gogrow.com", password: "password123456")
+      Admin.create!(user:, company: companies(:gogrow))
+      sign_in user, role: :admin
+
+      patch confirm_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
+    it "confirms a pending order" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch confirm_provider_order_path(order)
+
+      expect(order.reload).to be_confirmed
+      expect(response).to redirect_to(provider_orders_path)
+
+      follow_redirect!
+      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+    end
+
+    it "redirects back to the order detail when deciding from the detail page" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch confirm_provider_order_path(order), headers: { "HTTP_REFERER" => provider_order_url(order) }
+
+      expect(order.reload).to be_confirmed
+      expect(response).to redirect_to(provider_order_url(order))
+    end
+
+    it "leaves an order that is no longer pending as it was" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_cancelled_future)
+
+      patch confirm_provider_order_path(order)
+
+      expect(order.reload).to be_cancelled
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_not_pending"))
+    end
+
+    it "responds with not found for an order of another provider" do
+      sign_in users(:provider_user), role: :provider
+
+      patch confirm_provider_order_path(other_provider_order)
+
+      expect(response).to have_http_status(:not_found)
+      expect(other_provider_order.reload).to be_pending
+    end
+  end
+
+  describe "PATCH /provider/orders/:id/reject" do
+    it "redirects to sign in without a session" do
+      patch reject_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(sign_in_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
+    it "rejects a session with a different active role" do
+      sign_in users(:one), role: :consumer
+
+      patch reject_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
+    it "rejects an admin session" do
+      user = User.create!(name: "Admin User", email: "admin-reject-order@gogrow.com", password: "password123456")
+      Admin.create!(user:, company: companies(:gogrow))
+      sign_in user, role: :admin
+
+      patch reject_provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_today).reload).to be_pending
+    end
+
+    it "rejects a pending order with a valid reason" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+
+      expect(order.reload).to be_rejected
+      expect(order.rejection_reason).to eq("out_of_stock")
+      expect(order.rejection_details).to be_nil
+      expect(response).to redirect_to(provider_orders_path)
+
+      follow_redirect!
+      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+    end
+
+    it "rejects a pending order with 'other' reason and details" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch reject_provider_order_path(order), params: { reason: "other", details: "Cerrado por reformas" }
+
+      expect(order.reload).to be_rejected
+      expect(order.rejection_reason).to eq("other")
+      expect(order.rejection_details).to eq("Cerrado por reformas")
+      expect(response).to redirect_to(provider_orders_path)
+
+      follow_redirect!
+      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+    end
+
+    it "refuses to reject without a reason and returns an error flash" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch reject_provider_order_path(order)
+
+      expect(order.reload).to be_pending
+      expect(response).to redirect_to(provider_orders_path)
+
+      follow_redirect!
+      expected_alert = "#{Order.human_attribute_name(:rejection_reason)} #{I18n.t('activerecord.errors.models.order.attributes.rejection_reason.blank')}"
+      expect(inertia).to have_flash(alert: expected_alert)
+    end
+
+    it "refuses to reject with 'other' reason when details are missing" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch reject_provider_order_path(order), params: { reason: "other", details: "" }
+
+      expect(order.reload).to be_pending
+      expect(response).to redirect_to(provider_orders_path)
+
+      follow_redirect!
+      expected_alert = "#{Order.human_attribute_name(:rejection_details)} #{I18n.t('activerecord.errors.models.order.attributes.rejection_details.blank')}"
+      expect(inertia).to have_flash(alert: expected_alert)
+    end
+
+    it "redirects back to the order detail when rejecting from the detail page" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch reject_provider_order_path(order),
+            params: { reason: "duplicate_order" },
+            headers: { "HTTP_REFERER" => provider_order_url(order) }
+
+      expect(order.reload).to be_rejected
+      expect(order.rejection_reason).to eq("duplicate_order")
+      expect(response).to redirect_to(provider_order_url(order))
+    end
+
+    it "leaves an order that is no longer pending as it was" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_cancelled_future)
+
+      patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+
+      expect(order.reload).to be_cancelled
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_not_pending"))
+    end
+
+    it "responds with not found for an order of another provider" do
+      sign_in users(:provider_user), role: :provider
+
+      patch reject_provider_order_path(other_provider_order)
+
+      expect(response).to have_http_status(:not_found)
+      expect(other_provider_order.reload).to be_pending
+    end
+  end
 end

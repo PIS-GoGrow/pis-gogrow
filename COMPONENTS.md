@@ -57,6 +57,7 @@ Todas las pantallas con sesión iniciada comparten el mismo esqueleto. Las medid
 | Ancho y márgenes | `PageContainer` | Centrado, hasta 1200 px (`max-w-300`), con `p-5` |
 | Encabezado | `PageContainer` (por dentro usa `Heading`) | `eyebrow` opcional en mayúsculas, título en `text-xl font-semibold` y `description` opcional |
 | Botones del encabezado | Prop `actions` de `PageContainer` | A la derecha del título; debajo, si no entran |
+| Volver a la pantalla anterior | Prop `back` de `PageContainer` | Arriba del título y pegado a la izquierda. No va en `actions`: el volver no es una acción de la pantalla |
 | Separaciones | `PageContainer` | `mb-8` entre el encabezado y el contenido, y `gap-4` entre cada hijo directo |
 | Título de la pestaña del navegador | `<Head title>` | El mismo texto que `title` |
 | Breadcrumbs | `breadcrumbs` de `AppLayout` | Al menos la sección actual |
@@ -110,6 +111,7 @@ Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla
 | `Empty`, `EmptyHeader`, `EmptyMedia`, `EmptyTitle`, `EmptyDescription`, `EmptyContent` | `@/components/ui/empty` | Estado vacío de una lista o sección |
 | `Skeleton` | `@/components/ui/skeleton` | Espacio reservado mientras carga contenido |
 | `Spinner` | `@/components/ui/spinner` | Indicador de acción en curso (dentro de un botón) |
+| `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption` | `@/components/ui/table` | Listas tabulares (historial de cambios, filas con varias columnas) |
 | `Progress` | `@/components/ui/progress` | Barra de progreso de beneficios y métricas |
 | `Toaster` | `@/components/ui/sonner` | Ya montado en `PersistentLayout`; no se vuelve a montar |
 
@@ -128,12 +130,13 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | Componente | Importar desde | Usar para |
 |---|---|---|
 | `AppLayout` | `@/layouts/app-layout` | Toda pantalla con sesión iniciada; recibe `breadcrumbs` |
-| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description` y `actions` |
+| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `actions` y `back` |
 | `ListItemCard` | `@/components/list-item-card` | Tarjeta compacta para cada ítem de una lista; acepta las mismas partes que `Card` |
 | `Heading` | `@/components/heading` | Encabezado con `eyebrow`, `description` y `actions` opcionales. En las pantallas se usa a través de `PageContainer` |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
 | `AlertError` | `@/components/alert-error` | `Alert` destructivo con una lista de errores |
-| `StatusBadge` | `@/components/status-badge` | Estado de un pedido: `Badge variant="outline"` con `data-status` y color por estado |
+| `StatusBadge` | `@/components/status-badge` | Estado de un pedido o de un pago: `Badge variant="outline"` con `data-status` y color por estado |
+| `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail` y `badge` opcionales |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
@@ -147,8 +150,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 
 El prototipo repite estos patrones en varias pantallas. Acá no existen: se crean como componente compartido al portar la primera pantalla que los use, y su fila pasa a la tabla anterior.
 
-| Componente | Archivo | Cómo se arma |
-|---|---|---|
+Por ahora no queda ninguno pendiente.
 
 ## Superposiciones con el prototipo
 
@@ -168,10 +170,11 @@ El prototipo repite estos patrones en varias pantallas. Acá no existen: se crea
 | `Tabs` | Pendiente de agregar | Instalado | El del repo |
 | `Switch`, `Progress` | Pendientes de agregar | No instalados | Los de shadcn, cuando se necesiten |
 | Encabezado de sección (`Header`, `ScreenHeader`) | Duplicado en cuatro pantallas | `Heading`, `HeadingSmall` | Los del repo |
-| Navegación lateral y barra inferior | Una por dashboard | `AppLayout` con sidebar por rol | `AppLayout` |
+| Navegación lateral y barra inferior | Una por dashboard | `AppLayout` con navegación por rol | `AppLayout` |
 | Mensaje temporal | `styles.toast` con `setTimeout` | Flash del servidor que muestra Sonner | Flash del servidor |
 | Colores de estado | Duplicados | `StatusBadge` | El del repo |
-| `Stat`, control de cantidad | Duplicados | No existen | [Propios a crear](#propios-a-crear) |
+| `Stat` | Duplicado | Instalado | El del repo |
+| Control de cantidad | Duplicado | No existe | [Propio a crear](#propios-a-crear) |
 | `GoogleMark` | `branding/google-mark` | Igual | El mismo |
 
 ## Detalle por componente
@@ -405,7 +408,6 @@ Reemplaza los botones con `aria-pressed` del prototipo para filtros, días y el 
 </ToggleGroup>
 ```
 
-<<<<<<< HEAD
 ### Tabs
 
 ```tsx
@@ -597,12 +599,35 @@ Reemplaza los `<details>` del prototipo.
 import StatusBadge from "@/components/status-badge"
 ```
 
-Envuelve `Badge variant="outline"` y resuelve el color a partir del estado, con un punto del mismo color antes del texto. El texto sale de `pages.orders.statuses.<estado>`, así que la pantalla sólo pasa el estado.
+Envuelve `Badge variant="outline"` y resuelve el color a partir del estado, con un punto del mismo color antes del texto. El texto sale de las traducciones, así que la pantalla sólo pasa el estado.
 
-El mapa de estilos está tipado con `OrderStatus`: agregar un estado al enum de Rails rompe la compilación hasta definir cómo se ve. También expone `data-status`, para poder apuntarle desde los tests o desde una clase del contenedor.
+Sirve para los dos enums de estado que tiene la aplicación, y `kind` elige cuál: `"order"` (el valor por defecto, textos de `pages.orders.statuses.*`) o `"payment"` (textos de `pages.provider_collections.statuses.*`). El discriminador es obligatorio porque `pending` y `rejected` existen en ambos enums y el valor solo no alcanza para saber qué corresponde.
+
+Cada mapa de estilos está tipado con su enum de Rails: agregar un estado rompe la compilación hasta definir cómo se ve. También expone `data-status`, para poder apuntarle desde los tests o desde una clase del contenedor.
 
 ```tsx
 <StatusBadge status={order.status} />
+<StatusBadge status={account.status} kind="payment" />
+```
+
+### Stat
+
+```tsx
+import Stat from "@/components/stat"
+```
+
+Tarjeta de métrica sobre fondo gris: la etiqueta en `CardDescription`, un `badge` opcional arriba a la derecha (el período, por ejemplo), y el valor en `text-2xl` con un `detail` opcional a su lado. Se usa para los totales que encabezan una pantalla.
+
+- `value`, `detail` y `badge` son `ReactNode`: aceptan un importe ya formateado con `formatMoney` o un `Badge`.
+- No define su ancho: las métricas se acomodan con el `grid` de la pantalla (`grid gap-4 md:grid-cols-2`).
+
+```tsx
+<Stat
+  label={t("pages.provider_collections.index.sales")}
+  badge={<Badge variant="secondary">{t("pages.provider_collections.index.this_month")}</Badge>}
+  value={formatMoney(sales.total)}
+  detail={`| ${t("pages.provider_collections.index.confirmed_meals", { count: sales.meals })}`}
+/>
 ```
 
 ### Progress
@@ -612,6 +637,40 @@ import { Progress } from "@/components/ui/progress"
 ```
 
 Recibe `value` entre 0 y 100. Se usa para comunicar avance de beneficios y métricas; el tamaño se ajusta con `className`.
+
+### Table
+
+```tsx
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+```
+
+Para listas tabulares simples (historial de cambios, filas con varias columnas). El componente no pagina ni ordena por sí mismo; eso lo resuelve quien lo usa.
+
+```tsx
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Fecha</TableHead>
+      <TableHead>Valor</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    {rows.map((row) => (
+      <TableRow key={row.id}>
+        <TableCell>{row.date}</TableCell>
+        <TableCell>{row.value}</TableCell>
+      </TableRow>
+    ))}
+  </TableBody>
+</Table>
+```
 
 ### Heading y HeadingSmall
 
@@ -629,9 +688,8 @@ Reemplazan los `Header` y `ScreenHeader` del prototipo. Ambos reciben `title` y 
 ### AppLayout y navegación
 
 - Toda pantalla con sesión iniciada se envuelve en `AppLayout`, que incluye el sidebar del rol de la sesión y los breadcrumbs.
-- Para agregar una sección a la navegación de un rol, se agrega un ítem a `navItems[rol]` en [`app-sidebar.tsx`](app/javascript/components/app-sidebar.tsx), con `title`, `href` (helper de `@/routes`) e `icon` de lucide. No se arma una navegación propia por dashboard.
-- En móvil, el sidebar se abre como `Sheet`; eso ya lo resuelve `Sidebar`.
-- La barra inferior del prototipo no existe acá. Si el equipo decide tenerla, se crea un único componente compartido que use los mismos `navItems`.
+- Para agregar una sección a la navegación de un rol, se agrega un ítem en [`app-navigation.ts`](app/javascript/components/app-navigation.ts), con `title`, `href` (helper de `@/routes`) e `icon` de lucide. No se arma una navegación propia por dashboard.
+- En móvil, el proveedor usa una barra inferior que toma los destinos disponibles de `app-navigation.ts`; el empleado mantiene su navegación móvil propia y el resto usa el sidebar como `Sheet`.
 
 ```tsx
 <AppLayout breadcrumbs={[{ title: "Platos", href: providerMenus.index().url }]}>
@@ -672,7 +730,6 @@ Relevamiento del 12/09/2026. Al migrar un patrón, borrar su fila.
 | Confirmación de borrado con el botón en `variant` por defecto y sin botón de cancelar | [`components/menus/delete-menu-dialog.tsx`](app/javascript/components/menus/delete-menu-dialog.tsx) | `variant="destructive"` y `DialogClose` con «Cancelar» |
 | Control segmentado armado con `<button>` a mano | [`components/appearance-tabs.tsx`](app/javascript/components/appearance-tabs.tsx) (plantilla) | `ToggleGroup` |
 | Aviso «Saved» con `Transition` de `@headlessui/react` | `pages/settings/profiles/show.tsx`, `passwords/show.tsx`, `emails/show.tsx` (plantilla) | Flash del servidor; al migrar los tres, evaluar quitar `@headlessui/react` |
-| `navItems` por rol definidos dos veces | [`components/app-sidebar.tsx`](app/javascript/components/app-sidebar.tsx) y [`components/app-header.tsx`](app/javascript/components/app-header.tsx) | Extraer una única lista compartida |
 | Dashboards con `PlaceholderPattern` | [`components/dashboard.tsx`](app/javascript/components/dashboard.tsx) | Reemplazar al construir cada dashboard |
 
 ## Checklist para revisiones y agentes de IA

@@ -6,14 +6,18 @@ import {
   CreditCard,
   LayoutGrid,
   Package,
+  Percent,
   Utensils,
+  Wallet,
 } from "lucide-react"
 
 import {
+  adminBenefitConfigurations,
   adminDashboard,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
+  providerCollections,
   providerDashboard,
   providerMenus,
   providerOrders,
@@ -54,6 +58,12 @@ export function getNavigationItems(
         href: providerOrders.index().url,
         icon: Package,
       },
+      {
+        key: "collections",
+        title: t("nav.collections"),
+        href: providerCollections.index().url,
+        icon: Wallet,
+      },
     ],
     admin: [
       {
@@ -61,6 +71,12 @@ export function getNavigationItems(
         title: t("nav.dashboard"),
         href: adminDashboard.index().url,
         icon: LayoutGrid,
+      },
+      {
+        key: "benefit_configurations",
+        title: t("nav.benefit_configurations"),
+        href: adminBenefitConfigurations.index().url,
+        icon: Percent,
       },
     ],
     consumer: [

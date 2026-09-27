@@ -20,4 +20,6 @@ class Provider::DashboardIndexSerializer < ApplicationSerializer
   typelize month_orders_count: :number
   typelize month_dishes_count: :number
   typelize average_rating: :number?
+
+  has_one :provider, serializer: Provider::DashboardProviderSerializer
 end

@@ -1,0 +1,60 @@
+# Las fixtures no disparan los callbacks de Order, así que los montos están
+# escritos a mano y tienen que coincidir con las órdenes confirmadas de
+# orders.yml enlazadas en order_accounts.yml.
+#
+# La cuenta de la empresa cobra el subsidio; la del empleado, su parte.
+gogrow_tuviandita_current:
+  owner: gogrow (Company)
+  provider: tuviandita
+  month: <%= Date.current.beginning_of_month %>
+  amount: 601.00
+
+one_tuviandita_current:
+  owner: one (Consumer)
+  provider: tuviandita
+  month: <%= Date.current.beginning_of_month %>
+  amount: 450.75
+
+other_tuviandita_current:
+  owner: other (Consumer)
+  provider: tuviandita
+  month: <%= Date.current.beginning_of_month %>
+  amount: 150.25
+
+# Período anterior, para ejercitar el selector de mes.
+gogrow_tuviandita_previous:
+  owner: gogrow (Company)
+  provider: tuviandita
+  month: <%= 1.month.ago.beginning_of_month %>
+  amount: 900.00
+
+# De otro proveedor: no tiene que aparecer nunca en los cobros de tuviandita.
+one_endulzate_current:
+  owner: one (Consumer)
+  provider: endulzate
+  month: <%= Date.current.beginning_of_month %>
+  amount: 500.00
+
+# == Schema Information
+#
+# Table name: accounts
+#
+#  id          :bigint           not null, primary key
+#  amount      :decimal(10, 2)
+#  month       :date
+#  owner_type  :string           not null
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  owner_id    :bigint           not null
+#  provider_id :bigint           not null
+#
+# Indexes
+#
+#  idx_on_owner_type_owner_id_provider_id_month_49d9020441  (owner_type,owner_id,provider_id,month) UNIQUE
+#  index_accounts_on_owner                                  (owner_type,owner_id)
+#  index_accounts_on_provider_id                            (provider_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (provider_id => providers.id)
+#
