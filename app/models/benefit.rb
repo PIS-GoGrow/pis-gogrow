@@ -10,10 +10,9 @@ class Benefit < ApplicationRecord
   has_many :orders, through: :order_benefits, source: :order
   belongs_to :benefit_configuration
 
-  scope :current, -> {
-    where(due_date: Date.current..)
-      .or(where due_date: nil)
-  }
+  # Es importante que active sea 0
+  enum :status, { current: 0, expired: 1 }
+
   scope :monthly, -> {
     joins(benefit_configuration: :benefit_rules)
       .where(

@@ -9,7 +9,7 @@ class BenefitRule < ApplicationRecord
   # Indica si correspondería asignarle un beneficio al consumidor en la fecha dada
   # según esta regla. La respuesta debería ser true cuando la regla indica que el
   # consumidor podría llegar a tener el beneficio, sin chequear si el beneficio ya
-  # fue usado (esa es la responsabilidad de la clase Benefit)
+  # fue usado (esa es la responsabilidad de la clase Benefit).
   # Por ejemplo, si la regla es cumpleaños con tolerancia de uso hasta cinco días
   # después del cumpleaños y con límite de una vianda, y si ya pasaron dos días desde
   # el cumpleaños y el consumidor hizo ya su pedido para este beneficio, la función

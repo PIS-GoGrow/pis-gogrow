@@ -32,6 +32,9 @@ class BenefitConfiguration < ApplicationRecord
       benefit_rules.all? { |rule| rule.applicable_to? consumer, date }
   end
 
+  # Crea los beneficios (Benefit) asociados a esta configuración a todos los consumidores
+  # registrados. Esta operación es idempotente: correrla dos veces en el mismo día es
+  # equivalente a correrla una.
   def apply_to_all_consumers
     already_granted_ids = Benefit.current.where(benefit_configuration: self).pluck(:consumer_id).to_set
     date = Date.current
