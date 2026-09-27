@@ -61,3 +61,24 @@ RSpec.describe DeliveryAddress, type: :model do
     end
   end
 end
+
+# == Schema Information
+#
+# Table name: delivery_addresses
+#
+#  id          :bigint           not null, primary key
+#  apartment   :string
+#  name        :string           not null
+#  street      :string           not null
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  consumer_id :bigint           not null
+#
+# Indexes
+#
+#  index_delivery_addresses_on_consumer_id  (consumer_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (consumer_id => consumers.id)
+#
