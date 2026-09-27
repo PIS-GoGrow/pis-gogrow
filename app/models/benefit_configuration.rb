@@ -5,24 +5,30 @@ class BenefitConfiguration < ApplicationRecord
   belongs_to :created_by, class_name: "User"
 
   has_many :benefits
-  has_many :benefit_rules
+  has_many :benefit_rules, dependent: :destroy
   has_many :consumer_benefit_configurations
   has_many :consumers, through: :consumer_benefit_configurations
 
   validates :subsidy_percentage, presence: true,
     numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
 
-  scope :ordered, -> { order(effective_from: :desc, created_at: :desc) }
+  scope :monthly_ordered, -> {
+    joins(:benefit_rules)
+      .where(benefit_rules: { type: MonthlyBenefit.name })
+    .group("benefit_configurations.id")
+    .order("MAX(benefit_rules.effective_from) DESC", created_at: :desc)  }
 
-  def self.current_for(company)
-    where(company: company).where(effective_from: ..Date.current).ordered.first
-  end
+  scope :monthly, -> {
+    joins(:benefit_rules)
+      .where(benefit_rules: { type: MonthlyBenefit.name })
+      .distinct
+  }
 
-  # El beneficio es aplicable a un consumidor si todas sus reglas se cumplen, y si
-  # el consumidor está registrado para él.
-  def applicable_to?(consumer, date: Date.current)
-    consumer.include? consumer &&
-      benefit_rules.all? { |rule| rule.applicable_to? consumer, date }
+  def self.monthly_current_for(company)
+    where(company: company)
+      .monthly_ordered
+      .where(benefit_rules: { effective_from: Date.current })
+      .first
   end
 
   # Crea los beneficios (Benefit) asociados a esta configuración a todos los consumidores

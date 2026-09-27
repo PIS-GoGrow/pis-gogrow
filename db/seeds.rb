@@ -135,7 +135,7 @@ admin_user = User.create!(
   verified: true,
   google_uid: "101425658623552684238"
 )
-Admin.create!(user: admin_user, company:)
+admin = Admin.create!(user: admin_user, company:)
 
 benefit_config = BenefitConfiguration.create! subsidy_percentage: 50, name: "Subsidio base", company:, created_by: admin_user
 benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: Date.current, type: "MonthlyBenefit"
