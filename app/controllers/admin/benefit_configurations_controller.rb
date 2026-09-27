@@ -4,8 +4,11 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
   def index
     company = Current.user.admin.company
 
-    @benefit_configurations = company.benefit_configurations.monthly_ordered
-    @current_benefit_configuration = BenefitConfiguration.monthly_current_for(company)
+    @benefit_configurations = company.benefit_configurations
+    @pending_base_subsidy = BenefitConfiguration.base_subsidy_for company, effective_from: next_period_effective_from
+    @base_subsidy = BenefitConfiguration.base_subsidy_for company
+
+    @pending_base_subsidy = @pending_base_subsidy == @base_subsidy ? nil : @pending_base_subsidy
   end
 
   def create

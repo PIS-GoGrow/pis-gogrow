@@ -15,8 +15,9 @@ class BenefitConfiguration < ApplicationRecord
   scope :monthly_ordered, -> {
     joins(:benefit_rules)
       .where(benefit_rules: { type: MonthlyBenefit.name })
-    .group("benefit_configurations.id")
-    .order("MAX(benefit_rules.effective_from) DESC", created_at: :desc)  }
+      .group("benefit_configurations.id")
+      .order("MAX(benefit_rules.effective_from) DESC")
+  }
 
   scope :monthly, -> {
     joins(:benefit_rules)
@@ -24,11 +25,11 @@ class BenefitConfiguration < ApplicationRecord
       .distinct
   }
 
-  def self.monthly_current_for(company)
+  def self.base_subsidy_for(company, effective_from: Date.current)
     where(company: company)
       .monthly_ordered
-      .where(benefit_rules: { effective_from: Date.current })
-      .first
+      .where(benefit_rules: { effective_from: ..effective_from })
+      .first # Obtiene el que tenga effective_from más alto
   end
 
   # Crea los beneficios (Benefit) asociados a esta configuración a todos los consumidores

@@ -22,7 +22,11 @@ interface EditBenefitConfigurationFormProps {
     max_voucher_price: number | ""
     monthly_voucher_limit: number | ""
   }
-  pendingBenefitConfiguration?: BenefitConfiguration
+  pendingBenefitConfiguration: {
+    subsidy_percentage: number | ""
+    max_voucher_price: number | ""
+    monthly_voucher_limit: number | ""
+  }
   onCancel: () => void
   onSuccess: () => void
 }

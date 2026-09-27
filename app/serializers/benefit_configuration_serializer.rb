@@ -5,24 +5,11 @@ class BenefitConfigurationSerializer < ApplicationSerializer
 
   attributes :id, :subsidy_percentage, :created_at
 
+  has_many :benefit_rules, resource: BenefitRuleSerializer
+  
   typelize :string
   attribute :created_by_name do |benefit_configuration|
     benefit_configuration.created_by.name
-  end
-
-  typelize :number
-  attribute :monthly_voucher_limit do |benefit_configuration|
-    benefit_configuration.benefit_rules.first.limit
-  end
-
-  typelize :number
-  attribute :max_voucher_price do |benefit_configuration|
-    benefit_configuration.benefit_rules.first.max_price
-  end
-
-  typelize :string
-  attribute :effective_from do |benefit_configuration|
-    benefit_configuration.benefit_rules.first.effective_from
   end
 end
 
