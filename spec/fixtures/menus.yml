@@ -10,6 +10,14 @@ office_menu:
   description: Con vegetales de estación
   price: 250
 
+sorrentinos:
+  provider: endulzate
+  name: Sorrentinos artesanales
+  description: Pasta rellena a elección
+  price: 320.00
+  sauces: [Filetto, Bolognesa]
+  fillings: [Ricota y nuez]
+
 # == Schema Information
 #
 # Table name: menus

@@ -10,6 +10,11 @@ today:
   date: <%= Date.current %>
   amount: 5
 
+sorrentinos_today:
+  menu: sorrentinos
+  date: <%= Date.current %>
+  amount: 4
+
 past:
   menu: milanesa
   date: <%= Date.current - 5 %>

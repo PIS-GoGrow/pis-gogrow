@@ -2,6 +2,13 @@
 
 class Benefit < ApplicationRecord
   belongs_to :consumer
+
+  scope :current, -> {
+    where due_date: Date.current..
+  }
+  scope :monthly, -> {
+    where description: "Viandas mensuales"
+  }
 end
 
 # == Schema Information

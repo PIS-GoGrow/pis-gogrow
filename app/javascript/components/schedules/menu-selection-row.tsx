@@ -56,6 +56,7 @@ export default function MenuSelectionRow({
           <Input
             id={`amount-${menu.id}`}
             type="number"
+            max="2147483647"
             min="1"
             step="1"
             placeholder="Stock"

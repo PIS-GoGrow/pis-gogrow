@@ -1,10 +1,11 @@
+import { Link } from "@inertiajs/react"
 import { MapPin } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import ListItemCard from "@/components/list-item-card"
+import ProviderOrderActions from "@/components/orders/provider-order-actions"
 import StatusBadge from "@/components/status-badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import {
   CardAction,
   CardContent,
@@ -16,6 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
+import { providerOrders } from "@/routes"
 import type { ProviderOrder } from "@/types"
 
 interface ProviderOrderCardProps {
@@ -28,7 +30,7 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
   const { formatMoney } = useFormatters()
 
   return (
-    <ListItemCard>
+    <ListItemCard className="relative">
       <CardHeader>
         <div className="flex items-center gap-3">
           <Avatar size="lg">
@@ -37,7 +39,14 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
             </AvatarFallback>
           </Avatar>
           <div className="grid gap-1">
-            <CardTitle>{order.consumer_name}</CardTitle>
+            <CardTitle>
+              <Link
+                href={providerOrders.show(order.id).url}
+                className="after:absolute after:inset-0 hover:underline"
+              >
+                {order.consumer_name}
+              </Link>
+            </CardTitle>
             <CardDescription className="text-xs">
               {t("pages.provider_orders.index.code", { id: order.id })} ·{" "}
               {order.time}
@@ -67,6 +76,11 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
           <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
             <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
             {order.address ?? t("pages.provider_orders.index.no_address")}
+            {order.delivery_date &&
+              ", " +
+                t("pages.provider_orders.index.deliver") +
+                " " +
+                order.delivery_date}
           </p>
           <p className="text-lg font-semibold">{formatMoney(order.price)}</p>
         </div>
@@ -75,14 +89,7 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
       {order.status === "pending" && (
         <CardFooter className="flex-col gap-4">
           <Separator />
-          <div className="grid w-full grid-cols-2 gap-2">
-            <Button type="button" variant="outline" size="lg">
-              {t("pages.provider_orders.index.cancel")}
-            </Button>
-            <Button type="button" size="lg">
-              {t("pages.provider_orders.index.confirm")}
-            </Button>
-          </div>
+          <ProviderOrderActions order={order} className="relative w-full" />
         </CardFooter>
       )}
     </ListItemCard>

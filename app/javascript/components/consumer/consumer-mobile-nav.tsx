@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 import {
   consumerAccounts,
   consumerDashboard,
-  orders,
+  consumerOrders,
   settingsProfiles,
 } from "@/routes"
 
@@ -25,8 +25,8 @@ const links = [
   {
     label: "Pedidos",
     icon: ShoppingBasket01Icon,
-    href: orders.index().url,
-    activePrefix: orders.index().url,
+    href: consumerOrders.index().url,
+    activePrefix: consumerOrders.index().url,
   },
   {
     label: "Pagos",

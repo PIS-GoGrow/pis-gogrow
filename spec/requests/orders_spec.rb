@@ -12,10 +12,10 @@ RSpec.describe "Orders", type: :request do
       expect(response).to redirect_to(sign_in_path)
     end
 
-    it "redirects users without a consumer profile" do
+    it "redirects users with a different active role to the home page" do
       sign_in users(:provider_user)
       get orders_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(root_path)
     end
 
     context "when signed in as an employee" do
@@ -23,7 +23,7 @@ RSpec.describe "Orders", type: :request do
 
       it "renders the orders page" do
         get orders_path
-        expect(inertia).to render_component("orders/index")
+        expect(inertia).to render_component("consumer/orders/index")
       end
 
       it "splits the employee's orders between upcoming and history" do
@@ -88,7 +88,7 @@ RSpec.describe "Orders", type: :request do
 
       it "renders the detail page" do
         get order_path(orders(:upcoming_confirmed_future))
-        expect(inertia).to render_component("orders/show")
+        expect(inertia).to render_component("consumer/orders/show")
       end
 
       it "exposes the breakdown the employee needs to check the order" do
@@ -112,6 +112,21 @@ RSpec.describe "Orders", type: :request do
         get order_path(orders(:other_consumer_upcoming))
 
         expect(response).to have_http_status(:not_found)
+      end
+
+      it "exposes what the edit form needs on a pending order" do
+        get order_path(orders(:upcoming_pending_future))
+
+        expect(inertia.props[:order]).to include(modifiable: true, modification_block_reason: nil)
+        # El cupo libre de la fecha más la unidad que este pedido ya ocupa.
+        expect(inertia.props[:max_quantity]).to eq(7)
+        expect(inertia.props[:delivery_addresses].map { it[:address] }).to eq([ "18 de Julio 1006", "Julio Herrera y Reissig 565" ])
+      end
+
+      it "explains why an order the provider confirmed cannot be modified" do
+        get order_path(orders(:upcoming_confirmed_future))
+
+        expect(inertia.props[:order]).to include(modifiable: false, modification_block_reason: "already_confirmed")
       end
     end
   end
@@ -166,7 +181,16 @@ RSpec.describe "Orders", type: :request do
       follow_redirect!
       expect(inertia).to render_component("consumer/dashboard/index")
       expect(inertia).to have_flash(notice: I18n.t("flash.cart_confirmed"))
-      expect(inertia).to have_props(benefit: { limit: 5, used: 2, percentage: 50 })
+      expect(inertia).to have_props(
+        benefit: {
+          limit: 5,
+          used: 2,
+          percentage: 50,
+          monthly_limit: 20,
+          monthly_used: 2,
+          monthly_remaining: 18
+        }
+      )
       expect(inertia).to have_props(order_confirmation: {
         total: 300.0,
         orders: [
@@ -206,6 +230,39 @@ RSpec.describe "Orders", type: :request do
       expect(available.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
+    end
+
+    # IBP-003, criterio 3: "los platos agotados o no disponibles ... no pueden
+    # pedirse". Que la pantalla deshabilite el botón no es la regla: la guarda
+    # real es Order.reserve, y es la que se prueba acá con el pedido directo.
+    it "rejects a dish whose whole quota is already ordered" do
+      consumer, = setup_consumer
+      schedule = create_schedule(amount: 1)
+      Order.create!(consumer:, schedule:, amount: 1, price: schedule.menu.price, address: consumer.address, delivery_method: :home)
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      end.not_to change(Order, :count)
+
+      expect(schedule.reload.remaining_amount).to eq(0)
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
+    end
+
+    # Borde del cupo: N entra, N+1 no.
+    it "accepts exactly the remaining quota and rejects one unit more" do
+      consumer, = setup_consumer
+      schedule = create_schedule(amount: 2)
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 3 } ] } }
+      end.not_to change(Order, :count)
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 2 } ] } }
+      end.to change(Order, :count).by(1)
+
+      expect(schedule.reload.remaining_amount).to eq(0)
     end
 
     it "rejects an empty cart" do
@@ -292,6 +349,51 @@ RSpec.describe "Orders", type: :request do
       end.not_to change(Order, :count)
 
       expect(response).to redirect_to(root_path)
+    end
+
+    it "rejects an order once the provider's deadline for today has passed" do
+      consumer, = setup_consumer
+      schedule = create_schedule
+      schedule.menu.provider.update!(order_deadline: "09:59")
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      end.not_to change(Order, :count)
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(schedule.reload.remaining_amount).to eq(5)
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.order_deadline_passed") })
+    end
+
+    it "accepts an order right before the provider's deadline" do
+      consumer, = setup_consumer
+      schedule = create_schedule
+      schedule.menu.provider.update!(order_deadline: "10:01")
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      end.to change(Order, :count).by(1)
+    end
+
+    it "does not create a partial cart when one provider already closed" do
+      consumer, = setup_consumer
+      open_schedule = create_schedule
+      closed_provider = Provider.create!(user: users(:consumer_user), order_deadline: "09:00")
+      closed_menu = Menu.create!(provider: closed_provider, name: "Tarta", description: "De verdura", price: 200)
+      closed_schedule = Schedule.create!(menu: closed_menu, date: Date.current, amount: 5)
+
+      expect do
+        post orders_path, params: {
+          order: {
+            address: consumer.address,
+            items: [ { schedule_id: open_schedule.id, quantity: 1 }, { schedule_id: closed_schedule.id, quantity: 1 } ]
+          }
+        }
+      end.not_to change(Order, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.order_deadline_passed") })
     end
 
     it "rejects past schedules" do
@@ -421,6 +523,151 @@ RSpec.describe "Orders", type: :request do
 
         expect(response).to have_http_status(:not_found)
         expect(order.reload).to be_confirmed
+      end
+    end
+  end
+
+  describe "PATCH /orders/:id" do
+    let(:order) { orders(:upcoming_pending_future) }
+
+    def update_params(quantity: 1, address: "18 de Julio 1006", notes: nil)
+      { order: { quantity:, address:, notes: } }
+    end
+
+    it "redirects visitors to the sign in page" do
+      patch order_path(order), params: update_params
+
+      expect(response).to redirect_to(sign_in_path)
+      expect(order.reload.amount).to eq(1)
+    end
+
+    context "when signed in as an employee" do
+      before { sign_in users(:one) }
+
+      it "changes the quantity, the delivery address and the notes, and repricing follows the menu" do
+        patch order_path(order), params: update_params(quantity: 3, address: "18 de Julio 1006", notes: "Sin sal")
+
+        expect(order.reload).to have_attributes(
+          amount: 3,
+          address: "18 de Julio 1006",
+          delivery_method: "office",
+          notes: "Sin sal",
+          price: 901.50.to_d,
+          discounted_price: 901.50.to_d
+        )
+
+        follow_redirect!
+        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+      end
+
+      it "records who modified the order and when" do
+        freeze_time do
+          patch order_path(order), params: update_params(quantity: 2)
+
+          expect(order.reload).to have_attributes(modified_by: users(:one), modified_at: Time.current)
+        end
+      end
+
+      # El saldo del tope mensual ya descuenta la unidad de esta orden, así que al
+      # subirla se le devuelve: con 1 de saldo puede subsidiar 2 de las 3, y la
+      # tercera se cobra a precio de lista.
+      it "subsidizes only the meals left in the monthly cap" do
+        Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now)
+        allow_any_instance_of(Consumer).to receive(:remaining_subsidized_meals).and_return(1)
+
+        patch order_path(order), params: update_params(quantity: 3)
+
+        # 150.25 * 2 subsidiadas + 300.50 a precio de lista
+        expect(order.reload).to have_attributes(price: 901.50.to_d, discounted_price: 601.to_d)
+      end
+
+      it "applies the active benefit to the new quantity" do
+        Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now)
+
+        patch order_path(order), params: update_params(quantity: 2)
+
+        expect(order.reload).to have_attributes(price: 601.to_d, discounted_price: 300.50.to_d)
+      end
+
+      it "switches to home delivery when the employee picks their own address" do
+        patch order_path(order), params: update_params(address: "Julio Herrera y Reissig 565")
+
+        expect(order.reload).to have_attributes(address: "Julio Herrera y Reissig 565", delivery_method: "home")
+      end
+
+      # El cupo ya descuenta esta orden: sin devolverle sus unidades, subir de 1
+      # a 7 se rechazaría contra su propio consumo.
+      it "counts the units the order already holds against the schedule capacity" do
+        patch order_path(order), params: update_params(quantity: 7)
+
+        expect(order.reload.amount).to eq(7)
+        expect(order.schedule.reload.remaining_amount).to eq(0)
+      end
+
+      it "refuses a quantity the schedule cannot cover" do
+        patch order_path(order), params: update_params(quantity: 8)
+
+        expect(order.reload.amount).to eq(1)
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.schedule_unavailable"))
+      end
+
+      it "refuses an address that is neither the office nor the employee's" do
+        patch order_path(order), params: update_params(address: "Otra calle 123")
+
+        expect(order.reload.address).to eq("Julio Herrera y Reissig 565")
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.invalid_address"))
+      end
+
+      it "refuses a quantity that is not a positive integer" do
+        patch order_path(order), params: update_params(quantity: 0)
+
+        expect(order.reload.amount).to eq(1)
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.invalid_quantity"))
+      end
+
+      it "refuses to modify an order the provider already confirmed" do
+        confirmed = orders(:upcoming_confirmed_future)
+
+        patch order_path(confirmed), params: update_params(quantity: 3)
+
+        expect(confirmed.reload.amount).to eq(2)
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_modifiable"))
+      end
+
+      it "refuses to modify a pending order whose delivery day already passed" do
+        past = orders(:history_pending_past)
+
+        patch order_path(past), params: update_params(quantity: 3)
+
+        expect(past.reload.amount).to eq(1)
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_modifiable"))
+      end
+
+      it "still allows modifying a pending order that is delivered today" do
+        today = orders(:upcoming_pending_today)
+
+        patch order_path(today), params: update_params(quantity: 2)
+
+        expect(today.reload.amount).to eq(2)
+      end
+
+      it "does not modify another employee's order" do
+        other = orders(:other_consumer_upcoming)
+
+        patch order_path(other), params: update_params(quantity: 3)
+
+        expect(response).to have_http_status(:not_found)
+        expect(other.reload.amount).to eq(1)
       end
     end
   end

@@ -13,6 +13,13 @@ two:
   roles: "{}"
   verified: true
 
+admin:
+  email: admin@example.com
+  name: Admin User
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  roles: "{admin}"
+  verified: true
+
 consumer_user:
   email: consumer@example.com
   name: Consumer User
@@ -24,16 +31,15 @@ provider_user:
   name: Provider User
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
   verified: true
+other_provider_user:
+  email: other-provider@example.com
+  name: Other Provider User
+  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
+  verified: true
 
 other_consumer_user:
   email: other-consumer@example.com
   name: Other Consumer User
-  password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
-  verified: true
-
-admin_user:
-  email: admin@example.com
-  name: Admin User
   password_digest: "$2a$04$FPZVbthSpWD4rXvKNiNgzOVDQ3W4ozJjvtr59iUo6hWHCyAiiM9AO"
   verified: true
 

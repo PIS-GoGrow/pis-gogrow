@@ -38,7 +38,7 @@ class SessionsController < InertiaController
     if Current.user.roles.include?(new_role) && Current.session.update(role: new_role)
       redirect_to root_path, notice: t("flash.role_set")
     else
-      redirect_to root_path, alert: t("flash.role_not_available")
+      redirect_to root_path, alert: t("flash.role_not_available"), inertia: { clear_history: true }
     end
   end
 

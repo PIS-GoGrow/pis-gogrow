@@ -20,7 +20,7 @@ RSpec.describe "Admin::Consumers", type: :request do
     end
 
     context "when signed in as HR" do
-      before { sign_in users(:admin_user) }
+      before { sign_in users(:admin), role: :admin }
 
       it "renders the consumers page" do
         get admin_consumers_path
@@ -44,7 +44,7 @@ RSpec.describe "Admin::Consumers", type: :request do
 
   describe "GET /admin/consumers/:id" do
     context "when signed in as HR" do
-      before { sign_in users(:admin_user) }
+      before { sign_in users(:admin), role: :admin }
 
       it "renders the consumer's centralized detail" do
         get admin_consumer_path(consumers(:one))
@@ -52,8 +52,8 @@ RSpec.describe "Admin::Consumers", type: :request do
         expect(inertia).to render_component("admin/consumers/show")
         expect(inertia.props[:consumer]).to include(name: "Test User", email: "one@example.com", company_name: "GoGrow")
         expect(inertia.props[:benefits].pluck(:id)).to contain_exactly(benefits(:one).id)
-        expect(inertia.props[:debts].pluck(:id)).to contain_exactly(accounts(:unpaid).id, accounts(:failed_payment).id)
-        expect(inertia.props[:payments].pluck(:id)).to contain_exactly(payments(:paid).id, payments(:failed).id)
+        expect(inertia.props[:debts].pluck(:id)).to contain_exactly(accounts(:one_tuviandita_current).id, accounts(:one_endulzate_current).id)
+        expect(inertia.props[:payments].pluck(:id)).to contain_exactly(payments(:one_rejected).id)
       end
     end
   end

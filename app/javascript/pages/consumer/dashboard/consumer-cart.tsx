@@ -13,6 +13,11 @@ import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
 
 interface Props {
+  monthlyLimit: number
+  monthlyRemaining: number
+  subsidizedQuantity: number
+  fullPriceQuantity: number
+  lineDiscounts: Record<string, number>
   cart: CartItem[]
   addresses: ConsumerDashboardIndex["addresses"]
   address: string
@@ -29,6 +34,11 @@ interface Props {
 }
 
 export function ConsumerCart({
+  monthlyLimit,
+  monthlyRemaining,
+  subsidizedQuantity,
+  fullPriceQuantity,
+  lineDiscounts,
   cart,
   addresses,
   address,
@@ -142,6 +152,28 @@ export function ConsumerCart({
           </Alert>
         )}
       </section>
+
+      {fullPriceQuantity > 0 && (
+        <Alert className="mt-4 border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+          <TriangleAlert aria-hidden="true" className="text-amber-600" />
+          <AlertDescription>
+            {monthlyRemaining === 0 ? (
+              <p>
+                Ya utilizaste las {monthlyLimit} viandas subsidiadas de este
+                mes. Las {fullPriceQuantity} viandas de este pedido se cobrarán
+                a precio completo.
+              </p>
+            ) : (
+              <p>
+                Te quedan {monthlyRemaining} viandas subsidiadas este mes. De
+                este pedido, {subsidizedQuantity} tendrán el beneficio y{" "}
+                {fullPriceQuantity} se cobrarán a precio completo.
+              </p>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <section className="border-border mt-6 border-b pb-4 text-xs">
         {cart.map((item) => {
           const line = item.menu.price * item.quantity
@@ -178,10 +210,12 @@ export function ConsumerCart({
               >
                 {t("pages.cart.remove", { name: item.menu.name })}
               </Button>
-              <div className="mt-2 flex justify-between text-[#29944c]">
-                <span>Beneficio GoGrow ({percentage}%)</span>
-                <span>- {money((line * percentage) / 100)}</span>
-              </div>
+              {(lineDiscounts[item.cartId] ?? 0) > 0 && (
+                <div className="mt-2 flex justify-between text-[#29944c]">
+                  <span>Beneficio GoGrow ({percentage}%)</span>
+                  <span>- {money(lineDiscounts[item.cartId] ?? 0)}</span>
+                </div>
+              )}
             </div>
           )
         })}

@@ -3,7 +3,6 @@ import { ArrowLeft } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import StatusBadge from "@/components/status-badge"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -18,12 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
 import { adminConsumers } from "@/routes"
-import type {
-  AdminConsumersShow,
-  Benefit,
-  BreadcrumbItem,
-  PaymentStatus,
-} from "@/types"
+import type { AdminConsumersShow, Benefit, BreadcrumbItem } from "@/types"
 
 function EmptySection({ description }: { description: string }) {
   return (
@@ -33,11 +27,6 @@ function EmptySection({ description }: { description: string }) {
       </EmptyHeader>
     </Empty>
   )
-}
-
-const paymentStatusVariant: Record<PaymentStatus, "outline" | "default"> = {
-  pending: "outline",
-  paid: "default",
 }
 
 export default function Show({
@@ -55,7 +44,10 @@ export default function Show({
     const date = new Date(month)
     return Number.isNaN(date.getTime())
       ? month
-      : new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(date)
+      : new Intl.DateTimeFormat(locale, {
+          month: "long",
+          year: "numeric",
+        }).format(date)
   }
 
   const formatDate = (date: string) =>
@@ -202,13 +194,7 @@ export default function Show({
                     <p className="text-muted-foreground text-sm">
                       {formatDate(payment.created_at)}
                     </p>
-                    {payment.status && (
-                      <Badge variant={paymentStatusVariant[payment.status]}>
-                        {t(
-                          `pages.admin.consumers.payment_statuses.${payment.status}`,
-                        )}
-                      </Badge>
-                    )}
+                    <StatusBadge status={payment.status} kind="payment" />
                   </CardContent>
                 </Card>
               ))

@@ -3,13 +3,16 @@
 class Schedule < ApplicationRecord
   belongs_to :menu
 
+  MAX_AMOUNT = 2_147_483_647
+
   has_many :orders, dependent: :nullify
 
   validates :date, presence: true
   validates :amount,
             numericality: {
               only_integer: true,
-              greater_than_or_equal_to: 0
+              greater_than_or_equal_to: 0,
+              less_than_or_equal_to: MAX_AMOUNT
             }
 
   validates :menu_id, uniqueness: { scope: :date }
@@ -22,10 +25,14 @@ class Schedule < ApplicationRecord
   end
 
   def available?(quantity: 1)
-    # && significa "y": deben cumplirse las tres condiciones para poder reservar.
-    # Date.current usa la fecha de la zona horaria configurada en Rails.
-    # Esta regla todavía no considera el horario límite del proveedor.
-    date.present? && date >= Date.current && remaining_amount >= quantity
+    date.present? && date >= Date.current && !order_deadline_passed? && remaining_amount >= quantity
+  end
+
+  def order_deadline_passed?
+    deadline = menu.provider.order_deadline
+    return false unless date == Date.current && deadline.present?
+
+    Time.current >= Time.zone.local(date.year, date.month, date.day, deadline.hour, deadline.min, deadline.sec)
   end
 end
 

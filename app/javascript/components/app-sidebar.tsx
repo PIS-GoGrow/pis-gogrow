@@ -6,12 +6,13 @@ import {
   CreditCard,
   LayoutGrid,
   Package,
+  Percent,
   Users,
   Utensils,
+  Wallet,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import { ConsumerAppLogo } from "@/components/consumer/consumer-app-logo"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -24,11 +25,13 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
+  adminBenefitConfigurations,
   adminConsumers,
   adminDashboard,
   consumerAccounts,
   consumerDashboard,
-  orders,
+  consumerOrders,
+  providerCollections,
   providerDashboard,
   providerMenus,
   providerOrders,
@@ -64,12 +67,22 @@ export function AppSidebar() {
         href: providerOrders.index().url,
         icon: Package,
       },
+      {
+        title: t("nav.collections"),
+        href: providerCollections.index().url,
+        icon: Wallet,
+      },
     ],
     admin: [
       {
         title: t("nav.dashboard"),
         href: adminDashboard.index().url,
         icon: LayoutGrid,
+      },
+      {
+        title: t("nav.benefit_configurations"),
+        href: adminBenefitConfigurations.index().url,
+        icon: Percent,
       },
       {
         title: t("pages.admin.consumers.index.title"),
@@ -85,7 +98,7 @@ export function AppSidebar() {
       },
       {
         title: t("nav.orders"),
-        href: orders.index().url,
+        href: consumerOrders.index().url,
         icon: ClipboardList,
       },
       {
@@ -109,7 +122,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href={navItems[role][0]?.href} prefetch>
-                {role === "consumer" ? <ConsumerAppLogo /> : <AppLogo />}
+                <AppLogo />
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

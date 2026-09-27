@@ -144,21 +144,37 @@ past_schedule = Schedule.create!(
 
 upcoming_schedules = Schedule.where("date >= ?", Date.current).order(:date)
 if (first_schedule = upcoming_schedules.first)
-  order = Order.create!(
+  Order.create!(
     consumer:,
     schedule: first_schedule,
     status: :pending,
-    price: 300.50,
-    discounted_price: 150.25,
+    price: first_schedule.menu.price,
+    discounted_price: first_schedule.menu.price / 2,
     amount: 1,
     address: company.address,
     delivery_method: :office
   )
-  # Payment.create!(account: order.accounts.first)
 end
 
-if (second_schedule = upcoming_schedules.second)
-  Order.create!(consumer:, schedule: second_schedule, status: :confirmed, price: 601.00, discounted_price: 300.50, amount: 2, address: company.address, delivery_method: :office)
+# Una orden confirmada por proveedor genera las cuentas que aparecen en Pagos
+# pendientes. El Payment se crea recién cuando el empleado sube el comprobante.
+[ tu_viandita, endulzate ].each do |provider|
+  schedule = Schedule.joins(:menu)
+                     .where(menus: { provider_id: provider.id })
+                     .order(date: :desc)
+                     .first
+  next unless schedule
+
+  Order.create!(
+    consumer:,
+    schedule:,
+    status: :confirmed,
+    price: schedule.menu.price,
+    discounted_price: schedule.menu.price / 2,
+    amount: 1,
+    address: company.address,
+    delivery_method: :office
+  )
 end
 
 Order.create!(
@@ -187,3 +203,29 @@ notification_configuration = NotificationConfiguration.create!(
   description: "Notificaciones de orden en camino"
 )
 notification_configuration.consumers << consumer
+
+# Cobros del proveedor en distintos estados, para que la pantalla no se vea
+# toda pendiente. Las cuentas ya las crearon los pedidos de más arriba.
+def seed_payment(account, status)
+  payment = Payment.new(account:, provider: account.provider, status:)
+  payment.receipt.attach(
+    io: Rails.root.join("public/icon.png").open,
+    filename: "comprobante.png",
+    content_type: "image/png"
+  )
+  payment.save!
+end
+
+# TuViandita queda con los cuatro estados repartidos en las dos pestañas:
+# - este mes (cuentas reales de los pedidos): el empleado informó su pago y la
+#   empresa todavía no, así que va a Pendientes;
+# - hace dos meses: la empresa pagó pero al empleado le rechazaron el
+#   comprobante, así que sigue en Pendientes;
+# - el mes pasado: todo confirmado, así que va al Historial.
+seed_payment(consumer.accounts.find_by!(provider: tu_viandita, month: Date.current.beginning_of_month), :submitted)
+
+{ 2.months.ago => [ :approved, :rejected ], 1.month.ago => [ :approved, :approved ] }.each do |date, (company_status, consumer_status)|
+  month = date.beginning_of_month
+  seed_payment(company.accounts.create!(provider: tu_viandita, month:, amount: 1_250.00), company_status)
+  seed_payment(consumer.accounts.create!(provider: tu_viandita, month:, amount: 1_250.00), consumer_status)
+end
