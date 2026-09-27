@@ -54,6 +54,28 @@ RSpec.describe "Provider payments", type: :request do
     expect(payment.reload).to be_submitted
   end
 
+  it "does not review a payment that was already reviewed" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+    patch provider_payment_path(payment), params: { status: "approved" }
+
+    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: " otra vez" }
+
+    expect(response).to redirect_to(provider_payments_path)
+    expect(payment.reload).to be_approved
+    expect(payment.rejection_reason).to be_nil
+  end
+
+  it "does not accept a status the provider does not offer" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "cancelled" }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(payment.reload).to be_submitted
+  end
+
   it "does not let another provider review the payment" do
     _user, payment = setup_submitted_payment
     other = create_provider("other-provider@gmail.com")

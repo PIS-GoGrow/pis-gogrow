@@ -165,6 +165,29 @@ RSpec.describe Account, type: :model do
       create_payment(status: :submitted, created_at: instant)
 
       expect(account.collection_status).to eq("submitted")
+    # Una cuenta de empresa no debe la deuda final sino el subsidio: lo que la
+    # empresa subsidia es la diferencia entre el precio de lista y el de lista
+    # menos el descuento.
+    it "sets the amount of a company account to the subsidy its employees got" do
+      menu = Menu.create!(provider:, name: "Tarta", description: "Pascualina", price: 300)
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
+      company_account = consumer.company.accounts.create!(provider:, month: Date.current, amount: 0)
+
+      order = Order.create!(
+        consumer:,
+        schedule:,
+        amount: 2,
+        price: 600,
+        discounted_price: 300,
+        address: consumer.company.address,
+        delivery_method: :office,
+        status: :confirmed
+      )
+      OrderAccount.find_or_create_by!(order:, account: company_account)
+      company_account.sync_amount!
+
+      # 2 viandas de 300 (600 de lista) a 150 subsidized: el subsidio es la mitad.
+      expect(company_account.reload.amount).to eq(300.to_d)
     end
   end
 
