@@ -14,6 +14,9 @@ class Consumer < ApplicationRecord
   has_many :user_notifications, as: :user
   has_many :notification_configurations, through: :user_notifications, source: :notification_configuration
 
+  has_many :consumer_benefit_configurations
+  has_many :benefit_configurations, through: :consumer_benefit_configurations
+
   # La modalidad se deriva de la dirección elegida: la de la oficina es entrega en
   # oficina y cualquier otra es domicilio. Un proveedor que no entrega a domicilio
   # fuerza oficina, y el carrito se lo avisa al empleado.
@@ -47,6 +50,11 @@ class Consumer < ApplicationRecord
 
   def remaining_subsidized_meals
     [ SUBSIDIZED_MEALS_LIMIT - subsidized_meals_used_this_month, 0 ].max
+  end
+
+  # TODO: Cómo obtenemos el cumpleaños del empleado?
+  def birthday
+    Date.current - 1.day
   end
 end
 

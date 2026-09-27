@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_27_154620) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -65,27 +65,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
   end
 
   create_table "benefit_configurations", force: :cascade do |t|
+    t.boolean "applies_to_all", default: false
     t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
-    t.date "effective_from", null: false
-    t.decimal "max_voucher_price", precision: 10, scale: 2, null: false
-    t.integer "monthly_voucher_limit", null: false
+    t.string "name"
     t.integer "subsidy_percentage", null: false
     t.datetime "updated_at", null: false
-    t.index ["company_id", "effective_from"], name: "index_benefit_configurations_on_company_id_and_effective_from", unique: true
     t.index ["company_id"], name: "index_benefit_configurations_on_company_id"
     t.index ["created_by_id"], name: "index_benefit_configurations_on_created_by_id"
   end
 
+  create_table "benefit_rules", force: :cascade do |t|
+    t.bigint "benefit_configuration_id", null: false
+    t.datetime "created_at", null: false
+    t.date "deadline_date"
+    t.integer "deadline_days"
+    t.date "effective_from"
+    t.integer "limit"
+    t.decimal "max_price", precision: 10, scale: 2
+    t.integer "min_years"
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["benefit_configuration_id"], name: "index_benefit_rules_on_benefit_configuration_id"
+  end
+
   create_table "benefits", force: :cascade do |t|
     t.integer "amount"
+    t.bigint "benefit_configuration_id", null: false
     t.bigint "consumer_id", null: false
     t.datetime "created_at", null: false
     t.string "description"
     t.date "due_date"
     t.integer "percentage"
     t.datetime "updated_at", null: false
+    t.index ["benefit_configuration_id"], name: "index_benefits_on_benefit_configuration_id"
     t.index ["consumer_id"], name: "index_benefits_on_consumer_id"
   end
 
@@ -94,6 +108,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
     t.datetime "created_at", null: false
     t.string "name"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "consumer_benefit_configuration", force: :cascade do |t|
+    t.bigint "benefit_configuration_id", null: false
+    t.bigint "consumer_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["benefit_configuration_id"], name: "idx_on_benefit_configuration_id_dab181369d"
+    t.index ["consumer_id"], name: "index_consumer_benefit_configuration_on_consumer_id"
   end
 
   create_table "consumers", force: :cascade do |t|
@@ -131,6 +154,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_order_accounts_on_account_id"
     t.index ["order_id"], name: "index_order_accounts_on_order_id"
+  end
+
+  create_table "order_benefits", force: :cascade do |t|
+    t.decimal "amount_applied", precision: 10, scale: 2
+    t.bigint "benefit_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "order_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["benefit_id"], name: "index_order_benefits_on_benefit_id"
+    t.index ["order_id"], name: "index_order_benefits_on_order_id"
   end
 
   create_table "orders", force: :cascade do |t|
@@ -410,12 +443,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
   add_foreign_key "admins", "users"
   add_foreign_key "benefit_configurations", "companies"
   add_foreign_key "benefit_configurations", "users", column: "created_by_id"
+  add_foreign_key "benefit_rules", "benefit_configurations"
+  add_foreign_key "benefits", "benefit_configurations"
   add_foreign_key "benefits", "consumers"
+  add_foreign_key "consumer_benefit_configuration", "benefit_configurations"
+  add_foreign_key "consumer_benefit_configuration", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
   add_foreign_key "menus", "providers"
   add_foreign_key "order_accounts", "accounts"
   add_foreign_key "order_accounts", "orders"
+  add_foreign_key "order_benefits", "benefits"
+  add_foreign_key "order_benefits", "orders"
   add_foreign_key "orders", "consumers"
   add_foreign_key "orders", "schedules"
   add_foreign_key "orders", "users", column: "cancelled_by_id"

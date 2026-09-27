@@ -43,20 +43,23 @@ end
 #
 # Table name: benefits
 #
-#  id          :bigint           not null, primary key
-#  amount      :integer
-#  description :string
-#  due_date    :date
-#  percentage  :integer
-#  created_at  :datetime         not null
-#  updated_at  :datetime         not null
-#  consumer_id :bigint           not null
+#  id                       :bigint           not null, primary key
+#  amount                   :integer
+#  description              :string
+#  due_date                 :date
+#  percentage               :integer
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#  benefit_configuration_id :bigint           not null
+#  consumer_id              :bigint           not null
 #
 # Indexes
 #
-#  index_benefits_on_consumer_id  (consumer_id)
+#  index_benefits_on_benefit_configuration_id  (benefit_configuration_id)
+#  index_benefits_on_consumer_id               (consumer_id)
 #
 # Foreign Keys
 #
+#  fk_rails_...  (benefit_configuration_id => benefit_configurations.id)
 #  fk_rails_...  (consumer_id => consumers.id)
 #

@@ -171,21 +171,19 @@ end
 #
 # Table name: benefit_configurations
 #
-#  id                    :bigint           not null, primary key
-#  effective_from        :date             not null
-#  max_voucher_price     :decimal(10, 2)   not null
-#  monthly_voucher_limit :integer          not null
-#  subsidy_percentage    :integer          not null
-#  created_at            :datetime         not null
-#  updated_at            :datetime         not null
-#  company_id            :bigint           not null
-#  created_by_id         :bigint           not null
+#  id                 :bigint           not null, primary key
+#  applies_to_all     :boolean          default(FALSE)
+#  name               :string
+#  subsidy_percentage :integer          not null
+#  created_at         :datetime         not null
+#  updated_at         :datetime         not null
+#  company_id         :bigint           not null
+#  created_by_id      :bigint           not null
 #
 # Indexes
 #
-#  index_benefit_configurations_on_company_id                     (company_id)
-#  index_benefit_configurations_on_company_id_and_effective_from  (company_id,effective_from) UNIQUE
-#  index_benefit_configurations_on_created_by_id                  (created_by_id)
+#  index_benefit_configurations_on_company_id     (company_id)
+#  index_benefit_configurations_on_created_by_id  (created_by_id)
 #
 # Foreign Keys
 #
