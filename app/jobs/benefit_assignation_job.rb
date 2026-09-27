@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# Asigna los nuevos beneficios para el día de hoy. Siempre tiene que correr después
+# de BenefitExpiration y nunca antes.
 class BenefitAssignationJob < ApplicationJob
   queue_as :default
 

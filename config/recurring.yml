@@ -16,6 +16,3 @@ production:
   benefit_expiration:
     class: BenefitExpirationJob
     schedule: every day at midnight
-  benefit_assignation:
-    class: BenefitAssignationJob
-    schedule: every day at midnight
