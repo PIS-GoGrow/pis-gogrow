@@ -8,7 +8,7 @@ class OnboardingBenefit < BenefitRule
   def applicable_to?(consumer, date: Date.current)
     onboarding = consumer.onboarding_date
     window = onboarding..(onboarding + deadline_days.days)
-    
+
     window.cover? date
   end
 

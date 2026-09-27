@@ -6,14 +6,14 @@ class BirthdayBenefit < BenefitRule
   validates :limit, presence: true, numericality: { greater_than: 0 }
 
   def applicable_to?(consumer, date: Date.current)
-  	birthday = consumer.birthday
-  	window = birthday..(birthday + deadline_days.days)
+    birthday = consumer.birthday
+    window = birthday..(birthday + deadline_days.days)
 
-  	# El .map es para tener en cuenta el caso borde de que el cumpleaños es
-  	# el 31 de diciembre y hoy se está a primero de enero
-  	window
-  	  .map { |d| d.change year: date.year }
-  	  .include? date
+    # El .map es para tener en cuenta el caso borde de que el cumpleaños es
+    # el 31 de diciembre y hoy se está a primero de enero
+    window
+      .map { |d| d.change year: date.year }
+      .include? date
   end
 
   def benefit_limit

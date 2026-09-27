@@ -15,7 +15,7 @@ class BenefitRule < ApplicationRecord
   # el cumpleaños y el consumidor hizo ya su pedido para este beneficio, la función
   # devuelve true porque estamos en el rango, aunque el consumidor ya lo haya usado.
   def applicable_to?(consumer, date: Date.current)
-  	raise NotImplementedError, "#{self.class} debe implementar applicable_to?"
+    raise NotImplementedError, "#{self.class} debe implementar applicable_to?"
   end
 
   # Devuelve el límite de viandas que impone esta regla
@@ -25,7 +25,7 @@ class BenefitRule < ApplicationRecord
 
   # Devuelve hasta cuándo esta regla es válida
   def benefit_deadline(consumer, date: Date.current)
-  	raise NotImplementedError, "#{self.class} debe implementar benefit_deadline"
+    raise NotImplementedError, "#{self.class} debe implementar benefit_deadline"
   end
 end
 
