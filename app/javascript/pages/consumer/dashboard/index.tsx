@@ -6,7 +6,11 @@ import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
 
 import { ConsumerCart } from "./consumer-cart"
-import type { CartItem, Schedule } from "./consumer-types"
+import type {
+  CartItem,
+  DeliveryAddressOption,
+  Schedule,
+} from "./consumer-types"
 import { DishDetail } from "./dish-detail"
 import { OrderConfirmation } from "./order-confirmation"
 import { OrderError } from "./order-error"
@@ -69,6 +73,9 @@ export default function Index({
   const [filling, setFilling] = useState("")
   const [sauce, setSauce] = useState("")
   const [address, setAddress] = useState(addresses[0]?.address ?? "")
+  const [unsavedAddresses, setUnsavedAddresses] = useState<
+    DeliveryAddressOption[]
+  >([])
   const [confirmedOrder, setConfirmedOrder] = useState<Confirmation | null>(
     null,
   )
@@ -102,6 +109,23 @@ export default function Index({
   } = pricing
 
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
+  const addressOptions = [
+    ...addresses,
+    ...unsavedAddresses.filter(
+      (unsaved) => !addresses.some((item) => item.address === unsaved.address),
+    ),
+  ]
+
+  function addAddress(option: DeliveryAddressOption, saved: boolean) {
+    if (!saved) {
+      setUnsavedAddresses((items) => [
+        option,
+        ...items.filter((item) => item.address !== option.address),
+      ])
+    }
+    setAddress(option.address)
+  }
+
   function openDetail(item: Schedule) {
     setSelected(item)
     setQuantity(1)
@@ -222,9 +246,10 @@ export default function Index({
             fullPriceQuantity={fullPriceQuantity}
             lineDiscounts={lineDiscounts}
             cart={cart}
-            addresses={addresses}
+            addresses={addressOptions}
             address={address}
             setAddress={setAddress}
+            onAddAddress={addAddress}
             percentage={benefit.percentage}
             subtotal={subtotal}
             discount={discount}

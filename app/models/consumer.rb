@@ -9,6 +9,7 @@ class Consumer < ApplicationRecord
   belongs_to :user
 
   has_many :orders, dependent: :destroy
+  has_many :delivery_addresses, dependent: :destroy
   has_many :benefits
   has_many :accounts, as: :owner
   has_many :user_notifications, as: :user
@@ -23,6 +24,25 @@ class Consumer < ApplicationRecord
     else
       { delivery_method: "office", address: company.address }
     end
+  end
+
+  # La oficina va primero y después la última dirección particular a la que se
+  # pidió, que es la que el carrito muestra junto a la oficina.
+  def delivery_address_options
+    last_used = orders.home.order(created_at: :desc).pick(:address)
+    saved = delivery_addresses.order(created_at: :desc).map do |delivery_address|
+      { id: "address-#{delivery_address.id}", label: delivery_address.name, address: delivery_address.full_address }
+    end
+    custom = [
+      { id: "home", label: I18n.t("pages.orders.addresses.home"), address: },
+      *saved,
+      { id: "last_used", label: I18n.t("pages.orders.addresses.last_used"), address: last_used }
+    ]
+
+    [
+      { id: "office", label: I18n.t("pages.orders.addresses.office"), address: company.address },
+      *custom.partition { it[:address] == last_used }.flatten
+    ].select { it[:address].present? }.uniq { it[:address] }
   end
 
   def total_debt

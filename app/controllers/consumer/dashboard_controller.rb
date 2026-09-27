@@ -6,7 +6,7 @@ class Consumer::DashboardController < Consumer::InertiaController
     @week = week_data
     @schedules = schedule_data
     @benefit = benefit_data
-    @addresses = address_data
+    @addresses = @consumer.delivery_address_options
     @order_confirmation = order_confirmation_data
   end
 
@@ -79,13 +79,6 @@ class Consumer::DashboardController < Consumer::InertiaController
 
   def active_benefit
     @consumer.benefits.where("due_date >= ?", Date.current).order(:due_date).first
-  end
-
-  def address_data
-    [
-      { id: "office", label: "Oficina", address: @consumer.company.address },
-      { id: "home", label: "Casa", address: @consumer.address }
-    ].select { |address| address[:address].present? }
   end
 
   def order_confirmation_data
