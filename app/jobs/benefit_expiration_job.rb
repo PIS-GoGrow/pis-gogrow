@@ -9,6 +9,6 @@ class BenefitExpirationJob < ApplicationJob
            .where(due_date: ...date)
            .update_all(status: :expired, updated_at: Time.current)
 
-    BenefitAssignation.perform_later
+    BenefitAssignationJob.perform_later
   end
 end
