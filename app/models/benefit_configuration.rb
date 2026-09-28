@@ -33,19 +33,29 @@ class BenefitConfiguration < ApplicationRecord
   end
 
   def self.new_base_subsidy(company:, created_by:, subsidy_percentage:, effective_from:, max_price:, limit:)
+      return BenefitConfiguration.new unless company
+
       benefit_configuration = company.benefit_configurations.new(
         created_by:,
         name: "Subsidio base",
         subsidy_percentage:
       )
-      benefit_configuration.benefit_rules.new(
-        type: MonthlyBenefit.name,
+      benefit_configuration.new_monthly_benefit(
         effective_from:,
         max_price:,
         limit:
       )
 
       benefit_configuration
+  end
+
+  def new_monthly_benefit(effective_from:, max_price:, limit:)
+    benefit_rules.new(
+      type: MonthlyBenefit.name,
+      effective_from:,
+      max_price:,
+      limit:
+    )
   end
 
   # Crea los beneficios (Benefit) asociados a esta configuración a todos los consumidores

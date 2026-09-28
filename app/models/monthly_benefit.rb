@@ -6,7 +6,7 @@ class MonthlyBenefit < BenefitRule
 
   validates :max_price, presence: true,
     numericality: { greater_than: 0 }
-  validates :limit, presence: true, numericality: { greater_than: 0 }
+  validates :limit, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :effective_from, presence: true,
     comparison: { greater_than_or_equal_to: -> { Date.current } }
   validate :unique_effective_from_per_company
