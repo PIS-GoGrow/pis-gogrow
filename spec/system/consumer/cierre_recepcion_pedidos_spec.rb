@@ -25,12 +25,7 @@ RSpec.describe "Cierre de recepción de pedidos visto por el empleado" do
 
   def set_deadline_as_provider(value)
     sign_in users(:provider_user), role: :provider
-    visit provider_operational_settings_path
-    click_on "Agregar hora de cierre"
-    find("#order_deadline").click
-    find('[role="option"]', text: value).click
-    click_on "Guardar cambios"
-    expect(page).to have_content("¡Hora de cierre guardada!")
+    configure_order_deadline(value)
     sign_out
   end
 
@@ -63,7 +58,7 @@ RSpec.describe "Cierre de recepción de pedidos visto por el empleado" do
   end
 
   it "keeps the menu open while the deadline has not arrived" do
-    set_deadline_as_provider("12:01")
+    set_deadline_as_provider("12:15")
 
     visit_menu_as_consumer
 
