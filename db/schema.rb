@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -189,10 +189,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
 
   create_table "schedules", force: :cascade do |t|
     t.integer "amount", null: false
+    t.datetime "availability_changed_at"
+    t.bigint "availability_changed_by_id"
+    t.boolean "available", default: true, null: false
     t.datetime "created_at", null: false
     t.date "date", null: false
     t.bigint "menu_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["availability_changed_by_id"], name: "index_schedules_on_availability_changed_by_id"
     t.index ["menu_id", "date"], name: "index_schedules_on_menu_id_and_date", unique: true
     t.index ["menu_id"], name: "index_schedules_on_menu_id"
     t.check_constraint "amount >= 0", name: "schedules_amount_non_negative"
@@ -425,6 +429,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_180000) do
   add_foreign_key "providers", "users", on_delete: :nullify
   add_foreign_key "reviews", "menus"
   add_foreign_key "schedules", "menus"
+  add_foreign_key "schedules", "users", column: "availability_changed_by_id"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

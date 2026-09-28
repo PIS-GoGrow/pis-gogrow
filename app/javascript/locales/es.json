@@ -422,6 +422,13 @@
           "title": "Pedido %{code}"
         }
       },
+      "schedules": {
+        "index": {
+          "availability": {
+            "toggle_label": "En stock"
+          }
+        }
+      },
       "sessions": {
         "edit": {
           "description": "Tenés más de un rol disponible. Podés elegir cuál usar ahora, o cambiarlo después.",

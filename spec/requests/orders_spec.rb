@@ -144,10 +144,10 @@ RSpec.describe "Orders", type: :request do
       [ consumer, company ]
     end
 
-    def create_schedule(price: 300, amount: 5)
+    def create_schedule(price: 300, amount: 5, available: true)
       provider = Provider.find_or_create_by!(user: users(:two))
       menu = Menu.create!(provider:, name: "Milanesa", description: "Con puré", price:)
-      Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount:)
+      Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount:, available:)
     end
 
     it "creates the cart atomically with server prices, benefit and delivery address" do
@@ -245,6 +245,21 @@ RSpec.describe "Orders", type: :request do
       end.not_to change(Order, :count)
 
       expect(schedule.reload.remaining_amount).to eq(0)
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
+    end
+
+    # IBP-053, criterio 2: un plato marcado agotado no admite pedidos nuevos,
+    # aunque su schedule todavía tenga cupo disponible.
+    it "rejects a dish the provider marked as sold out, even with quota left" do
+      consumer, = setup_consumer
+      schedule = create_schedule(amount: 5, available: false)
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      end.not_to change(Order, :count)
+
+      expect(schedule.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
     end
@@ -602,6 +617,28 @@ RSpec.describe "Orders", type: :request do
 
         expect(order.reload.amount).to eq(7)
         expect(order.schedule.reload.remaining_amount).to eq(0)
+      end
+
+      # IBP-053, criterio 3: los pedidos existentes no se tocan cuando el
+      # proveedor agota el plato, pero no se puede pedir más de lo que ya tenía.
+      it "refuses to increase the quantity of an order whose dish is now sold out" do
+        order.schedule.update!(available: false)
+
+        patch order_path(order), params: update_params(quantity: 2)
+
+        expect(order.reload.amount).to eq(1)
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.schedule_unavailable"))
+      end
+
+      it "still allows lowering or keeping the quantity of a sold out dish" do
+        order.schedule.update!(available: false)
+
+        patch order_path(order), params: update_params(quantity: 1)
+
+        expect(order.reload.amount).to eq(1)
+        follow_redirect!
+        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
       end
 
       it "refuses a quantity the schedule cannot cover" do
