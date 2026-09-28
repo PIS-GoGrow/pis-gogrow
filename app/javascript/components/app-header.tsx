@@ -1,5 +1,12 @@
 import { Link, usePage } from "@inertiajs/react"
-import { LayoutGrid, Menu, Package, Search, Utensils } from "lucide-react"
+import {
+  LayoutGrid,
+  Menu,
+  Package,
+  Search,
+  Utensils,
+  Wallet,
+} from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { Breadcrumbs } from "@/components/breadcrumbs"
@@ -30,6 +37,7 @@ import { cn } from "@/lib/utils"
 import {
   adminDashboard,
   consumerDashboard,
+  providerCollections,
   providerDashboard,
   providerMenus,
   providerOrders,
@@ -67,6 +75,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
         title: "Pedidos",
         href: providerOrders.index().url,
         icon: Package,
+      },
+      {
+        title: t("nav.collections"),
+        href: providerCollections.index().url,
+        icon: Wallet,
       },
     ],
     admin: [

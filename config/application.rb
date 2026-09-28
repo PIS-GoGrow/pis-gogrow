@@ -35,6 +35,9 @@ module RailsInertiaBase
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
+    # GoGrow opera en Uruguay; sin esto Rails usa UTC y Date.current/Time.current
+    # se adelantan 3 horas al día real, rompiendo cualquier regla de negocio
+    # basada en "hoy" (vigencia de beneficios, fechas de órdenes, etc.).
     config.time_zone = "Montevideo"
     # config.eager_load_paths << Rails.root.join("extras")
 

@@ -7,6 +7,62 @@ RSpec.describe Order, type: :model do
 
   it { is_expected.to define_enum_for(:status).with_values(pending: 0, confirmed: 1, cancelled: 2, rejected: 3) }
   it { is_expected.to define_enum_for(:delivery_method).with_values(office: 0, home: 1) }
+  it do
+    expect(subject).to define_enum_for(:rejection_reason)
+      .with_values(out_of_stock: 0, duplicate_order: 1, customer_request: 2, order_error: 3, other: 4)
+      .with_prefix(:rejection_reason)
+  end
+
+  describe "rejection reason validations" do
+    let(:order) { orders(:upcoming_pending_today) }
+
+    it "is valid without rejection reason while pending, confirmed or cancelled" do
+      expect(order).to be_valid
+
+      order.status = :confirmed
+      expect(order).to be_valid
+
+      order.status = :cancelled
+      expect(order).to be_valid
+    end
+
+    it "requires a rejection reason when rejected" do
+      order.status = :rejected
+      order.rejection_reason = nil
+
+      expect(order).not_to be_valid
+      expect(order.errors[:rejection_reason]).to include(
+        I18n.t("activerecord.errors.models.order.attributes.rejection_reason.blank")
+      )
+    end
+
+    it "is valid with a standard rejection reason without details" do
+      order.status = :rejected
+      order.rejection_reason = :out_of_stock
+      order.rejection_details = nil
+
+      expect(order).to be_valid
+    end
+
+    it "requires rejection_details when reason is other" do
+      order.status = :rejected
+      order.rejection_reason = :other
+      order.rejection_details = nil
+
+      expect(order).not_to be_valid
+      expect(order.errors[:rejection_details]).to include(
+        I18n.t("activerecord.errors.models.order.attributes.rejection_details.blank")
+      )
+    end
+
+    it "is valid with other reason and details present" do
+      order.status = :rejected
+      order.rejection_reason = :other
+      order.rejection_details = "Sin insumos"
+
+      expect(order).to be_valid
+    end
+  end
 
   describe "delivery method by provider" do
     it "rejects home for an office-only provider" do
@@ -206,6 +262,176 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "#decide" do
+    it "confirms a pending order and returns true" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:confirmed)).to be(true)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "rejects a pending order with a valid reason and returns true" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(true)
+      expect(order.reload).to be_rejected
+      expect(order.rejection_reason).to eq("out_of_stock")
+      expect(order.rejection_details).to be_nil
+    end
+
+    it "rejects a pending order with 'other' reason and details" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:rejected, reason: :other, details: "Cocina cerrada")).to be(true)
+      expect(order.reload).to be_rejected
+      expect(order.rejection_reason).to eq("other")
+      expect(order.rejection_details).to eq("Cocina cerrada")
+    end
+
+    it "refuses to reject without a reason" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:rejected)).to be(false)
+      expect(order.reload).to be_pending
+      expect(order.errors[:rejection_reason]).to be_present
+    end
+
+    it "refuses to reject with 'other' reason when details are missing" do
+      order = orders(:upcoming_pending_today)
+
+      expect(order.decide(:rejected, reason: :other)).to be(false)
+      expect(order.reload).to be_pending
+      expect(order.errors[:rejection_details]).to be_present
+    end
+
+    it "gives reserved units back to the schedule when rejected" do
+      order = orders(:upcoming_pending_today)
+
+      expect { order.decide(:rejected, reason: :out_of_stock) }
+        .to change { order.schedule.reload.remaining_amount }.by(order.amount)
+    end
+
+    it "refuses to decide an already confirmed order and returns false" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect(order.decide(:rejected)).to be(false)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "refuses to decide an already cancelled order and returns false" do
+      order = orders(:history_cancelled_future)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(order.reload).to be_cancelled
+    end
+
+    it "refuses to decide an already rejected order and returns false" do
+      order = orders(:history_rejected_future)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(order.reload).to be_rejected
+    end
+  end
+
+  describe "#ensure_accounts!" do
+    let(:consumer) { consumers(:one) }
+    let(:provider) { providers(:tuviandita) }
+    let(:month) { Date.current.beginning_of_month }
+
+    def account_for(owner)
+      owner.accounts.find_by(provider:, month:)
+    end
+
+    def build_order(status:, **attributes)
+      Order.new(
+        consumer:,
+        schedule: schedules(:future),
+        amount: 1,
+        price: 300.50,
+        discounted_price: 150.25,
+        address: companies(:gogrow).address,
+        delivery_method: :office,
+        status:,
+        **attributes
+      )
+    end
+
+    def create_order(status:, **attributes)
+      build_order(status:, **attributes).tap(&:save!)
+    end
+
+    it "assigns the order to the account of the employee and to the one of their company" do
+      order = create_order(status: :confirmed)
+
+      expect(order.accounts).to contain_exactly(account_for(consumer), account_for(consumer.company))
+    end
+
+    it "charges the employee their part and the company the subsidy" do
+      expect { create_order(status: :confirmed) }
+        .to change { account_for(consumer).amount }.by(150.25.to_d)
+        .and change { account_for(consumer.company).amount }.by(150.25.to_d)
+    end
+
+    it "does not charge anything while the order is pending" do
+      expect { create_order(status: :pending) }.not_to change { account_for(consumer).amount }
+      expect { create_order(status: :pending) }.not_to change { account_for(consumer.company).amount }
+    end
+
+    it "updates both accounts when the order is confirmed" do
+      order = create_order(status: :pending)
+
+      expect { order.update!(status: :confirmed) }
+        .to change { account_for(consumer).amount }.by(150.25.to_d)
+        .and change { account_for(consumer.company).amount }.by(150.25.to_d)
+    end
+
+    it "discounts both accounts when the order is cancelled" do
+      order = create_order(status: :confirmed)
+
+      expect { order.cancel(by: users(:one)) }
+        .to change { account_for(consumer).amount }.by(-150.25.to_d)
+        .and change { account_for(consumer.company).amount }.by(-150.25.to_d)
+    end
+
+    it "does not duplicate accounts when it runs again" do
+      order = create_order(status: :confirmed)
+
+      expect { order.ensure_accounts! }.not_to change(Account, :count)
+      expect(order.reload.accounts.count).to eq(2)
+    end
+
+    it "keeps an old order in the accounts of the month it was placed" do
+      order = create_order(status: :confirmed, created_at: 1.month.ago)
+
+      expect { order.ensure_accounts! }.not_to change(Account, :count)
+      expect(order.reload.accounts.map(&:month).uniq).to eq([ 1.month.ago.to_date.beginning_of_month ])
+    end
+
+    it "completes the missing company account of an old order in its own month" do
+      order = create_order(status: :confirmed, created_at: 1.month.ago)
+      order.order_accounts.joins(:account).where(accounts: { owner_type: "Company" }).delete_all
+      order.accounts.reset
+
+      order.ensure_accounts!
+
+      last_month = 1.month.ago.to_date.beginning_of_month
+      expect(order.reload.accounts.map { [ it.owner_type, it.month ] }).to contain_exactly(
+        [ "Consumer", last_month ], [ "Company", last_month ]
+      )
+    end
+
+    it "takes the account another order created at the same time instead of failing" do
+      order = build_order(status: :confirmed)
+      company = order.consumer.company
+      # Simula la carrera: la búsqueda no ve la cuenta y el INSERT choca con el
+      # índice único porque otro pedido ya la creó.
+      allow(company.accounts).to receive(:find_by).and_return(nil)
+
+      expect { order.save! }.not_to raise_error
+      expect(order.accounts).to include(accounts(:gogrow_tuviandita_current))
+    end
+  end
+
   it "splits every order between the two sections" do
     expect(described_class.upcoming.ids & described_class.history.ids).to be_empty
     expect(described_class.upcoming.count + described_class.history.count).to eq(described_class.count)
@@ -225,6 +451,8 @@ end
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  rejection_details          :string
+#  rejection_reason           :integer
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null

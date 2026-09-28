@@ -41,7 +41,9 @@
       }
     },
     "nav": {
+      "benefit_configurations": "Beneficio general",
       "change_to": "Cambiar a",
+      "collections": "Cobros",
       "dashboard": "Panel",
       "menu": "Menú de navegación",
       "orders": "Mis pedidos",
@@ -92,12 +94,48 @@
           "total": "Total"
         }
       },
+      "admin": {
+        "benefit_configurations": {
+          "index": {
+            "current": {
+              "cancel": "Cancelar",
+              "edit": "Editar",
+              "empty": "Todavía no configuraste el beneficio general.",
+              "max_voucher_price": "Cuando el precio por vianda es",
+              "monthly_voucher_limit": "Hasta un límite por empleado de",
+              "monthly_voucher_limit_unit": "viandas",
+              "notice": "Los cambios se aplicarán en el próximo período.",
+              "pending_conflict": {
+                "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
+                "keep": "Mantener el programado",
+                "replace": "Reemplazar por este",
+                "title": "Ya hay un cambio programado para el próximo período"
+              },
+              "scheduled_banner": {
+                "description": "La nueva configuración de subsidios se aplicará a partir del próximo período.",
+                "dismiss": "Cerrar aviso",
+                "title": "Tus cambios están programados"
+              },
+              "submit": "Programar Subsidio",
+              "subsidy_percentage": "Se descuenta",
+              "title": "Subsidio Base"
+            },
+            "description": "Gestioná los subsidios de tu compañía",
+            "title": "Subsidios"
+          }
+        }
+      },
       "cart": {
         "delivery": "Entrega: %{date}",
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning": "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina.",
         "other_deliveries": "Las demás viandas irán a la dirección seleccionada.",
         "remove": "Quitar %{name}"
+      },
+      "consumer_dashboard": {
+        "index": {
+          "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
+        }
       },
       "dashboard": {
         "roles": {
@@ -227,7 +265,93 @@
           "title": "Olvidé mi contraseña"
         }
       },
+      "provider_collections": {
+        "group": {
+          "company": "Empresa",
+          "confirmed": "%{amount} en cobros confirmados",
+          "detail": "Ver detalle",
+          "due": "Vence: %{date}",
+          "employees": "Empleados",
+          "pending": "%{amount} en cobros pendientes",
+          "rejected": "%{amount} en cobros rechazados",
+          "submitted": "%{amount} en cobros informados",
+          "total": "Total a cobrar"
+        },
+        "index": {
+          "all_clients": "Todos",
+          "clients": "Clientes:",
+          "confirmed_meals_one": "%{count} vianda confirmada",
+          "confirmed_meals_other": "%{count} viandas confirmadas",
+          "delivered_meals_one": "%{count} vianda entregada",
+          "delivered_meals_other": "%{count} viandas entregadas",
+          "empty_history_all": "Todavía no hay meses cobrados por completo.",
+          "empty_history_client": "Todavía no hay meses cobrados por completo de este cliente.",
+          "empty_history_title": "Sin cobros confirmados",
+          "empty_pending_all": "Por ahora no hay deudas pendientes de ningún cliente seleccionado. Volvé a consultar el mes que viene.",
+          "empty_pending_client": "Por ahora no hay deudas pendientes de este cliente. Volvé a consultar el mes que viene.",
+          "empty_pending_title": "Sin deudas pendientes",
+          "filter_clients": "Filtrar por cliente",
+          "history_tab": "Historial",
+          "outstanding": "Cobros pendientes",
+          "pending_tab": "Pendientes",
+          "sales": "Ventas",
+          "section": "Cobros",
+          "this_month": "Este mes",
+          "title": "Cobros",
+          "total_debt": "Deuda total"
+        },
+        "meals_one": "%{count} vianda",
+        "meals_other": "%{count} viandas",
+        "show": {
+          "amount": "Importe a cobrar",
+          "back": "Volver a cobros",
+          "due_date": "Vencimiento",
+          "eyebrow": "Cobro",
+          "no_date": "Sin fecha de entrega",
+          "orders": "Pedidos",
+          "orders_empty": "Todavía no hay pedidos confirmados en este período.",
+          "payments": "Pagos",
+          "payments_empty": "Todavía no se informó ningún pago.",
+          "period": "Período",
+          "quantity": "x%{count}",
+          "status": "Estado",
+          "summary": "Resumen",
+          "title": "Cobro a %{name}"
+        },
+        "statuses": {
+          "approved": "Confirmado",
+          "pending": "Pendiente",
+          "rejected": "Rechazado",
+          "submitted": "Por revisar"
+        }
+      },
+      "provider_dashboard": {
+        "index": {
+          "description": "Administrá la recepción de pedidos de tus menús.",
+          "eyebrow": "Operación diaria",
+          "order_deadline": {
+            "description": "Definí hasta qué hora aceptás pedidos para hoy.",
+            "help": "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos.",
+            "label": "Hora límite",
+            "title": "Recepción de pedidos"
+          },
+          "title": "Panel del proveedor"
+        }
+      },
       "provider_orders": {
+        "actions": {
+          "confirm": "Confirmar",
+          "reject": "Rechazar",
+          "reject_dialog": {
+            "back": "Volver",
+            "confirm": "Rechazar pedido",
+            "description": "Seleccioná el motivo de la cancelación. El empleado va a ver el cambio en sus pedidos.",
+            "details_label": "Describí el motivo",
+            "details_placeholder": "Ingresá el motivo…",
+            "reason_label": "Motivo",
+            "title": "¿Rechazar el pedido %{code}?"
+          }
+        },
         "index": {
           "cancel": "Cancelar",
           "code": "PED-%{id}",
@@ -252,6 +376,13 @@
           "title": "Pedidos",
           "today": "hoy",
           "tomorrow": "mañana"
+        },
+        "rejection_reasons": {
+          "customer_request": "Solicitud del cliente",
+          "duplicate_order": "Pedido duplicado",
+          "order_error": "Error en el pedido",
+          "other": "Otro motivo",
+          "out_of_stock": "Sin stock disponible"
         },
         "show": {
           "amounts": "Importe",
@@ -279,6 +410,8 @@
           "ordered_at": "Hora del pedido",
           "preparation": "Preparación",
           "quantity": "Cantidad",
+          "rejection_details": "Detalle del rechazo",
+          "rejection_reason": "Motivo de rechazo",
           "status": "Estado",
           "stock": "Cupo del día",
           "stock_detail": "%{remaining} disponibles de %{total} publicados",

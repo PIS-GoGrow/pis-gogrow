@@ -33,7 +33,14 @@ Rails.application.routes.draw do
 
   namespace :provider do
     resources :menus
-    resources :orders, only: [ :index, :show ]
+    resources :orders, only: [ :index, :show ] do
+      member do
+        patch :confirm
+        patch :reject
+      end
+    end
+    resources :collections, only: [ :index, :show ]
+    resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
@@ -56,6 +63,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :benefit_configurations, only: [ :index, :create ]
   end
 
   root "home#index"

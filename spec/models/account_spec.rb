@@ -99,6 +99,73 @@ RSpec.describe Account, type: :model do
 
       expect(account.reload.amount).to eq(450.to_d)
     end
+
+    it "sums the subsidy of confirmed orders for a company account" do
+      menu = Menu.create!(provider:, name: "Wok", description: "De verduras", price: 400)
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
+
+      Order.create!(
+        consumer:,
+        schedule:,
+        amount: 1,
+        price: 400,
+        discounted_price: 250,
+        address: company.address,
+        delivery_method: :office,
+        status: :confirmed
+      )
+
+      account = company.accounts.find_by!(provider:, month: Date.current.beginning_of_month)
+
+      expect(account.amount).to eq(150.to_d)
+    end
+  end
+
+  describe "#collection_status" do
+    let(:account) { consumer.accounts.create!(provider:, month: Date.current, amount: 500) }
+
+    # Un pago informado exige comprobante adjunto.
+    def create_payment(status:, created_at: Time.current)
+      payment = Payment.new(account:, status:, created_at:)
+      payment.receipt.attach(
+        io: Rails.root.join("public/icon.png").open,
+        filename: "receipt.png",
+        content_type: "image/png"
+      )
+      payment.save!
+      payment
+    end
+
+    it "is pending when there is no payment" do
+      expect(account.collection_status).to eq("pending")
+    end
+
+    it "is pending when the only payment is still pending" do
+      create_payment(status: :pending)
+
+      expect(account.collection_status).to eq("pending")
+    end
+
+    it "follows the status of the payment" do
+      create_payment(status: :submitted)
+
+      expect(account.collection_status).to eq("submitted")
+    end
+
+    it "takes the most recent payment when there are several" do
+      create_payment(status: :rejected, created_at: 2.days.ago)
+      create_payment(status: :approved, created_at: 1.day.ago)
+
+      expect(account.collection_status).to eq("approved")
+    end
+
+    it "breaks a tie between payments of the same instant with the newest record" do
+      instant = 1.day.ago
+      create_payment(status: :rejected, created_at: instant)
+      create_payment(status: :submitted, created_at: instant)
+
+      expect(account.collection_status).to eq("submitted")
+    end
   end
 
   describe ".amount_and_price_sum" do

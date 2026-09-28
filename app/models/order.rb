@@ -14,6 +14,13 @@ class Order < ApplicationRecord
   enum :status, { pending: 0, confirmed: 1, cancelled: 2, rejected: 3 }, default: :pending
   enum :delivery_method, { office: 0, home: 1 }
   enum :status_before_cancellation, { pending: 0, confirmed: 1 }, prefix: :before_cancellation
+  enum :rejection_reason, {
+    out_of_stock: 0,
+    duplicate_order: 1,
+    customer_request: 2,
+    order_error: 3,
+    other: 4
+  }, prefix: :rejection_reason
 
   # Esta línea tiene que estar antes de has_many :order_accounts.
   # Antes de que se borre la orden, se tiene que registrar sus cuentas
@@ -35,6 +42,8 @@ class Order < ApplicationRecord
   validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true
   validates :address, presence: true, if: :home?
   validates :delivery_method, presence: true
+  validates :rejection_reason, presence: true, if: :rejected?
+  validates :rejection_details, presence: true, if: -> { rejected? && rejection_reason_other? }
   validate :delivery_method_allowed_by_provider, on: :create
 
   # El corte entre ambas secciones es la fecha de entrega, no el estado: una
@@ -55,7 +64,7 @@ class Order < ApplicationRecord
       .left_joins(:schedule)
       .order(Arel.sql("schedules.date DESC NULLS LAST"))
   }
-  after_create :assign_account
+  after_create :ensure_accounts!
   after_update_commit :sync_accounts,
     if: -> { saved_change_to_status? || saved_change_to_price? || saved_change_to_discounted_price? }
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
@@ -105,7 +114,9 @@ class Order < ApplicationRecord
     return order unless order.valid?
 
     schedule.with_lock do
-      if schedule.available?(quantity:)
+      if schedule.order_deadline_passed?
+        order.errors.add(:schedule_id, I18n.t("validations.order_deadline_passed"))
+      elsif schedule.available?(quantity:)
         order.save
       else
         order.errors.add(
@@ -149,6 +160,23 @@ class Order < ApplicationRecord
 
   def cancellable?
     cancellation_block_reason.nil?
+  end
+
+  # La decisión del proveedor solo corre sobre pedidos pendientes: confirmar o
+  # rechazar uno ya resuelto pisaría la cancelación del empleado. El lock es por
+  # el doble envío, igual que en cancel.
+  def decide(status, reason: nil, details: nil)
+    with_lock do
+      return false unless pending?
+
+      attrs = { status: status }
+      if status.to_s == "rejected"
+        attrs[:rejection_reason] = reason
+        attrs[:rejection_details] = details
+      end
+
+      update(attrs)
+    end
   end
 
   # RN-12: modificar equivale a cancelar y volver a pedir, así que rige la misma
@@ -212,7 +240,38 @@ class Order < ApplicationRecord
     end
   end
 
+  # Asigna la orden a las dos cuentas que le corresponden y las hace recalcular
+  # su monto: la del empleado, que paga su parte, y la de su empresa, que paga el
+  # subsidio. Es idempotente, así que sirve también para completar las cuentas de
+  # órdenes viejas: una orden cuelga siempre de una sola cuenta de cada dueño.
+  def ensure_accounts!
+    # El mes es el de cuando se hizo el pedido, no el de hoy: si no, completar una
+    # orden vieja la colgaría también de una cuenta de este mes.
+    # Habría que validar si queremos que el pedido se descuente en el mes en el que
+    # será enviado. En ese caso, habría que cambiar la siguiente línea por:
+    #   month = schedule.date.beginning_of_month
+    month = created_at.to_date.beginning_of_month
+    provider =
+      self.provider or raise "La orden #{id} no tiene proveedor. Puede ser que no tenga un schedule asignado, que su schedule no tenga un menú o que ese menú no tenga un proveedor"
+
+    [ consumer, consumer.company ].each do |owner|
+      account = accounts.find { it.owner_type == owner.class.name && it.owner_id == owner.id } ||
+                account_of(owner, month:, provider:)
+      accounts << account unless accounts.include?(account)
+
+      account.sync_amount!
+    end
+  end
+
   private
+
+  # La cuenta de la empresa la comparten todos sus empleados, así que dos pedidos
+  # simultáneos pueden intentar crearla a la vez. create_or_find_by! inserta en un
+  # savepoint: si el índice único rechaza el segundo INSERT, busca la que creó el
+  # otro sin abortar la transacción del pedido.
+  def account_of(owner, month:, provider:)
+    owner.accounts.find_by(month:, provider:) || owner.accounts.create_or_find_by!(month:, provider:)
+  end
 
   # El tope mensual solo mira las entregas del mes en curso, así que una orden
   # para el mes que viene no tiene unidades que devolver.
@@ -220,30 +279,6 @@ class Order < ApplicationRecord
     return 0 unless schedule&.date&.then { Date.current.all_month.cover?(it) }
 
     amount.to_i
-  end
-
-  # Asignarse a la cuenta actual del usuario, o crearla si no existiera
-  # Forzar a que la cuenta recalcule su valor calculado.
-  def assign_account
-    unless accounts.empty?
-      accounts.each &:sync_amount!
-      return
-    end
-
-    # Obetener información de la cuenta a la que debería ser asignada la orden:
-    # el mes actual y la id del proveedor correspondiente a la orden.
-    # Habría que validar si queremos que el pedido se descuente en el mes en el que
-    # será enviado, que puede ser distinto del actual. En ese caso, habría que cambiar
-    # la siguiente línea por:
-    #   month = Schedule.date.beginning_of_month
-    month = Date.current.beginning_of_month
-    provider =
-      self.provider or raise "La orden #{id} no tiene proveedor. Puede ser que no tenga un schedule asignado, que su schedule no tenga un menú o que ese menú no tenga un proveedor"
-
-    account = consumer.accounts.find_or_create_by! month: month, provider: provider
-    accounts << account
-
-    account.sync_amount!
   end
 
   def sync_accounts
@@ -268,6 +303,8 @@ end
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  rejection_details          :string
+#  rejection_reason           :integer
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null
