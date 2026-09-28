@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { adminBenefitConfigurations } from "@/routes"
-import type { BenefitConfiguration } from "@/types/serializers"
 
 interface EditBenefitConfigurationFormProps {
   defaultValues: {
@@ -22,13 +21,24 @@ interface EditBenefitConfigurationFormProps {
     max_voucher_price: number | ""
     monthly_voucher_limit: number | ""
   }
-  pendingBenefitConfiguration: {
+  pendingBenefitConfiguration?: {
     subsidy_percentage: number | ""
     max_voucher_price: number | ""
     monthly_voucher_limit: number | ""
   }
   onCancel: () => void
   onSuccess: () => void
+}
+
+interface BenefitConfigurationErrors {
+  benefit_configuration?: {
+    subsidy_percentage?: string[]
+  }
+  benefit_rules?: {
+    effective_from?: string[]
+    max_price?: string[]
+    limit?: string[]
+  }[]
 }
 
 export default function EditBenefitConfigurationForm({
@@ -40,12 +50,14 @@ export default function EditBenefitConfigurationForm({
   const { t } = useTranslation()
   const [showPendingConflict, setShowPendingConflict] = useState(false)
 
-  const { data, setData, post, processing, errors, clearErrors, transform } =
-    useForm({
-      subsidy_percentage: defaultValues.subsidy_percentage,
-      max_voucher_price: defaultValues.max_voucher_price,
-      monthly_voucher_limit: defaultValues.monthly_voucher_limit,
-    })
+  const form = useForm({
+    subsidy_percentage: defaultValues.subsidy_percentage,
+    max_voucher_price: defaultValues.max_voucher_price,
+    monthly_voucher_limit: defaultValues.monthly_voucher_limit,
+  })
+
+  const { data, setData, post, processing, clearErrors, transform } = form
+  const errors = form.errors as BenefitConfigurationErrors
 
   function submit(replacePending: boolean) {
     transform((currentData) => ({
@@ -88,12 +100,14 @@ export default function EditBenefitConfigurationForm({
     submit(true)
   }
 
+  const efectiveFromErrors = errors.benefit_rules?.at(0)?.effective_from
+
   return (
     <form onSubmit={handleSubmit}>
       <FieldGroup>
         <Field
           orientation="horizontal"
-          data-invalid={!!errors.subsidy_percentage}
+          data-invalid={!!errors.benefit_configuration?.subsidy_percentage}
         >
           <FieldLabel htmlFor="subsidy_percentage" className="font-normal">
             {t(
@@ -110,7 +124,9 @@ export default function EditBenefitConfigurationForm({
                 max="100"
                 className="w-24 text-base"
                 value={data.subsidy_percentage}
-                aria-invalid={!!errors.subsidy_percentage}
+                aria-invalid={
+                  !!errors.benefit_configuration?.subsidy_percentage
+                }
                 onChange={(e) => {
                   setData(
                     "subsidy_percentage",
@@ -122,16 +138,18 @@ export default function EditBenefitConfigurationForm({
               <span className="text-muted-foreground">%</span>
             </div>
             <FieldError
-              errors={errors.subsidy_percentage?.map((message) => ({
-                message,
-              }))}
+              errors={errors.benefit_configuration?.subsidy_percentage?.map(
+                (message) => ({
+                  message,
+                }),
+              )}
             />
           </FieldContent>
         </Field>
 
         <Field
           orientation="horizontal"
-          data-invalid={!!errors.max_voucher_price}
+          data-invalid={!!errors.benefit_rules?.at(0)?.max_price}
         >
           <FieldLabel htmlFor="max_voucher_price" className="font-normal">
             {t(
@@ -149,7 +167,7 @@ export default function EditBenefitConfigurationForm({
                 step="0.01"
                 className="w-24 text-base"
                 value={data.max_voucher_price}
-                aria-invalid={!!errors.max_voucher_price}
+                aria-invalid={!!errors.benefit_rules?.at(0)?.max_price}
                 onChange={(e) => {
                   setData(
                     "max_voucher_price",
@@ -160,16 +178,18 @@ export default function EditBenefitConfigurationForm({
               />
             </div>
             <FieldError
-              errors={errors.max_voucher_price?.map((message) => ({
-                message,
-              }))}
+              errors={errors.benefit_rules
+                ?.at(0)
+                ?.max_price?.map((message) => ({
+                  message,
+                }))}
             />
           </FieldContent>
         </Field>
 
         <Field
           orientation="horizontal"
-          data-invalid={!!errors.monthly_voucher_limit}
+          data-invalid={!!errors.benefit_rules?.at(0)?.limit}
         >
           <FieldLabel htmlFor="monthly_voucher_limit" className="font-normal">
             {t(
@@ -185,7 +205,7 @@ export default function EditBenefitConfigurationForm({
                 min="0"
                 className="w-24 text-base"
                 value={data.monthly_voucher_limit}
-                aria-invalid={!!errors.monthly_voucher_limit}
+                aria-invalid={!!errors.benefit_rules?.at(0)?.limit}
                 onChange={(e) => {
                   setData(
                     "monthly_voucher_limit",
@@ -201,7 +221,7 @@ export default function EditBenefitConfigurationForm({
               </span>
             </div>
             <FieldError
-              errors={errors.monthly_voucher_limit?.map((message) => ({
+              errors={errors.benefit_rules?.at(0)?.limit?.map((message) => ({
                 message,
               }))}
             />
@@ -212,11 +232,13 @@ export default function EditBenefitConfigurationForm({
             server), pero puede fallar por unicidad si ya hay un cambio
             pendiente para el proximo periodo -- sin esto el error queda
             invisible para quien lo esta llenando. */}
-        <FieldError
-          errors={(
-            errors as Record<string, string[] | undefined>
-          ).effective_from?.map((message) => ({ message }))}
-        />
+        {efectiveFromErrors && efectiveFromErrors.length > 0 && (
+          <FieldError>
+            {t(
+              "pages.admin.benefit_configurations.index.current.pending_conflict.unexpected",
+            )}
+          </FieldError>
+        )}
 
         {showPendingConflict && pendingBenefitConfiguration ? (
           <>

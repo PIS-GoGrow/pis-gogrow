@@ -13,10 +13,7 @@ RSpec.describe BenefitConfiguration, type: :model do
       {
         company: company,
         created_by: admin_user,
-        subsidy_percentage: 50,
-        max_voucher_price: 150,
-        monthly_voucher_limit: 20,
-        effective_from: Date.current
+        subsidy_percentage: 50
       }.merge(attrs)
     )
   end

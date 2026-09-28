@@ -2,8 +2,6 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { BenefitConfiguration } from "@/types/serializers"
-
 import EditBenefitConfigurationForm from "./edit-benefit-configuration-form"
 
 const postMock = vi.fn()
@@ -43,14 +41,10 @@ describe("EditBenefitConfigurationForm", () => {
     monthly_voucher_limit: 20 as const,
   }
 
-  const pendingBenefitConfiguration: BenefitConfiguration = {
-    id: 99,
+  const pendingBenefitConfiguration = {
     subsidy_percentage: 60,
     max_voucher_price: 200,
     monthly_voucher_limit: 25,
-    effective_from: "2026-10-01",
-    created_at: "2026-09-21T00:00:00Z",
-    created_by_name: "Admin User",
   }
 
   beforeEach(() => {

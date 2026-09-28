@@ -17,10 +17,9 @@ import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import AppLayout from "@/layouts/app-layout"
 import { adminBenefitConfigurations } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
-import type { AdminBenefitConfigurationsIndex, benefitConfiguration, BenefitRules } from "@/types/serializers"
+import type { AdminBenefitConfigurationsIndex } from "@/types/serializers"
 
 export default function Index({
-  benefit_configurations,
   pending_base_subsidy,
   base_subsidy,
 }: AdminBenefitConfigurationsIndex) {
@@ -49,7 +48,7 @@ export default function Index({
   const breadcrumbs: BreadcrumbItem[] = [
     { title, href: adminBenefitConfigurations.index().url },
   ]
-  
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={title} />
@@ -112,8 +111,7 @@ export default function Index({
             {isEditing ? (
               <EditBenefitConfigurationForm
                 defaultValues={{
-                  subsidy_percentage:
-                    base_subsidy?.subsidy_percentage ?? "",
+                  subsidy_percentage: base_subsidy?.subsidy_percentage ?? "",
                   max_voucher_price:
                     base_subsidy?.benefit_rules[0]?.max_price ?? "",
                   monthly_voucher_limit:

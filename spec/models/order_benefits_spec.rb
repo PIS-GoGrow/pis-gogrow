@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe OrderBenefitConfiguration, type: :model do
+RSpec.describe OrderBenefit, type: :model do
   pending "add some examples to (or delete) #{__FILE__}"
 end
 

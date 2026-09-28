@@ -108,7 +108,8 @@
                 "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
                 "keep": "Mantener el programado",
                 "replace": "Reemplazar por este",
-                "title": "Ya hay un cambio programado para el próximo período"
+                "title": "Ya hay un cambio programado para el próximo período",
+                "unexpected": "Error inesperado. Por favor reintentá la operación."
               },
               "scheduled_banner": {
                 "description": "La nueva configuración de subsidios se aplicará a partir del próximo período.",

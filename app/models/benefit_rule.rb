@@ -4,6 +4,8 @@
 class BenefitRule < ApplicationRecord
   belongs_to :benefit_configuration
 
+  validate :monthly_benefit_exclusivity
+
   # Cada regla que herede tiene que implementar los siguientes métodos:
 
   # Indica si correspondería asignarle un beneficio al consumidor en la fecha dada
@@ -26,6 +28,18 @@ class BenefitRule < ApplicationRecord
   # Devuelve hasta cuándo esta regla es válida
   def benefit_deadline(consumer, date: Date.current)
     raise NotImplementedError, "#{self.class} debe implementar benefit_deadline"
+  end
+
+  private
+
+  def monthly_benefit_exclusivity
+    siblings = benefit_configuration.benefit_rules.where.not(id: id)
+
+    if type == "MonthlyBenefit" && siblings.exists?
+      errors.add(:base, "MonthlyBenefit no puede coexistir con otras benefit_rules")
+    elsif siblings.exists?(type: "MonthlyBenefit")
+      errors.add(:base, "No se puede agregar otra regla cuando ya existe MonthlyBenefit")
+    end
   end
 end
 

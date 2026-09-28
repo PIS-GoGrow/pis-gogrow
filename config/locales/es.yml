@@ -161,6 +161,7 @@ es:
               description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
+              unexpected: "Error inesperado. Por favor reintentá la operación."
     errors:
       internal_server_error:
         title: "Algo salió mal"

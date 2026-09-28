@@ -32,6 +32,22 @@ class BenefitConfiguration < ApplicationRecord
       .first # Obtiene el que tenga effective_from más alto
   end
 
+  def self.new_base_subsidy(company:, created_by:, subsidy_percentage:, effective_from:, max_price:, limit:)
+      benefit_configuration = company.benefit_configurations.new(
+        created_by:,
+        name: "Subsidio base",
+        subsidy_percentage:
+      )
+      benefit_configuration.benefit_rules.new(
+        type: MonthlyBenefit.name,
+        effective_from:,
+        max_price:,
+        limit:
+      )
+
+      benefit_configuration
+  end
+
   # Crea los beneficios (Benefit) asociados a esta configuración a todos los consumidores
   # registrados. Esta operación es idempotente: correrla dos veces en el mismo día es
   # equivalente a correrla una.

@@ -16,6 +16,8 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
     effective_from = next_period_effective_from
     benefit_configuration = nil
     
+    # Hacer toda la acción como una transacción: No queremos borrar el beneficio que ya
+    # está si no podemos crear uno nuevo.
     ActiveRecord::Base.transaction do
       # RRHH ya vio que hay un cambio programado (todavia no vigente) para el
       # proximo periodo y eligio explicitamente reemplazarlo por este nuevo
@@ -30,14 +32,11 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
                .destroy_all
       end
 
-      benefit_configuration = company.benefit_configurations.new(
+      benefit_configuration = BenefitConfiguration.new_base_subsidy(
         created_by: Current.user,
-        name: "Subsidio base",
-        subsidy_percentage: benefit_configuration_params[:subsidy_percentage]
-      )
-      benefit_configuration.benefit_rules.new(
-        type: MonthlyBenefit.name,
+        company:,
         effective_from:,
+        subsidy_percentage: benefit_configuration_params[:subsidy_percentage],
         max_price: benefit_configuration_params[:max_voucher_price],
         limit: benefit_configuration_params[:monthly_voucher_limit]
       )
@@ -48,7 +47,13 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
     if benefit_configuration.persisted?
       redirect_to admin_benefit_configurations_path, notice: t("flash.benefit_configuration_created")
     else
-      redirect_back fallback_location: admin_benefit_configurations_path, inertia: { errors: benefit_configuration.errors }
+      errors_hash = {
+        benefit_configuration: benefit_configuration.errors,
+        benefit_rules: benefit_configuration.benefit_rules.map(&:errors)
+      }
+      
+      redirect_back fallback_location: admin_benefit_configurations_path, 
+                    inertia: { errors: errors_hash }
     end
   end
 
