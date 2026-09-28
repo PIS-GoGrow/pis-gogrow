@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe Consumer, type: :model do
-  fixtures :consumers, :companies, :providers
+  fixtures :consumers, :companies, :providers, :benefit_configurations
 
   let(:consumer) { consumers(:one) }
   let(:company_address) { companies(:gogrow).address }
@@ -90,8 +90,9 @@ RSpec.describe Consumer, type: :model do
   describe "#benefit_available" do
     it "returns the amount of the active monthly benefit" do
       Benefit.create!(
-        consumer:, amount: 15, percentage: 50,
-        due_date: 1.month.from_now, description: "Viandas mensuales"
+        consumer:, amount: 15, percentage: 50, status: :current,
+        due_date: 1.month.from_now, description: "Viandas mensuales",
+        benefit_configuration: benefit_configurations(:monthly)
       )
 
       expect(consumer.benefit_available).to eq(15)

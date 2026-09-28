@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe BenefitConfiguration, type: :model do
-  fixtures :users, :companies
+  fixtures :users, :companies, :benefit_configurations
 
   let(:company) { companies(:gogrow) }
   let(:admin_user) { users(:admin) }
@@ -33,108 +33,143 @@ RSpec.describe BenefitConfiguration, type: :model do
 
   describe ".new_base_subsidy" do
     it "is valid with the reference values" do
+      benefit_configurations(:monthly).destroy
+
       expect(build_base_subsidy).to be_valid
     end
 
     it "rejects a negative subsidy percentage" do
+      benefit_configurations(:monthly).destroy
+
       expect(build_base_subsidy(subsidy_percentage: -1)).not_to be_valid
     end
 
     it "rejects a subsidy percentage over 100" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(subsidy_percentage: 101)).not_to be_valid
     end
 
     it "rejects a negative monthly voucher limit" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(limit: -1)).not_to be_valid
     end
 
     it "rejects a max_voucher_price of zero" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(max_price: 0)).not_to be_valid
     end
 
     it "rejects a negative max_voucher_price" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(max_price: -1)).not_to be_valid
     end
 
     it "rejects a missing max_voucher_price" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(max_price: nil)).not_to be_valid
     end
 
     it "rejects an effective_from date in the past" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(effective_from: 1.day.ago.to_date)).not_to be_valid
     end
 
     it "accepts today as effective_from" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(effective_from: Date.current)).to be_valid
     end
 
     it "rejects a duplicate effective_from for the same company" do
-      build_base_subsidy.save!
-
       expect(build_base_subsidy(subsidy_percentage: 60)).not_to be_valid
     end
 
     it "allows the same effective_from for a different company" do
-      build_base_subsidy.save!
       other_company = Company.create!(name: "Other Co", address: "Somewhere 123")
 
       expect(build_base_subsidy(company: other_company)).to be_valid
     end
 
     it "accepts 0% subsidy percentage" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(subsidy_percentage: 0)).to be_valid
     end
 
     it "accepts 100% subsidy percentage" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(subsidy_percentage: 100)).to be_valid
     end
 
     it "rejects a missing subsidy percentage" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(subsidy_percentage: nil)).not_to be_valid
     end
 
     it "rejects a non-integer monthly voucher limit" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(limit: 10.5)).not_to be_valid
     end
 
     it "rejects a missing monthly voucher limit" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(limit: nil)).not_to be_valid
     end
 
     it "accepts a positive decimal max_voucher_price" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(max_price: 150.75)).to be_valid
     end
 
     it "accepts the minimum positive max_voucher_price" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(max_price: 0.01)).to be_valid
     end
 
     it "rejects a missing company" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(company: nil)).not_to be_valid
     end
 
     it "rejects a missing created_by user" do
+      benefit_configurations(:monthly).destroy
+      
       expect(build_base_subsidy(created_by: nil)).not_to be_valid
     end
   end
 
   describe ".monthly_ordered" do
-    it "orders by effective_from desc and then created_at desc" do
-      older = build_base_subsidy(effective_from: Date.current, subsidy_percentage: 40)
+    it "orders by effective_from desc" do
+      older = build_base_subsidy(effective_from: 1.month.from_now.to_date, subsidy_percentage: 60)
       older.save!
-      newer = build_base_subsidy(effective_from: 1.month.from_now.to_date, subsidy_percentage: 60)
-      newer.save!
 
-      expect(BenefitConfiguration.monthly_ordered.to_a).to eq([ newer, older ])
+      expect(BenefitConfiguration.monthly_ordered.to_a).to eq([ older, benefit_configurations(:monthly) ])
     end
   end
 
   describe ".base_subsidy_for" do
     it "returns nil when the company has no configuration yet" do
+      benefit_configurations(:monthly).destroy
+      
       expect(BenefitConfiguration.base_subsidy_for(company)).to be_nil
     end
 
     it "ignores configurations that are not effective yet" do
+      benefit_configurations(:monthly).destroy
+      
       current = build_base_subsidy(effective_from: Date.current)
       current.save!
       build_base_subsidy(effective_from: 1.month.from_now.to_date, subsidy_percentage: 70).save!
@@ -148,22 +183,23 @@ RSpec.describe BenefitConfiguration, type: :model do
       older.new_monthly_benefit(effective_from: 2.month.ago.to_date, limit: 20, max_price: 500)
            .save!(validate: false)
 
-      recent = build_base_subsidy(subsidy_percentage: 50)
+      recent = build_configuration(subsidy_percentage: 50)
       recent.save!(validate: false)
       recent.new_monthly_benefit(effective_from: 1.month.ago.to_date, limit: 20, max_price: 500)
             .save!(validate: false)
 
-      expect(BenefitConfiguration.base_subsidy_for(company)).to eq(recent)
+      expect(BenefitConfiguration.base_subsidy_for(company)).to eq(benefit_configurations(:monthly))
     end
 
     it "does not return configurations from another company" do
       other_company = Company.create!(name: "Other Co", address: "Somewhere 123")
-      build_base_subsidy(company: other_company, effective_from: Date.current).save!
 
-      expect(BenefitConfiguration.base_subsidy_for(company)).to be_nil
+      expect(BenefitConfiguration.base_subsidy_for(other_company)).to be_nil
     end
 
     it "picks up a new configuration once its effective_from date arrives, without altering the previous one" do
+      benefit_configurations(:monthly).destroy
+      
       original = build_base_subsidy(effective_from: Date.current)
       original.save!
 

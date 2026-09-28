@@ -1,0 +1,17 @@
+monthly:
+  type: "MonthlyBenefit"
+  limit: 20
+  max_price: 500
+  effective_from: <%= Date.current %>
+  benefit_configuration: monthly
+
+gift:
+  type: "GiftBenefit"
+  limit: 10
+  deadline_date: <%= Date.current + 5.days %>
+  benefit_configuration: gift
+
+seniority:
+  type: "GiftBenefit"
+  min_years: 2
+  benefit_configuration: seniority

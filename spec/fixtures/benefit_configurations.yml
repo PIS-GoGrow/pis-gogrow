@@ -1,0 +1,14 @@
+monthly:
+  subsidy_percentage: 50
+  company: gogrow
+  created_by: admin
+
+gift:
+  subsidy_percentage: 50
+  company: gogrow
+  created_by: admin
+
+seniority:
+  subsidy_percentage: 25
+  company: gogrow
+  created_by: admin

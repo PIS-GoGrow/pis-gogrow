@@ -36,16 +36,43 @@ class Consumer < ApplicationRecord
     accounts.current.sum :amount
   end
 
-  def benefit_available
-    benefits.current.monthly.first&.amount || 0
+  def current_monthly_benefit
+    benefits.current.monthly.first
   end
 
+  def benefit_available
+    current_monthly_benefit&.amount || 0
+  end
+
+  # Devuelve las órdenes del cliente en las que se usó un beneficio mensual
+  def subsidized_orders
+    orders.joins(benefits: { benefit_configuration: :benefit_rules })
+          .where(benefit_rules: { type: MonthlyBenefit.name })
+  end
+
+  # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes, para
+  # las que se usó un beneficio mensual
   def subsidized_meals_used_this_month
     orders
       .joins(:schedule)
       .where(schedules: { date: Date.current.all_month })
-      .where.not(status: [ :cancelled, :rejected ])
+      .where.not(status: [:rejected, :cancelled])
+      .where(id: subsidized_orders)
       .sum(:amount)
+  end
+
+  # Devuelve la cantidad de viandas compradas en órdenes confirmadas esta semana
+  def subsidized_meals_used_this_week
+    orders
+      .joins(:schedule)
+      .where(schedules: { date: Date.current.all_week })
+      .where.not(status: [:rejected, :cancelled])
+      .where(id: subsidized_orders)
+      .sum(:amount)
+  end
+
+  def remaining_subsidized_meals
+    [ benefit_available - subsidized_meals_used_this_month, 0 ].max
   end
 
   def remaining_subsidized_meals

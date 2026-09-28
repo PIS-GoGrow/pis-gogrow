@@ -22,6 +22,12 @@ class Benefit < ApplicationRecord
       )
       .distinct
   }
+
+  def self.expire_old!(date)
+    current
+      .where(due_date: ...date)
+      .update_all(status: :expired, updated_at: Time.current)
+  end
 end
 
 # == Schema Information

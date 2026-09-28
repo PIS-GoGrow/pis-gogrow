@@ -4,7 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Orders", type: :request do
-  fixtures :orders, :schedules, :menus, :providers, :consumers, :companies, :users
+  fixtures :orders, :schedules, :menus, :providers, :consumers, :companies, :users, :benefit_configurations
 
   describe "GET /orders" do
     it "redirects visitors to the sign in page" do
@@ -153,7 +153,7 @@ RSpec.describe "Orders", type: :request do
     it "creates the cart atomically with server prices, benefit and delivery address" do
       consumer, company = setup_consumer
       schedule = create_schedule
-      Benefit.create!(consumer:, amount: 5, percentage: 50, due_date: 1.month.from_now)
+      Benefit.create!(consumer:, amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
 
       expect do
         post orders_path, params: {
@@ -572,7 +572,7 @@ RSpec.describe "Orders", type: :request do
       # subirla se le devuelve: con 1 de saldo puede subsidiar 2 de las 3, y la
       # tercera se cobra a precio de lista.
       it "subsidizes only the meals left in the monthly cap" do
-        Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now)
+        Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
         allow_any_instance_of(Consumer).to receive(:remaining_subsidized_meals).and_return(1)
 
         patch order_path(order), params: update_params(quantity: 3)
@@ -582,7 +582,7 @@ RSpec.describe "Orders", type: :request do
       end
 
       it "applies the active benefit to the new quantity" do
-        Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now)
+        Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
 
         patch order_path(order), params: update_params(quantity: 2)
 

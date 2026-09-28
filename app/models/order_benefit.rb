@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class OrderBenefit < BenefitRule
+class OrderBenefit < ApplicationRecord
   belongs_to :benefit
   belongs_to :order
 end
