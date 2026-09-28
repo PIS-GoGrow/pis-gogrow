@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next"
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Button } from "@/components/ui/button"
 import AppLayout from "@/layouts/app-layout"
-import { consumerDashboard, orders as ordersRoutes } from "@/routes"
+import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardConfirmation } from "@/types"
 
 import { money } from "./formatters"
@@ -140,7 +140,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
 
         <BottomAction>
           <Button className="h-12 w-full" asChild>
-            <Link href={ordersRoutes.index()} prefetch>
+            <Link href={consumerOrders.index()} prefetch>
               Ver mis pedidos
             </Link>
           </Button>
