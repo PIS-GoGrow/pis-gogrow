@@ -16,60 +16,72 @@ RSpec.describe "Hora límite de pedidos del proveedor" do
   let(:provider_user) { users(:provider_user) }
   let(:provider) { providers(:tuviandita) }
 
-  def order_deadline_select
-    find('[role="combobox"][aria-label="Hora de cierre"]')
-  end
-
-  def add_deadline(value)
-    click_on "Agregar hora de cierre"
-    find("#order_deadline").click
-    find('[role="option"]', text: value).click
-    click_on "Guardar cambios"
-    expect(page).to have_content("¡Hora de cierre guardada!")
-    click_on "Listo"
-  end
-
-  def update_deadline(value)
-    order_deadline_select.click
-    find('[role="option"]', text: value).click
+  def saved_deadline
+    provider.reload.order_deadline&.strftime("%H:%M")
   end
 
   before do
+    provider.update!(order_deadline: nil)
     sign_in provider_user, role: :provider
-    visit provider_operational_settings_path
   end
 
-  it "saves a new deadline and keeps it after a reload and a new session" do
-    add_deadline("18:30")
+  it "reaches the closing time from the account screen" do
+    visit provider_account_path
+    click_on "Configuración operativa"
 
-    expect(order_deadline_select).to have_text("18:30")
-    expect(provider.reload.order_deadline.strftime("%H:%M")).to eq("18:30")
+    expect(page).to have_current_path(provider_operational_settings_path)
+    expect(page).to have_button("Agregar hora de cierre")
+  end
+
+  it "adds a deadline and keeps it after a reload and a new session" do
+    configure_order_deadline("18:30")
+
+    expect(saved_deadline).to eq("18:30")
 
     visit provider_operational_settings_path
-    expect(order_deadline_select).to have_text("18:30")
+    expect(page).to have_button("Hora de cierre", text: "18:30")
 
     sign_out
     sign_in provider_user, role: :provider
     visit provider_operational_settings_path
-    expect(order_deadline_select).to have_text("18:30")
+    expect(page).to have_button("Hora de cierre", text: "18:30")
   end
 
   it "replaces a deadline with a new one" do
-    add_deadline("18:30")
+    configure_order_deadline("18:30")
 
-    update_deadline("09:15")
+    configure_order_deadline("09:15")
 
-    expect(order_deadline_select).to have_text("09:15")
-    expect(provider.reload.order_deadline.strftime("%H:%M")).to eq("09:15")
+    expect(saved_deadline).to eq("09:15")
+    expect(page).to have_no_button("Agregar hora de cierre")
   end
 
-  it "does not let a consumer reach the deadline screen" do
+  it "cancels adding a deadline without saving it" do
+    visit provider_operational_settings_path
+    click_on "Agregar hora de cierre"
+    click_on "Cancelar"
+
+    expect(page).to have_button("Agregar hora de cierre")
+    expect(saved_deadline).to be_nil
+  end
+
+  it "only changes the signed-in provider's deadline" do
+    other = providers(:endulzate)
+    other.update!(order_deadline: Time.zone.parse("11:00"))
+
+    configure_order_deadline("18:30")
+
+    expect(other.reload.order_deadline.strftime("%H:%M")).to eq("11:00")
+  end
+
+  it "does not let a consumer reach the closing time screen" do
     sign_out
     sign_in users(:one), role: :consumer
 
     visit provider_operational_settings_path
 
     expect(page).to have_no_current_path(provider_operational_settings_path)
+    expect(page).to have_no_content("Hora de cierre")
   end
 
   it "sends a visitor without a session to sign in" do
