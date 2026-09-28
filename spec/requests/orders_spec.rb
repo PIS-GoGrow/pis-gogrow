@@ -586,6 +586,9 @@ RSpec.describe "Orders", type: :request do
       # subirla se le devuelve: con 1 de saldo puede subsidiar 2 de las 3, y la
       # tercera se cobra a precio de lista.
       it "subsidizes only the meals left in the monthly cap" do
+        # La fixture es para dentro de 3 días: a fin de mes cae en el siguiente y
+        # ya no cuenta para el tope de este.
+        travel_to(order.schedule.date)
         Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now)
         allow_any_instance_of(Consumer).to receive(:remaining_subsidized_meals).and_return(1)
 
