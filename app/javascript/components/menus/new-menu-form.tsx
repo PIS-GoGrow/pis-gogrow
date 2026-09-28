@@ -181,7 +181,7 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
           </div>
 
           {groups.length === 0 ? (
-            <p className="py-2 text-sm text-muted-foreground">
+            <p className="text-muted-foreground py-2 text-sm">
               ¿Tiene sabores para elegir? ¡Agrégalos!
             </p>
           ) : (
@@ -212,7 +212,7 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
                     </div>
                   </div>
                   <Separator className="my-2" />
-                  <div className="flex items-start justify-between gap-2 text-sm text-muted-foreground">
+                  <div className="text-muted-foreground flex items-start justify-between gap-2 text-sm">
                     <span>{group.options}</span>
                     <span className="shrink-0">Límite {group.limit}</span>
                   </div>
@@ -257,14 +257,12 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
               </FieldDescription>
             </Field>
             <Field>
-              <FieldLabel>
-                ¿Cuántas opciones pueden elegir a la vez?
-              </FieldLabel>
+              <FieldLabel>¿Cuántas opciones pueden elegir a la vez?</FieldLabel>
               <div>
                 <QuantityInput
                   value={Math.min(
                     draft.limit,
-                    Math.max(draftOptions.length, 1)
+                    Math.max(draftOptions.length, 1),
                   )}
                   max={Math.max(draftOptions.length, 1)}
                   onChange={(value) =>
