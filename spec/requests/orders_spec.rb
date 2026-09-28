@@ -376,6 +376,20 @@ RSpec.describe "Orders", type: :request do
       end.to change(Order, :count).by(1)
     end
 
+    it "leaves orders placed before the deadline untouched once it passes" do
+      consumer, = setup_consumer
+      schedule = create_schedule
+      schedule.menu.provider.update!(order_deadline: "10:30")
+      post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      order = Order.last
+
+      travel 1.hour
+      get orders_path
+
+      expect(order.reload).to have_attributes(status: "pending", amount: 1)
+      expect(schedule.reload.remaining_amount).to eq(4)
+    end
+
     it "does not create a partial cart when one provider already closed" do
       consumer, = setup_consumer
       open_schedule = create_schedule
