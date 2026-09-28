@@ -5,6 +5,7 @@ class MenuSerializer < ApplicationSerializer
 
   attributes :id, :name, :description, :price, :created_at, :updated_at
 
+  typelize "{ id: number; name: string; options: string[]; limit: number }[]"
   attribute :option_groups do |menu|
     menu.option_groups.map do |g|
       { id: g.id, name: g.name, options: g.options, limit: g.limit }
