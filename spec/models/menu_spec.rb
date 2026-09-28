@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe Menu, type: :model do
-  fixtures :menus, :providers, :reviews, :schedules
+  fixtures :menus, :providers, :reviews, :schedules, :menu_option_groups
 
   let(:provider) { providers(:tuviandita) }
 
@@ -46,11 +46,15 @@ RSpec.describe Menu, type: :model do
     end
   end
 
-  describe "toppings" do
-    it "defaults fillings and sauces to empty arrays" do
-      menu = described_class.new
-      expect(menu.fillings).to eq([])
-      expect(menu.sauces).to eq([])
+  describe "option_groups" do
+    it "can have multiple option groups" do
+      menu = menus(:sorrentinos)
+      expect(menu.option_groups.count).to eq(2)
+    end
+
+    it "destroys option groups when menu is deleted" do
+      menu = menus(:sorrentinos)
+      expect { menu.destroy }.to change(MenuOptionGroup, :count).by(-2)
     end
   end
 end
@@ -61,10 +65,8 @@ end
 #
 #  id          :bigint           not null, primary key
 #  description :string
-#  fillings    :string           default([]), not null, is an Array
 #  name        :string
 #  price       :decimal(10, 2)
-#  sauces      :string           default([]), not null, is an Array
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  provider_id :bigint           not null

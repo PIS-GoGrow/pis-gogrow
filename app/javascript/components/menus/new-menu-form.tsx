@@ -1,15 +1,40 @@
 import { useForm } from "@inertiajs/react"
+import { Pencil, Plus, Trash2 } from "lucide-react"
+import { useState } from "react"
 
+import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
+import { Textarea } from "@/components/ui/textarea"
 import { providerMenus as menusRoutes } from "@/routes"
+
+interface OptionGroupDraft {
+  name: string
+  options: string
+  limit: number
+}
+
+const emptyDraft: OptionGroupDraft = { name: "", options: "", limit: 1 }
 
 interface NewMenuProps {
   formSuccess: () => void
 }
 
 export default function NewMenuForm({ formSuccess }: NewMenuProps) {
+  const [groups, setGroups] = useState<OptionGroupDraft[]>([])
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [draft, setDraft] = useState<OptionGroupDraft>(emptyDraft)
+
   const {
     data,
     setData,
@@ -23,126 +48,251 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
     name: "",
     description: "",
     price: "",
-    fillings: "",
-    sauces: "",
   })
+
+  const draftOptions = draft.options
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean)
+  const canSaveDraft = draft.name.trim() !== "" && draftOptions.length > 0
+
+  function openAddGroupDialog() {
+    setEditingIndex(null)
+    setDraft(emptyDraft)
+    setGroupDialogOpen(true)
+  }
+
+  function openEditGroupDialog(index: number) {
+    setEditingIndex(index)
+    setDraft(groups[index])
+    setGroupDialogOpen(true)
+  }
+
+  function saveDraft() {
+    if (!canSaveDraft) return
+
+    const groupToSave: OptionGroupDraft = {
+      ...draft,
+      limit: Math.min(draft.limit, draftOptions.length),
+    }
+
+    setGroups((prev) =>
+      editingIndex === null
+        ? [...prev, groupToSave]
+        : prev.map((g, i) => (i === editingIndex ? groupToSave : g)),
+    )
+    setGroupDialogOpen(false)
+  }
+
+  function removeGroup(index: number) {
+    setGroups((prev) => prev.filter((_, i) => i !== index))
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    // No validamos que exista descripción porque no se requiere
-    if (data.name === "") setError("name", ["No puede estar vacío."])
-    else if (data.price === "") setError("price", ["No puede estar vacío."])
-    else {
-      transform((data) => ({
-        menu: {
-          ...data,
-          fillings: optionsFrom(data.fillings),
-          sauces: optionsFrom(data.sauces),
-        },
-      }))
-      post(menusRoutes.create().url, {
-        onSuccess: () => {
-          formSuccess()
-        },
-      })
+    if (data.name === "") {
+      setError("name", ["No puede estar vacío."])
+      return
     }
+    if (data.price === "") {
+      setError("price", ["No puede estar vacío."])
+      return
+    }
+
+    transform((formData) => ({
+      menu: {
+        ...formData,
+        option_groups_attributes: groups.map((g) => ({
+          name: g.name,
+          options: g.options
+            .split(",")
+            .map((o) => o.trim())
+            .filter(Boolean),
+          limit: g.limit,
+        })),
+      },
+    }))
+
+    post(menusRoutes.create().url, {
+      onSuccess: () => formSuccess(),
+    })
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <div className="flex flex-col gap-3">
-        <div className="grid gap-2">
-          <Field data-invalid={!!errors.name?.length}>
-            <FieldLabel htmlFor="name">Nombre</FieldLabel>
-            <Input
-              type="text"
-              name="name"
-              value={data.name}
-              onChange={(e) => {
-                setData("name", e.target.value)
-                clearErrors("name")
-              }}
-            />
-            {!!errors.name?.length && (
-              <FieldDescription>{errors.name}</FieldDescription>
-            )}
-          </Field>
-        </div>
-        <div className="grid gap-2">
-          <Field data-invalid={!!errors.description?.length}>
-            <FieldLabel htmlFor="description">Descripción</FieldLabel>
-            <Input
-              type="text"
-              name="description"
-              value={data.description}
-              onChange={(e) => setData("description", e.target.value)}
-            />
-            {!!errors.description?.length && (
-              <FieldDescription>{errors.description}</FieldDescription>
-            )}
-          </Field>
-        </div>
-        <div className="grid gap-2">
-          <Field data-invalid={!!errors.price?.length}>
-            <FieldLabel htmlFor="price">Precio</FieldLabel>
-            <Input
-              type="number"
-              min="0.01"
-              step="0.01"
-              name="price"
-              value={data.price}
-              onChange={(e) => {
-                setData("price", e.target.value)
-                clearErrors("price")
-              }}
-            />
-            {!!errors.price?.length && (
-              <FieldDescription>{errors.price}</FieldDescription>
-            )}
-          </Field>
-        </div>
-        <div className="grid gap-2">
-          <Field>
-            <FieldLabel htmlFor="fillings">Rellenos disponibles</FieldLabel>
-            <Input
-              type="text"
-              name="fillings"
-              value={data.fillings}
-              onChange={(e) => setData("fillings", e.target.value)}
-              placeholder="Ricota y nuez, Ricota y espinaca"
-            />
-            <FieldDescription>
-              Separalos con comas. Dejalo vacío si no aplica.
-            </FieldDescription>
-          </Field>
-        </div>
-        <div className="grid gap-2">
-          <Field>
-            <FieldLabel htmlFor="sauces">Salsas disponibles</FieldLabel>
-            <Input
-              type="text"
-              name="sauces"
-              value={data.sauces}
-              onChange={(e) => setData("sauces", e.target.value)}
-              placeholder="Filetto, Bolognesa"
-            />
-            <FieldDescription>
-              Separalas con comas. Dejalo vacío si no aplica.
-            </FieldDescription>
-          </Field>
+        <Field data-invalid={!!errors.name?.length}>
+          <FieldLabel htmlFor="name">Nombre</FieldLabel>
+          <Input
+            type="text"
+            name="name"
+            value={data.name}
+            onChange={(e) => {
+              setData("name", e.target.value)
+              clearErrors("name")
+            }}
+          />
+          {!!errors.name?.length && (
+            <FieldDescription>{errors.name}</FieldDescription>
+          )}
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="description">Descripción</FieldLabel>
+          <Input
+            type="text"
+            name="description"
+            value={data.description}
+            onChange={(e) => setData("description", e.target.value)}
+          />
+        </Field>
+
+        <Field data-invalid={!!errors.price?.length}>
+          <FieldLabel htmlFor="price">Precio</FieldLabel>
+          <Input
+            type="number"
+            min="0.01"
+            step="0.01"
+            name="price"
+            value={data.price}
+            onChange={(e) => {
+              setData("price", e.target.value)
+              clearErrors("price")
+            }}
+          />
+          {!!errors.price?.length && (
+            <FieldDescription>{errors.price}</FieldDescription>
+          )}
+        </Field>
+
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <FieldLabel>Opciones</FieldLabel>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={openAddGroupDialog}
+            >
+              <Plus aria-hidden="true" className="h-4 w-4" />
+              Agregar
+            </Button>
+          </div>
+
+          {groups.length === 0 ? (
+            <p className="py-2 text-sm text-muted-foreground">
+              ¿Tiene sabores para elegir? ¡Agrégalos!
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {groups.map((group, index) => (
+                <div key={index} className="rounded-md border p-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{group.name}</span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Editar ${group.name}`}
+                        onClick={() => openEditGroupDialog(index)}
+                      >
+                        <Pencil aria-hidden="true" className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Borrar ${group.name}`}
+                        onClick={() => removeGroup(index)}
+                      >
+                        <Trash2 aria-hidden="true" className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex items-start justify-between gap-2 text-sm text-muted-foreground">
+                    <span>{group.options}</span>
+                    <span className="shrink-0">Límite {group.limit}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      <Dialog open={groupDialogOpen} onOpenChange={setGroupDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Agregá opciones</DialogTitle>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-3">
+            <Field>
+              <FieldLabel htmlFor="group-name">Nombre del grupo</FieldLabel>
+              <Input
+                id="group-name"
+                type="text"
+                placeholder="Ej: Salsa"
+                value={draft.name}
+                onChange={(e) =>
+                  setDraft((prev) => ({ ...prev, name: e.target.value }))
+                }
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="group-options">Opciones</FieldLabel>
+              <Textarea
+                id="group-options"
+                placeholder="Ej: Boloñesa, Caruso, 4 quesos"
+                value={draft.options}
+                onChange={(e) =>
+                  setDraft((prev) => ({ ...prev, options: e.target.value }))
+                }
+              />
+              <FieldDescription>
+                Ingresá las opciones separadas por coma.
+              </FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel>
+                ¿Cuántas opciones pueden elegir a la vez?
+              </FieldLabel>
+              <div>
+                <QuantityInput
+                  value={Math.min(
+                    draft.limit,
+                    Math.max(draftOptions.length, 1)
+                  )}
+                  max={Math.max(draftOptions.length, 1)}
+                  onChange={(value) =>
+                    setDraft((prev) => ({ ...prev, limit: value }))
+                  }
+                />
+              </div>
+            </Field>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setGroupDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button type="button" disabled={!canSaveDraft} onClick={saveDraft}>
+              Agregar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Button type="submit" className="mt-4 w-full" disabled={processing}>
         {processing ? "Creando..." : "Crear"}
       </Button>
     </form>
   )
-}
-
-function optionsFrom(value: string) {
-  return value
-    .split(",")
-    .map((option) => option.trim())
-    .filter(Boolean)
 }

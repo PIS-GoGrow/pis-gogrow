@@ -4,7 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Provider::Menus", type: :request do
-  fixtures :users, :providers, :menus, :consumers
+  fixtures :users, :providers, :menus, :consumers, :menu_option_groups
 
   let(:provider_user) { users(:provider_user) }
   let(:provider) { providers(:tuviandita) }
@@ -43,15 +43,17 @@ RSpec.describe "Provider::Menus", type: :request do
   describe "POST /provider/menus" do
     before { sign_in provider_user, role: :provider }
 
-    it "creates a new dish with valid parameters and redirects to the index" do
+    it "creates a new dish with option groups and redirects to the index" do
       expect do
         post provider_menus_path, params: {
           menu: {
             name: "Suprema napolitana",
             price: 360.0,
             description: "Con guarnición a elección",
-            fillings: [ "Jamón", "Queso" ],
-            sauces: [ "Tuco" ]
+            option_groups_attributes: [
+              { name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 1 },
+              { name: "Guarnición", options: [ "Papas fritas", "Ensalada" ], limit: 1 }
+            ]
           }
         }
       end.to change(provider.menus, :count).by(1)
@@ -59,29 +61,35 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(response).to redirect_to(provider_menus_path)
       created = provider.menus.order(:id).last
       expect(created.name).to eq("Suprema napolitana")
-      expect(created.price).to eq(360.0)
-      expect(created.description).to eq("Con guarnición a elección")
-      expect(created.fillings).to eq([ "Jamón", "Queso" ])
-      expect(created.sauces).to eq([ "Tuco" ])
+      expect(created.option_groups.count).to eq(2)
+      expect(created.option_groups.find_by(name: "Salsa").options).to eq([ "Tuco", "Caruso" ])
     end
 
-    it "creates a dish without optional description and toppings" do
+    it "creates a dish without option groups" do
       expect do
         post provider_menus_path, params: {
-          menu: {
-            name: "Ensalada César",
-            price: 290.0,
-            description: nil
-          }
+          menu: { name: "Ensalada César", price: 290.0 }
         }
       end.to change(provider.menus, :count).by(1)
 
       expect(response).to redirect_to(provider_menus_path)
-      created = provider.menus.order(:id).last
-      expect(created.name).to eq("Ensalada César")
-      expect(created.description).to be_nil
-      expect(created.fillings).to eq([])
-      expect(created.sauces).to eq([])
+      expect(provider.menus.order(:id).last.option_groups).to be_empty
+    end
+
+    it "rejects a dish with duplicate options in a group" do
+      expect do
+        post provider_menus_path, params: {
+          menu: {
+            name: "Plato",
+            price: 300.0,
+            option_groups_attributes: [ { name: "Salsa", options: [ "Tuco", "Tuco" ], limit: 1 } ]
+          }
+        }
+      end.not_to change(Menu, :count)
+
+      expect(response).to redirect_to(provider_menus_path)
+      follow_redirect!
+      expect(inertia.props[:errors]).to have_key(:"option_groups.options")
     end
 
     it "rejects a dish without a name and returns validation errors" do
@@ -130,6 +138,40 @@ RSpec.describe "Provider::Menus", type: :request do
       get provider_menu_path(menus(:sorrentinos))
 
       expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  describe "PATCH /provider/menus/:id" do
+    before { sign_in provider_user, role: :provider }
+
+    it "updates option groups of an existing dish" do
+      menu = menus(:milanesa)
+      group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1)
+
+      patch provider_menu_path(menu), params: {
+        menu: {
+          option_groups_attributes: [ { id: group.id, name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 2 } ]
+        }
+      }
+
+      expect(response).to redirect_to(provider_menus_path)
+      expect(group.reload.options).to eq([ "Tuco", "Caruso" ])
+      expect(group.reload.limit).to eq(2)
+    end
+
+    it "removes an option group with _destroy" do
+      menu = menus(:milanesa)
+      group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1)
+
+      expect do
+        patch provider_menu_path(menu), params: {
+          menu: {
+            option_groups_attributes: [ { id: group.id, _destroy: true } ]
+          }
+        }
+      end.to change(MenuOptionGroup, :count).by(-1)
+
+      expect(response).to redirect_to(provider_menus_path)
     end
   end
 

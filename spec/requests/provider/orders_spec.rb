@@ -181,8 +181,11 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(inertia).to have_props { |props|
         order = props.deep_symbolize_keys[:order]
 
-        order[:menu_sauces] == [ "Filetto", "Bolognesa" ] &&
-          order[:menu_fillings] == [ "Ricota y nuez" ]
+        order[:menu_option_groups].pluck(:name) == [ "Salsa", "Relleno" ] &&
+          order[:menu_option_groups].pluck(:options) == [
+            [ "Filetto", "Bolognesa" ],
+            [ "Ricota y nuez", "Espinaca y queso" ]
+          ]
       }
     end
 

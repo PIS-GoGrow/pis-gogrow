@@ -19,8 +19,7 @@ type ProviderOrderDetail = {
   consumer_company: string | null;
   consumer_email: string;
   menu_description: string | null;
-  menu_sauces: Array<string>;
-  menu_fillings: Array<string>;
+  menu_option_groups: Array<{ id: number; name: string; options: Array<string>; limit: number }>;
   discounted_price: number | null;
   subsidy: number | null;
   schedule_amount: number | null;

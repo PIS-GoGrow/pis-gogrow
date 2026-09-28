@@ -62,6 +62,10 @@ es:
   activerecord:
     errors:
       models:
+        menu_option_group:
+          attributes:
+            options:
+              invalid: "no pueden tener valores vacíos ni repetidos"
         payment:
           attributes:
             receipt:
@@ -267,8 +271,6 @@ es:
         menu: "Plato"
         description: "Descripción"
         quantity: "Cantidad"
-        sauces: "Salsas"
-        fillings: "Rellenos"
         notes: "Notas del cliente"
         stock: "Cupo del día"
         stock_detail: "%{remaining} disponibles de %{total} publicados"
