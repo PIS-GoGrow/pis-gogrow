@@ -39,4 +39,8 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   attribute :paid_on do |row|
     row.paid_on&.strftime("%d/%m/%y")
   end
+
+  # Solo la cuenta de la empresa lleva factura: es la que le cobra el subsidio a GoGrow.
+  typelize invoice: [ nullable: true ]
+  has_one :latest_invoice, key: :invoice, resource: Provider::InvoiceSerializer
 end
