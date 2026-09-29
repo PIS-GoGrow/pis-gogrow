@@ -12,7 +12,7 @@ class GiftBenefit < BenefitRule
     limit
   end
 
-  def benefit_deadline
+  def benefit_deadline(consumer, date: Date.current)
     deadline_date
   end
 end

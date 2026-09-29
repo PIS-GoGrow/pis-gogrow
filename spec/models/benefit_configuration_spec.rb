@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe BenefitConfiguration, type: :model do
-  fixtures :users, :companies, :benefit_configurations
+  fixtures :users, :companies, :benefit_configurations, :consumers
 
   let(:company) { companies(:gogrow) }
   let(:admin_user) { users(:admin) }
@@ -31,7 +31,7 @@ RSpec.describe BenefitConfiguration, type: :model do
     )
   end
 
-  describe ".new_base_subsidy" do
+  describe "#new_base_subsidy" do
     it "is valid with the reference values" do
       benefit_configurations(:monthly).destroy
 
@@ -151,7 +151,7 @@ RSpec.describe BenefitConfiguration, type: :model do
     end
   end
 
-  describe ".monthly_ordered" do
+  describe "#monthly_ordered" do
     it "orders by effective_from desc" do
       older = build_base_subsidy(effective_from: 1.month.from_now.to_date, subsidy_percentage: 60)
       older.save!
@@ -160,7 +160,7 @@ RSpec.describe BenefitConfiguration, type: :model do
     end
   end
 
-  describe ".base_subsidy_for" do
+  describe "#base_subsidy_for" do
     it "returns nil when the company has no configuration yet" do
       benefit_configurations(:monthly).destroy
 
@@ -211,6 +211,83 @@ RSpec.describe BenefitConfiguration, type: :model do
       end
 
       expect(original.reload.subsidy_percentage).to eq(50)
+    end
+  end
+
+  describe "apply_to_all_consumers" do
+    before do
+      BenefitConfiguration.destroy_all
+      Benefit.destroy_all
+    end
+
+    it "applies monthly benefits to associated consumers" do
+      benefit_configuration = build_base_subsidy
+      benefit_configuration.save
+      benefit_configuration.consumers = [consumers(:one)]
+
+      expect(consumers(:one).reload.benefits.count).to eq(0)
+      benefit_configuration.apply_to_all_consumers
+      expect(consumers(:one).benefits.count).to eq(1)
+      expect(consumers(:one).benefits.first.percentage).to eq(50)
+      expect(consumers(:one).benefits.first.amount).to eq(20)
+      expect(consumers(:one).benefits.first.due_date).to eq(Date.current.end_of_month)
+    end
+
+    it "does not apply monthly benefits to not associated consumers" do
+      benefit_configuration = build_base_subsidy
+      benefit_configuration.save
+      benefit_configuration.consumers = [consumers(:one)]
+
+      expect(consumers(:other).reload.benefits.count).to eq(0)
+      benefit_configuration.apply_to_all_consumers
+      expect(consumers(:other).benefits.count).to eq(0)
+    end
+
+    it "applies gift benefits to associated consumers" do
+      benefit_configuration = build_configuration
+      benefit_configuration.benefit_rules.new(
+        type: GiftBenefit.name,
+        limit: 10,
+        effective_from: Date.current,
+        deadline_date: Date.current + 1
+      )
+      benefit_configuration.save
+      benefit_configuration.consumers = [consumers(:one)]
+
+      expect(consumers(:one).reload.benefits.count).to eq(0)
+      benefit_configuration.apply_to_all_consumers
+      expect(consumers(:one).benefits.count).to eq(1)
+      expect(consumers(:one).benefits.first.percentage).to eq(50)
+      expect(consumers(:one).benefits.first.amount).to eq(10)
+      expect(consumers(:one).benefits.first.due_date).to eq(Date.current + 1)
+    end
+
+    it "does not apply gift benefits to associated consumers when out of date" do
+      benefit_configuration = build_configuration
+      benefit_configuration.benefit_rules.new(
+        type: GiftBenefit.name,
+        limit: 10,
+        effective_from: Date.current + 1,
+        deadline_date: Date.current + 1
+      )
+      benefit_configuration.save
+      benefit_configuration.consumers = [consumers(:one)]
+
+      benefit_configuration.apply_to_all_consumers
+      expect(consumers(:one).benefits.count).to eq(0)
+
+      benefit_configuration = build_configuration
+      benefit_configuration.benefit_rules.new(
+        type: GiftBenefit.name,
+        limit: 10,
+        effective_from: Date.current - 1,
+        deadline_date: Date.current - 1
+      )
+      benefit_configuration.save
+      benefit_configuration.consumers = [consumers(:one)]
+
+      benefit_configuration.apply_to_all_consumers
+      expect(consumers(:one).benefits.count).to eq(0)
     end
   end
 end
