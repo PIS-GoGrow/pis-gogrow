@@ -6,7 +6,7 @@ class BenefitConfigurationSerializer < ApplicationSerializer
   attributes :id, :subsidy_percentage, :created_at
 
   has_many :benefit_rules, resource: BenefitRuleSerializer
-  
+
   typelize :string
   attribute :created_by_name do |benefit_configuration|
     benefit_configuration.created_by.name

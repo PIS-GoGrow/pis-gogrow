@@ -59,7 +59,7 @@ class Consumer::OrdersController < Consumer::InertiaController
           notes: item[:notes],
           discount_percentage: benefit_percentage,
           subsidized_quantity:,
-          benefits: [consumer.current_monthly_benefit],
+          benefits: [ consumer.current_monthly_benefit ],
           **delivery
         )
 

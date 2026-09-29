@@ -15,7 +15,7 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
     company = Current.user.admin.company
     effective_from = next_period_effective_from
     benefit_configuration = nil
-    
+
     # Hacer toda la acción como una transacción: No queremos borrar el beneficio que ya
     # está si no podemos crear uno nuevo.
     ActiveRecord::Base.transaction do
@@ -51,8 +51,8 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
         benefit_configuration: benefit_configuration.errors,
         benefit_rules: benefit_configuration.benefit_rules.map(&:errors)
       }
-      
-      redirect_back fallback_location: admin_benefit_configurations_path, 
+
+      redirect_back fallback_location: admin_benefit_configurations_path,
                     inertia: { errors: errors_hash }
     end
   end

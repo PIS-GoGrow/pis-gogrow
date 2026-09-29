@@ -55,13 +55,13 @@ class Consumer < ApplicationRecord
   # Si se hizo una orden pidiendo dos viandas con un beneficio, esa orden cuenta
   # por dos.
   def monthly_benefit_used_in(date_range, count_pending: false)
-    valid_status = [:rejected, :cancelled]
+    valid_status = [ :rejected, :cancelled ]
     valid_status << :pending if count_pending
 
     OrderBenefit
       .joins(order: :schedule)
       .where(schedules: { date: date_range })
-      .where.not(orders: { status:  valid_status})
+      .where.not(orders: { status:  valid_status })
       .where(benefit_id: monthly_benefits)
       .sum(:benefit_used)
   end

@@ -33,23 +33,23 @@ class BenefitConfiguration < ApplicationRecord
   end
 
   def self.new_base_subsidy(company:, created_by:, subsidy_percentage:, effective_from:, max_price:, limit:)
-      return BenefitConfiguration.new unless company
+    return BenefitConfiguration.new unless company
 
-      benefit_configuration = company.benefit_configurations.new(
-        created_by:,
-        name: "Subsidio base",
-        subsidy_percentage:
-      )
-      benefit_configuration.new_monthly_benefit(
-        effective_from:,
-        max_price:,
-        limit:
-      )
-      company.consumers.each do |consumer|
-        benefit_configuration.consumer_benefit_configurations.new consumer:, benefit_configuration:
-      end
+    benefit_configuration = company.benefit_configurations.new(
+      created_by:,
+      name: "Subsidio base",
+      subsidy_percentage:
+    )
+    benefit_configuration.new_monthly_benefit(
+      effective_from:,
+      max_price:,
+      limit:
+    )
+    company.consumers.each do |consumer|
+      benefit_configuration.consumer_benefit_configurations.new consumer:, benefit_configuration:
+    end
 
-      benefit_configuration
+    benefit_configuration
   end
 
   def new_monthly_benefit(effective_from:, max_price:, limit:)

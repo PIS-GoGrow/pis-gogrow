@@ -49,14 +49,21 @@ export default function Index({
     { title, href: adminBenefitConfigurations.index().url },
   ]
 
-  const pendingBenefitConfiguration = pending_base_subsidy && {
-    subsidy_percentage:
-      pending_base_subsidy?.subsidy_percentage ?? "",
-    max_voucher_price:
-      pending_base_subsidy?.benefit_rules[0]?.max_price ?? "",
-    monthly_voucher_limit:
-      pending_base_subsidy?.benefit_rules[0]?.limit ?? "",
-  }
+  const pendingBenefitConfiguration:
+    | {
+        subsidy_percentage: number | ""
+        max_voucher_price: number | ""
+        monthly_voucher_limit: number | ""
+      }
+    | undefined = pending_base_subsidy
+    ? {
+        subsidy_percentage: pending_base_subsidy?.subsidy_percentage ?? "",
+        max_voucher_price:
+          pending_base_subsidy?.benefit_rules[0]?.max_price ?? "",
+        monthly_voucher_limit:
+          pending_base_subsidy?.benefit_rules[0]?.limit ?? "",
+      }
+    : undefined
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>

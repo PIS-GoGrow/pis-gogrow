@@ -22,7 +22,7 @@ class MonthlyBenefit < BenefitRule
   def benefit_deadline(consumer, date: Date.current)
     date.end_of_month
   end
-  
+
   private
 
   def unique_effective_from_per_company
@@ -30,7 +30,7 @@ class MonthlyBenefit < BenefitRule
       .where(effective_from: effective_from)
       .where(benefit_configurations: { company_id: benefit_configuration.company_id })
       .where.not(id: id)
-    
+
     errors.add(:effective_from, "ya existe para esta empresa") if existing.exists?
   end
 end

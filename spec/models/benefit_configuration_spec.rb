@@ -46,43 +46,43 @@ RSpec.describe BenefitConfiguration, type: :model do
 
     it "rejects a subsidy percentage over 100" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(subsidy_percentage: 101)).not_to be_valid
     end
 
     it "rejects a negative monthly voucher limit" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(limit: -1)).not_to be_valid
     end
 
     it "rejects a max_voucher_price of zero" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(max_price: 0)).not_to be_valid
     end
 
     it "rejects a negative max_voucher_price" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(max_price: -1)).not_to be_valid
     end
 
     it "rejects a missing max_voucher_price" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(max_price: nil)).not_to be_valid
     end
 
     it "rejects an effective_from date in the past" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(effective_from: 1.day.ago.to_date)).not_to be_valid
     end
 
     it "accepts today as effective_from" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(effective_from: Date.current)).to be_valid
     end
 
@@ -98,55 +98,55 @@ RSpec.describe BenefitConfiguration, type: :model do
 
     it "accepts 0% subsidy percentage" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(subsidy_percentage: 0)).to be_valid
     end
 
     it "accepts 100% subsidy percentage" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(subsidy_percentage: 100)).to be_valid
     end
 
     it "rejects a missing subsidy percentage" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(subsidy_percentage: nil)).not_to be_valid
     end
 
     it "rejects a non-integer monthly voucher limit" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(limit: 10.5)).not_to be_valid
     end
 
     it "rejects a missing monthly voucher limit" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(limit: nil)).not_to be_valid
     end
 
     it "accepts a positive decimal max_voucher_price" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(max_price: 150.75)).to be_valid
     end
 
     it "accepts the minimum positive max_voucher_price" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(max_price: 0.01)).to be_valid
     end
 
     it "rejects a missing company" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(company: nil)).not_to be_valid
     end
 
     it "rejects a missing created_by user" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(build_base_subsidy(created_by: nil)).not_to be_valid
     end
   end
@@ -163,13 +163,13 @@ RSpec.describe BenefitConfiguration, type: :model do
   describe ".base_subsidy_for" do
     it "returns nil when the company has no configuration yet" do
       benefit_configurations(:monthly).destroy
-      
+
       expect(BenefitConfiguration.base_subsidy_for(company)).to be_nil
     end
 
     it "ignores configurations that are not effective yet" do
       benefit_configurations(:monthly).destroy
-      
+
       current = build_base_subsidy(effective_from: Date.current)
       current.save!
       build_base_subsidy(effective_from: 1.month.from_now.to_date, subsidy_percentage: 70).save!
@@ -199,7 +199,7 @@ RSpec.describe BenefitConfiguration, type: :model do
 
     it "picks up a new configuration once its effective_from date arrives, without altering the previous one" do
       benefit_configurations(:monthly).destroy
-      
+
       original = build_base_subsidy(effective_from: Date.current)
       original.save!
 
