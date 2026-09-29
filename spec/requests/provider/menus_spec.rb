@@ -153,6 +153,7 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(inertia).to render_component("provider/menus/edit")
       expect(inertia.props[:menu]["id"]).to eq(menu.id)
       expect(inertia.props[:menu]["name"]).to eq(menu.name)
+      expect(inertia.props[:menu]).to have_key("option_groups")
     end
 
     it "returns not found when attempting to edit another provider's dish" do

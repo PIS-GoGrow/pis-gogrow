@@ -33,7 +33,9 @@ class Provider::MenusController < Provider::InertiaController
     provider = Current.user.provider
     menu = provider.menus.find(params[:id])
 
-    render inertia: { menu: }
+    render inertia: {
+      menu: MenuSerializer.new(menu).serializable_hash
+    }
   end
 
   def update

@@ -16,8 +16,10 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { providerMenus as menusRoutes } from "@/routes"
+import type { Menu } from "@/types"
 
 interface OptionGroupDraft {
+  id?: number
   name: string
   options: string
   limit: number
@@ -25,12 +27,24 @@ interface OptionGroupDraft {
 
 const emptyDraft: OptionGroupDraft = { name: "", options: "", limit: 1 }
 
-interface NewMenuProps {
-  formSuccess: () => void
+interface MenuFormProps {
+  formSuccess?: () => void
+  menu?: Menu
 }
 
-export default function NewMenuForm({ formSuccess }: NewMenuProps) {
-  const [groups, setGroups] = useState<OptionGroupDraft[]>([])
+export default function MenuForm({ formSuccess, menu }: MenoFormProps) {
+  const [groups, setGroups] = useState<OptionGroupDraft[]>(() =>
+    menu
+      ? menu.option_groups.map((group) => ({
+          id: group.id,
+          name: group.name,
+          options: group.options.join(", "),
+          limit: group.limit,
+        }))
+      : [],
+  )
+
+  const [removedGroupIds, setRemovedGroupIds] = useState<number[]>([])
   const [groupDialogOpen, setGroupDialogOpen] = useState(false)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [draft, setDraft] = useState<OptionGroupDraft>(emptyDraft)
@@ -39,15 +53,16 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
     data,
     setData,
     post,
+    patch,
     processing,
     errors,
     setError,
     clearErrors,
     transform,
   } = useForm({
-    name: "",
-    description: "",
-    price: "",
+    name: menu?.name ?? "",
+    description: menu?.description ?? "",
+    price: menu?.price?.toString() ?? "",
   })
 
   const draftOptions = draft.options
@@ -95,6 +110,12 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
   }
 
   function removeGroup(index: number) {
+    const group = groups[index]
+
+    if (group.id !== undefined) {
+      setRemovedGroupIds((prev) => [...prev, group.id!])
+    }
+
     setGroups((prev) => prev.filter((_, i) => i !== index))
   }
 
@@ -114,20 +135,33 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
     transform((formData) => ({
       menu: {
         ...formData,
-        option_groups_attributes: groups.map((g) => ({
-          name: g.name,
-          options: g.options
-            .split(",")
-            .map((o) => o.trim())
-            .filter(Boolean),
-          limit: g.limit,
-        })),
+        option_groups_attributes: [
+          ...groups.map((g) => ({
+            ...(g.id !== undefined ? { id: g.id } : {}),
+            name: g.name,
+            options: g.options
+              .split(",")
+              .map((o) => o.trim())
+              .filter(Boolean),
+            limit: g.limit,
+          })),
+          ...removedGroupIds.map((id) => ({
+            id,
+            _destroy: true,
+          })),
+        ],
       },
     }))
 
-    post(menusRoutes.create().url, {
-      onSuccess: () => formSuccess(),
-    })
+    if (menu) {
+      patch(menusRoutes.update(menu.id).url, {
+        onSuccess: () => formSuccess?.(),
+      })
+    } else {
+      post(menusRoutes.create().url, {
+        onSuccess: () => formSuccess?.(),
+      })
+    }
   }
 
   return (
@@ -312,14 +346,20 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
             </Button>
 
             <Button type="button" disabled={!canSaveDraft} onClick={saveDraft}>
-              Agregar
+              {editingIndex === null ? "Agregar" : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Button type="submit" className="mt-4 w-full" disabled={processing}>
-        {processing ? "Creando..." : "Crear"}
+        {processing
+          ? menu
+            ? "Guardando..."
+            : "Creando..."
+          : menu
+            ? "Guardar cambios"
+            : "Crear"}
       </Button>
     </form>
   )
