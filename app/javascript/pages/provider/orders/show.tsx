@@ -121,16 +121,11 @@ export default function Show({ order }: ProviderOrdersShow) {
           <Row label={t("pages.provider_orders.show.quantity")}>
             {order.amount ?? empty}
           </Row>
-          {order.menu_sauces.length > 0 && (
-            <Row label={t("pages.provider_orders.show.sauces")}>
-              {order.menu_sauces.join(" · ")}
+          {order.menu_option_groups.map((group) => (
+            <Row key={group.id} label={group.name}>
+              {group.options.join(" · ")}
             </Row>
-          )}
-          {order.menu_fillings.length > 0 && (
-            <Row label={t("pages.provider_orders.show.fillings")}>
-              {order.menu_fillings.join(" · ")}
-            </Row>
-          )}
+          ))}
           <Row label={t("pages.provider_orders.show.notes")}>
             {order.notes ?? t("pages.provider_orders.show.no_notes")}
           </Row>

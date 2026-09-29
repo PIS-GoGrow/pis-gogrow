@@ -2,6 +2,7 @@
 
 class Schedule < ApplicationRecord
   belongs_to :menu
+  belongs_to :availability_changed_by, class_name: "User", optional: true
 
   MAX_AMOUNT = 2_147_483_647
 
@@ -28,14 +29,19 @@ class Schedule < ApplicationRecord
   end
 
   def available?(quantity: 1)
-    date.present? && date >= Date.current && !order_deadline_passed? && remaining_amount >= quantity
+    date.present? && date >= Date.current && !order_deadline_passed? && remaining_amount >= quantity && available
   end
 
   def order_deadline_passed?
-    deadline = menu.provider.order_deadline
-    return false unless date == Date.current && deadline.present?
+    date == Date.current && menu.provider.order_deadline_passed_today?
+  end
 
-    Time.current >= Time.zone.local(date.year, date.month, date.day, deadline.hour, deadline.min, deadline.sec)
+  # No cancela los pedidos ya hechos sobre esta publicación: Order.reserve/#modify
+  # son quienes consultan available? antes de guardar uno nuevo. Este método solo
+  # persiste el cambio y quién/cuándo lo hizo, igual que Order#cancel con
+  # cancelled_by/cancelled_at.
+  def set_availability(available:, by:)
+    update(available:, availability_changed_at: Time.current, availability_changed_by: by)
   end
 end
 
@@ -43,19 +49,24 @@ end
 #
 # Table name: schedules
 #
-#  id         :bigint           not null, primary key
-#  amount     :integer          not null
-#  date       :date             not null
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  menu_id    :bigint           not null
+#  id                         :bigint           not null, primary key
+#  amount                     :integer          not null
+#  availability_changed_at    :datetime
+#  available                  :boolean          default(TRUE), not null
+#  date                       :date             not null
+#  created_at                 :datetime         not null
+#  updated_at                 :datetime         not null
+#  availability_changed_by_id :bigint
+#  menu_id                    :bigint           not null
 #
 # Indexes
 #
-#  index_schedules_on_menu_id           (menu_id)
-#  index_schedules_on_menu_id_and_date  (menu_id,date) UNIQUE
+#  index_schedules_on_availability_changed_by_id  (availability_changed_by_id)
+#  index_schedules_on_menu_id                     (menu_id)
+#  index_schedules_on_menu_id_and_date            (menu_id,date) UNIQUE
 #
 # Foreign Keys
 #
+#  fk_rails_...  (availability_changed_by_id => users.id)
 #  fk_rails_...  (menu_id => menus.id)
 #

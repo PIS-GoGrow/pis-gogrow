@@ -78,6 +78,7 @@ class Consumer::OrdersController < Consumer::InertiaController
           subsidized_quantity:,
           **delivery
         )
+
         raise ActiveRecord::RecordInvalid, order unless order.persisted?
 
         remaining_subsidized -= subsidized_quantity
@@ -115,7 +116,9 @@ class Consumer::OrdersController < Consumer::InertiaController
     if modified
       redirect_to order_path(order), notice: t("flash.order_updated"), status: :see_other
     else
-      redirect_to order_path(order), alert: order.errors.full_messages.first || t("validations.order_not_modifiable"), status: :see_other
+      redirect_to order_path(order),
+                  alert: order.errors.full_messages.first || t("validations.order_not_modifiable"),
+                  status: :see_other
     end
   end
 
@@ -148,6 +151,11 @@ class Consumer::OrdersController < Consumer::InertiaController
 
   def order_error_reason(order)
     return :order_deadline_passed if order.errors[:schedule_id].include?(t("validations.order_deadline_passed"))
+
+    schedule = order.schedule
+
+    return :schedule_unavailable if schedule && !schedule.available
+    return :insufficient_stock if schedule && schedule.remaining_amount < order.amount.to_i
 
     :cart_unavailable
   end

@@ -44,15 +44,15 @@ class Consumer::DashboardController < Consumer::InertiaController
         id: schedule.id,
         date: schedule.date.iso8601,
         remaining: schedule.remaining_amount,
-        sold_out: schedule.remaining_amount.zero?,
+        sold_out: schedule.remaining_amount.zero? || !schedule.available,
         orders_closed: schedule.order_deadline_passed?,
         menu: {
           id: menu.id,
           name: menu.name,
           description: menu.description,
           price: menu.price.to_f,
-          fillings: menu.fillings,
-          sauces: menu.sauces,
+          fillings: [],
+          sauces: [],
           provider_name: menu.provider_name,
           home_delivery: menu.provider.home_delivery?,
           reviews: menu.reviews.first(4).map do |review|

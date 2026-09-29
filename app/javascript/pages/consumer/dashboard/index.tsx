@@ -66,6 +66,7 @@ export default function Index({
   const [filling, setFilling] = useState("")
   const [sauce, setSauce] = useState("")
   const [address, setAddress] = useState(addresses[0]?.address ?? "")
+
   const form = useForm({
     address: "",
     order_error: "",
@@ -75,11 +76,14 @@ export default function Index({
       notes: string
     }[],
   })
+
   const providers = useMemo(
     () => [...new Set(schedules.map((item) => item.menu.provider_name))],
     [schedules],
   )
+
   const visibleSchedules = schedules.filter((item) => item.date === date)
+
   const pricing = pricingFor(
     cart,
     benefit.percentage,
@@ -96,6 +100,7 @@ export default function Index({
   } = pricing
 
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
+
   function openDetail(item: Schedule) {
     setSelected(item)
     setQuantity(1)
@@ -109,10 +114,12 @@ export default function Index({
     if (!selected || selected.sold_out || selected.orders_closed) return
 
     const detail = [filling, sauce, notes].filter(Boolean).join(" · ")
+
     setCart((items) => {
       const found = items.find(
         (item) => item.id === selected.id && item.notes === detail,
       )
+
       return found
         ? items.map((item) =>
             item.id === selected.id && item.notes === detail
@@ -133,6 +140,7 @@ export default function Index({
             },
           ]
     })
+
     setView("menu")
   }
 
@@ -144,7 +152,9 @@ export default function Index({
       quantity: item.quantity,
       notes: item.notes,
     }))
+
     form.transform(() => ({ order: { address, items } }))
+
     form.post(consumerOrders.create().url, {
       preserveState: true,
       preserveScroll: false,
@@ -228,6 +238,11 @@ export default function Index({
               setView("cart")
             }}
             homeUrl={consumerDashboard.index().url}
+            error={
+              Array.isArray(form.errors.order_error)
+                ? form.errors.order_error[0]
+                : form.errors.order_error
+            }
           />
         )}
       </div>
