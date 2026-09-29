@@ -30,10 +30,7 @@ class Schedule < ApplicationRecord
   end
 
   def order_deadline_passed?
-    deadline = menu.provider.order_deadline
-    return false unless date == Date.current && deadline.present?
-
-    Time.current >= Time.zone.local(date.year, date.month, date.day, deadline.hour, deadline.min, deadline.sec)
+    date == Date.current && menu.provider.order_deadline_passed_today?
   end
 
   # No cancela los pedidos ya hechos sobre esta publicación: Order.reserve/#modify

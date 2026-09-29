@@ -112,6 +112,15 @@ es:
     menu: "Menú de navegación"
     benefit_configurations: "Beneficio general"
     change_to: "Cambiar a"
+    provider:
+      home: "Inicio"
+      dishes: "Platos"
+      menus: "Publicar menús"
+      menu: "Menú"
+      orders: "Pedidos"
+      payments: "Cobros"
+      account: "Cuenta"
+      mobile_navigation: "Navegación del proveedor"
     settings:
       profile: "Perfil"
       email: "Correo electrónico"
@@ -443,6 +452,33 @@ es:
           description: "Definí hasta qué hora aceptás pedidos para hoy."
           label: "Hora límite"
           help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
+    provider_accounts:
+      show:
+        title: "Cuenta"
+        sign_out: "Salir"
+        settings: "Configuración"
+        payment_details: "Datos de cobro"
+        payment_details_description: "Configurá dónde querés recibir tus cobros"
+        operational_settings: "Configuración operativa"
+        operational_settings_description: "Configurá horarios y días sin servicio"
+        deliveries: "Entregas"
+        deliveries_description: "Elegí dónde realizás tus entregas"
+        notifications: "Notificaciones"
+        notifications_description: "Configurá qué alertas querés recibir"
+    provider_operational_settings:
+      show:
+        title: "Configuración operativa"
+        description: "Configurá tus horarios y días sin servicio."
+        back: "Volver a Cuenta"
+        closing_time: "Hora de cierre"
+        closing_time_description: "Hasta qué hora recibís pedidos."
+        add_closing_time: "Agregar hora de cierre"
+        add_closing_time_title: "Agregar Hora de cierre"
+        save_changes: "Guardar cambios"
+        saved_title: "¡Hora de cierre guardada!"
+        saved_description: "El cambio se aplica desde ahora. Los pedidos cerrarán todos los días a las %{time}."
+        saved_description_closed_today: "El cambio se aplica desde ahora. La recepción de pedidos de hoy ya está cerrada. A partir de mañana, cerrará todos los días a las %{time}."
+        done: "Listo"
     consumer_dashboard:
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."

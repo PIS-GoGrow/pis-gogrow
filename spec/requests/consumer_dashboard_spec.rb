@@ -53,6 +53,8 @@ RSpec.describe "Consumer dashboard", type: :request do
   end
 
   it "reports the five meal weekly allowance using delivery dates" do
+    # A fin de mes la semana siguiente cae en otro mes y sale del tope mensual.
+    travel_to(Time.zone.local(2026, 9, 14, 10))
     Order.destroy_all
     Schedule.delete_all
     user = consumer_user

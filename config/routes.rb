@@ -32,6 +32,8 @@ Rails.application.routes.draw do
   end
 
   namespace :provider do
+    get "account", to: "accounts#show", as: :account
+    get "operational_settings", to: "operational_settings#show", as: :operational_settings
     resources :menus
     resources :orders, only: [ :index, :show ] do
       member do
