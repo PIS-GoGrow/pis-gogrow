@@ -180,7 +180,7 @@ RSpec.describe "Provider::Menus", type: :request do
         }
       }
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(edit_provider_menu_path(menu))
       expect(group.reload.options).to eq([ "Tuco", "Caruso" ])
       expect(group.reload.limit).to eq(2)
     end
@@ -196,7 +196,7 @@ RSpec.describe "Provider::Menus", type: :request do
         }
       }
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(edit_provider_menu_path(menu))
 
       menu.reload
       expect(menu.name).to eq("Milanesa napolitana")
@@ -250,7 +250,7 @@ RSpec.describe "Provider::Menus", type: :request do
         }
       end.to change(MenuOptionGroup, :count).by(-1)
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(edit_provider_menu_path(menu))
     end
   end
 

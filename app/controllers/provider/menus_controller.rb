@@ -42,7 +42,7 @@ class Provider::MenusController < Provider::InertiaController
     menu = Current.user.provider.menus.find(params[:id])
 
     if menu.update(menu_params)
-      redirect_to provider_menus_path
+      redirect_to edit_provider_menu_path(menu)
     else
       redirect_to edit_provider_menu_path(menu), inertia: { errors: menu.errors }
     end
