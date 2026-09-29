@@ -373,7 +373,8 @@
           "description": "Configurá tus horarios y días sin servicio.",
           "done": "Listo",
           "save_changes": "Guardar cambios",
-          "saved_description": "Los pedidos cerrarán todos los días a las %{time}.",
+          "saved_description": "El cambio se aplica desde ahora. Los pedidos cerrarán todos los días a las %{time}.",
+          "saved_description_closed_today": "El cambio se aplica desde ahora. La recepción de pedidos de hoy ya está cerrada. A partir de mañana, cerrará todos los días a las %{time}.",
           "saved_title": "¡Hora de cierre guardada!",
           "title": "Configuración operativa"
         }

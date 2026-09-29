@@ -38,6 +38,7 @@ const quarterHourOptions = Array.from({ length: 96 }, (_, index) => {
 
 export default function OperationalSettings({
   provider,
+  order_deadline_passed_today,
 }: ProviderOperationalSettingsShow) {
   const { t } = useTranslation()
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -105,6 +106,11 @@ export default function OperationalSettings({
                       preserveScroll: true,
                       onError: (errors) =>
                         setEditError(errors.order_deadline?.[0]),
+                      onSuccess: () => {
+                        setNewTime(value)
+                        setSheetStage("saved")
+                        setSheetOpen(true)
+                      },
                     },
                   )
                 }}
@@ -220,12 +226,15 @@ export default function OperationalSettings({
             </Form>
           ) : (
             <>
-              <SheetHeader className="items-center px-6 pt-8 text-center">
-                <SheetTitle className="text-xl">
+              <SheetHeader className="items-start px-6 pt-8 text-left">
+                <SheetTitle className="text-base">
                   {t(`${page}.saved_title`)}
                 </SheetTitle>
-                <SheetDescription className="text-base">
-                  {t(`${page}.saved_description`, { time: newTime })}
+                <SheetDescription>
+                  {t(
+                    `${page}.${order_deadline_passed_today ? "saved_description_closed_today" : "saved_description"}`,
+                    { time: newTime },
+                  )}
                 </SheetDescription>
               </SheetHeader>
               <SheetFooter className="px-6 pt-6 pb-6">
