@@ -79,13 +79,8 @@ class Consumer < ApplicationRecord
     [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
   end
 
-  # TODO: Cómo obtenemos el cumpleaños del empleado?
-  attr_accessor :bithday
-
-  # TODO: Cómo obtenemos el onboarding del empleado?
-  def onboarding_date
-    Date.current - 1.day
-  end
+  # TODO: Cómo obtenemos el cumpleaños/onboarding del empleado?
+  attr_accessor :bithday, :onboarding_date
 end
 
 # == Schema Information

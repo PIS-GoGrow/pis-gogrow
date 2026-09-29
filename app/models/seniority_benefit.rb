@@ -6,8 +6,10 @@ class SeniorityBenefit < BenefitRule
   validates :min_years, presence: true
 
   def applicable_to?(consumer, date: Date.current)
-    onboarding = consumer.onboarding_date
+    onboarding = consumer&.onboarding_date
 
+    return false unless onboarding
+    
     date >= onboarding + min_years.years
   end
 
