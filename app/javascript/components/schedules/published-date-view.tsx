@@ -44,7 +44,10 @@ function PublishedScheduleRow({ schedule }: { schedule: Schedule }) {
         <CardDescription>{schedule.menu.description}</CardDescription>
       </CardHeader>
 
-      <CardContent className="flex items-center justify-end">
+      <CardContent className="flex items-center justify-between">
+        <p className="text-muted-foreground text-sm font-medium">
+          Stock: {schedule.amount}
+        </p>
         <label className="flex items-center gap-2 text-sm">
           {t("pages.schedules.index.availability.toggle_label")}
           <Switch
