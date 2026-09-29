@@ -5,7 +5,7 @@ class CreateOrderBenefits < ActiveRecord::Migration[8.1]
     create_table :order_benefits do |t|
       t.references :benefit, null: false, foreign_key: true
       t.references :order, null: false, foreign_key: true
-      t.decimal :amount_applied, precision: 10, scale: 2
+      t.integer :benefit_used, null: false
 
       t.timestamps
     end

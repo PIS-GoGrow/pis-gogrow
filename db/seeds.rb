@@ -138,9 +138,9 @@ admin_user = User.create!(
 admin = Admin.create!(user: admin_user, company:)
 
 benefit_config = BenefitConfiguration.create! subsidy_percentage: 50, name: "Subsidio base", company:, created_by: admin_user
-benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: Date.current, type: "MonthlyBenefit"
+benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: Date.current, type: MonthlyBenefit.name
 
-Benefit.create!(
+benefit = Benefit.create!(
   consumer:,
   amount: 20,
   description: "Viandas mensuales",
@@ -159,7 +159,7 @@ past_schedule = Schedule.create!(
 
 upcoming_schedules = Schedule.where("date >= ?", Date.current).order(:date)
 if (first_schedule = upcoming_schedules.first)
-  Order.create!(
+  order = Order.create!(
     consumer:,
     schedule: first_schedule,
     status: :pending,
@@ -169,6 +169,7 @@ if (first_schedule = upcoming_schedules.first)
     address: company.address,
     delivery_method: :office
   )
+  order.apply_benefit! benefit, 1
 end
 
 # Una orden confirmada por proveedor genera las cuentas que aparecen en Pagos
@@ -180,7 +181,7 @@ end
                      .first
   next unless schedule
 
-  Order.create!(
+  order = Order.create!(
     consumer:,
     schedule:,
     status: :confirmed,
@@ -190,9 +191,10 @@ end
     address: company.address,
     delivery_method: :office
   )
+  order.apply_benefit! benefit, 1
 end
 
-Order.create!(
+order = Order.create!(
   consumer:,
   schedule: past_schedule,
   status: :confirmed,
@@ -202,6 +204,7 @@ Order.create!(
   address: company.address,
   delivery_method: :office
 )
+order.apply_benefit! benefit, 1
 
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 

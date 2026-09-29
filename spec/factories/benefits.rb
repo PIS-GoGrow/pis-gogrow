@@ -19,6 +19,7 @@ end
 #  description              :string
 #  due_date                 :date
 #  percentage               :integer
+#  status                   :integer
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
 #  benefit_configuration_id :bigint           not null
@@ -26,8 +27,9 @@ end
 #
 # Indexes
 #
-#  index_benefits_on_benefit_configuration_id  (benefit_configuration_id)
-#  index_benefits_on_consumer_id               (consumer_id)
+#  index_benefits_on_benefit_configuration_id        (benefit_configuration_id)
+#  index_benefits_on_consumer_id                     (consumer_id)
+#  index_benefits_unique_active_per_consumer_config  (consumer_id,benefit_configuration_id) UNIQUE WHERE (status = 0)
 #
 # Foreign Keys
 #

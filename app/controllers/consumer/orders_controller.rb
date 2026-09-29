@@ -20,8 +20,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   def create
     consumer = Current.user.consumer
     requested_items = order_params.fetch(:items)
-    benefit_percentage = active_benefit_for(consumer)&.percentage.to_i
-    remaining_subsidized = benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
+    benefit_percentage = consumer&.current_monthly_benefit&.percentage.to_i
     return reject_order(:empty_cart) if requested_items.empty?
     return reject_order(:invalid_address) unless delivery_addresses(consumer).include?(order_params[:address])
     return reject_order(:invalid_quantity) unless requested_items.all? { |item| item[:quantity].to_s.match?(/\A[1-9]\d*\z/) }
@@ -32,7 +31,7 @@ class Consumer::OrdersController < Consumer::InertiaController
       consumer.lock!
 
       remaining_subsidized =
-        benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
+        benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
       schedule_ids = requested_items.pluck(:schedule_id)
       schedules = Schedule.includes(menu: :provider).where(id: schedule_ids.uniq, date: current_week).order(:id).lock.index_by(&:id)
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
@@ -58,6 +57,7 @@ class Consumer::OrdersController < Consumer::InertiaController
           notes: item[:notes],
           discount_percentage: benefit_percentage,
           subsidized_quantity:,
+          benefits: [consumer.current_monthly_benefit],
           **delivery
         )
         raise ActiveRecord::RecordInvalid, order unless order.persisted?
@@ -84,14 +84,14 @@ class Consumer::OrdersController < Consumer::InertiaController
     delivery = consumer.delivery_for(order.provider, update_params[:address])
     return reject_update(order, :office_address_required) if delivery[:address].blank?
 
-    benefit_percentage = active_benefit_for(consumer)&.percentage.to_i
+    benefit_percentage = consumer&.current_monthly_benefit&.percentage.to_i
     modified = order.modify(
       by: Current.user,
       quantity: update_params[:quantity].to_i,
       notes: update_params[:notes],
       delivery:,
       discount_percentage: benefit_percentage,
-      remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
+      remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
     )
 
     if modified
@@ -127,10 +127,6 @@ class Consumer::OrdersController < Consumer::InertiaController
     return :order_deadline_passed if order.errors[:schedule_id].include?(t("validations.order_deadline_passed"))
 
     :cart_unavailable
-  end
-
-  def active_benefit_for(consumer)
-    consumer.benefits.where("due_date >= ?", Date.current).order(:due_date).first
   end
 
   def current_week

@@ -7,25 +7,22 @@ end
 
 # == Schema Information
 #
-# Table name: benefit_rules
+# Table name: order_benefits
 #
-#  id                       :bigint           not null, primary key
-#  deadline_date            :date
-#  deadline_days            :integer
-#  effective_from           :date
-#  limit                    :integer
-#  max_price                :decimal(10, 2)
-#  min_years                :integer
-#  type                     :string
-#  created_at               :datetime         not null
-#  updated_at               :datetime         not null
-#  benefit_configuration_id :bigint           not null
+#  id           :bigint           not null, primary key
+#  benefit_used :integer          not null
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
+#  benefit_id   :bigint           not null
+#  order_id     :bigint           not null
 #
 # Indexes
 #
-#  index_benefit_rules_on_benefit_configuration_id  (benefit_configuration_id)
+#  index_order_benefits_on_benefit_id  (benefit_id)
+#  index_order_benefits_on_order_id    (order_id)
 #
 # Foreign Keys
 #
-#  fk_rails_...  (benefit_configuration_id => benefit_configurations.id)
+#  fk_rails_...  (benefit_id => benefits.id)
+#  fk_rails_...  (order_id => orders.id)
 #

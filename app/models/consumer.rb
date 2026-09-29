@@ -36,47 +36,49 @@ class Consumer < ApplicationRecord
     accounts.current.sum :amount
   end
 
+  # Devuelve todos los beneficios mensuales del cliente
+  def monthly_benefits
+    benefits.joins(benefit_configuration: :benefit_rules)
+            .where(benefit_rules: { type: MonthlyBenefit.name })
+  end
+
   def current_monthly_benefit
     benefits.current.monthly.first
   end
 
-  def benefit_available
+  def monthly_benefit_available
     current_monthly_benefit&.amount || 0
   end
 
-  # Devuelve las órdenes del cliente en las que se usó un beneficio mensual
-  def subsidized_orders
-    orders.joins(benefits: { benefit_configuration: :benefit_rules })
-          .where(benefit_rules: { type: MonthlyBenefit.name })
+  # Devuelve la cantidad de beneficios mensuales usados en total en un determinado
+  # rango de fechas y especificando si contar órdenes pendientes.
+  # Si se hizo una orden pidiendo dos viandas con un beneficio, esa orden cuenta
+  # por dos.
+  def monthly_benefit_used_in(date_range, count_pending: false)
+    valid_status = [:rejected, :cancelled]
+    valid_status << :pending if count_pending
+
+    OrderBenefit
+      .joins(order: :schedule)
+      .where(schedules: { date: date_range })
+      .where.not(orders: { status:  valid_status})
+      .where(benefit_id: monthly_benefits)
+      .sum(:benefit_used)
   end
 
   # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes, para
   # las que se usó un beneficio mensual
-  def subsidized_meals_used_this_month
-    orders
-      .joins(:schedule)
-      .where(schedules: { date: Date.current.all_month })
-      .where.not(status: [:rejected, :cancelled])
-      .where(id: subsidized_orders)
-      .sum(:amount)
+  def monthly_benefit_used_this_month
+    monthly_benefit_used_in Date.current.all_month
   end
 
   # Devuelve la cantidad de viandas compradas en órdenes confirmadas esta semana
-  def subsidized_meals_used_this_week
-    orders
-      .joins(:schedule)
-      .where(schedules: { date: Date.current.all_week })
-      .where.not(status: [:rejected, :cancelled])
-      .where(id: subsidized_orders)
-      .sum(:amount)
+  def monthly_benefit_used_this_week
+    monthly_benefit_used_in Date.current.all_week
   end
 
-  def remaining_subsidized_meals
-    [ benefit_available - subsidized_meals_used_this_month, 0 ].max
-  end
-
-  def remaining_subsidized_meals
-    [ SUBSIDIZED_MEALS_LIMIT - subsidized_meals_used_this_month, 0 ].max
+  def remaining_monthly_benefit
+    [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
   end
 
   # TODO: Cómo obtenemos el cumpleaños del empleado?

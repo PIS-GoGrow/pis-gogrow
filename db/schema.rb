@@ -159,8 +159,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_161634) do
   end
 
   create_table "order_benefits", force: :cascade do |t|
-    t.decimal "amount_applied", precision: 10, scale: 2
     t.bigint "benefit_id", null: false
+    t.integer "benefit_used", null: false
     t.datetime "created_at", null: false
     t.bigint "order_id", null: false
     t.datetime "updated_at", null: false
