@@ -45,6 +45,10 @@ class Order < ApplicationRecord
   validates :rejection_reason, presence: true, if: :rejected?
   validates :rejection_details, presence: true, if: -> { rejected? && rejection_reason_other? }
   validate :delivery_method_allowed_by_provider, on: :create
+  # Solo al crear o cuando el empleado toca la selección: un pedido anterior a
+  # esta funcionalidad no tiene elección guardada, y el proveedor tiene que
+  # poder confirmarlo igual.
+  validate :selected_options_offered_by_menu, if: -> { new_record? || selected_options_changed? }
 
   # El corte entre ambas secciones es la fecha de entrega, no el estado: una
   # orden confirmada sigue necesitando seguimiento hasta que la vianda llega.
@@ -91,7 +95,8 @@ class Order < ApplicationRecord
     quantity: 1,
     notes: nil,
     discount_percentage: 0,
-    subsidized_quantity: nil
+    subsidized_quantity: nil,
+    selected_options: []
   )
     gross_price, discounted_price = price_breakdown(
       unit_price: schedule.menu.price,
@@ -108,7 +113,8 @@ class Order < ApplicationRecord
       address:,
       price: gross_price,
       discounted_price:,
-      delivery_method:
+      delivery_method:,
+      selected_options:
     )
 
     return order unless order.valid?
@@ -199,7 +205,7 @@ class Order < ApplicationRecord
   # unidades de esta orden, así que hay que devolvérselas antes de validar y de
   # repartir el subsidio sobre el total nuevo: sin eso, pasar de 2 a 3 se
   # rechazaría contra su propio consumo.
-  def modify(by:, quantity:, notes:, delivery:, discount_percentage: 0, remaining_subsidized: 0)
+  def modify(by:, quantity:, notes:, delivery:, discount_percentage: 0, remaining_subsidized: 0, selected_options: nil)
     with_lock do
       return false unless modifiable?
 
@@ -225,6 +231,7 @@ class Order < ApplicationRecord
           notes:,
           price:,
           discounted_price:,
+          selected_options: selected_options || self.selected_options,
           modified_at: Time.current,
           modified_by: by,
           **delivery
@@ -281,6 +288,25 @@ class Order < ApplicationRecord
 
   private
 
+  # Cada grupo que el plato ofrece tiene que venir una sola vez y con entre 1 y
+  # limit opciones, todas del propio grupo. La pantalla ya lo impide, pero esta
+  # es la única guarda real: un POST directo no pasa por ella.
+  def selected_options_offered_by_menu
+    groups = schedule&.menu&.option_groups.to_a
+    chosen = Array(selected_options).index_by { it["group_id"].to_i }
+
+    valid = chosen.size == Array(selected_options).size &&
+      chosen.keys.sort == groups.map(&:id).sort &&
+      groups.all? { chosen_within_group?(chosen[it.id]["values"], it) }
+
+    errors.add(:base, I18n.t("validations.invalid_options")) unless valid
+  end
+
+  def chosen_within_group?(values, group)
+    values.is_a?(Array) && values.any? && values.size <= group.limit &&
+      values.uniq.size == values.size && values.all? { group.options.include?(it) }
+  end
+
   # La cuenta de la empresa la comparten todos sus empleados, así que dos pedidos
   # simultáneos pueden intentar crearla a la vez. create_or_find_by! inserta en un
   # savepoint: si el índice único rechaza el segundo INSERT, busca la que creó el
@@ -321,6 +347,7 @@ end
 #  price                      :decimal(10, 2)
 #  rejection_details          :string
 #  rejection_reason           :integer
+#  selected_options           :jsonb            not null
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null

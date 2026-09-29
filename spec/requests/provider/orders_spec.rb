@@ -15,7 +15,8 @@ RSpec.describe "Provider::Orders", type: :request do
       delivery_method: :office,
       amount: 1,
       price: 320.00,
-      discounted_price: 160.00
+      discounted_price: 160.00,
+      selected_options: selection_for(schedules(:sorrentinos_today).menu)
     )
   end
 

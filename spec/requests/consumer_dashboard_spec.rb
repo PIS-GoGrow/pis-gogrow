@@ -346,13 +346,13 @@ RSpec.describe "Consumer dashboard", type: :request do
       expect(review).to include(description: nil, rating: nil)
     end
 
-    it "sends the toppings of a dish that has none as an empty list" do
+    it "sends the option groups of a dish that has none as an empty list" do
       publish(menus(:milanesa), monday)
       sign_in users(:one)
 
       get dashboard_path
 
-      expect(inertia.props[:schedules].first[:menu]).to include(fillings: [], sauces: [])
+      expect(inertia.props[:schedules].first[:menu]).to include(option_groups: [])
     end
 
     # Criterio 2: el cupo subsidiado se cuenta por mes de entrega. Lo que se fija
@@ -367,7 +367,8 @@ RSpec.describe "Consumer dashboard", type: :request do
         Order.create!(
           consumer: consumers(:one), schedule:, amount: quantity,
           price: schedule.menu.price * quantity,
-          address: consumers(:one).company.address, delivery_method: :office
+          address: consumers(:one).company.address, delivery_method: :office,
+          selected_options: selection_for(schedule.menu)
         )
       end
       sign_in users(:one)

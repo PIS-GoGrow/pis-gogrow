@@ -30,8 +30,7 @@ const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
     name: "Sorrentinos artesanales",
     description: "Pasta rellena a elección",
     price: 320,
-    fillings: [],
-    sauces: [],
+    option_groups: [],
     provider_name: "Endulzate by Noe",
     home_delivery: true,
     reviews: [],
@@ -46,10 +45,8 @@ function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
     setQuantity: vi.fn(),
     notes: "",
     setNotes: vi.fn(),
-    filling: "",
-    setFilling: vi.fn(),
-    sauce: "",
-    setSauce: vi.fn(),
+    selections: {},
+    setSelections: vi.fn(),
     percentage: 0,
     back: vi.fn(),
     add: vi.fn(),
@@ -150,11 +147,23 @@ describe("DishDetail", () => {
     expect(screen.getByText("La salsa filetto es la mejor")).toBeInTheDocument()
   })
 
-  it("requires picking a filling and a sauce before adding the dish", async () => {
+  const groups = [
+    {
+      id: 1,
+      name: "relleno",
+      options: ["Ricota y nuez", "Jamón y queso"],
+      limit: 1,
+    },
+    { id: 2, name: "salsa", options: ["Filetto", "Puerro", "Rosa"], limit: 2 },
+  ]
+
+  // IBP-022, criterio 2: no se puede pedir sin resolver lo que el plato pregunta.
+  it("requires picking an option from every group before adding the dish", async () => {
     const user = userEvent.setup()
     const add = vi.fn()
     const { rerender } = renderDetail({
-      item: schedule({ fillings: ["Ricota y nuez"], sauces: ["Filetto"] }),
+      item: schedule({ option_groups: groups }),
+      selections: { 1: ["Ricota y nuez"] },
       add,
     })
 
@@ -162,15 +171,13 @@ describe("DishDetail", () => {
 
     rerender(
       <DishDetail
-        item={schedule({ fillings: ["Ricota y nuez"], sauces: ["Filetto"] })}
+        item={schedule({ option_groups: groups })}
         quantity={1}
         setQuantity={vi.fn()}
         notes=""
         setNotes={vi.fn()}
-        filling="Ricota y nuez"
-        setFilling={vi.fn()}
-        sauce="Filetto"
-        setSauce={vi.fn()}
+        selections={{ 1: ["Ricota y nuez"], 2: ["Filetto"] }}
+        setSelections={vi.fn()}
         percentage={0}
         back={vi.fn()}
         add={add}
@@ -184,7 +191,31 @@ describe("DishDetail", () => {
     expect(add).toHaveBeenCalledOnce()
   })
 
-  it("adds a dish with no toppings to choose straight away", async () => {
+  // Criterio 1: se ofrece lo que el proveedor definió para ese plato.
+  it("shows every option of every group the dish offers", () => {
+    renderDetail({ item: schedule({ option_groups: groups }) })
+
+    expect(
+      screen.getByRole("radio", { name: "Ricota y nuez" }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("checkbox", { name: "Filetto" }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("checkbox", { name: "Rosa" })).toBeInTheDocument()
+  })
+
+  // Criterio 3: el límite del grupo se respeta en la pantalla.
+  it("blocks the options left once the group limit is reached", () => {
+    renderDetail({
+      item: schedule({ option_groups: groups }),
+      selections: { 1: ["Ricota y nuez"], 2: ["Filetto", "Puerro"] },
+    })
+
+    expect(screen.getByRole("checkbox", { name: "Rosa" })).toBeDisabled()
+    expect(screen.getByRole("checkbox", { name: "Filetto" })).toBeEnabled()
+  })
+
+  it("adds a dish with no options to choose straight away", async () => {
     const user = userEvent.setup()
     const add = vi.fn()
     renderDetail({ add })
