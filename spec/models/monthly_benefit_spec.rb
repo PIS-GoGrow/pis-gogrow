@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # spec/models/monthly_benefit_spec.rb
 require "rails_helper"
 
@@ -55,7 +56,7 @@ RSpec.describe MonthlyBenefit, type: :model do
       end
 
       it "debe ser mayor a 0" do
-        [0, -1].each do |value|
+        [ 0, -1 ].each do |value|
           rule.max_price = value
           expect(rule).not_to be_valid
           expect(rule.errors[:max_price]).to be_present
@@ -76,7 +77,7 @@ RSpec.describe MonthlyBenefit, type: :model do
       end
 
       it "debe ser mayor a 0" do
-        [0, -3].each do |value|
+        [ 0, -3 ].each do |value|
           rule.limit = value
           expect(rule).not_to be_valid
           expect(rule.errors[:limit]).to be_present
@@ -243,13 +244,13 @@ RSpec.describe MonthlyBenefit, type: :model do
           Date.new(2025, 8, 1)  => third,
           Date.new(2026, 1, 1)  => third
         }.each do |date, expected|
-          applicable = [first, second, third].select { |r| r.applicable_to?(consumer, date: date) }
-          expect(applicable).to eq([expected]), "en #{date} se esperaba #{expected.effective_from}"
+          applicable = [ first, second, third ].select { |r| r.applicable_to?(consumer, date: date) }
+          expect(applicable).to eq([ expected ]), "en #{date} se esperaba #{expected.effective_from}"
         end
       end
 
       it "ninguna es aplicable antes de la primera" do
-        [first, second, third].each do |r|
+        [ first, second, third ].each do |r|
           expect(r.applicable_to?(consumer, date: Date.new(2024, 12, 31))).to be false
         end
       end
@@ -286,7 +287,7 @@ RSpec.describe MonthlyBenefit, type: :model do
         expect(rule.applicable_to?(double("Other"), date: Date.new(2025, 6, 15))).to be true
       end
     end
-    
+
     context "sin pasar date (usa Date.current por defecto)" do
       let!(:rule) { create_rule(effective_from: Date.new(2025, 6, 15)) }
 

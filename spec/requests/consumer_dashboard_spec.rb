@@ -368,7 +368,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     # acá es esa regla; que el mismo número se aplique a los días de la semana
     # que ya caen en el mes siguiente es un defecto, y está anotado como
     # TODO(integración) en el system spec de la historia.
-    #it "counts the monthly quota by delivery date inside the current month" do
+    # it "counts the monthly quota by delivery date inside the current month" do
     #  this_month = publish(menus(:milanesa), monday, amount: 30)
     #  next_month = publish(menus(:sorrentinos), Date.new(2026, 10, 1), amount: 30)
     #  [ [ this_month, 3 ], [ next_month, 7 ] ].each do |schedule, quantity|
@@ -383,7 +383,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     #  get dashboard_path
     #
     #  expect(inertia.props[:benefit]).to include(monthly_used: 3, monthly_remaining: 17)
-    #end
+    # end
   end
 
   it "rejects a session with a different role" do

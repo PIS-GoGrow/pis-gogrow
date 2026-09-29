@@ -19,7 +19,7 @@ RSpec.describe OnboardingBenefit, type: :model do
       end
 
       it "debe ser mayor a 0" do
-        [0, -1].each do |value|
+        [ 0, -1 ].each do |value|
           rule.deadline_days = value
           rule.valid?
           expect(rule.errors[:deadline_days]).to be_present
@@ -33,7 +33,7 @@ RSpec.describe OnboardingBenefit, type: :model do
       end
 
       it "acepta los valores límite 1 y 100" do
-        [1, 100].each do |value|
+        [ 1, 100 ].each do |value|
           rule.deadline_days = value
           rule.valid?
           expect(rule.errors[:deadline_days]).to be_empty
@@ -49,7 +49,7 @@ RSpec.describe OnboardingBenefit, type: :model do
       end
 
       it "debe ser mayor a 0" do
-        [0, -1].each do |value|
+        [ 0, -1 ].each do |value|
           rule.limit = value
           rule.valid?
           expect(rule.errors[:limit]).to be_present

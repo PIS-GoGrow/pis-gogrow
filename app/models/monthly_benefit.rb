@@ -17,7 +17,7 @@ class MonthlyBenefit < BenefitRule
     return false if effective_from > date
 
     current_base_subsidy = BenefitConfiguration.base_subsidy_for(benefit_configuration.company, effective_from: date)
-    current_base_subsidy&.id.in? [benefit_configuration_id, nil]
+    current_base_subsidy&.id.in? [ benefit_configuration_id, nil ]
   end
 
   def benefit_limit
