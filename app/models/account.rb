@@ -10,6 +10,7 @@ class Account < ApplicationRecord
 
   # TODO: Habría que validar que los dependent: :destroy son esperables
   has_many :payments, dependent: :destroy
+  has_many :invoices, dependent: :destroy
   has_many :order_accounts, dependent: :destroy
 
   has_many :orders, through: :order_accounts
@@ -41,6 +42,10 @@ class Account < ApplicationRecord
   # cuenta. El id desempata dos pagos del mismo instante.
   def last_payment
     payments.max_by { |payment| [ payment.created_at, payment.id ] }
+  end
+
+  def latest_invoice
+    invoices.max_by { |invoice| [ invoice.created_at, invoice.id ] }
   end
 
   # El comprobante cubre la cuenta entera, así que el estado del cobro vive acá

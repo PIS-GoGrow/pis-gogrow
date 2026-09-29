@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_29_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -104,6 +104,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
     t.bigint "user_id", null: false
     t.index ["company_id"], name: "index_consumers_on_company_id"
     t.index ["user_id"], name: "index_consumers_on_user_id"
+  end
+
+  create_table "invoices", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.date "issued_on", null: false
+    t.integer "status", default: 0, null: false
+    t.decimal "total_amount", precision: 10, scale: 2, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_invoices_on_account_id"
   end
 
   create_table "menus", force: :cascade do |t|
@@ -417,6 +427,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
   add_foreign_key "benefits", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
+  add_foreign_key "invoices", "accounts"
   add_foreign_key "menus", "providers"
   add_foreign_key "order_accounts", "accounts"
   add_foreign_key "order_accounts", "orders"

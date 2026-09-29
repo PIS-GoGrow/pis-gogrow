@@ -7,6 +7,7 @@ class Provider < ApplicationRecord
   has_many :schedules, through: :menus
   has_many :orders, through: :schedules
   has_many :accounts, dependent: :destroy
+  has_many :invoices, through: :accounts
   has_many :schedules, through: :menus
   has_many :orders, through: :schedules
 
