@@ -7,7 +7,14 @@ vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
-    Link: ({ children, href, ...props }: { children: React.ReactNode; href: string | { url: string } }) => (
+    Link: ({
+      children,
+      href,
+      ...props
+    }: {
+      children: React.ReactNode
+      href: string | { url: string }
+    }) => (
       <a href={typeof href === "string" ? href : href.url} {...props}>
         {children}
       </a>
@@ -50,7 +57,9 @@ describe("OrderConfirmation Page", () => {
 
     expect(screen.getByText("¡Pedido recibido!")).toBeInTheDocument()
     expect(
-      screen.getByText("Te notificaremos cuando el proveedor confirme tu pedido."),
+      screen.getByText(
+        "Te notificaremos cuando el proveedor confirme tu pedido.",
+      ),
     ).toBeInTheDocument()
   })
 
