@@ -1,5 +1,5 @@
 one:
-  consumer: one
+  consumer: other
   percentage: 50
   description: "Viandas mensuales"
   amount: 20
@@ -11,3 +11,24 @@ two:
   amount: 20
   description: "Viandas mensuales"
   due_date: <%= Date.current + 5 %>
+# == Schema Information
+#
+# Table name: benefits
+#
+#  id          :bigint           not null, primary key
+#  amount      :integer
+#  description :string
+#  due_date    :date
+#  percentage  :integer
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  consumer_id :bigint           not null
+#
+# Indexes
+#
+#  index_benefits_on_consumer_id  (consumer_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (consumer_id => consumers.id)
+#
