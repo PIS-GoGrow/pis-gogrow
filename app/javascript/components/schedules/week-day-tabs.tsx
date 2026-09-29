@@ -90,12 +90,6 @@ export default function WeekDayTabs({
                 {dayNumberLabel(day.date)}
               </span>
             </div>
-
-            {day.published && (
-              <span className="text-[10px] font-medium text-green-600 data-[state=on]:text-green-400">
-                Publicado
-              </span>
-            )}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>

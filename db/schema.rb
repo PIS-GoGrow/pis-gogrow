@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_27_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -116,14 +116,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_150000) do
     t.index ["consumer_id"], name: "index_delivery_addresses_on_consumer_id"
   end
 
+  create_table "menu_option_groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "limit", default: 1, null: false
+    t.bigint "menu_id", null: false
+    t.string "name", null: false
+    t.string "options", default: [], array: true
+    t.datetime "updated_at", null: false
+    t.index ["menu_id"], name: "index_menu_option_groups_on_menu_id"
+  end
+
   create_table "menus", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "description"
-    t.string "fillings", default: [], null: false, array: true
     t.string "name"
     t.decimal "price", precision: 10, scale: 2
     t.bigint "provider_id", null: false
-    t.string "sauces", default: [], null: false, array: true
     t.datetime "updated_at", null: false
     t.index ["provider_id"], name: "index_menus_on_provider_id"
   end
@@ -199,10 +207,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_150000) do
 
   create_table "schedules", force: :cascade do |t|
     t.integer "amount", null: false
+    t.datetime "availability_changed_at"
+    t.bigint "availability_changed_by_id"
+    t.boolean "available", default: true, null: false
     t.datetime "created_at", null: false
     t.date "date", null: false
     t.bigint "menu_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["availability_changed_by_id"], name: "index_schedules_on_availability_changed_by_id"
     t.index ["menu_id", "date"], name: "index_schedules_on_menu_id_and_date", unique: true
     t.index ["menu_id"], name: "index_schedules_on_menu_id"
     t.check_constraint "amount >= 0", name: "schedules_amount_non_negative"
@@ -424,6 +436,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_150000) do
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
   add_foreign_key "delivery_addresses", "consumers"
+  add_foreign_key "menu_option_groups", "menus"
   add_foreign_key "menus", "providers"
   add_foreign_key "order_accounts", "accounts"
   add_foreign_key "order_accounts", "orders"
@@ -436,6 +449,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_150000) do
   add_foreign_key "providers", "users", on_delete: :nullify
   add_foreign_key "reviews", "menus"
   add_foreign_key "schedules", "menus"
+  add_foreign_key "schedules", "users", column: "availability_changed_by_id"
   add_foreign_key "sessions", "users"
   add_foreign_key "solid_queue_batch_executions", "solid_queue_batches", column: "batch_id", on_delete: :cascade
   add_foreign_key "solid_queue_batch_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

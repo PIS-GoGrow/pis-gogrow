@@ -187,6 +187,54 @@ RSpec.describe Schedule, type: :model do
       end
     end
   end
+
+  describe "#available?" do
+    it "is false when the provider manually turned the publication off, even with quota and a valid date" do
+      schedule = described_class.create!(date: Date.current, amount: 10, menu: menu, available: false)
+
+      expect(schedule).not_to be_available
+    end
+  end
+
+  describe "#set_availability" do
+    let(:schedule) { described_class.create!(date: Date.current, amount: 10, menu: menu) }
+    let(:by) { users(:one) }
+
+    it "updates the available flag" do
+      expect { schedule.set_availability(available: false, by:) }
+        .to change(schedule, :available).from(true).to(false)
+    end
+
+    it "stamps who and when changed it" do
+      travel_to Time.zone.local(2026, 1, 1, 12, 0, 0) do
+        schedule.set_availability(available: false, by:)
+      end
+
+      expect(schedule.availability_changed_by).to eq(by)
+      expect(schedule.availability_changed_at).to eq(Time.zone.local(2026, 1, 1, 12, 0, 0))
+    end
+  end
+
+  describe "#remaining_amount" do
+    fixtures :consumers
+    let(:schedule) { described_class.create!(date: Date.current, amount: 10, menu:) }
+    let(:consumer) { consumers(:one) }
+
+    it "subtracts pending and confirmed orders from the total amount" do
+      Order.create!(consumer:, schedule:, amount: 3, price: 300, address: "Dir", delivery_method: :office, status: :pending)
+      Order.create!(consumer:, schedule:, amount: 2, price: 200, address: "Dir", delivery_method: :office, status: :confirmed)
+      Order.create!(consumer:, schedule:, amount: 4, price: 400, address: "Dir", delivery_method: :office, status: :cancelled)
+      Order.create!(consumer:, schedule:, amount: 1, price: 100, address: "Dir", delivery_method: :office, status: :rejected, rejection_reason: :out_of_stock)
+
+      expect(schedule.remaining_amount).to eq(5)
+    end
+
+    it "returns 0 when reserved amount exceeds the schedule amount" do
+      Order.create!(consumer:, schedule:, amount: 15, price: 1500, address: "Dir", delivery_method: :office, status: :confirmed)
+
+      expect(schedule.remaining_amount).to eq(0)
+    end
+  end
 end
 
 
@@ -195,19 +243,24 @@ end
 #
 # Table name: schedules
 #
-#  id         :bigint           not null, primary key
-#  amount     :integer          not null
-#  date       :date             not null
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  menu_id    :bigint           not null
+#  id                         :bigint           not null, primary key
+#  amount                     :integer          not null
+#  availability_changed_at    :datetime
+#  available                  :boolean          default(TRUE), not null
+#  date                       :date             not null
+#  created_at                 :datetime         not null
+#  updated_at                 :datetime         not null
+#  availability_changed_by_id :bigint
+#  menu_id                    :bigint           not null
 #
 # Indexes
 #
-#  index_schedules_on_menu_id           (menu_id)
-#  index_schedules_on_menu_id_and_date  (menu_id,date) UNIQUE
+#  index_schedules_on_availability_changed_by_id  (availability_changed_by_id)
+#  index_schedules_on_menu_id                     (menu_id)
+#  index_schedules_on_menu_id_and_date            (menu_id,date) UNIQUE
 #
 # Foreign Keys
 #
+#  fk_rails_...  (availability_changed_by_id => users.id)
 #  fk_rails_...  (menu_id => menus.id)
 #

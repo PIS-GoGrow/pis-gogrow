@@ -3,17 +3,53 @@
 class Consumer < ApplicationRecord
   include SyncsUserRoles
 
-  SUBSIDIZED_MEALS_LIMIT = 20
-
   belongs_to :company
   belongs_to :user
 
   has_many :orders, dependent: :destroy
   has_many :delivery_addresses, dependent: :destroy
-  has_many :benefits
+  has_many :benefits, dependent: :destroy
   has_many :accounts, as: :owner
   has_many :user_notifications, as: :user
   has_many :notification_configurations, through: :user_notifications, source: :notification_configuration
+
+  def total_debt
+    accounts.pending.sum :amount
+  end
+
+  def current_month_spending
+    accounts.current.sum :amount
+  end
+
+  def current_benefit
+    benefits.current.monthly.first || benefits.current.order(:due_date).first
+  end
+
+  def benefit_available
+    current_benefit&.amount || 0
+  end
+
+  # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes
+  def subsidized_meals_used_this_month
+    orders
+      .joins(:schedule)
+      .where(schedules: { date: Date.current.all_month })
+      .where.not(status: [ :rejected, :cancelled ])
+      .sum(:amount)
+  end
+
+  # Devuelve la cantidad de viandas compradas en órdenes confirmadas esta semana
+  def subsidized_meals_used_this_week
+    orders
+      .joins(:schedule)
+      .where(schedules: { date: Date.current.all_week })
+      .where.not(status: [ :rejected, :cancelled ])
+      .sum(:amount)
+  end
+
+  def remaining_subsidized_meals
+    [ benefit_available - subsidized_meals_used_this_month, 0 ].max
+  end
 
   # La modalidad se deriva de la dirección elegida: la de la oficina es entrega en
   # oficina y cualquier otra es domicilio. Un proveedor que no entrega a domicilio
@@ -43,30 +79,6 @@ class Consumer < ApplicationRecord
       { id: "office", label: I18n.t("pages.orders.addresses.office"), address: company.address },
       *custom.partition { it[:address] == last_used }.flatten
     ].select { it[:address].present? }.uniq { it[:address] }
-  end
-
-  def total_debt
-    accounts.pending.sum :amount
-  end
-
-  def current_month_spending
-    accounts.current.sum :amount
-  end
-
-  def benefit_available
-    benefits.current.monthly.first&.amount || 0
-  end
-
-  def subsidized_meals_used_this_month
-    orders
-      .joins(:schedule)
-      .where(schedules: { date: Date.current.all_month })
-      .where.not(status: [ :cancelled, :rejected ])
-      .sum(:amount)
-  end
-
-  def remaining_subsidized_meals
-    [ SUBSIDIZED_MEALS_LIMIT - subsidized_meals_used_this_month, 0 ].max
   end
 end
 

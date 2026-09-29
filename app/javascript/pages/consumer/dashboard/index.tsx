@@ -12,12 +12,10 @@ import type {
   Schedule,
 } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
-import { OrderConfirmation } from "./order-confirmation"
 import { OrderError } from "./order-error"
 import { WeeklyMenu } from "./weekly-menu"
 
 type View = "menu" | "detail" | "cart" | "confirmation" | "error"
-type Confirmation = NonNullable<ConsumerDashboardIndex["order_confirmation"]>
 
 const pricingFor = (
   items: CartItem[],
@@ -61,7 +59,6 @@ export default function Index({
   schedules,
   benefit,
   addresses,
-  order_confirmation,
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")
@@ -76,9 +73,7 @@ export default function Index({
   const [unsavedAddresses, setUnsavedAddresses] = useState<
     DeliveryAddressOption[]
   >([])
-  const [confirmedOrder, setConfirmedOrder] = useState<Confirmation | null>(
-    null,
-  )
+
   const form = useForm({
     address: "",
     order_error: "",
@@ -88,11 +83,14 @@ export default function Index({
       notes: string
     }[],
   })
+
   const providers = useMemo(
     () => [...new Set(schedules.map((item) => item.menu.provider_name))],
     [schedules],
   )
+
   const visibleSchedules = schedules.filter((item) => item.date === date)
+
   const pricing = pricingFor(
     cart,
     benefit.percentage,
@@ -139,10 +137,12 @@ export default function Index({
     if (!selected || selected.sold_out || selected.orders_closed) return
 
     const detail = [filling, sauce, notes].filter(Boolean).join(" · ")
+
     setCart((items) => {
       const found = items.find(
         (item) => item.id === selected.id && item.notes === detail,
       )
+
       return found
         ? items.map((item) =>
             item.id === selected.id && item.notes === detail
@@ -163,6 +163,7 @@ export default function Index({
             },
           ]
     })
+
     setView("menu")
   }
 
@@ -174,26 +175,16 @@ export default function Index({
       quantity: item.quantity,
       notes: item.notes,
     }))
+
     form.transform(() => ({ order: { address, items } }))
+
     form.post(consumerOrders.create().url, {
       preserveState: true,
       preserveScroll: false,
-      onSuccess: (page) => {
-        const confirmation = (
-          page.props as { order_confirmation?: Confirmation }
-        ).order_confirmation
-        if (!confirmation) return
-
-        setConfirmedOrder(confirmation)
-        setCart([])
-        setView("confirmation")
-      },
+      onSuccess: () => setCart([]),
       onError: () => setView("error"),
     })
   }
-
-  const activeConfirmation = confirmedOrder ?? order_confirmation
-  const activeView = activeConfirmation ? "confirmation" : view
 
   return (
     <AppLayout
@@ -204,9 +195,9 @@ export default function Index({
           '@media (max-width: 767px) { [data-slot="sidebar-inset"] > header { display: none; } }'
         }
       </style>
-      <main className="bg-background text-foreground min-h-svh md:min-h-[calc(100svh-4rem)]">
+      <div className="bg-background text-foreground min-h-svh md:min-h-[calc(100svh-4rem)]">
         <Head title="Menú semanal" />
-        {activeView === "menu" && (
+        {view === "menu" && (
           <WeeklyMenu
             name={auth.user.name.split(" ")[0]}
             date={date}
@@ -221,7 +212,7 @@ export default function Index({
             openCart={() => setView("cart")}
           />
         )}
-        {activeView === "detail" && selected && (
+        {view === "detail" && selected && (
           <DishDetail
             item={selected}
             quantity={quantity}
@@ -238,7 +229,7 @@ export default function Index({
             monthlyRemaining={benefit.monthly_remaining}
           />
         )}
-        {activeView === "cart" && (
+        {view === "cart" && (
           <ConsumerCart
             monthlyLimit={benefit.monthly_limit}
             monthlyRemaining={benefit.monthly_remaining}
@@ -264,22 +255,21 @@ export default function Index({
             }}
           />
         )}
-        {activeView === "confirmation" && activeConfirmation && (
-          <OrderConfirmation
-            confirmation={activeConfirmation}
-            homeUrl={consumerDashboard.index().url}
-          />
-        )}
-        {activeView === "error" && (
+        {view === "error" && (
           <OrderError
             retry={() => {
               form.clearErrors()
               setView("cart")
             }}
             homeUrl={consumerDashboard.index().url}
+            error={
+              Array.isArray(form.errors.order_error)
+                ? form.errors.order_error[0]
+                : form.errors.order_error
+            }
           />
         )}
-      </main>
+      </div>
     </AppLayout>
   )
 }
