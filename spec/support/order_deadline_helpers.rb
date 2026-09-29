@@ -10,13 +10,13 @@ module OrderDeadlineHelpers
       find_by_id("order_deadline").click
       choose_time(time)
       click_on "Guardar cambios"
-      expect(page).to have_content("Los pedidos cerrarán todos los días a las #{time}.")
-      click_on "Listo"
     else
       find_button("Hora de cierre").click
       choose_time(time)
     end
 
+    expect(page).to have_content("¡Hora de cierre guardada!")
+    click_on "Listo"
     expect(page).to have_button("Hora de cierre", text: time)
   end
 
