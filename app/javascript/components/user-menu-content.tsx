@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { UserInfo } from "@/components/user-info"
 import { useMobileNavigation } from "@/hooks/use-mobile-navigation"
-import { sessions, settingsProfiles } from "@/routes"
+import { providerAccount, sessions, settingsProfiles } from "@/routes"
 import type { User } from "@/types"
 
 interface UserMenuContentProps {
@@ -72,7 +72,11 @@ export function UserMenuContent({ auth }: UserMenuContentProps) {
         <DropdownMenuItem asChild>
           <Link
             className="block w-full"
-            href={settingsProfiles.show()}
+            href={
+              session.role === "provider"
+                ? providerAccount()
+                : settingsProfiles.show()
+            }
             as="button"
             prefetch
             onClick={cleanup}

@@ -17,6 +17,15 @@ class Provider < ApplicationRecord
   def allows_delivery_method?(method)
     delivery_methods.include?(method.to_s)
   end
+
+  def order_deadline_passed_today?
+    deadline = order_deadline
+    return false unless deadline
+
+    today = Date.current
+    deadline_at = Time.zone.local(today.year, today.month, today.day, deadline.hour, deadline.min, deadline.sec)
+    Time.current >= deadline_at
+  end
 end
 
 # == Schema Information

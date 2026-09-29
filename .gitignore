@@ -43,3 +43,6 @@ node_modules
 
 # Claude Code worktrees (parallel session isolation)
 /.claude/worktrees/
+
+# Cobertura de SimpleCov
+/coverage/

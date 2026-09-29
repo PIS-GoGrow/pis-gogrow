@@ -6,7 +6,9 @@ import {
   CreditCard,
   LayoutGrid,
   Package,
+  Percent,
   Utensils,
+  Wallet,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -22,10 +24,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
+  adminBenefitConfigurations,
   adminDashboard,
   consumerAccounts,
   consumerDashboard,
-  orders,
+  consumerOrders,
+  providerCollections,
   providerDashboard,
   providerMenus,
   providerOrders,
@@ -61,12 +65,22 @@ export function AppSidebar() {
         href: providerOrders.index().url,
         icon: Package,
       },
+      {
+        title: t("nav.collections"),
+        href: providerCollections.index().url,
+        icon: Wallet,
+      },
     ],
     admin: [
       {
         title: t("nav.dashboard"),
         href: adminDashboard.index().url,
         icon: LayoutGrid,
+      },
+      {
+        title: t("nav.benefit_configurations"),
+        href: adminBenefitConfigurations.index().url,
+        icon: Percent,
       },
     ],
     consumer: [
@@ -77,7 +91,7 @@ export function AppSidebar() {
       },
       {
         title: t("nav.orders"),
-        href: orders.index().url,
+        href: consumerOrders.index().url,
         icon: ClipboardList,
       },
       {
@@ -94,7 +108,7 @@ export function AppSidebar() {
     <Sidebar
       collapsible="icon"
       variant="inset"
-      hideOnMobile={role === "consumer"}
+      hideOnMobile={role === "consumer" || role === "provider"}
     >
       <SidebarHeader>
         <SidebarMenu>

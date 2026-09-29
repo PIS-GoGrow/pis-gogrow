@@ -2,6 +2,9 @@
 
 class Schedule < ApplicationRecord
   belongs_to :menu
+  belongs_to :availability_changed_by, class_name: "User", optional: true
+
+  MAX_AMOUNT = 2_147_483_647
 
   has_many :orders, dependent: :nullify
 
@@ -9,7 +12,8 @@ class Schedule < ApplicationRecord
   validates :amount,
             numericality: {
               only_integer: true,
-              greater_than_or_equal_to: 0
+              greater_than_or_equal_to: 0,
+              less_than_or_equal_to: MAX_AMOUNT
             }
 
   validates :menu_id, uniqueness: { scope: :date }
@@ -22,10 +26,19 @@ class Schedule < ApplicationRecord
   end
 
   def available?(quantity: 1)
-    # && significa "y": deben cumplirse las tres condiciones para poder reservar.
-    # Date.current usa la fecha de la zona horaria configurada en Rails.
-    # Esta regla todavía no considera el horario límite del proveedor.
-    date.present? && date >= Date.current && remaining_amount >= quantity
+    date.present? && date >= Date.current && !order_deadline_passed? && remaining_amount >= quantity && available
+  end
+
+  def order_deadline_passed?
+    date == Date.current && menu.provider.order_deadline_passed_today?
+  end
+
+  # No cancela los pedidos ya hechos sobre esta publicación: Order.reserve/#modify
+  # son quienes consultan available? antes de guardar uno nuevo. Este método solo
+  # persiste el cambio y quién/cuándo lo hizo, igual que Order#cancel con
+  # cancelled_by/cancelled_at.
+  def set_availability(available:, by:)
+    update(available:, availability_changed_at: Time.current, availability_changed_by: by)
   end
 end
 
@@ -33,19 +46,24 @@ end
 #
 # Table name: schedules
 #
-#  id         :bigint           not null, primary key
-#  amount     :integer          not null
-#  date       :date             not null
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  menu_id    :bigint           not null
+#  id                         :bigint           not null, primary key
+#  amount                     :integer          not null
+#  availability_changed_at    :datetime
+#  available                  :boolean          default(TRUE), not null
+#  date                       :date             not null
+#  created_at                 :datetime         not null
+#  updated_at                 :datetime         not null
+#  availability_changed_by_id :bigint
+#  menu_id                    :bigint           not null
 #
 # Indexes
 #
-#  index_schedules_on_menu_id           (menu_id)
-#  index_schedules_on_menu_id_and_date  (menu_id,date) UNIQUE
+#  index_schedules_on_availability_changed_by_id  (availability_changed_by_id)
+#  index_schedules_on_menu_id                     (menu_id)
+#  index_schedules_on_menu_id_and_date            (menu_id,date) UNIQUE
 #
 # Foreign Keys
 #
+#  fk_rails_...  (availability_changed_by_id => users.id)
 #  fk_rails_...  (menu_id => menus.id)
 #

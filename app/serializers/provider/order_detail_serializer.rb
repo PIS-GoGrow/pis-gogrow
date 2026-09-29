@@ -56,4 +56,14 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
   attribute :remaining_amount do |order|
     order.schedule&.remaining_amount
   end
+
+  typelize :string, nullable: true
+  attribute :rejection_reason do |order|
+    order.rejection_reason
+  end
+
+  typelize :string, nullable: true
+  attribute :rejection_details do |order|
+    order.rejection_details
+  end
 end

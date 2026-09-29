@@ -81,6 +81,16 @@ class SchedulesController < Provider::InertiaController
     }
   end
 
+  def availability
+    schedule = Current.user.provider.schedules.find(params[:id])
+
+    if schedule.set_availability(available: params.expect(:available), by: Current.user)
+      redirect_to schedules_path(week_start: schedule.date.beginning_of_week(:monday).to_s)
+    else
+      redirect_to schedules_path, inertia: { errors: schedule.errors }
+    end
+  end
+
   def create
     provider = Current.user.provider
     date = Date.iso8601(params.require(:date))
@@ -106,7 +116,7 @@ class SchedulesController < Provider::InertiaController
 
     unless valid_initial_stock?(items)
       redirect_to schedules_path,
-                  inertia: { errors: { amount: [ "El stock inicial debe ser mayor a 0" ] } }
+                  inertia: { errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] } }
       return
     end
 
@@ -183,7 +193,8 @@ class SchedulesController < Provider::InertiaController
     end
 
     redirect_to schedules_path(week_start: date.beginning_of_week(:monday).to_s),
-                notice: "Menú actualizado con éxito."
+                notice: "Menú actualizado con éxito.",
+                status: :see_other
   end
 
   private
@@ -191,7 +202,9 @@ class SchedulesController < Provider::InertiaController
   def valid_initial_stock?(items)
     items.all? do |item|
       amount = Integer(item.require(:amount), exception: false)
-      amount.present? && amount.positive?
+      amount.present? &&
+        amount.positive? &&
+        amount <= Schedule::MAX_AMOUNT
     end
   end
 

@@ -14,13 +14,14 @@ RSpec.describe "Edición de menú publicado por el proveedor", type: :system do
       sign_in provider_user, role: :provider
     end
 
+
     it "permite editar el stock de un plato en una fecha publicada futura y persistir los cambios" do
       target_date = Date.current.next_week(:monday) + 1.day
       schedule = milanesa.schedules.create!(date: target_date, amount: 10)
 
       visit schedules_path(week_start: target_date.beginning_of_week(:monday).to_s)
 
-      find("button", text: target_date.strftime("%d")).click
+      find("button", text: /\b#{target_date.day}\b/).click
 
       expect(page).to have_button("Editar menú")
       click_button "Editar menú"
@@ -42,7 +43,7 @@ RSpec.describe "Edición de menú publicado por el proveedor", type: :system do
 
       visit schedules_path(week_start: (Date.current.beginning_of_week(:monday) - 1.week).to_s)
 
-      find("button", text: past_date.strftime("%d")).click
+      find("button", text: /\b#{past_date.day}\b/).click
 
       expect(page).to have_no_button("Editar menú")
     end
@@ -70,12 +71,12 @@ RSpec.describe "Edición de menú publicado por el proveedor", type: :system do
       second_dish.schedules.create!(date: target_date, amount: 10)
 
       visit schedules_path(week_start: target_date.beginning_of_week(:monday).to_s)
-      find("button", text: target_date.strftime("%d")).click
+      find("button", text: /\b#{target_date.day}\b/).click
 
       click_button "Editar menú"
 
       # Deselecciona el plato que tenía pedidos y guarda
-      uncheck "menu-#{milanesa.id}"
+      find("p", text: milanesa.name).click
       click_button "Publicar menú"
 
       expect(page).to have_content("Menú actualizado con éxito.")

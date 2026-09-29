@@ -503,6 +503,12 @@ RSpec.describe "Schedules", type: :request do
           ]
         }
       end.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
+      )
     end
 
     it "does not publish a menu with negative initial stock" do
@@ -527,8 +533,138 @@ RSpec.describe "Schedules", type: :request do
           ]
         }
       end.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
+      )
     end
 
+    it "does not publish a menu with stock greater than the integer limit" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+
+      menu = provider.menus.create!(
+        name: "Milanesa",
+        description: "Milanesa con puré",
+        price: 350
+      )
+
+      sign_in_with_role(user, role: :provider)
+
+      date = next_publishable_date
+
+      expect do
+        post schedules_path, params: {
+          date: date.to_s,
+          items: [
+            { menu_id: menu.id, amount: Schedule::MAX_AMOUNT + 1 }
+          ]
+        }
+      end.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
+      )
+    end
+
+    it "publishes a menu with stock equal to the maximum allowed" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+
+      menu = provider.menus.create!(
+        name: "Milanesa",
+        description: "Milanesa con puré",
+        price: 350
+      )
+
+      sign_in_with_role(user, role: :provider)
+
+      date = next_publishable_date
+
+      expect do
+        post schedules_path, params: {
+          date: date.to_s,
+          items: [
+            { menu_id: menu.id, amount: Schedule::MAX_AMOUNT }
+          ]
+        }
+      end.to change(Schedule, :count).by(1)
+
+      schedule = Schedule.find_by!(menu: menu, date: date)
+      expect(schedule.amount).to eq(Schedule::MAX_AMOUNT)
+      expect(response).to redirect_to(schedules_path(week_start: date.beginning_of_week(:monday).to_s))
+    end
+
+    it "does not publish any menu when at least one item exceeds the maximum allowed stock" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+
+      first_menu = provider.menus.create!(
+        name: "Milanesa",
+        description: "Milanesa con puré",
+        price: 350
+      )
+
+      second_menu = provider.menus.create!(
+        name: "Ravioles",
+        description: "Ravioles con salsa",
+        price: 400
+      )
+
+      sign_in_with_role(user, role: :provider)
+
+      date = next_publishable_date
+
+      expect do
+        post schedules_path, params: {
+          date: date.to_s,
+          items: [
+            { menu_id: first_menu.id, amount: 20 },
+            { menu_id: second_menu.id, amount: Schedule::MAX_AMOUNT + 1 }
+          ]
+        }
+      end.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
+      )
+    end
+
+    it "does not publish a menu with non-integer stock" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+
+      menu = provider.menus.create!(
+        name: "Milanesa",
+        description: "Milanesa con puré",
+        price: 350
+      )
+
+      sign_in_with_role(user, role: :provider)
+
+      date = next_publishable_date
+
+      expect do
+        post schedules_path, params: {
+          date: date.to_s,
+          items: [
+            { menu_id: menu.id, amount: "10.5" }
+          ]
+        }
+      end.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] }
+      )
+    end
     it "does not publish the same menu twice for the same date" do
       user = users(:one)
       provider = Provider.create!(user: user)
@@ -1051,6 +1187,58 @@ RSpec.describe "Schedules", type: :request do
 
         expect(response).to have_http_status(:bad_request)
       end
+    end
+  end
+
+  describe "PATCH /schedules/:id/availability" do
+    it "marks the publication as sold out and records who and when" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+      menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
+      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10)
+
+      sign_in_with_role(user, role: :provider)
+
+      freeze_time do
+        patch availability_schedule_path(schedule), params: { available: false }
+
+        expect(schedule.reload).to have_attributes(
+          available: false,
+          availability_changed_by: user,
+          availability_changed_at: Time.current
+        )
+      end
+
+      expect(response).to redirect_to(schedules_path(week_start: schedule.date.beginning_of_week(:monday).to_s))
+    end
+
+    it "marks the publication as available again" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+      menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
+      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10, available: false)
+
+      sign_in_with_role(user, role: :provider)
+
+      patch availability_schedule_path(schedule), params: { available: true }
+
+      expect(schedule.reload.available).to be(true)
+    end
+
+    it "returns not found when attempting to toggle another provider's publication" do
+      owner = users(:one)
+      provider = Provider.create!(user: owner)
+      menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
+      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10)
+
+      other = users(:two)
+      Provider.create!(user: other)
+      sign_in_with_role(other, role: :provider)
+
+      patch availability_schedule_path(schedule), params: { available: false }
+
+      expect(response).to have_http_status(:not_found)
+      expect(schedule.reload.available).to be(true)
     end
   end
 end

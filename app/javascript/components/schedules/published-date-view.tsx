@@ -1,38 +1,72 @@
-import { UtensilsCrossed } from "lucide-react"
+import { router } from "@inertiajs/react"
+import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
-import { Badge } from "@/components/ui/badge"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Switch } from "@/components/ui/switch"
+import { schedules as schedulesRoutes } from "@/routes"
 import type { Schedule } from "@/types"
 
 interface PublishedDayViewProps {
   schedules: Schedule[]
 }
 
+function PublishedScheduleRow({ schedule }: { schedule: Schedule }) {
+  const { t } = useTranslation()
+  const [processing, setProcessing] = useState(false)
+
+  function handleAvailabilityChange(available: boolean) {
+    setProcessing(true)
+
+    router.patch(
+      schedulesRoutes.availability(schedule.id).url,
+      { available },
+      {
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => setProcessing(false),
+      },
+    )
+  }
+
+  return (
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>
+          {schedule.menu.name} | {schedule.menu.price}$
+        </CardTitle>
+        <CardDescription>{schedule.menu.description}</CardDescription>
+      </CardHeader>
+
+      <CardContent className="flex items-center justify-between">
+        <p className="text-muted-foreground text-sm font-medium">
+          Stock: {schedule.amount}
+        </p>
+        <label className="flex items-center gap-2 text-sm">
+          {t("pages.schedules.index.availability.toggle_label")}
+          <Switch
+            checked={schedule.available}
+            disabled={processing}
+            onCheckedChange={handleAvailabilityChange}
+            className="data-[state=checked]:bg-green-600 dark:data-[state=checked]:bg-green-600"
+          />
+        </label>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function PublishedDayView({ schedules }: PublishedDayViewProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {schedules.map((schedule) => (
-        <div
-          key={schedule.id}
-          className="flex items-center gap-3 rounded-xl border p-4"
-        >
-          <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-md">
-            <UtensilsCrossed className="text-muted-foreground size-5" />
-          </div>
-
-          <div className="flex-1">
-            <Badge
-              variant="secondary"
-              className="mb-1 bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400"
-            >
-              Publicado
-            </Badge>
-            <p className="font-medium">{schedule.menu.name}</p>
-          </div>
-
-          <p className="text-muted-foreground text-sm font-medium">
-            Stock: {schedule.amount}
-          </p>
-        </div>
+        <PublishedScheduleRow key={schedule.id} schedule={schedule} />
       ))}
     </div>
   )

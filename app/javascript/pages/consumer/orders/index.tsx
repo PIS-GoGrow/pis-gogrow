@@ -12,8 +12,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
-import { orders as ordersRoutes } from "@/routes"
-import type { BreadcrumbItem, Order, OrdersIndex } from "@/types"
+import { consumerOrders } from "@/routes"
+import type { BreadcrumbItem, ConsumerOrdersIndex, Order } from "@/types"
 
 // Las órdenes llegan ya ordenadas por fecha, así que alcanza con agrupar por
 // primera aparición para que los encabezados queden en el orden del servidor.
@@ -31,14 +31,17 @@ const groupByDate = (orders: Order[]) =>
     return groups
   }, [])
 
-export default function Index({ upcoming_orders, past_orders }: OrdersIndex) {
+export default function Index({
+  upcoming_orders,
+  past_orders,
+}: ConsumerOrdersIndex) {
   const { t } = useTranslation()
   const { formatDeliveryDate } = useFormatters()
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: t("pages.orders.index.title"),
-      href: ordersRoutes.index().url,
+      href: consumerOrders.index().url,
     },
   ]
 
