@@ -80,6 +80,19 @@ RSpec.describe "Provider::Invoices", type: :request do
       expect(inertia.props[:errors]).to include("file" => [ I18n.t("activerecord.errors.models.invoice.attributes.file.invalid_content_type") ])
     end
 
+    it "answers with the already invoiced error when a simultaneous upload wins the race" do
+      create_invoice
+      allow_any_instance_of(Invoice).to receive(:period_accepts_a_new_invoice)
+      sign_in provider_user, role: :provider
+
+      expect {
+        post provider_invoices_path, params: invoice_params, headers: collections_headers
+      }.not_to change(Invoice, :count)
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("base" => [ I18n.t("activerecord.errors.models.invoice.attributes.base.already_invoiced") ])
+    end
+
     it "does not find the period of another provider" do
       sign_in provider_user, role: :provider
 

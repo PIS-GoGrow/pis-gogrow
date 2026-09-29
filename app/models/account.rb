@@ -19,6 +19,7 @@ class Account < ApplicationRecord
   before_create :correct_month
 
   scope :current, -> { where(month: Date.current.beginning_of_month) }
+  scope :companies, -> { where(owner_type: "Company") }
 
   # Los dos scopes de abajo asumen que Payment.account_id no es NULL
   # TODO: Hay que cambiar según qué estado sea el que se elija para pagos
@@ -29,6 +30,10 @@ class Account < ApplicationRecord
   scope :history, -> {
     where(id: Payment.where(status: 0).select(:account_id))
   }
+
+  def company?
+    owner_type == "Company"
+  end
 
   def current?
     month == Date.current.beginning_of_month

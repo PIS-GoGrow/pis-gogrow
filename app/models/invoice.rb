@@ -3,6 +3,9 @@
 # Factura que el proveedor le emite a GoGrow por el subsidio de un período, que
 # es la cuenta de la empresa con ese proveedor para ese mes.
 class Invoice < ApplicationRecord
+  ALLOWED_CONTENT_TYPES = %w[application/pdf image/jpeg image/png].freeze
+  MAX_FILE_SIZE = 10.megabytes
+
   enum :status, { pending: 0, approved: 1, rejected: 2 }, default: :pending
 
   belongs_to :account
@@ -17,6 +20,8 @@ class Invoice < ApplicationRecord
   validate :file_has_allowed_type
   validate :file_is_within_size_limit
 
+  scope :active, -> { where(status: [ :pending, :approved ]) }
+
   # Mientras nadie la revisó, el proveedor puede sacarla y subir otra.
   def removable?
     pending?
@@ -25,13 +30,13 @@ class Invoice < ApplicationRecord
   private
 
   def account_belongs_to_a_company
-    errors.add(:account, :not_company) if account && account.owner_type != "Company"
+    errors.add(:account, :not_company) if account && !account.company?
   end
 
   # Solo una rechazada deja lugar a otra: si no, el período quedaría con dos
   # facturas vigentes para el mismo cobro.
   def period_accepts_a_new_invoice
-    return unless account&.invoices&.where(status: [ :pending, :approved ])&.exists?
+    return if account.nil? || account.invoices.active.none?
 
     errors.add(:base, :already_invoiced)
   end
@@ -42,14 +47,14 @@ class Invoice < ApplicationRecord
 
   def file_has_allowed_type
     return unless file.attached?
-    return if file.blob.content_type.in?([ "application/pdf", "image/jpeg", "image/png" ])
+    return if file.blob.content_type.in?(ALLOWED_CONTENT_TYPES)
 
     errors.add(:file, :invalid_content_type)
   end
 
   def file_is_within_size_limit
     return unless file.attached?
-    return unless file.blob.byte_size > 10.megabytes
+    return unless file.blob.byte_size > MAX_FILE_SIZE
 
     errors.add(:file, :too_large)
   end
@@ -69,7 +74,8 @@ end
 #
 # Indexes
 #
-#  index_invoices_on_account_id  (account_id)
+#  index_invoices_on_account_id         (account_id)
+#  index_invoices_on_account_id_active  (account_id) UNIQUE WHERE (status = ANY (ARRAY[0, 1]))
 #
 # Foreign Keys
 #

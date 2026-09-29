@@ -1,14 +1,9 @@
 # frozen_string_literal: true
 
 class Admin::InvoicesController < Admin::InertiaController
-  def file
-    invoice = Invoice.find(params[:id])
+  include InvoiceFile
 
-    send_data(
-      invoice.file.download,
-      filename: invoice.file.filename.to_s,
-      type: invoice.file.content_type,
-      disposition: params[:download].present? ? "attachment" : "inline"
-    )
+  def file
+    send_invoice_file(Invoice.find(params[:id]))
   end
 end

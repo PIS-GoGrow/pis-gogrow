@@ -107,6 +107,12 @@ RSpec.describe Invoice, type: :model do
 
       expect(invoice.reload).to be_valid
     end
+
+    it "is rejected by the database even when the validation is skipped" do
+      build_invoice.save!
+
+      expect { build_invoice.save(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
   end
 
   it "can only be removed while pending" do
@@ -130,7 +136,8 @@ end
 #
 # Indexes
 #
-#  index_invoices_on_account_id  (account_id)
+#  index_invoices_on_account_id         (account_id)
+#  index_invoices_on_account_id_active  (account_id) UNIQUE WHERE (status = ANY (ARRAY[0, 1]))
 #
 # Foreign Keys
 #

@@ -10,5 +10,7 @@ class CreateInvoices < ActiveRecord::Migration[8.1]
 
       t.timestamps
     end
+
+    add_index :invoices, :account_id, unique: true, where: "status IN (0, 1)", name: "index_invoices_on_account_id_active"
   end
 end

@@ -114,6 +114,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_180000) do
     t.decimal "total_amount", precision: 10, scale: 2, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_invoices_on_account_id"
+    t.index ["account_id"], name: "index_invoices_on_account_id_active", unique: true, where: "(status = ANY (ARRAY[0, 1]))"
   end
 
   create_table "menu_option_groups", force: :cascade do |t|
