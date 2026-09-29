@@ -9,7 +9,7 @@ class SeniorityBenefit < BenefitRule
     onboarding = consumer&.onboarding_date
 
     return false unless onboarding
-    
+
     date >= onboarding + min_years.years
   end
 

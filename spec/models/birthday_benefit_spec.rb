@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # spec/models/birthday_benefit_spec.rb
 require "rails_helper"
 

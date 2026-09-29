@@ -223,7 +223,7 @@ RSpec.describe BenefitConfiguration, type: :model do
     it "applies monthly benefits to associated consumers" do
       benefit_configuration = build_base_subsidy
       benefit_configuration.save
-      benefit_configuration.consumers = [consumers(:one)]
+      benefit_configuration.consumers = [ consumers(:one) ]
 
       expect(consumers(:one).reload.benefits.count).to eq(0)
       benefit_configuration.apply_to_all_consumers
@@ -236,7 +236,7 @@ RSpec.describe BenefitConfiguration, type: :model do
     it "does not apply monthly benefits to not associated consumers" do
       benefit_configuration = build_base_subsidy
       benefit_configuration.save
-      benefit_configuration.consumers = [consumers(:one)]
+      benefit_configuration.consumers = [ consumers(:one) ]
 
       expect(consumers(:other).reload.benefits.count).to eq(0)
       benefit_configuration.apply_to_all_consumers
@@ -252,7 +252,7 @@ RSpec.describe BenefitConfiguration, type: :model do
         deadline_date: Date.current + 1
       )
       benefit_configuration.save
-      benefit_configuration.consumers = [consumers(:one)]
+      benefit_configuration.consumers = [ consumers(:one) ]
 
       expect(consumers(:one).reload.benefits.count).to eq(0)
       benefit_configuration.apply_to_all_consumers
@@ -271,7 +271,7 @@ RSpec.describe BenefitConfiguration, type: :model do
         deadline_date: Date.current + 1
       )
       benefit_configuration.save
-      benefit_configuration.consumers = [consumers(:one)]
+      benefit_configuration.consumers = [ consumers(:one) ]
 
       benefit_configuration.apply_to_all_consumers
       expect(consumers(:one).benefits.count).to eq(0)
@@ -284,7 +284,7 @@ RSpec.describe BenefitConfiguration, type: :model do
         deadline_date: Date.current - 1
       )
       benefit_configuration.save
-      benefit_configuration.consumers = [consumers(:one)]
+      benefit_configuration.consumers = [ consumers(:one) ]
 
       benefit_configuration.apply_to_all_consumers
       expect(consumers(:one).benefits.count).to eq(0)

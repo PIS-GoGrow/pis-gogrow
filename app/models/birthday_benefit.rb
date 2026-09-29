@@ -6,7 +6,7 @@ class BirthdayBenefit < BenefitRule
   validates :deadline_days, presence: true,
     numericality: { greater_than: 0, less_than_or_equal_to: 100 }
   validates :limit, presence: true, numericality: { greater_than: 0 }
-  
+
   def applicable_to?(consumer, date: Date.current)
     birthday = consumer&.birthday
     return false unless birthday
@@ -14,7 +14,7 @@ class BirthdayBenefit < BenefitRule
     # Probamos con el cumpleaños del año de `date` y con el del año anterior:
     # la ventana puede haber arrancado en diciembre y seguir en enero
     # (ej: cumpleaños el 31/12 y hoy es 01/01).
-    [date.year - 1, date.year].any? do |year|
+    [ date.year - 1, date.year ].any? do |year|
       next false if year < birthday.year
 
       # `advance` resuelve el 29/02 en años no bisiestos como 28/02.

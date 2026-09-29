@@ -43,7 +43,7 @@ class BenefitRule < ApplicationRecord
 
   def monthly_benefit_exclusivity
     return true unless benefit_configuration
-    
+
     siblings = benefit_configuration.benefit_rules.where.not(id: id)
 
     if type == "MonthlyBenefit" && siblings.exists?
