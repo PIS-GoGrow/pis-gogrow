@@ -63,9 +63,7 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
     new Set(normalizedDraftOptions).size !== normalizedDraftOptions.length
 
   const canSaveDraft =
-    draft.name.trim() !== "" &&
-    draftOptions.length > 0 &&
-    !hasDuplicateOptions
+    draft.name.trim() !== "" && draftOptions.length > 0 && !hasDuplicateOptions
 
   function openAddGroupDialog() {
     setEditingIndex(null)
