@@ -5,7 +5,11 @@
 # Chrome headless.
 RSpec.configure do |config|
   config.before(:each, type: :system) do
-    driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ]
+    driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ] do |driver_option|
+      driver_option.add_argument("--no-sandbox")
+      driver_option.add_argument("--disable-dev-shm-usage")
+      driver_option.add_argument("--disable-gpu")
+    end
   end
 end
 
@@ -13,3 +17,4 @@ end
 # aria-label ("Agregar <plato>", "Semana anterior"). Sin esto, find_button no
 # los encuentra y habría que bajar a selectores de CSS.
 Capybara.enable_aria_label = true
+Capybara.default_max_wait_time = 10
