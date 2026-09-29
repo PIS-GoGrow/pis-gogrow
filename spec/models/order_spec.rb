@@ -206,6 +206,60 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "#withdraw!" do
+    let(:provider_user) { users(:provider_user) }
+
+    it "cancels a pending order and records provider, time and previous status" do
+      order = orders(:upcoming_pending_future)
+
+      expect(order.withdraw!(by: provider_user)).to be(true)
+
+      order.reload
+      expect(order).to be_cancelled
+      expect(order.cancelled_by).to eq(provider_user)
+      expect(order.cancelled_at).to be_present
+      expect(order.status_before_cancellation).to eq("pending")
+    end
+
+    it "cancels a confirmed order and records provider, time and previous status" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect(order.withdraw!(by: provider_user)).to be(true)
+
+      order.reload
+      expect(order).to be_cancelled
+      expect(order.cancelled_by).to eq(provider_user)
+      expect(order.cancelled_at).to be_present
+      expect(order.status_before_cancellation).to eq("confirmed")
+    end
+
+    it "allows withdrawing a confirmed order even on its delivery day" do
+      order = orders(:upcoming_pending_today)
+      order.update!(status: :confirmed)
+
+      expect(order.withdraw!(by: provider_user)).to be(true)
+      expect(order.reload).to be_cancelled
+      expect(order.status_before_cancellation).to eq("confirmed")
+    end
+
+    it "ignores withdrawal on an already cancelled order" do
+      order = orders(:history_cancelled_future)
+      original_cancelled_at = order.cancelled_at
+      original_cancelled_by = order.cancelled_by
+
+      expect(order.withdraw!(by: provider_user)).to be(false)
+      expect(order.reload.cancelled_at).to eq(original_cancelled_at)
+      expect(order.cancelled_by).to eq(original_cancelled_by)
+    end
+
+    it "ignores withdrawal on an already rejected order" do
+      order = orders(:history_rejected_future)
+
+      expect(order.withdraw!(by: provider_user)).to be(false)
+      expect(order.reload).to be_rejected
+    end
+  end
+
   it "splits every order between the two sections" do
     expect(described_class.upcoming.ids & described_class.history.ids).to be_empty
     expect(described_class.upcoming.count + described_class.history.count).to eq(described_class.count)

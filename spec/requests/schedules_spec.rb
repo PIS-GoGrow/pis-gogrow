@@ -9,7 +9,7 @@ def next_publishable_date
 end
 
 RSpec.describe "Schedules", type: :request do
-  fixtures :users
+  fixtures :users, :providers, :menus, :schedules, :orders, :consumers
 
   def sign_in_with_role(user, role:)
     session = user.sessions.create!(role: role)
@@ -339,6 +339,58 @@ RSpec.describe "Schedules", type: :request do
       }
 
       expect(response).to redirect_to(schedules_path)
+    end
+
+    it "marks future and today published schedules as editable" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+      menu = provider.menus.create!(name: "Milanesa", price: 350)
+
+      travel_to(Date.current.beginning_of_week(:monday) + 1.day) do
+        today_date = Date.current
+        future_date = Date.current + 2.days
+
+        menu.schedules.create!(date: today_date, amount: 10)
+        menu.schedules.create!(date: future_date, amount: 15)
+
+        sign_in_with_role(user, role: :provider)
+
+        get schedules_path, params: {
+          week_start: Date.current.beginning_of_week(:monday).to_s
+        }
+
+        expect(response).to have_http_status(:ok)
+        days = inertia_page.dig("props", "days")
+
+        today_day = days.find { |d| d["date"] == today_date.to_s }
+        future_day = days.find { |d| d["date"] == future_date.to_s }
+
+        expect(today_day["editable"]).to be(true)
+        expect(future_day["editable"]).to be(true)
+      end
+    end
+
+    it "marks past published schedules as not editable" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+      menu = provider.menus.create!(name: "Milanesa", price: 350)
+
+      week_start = Date.current.beginning_of_week(:monday) - 1.week
+      past_date = week_start + 1.day
+
+      menu.schedules.create!(date: past_date, amount: 10)
+
+      sign_in_with_role(user, role: :provider)
+
+      get schedules_path, params: {
+        week_start: week_start.to_s
+      }
+
+      expect(response).to have_http_status(:ok)
+      days = inertia_page.dig("props", "days")
+
+      past_day = days.find { |d| d["date"] == past_date.to_s }
+      expect(past_day["editable"]).to be(false)
     end
   end
 
@@ -763,6 +815,242 @@ RSpec.describe "Schedules", type: :request do
       end.not_to change(Schedule, :count)
 
       expect(response).to have_http_status(:redirect)
+    end
+  end
+
+  describe "PATCH /schedules/update_by_date" do
+    let(:provider_user) { users(:provider_user) }
+    let(:provider) { providers(:tuviandita) }
+    let(:menu) { menus(:milanesa) }
+
+    context "control de acceso por rol" do
+      it "redirige a iniciar sesión si el visitante no tiene sesión" do
+        patch update_by_date_schedules_path, params: {
+          date: (Date.current + 2.days).to_s,
+          items: [ { menu_id: menu.id, amount: 10 } ]
+        }
+
+        expect(response).to redirect_to(sign_in_path)
+      end
+
+      it "bloquea a usuarios con rol consumer" do
+        sign_in(users(:one), role: :consumer)
+
+        patch update_by_date_schedules_path, params: {
+          date: (Date.current + 2.days).to_s,
+          items: [ { menu_id: menu.id, amount: 10 } ]
+        }
+
+        expect(response).to redirect_to(root_path)
+        follow_redirect!
+        expect(flash[:alert]).to be_present
+      end
+    end
+
+    context "edición válida de un menú publicado" do
+      it "actualiza el stock de un plato preservando el ID del schedule original" do
+        target_date = Date.current.next_week(:monday) + 1.day
+        schedule = menu.schedules.create!(date: target_date, amount: 10)
+        original_schedule_id = schedule.id
+
+        sign_in(provider_user, role: :provider)
+
+        patch update_by_date_schedules_path, params: {
+          date: target_date.to_s,
+          items: [
+            { menu_id: menu.id, amount: 25 }
+          ]
+        }
+
+        expect(response).to redirect_to(schedules_path(week_start: target_date.beginning_of_week(:monday).to_s))
+        follow_redirect!
+        expect(flash[:notice]).to eq("Menú actualizado con éxito.")
+
+        schedule.reload
+        expect(schedule.id).to eq(original_schedule_id)
+        expect(schedule.amount).to eq(25)
+      end
+
+      it "permite agregar un nuevo plato al menú ya publicado del día" do
+        target_date = Date.current.next_week(:monday) + 2.days
+        menu.schedules.create!(date: target_date, amount: 10)
+
+        second_menu = provider.menus.create!(
+          name: "Pastel de papa",
+          description: "Casero",
+          price: 320
+        )
+
+        sign_in(provider_user, role: :provider)
+
+        expect do
+          patch update_by_date_schedules_path, params: {
+            date: target_date.to_s,
+            items: [
+              { menu_id: menu.id, amount: 10 },
+              { menu_id: second_menu.id, amount: 15 }
+            ]
+          }
+        end.to change(Schedule, :count).by(1)
+
+        new_schedule = Schedule.find_by(menu: second_menu, date: target_date)
+        expect(new_schedule).to be_present
+        expect(new_schedule.amount).to eq(15)
+      end
+
+      it "cancela automáticamente los pedidos pendientes y confirmados al retirar un plato del menú" do
+        target_date = Date.current.next_week(:monday) + 3.days
+        schedule_to_remove = menu.schedules.create!(date: target_date, amount: 10)
+
+        kept_menu = provider.menus.create!(
+          name: "Ensalada César",
+          description: "Fresca",
+          price: 280
+        )
+        kept_menu.schedules.create!(date: target_date, amount: 10)
+
+        pending_order = Order.create!(
+          consumer: consumers(:one),
+          schedule: schedule_to_remove,
+          status: :pending,
+          amount: 1,
+          price: 350,
+          discounted_price: 175,
+          address: "18 de Julio 1234",
+          delivery_method: :office
+        )
+
+        confirmed_order = Order.create!(
+          consumer: consumers(:one),
+          schedule: schedule_to_remove,
+          status: :confirmed,
+          amount: 2,
+          price: 700,
+          discounted_price: 350,
+          address: "18 de Julio 1234",
+          delivery_method: :office
+        )
+
+        sign_in(provider_user, role: :provider)
+
+        patch update_by_date_schedules_path, params: {
+          date: target_date.to_s,
+          items: [
+            { menu_id: kept_menu.id, amount: 10 }
+          ]
+        }
+
+        expect(Schedule.exists?(schedule_to_remove.id)).to be(false)
+
+        pending_order.reload
+        expect(pending_order.status).to eq("cancelled")
+        expect(pending_order.status_before_cancellation).to eq("pending")
+        expect(pending_order.cancelled_by).to eq(provider_user)
+
+        confirmed_order.reload
+        expect(confirmed_order.status).to eq("cancelled")
+        expect(confirmed_order.status_before_cancellation).to eq("confirmed")
+        expect(confirmed_order.cancelled_by).to eq(provider_user)
+      end
+    end
+
+    context "validaciones y casos borde (bypass de interfaz e integridad)" do
+      it "no permite editar un menú de una fecha pasada" do
+        past_date = Date.current - 2.days
+        schedule = menu.schedules.create!(date: past_date, amount: 10)
+
+        sign_in(provider_user, role: :provider)
+
+        patch update_by_date_schedules_path, params: {
+          date: past_date.to_s,
+          items: [
+            { menu_id: menu.id, amount: 20 }
+          ]
+        }
+
+        expect(response).to redirect_to(schedules_path)
+        expect(schedule.reload.amount).to eq(10)
+      end
+
+      it "rechaza stock con valor cero" do
+        target_date = Date.current.next_week(:monday) + 1.day
+        schedule = menu.schedules.create!(date: target_date, amount: 10)
+
+        sign_in(provider_user, role: :provider)
+
+        patch update_by_date_schedules_path, params: {
+          date: target_date.to_s,
+          items: [
+            { menu_id: menu.id, amount: 0 }
+          ]
+        }
+
+        expect(response).to redirect_to(schedules_path)
+        expect(schedule.reload.amount).to eq(10)
+      end
+
+      it "rechaza stock con valor negativo" do
+        target_date = Date.current.next_week(:monday) + 1.day
+        schedule = menu.schedules.create!(date: target_date, amount: 10)
+
+        sign_in(provider_user, role: :provider)
+
+        patch update_by_date_schedules_path, params: {
+          date: target_date.to_s,
+          items: [
+            { menu_id: menu.id, amount: -5 }
+          ]
+        }
+
+        expect(response).to redirect_to(schedules_path)
+        expect(schedule.reload.amount).to eq(10)
+      end
+
+      it "rechaza stock no numérico" do
+        target_date = Date.current.next_week(:monday) + 1.day
+        schedule = menu.schedules.create!(date: target_date, amount: 10)
+
+        sign_in(provider_user, role: :provider)
+
+        patch update_by_date_schedules_path, params: {
+          date: target_date.to_s,
+          items: [
+            { menu_id: menu.id, amount: "invalido" }
+          ]
+        }
+
+        expect(response).to redirect_to(schedules_path)
+        expect(schedule.reload.amount).to eq(10)
+      end
+
+      it "devuelve 404 y revierte la transacción si se intenta incluir un plato de otro proveedor" do
+        target_date = Date.current.next_week(:monday) + 1.day
+        schedule = menu.schedules.create!(date: target_date, amount: 10)
+        foreign_menu = menus(:sorrentinos)
+
+        sign_in(provider_user, role: :provider)
+
+        expect do
+          patch update_by_date_schedules_path, params: {
+            date: target_date.to_s,
+            items: [
+              { menu_id: menu.id, amount: 20 },
+              { menu_id: foreign_menu.id, amount: 15 }
+            ]
+          }
+        end.not_to change(Schedule, :count)
+
+        expect(response).to have_http_status(:not_found)
+        expect(schedule.reload.amount).to eq(10)
+      end
+
+      it "devuelve bad request si faltan parámetros requeridos" do
+        sign_in(provider_user, role: :provider)
+
+        patch update_by_date_schedules_path, params: {}
+
+        expect(response).to have_http_status(:bad_request)
+      end
     end
   end
 end
