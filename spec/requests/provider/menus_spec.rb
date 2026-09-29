@@ -214,7 +214,7 @@ RSpec.describe "Provider::Menus", type: :request do
           price: 0
         }
       }
-      
+
       expect(response).to redirect_to(edit_provider_menu_path(menu))
 
       follow_redirect!

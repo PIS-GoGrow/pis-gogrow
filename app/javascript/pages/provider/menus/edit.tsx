@@ -1,11 +1,11 @@
 import { Head } from "@inertiajs/react"
 
+import NewMenuForm from "@/components/menus/new-menu-form"
 import PageContainer from "@/components/page-container"
 import AppLayout from "@/layouts/app-layout"
 import { providerMenus as menusRoutes } from "@/routes"
 import type { Menu } from "@/types"
 import type { BreadcrumbItem } from "@/types"
-import NewMenuForm from "@/components/menus/new-menu-form"
 
 interface EditMenuProps {
   menu: Menu

@@ -14,9 +14,6 @@ import {
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
-import { providerMenus as menusRoutes } from "@/routes"
-import type { Menu } from "@/types"
 import {
   Sheet,
   SheetContent,
@@ -25,6 +22,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { Textarea } from "@/components/ui/textarea"
+import { providerMenus as menusRoutes } from "@/routes"
+import type { Menu } from "@/types"
 
 interface OptionGroupDraft {
   id?: number
@@ -40,7 +40,7 @@ interface MenuFormProps {
   menu?: Menu
 }
 
-export default function MenuForm({ formSuccess, menu }: MenoFormProps) {
+export default function MenuForm({ formSuccess, menu }: MenuFormProps) {
   const [groups, setGroups] = useState<OptionGroupDraft[]>(() =>
     menu
       ? menu.option_groups.map((group) => ({
