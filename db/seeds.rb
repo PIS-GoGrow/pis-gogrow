@@ -229,3 +229,12 @@ seed_payment(consumer.accounts.find_by!(provider: tu_viandita, month: Date.curre
   seed_payment(company.accounts.create!(provider: tu_viandita, month:, amount: 1_250.00), company_status)
   seed_payment(consumer.accounts.create!(provider: tu_viandita, month:, amount: 1_250.00), consumer_status)
 end
+
+# Facturas de TuViandita a GoGrow: el mes pasado aprobada (se descarga desde el
+# Historial), hace dos meses por revisar y este mes todavía sin subir.
+{ 1.month.ago => :approved, 2.months.ago => :pending }.each do |date, status|
+  account = company.accounts.find_by!(provider: tu_viandita, month: date.beginning_of_month)
+  invoice = account.invoices.build(issued_on: account.month.end_of_month, total_amount: account.amount, status:)
+  invoice.file.attach(io: Rails.root.join("public/icon.png").open, filename: "factura.png", content_type: "image/png")
+  invoice.save!
+end
