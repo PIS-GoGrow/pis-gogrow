@@ -46,6 +46,12 @@ RSpec.describe MenuOptionGroup, type: :model do
       expect(group).not_to be_valid
       expect(group.errors[:options]).to be_present
     end
+
+    it "rejects duplicate options ignoring case and spaces" do
+      group = described_class.new(menu:, name: "Salsa", options: [ "Tuco", " TUCO " ], limit: 1)
+      expect(group).not_to be_valid
+      expect(group.errors[:options]).to be_present
+    end
   end
 
   describe "associations" do

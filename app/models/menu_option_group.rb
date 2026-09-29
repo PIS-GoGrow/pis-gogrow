@@ -10,7 +10,11 @@ class MenuOptionGroup < ApplicationRecord
   private
 
   def options_values_valid
-    return if options.all?(&:present?) && options.uniq.size == options.size
+    normalized_options = options.map { |option| option.to_s.strip.downcase }
+
+    return if normalized_options.all?(&:present?) &&
+              normalized_options.uniq.size == normalized_options.size
+
     errors.add(:options, :invalid)
   end
 end

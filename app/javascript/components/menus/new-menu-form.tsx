@@ -54,7 +54,18 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
     .split(",")
     .map((o) => o.trim())
     .filter(Boolean)
-  const canSaveDraft = draft.name.trim() !== "" && draftOptions.length > 0
+
+  const normalizedDraftOptions = draftOptions.map((option) =>
+    option.toLocaleLowerCase("es"),
+  )
+
+  const hasDuplicateOptions =
+    new Set(normalizedDraftOptions).size !== normalizedDraftOptions.length
+
+  const canSaveDraft =
+    draft.name.trim() !== "" &&
+    draftOptions.length > 0 &&
+    !hasDuplicateOptions
 
   function openAddGroupDialog() {
     setEditingIndex(null)
@@ -81,6 +92,7 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
         ? [...prev, groupToSave]
         : prev.map((g, i) => (i === editingIndex ? groupToSave : g)),
     )
+
     setGroupDialogOpen(false)
   }
 
@@ -95,6 +107,7 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
       setError("name", ["No puede estar vacío."])
       return
     }
+
     if (data.price === "") {
       setError("price", ["No puede estar vacío."])
       return
@@ -169,6 +182,7 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <FieldLabel>Opciones</FieldLabel>
+
             <Button
               type="button"
               variant="ghost"
@@ -190,6 +204,7 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
                 <div key={index} className="rounded-md border p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{group.name}</span>
+
                     <div className="flex items-center gap-1">
                       <Button
                         type="button"
@@ -200,6 +215,7 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
                       >
                         <Pencil aria-hidden="true" className="h-4 w-4" />
                       </Button>
+
                       <Button
                         type="button"
                         variant="ghost"
@@ -211,7 +227,9 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
                       </Button>
                     </div>
                   </div>
+
                   <Separator className="my-2" />
+
                   <div className="text-muted-foreground flex items-start justify-between gap-2 text-sm">
                     <span>{group.options}</span>
                     <span className="shrink-0">Límite {group.limit}</span>
@@ -232,6 +250,7 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
           <div className="flex flex-col gap-3">
             <Field>
               <FieldLabel htmlFor="group-name">Nombre del grupo</FieldLabel>
+
               <Input
                 id="group-name"
                 type="text"
@@ -242,22 +261,34 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
                 }
               />
             </Field>
+
             <Field>
               <FieldLabel htmlFor="group-options">Opciones</FieldLabel>
+
               <Textarea
                 id="group-options"
+                spellCheck={false}
                 placeholder="Ej: Boloñesa, Caruso, 4 quesos"
                 value={draft.options}
                 onChange={(e) =>
                   setDraft((prev) => ({ ...prev, options: e.target.value }))
                 }
               />
+
               <FieldDescription>
                 Ingresá las opciones separadas por coma.
               </FieldDescription>
+
+              {hasDuplicateOptions && (
+                <p className="text-destructive text-sm">
+                  No se permiten opciones repetidas.
+                </p>
+              )}
             </Field>
+
             <Field>
               <FieldLabel>¿Cuántas opciones pueden elegir a la vez?</FieldLabel>
+
               <div>
                 <QuantityInput
                   value={Math.min(
@@ -281,6 +312,7 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
             >
               Cancelar
             </Button>
+
             <Button type="button" disabled={!canSaveDraft} onClick={saveDraft}>
               Agregar
             </Button>
