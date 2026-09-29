@@ -30,6 +30,10 @@ class Provider::MenusController < Provider::InertiaController
   end
 
   def edit
+    provider = Current.user.provider
+    menu = provider.menus.find(params[:id])
+
+    render inertia: { menu: }
   end
 
   def update
@@ -38,7 +42,7 @@ class Provider::MenusController < Provider::InertiaController
     if menu.update(menu_params)
       redirect_to provider_menus_path
     else
-      redirect_to provider_menus_path, inertia: { errors: menu.errors }
+      redirect_to edit_provider_menu_path(menu), inertia: { errors: menu.errors }
     end
   end
 

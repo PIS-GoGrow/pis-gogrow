@@ -141,6 +141,27 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
+  describe "GET /provider/menus/:id/edit" do
+    before { sign_in provider_user, role: :provider }
+
+    it "renders the edit page for the provider's own dish" do
+      menu = menus(:milanesa)
+
+      get edit_provider_menu_path(menu)
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to render_component("provider/menus/edit")
+      expect(inertia.props[:menu]["id"]).to eq(menu.id)
+      expect(inertia.props[:menu]["name"]).to eq(menu.name)
+    end
+
+    it "returns not found when attempting to edit another provider's dish" do
+      get edit_provider_menu_path(menus(:sorrentinos))
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe "PATCH /provider/menus/:id" do
     before { sign_in provider_user, role: :provider }
 
@@ -159,6 +180,57 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(group.reload.limit).to eq(2)
     end
 
+    it "updates the provider's dish information" do
+      menu = menus(:milanesa)
+
+      patch provider_menu_path(menu), params: {
+        menu: {
+          name: "Milanesa napolitana",
+          description: "Con papas fritas",
+          price: 420.50
+        }
+      }
+
+      expect(response).to redirect_to(provider_menus_path)
+
+      menu.reload
+      expect(menu.name).to eq("Milanesa napolitana")
+      expect(menu.description).to eq("Con papas fritas")
+      expect(menu.price).to eq(420.50)
+    end
+
+    it "returns validation errors when the changes are invalid" do
+      menu = menus(:milanesa)
+
+      patch provider_menu_path(menu), params: {
+        menu: {
+          name: "",
+          price: 0
+        }
+      }
+
+      expect(response).to redirect_to(edit_provider_menu_path(menu))
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to have_key(:name)
+      expect(inertia.props[:errors]).to have_key(:price)
+    end
+
+    it "returns not found when attempting to update another provider's dish" do
+      menu = menus(:sorrentinos)
+      original_name = menu.name
+
+      patch provider_menu_path(menu), params: {
+        menu: {
+          name: "No debería cambiar",
+          price: 999
+        }
+      }
+
+      expect(response).to have_http_status(:not_found)
+      expect(menu.reload.name).to eq(original_name)
+    end
+    
     it "removes an option group with _destroy" do
       menu = menus(:milanesa)
       group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1)
