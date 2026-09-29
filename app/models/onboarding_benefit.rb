@@ -8,7 +8,9 @@ class OnboardingBenefit < BenefitRule
   validates :limit, presence: true, numericality: { greater_than: 0 }
 
   def applicable_to?(consumer, date: Date.current)
-    onboarding = consumer.onboarding_date
+    onboarding = consumer&.onboarding_date
+    return false unless onboarding
+
     window = onboarding..(onboarding + deadline_days.days)
 
     window.cover? date

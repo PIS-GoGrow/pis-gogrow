@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-# Representa el subsidio base de la empresa, que se aplica en cada mes
+# Representa el subsidio base de la empresa, que se aplica en cada mes.
+# Es siempre aplicable cuando se pasó la fecha effective_from y si la compañía
+# no tiene MonthlyBenefits que apliquen más tarde.
 class MonthlyBenefit < BenefitRule
   belongs_to :benefit_configuration
 
@@ -12,7 +14,10 @@ class MonthlyBenefit < BenefitRule
   validate :unique_effective_from_per_company
 
   def applicable_to?(consumer, date: Date.current)
-    date >= effective_from
+    return false if effective_from > date
+
+    current_base_subsidy = BenefitConfiguration.base_subsidy_for(benefit_configuration.company, effective_from: date)
+    current_base_subsidy&.id.in? [benefit_configuration_id, nil]
   end
 
   def benefit_limit

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory :benefit_configuration_consumer do
+  factory :consumer_benefit_configuration do
   end
 end
 
