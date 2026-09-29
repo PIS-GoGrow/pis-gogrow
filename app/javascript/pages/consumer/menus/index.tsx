@@ -156,7 +156,7 @@ export default function Index({
                 name={schedule.menu.name ?? "Plato sin nombre"}
                 price={schedule.menu.price ?? 0}
                 description={schedule.menu.description}
-                soldOut={schedule.amount === 0}
+                soldOut={schedule.amount === 0 || !schedule.available}
                 isPast={isPast}
               />
             ))}

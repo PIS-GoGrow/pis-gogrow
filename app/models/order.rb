@@ -204,7 +204,10 @@ class Order < ApplicationRecord
       return false unless modifiable?
 
       schedule.with_lock do
-        if schedule.remaining_amount + amount.to_i < quantity
+        # Bajar o mantener cantidad no cuenta como pedir "de más": solo se
+        # bloquea si la publicación está agotada y encima se pide aumentar.
+        if schedule.remaining_amount + amount.to_i < quantity ||
+           (!schedule.available && quantity > amount.to_i)
           errors.add(:base, I18n.t("validations.schedule_unavailable"))
           return false
         end

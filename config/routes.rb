@@ -46,7 +46,9 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
-  resources :schedules, only: [ :index, :create ]
+  resources :schedules, only: [ :index, :create ] do
+    patch :availability, on: :member
+  end
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
