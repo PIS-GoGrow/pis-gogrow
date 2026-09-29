@@ -63,7 +63,13 @@ class Consumer < ApplicationRecord
   def monthly_benefit_used_this_week
     monthly_benefit_used_in Date.current.all_week
   end
-  
+
+  # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes,
+  # contando solo las órdenes confirmadas
+  def remaining_monthly_benefit
+    [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
+  end
+
   # Se espera que no se incluyan direcciones blank acá
   def delivery_addresses
     [ address, company.address ].compact_blank

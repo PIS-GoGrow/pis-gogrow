@@ -7,8 +7,8 @@
 # workaround porque en Mac Selenium con Chrome no funciona)
 RSpec.configure do |config|
   config.before(:each, type: :system) do
-    browser = ENV['USE_FIREFOX'] ? :firefox : :headless_chrome
-    
+    browser = ENV["USE_FIREFOX"] ? :firefox : :headless_chrome
+
     driven_by :selenium, using: browser, screen_size: [ 1400, 1400 ] do |driver_option|
       driver_option.add_argument("--no-sandbox")
       driver_option.add_argument("--disable-dev-shm-usage")

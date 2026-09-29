@@ -22,7 +22,7 @@ end
 #  status                   :integer
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null
-#  benefit_configuration_id :bigint           not null
+#  benefit_configuration_id :bigint
 #  consumer_id              :bigint           not null
 #
 # Indexes

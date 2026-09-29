@@ -38,11 +38,11 @@ class Consumer::OrdersController < Consumer::InertiaController
       remaining_subsidized =
         benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
       schedule_ids = requested_items.pluck(:schedule_id)
-      
+
       # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos todos
       # los schedules correspondientes.
       schedules = Schedule.includes(menu: :provider).where(id: schedule_ids.uniq, date: allowed_dates).order(:id).lock.index_by(&:id)
-      
+
       # Tiramos error si alguno de los schedules no existen o si están fuera del rango de fechas permitidas
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 

@@ -30,7 +30,6 @@ RSpec.describe Consumer, type: :model do
       # destroy_all y no delete_all: las órdenes cuelgan de cuentas.
       Order.destroy_all
       Schedule.delete_all
-      Benefit.create!(consumer:, amount: 20, percentage: 50, due_date: 1.month.from_now, description: "Viandas mensuales")
     end
 
     let(:menu) { menus(:milanesa) }
@@ -149,17 +148,17 @@ RSpec.describe Consumer, type: :model do
       Order.create!(
         consumer:, schedule: today_schedule, amount: 2,
         price: 600, address: consumer.company.address, delivery_method: :office, status: :confirmed
-      )
+      ).apply_benefit! benefits(:monthly), 2
       Order.create!(
         consumer:, schedule: today_schedule, amount: 1,
         price: 300, address: consumer.company.address, delivery_method: :office, status: :pending
-      )
+      ).apply_benefit! benefits(:monthly), 1
       Order.create!(
         consumer:, schedule: today_schedule, amount: 4,
         price: 1200, address: consumer.company.address, delivery_method: :office, status: :cancelled
-      )
+      ).apply_benefit! benefits(:monthly), 4
 
-      expect(consumer.subsidized_meals_used_this_week).to eq(3)
+      expect(consumer.monthly_benefit_used_this_week).to eq(3)
     end
   end
 end
