@@ -292,14 +292,15 @@
       },
       "provider_collections": {
         "group": {
+          "awaiting_one": "%{count} cobro pendiente de confirmación",
+          "awaiting_other": "%{count} cobros pendientes de confirmación",
           "company": "Empresa",
           "confirmed": "%{amount} en cobros confirmados",
           "detail": "Ver detalle",
           "due": "Vence: %{date}",
           "employees": "Empleados",
-          "pending": "%{amount} en cobros pendientes",
-          "rejected": "%{amount} en cobros rechazados",
-          "submitted": "%{amount} en cobros informados",
+          "rejected_one": "%{count} cobro rechazado",
+          "rejected_other": "%{count} cobros rechazados",
           "total": "Total a cobrar"
         },
         "index": {
@@ -324,6 +325,36 @@
           "this_month": "Este mes",
           "title": "Cobros",
           "total_debt": "Deuda total"
+        },
+        "invoice": {
+          "dialog": {
+            "description": "Completá los datos de la factura de %{month} antes de enviarla.",
+            "expected": "Importe calculado del período: %{amount}",
+            "file": "Archivo",
+            "issued_on": "Fecha de emisión",
+            "title": "Subir factura",
+            "total_amount": "Monto total"
+          },
+          "download": "Descargar factura",
+          "file_label": "Archivo de la factura",
+          "formats": "PDF, JPG o PNG de hasta 10 MB.",
+          "no_file": "Sin archivos seleccionados",
+          "preview": "Ver factura %{name}",
+          "rejected_hint": "La factura fue rechazada. Podés subir una nueva.",
+          "remove": {
+            "confirm": "Eliminar",
+            "description": "Vas a poder subir otra para este período.",
+            "title": "¿Eliminar la factura?",
+            "trigger": "Eliminar factura"
+          },
+          "select_file": "Seleccionar archivo",
+          "statuses": {
+            "approved": "Aprobada",
+            "pending": "Por revisar",
+            "rejected": "Rechazada"
+          },
+          "upload": "Subir factura",
+          "uploading": "Subiendo…"
         },
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
