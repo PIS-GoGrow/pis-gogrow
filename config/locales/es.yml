@@ -65,6 +65,7 @@ es:
     invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
+    insufficient_stock: "Ya no hay suficiente stock para la cantidad solicitada. Revisá la cantidad e intentá nuevamente."
     order_deadline_passed: "Este proveedor ya cerró la recepción de pedidos para hoy."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."

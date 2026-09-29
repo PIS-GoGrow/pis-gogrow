@@ -212,7 +212,14 @@ RSpec.describe "Orders", type: :request do
       consumer, = setup_consumer
       available = create_schedule
       unavailable = create_schedule(amount: 1)
-      Order.create!(consumer:, schedule: unavailable, amount: 1, price: unavailable.menu.price, address: consumer.address, delivery_method: :home)
+      Order.create!(
+        consumer:,
+        schedule: unavailable,
+        amount: 1,
+        price: unavailable.menu.price,
+        address: consumer.address,
+        delivery_method: :home
+      )
 
       expect do
         post orders_path, params: {
@@ -229,7 +236,11 @@ RSpec.describe "Orders", type: :request do
       expect(response).to redirect_to(dashboard_path)
       expect(available.reload.remaining_amount).to eq(5)
       follow_redirect!
-      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
+      expect(inertia).to have_props(
+        errors: {
+          order_error: I18n.t("validations.insufficient_stock")
+        }
+      )
     end
 
     # IBP-003, criterio 3: "los platos agotados o no disponibles ... no pueden
@@ -238,15 +249,33 @@ RSpec.describe "Orders", type: :request do
     it "rejects a dish whose whole quota is already ordered" do
       consumer, = setup_consumer
       schedule = create_schedule(amount: 1)
-      Order.create!(consumer:, schedule:, amount: 1, price: schedule.menu.price, address: consumer.address, delivery_method: :home)
+      Order.create!(
+        consumer:,
+        schedule:,
+        amount: 1,
+        price: schedule.menu.price,
+        address: consumer.address,
+        delivery_method: :home
+      )
 
       expect do
-        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+        post orders_path, params: {
+          order: {
+            address: consumer.address,
+            items: [
+              { schedule_id: schedule.id, quantity: 1 }
+            ]
+          }
+        }
       end.not_to change(Order, :count)
 
       expect(schedule.reload.remaining_amount).to eq(0)
       follow_redirect!
-      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
+      expect(inertia).to have_props(
+        errors: {
+          order_error: I18n.t("validations.insufficient_stock")
+        }
+      )
     end
 
     # IBP-053, criterio 2: un plato marcado agotado no admite pedidos nuevos,
@@ -256,12 +285,23 @@ RSpec.describe "Orders", type: :request do
       schedule = create_schedule(amount: 5, available: false)
 
       expect do
-        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+        post orders_path, params: {
+          order: {
+            address: consumer.address,
+            items: [
+              { schedule_id: schedule.id, quantity: 1 }
+            ]
+          }
+        }
       end.not_to change(Order, :count)
 
       expect(schedule.reload.remaining_amount).to eq(5)
       follow_redirect!
-      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
+      expect(inertia).to have_props(
+        errors: {
+          order_error: I18n.t("validations.schedule_unavailable")
+        }
+      )
     end
 
     # Borde del cupo: N entra, N+1 no.

@@ -43,6 +43,7 @@ function PublishedScheduleRow({ schedule }: { schedule: Schedule }) {
         </CardTitle>
         <CardDescription>{schedule.menu.description}</CardDescription>
       </CardHeader>
+
       <CardContent className="flex items-center justify-end">
         <label className="flex items-center gap-2 text-sm">
           {t("pages.schedules.index.availability.toggle_label")}
@@ -50,6 +51,7 @@ function PublishedScheduleRow({ schedule }: { schedule: Schedule }) {
             checked={schedule.available}
             disabled={processing}
             onCheckedChange={handleAvailabilityChange}
+            className="data-[state=checked]:bg-green-600 dark:data-[state=checked]:bg-green-600"
           />
         </label>
       </CardContent>
@@ -57,7 +59,9 @@ function PublishedScheduleRow({ schedule }: { schedule: Schedule }) {
   )
 }
 
-export default function PublishedDayView({ schedules }: PublishedDayViewProps) {
+export default function PublishedDayView({
+  schedules,
+}: PublishedDayViewProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {schedules.map((schedule) => (
