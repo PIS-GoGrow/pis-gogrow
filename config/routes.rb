@@ -42,6 +42,9 @@ Rails.application.routes.draw do
       end
     end
     resources :collections, only: [ :index, :show ]
+    resources :invoices, only: [ :create, :destroy ] do
+      get :file, on: :member
+    end
     resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
@@ -68,6 +71,9 @@ Rails.application.routes.draw do
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
+    resources :invoices, only: [] do
+      get :file, on: :member
+    end
   end
 
   root "home#index"
