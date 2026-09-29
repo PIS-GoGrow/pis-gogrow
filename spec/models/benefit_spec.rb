@@ -49,7 +49,7 @@ RSpec.describe Benefit, type: :model do
     before do
       benefits(:monthly).destroy
     end
-    
+
     it ".current includes benefits due today or in the future and excludes past ones" do
       active = described_class.create!(consumer:, status: :current, amount: 5, percentage: 50, due_date: nil, benefit_configuration: benefit_configurations(:seniority))
       today = described_class.create!(consumer:, status: :current, amount: 5, percentage: 50, due_date: Date.current, benefit_configuration: benefit_configurations(:gift))
