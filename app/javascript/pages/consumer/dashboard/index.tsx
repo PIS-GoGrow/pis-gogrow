@@ -251,9 +251,7 @@ export default function Index({
             back={() => setView("menu")}
             confirm={confirm}
             remove={(cartId) => {
-              setCart((items) =>
-                items.filter((item) => item.cartId !== cartId),
-              )
+              setCart((items) => items.filter((item) => item.cartId !== cartId))
               form.clearErrors()
             }}
           />

@@ -59,9 +59,7 @@ function PublishedScheduleRow({ schedule }: { schedule: Schedule }) {
   )
 }
 
-export default function PublishedDayView({
-  schedules,
-}: PublishedDayViewProps) {
+export default function PublishedDayView({ schedules }: PublishedDayViewProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {schedules.map((schedule) => (
