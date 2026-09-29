@@ -34,6 +34,7 @@ import _consumerAccounts from './Consumer/AccountsController'
 import _omniauthCallbacks from './OmniauthCallbacksController'
 import _schedules from './SchedulesController'
 import _consumerOrders from './Consumer/OrdersController'
+import _providerOrders from './Provider/OrdersController'
 import _consumerDashboard from './Consumer/DashboardController'
 import _identityPasswordResets from './Identity/PasswordResetsController'
 import _providerMenus from './Provider/MenusController'
@@ -44,7 +45,6 @@ import _consumerPayments from './Consumer/PaymentsController'
 import _providerAccounts from './Provider/AccountsController'
 import _providerCollections from './Provider/CollectionsController'
 import _providerOrderDeadlines from './Provider/OrderDeadlinesController'
-import _providerOrders from './Provider/OrdersController'
 import _orders from './OrdersController'
 import _providerPayments from './Provider/PaymentsController'
 import _home from './HomeController'
@@ -80,7 +80,9 @@ export const providerCollection = _providerCollections.show
 export const providerMenu = _providerMenus.show
 export const providerOrder = _providerOrders.show
 export const providerOrderDeadline = _providerOrderDeadlines.update
+export const providerPayment = _providerPayments.update
 export const receiptPayment = _consumerPayments.receipt
+export const receiptProviderPayment = _providerPayments.receipt
 export const rejectProviderOrder = _providerOrders.reject
 export const root = _home.index
 export const session = _sessions.update
