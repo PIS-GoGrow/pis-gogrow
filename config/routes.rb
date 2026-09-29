@@ -47,11 +47,14 @@ Rails.application.routes.draw do
   end
 
   resources :schedules, only: [ :index, :create ] do
+    patch :update_by_date, on: :collection
     patch :availability, on: :member
   end
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
+    get "dashboard/confirmation", to: "dashboard#confirmation", as: :dashboard_confirmation
+
     resources :menus, only: [ :index ]
 
     resources :orders, only: [ :index, :show, :create, :update ] do

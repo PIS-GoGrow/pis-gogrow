@@ -57,6 +57,27 @@ RSpec.describe Menu, type: :model do
       expect { menu.destroy }.to change(MenuOptionGroup, :count).by(-2)
     end
   end
+
+  describe "#provider_name" do
+    it "returns the user name of the provider" do
+      menu = menus(:milanesa)
+      expect(menu.provider_name).to eq(menu.provider.user.name)
+    end
+
+    it "falls back to 'Proveedor' when provider has no user" do
+      menu = menus(:milanesa)
+      allow(menu.provider).to receive(:user).and_return(nil)
+      expect(menu.provider_name).to eq("Proveedor")
+    end
+  end
+
+  describe "reviews ordering" do
+    it "orders reviews by created_at desc" do
+      menu = menus(:sorrentinos)
+      dates = menu.reviews.pluck(:created_at)
+      expect(dates).to eq(dates.sort.reverse)
+    end
+  end
 end
 
 # == Schema Information

@@ -36,12 +36,8 @@ menus = [
     name: "Milanesa con papas fritas",
     description: "Opción de carne o pollo",
     price: 300,
-    option_groups: [
-      {
-        name: "Salsa",
-        options: [ "Mayonesa de ajo", "Ketchup" ],
-        limit: 1
-      }
+    option_groups_attributes: [
+      { name: "Salsas", limit: 1, options: [ "Mayonesa de ajo", "Ketchup" ] }
     ],
     day: 0,
     amount: 7
@@ -67,12 +63,8 @@ menus = [
     name: "Ravioles con salsa de tomate",
     description: "Pasta fresca con salsa a elección",
     price: 320,
-    option_groups: [
-      {
-        name: "Salsa",
-        options: [ "Filetto", "Bolognesa" ],
-        limit: 1
-      }
+    option_groups_attributes: [
+      { name: "Salsas", limit: 1, options: [ "Filetto", "Bolognesa" ] }
     ],
     day: 3,
     amount: 8
@@ -90,17 +82,9 @@ menus = [
     name: "Sorrentinos de ricota",
     description: "Pasta rellena con opciones a elección",
     price: 300,
-    option_groups: [
-      {
-        name: "Relleno",
-        options: [ "Ricota y nuez", "Ricota y espinaca" ],
-        limit: 1
-      },
-      {
-        name: "Salsa",
-        options: [ "Filetto", "Bolognesa", "Rosa" ],
-        limit: 1
-      }
+    option_groups_attributes: [
+      { name: "Rellenos", limit: 1, options: [ "Ricota y nuez", "Ricota y espinaca" ] },
+      { name: "Salsas", limit: 1, options: [ "Filetto", "Bolognesa", "Rosa" ] }
     ],
     day: 0,
     amount: 8
@@ -126,14 +110,7 @@ menus = [
 menus.each do |attributes|
   day = attributes.delete(:day)
   amount = attributes.delete(:amount)
-  option_groups = attributes.delete(:option_groups) || []
-
   menu = Menu.create!(**attributes)
-
-  option_groups.each do |option_group|
-    menu.option_groups.create!(**option_group)
-  end
-
   Schedule.create!(menu:, date: week_start + day.days, amount:)
 end
 

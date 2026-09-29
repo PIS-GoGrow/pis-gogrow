@@ -4,7 +4,7 @@ class Menu < ApplicationRecord
   belongs_to :provider
 
   has_many :schedules, dependent: :destroy
-  has_many :reviews, dependent: :destroy
+  has_many :reviews, -> { order(created_at: :desc) }, dependent: :destroy
   has_many :option_groups, class_name: "MenuOptionGroup", dependent: :destroy
 
   accepts_nested_attributes_for :option_groups, allow_destroy: true, reject_if: :all_blank
@@ -12,6 +12,10 @@ class Menu < ApplicationRecord
   validates :name, presence: true
   validates :description, presence: true
   validates :price, comparison: { greater_than: 0 }
+
+  def provider_name
+    provider.user&.name || "Proveedor"
+  end
 end
 
 # == Schema Information

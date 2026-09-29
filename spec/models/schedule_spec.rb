@@ -214,6 +214,27 @@ RSpec.describe Schedule, type: :model do
       expect(schedule.availability_changed_at).to eq(Time.zone.local(2026, 1, 1, 12, 0, 0))
     end
   end
+
+  describe "#remaining_amount" do
+    fixtures :consumers
+    let(:schedule) { described_class.create!(date: Date.current, amount: 10, menu:) }
+    let(:consumer) { consumers(:one) }
+
+    it "subtracts pending and confirmed orders from the total amount" do
+      Order.create!(consumer:, schedule:, amount: 3, price: 300, address: "Dir", delivery_method: :office, status: :pending)
+      Order.create!(consumer:, schedule:, amount: 2, price: 200, address: "Dir", delivery_method: :office, status: :confirmed)
+      Order.create!(consumer:, schedule:, amount: 4, price: 400, address: "Dir", delivery_method: :office, status: :cancelled)
+      Order.create!(consumer:, schedule:, amount: 1, price: 100, address: "Dir", delivery_method: :office, status: :rejected, rejection_reason: :out_of_stock)
+
+      expect(schedule.remaining_amount).to eq(5)
+    end
+
+    it "returns 0 when reserved amount exceeds the schedule amount" do
+      Order.create!(consumer:, schedule:, amount: 15, price: 1500, address: "Dir", delivery_method: :office, status: :confirmed)
+
+      expect(schedule.remaining_amount).to eq(0)
+    end
+  end
 end
 
 
