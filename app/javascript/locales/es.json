@@ -43,11 +43,22 @@
     "nav": {
       "benefit_configurations": "Beneficio general",
       "change_to": "Cambiar a",
+      "collections": "Cobros",
       "dashboard": "Panel",
       "menu": "Menú de navegación",
       "orders": "Mis pedidos",
       "payments": "Pagos",
       "platform": "Plataforma",
+      "provider": {
+        "account": "Cuenta",
+        "dishes": "Platos",
+        "home": "Inicio",
+        "menu": "Menú",
+        "menus": "Publicar menús",
+        "mobile_navigation": "Navegación del proveedor",
+        "orders": "Pedidos",
+        "payments": "Cobros"
+      },
       "settings": {
         "appearance": "Apariencia",
         "email": "Correo electrónico",
@@ -265,6 +276,81 @@
           "title": "Olvidé mi contraseña"
         }
       },
+      "provider_accounts": {
+        "show": {
+          "deliveries": "Entregas",
+          "deliveries_description": "Elegí dónde realizás tus entregas",
+          "notifications": "Notificaciones",
+          "notifications_description": "Configurá qué alertas querés recibir",
+          "operational_settings": "Configuración operativa",
+          "operational_settings_description": "Configurá horarios y días sin servicio",
+          "payment_details": "Datos de cobro",
+          "payment_details_description": "Configurá dónde querés recibir tus cobros",
+          "settings": "Configuración",
+          "sign_out": "Salir",
+          "title": "Cuenta"
+        }
+      },
+      "provider_collections": {
+        "group": {
+          "company": "Empresa",
+          "confirmed": "%{amount} en cobros confirmados",
+          "detail": "Ver detalle",
+          "due": "Vence: %{date}",
+          "employees": "Empleados",
+          "pending": "%{amount} en cobros pendientes",
+          "rejected": "%{amount} en cobros rechazados",
+          "submitted": "%{amount} en cobros informados",
+          "total": "Total a cobrar"
+        },
+        "index": {
+          "all_clients": "Todos",
+          "clients": "Clientes:",
+          "confirmed_meals_one": "%{count} vianda confirmada",
+          "confirmed_meals_other": "%{count} viandas confirmadas",
+          "delivered_meals_one": "%{count} vianda entregada",
+          "delivered_meals_other": "%{count} viandas entregadas",
+          "empty_history_all": "Todavía no hay meses cobrados por completo.",
+          "empty_history_client": "Todavía no hay meses cobrados por completo de este cliente.",
+          "empty_history_title": "Sin cobros confirmados",
+          "empty_pending_all": "Por ahora no hay deudas pendientes de ningún cliente seleccionado. Volvé a consultar el mes que viene.",
+          "empty_pending_client": "Por ahora no hay deudas pendientes de este cliente. Volvé a consultar el mes que viene.",
+          "empty_pending_title": "Sin deudas pendientes",
+          "filter_clients": "Filtrar por cliente",
+          "history_tab": "Historial",
+          "outstanding": "Cobros pendientes",
+          "pending_tab": "Pendientes",
+          "sales": "Ventas",
+          "section": "Cobros",
+          "this_month": "Este mes",
+          "title": "Cobros",
+          "total_debt": "Deuda total"
+        },
+        "meals_one": "%{count} vianda",
+        "meals_other": "%{count} viandas",
+        "show": {
+          "amount": "Importe a cobrar",
+          "back": "Volver a cobros",
+          "due_date": "Vencimiento",
+          "eyebrow": "Cobro",
+          "no_date": "Sin fecha de entrega",
+          "orders": "Pedidos",
+          "orders_empty": "Todavía no hay pedidos confirmados en este período.",
+          "payments": "Pagos",
+          "payments_empty": "Todavía no se informó ningún pago.",
+          "period": "Período",
+          "quantity": "x%{count}",
+          "status": "Estado",
+          "summary": "Resumen",
+          "title": "Cobro a %{name}"
+        },
+        "statuses": {
+          "approved": "Confirmado",
+          "pending": "Pendiente",
+          "rejected": "Rechazado",
+          "submitted": "Por revisar"
+        }
+      },
       "provider_dashboard": {
         "index": {
           "description": "Administrá la recepción de pedidos de tus menús.",
@@ -276,6 +362,22 @@
             "title": "Recepción de pedidos"
           },
           "title": "Panel del proveedor"
+        }
+      },
+      "provider_operational_settings": {
+        "show": {
+          "add_closing_time": "Agregar hora de cierre",
+          "add_closing_time_title": "Agregar Hora de cierre",
+          "back": "Volver a Cuenta",
+          "closing_time": "Hora de cierre",
+          "closing_time_description": "Hasta qué hora recibís pedidos.",
+          "description": "Configurá tus horarios y días sin servicio.",
+          "done": "Listo",
+          "save_changes": "Guardar cambios",
+          "saved_description": "El cambio se aplica desde ahora. Los pedidos cerrarán todos los días a las %{time}.",
+          "saved_description_closed_today": "El cambio se aplica desde ahora. La recepción de pedidos de hoy ya está cerrada. A partir de mañana, cerrará todos los días a las %{time}.",
+          "saved_title": "¡Hora de cierre guardada!",
+          "title": "Configuración operativa"
         }
       },
       "provider_orders": {
@@ -360,6 +462,13 @@
           "subsidy": "Subsidio",
           "summary": "Resumen",
           "title": "Pedido %{code}"
+        }
+      },
+      "schedules": {
+        "index": {
+          "availability": {
+            "toggle_label": "En stock"
+          }
         }
       },
       "sessions": {

@@ -333,6 +333,105 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "#ensure_accounts!" do
+    let(:consumer) { consumers(:one) }
+    let(:provider) { providers(:tuviandita) }
+    let(:month) { Date.current.beginning_of_month }
+
+    def account_for(owner)
+      owner.accounts.find_by(provider:, month:)
+    end
+
+    def build_order(status:, **attributes)
+      Order.new(
+        consumer:,
+        schedule: schedules(:future),
+        amount: 1,
+        price: 300.50,
+        discounted_price: 150.25,
+        address: companies(:gogrow).address,
+        delivery_method: :office,
+        status:,
+        **attributes
+      )
+    end
+
+    def create_order(status:, **attributes)
+      build_order(status:, **attributes).tap(&:save!)
+    end
+
+    it "assigns the order to the account of the employee and to the one of their company" do
+      order = create_order(status: :confirmed)
+
+      expect(order.accounts).to contain_exactly(account_for(consumer), account_for(consumer.company))
+    end
+
+    it "charges the employee their part and the company the subsidy" do
+      expect { create_order(status: :confirmed) }
+        .to change { account_for(consumer).amount }.by(150.25.to_d)
+        .and change { account_for(consumer.company).amount }.by(150.25.to_d)
+    end
+
+    it "does not charge anything while the order is pending" do
+      expect { create_order(status: :pending) }.not_to change { account_for(consumer).amount }
+      expect { create_order(status: :pending) }.not_to change { account_for(consumer.company).amount }
+    end
+
+    it "updates both accounts when the order is confirmed" do
+      order = create_order(status: :pending)
+
+      expect { order.update!(status: :confirmed) }
+        .to change { account_for(consumer).amount }.by(150.25.to_d)
+        .and change { account_for(consumer.company).amount }.by(150.25.to_d)
+    end
+
+    it "discounts both accounts when the order is cancelled" do
+      order = create_order(status: :confirmed)
+
+      expect { order.cancel(by: users(:one)) }
+        .to change { account_for(consumer).amount }.by(-150.25.to_d)
+        .and change { account_for(consumer.company).amount }.by(-150.25.to_d)
+    end
+
+    it "does not duplicate accounts when it runs again" do
+      order = create_order(status: :confirmed)
+
+      expect { order.ensure_accounts! }.not_to change(Account, :count)
+      expect(order.reload.accounts.count).to eq(2)
+    end
+
+    it "keeps an old order in the accounts of the month it was placed" do
+      order = create_order(status: :confirmed, created_at: 1.month.ago)
+
+      expect { order.ensure_accounts! }.not_to change(Account, :count)
+      expect(order.reload.accounts.map(&:month).uniq).to eq([ 1.month.ago.to_date.beginning_of_month ])
+    end
+
+    it "completes the missing company account of an old order in its own month" do
+      order = create_order(status: :confirmed, created_at: 1.month.ago)
+      order.order_accounts.joins(:account).where(accounts: { owner_type: "Company" }).delete_all
+      order.accounts.reset
+
+      order.ensure_accounts!
+
+      last_month = 1.month.ago.to_date.beginning_of_month
+      expect(order.reload.accounts.map { [ it.owner_type, it.month ] }).to contain_exactly(
+        [ "Consumer", last_month ], [ "Company", last_month ]
+      )
+    end
+
+    it "takes the account another order created at the same time instead of failing" do
+      order = build_order(status: :confirmed)
+      company = order.consumer.company
+      # Simula la carrera: la búsqueda no ve la cuenta y el INSERT choca con el
+      # índice único porque otro pedido ya la creó.
+      allow(company.accounts).to receive(:find_by).and_return(nil)
+
+      expect { order.save! }.not_to raise_error
+      expect(order.accounts).to include(accounts(:gogrow_tuviandita_current))
+    end
+  end
+
   it "splits every order between the two sections" do
     expect(described_class.upcoming.ids & described_class.history.ids).to be_empty
     expect(described_class.upcoming.count + described_class.history.count).to eq(described_class.count)

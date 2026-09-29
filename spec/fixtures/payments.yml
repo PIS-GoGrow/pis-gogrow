@@ -1,0 +1,38 @@
+# Cubren los tres estados que puede tener un cobro además de pendiente. Van sin
+# comprobante adjunto: las fixtures no corren validaciones.
+other_submitted:
+  account: other_tuviandita_current
+  provider: tuviandita
+  status: 1
+
+one_rejected:
+  account: one_tuviandita_current
+  provider: tuviandita
+  status: 3
+
+gogrow_previous_approved:
+  account: gogrow_tuviandita_previous
+  provider: tuviandita
+  status: 2
+
+# == Schema Information
+#
+# Table name: payments
+#
+#  id          :bigint           not null, primary key
+#  status      :integer          default(0), not null
+#  created_at  :datetime         not null
+#  updated_at  :datetime         not null
+#  account_id  :bigint           not null
+#  provider_id :bigint
+#
+# Indexes
+#
+#  index_payments_on_account_id   (account_id)
+#  index_payments_on_provider_id  (provider_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (account_id => accounts.id)
+#  fk_rails_...  (provider_id => providers.id)
+#

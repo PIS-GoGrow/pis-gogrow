@@ -80,6 +80,16 @@ class SchedulesController < Provider::InertiaController
     }
   end
 
+  def availability
+    schedule = Current.user.provider.schedules.find(params[:id])
+
+    if schedule.set_availability(available: params.expect(:available), by: Current.user)
+      redirect_to schedules_path(week_start: schedule.date.beginning_of_week(:monday).to_s)
+    else
+      redirect_to schedules_path, inertia: { errors: schedule.errors }
+    end
+  end
+
   def create
     provider = Current.user.provider
     date = Date.iso8601(params.require(:date))

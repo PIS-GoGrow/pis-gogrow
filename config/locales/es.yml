@@ -65,6 +65,7 @@ es:
     invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
+    insufficient_stock: "Ya no hay suficiente stock para la cantidad solicitada. Revisá la cantidad e intentá nuevamente."
     order_deadline_passed: "Este proveedor ya cerró la recepción de pedidos para hoy."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
@@ -112,6 +113,15 @@ es:
     menu: "Menú de navegación"
     benefit_configurations: "Beneficio general"
     change_to: "Cambiar a"
+    provider:
+      home: "Inicio"
+      dishes: "Platos"
+      menus: "Publicar menús"
+      menu: "Menú"
+      orders: "Pedidos"
+      payments: "Cobros"
+      account: "Cuenta"
+      mobile_navigation: "Navegación del proveedor"
     settings:
       profile: "Perfil"
       email: "Correo electrónico"
@@ -119,6 +129,7 @@ es:
       sessions: "Sesiones"
       appearance: "Apariencia"
     payments: "Pagos"
+    collections: "Cobros"
   components:
     appearance:
       toggle_theme: "Cambiar tema"
@@ -276,6 +287,61 @@ es:
       delivery_methods:
         office: "Oficina"
         home: "Domicilio"
+    provider_collections:
+      statuses:
+        pending: "Pendiente"
+        submitted: "Por revisar"
+        approved: "Confirmado"
+        rejected: "Rechazado"
+      meals_one: "%{count} vianda"
+      meals_other: "%{count} viandas"
+      index:
+        title: "Cobros"
+        sales: "Ventas"
+        this_month: "Este mes"
+        confirmed_meals_one: "%{count} vianda confirmada"
+        confirmed_meals_other: "%{count} viandas confirmadas"
+        outstanding: "Cobros pendientes"
+        total_debt: "Deuda total"
+        delivered_meals_one: "%{count} vianda entregada"
+        delivered_meals_other: "%{count} viandas entregadas"
+        section: "Cobros"
+        pending_tab: "Pendientes"
+        history_tab: "Historial"
+        clients: "Clientes:"
+        all_clients: "Todos"
+        filter_clients: "Filtrar por cliente"
+        empty_pending_title: "Sin deudas pendientes"
+        empty_pending_all: "Por ahora no hay deudas pendientes de ningún cliente seleccionado. Volvé a consultar el mes que viene."
+        empty_pending_client: "Por ahora no hay deudas pendientes de este cliente. Volvé a consultar el mes que viene."
+        empty_history_title: "Sin cobros confirmados"
+        empty_history_all: "Todavía no hay meses cobrados por completo."
+        empty_history_client: "Todavía no hay meses cobrados por completo de este cliente."
+      group:
+        total: "Total a cobrar"
+        confirmed: "%{amount} en cobros confirmados"
+        pending: "%{amount} en cobros pendientes"
+        submitted: "%{amount} en cobros informados"
+        rejected: "%{amount} en cobros rechazados"
+        employees: "Empleados"
+        company: "Empresa"
+        due: "Vence: %{date}"
+        detail: "Ver detalle"
+      show:
+        eyebrow: "Cobro"
+        title: "Cobro a %{name}"
+        back: "Volver a cobros"
+        summary: "Resumen"
+        period: "Período"
+        status: "Estado"
+        amount: "Importe a cobrar"
+        due_date: "Vencimiento"
+        orders: "Pedidos"
+        orders_empty: "Todavía no hay pedidos confirmados en este período."
+        payments: "Pagos"
+        payments_empty: "Todavía no se informó ningún pago."
+        quantity: "x%{count}"
+        no_date: "Sin fecha de entrega"
     provider_orders:
       actions:
         confirm: "Confirmar"
@@ -353,6 +419,10 @@ es:
         no_notes: "Sin notas"
         no_stock: "Sin cupo publicado"
         no_price: "Importe no disponible"
+    schedules:
+      index:
+        availability:
+          toggle_label: "En stock"
     cart:
       office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
       other_deliveries: "Las demás viandas irán a la dirección seleccionada."
@@ -384,6 +454,33 @@ es:
           description: "Definí hasta qué hora aceptás pedidos para hoy."
           label: "Hora límite"
           help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
+    provider_accounts:
+      show:
+        title: "Cuenta"
+        sign_out: "Salir"
+        settings: "Configuración"
+        payment_details: "Datos de cobro"
+        payment_details_description: "Configurá dónde querés recibir tus cobros"
+        operational_settings: "Configuración operativa"
+        operational_settings_description: "Configurá horarios y días sin servicio"
+        deliveries: "Entregas"
+        deliveries_description: "Elegí dónde realizás tus entregas"
+        notifications: "Notificaciones"
+        notifications_description: "Configurá qué alertas querés recibir"
+    provider_operational_settings:
+      show:
+        title: "Configuración operativa"
+        description: "Configurá tus horarios y días sin servicio."
+        back: "Volver a Cuenta"
+        closing_time: "Hora de cierre"
+        closing_time_description: "Hasta qué hora recibís pedidos."
+        add_closing_time: "Agregar hora de cierre"
+        add_closing_time_title: "Agregar Hora de cierre"
+        save_changes: "Guardar cambios"
+        saved_title: "¡Hora de cierre guardada!"
+        saved_description: "El cambio se aplica desde ahora. Los pedidos cerrarán todos los días a las %{time}."
+        saved_description_closed_today: "El cambio se aplica desde ahora. La recepción de pedidos de hoy ya está cerrada. A partir de mañana, cerrará todos los días a las %{time}."
+        done: "Listo"
     consumer_dashboard:
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
@@ -449,4 +546,5 @@ es:
   date:
     formats:
       month_year: "%B de %Y"
-    month_names: [~, Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Setiembre, Octubre, Noviembre, Diciembre]
+      month_name_year: "%B %Y"
+    month_names: [~, Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Septiembre, Octubre, Noviembre, Diciembre]

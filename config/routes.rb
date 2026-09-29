@@ -32,6 +32,8 @@ Rails.application.routes.draw do
   end
 
   namespace :provider do
+    get "account", to: "accounts#show", as: :account
+    get "operational_settings", to: "operational_settings#show", as: :operational_settings
     resources :menus
     resources :orders, only: [ :index, :show ] do
       member do
@@ -39,11 +41,14 @@ Rails.application.routes.draw do
         patch :reject
       end
     end
+    resources :collections, only: [ :index, :show ]
     resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
   end
 
-  resources :schedules, only: [ :index, :create ]
+  resources :schedules, only: [ :index, :create ] do
+    patch :availability, on: :member
+  end
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
