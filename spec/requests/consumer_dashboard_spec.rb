@@ -4,6 +4,8 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Consumer dashboard", type: :request do
+  fixtures :benefit_configurations, :benefits
+
   def consumer_user
     company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
     user = User.create!(email: "consumer-menu@gmail.com", name: "Sofía", password: "password123456")
@@ -37,7 +39,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     Schedule.delete_all
     user = consumer_user
     schedule = create_schedule
-    Benefit.create!(consumer: user.consumer, amount: 5, percentage: 50, due_date: 1.month.from_now)
+    Benefit.create!(consumer: user.consumer, amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
     sign_in_as_consumer(user)
 
     get dashboard_path
@@ -59,11 +61,12 @@ RSpec.describe "Consumer dashboard", type: :request do
     Schedule.delete_all
     user = consumer_user
     schedule = create_schedule
-    benefit = Benefit.create!(consumer: user.consumer, amount: 20, percentage: 50, due_date: 1.month.from_now)
+    benefit = Benefit.create!(consumer: user.consumer, amount: 20, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
     Order.create!(consumer: user.consumer, schedule:, amount: 2, price: 600, discounted_price: 300, address: user.consumer.address, delivery_method: :home)
-
+         .apply_benefit! benefit, 2
     next_week_schedule = Schedule.create!(menu: schedule.menu, date: schedule.date + 1.week, amount: 5)
     Order.create!(consumer: user.consumer, schedule: next_week_schedule, amount: 3, price: 900, discounted_price: 450, address: user.consumer.address, delivery_method: :home)
+         .apply_benefit! benefit, 3
     sign_in_as_consumer(user)
 
     get dashboard_path
@@ -116,8 +119,8 @@ RSpec.describe "Consumer dashboard", type: :request do
       Schedule.create!(menu:, date:, amount:)
     end
 
-    def order_for(schedule, quantity, consumer: consumers(:one))
-      Order.create!(
+    def order_for(schedule, quantity, consumer: consumers(:one), benefit: nil)
+      order = Order.create!(
         consumer:,
         schedule:,
         amount: quantity,
@@ -125,6 +128,9 @@ RSpec.describe "Consumer dashboard", type: :request do
         address: consumer.company.address,
         delivery_method: :office
       )
+      order.apply_benefit! benefit, quantity if benefit
+
+      order
     end
 
     # Criterio 1: los platos de todos los proveedores, en un mismo lugar.
@@ -247,8 +253,8 @@ RSpec.describe "Consumer dashboard", type: :request do
     # empleados, pero los contadores del beneficio son personales.
     it "does not count another employee orders in the own benefit" do
       schedule = publish(menus(:milanesa), monday, amount: 10)
-      order_for(schedule, 3, consumer: consumers(:other))
-      Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now)
+      benefit = Benefit.create!(consumer: consumers(:other), amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
+      order_for(schedule, 3, consumer: consumers(:other), benefit:)
       sign_in users(:one)
 
       get dashboard_path
@@ -361,7 +367,6 @@ RSpec.describe "Consumer dashboard", type: :request do
     it "counts the monthly quota by delivery date inside the current month" do
       this_month = publish(menus(:milanesa), monday, amount: 30)
       next_month = publish(menus(:sorrentinos), Date.new(2026, 10, 1), amount: 30)
-      Benefit.create!(consumer: consumers(:one), amount: 20, percentage: 50, due_date: 1.month.from_now)
       [ [ this_month, 3 ], [ next_month, 7 ] ].each do |schedule, quantity|
         Order.create!(
           consumer: consumers(:one), schedule:, amount: quantity,

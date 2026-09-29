@@ -1,0 +1,7 @@
+monthly:
+  benefit_configuration: monthly
+  consumer: one
+  amount: 20
+  percentage: 50
+  due_date: <%= Date.current + 2 %>
+  status: current

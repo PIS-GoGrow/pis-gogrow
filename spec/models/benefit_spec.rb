@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe Benefit, type: :model do
-  fixtures :consumers, :benefit_configurations
+  fixtures :consumers, :benefit_configurations, :benefits
 
   let(:consumer) { consumers(:one) }
 
@@ -20,6 +20,10 @@ RSpec.describe Benefit, type: :model do
   end
 
   describe ".expire_old!" do
+    before do
+      benefits(:monthly).destroy
+    end
+
     it "expires old benefits" do
       expired1 = described_class.create!(consumer:, amount: 5, status: :current, percentage: 50, due_date: Date.current - 2.days, benefit_configuration: benefit_configurations(:monthly))
       expired2 = described_class.create!(consumer:, amount: 5, status: :current, percentage: 50, due_date: Date.current - 3.days, benefit_configuration: benefit_configurations(:gift))
@@ -42,6 +46,10 @@ RSpec.describe Benefit, type: :model do
   end
 
   describe "scopes" do
+    before do
+      benefits(:monthly).destroy
+    end
+    
     it ".current includes benefits due today or in the future and excludes past ones" do
       active = described_class.create!(consumer:, status: :current, amount: 5, percentage: 50, due_date: nil, benefit_configuration: benefit_configurations(:seniority))
       today = described_class.create!(consumer:, status: :current, amount: 5, percentage: 50, due_date: Date.current, benefit_configuration: benefit_configurations(:gift))

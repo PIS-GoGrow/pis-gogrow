@@ -4,7 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Orders", type: :request do
-  fixtures :orders, :schedules, :menus, :providers, :consumers, :companies, :users, :benefit_configurations
+  fixtures :orders, :schedules, :menus, :providers, :consumers, :companies, :users, :benefit_configurations, :benefits
 
   describe "GET /orders" do
     it "redirects visitors to the sign in page" do
@@ -183,12 +183,12 @@ RSpec.describe "Orders", type: :request do
       expect(inertia).to have_flash(notice: I18n.t("flash.cart_confirmed"))
       expect(inertia).to have_props(
         benefit: {
-          limit: 5,
+          limit: 1,
           used: 2,
           percentage: 50,
-          monthly_limit: 20,
+          monthly_limit: 5,
           monthly_used: 2,
-          monthly_remaining: 18
+          monthly_remaining: 3
         }
       )
       expect(inertia).to have_props(order_confirmation: {
@@ -448,7 +448,7 @@ RSpec.describe "Orders", type: :request do
     it "does not create a partial cart when one provider already closed" do
       consumer, = setup_consumer
       open_schedule = create_schedule
-      closed_provider = Provider.create!(user: users(:consumer_user), order_deadline: "09:00")
+      closed_provider = Provider.create!(user: users(:consumer_user), order_deadline: Time.current)
       closed_menu = Menu.create!(provider: closed_provider, name: "Tarta", description: "De verdura", price: 200)
       closed_schedule = Schedule.create!(menu: closed_menu, date: Date.current, amount: 5)
 
@@ -611,7 +611,10 @@ RSpec.describe "Orders", type: :request do
     end
 
     context "when signed in as an employee" do
-      before { sign_in users(:one) }
+      before do
+        sign_in users(:one)
+        benefits(:monthly).destroy
+      end
 
       it "changes the quantity, the delivery address and the notes, and repricing follows the menu" do
         patch order_path(order), params: update_params(quantity: 3, address: "18 de Julio 1006", notes: "Sin sal")
@@ -645,7 +648,7 @@ RSpec.describe "Orders", type: :request do
         # ya no cuenta para el tope de este.
         travel_to(order.schedule.date)
         Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
-        allow_any_instance_of(Consumer).to receive(:remaining_subsidized_meals).and_return(1)
+        allow_any_instance_of(Consumer).to receive(:remaining_monthly_benefit).and_return(1)
 
         patch order_path(order), params: update_params(quantity: 3)
 

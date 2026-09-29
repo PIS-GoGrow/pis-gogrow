@@ -6,7 +6,7 @@
 # y qué configuración lo generó.
 class Benefit < ApplicationRecord
   belongs_to :consumer
-  has_many :order_benefits
+  has_many :order_benefits, dependent: :destroy
   has_many :orders, through: :order_benefits, source: :order
   belongs_to :benefit_configuration
 

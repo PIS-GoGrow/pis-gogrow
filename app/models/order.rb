@@ -37,7 +37,7 @@ class Order < ApplicationRecord
   has_many :order_accounts, dependent: :destroy
   has_many :accounts, through: :order_accounts
 
-  has_many :order_benefits
+  has_many :order_benefits, dependent: :destroy
   has_many :benefits, through: :order_benefits
 
   validates :amount, presence: true, numericality: { only_integer: true, greater_than: 0 }

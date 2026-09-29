@@ -4,9 +4,9 @@ class BenefitConfiguration < ApplicationRecord
   belongs_to :company
   belongs_to :created_by, class_name: "User"
 
-  has_many :benefits
+  has_many :benefits, dependent: :destroy
   has_many :benefit_rules, dependent: :destroy
-  has_many :consumer_benefit_configurations
+  has_many :consumer_benefit_configurations, dependent: :destroy
   has_many :consumers, through: :consumer_benefit_configurations
 
   validates :subsidy_percentage, presence: true,
