@@ -1,6 +1,7 @@
 import { ChevronLeft, MapPin, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -67,7 +68,7 @@ export function ConsumerCart({
     officeOnlyProviders.length > 0 && !!address && address !== office?.address
 
   return (
-    <div className="bg-background border-border mx-auto min-h-screen max-w-3xl px-6 pt-6 pb-8 md:my-8 md:min-h-0 md:rounded-2xl md:border md:p-8">
+    <MobileCard>
       <Button
         type="button"
         variant="ghost"
@@ -174,7 +175,7 @@ export function ConsumerCart({
         </Alert>
       )}
 
-      <section className="border-border mt-6 border-b pb-4 text-xs">
+      <section className="border-border mt-6 pb-4 text-xs md:border-b">
         {cart.map((item) => {
           const line = item.menu.price * item.quantity
           return (
@@ -225,30 +226,32 @@ export function ConsumerCart({
           </p>
         )}
       </section>
-      <OrderSummary
-        subtotal={subtotal}
-        discount={discount}
-        total={total}
-        percentage={percentage}
-        compact
-      />
-      <Button
-        disabled={!cart.length || processing || !address || missingOffice}
-        onClick={confirm}
-        className={cn(
-          "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
-          processing && "bg-muted hover:bg-muted",
-        )}
-      >
-        {processing ? (
-          <>
-            <Spinner />
-            Confirmando pedido
-          </>
-        ) : (
-          "Confirmar pedido"
-        )}
-      </Button>
+      <BottomAction>
+        <OrderSummary
+          subtotal={subtotal}
+          discount={discount}
+          total={total}
+          percentage={percentage}
+          compact
+        />
+        <Button
+          disabled={!cart.length || processing || !address || missingOffice}
+          onClick={confirm}
+          className={cn(
+            "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
+            processing && "bg-muted hover:bg-muted",
+          )}
+        >
+          {processing ? (
+            <>
+              <Spinner />
+              Confirmando pedido
+            </>
+          ) : (
+            "Confirmar pedido"
+          )}
+        </Button>
+      </BottomAction>
       {error && (
         <Alert variant="destructive" className="mt-3">
           <AlertDescription>
@@ -256,6 +259,6 @@ export function ConsumerCart({
           </AlertDescription>
         </Alert>
       )}
-    </div>
+    </MobileCard>
   )
 }

@@ -9,7 +9,8 @@ RSpec.describe "Consumer dashboard", type: :request do
   def consumer_user
     company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
     user = User.create!(email: "consumer-menu@gmail.com", name: "Sofía", password: "password123456")
-    Consumer.create!(user:, company:, address: "Ellauri 1234")
+    consumer = Consumer.create!(user:, company:, address: "Ellauri 1234")
+    consumer.benefits.create!(description: "Viandas mensuales", amount: 20, percentage: 50, due_date: Date.current + 3.days)
     user
   end
 
@@ -418,5 +419,139 @@ RSpec.describe "Consumer dashboard", type: :request do
     expect(cookies[:session_token]).to be_present
   ensure
     OmniAuth.config.mock_auth[:google_oauth2] = nil
+  end
+
+  describe "GET /dashboard during weekend" do
+    let(:consumer_user_record) { consumer_user }
+    let(:saturday) { Time.zone.local(2026, 10, 3, 10, 0, 0) }
+    let(:next_monday) { Date.new(2026, 10, 5) }
+    let(:next_friday) { Date.new(2026, 10, 9) }
+
+    before do
+      Order.destroy_all
+      Schedule.delete_all
+    end
+
+    it "shows next week's menu and date range when accessed on a Saturday" do
+      travel_to(saturday) do
+        provider_user = User.create!(email: "provider-weekend@gmail.com", name: "Viandas FinDe", password: "password123456")
+        provider = Provider.create!(user: provider_user)
+        menu = Menu.create!(provider:, name: "Wok de vegetales", price: 300)
+
+        # Schedule for this past Friday (should not be included)
+        Schedule.create!(menu:, date: Date.new(2026, 10, 2), amount: 10)
+        # Schedule for next Monday (should be included)
+        next_week_schedule = Schedule.create!(menu:, date: next_monday, amount: 10)
+
+        sign_in_as_consumer(consumer_user_record)
+        get dashboard_path
+
+        expect(response).to have_http_status(:success)
+        expect(inertia).to render_component("consumer/dashboard/index")
+        expect(inertia.props[:week]).to include(
+          start_date: next_monday.iso8601,
+          end_date: next_friday.iso8601
+        )
+        expect(inertia.props[:week][:days].pluck(:date)).to eq(
+          (next_monday..next_friday).map(&:iso8601)
+        )
+        expect(inertia.props[:schedules].map { |s| s[:id] }).to eq([ next_week_schedule.id ])
+      end
+    end
+
+    it "shows next week's menu when accessed on a Sunday" do
+      sunday = Time.zone.local(2026, 10, 4, 15, 0, 0)
+      travel_to(sunday) do
+        sign_in_as_consumer(consumer_user_record)
+        get dashboard_path
+
+        expect(inertia.props[:week]).to include(
+          start_date: next_monday.iso8601,
+          end_date: next_friday.iso8601
+        )
+      end
+    end
+  end
+
+  describe "GET /dashboard/confirmation" do
+    let(:user) { consumer_user }
+    let(:consumer) { user.consumer }
+
+    it "redirects visitors to the sign in page" do
+      get dashboard_confirmation_path
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "redirects users with another role to root_path" do
+      provider_user = User.create!(email: "prov-conf@gmail.com", name: "Prov", password: "password123456")
+      Provider.create!(user: provider_user)
+      session = provider_user.sessions.create!(role: :provider)
+      cookies[:session_token] = AuthenticationHelpers.signed_cookie(:session_token, session.id)
+
+      get dashboard_confirmation_path
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "renders the confirmation page with order details and totals" do
+      provider_user = User.create!(email: "prov-conf-2@gmail.com", name: "La Cocina", password: "password123456")
+      provider = Provider.create!(user: provider_user)
+      menu = Menu.create!(provider:, name: "Tarta Pascualina", price: 250)
+      schedule = Schedule.create!(menu:, date: Date.current, amount: 10)
+      order = Order.create!(
+        consumer:,
+        schedule:,
+        amount: 2,
+        price: 500,
+        discounted_price: 250,
+        address: consumer.company.address,
+        delivery_method: :office,
+        status: :pending
+      )
+
+      sign_in_as_consumer(user)
+      get dashboard_confirmation_path(confirmed_order_ids: [ order.id ])
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to render_component("consumer/dashboard/confirmation")
+      expect(inertia).to have_props(
+        total: 250.0,
+        orders: [
+          {
+            id: order.id,
+            date: schedule.date.iso8601,
+            address: consumer.company.address,
+            delivery_method: "office",
+            provider_name: "La Cocina",
+            name: "Tarta Pascualina",
+            quantity: 2,
+            discounted_price: 250.0
+          }
+        ]
+      )
+    end
+
+    it "fails with NoMethodError when order IDs do not belong to the signed-in consumer (bypass bug)" do
+      other_user = User.create!(email: "other-conf@gmail.com", name: "Otro", password: "password123456")
+      other_consumer = Consumer.create!(user: other_user, company: consumer.company, address: "Dir 123")
+      provider_user = User.create!(email: "prov-conf-3@gmail.com", name: "La Cocina", password: "password123456")
+      provider = Provider.create!(user: provider_user)
+      menu = Menu.create!(provider:, name: "Guiso de lentejas", price: 250)
+      schedule = Schedule.create!(menu:, date: Date.current, amount: 10)
+      other_order = Order.create!(
+        consumer: other_consumer,
+        schedule:,
+        amount: 1,
+        price: 250,
+        discounted_price: 250,
+        address: other_consumer.address,
+        delivery_method: :home,
+        status: :pending
+      )
+
+      sign_in_as_consumer(user)
+      expect {
+        get dashboard_confirmation_path(confirmed_order_ids: [ other_order.id ])
+      }.to raise_error(NoMethodError)
+    end
   end
 end

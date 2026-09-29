@@ -15,17 +15,6 @@ class Consumer < ApplicationRecord
   has_many :consumer_benefit_configurations
   has_many :benefit_configurations, through: :consumer_benefit_configurations
 
-  # La modalidad se deriva de la dirección elegida: la de la oficina es entrega en
-  # oficina y cualquier otra es domicilio. Un proveedor que no entrega a domicilio
-  # fuerza oficina, y el carrito se lo avisa al empleado.
-  def delivery_for(provider, chosen_address)
-    if provider.home_delivery? && chosen_address.present? && chosen_address != company.address
-      { delivery_method: "home", address: chosen_address }
-    else
-      { delivery_method: "office", address: company.address }
-    end
-  end
-
   def total_debt
     accounts.pending.sum :amount
   end
@@ -74,9 +63,21 @@ class Consumer < ApplicationRecord
   def monthly_benefit_used_this_week
     monthly_benefit_used_in Date.current.all_week
   end
+  
+  # Se espera que no se incluyan direcciones blank acá
+  def delivery_addresses
+    [ address, company.address ].compact_blank
+  end
 
-  def remaining_monthly_benefit
-    [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
+  # La modalidad se deriva de la dirección elegida: la de la oficina es entrega en
+  # oficina y cualquier otra es domicilio. Un proveedor que no entrega a domicilio
+  # fuerza oficina, y el carrito se lo avisa al empleado.
+  def delivery_for(provider, chosen_address)
+    if provider.home_delivery? && chosen_address.present? && chosen_address != company.address
+      { delivery_method: "home", address: chosen_address }
+    else
+      { delivery_method: "office", address: company.address }
+    end
   end
 
   # TODO: Cómo obtenemos el cumpleaños/onboarding del empleado?

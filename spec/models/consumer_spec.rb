@@ -30,6 +30,7 @@ RSpec.describe Consumer, type: :model do
       # destroy_all y no delete_all: las órdenes cuelgan de cuentas.
       Order.destroy_all
       Schedule.delete_all
+      Benefit.create!(consumer:, amount: 20, percentage: 50, due_date: 1.month.from_now, description: "Viandas mensuales")
     end
 
     let(:menu) { menus(:milanesa) }
@@ -121,6 +122,44 @@ RSpec.describe Consumer, type: :model do
       Account.create!(owner: consumer, provider:, month: 1.month.ago.beginning_of_month, amount: 300)
 
       expect(consumer.current_month_spending).to eq(450)
+    end
+  end
+
+  describe "#delivery_addresses" do
+    it "returns both consumer and company addresses when both are present" do
+      expect(consumer.delivery_addresses).to contain_exactly(consumer.address, consumer.company.address)
+    end
+
+    it "omits blank consumer addresses" do
+      consumer.update!(address: "")
+      expect(consumer.delivery_addresses).to eq([ consumer.company.address ])
+    end
+  end
+
+  describe "#subsidized_meals_used_this_week" do
+    before do
+      Order.destroy_all
+      Schedule.delete_all
+    end
+
+    let(:menu) { menus(:milanesa) }
+    let(:today_schedule) { Schedule.create!(menu:, date: Date.current, amount: 30) }
+
+    it "sums active orders delivered in the current week" do
+      Order.create!(
+        consumer:, schedule: today_schedule, amount: 2,
+        price: 600, address: consumer.company.address, delivery_method: :office, status: :confirmed
+      )
+      Order.create!(
+        consumer:, schedule: today_schedule, amount: 1,
+        price: 300, address: consumer.company.address, delivery_method: :office, status: :pending
+      )
+      Order.create!(
+        consumer:, schedule: today_schedule, amount: 4,
+        price: 1200, address: consumer.company.address, delivery_method: :office, status: :cancelled
+      )
+
+      expect(consumer.subsidized_meals_used_this_week).to eq(3)
     end
   end
 end

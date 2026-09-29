@@ -7,27 +7,37 @@ class Consumer::DashboardController < Consumer::InertiaController
     @schedules = schedule_data
     @benefit = benefit_data
     @addresses = address_data
-    @order_confirmation = order_confirmation_data
+  end
+
+  def confirmation
+    @consumer = Current.user.consumer
+    order_confirmation = order_confirmation_data
+    @total = order_confirmation[:total]
+    @orders = order_confirmation[:orders]
   end
 
   private
 
-  def week_data
-    start_date = Date.current.beginning_of_week(:monday)
+  # TODO: Eventualmente habría que mover todos los métodos siguientes que están acá
+  # a serializers aparte. Esto permetiría reutilizarlos y hacer todo un poco más legible
+  # (es difícil ver qué información tiene schedule_data)
 
+  def week_data
     {
-      start_date: start_date.iso8601,
-      end_date: (start_date + 4.days).iso8601,
-      days: (start_date..(start_date + 4.days)).map do |date|
+      start_date: week_range.first.iso8601,
+      end_date: week_range.last.iso8601,
+      days: week_range.map do |date|
         { date: date.iso8601, weekday: I18n.l(date, format: "%a"), day: date.day }
       end
     }
   end
 
   def schedule_data
-    range = Date.iso8601(@week[:start_date])..Date.iso8601(@week[:end_date])
+    schedules = Schedule.includes(:orders, menu: [ :reviews, { provider: :user } ])
+                        .where(date: week_range)
+                        .order(:date, :id)
 
-    Schedule.includes(:orders, menu: [ :reviews, { provider: :user } ]).where(date: range).order(:date, :id).map do |schedule|
+    schedules.map do |schedule|
       menu = schedule.menu
 
       {
@@ -43,9 +53,9 @@ class Consumer::DashboardController < Consumer::InertiaController
           price: menu.price.to_f,
           fillings: [],
           sauces: [],
-          provider_name: menu.provider.user&.name || "Proveedor",
+          provider_name: menu.provider_name,
           home_delivery: menu.provider.home_delivery?,
-          reviews: menu.reviews.order(created_at: :desc).limit(4).map do |review|
+          reviews: menu.reviews.first(4).map do |review|
             {
               id: review.id,
               description: review.description,
@@ -80,10 +90,8 @@ class Consumer::DashboardController < Consumer::InertiaController
     order_ids = Array(params[:confirmed_order_ids]).filter_map { |id| Integer(id, exception: false) }.uniq
     return if order_ids.empty?
 
-    orders_by_id = @consumer.orders.includes(schedule: { menu: { provider: :user } }).where(id: order_ids).index_by(&:id)
-    return unless orders_by_id.size == order_ids.size
-
-    orders = order_ids.map { |id| orders_by_id.fetch(id) }
+    orders = @consumer.orders.includes(schedule: { menu: { provider: :user } }).where(id: order_ids)
+    return unless orders.size == order_ids.size
 
     {
       total: orders.sum(&:discounted_price).to_f,
@@ -94,12 +102,21 @@ class Consumer::DashboardController < Consumer::InertiaController
           date: order.schedule.date.iso8601,
           address: order.address,
           delivery_method: order.delivery_method,
-          provider_name: menu.provider.user&.name || "Proveedor",
+          provider_name: menu.provider_name,
           name: menu.name,
           quantity: order.amount,
           discounted_price: order.discounted_price.to_f
         }
       end
     }
+  end
+
+  # Si hoy es sábado o domingo, queremos mostrar los menús para la semana que viene.
+  # Si no, mostramos los de esta.
+  def week_range
+    @week_range ||= begin
+      start = Date.current.on_weekend? ? Date.current.next_week(:monday) : Date.current.beginning_of_week(:monday)
+      start..(start + 4.days)
+    end
   end
 end

@@ -7,6 +7,7 @@ export type { AdminBenefitConfigurationsIndex } from './AdminBenefitConfiguratio
 export type { Auth } from './Auth'
 export type { BenefitConfiguration } from './BenefitConfiguration'
 export type { BenefitRule } from './BenefitRule'
+export type { ConsumerDashboardConfirmation } from './ConsumerDashboardConfirmation'
 export type { ConsumerDashboardIndex } from './ConsumerDashboardIndex'
 export type { ConsumerMenuWithProvider } from './ConsumerMenuWithProvider'
 export type { ConsumerMenusIndex } from './ConsumerMenusIndex'
