@@ -125,8 +125,9 @@ RSpec.describe Account, type: :model do
     let(:account) { consumer.accounts.create!(provider:, month: Date.current, amount: 500) }
 
     # Un pago informado exige comprobante adjunto.
-    def create_payment(status:, created_at: Time.current)
-      payment = Payment.new(account:, status:, created_at:)
+    def create_payment(status:, created_at: Time.current, rejection_reason: nil)
+      rejection_reason ||= "Comprobante ilegible" if status == :rejected
+      payment = Payment.new(account:, status:, created_at:, rejection_reason:)
       payment.receipt.attach(
         io: Rails.root.join("public/icon.png").open,
         filename: "receipt.png",
@@ -165,6 +166,8 @@ RSpec.describe Account, type: :model do
       create_payment(status: :submitted, created_at: instant)
 
       expect(account.collection_status).to eq("submitted")
+    end
+
     # Una cuenta de empresa no debe la deuda final sino el subsidio: lo que la
     # empresa subsidia es la diferencia entre el precio de lista y el de lista
     # menos el descuento.
