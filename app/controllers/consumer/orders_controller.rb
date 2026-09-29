@@ -47,10 +47,12 @@ class Consumer::OrdersController < Consumer::InertiaController
 
         schedule = schedules.fetch(item[:schedule_id].to_i)
         delivery = consumer.delivery_for(schedule.menu.provider, order_params[:address])
+
         if delivery[:address].blank?
           reject_order(:office_address_required)
           raise ActiveRecord::Rollback
         end
+
         order = Order.reserve(
           consumer:,
           schedule:,
@@ -60,6 +62,7 @@ class Consumer::OrdersController < Consumer::InertiaController
           subsidized_quantity:,
           **delivery
         )
+
         raise ActiveRecord::RecordInvalid, order unless order.persisted?
 
         remaining_subsidized -= subsidized_quantity
@@ -67,7 +70,9 @@ class Consumer::OrdersController < Consumer::InertiaController
       end
     end
 
-    redirect_to dashboard_path(confirmed_order_ids: created_orders.map(&:id)), notice: t("flash.cart_confirmed"), status: :see_other unless performed?
+    redirect_to dashboard_path(
+      confirmed_order_ids: created_orders.map(&:id)
+    ), notice: t("flash.cart_confirmed"), status: :see_other unless performed?
   rescue ActiveRecord::RecordInvalid => error
     reject_order(order_error_reason(error.record))
   rescue ActiveRecord::RecordNotFound, KeyError
@@ -97,7 +102,9 @@ class Consumer::OrdersController < Consumer::InertiaController
     if modified
       redirect_to order_path(order), notice: t("flash.order_updated"), status: :see_other
     else
-      redirect_to order_path(order), alert: order.errors.full_messages.first || t("validations.order_not_modifiable"), status: :see_other
+      redirect_to order_path(order),
+                  alert: order.errors.full_messages.first || t("validations.order_not_modifiable"),
+                  status: :see_other
     end
   end
 
@@ -125,6 +132,11 @@ class Consumer::OrdersController < Consumer::InertiaController
 
   def order_error_reason(order)
     return :order_deadline_passed if order.errors[:schedule_id].include?(t("validations.order_deadline_passed"))
+
+    schedule = order.schedule
+
+    return :schedule_unavailable if schedule && !schedule.available
+    return :insufficient_stock if schedule && schedule.remaining_amount < order.amount.to_i
 
     :cart_unavailable
   end

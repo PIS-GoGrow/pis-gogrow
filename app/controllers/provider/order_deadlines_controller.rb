@@ -4,11 +4,11 @@ class Provider::OrderDeadlinesController < Provider::InertiaController
   def update
     if invalid_order_deadline?
       provider.errors.add(:order_deadline, t("validations.invalid_order_deadline"))
-      redirect_to provider_dashboard_path, inertia: { errors: provider.errors }
+      redirect_to provider_operational_settings_path, inertia: { errors: provider.errors }
     elsif provider.update(order_deadline: parsed_order_deadline)
-      redirect_to provider_dashboard_path, notice: t("flash.order_deadline_updated")
+      redirect_to provider_operational_settings_path
     else
-      redirect_to provider_dashboard_path, inertia: { errors: provider.errors }
+      redirect_to provider_operational_settings_path, inertia: { errors: provider.errors }
     end
   end
 

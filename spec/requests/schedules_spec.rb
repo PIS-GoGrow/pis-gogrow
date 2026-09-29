@@ -901,4 +901,56 @@ RSpec.describe "Schedules", type: :request do
       expect(response).to have_http_status(:redirect)
     end
   end
+
+  describe "PATCH /schedules/:id/availability" do
+    it "marks the publication as sold out and records who and when" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+      menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
+      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10)
+
+      sign_in_with_role(user, role: :provider)
+
+      freeze_time do
+        patch availability_schedule_path(schedule), params: { available: false }
+
+        expect(schedule.reload).to have_attributes(
+          available: false,
+          availability_changed_by: user,
+          availability_changed_at: Time.current
+        )
+      end
+
+      expect(response).to redirect_to(schedules_path(week_start: schedule.date.beginning_of_week(:monday).to_s))
+    end
+
+    it "marks the publication as available again" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+      menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
+      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10, available: false)
+
+      sign_in_with_role(user, role: :provider)
+
+      patch availability_schedule_path(schedule), params: { available: true }
+
+      expect(schedule.reload.available).to be(true)
+    end
+
+    it "returns not found when attempting to toggle another provider's publication" do
+      owner = users(:one)
+      provider = Provider.create!(user: owner)
+      menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
+      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10)
+
+      other = users(:two)
+      Provider.create!(user: other)
+      sign_in_with_role(other, role: :provider)
+
+      patch availability_schedule_path(schedule), params: { available: false }
+
+      expect(response).to have_http_status(:not_found)
+      expect(schedule.reload.available).to be(true)
+    end
+  end
 end
