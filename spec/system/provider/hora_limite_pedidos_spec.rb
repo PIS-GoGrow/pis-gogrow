@@ -74,6 +74,62 @@ RSpec.describe "Hora límite de pedidos del proveedor" do
     expect(other.reload.order_deadline.strftime("%H:%M")).to eq("11:00")
   end
 
+  context "when telling the provider since when the change applies" do
+    let(:open_today) { "El cambio se aplica desde ahora. Los pedidos cerrarán todos los días a las 13:00." }
+    let(:closed_today) do
+      "El cambio se aplica desde ahora. La recepción de pedidos de hoy ya está cerrada. " \
+        "A partir de mañana, cerrará todos los días a las 11:00."
+    end
+
+    around do |example|
+      travel_to(Time.current.change(hour: 12)) { example.run }
+    end
+
+    def add_deadline(time)
+      visit provider_operational_settings_path
+      click_on "Agregar hora de cierre"
+      find_by_id("order_deadline").click
+      choose_time(time)
+      click_on "Guardar cambios"
+    end
+
+    def change_deadline(time)
+      visit provider_operational_settings_path
+      find_button("Hora de cierre").click
+      choose_time(time)
+    end
+
+    it "says a deadline still ahead applies from now on" do
+      add_deadline("13:00")
+
+      expect(page).to have_content(open_today)
+    end
+
+    it "says today is already closed when the new deadline has passed" do
+      add_deadline("11:00")
+
+      expect(page).to have_content(closed_today)
+    end
+
+    it "informs since when it applies after changing an existing deadline" do
+      provider.update!(order_deadline: Time.zone.parse("13:00"))
+
+      change_deadline("11:00")
+
+      expect(page).to have_content(closed_today)
+      expect(saved_deadline).to eq("11:00")
+    end
+
+    it "says the change applies from now when moving a passed deadline later" do
+      provider.update!(order_deadline: Time.zone.parse("11:00"))
+
+      change_deadline("13:00")
+
+      expect(page).to have_content(open_today)
+      expect(saved_deadline).to eq("13:00")
+    end
+  end
+
   it "does not let a consumer reach the closing time screen" do
     sign_out
     sign_in users(:one), role: :consumer
