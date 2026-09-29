@@ -627,7 +627,7 @@ RSpec.describe "Orders", type: :request do
     describe "custom delivery address (IBP-014)" do
       it "delivers home to an address the employee saved in their profile" do
         consumer, = setup_consumer
-        saved = consumer.delivery_addresses.create!(name: "Flora Café", street: "Canelones 892", apartment: "Apto 3")
+        saved = consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892", apartment: "Apto 3")
         schedule = create_schedule
 
         post orders_path, params: { order: { address: saved.full_address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
@@ -644,7 +644,7 @@ RSpec.describe "Orders", type: :request do
         end.to change(Order, :count).by(1)
 
         expect(consumer.orders.last).to have_attributes(address: "Colonia 1370, Apto 4", delivery_method: "home")
-        expect(consumer.delivery_addresses).to be_empty
+        expect(consumer.saved_addresses).to be_empty
       end
 
       # Criterio 1: la dirección personalizada solo aplica si el proveedor entrega a domicilio.
@@ -660,7 +660,7 @@ RSpec.describe "Orders", type: :request do
 
       it "shows the last custom address used next to the office on the next visit" do
         consumer, = setup_consumer
-        consumer.delivery_addresses.create!(name: "Flora Café", street: "Canelones 892")
+        consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
         schedule = create_schedule
 
         post orders_path, params: { order: { address: "Canelones 892", items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
@@ -881,7 +881,7 @@ RSpec.describe "Orders", type: :request do
       end
 
       it "switches to an address the employee saved in their profile" do
-        consumers(:one).delivery_addresses.create!(name: "Flora Café", street: "Canelones 892")
+        consumers(:one).saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
 
         patch order_path(order), params: update_params(address: "Canelones 892")
 

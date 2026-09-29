@@ -33,7 +33,7 @@ RSpec.describe "Delivery addresses", type: :request do
       expect { post delivery_addresses_path, params: address_params }.to change(DeliveryAddress, :count).by(1)
 
       expect(response).to redirect_to(dashboard_path)
-      expect(consumers(:one).delivery_addresses.last)
+      expect(consumers(:one).saved_addresses.last)
         .to have_attributes(name: "Flora Café", street: "Canelones 892", apartment: "Apto 3")
 
       follow_redirect!

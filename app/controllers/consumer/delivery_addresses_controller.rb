@@ -2,7 +2,7 @@
 
 class Consumer::DeliveryAddressesController < Consumer::InertiaController
   def create
-    delivery_address = Current.user.consumer.delivery_addresses.new(delivery_address_params)
+    delivery_address = Current.user.consumer.saved_addresses.new(delivery_address_params)
     saved = save_for_later? ? delivery_address.save : delivery_address.valid?
 
     if saved

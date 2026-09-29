@@ -43,8 +43,8 @@ RSpec.describe Consumer, type: :model do
     end
 
     it "lists the office, the profile address and the saved ones, newest first" do
-      consumer.delivery_addresses.create!(name: "Flora Café", street: "Canelones 892", created_at: 2.days.ago)
-      consumer.delivery_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
+      consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892", created_at: 2.days.ago)
+      consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
 
       expect(consumer.delivery_address_options.pluck(:label, :address)).to eq([
         [ "Oficina", company_address ],
@@ -55,7 +55,7 @@ RSpec.describe Consumer, type: :model do
     end
 
     it "puts the last custom address an order went to right after the office" do
-      flora = consumer.delivery_addresses.create!(name: "Flora Café", street: "Canelones 892")
+      flora = consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
       home_order("Ellauri 1234", created_at: 2.days.ago)
       home_order(flora.full_address, created_at: 1.day.ago)
 
@@ -69,7 +69,7 @@ RSpec.describe Consumer, type: :model do
     end
 
     it "does not list another employee's saved addresses" do
-      consumers(:other).delivery_addresses.create!(name: "Estudio", street: "Colonia 1370")
+      consumers(:other).saved_addresses.create!(name: "Estudio", street: "Colonia 1370")
 
       expect(consumer.delivery_address_options.pluck(:label)).not_to include("Estudio")
     end
@@ -178,16 +178,14 @@ RSpec.describe Consumer, type: :model do
     end
   end
 
-  describe "#delivery_address_options addresses" do
+  describe "#delivery_addresses" do
     it "returns both consumer and company addresses when both are present" do
-      expect(consumer.delivery_address_options.pluck(:address)).to contain_exactly(consumer.address, consumer.company.address)
+      expect(consumer.delivery_addresses).to contain_exactly(consumer.address, consumer.company.address)
     end
 
     it "omits blank consumer addresses" do
       consumer.update!(address: "")
-      options = consumer.delivery_address_options
-      expect(options.pluck(:id)).not_to include("home")
-      expect(options.pluck(:address)).to all(be_present)
+      expect(consumer.delivery_addresses).to eq([ consumer.company.address ])
     end
   end
 

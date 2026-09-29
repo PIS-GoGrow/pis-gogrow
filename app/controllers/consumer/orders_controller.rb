@@ -25,9 +25,9 @@ class Consumer::OrdersController < Consumer::InertiaController
     return reject_order(:empty_cart) if requested_items.empty?
     return reject_order(:invalid_quantity) unless requested_items.all? { |item| item[:quantity].to_s.match?(/\A[1-9]\d*\z/) }
     # Rechazamos si la dirección es invalida
-    # valid_new_address? ya verifica que la dirección no sea blank, por lo que acá
+    # delivery_addresses ya verifica que la dirección no sea blank, por lo que acá
     # está manejado el caso de que no haya dirección de envío.
-    return reject_order(:invalid_address) unless valid_new_address?(consumer, order_params[:address])
+    return reject_order(:invalid_address) unless consumer.delivery_addresses.include?(order_params[:address]) || valid_new_address?(consumer, order_params[:address])
 
     created_orders = []
 

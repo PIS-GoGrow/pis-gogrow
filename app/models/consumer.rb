@@ -7,7 +7,7 @@ class Consumer < ApplicationRecord
   belongs_to :user
 
   has_many :orders, dependent: :destroy
-  has_many :delivery_addresses, dependent: :destroy
+  has_many :saved_addresses, class_name: "DeliveryAddress", dependent: :destroy
   has_many :benefits, dependent: :destroy
   has_many :accounts, as: :owner
   has_many :user_notifications, as: :user
@@ -51,6 +51,11 @@ class Consumer < ApplicationRecord
     [ benefit_available - subsidized_meals_used_this_month, 0 ].max
   end
 
+  # Se espera que no se incluyan direcciones blank acá
+  def delivery_addresses
+    [ address, company.address ].compact_blank
+  end
+
   # La modalidad se deriva de la dirección elegida: la de la oficina es entrega en
   # oficina y cualquier otra es domicilio. Un proveedor que no entrega a domicilio
   # fuerza oficina, y el carrito se lo avisa al empleado.
@@ -66,7 +71,7 @@ class Consumer < ApplicationRecord
   # pidió, que es la que el carrito muestra junto a la oficina.
   def delivery_address_options
     last_used = orders.home.order(created_at: :desc).pick(:address)
-    saved = delivery_addresses.order(created_at: :desc).map do |delivery_address|
+    saved = saved_addresses.order(created_at: :desc).map do |delivery_address|
       { id: "address-#{delivery_address.id}", label: delivery_address.name, address: delivery_address.full_address }
     end
     custom = [

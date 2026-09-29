@@ -6,7 +6,7 @@ RSpec.describe DeliveryAddress, type: :model do
   fixtures :consumers, :companies, :users
 
   def build_address(**attributes)
-    consumers(:one).delivery_addresses.new(name: "Casa", street: "Ellauri 1234", **attributes)
+    consumers(:one).saved_addresses.new(name: "Casa", street: "Ellauri 1234", **attributes)
   end
 
   it "is valid with a name and a street with its door number" do
