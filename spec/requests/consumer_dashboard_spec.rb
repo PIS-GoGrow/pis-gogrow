@@ -10,7 +10,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
     user = User.create!(email: "consumer-menu@gmail.com", name: "Sofía", password: "password123456")
     consumer = Consumer.create!(user:, company:, address: "Ellauri 1234")
-    consumer.benefits.create!(description: "Viandas mensuales", amount: 20, percentage: 50, due_date: Date.current + 3.days)
+    consumer.benefits.create!(description: "Viandas mensuales", amount: 20, percentage: 50, due_date: Date.current + 3.days, benefit_configuration: benefit_configurations(:monthly))
     user
   end
 
@@ -40,7 +40,6 @@ RSpec.describe "Consumer dashboard", type: :request do
     Schedule.delete_all
     user = consumer_user
     schedule = create_schedule
-    Benefit.create!(consumer: user.consumer, amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
     sign_in_as_consumer(user)
 
     get dashboard_path
@@ -62,17 +61,16 @@ RSpec.describe "Consumer dashboard", type: :request do
     Schedule.delete_all
     user = consumer_user
     schedule = create_schedule
-    benefit = Benefit.create!(consumer: user.consumer, amount: 20, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
     Order.create!(consumer: user.consumer, schedule:, amount: 2, price: 600, discounted_price: 300, address: user.consumer.address, delivery_method: :home)
-         .apply_benefit! benefit, 2
+         .apply_benefit! user.consumer.benefits.first, 2
     next_week_schedule = Schedule.create!(menu: schedule.menu, date: schedule.date + 1.week, amount: 5)
     Order.create!(consumer: user.consumer, schedule: next_week_schedule, amount: 3, price: 900, discounted_price: 450, address: user.consumer.address, delivery_method: :home)
-         .apply_benefit! benefit, 3
+         .apply_benefit! user.consumer.benefits.first, 3
     sign_in_as_consumer(user)
 
     get dashboard_path
 
-    expect(benefit.amount).to eq(20)
+    expect(user.consumer.benefits.first.amount).to eq(20)
     expect(inertia).to have_props(
       benefit: {
         limit: 5,

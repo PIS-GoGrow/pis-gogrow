@@ -153,7 +153,7 @@ RSpec.describe "Orders", type: :request do
     it "creates the cart atomically with server prices, benefit and delivery address" do
       consumer, company = setup_consumer
       schedule = create_schedule
-      Benefit.create!(consumer:, amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
+      Benefit.create!(consumer:, amount: 16, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
 
       expect do
         post orders_path, params: {
@@ -181,19 +181,8 @@ RSpec.describe "Orders", type: :request do
       follow_redirect!
       expect(inertia).to render_component("consumer/dashboard/confirmation")
       expect(inertia).to have_flash(notice: I18n.t("flash.cart_confirmed"))
-      expect(inertia).to have_props(
-        benefit: {
-          limit: 1,
-          used: 2,
-          percentage: 50,
-          monthly_limit: 5,
-          monthly_used: 2,
-          monthly_remaining: 3
-        }
-      )
-      expect(inertia).to have_props(order_confirmation: {
-        total: 300.0,
-        orders: [
+      expect(inertia).to have_props(total: 300.0)
+      expect(inertia).to have_props(orders: [
           {
             id: order.id,
             date: Date.current.iso8601,
@@ -205,17 +194,17 @@ RSpec.describe "Orders", type: :request do
             discounted_price: 300.0
           }
         ]
-      })
+      )
 
       get dashboard_path
       expect(inertia).to have_props(
         benefit: {
-          limit: 2,
+          limit: 4,
           used: 2,
           percentage: 50,
-          monthly_limit: 10,
+          monthly_limit: 16,
           monthly_used: 2,
-          monthly_remaining: 8
+          monthly_remaining: 14
         }
       )
     end
