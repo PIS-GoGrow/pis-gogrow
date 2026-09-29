@@ -49,6 +49,15 @@ export default function Index({
     { title, href: adminBenefitConfigurations.index().url },
   ]
 
+  const pendingBenefitConfiguration = pending_base_subsidy && {
+    subsidy_percentage:
+      pending_base_subsidy?.subsidy_percentage ?? "",
+    max_voucher_price:
+      pending_base_subsidy?.benefit_rules[0]?.max_price ?? "",
+    monthly_voucher_limit:
+      pending_base_subsidy?.benefit_rules[0]?.limit ?? "",
+  }
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={title} />
@@ -117,14 +126,7 @@ export default function Index({
                   monthly_voucher_limit:
                     base_subsidy?.benefit_rules[0]?.limit ?? "",
                 }}
-                pendingBenefitConfiguration={{
-                  subsidy_percentage:
-                    pending_base_subsidy?.subsidy_percentage ?? "",
-                  max_voucher_price:
-                    pending_base_subsidy?.benefit_rules[0]?.max_price ?? "",
-                  monthly_voucher_limit:
-                    pending_base_subsidy?.benefit_rules[0]?.limit ?? "",
-                }}
+                pendingBenefitConfiguration={pendingBenefitConfiguration}
                 onCancel={() => setIsEditing(false)}
                 onSuccess={() => setIsEditing(false)}
               />

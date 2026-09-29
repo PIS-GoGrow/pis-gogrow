@@ -10,9 +10,9 @@ class Benefit < ApplicationRecord
   has_many :orders, through: :order_benefits, source: :order
   belongs_to :benefit_configuration
 
-
   validates :percentage, presence: true,
     numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validate :only_one_monthly_benefit_per_consumer, if: :monthly?
 
   # Es importante que current sea 0
   enum :status, { current: 0, expired: 1 }, default: :current
@@ -27,14 +27,24 @@ class Benefit < ApplicationRecord
       .distinct
   }
 
-  def self.used_in
-
-  end
-
   def self.expire_old!(date)
     current
       .where(due_date: ...date)
       .update_all(status: :expired, updated_at: Time.current)
+  end
+
+  def monthly?
+    benefit_configuration&.benefit_rules&.any? { |rule| rule.type == MonthlyBenefit.name }
+  end
+
+  private
+
+  def only_one_monthly_benefit_per_consumer
+    return if consumer_id.blank?
+
+    if Benefit.monthly.current.where(consumer_id: consumer_id).where.not(id: id).exists?
+      errors.add(:base, "el cliente ya tiene un beneficio mensual")
+    end
   end
 end
 

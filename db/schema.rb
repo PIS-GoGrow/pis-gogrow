@@ -112,13 +112,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_161634) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "consumer_benefit_configuration", force: :cascade do |t|
+  create_table "consumer_benefit_configurations", force: :cascade do |t|
     t.bigint "benefit_configuration_id", null: false
     t.bigint "consumer_id", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["benefit_configuration_id"], name: "idx_on_benefit_configuration_id_dab181369d"
-    t.index ["consumer_id"], name: "index_consumer_benefit_configuration_on_consumer_id"
+    t.index ["benefit_configuration_id"], name: "idx_on_benefit_configuration_id_5005c4988d"
+    t.index ["consumer_id"], name: "index_consumer_benefit_configurations_on_consumer_id"
   end
 
   create_table "consumers", force: :cascade do |t|
@@ -448,8 +448,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_27_161634) do
   add_foreign_key "benefit_rules", "benefit_configurations"
   add_foreign_key "benefits", "benefit_configurations"
   add_foreign_key "benefits", "consumers"
-  add_foreign_key "consumer_benefit_configuration", "benefit_configurations"
-  add_foreign_key "consumer_benefit_configuration", "consumers"
+  add_foreign_key "consumer_benefit_configurations", "benefit_configurations"
+  add_foreign_key "consumer_benefit_configurations", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
   add_foreign_key "menus", "providers"

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class BenefitConfigurationConsumer < ApplicationRecord
+class ConsumerBenefitConfiguration < ApplicationRecord
   belongs_to :benefit_configuration
   belongs_to :consumer
 end

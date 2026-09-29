@@ -45,6 +45,9 @@ class BenefitConfiguration < ApplicationRecord
         max_price:,
         limit:
       )
+      company.consumers.each do |consumer|
+        benefit_configuration.consumer_benefit_configurations.new consumer:, benefit_configuration:
+      end
 
       benefit_configuration
   end
@@ -67,7 +70,7 @@ class BenefitConfiguration < ApplicationRecord
 
     consumers.each do |consumer|
       next if already_granted_ids.include? consumer.id
-      next unless benefit_rules.all? { |rule| rule.applicable_to? consumer, date }
+      next unless benefit_rules.all? { |rule| rule.applicable_to? consumer, date: }
 
       begin
         consumer.benefits.create!(
@@ -100,7 +103,7 @@ class BenefitConfiguration < ApplicationRecord
   # Devuelve el menor deadline impuesto por las reglas. Si no hay deadlines, devuelve nil
   def benefit_deadline(consumer, date)
     benefit_rules
-      .map { |rule| rule.benefit_deadline consumer, date }
+      .map { |rule| rule.benefit_deadline consumer, date: }
       .filter { |deadline| !deadline.nil? }
       .min
   end
