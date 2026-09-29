@@ -1,4 +1,4 @@
-import { useForm } from "@inertiajs/react"
+import { Link, useForm } from "@inertiajs/react"
 import { Pencil, Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
 
@@ -127,6 +127,11 @@ export default function MenuForm({ formSuccess, menu }: MenoFormProps) {
       return
     }
 
+    if (data.description.trim() === "") {
+      setError("description", ["No puede estar vacío."])
+      return
+    }
+
     if (data.price === "") {
       setError("price", ["No puede estar vacío."])
       return
@@ -168,7 +173,9 @@ export default function MenuForm({ formSuccess, menu }: MenoFormProps) {
     <form onSubmit={handleSubmit}>
       <div className="flex flex-col gap-3">
         <Field data-invalid={!!errors.name?.length}>
-          <FieldLabel htmlFor="name">Nombre</FieldLabel>
+          <FieldLabel htmlFor="name">
+            Nombre <span className="text-destructive">*</span>
+          </FieldLabel>
           <Input
             type="text"
             name="name"
@@ -183,18 +190,35 @@ export default function MenuForm({ formSuccess, menu }: MenoFormProps) {
           )}
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="description">Descripción</FieldLabel>
-          <Input
-            type="text"
+        <Field
+          data-invalid={!!errors.description?.length}
+          className={menu ? "sm:col-span-2" : undefined}
+        >
+          <FieldLabel htmlFor="description">
+            Descripción <span className="text-destructive">*</span>
+          </FieldLabel>
+          <Textarea
             name="description"
             value={data.description}
-            onChange={(e) => setData("description", e.target.value)}
+            className="min-h-24 resize-none"
+            onChange={(e) => {
+              setData("description", e.target.value)
+              clearErrors("description")
+            }}
           />
+
+          {!!errors.description?.length && (
+            <FieldDescription>{errors.description}</FieldDescription>
+          )}
         </Field>
 
-        <Field data-invalid={!!errors.price?.length}>
-          <FieldLabel htmlFor="price">Precio</FieldLabel>
+        <Field
+          data-invalid={!!errors.price?.length}
+          className={menu ? "sm:col-start-2 sm:row-start-1" : undefined}
+        >
+          <FieldLabel htmlFor="price">
+            Precio <span className="text-destructive">*</span>
+          </FieldLabel>
           <Input
             type="number"
             min="0.01"
@@ -211,9 +235,15 @@ export default function MenuForm({ formSuccess, menu }: MenoFormProps) {
           )}
         </Field>
 
-        <div className="flex flex-col gap-2">
+        <div
+          className={
+            menu ? "flex flex-col gap-3 sm:col-span-2" : "flex flex-col gap-2"
+          }
+        >
           <div className="flex items-center justify-between">
-            <FieldLabel>Opciones</FieldLabel>
+            <FieldLabel className="text-base font-semibold">
+              Opciones
+            </FieldLabel>
 
             <Button
               type="button"
@@ -225,7 +255,6 @@ export default function MenuForm({ formSuccess, menu }: MenoFormProps) {
               Agregar
             </Button>
           </div>
-
           {groups.length === 0 ? (
             <p className="text-muted-foreground py-2 text-sm">
               ¿Tiene sabores para elegir? ¡Agrégalos!
@@ -233,7 +262,10 @@ export default function MenuForm({ formSuccess, menu }: MenoFormProps) {
           ) : (
             <div className="flex flex-col gap-3">
               {groups.map((group, index) => (
-                <div key={index} className="rounded-md border p-3">
+                <div
+                  key={group.id ?? index}
+                  className="bg-background rounded-xl border p-4"
+                >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{group.name}</span>
 
@@ -352,15 +384,21 @@ export default function MenuForm({ formSuccess, menu }: MenoFormProps) {
         </DialogContent>
       </Dialog>
 
-      <Button type="submit" className="mt-4 w-full" disabled={processing}>
-        {processing
-          ? menu
-            ? "Guardando..."
-            : "Creando..."
-          : menu
-            ? "Guardar cambios"
-            : "Crear"}
-      </Button>
+      {menu ? (
+        <div className="mt-8 flex justify-end gap-3">
+          <Button type="button" variant="outline" asChild>
+            <Link href={menusRoutes.index().url}>Cancelar</Link>
+          </Button>
+
+          <Button type="submit" disabled={processing}>
+            {processing ? "Guardando..." : "Modificar"}
+          </Button>
+        </div>
+      ) : (
+        <Button type="submit" className="mt-4 w-full" disabled={processing}>
+          {processing ? "Creando..." : "Crear"}
+        </Button>
+      )}
     </form>
   )
 }

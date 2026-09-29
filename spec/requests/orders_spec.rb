@@ -480,7 +480,12 @@ RSpec.describe "Orders", type: :request do
       office_only = create_schedule
       office_only.menu.provider.update!(home_delivery: false)
       home_provider = Provider.create!(user: consumer.user, home_delivery: true)
-      home_menu = Menu.create!(provider: home_provider, name: "Ensalada", price: 250)
+      home_menu = Menu.create!(
+        provider: home_provider,
+        name: "Ensalada",
+        description: "Ensalada",
+        price: 250
+      )
       home_schedule = Schedule.create!(menu: home_menu, date: Date.current, amount: 5)
 
       expect do
