@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Representa el subsidio base de la empresa
+# Representa el subsidio base de la empresa, que se aplica en cada mes
 class MonthlyBenefit < BenefitRule
   belongs_to :benefit_configuration
 

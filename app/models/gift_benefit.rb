@@ -1,8 +1,11 @@
 # frozen_string_literal: true
 
+# Regla de beneficio que representa un regalo de la empresa que puede ser
+# usado entre determinadas fechas y con un límite
 class GiftBenefit < BenefitRule
   validates :effective_from, presence: true
   validates :deadline_date, presence: true
+  validates :limit, presence: true
 
   def applicable_to?(consumer, date: Date.current)
     effective_from <= date && date <= deadline_date

@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
+# Regla de beneficio que se puede usar sin límite a partir de que el empleado
+# estuvo min_years años en la empresa
 class SeniorityBenefit < BenefitRule
-  validates :effective_from, presence: true
+  validates :min_years, presence: true
 
   def applicable_to?(consumer, date: Date.current)
     onboarding = consumer.onboarding_date

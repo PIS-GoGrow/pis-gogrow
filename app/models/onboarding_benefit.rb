@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# Regla de beneficio que se puede usar entre el onboarding del consumidor
+# y deadline_days días más, con un determinado límite
 class OnboardingBenefit < BenefitRule
   validates :deadline_days, presence: true,
     numericality: { greater_than: 0, less_than_or_equal_to: 100 }

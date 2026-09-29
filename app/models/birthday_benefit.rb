@@ -1,19 +1,26 @@
 # frozen_string_literal: true
 
+# Regla de beneficio que se puede usar entre el cumpleaños del consumidor
+# y deadline_days días más, con un determinado límite
 class BirthdayBenefit < BenefitRule
   validates :deadline_days, presence: true,
     numericality: { greater_than: 0, less_than_or_equal_to: 100 }
   validates :limit, presence: true, numericality: { greater_than: 0 }
-
+  
   def applicable_to?(consumer, date: Date.current)
-    birthday = consumer.birthday
-    window = birthday..(birthday + deadline_days.days)
+    birthday = consumer&.birthday
+    return false unless birthday
 
-    # El .map es para tener en cuenta el caso borde de que el cumpleaños es
-    # el 31 de diciembre y hoy se está a primero de enero
-    window
-      .map { |d| d.change year: date.year }
-      .include? date
+    # Probamos con el cumpleaños del año de `date` y con el del año anterior:
+    # la ventana puede haber arrancado en diciembre y seguir en enero
+    # (ej: cumpleaños el 31/12 y hoy es 01/01).
+    [date.year - 1, date.year].any? do |year|
+      next false if year < birthday.year
+
+      # `advance` resuelve el 29/02 en años no bisiestos como 28/02.
+      start = birthday.advance(years: year - birthday.year)
+      (start..(start + deadline_days)).cover?(date)
+    end
   end
 
   def benefit_limit

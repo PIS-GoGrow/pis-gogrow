@@ -3,8 +3,6 @@
 class Consumer < ApplicationRecord
   include SyncsUserRoles
 
-  SUBSIDIZED_MEALS_LIMIT = 20
-
   belongs_to :company
   belongs_to :user
 
@@ -82,9 +80,7 @@ class Consumer < ApplicationRecord
   end
 
   # TODO: Cómo obtenemos el cumpleaños del empleado?
-  def birthday
-    Date.current - 1.day
-  end
+  attr_accessor :bithday
 
   # TODO: Cómo obtenemos el onboarding del empleado?
   def onboarding_date

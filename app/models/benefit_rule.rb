@@ -1,12 +1,21 @@
 # frozen_string_literal: true
 
 # De esta clase heredan todas las reglas de beneficio posibles en el sistema
+# que son:
+# - MonthlyBenefit
+# - SeniorityBenefit
+# - BirthdayBenefit
+# - OnboardingBenefit
+# - GiftBenefit
+# Más información de cada una se puede encontrar en sus archivos.
+# Las reglas son combinables: un determinado beneficio podría aplicarse cuando el
+# usuario está en su cumpleaños y si además tiene determinada cantidad de años en
+# la empresa. MonthlyBenefit no se puede combinar con el resto.
+# En esta clase se define la interfaz que cada regla debe implementar y su semántica.
 class BenefitRule < ApplicationRecord
   belongs_to :benefit_configuration
 
   validate :monthly_benefit_exclusivity
-
-  # Cada regla que herede tiene que implementar los siguientes métodos:
 
   # Indica si correspondería asignarle un beneficio al consumidor en la fecha dada
   # según esta regla. La respuesta debería ser true cuando la regla indica que el
@@ -33,6 +42,8 @@ class BenefitRule < ApplicationRecord
   private
 
   def monthly_benefit_exclusivity
+    return true unless benefit_configuration
+    
     siblings = benefit_configuration.benefit_rules.where.not(id: id)
 
     if type == "MonthlyBenefit" && siblings.exists?
