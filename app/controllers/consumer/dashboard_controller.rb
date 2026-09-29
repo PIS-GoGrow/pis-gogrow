@@ -41,8 +41,8 @@ class Consumer::DashboardController < Consumer::InertiaController
           name: menu.name,
           description: menu.description,
           price: menu.price.to_f,
-          fillings: menu.fillings,
-          sauces: menu.sauces,
+          fillings: [],
+          sauces: [],
           provider_name: menu.provider.user&.name || "Proveedor",
           home_delivery: menu.provider.home_delivery?,
           reviews: menu.reviews.order(created_at: :desc).limit(4).map do |review|

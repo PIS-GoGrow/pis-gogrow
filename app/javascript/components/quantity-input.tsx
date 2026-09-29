@@ -11,7 +11,7 @@ interface Props {
 
 export function QuantityInput({ value, min = 1, max, onChange }: Props) {
   return (
-    <div className="bg-secondary text-secondary-foreground flex h-12 items-center rounded-lg">
+    <div className="bg-secondary text-secondary-foreground flex h-12 w-fit items-center rounded-lg">
       <Button
         type="button"
         variant="ghost"

@@ -131,14 +131,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
     t.index ["user_id"], name: "index_consumers_on_user_id"
   end
 
+  create_table "menu_option_groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "limit", default: 1, null: false
+    t.bigint "menu_id", null: false
+    t.string "name", null: false
+    t.string "options", default: [], array: true
+    t.datetime "updated_at", null: false
+    t.index ["menu_id"], name: "index_menu_option_groups_on_menu_id"
+  end
+
   create_table "menus", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "description"
-    t.string "fillings", default: [], null: false, array: true
     t.string "name"
     t.decimal "price", precision: 10, scale: 2
     t.bigint "provider_id", null: false
-    t.string "sauces", default: [], null: false, array: true
     t.datetime "updated_at", null: false
     t.index ["provider_id"], name: "index_menus_on_provider_id"
   end
@@ -456,6 +464,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
   add_foreign_key "consumer_benefit_configurations", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
+  add_foreign_key "menu_option_groups", "menus"
   add_foreign_key "menus", "providers"
   add_foreign_key "order_accounts", "accounts"
   add_foreign_key "order_accounts", "orders"
