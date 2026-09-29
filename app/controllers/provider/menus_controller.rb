@@ -33,6 +33,13 @@ class Provider::MenusController < Provider::InertiaController
   end
 
   def update
+    menu = Current.user.provider.menus.find(params[:id])
+
+    if menu.update(menu_params)
+      redirect_to provider_menus_path
+    else
+      redirect_to provider_menus_path, inertia: { errors: menu.errors }
+    end
   end
 
   def destroy
@@ -47,6 +54,9 @@ class Provider::MenusController < Provider::InertiaController
   private
 
   def menu_params
-    params.expect(menu: [ :name, :price, :description, fillings: [], sauces: [] ])
+    params.expect(menu: [
+      :name, :price, :description,
+      option_groups_attributes: [ [ :id, :name, :limit, :_destroy, options: [] ] ]
+    ])
   end
 end
