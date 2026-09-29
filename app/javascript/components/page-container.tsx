@@ -8,6 +8,7 @@ interface PageContainerProps {
   description?: string
   actions?: ReactNode
   back?: ReactNode
+  titleVariant?: "default" | "prominent"
   children: ReactNode
 }
 
@@ -17,6 +18,7 @@ export default function PageContainer({
   description,
   actions,
   back,
+  titleVariant,
   children,
 }: PageContainerProps) {
   return (
@@ -27,6 +29,7 @@ export default function PageContainer({
         description={description}
         actions={actions}
         back={back}
+        titleVariant={titleVariant}
       />
       <div className="flex flex-col gap-4">{children}</div>
     </div>

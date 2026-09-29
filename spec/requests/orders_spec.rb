@@ -376,6 +376,20 @@ RSpec.describe "Orders", type: :request do
       end.to change(Order, :count).by(1)
     end
 
+    it "leaves orders placed before the deadline untouched once it passes" do
+      consumer, = setup_consumer
+      schedule = create_schedule
+      schedule.menu.provider.update!(order_deadline: "10:30")
+      post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      order = Order.last
+
+      travel 1.hour
+      get orders_path
+
+      expect(order.reload).to have_attributes(status: "pending", amount: 1)
+      expect(schedule.reload.remaining_amount).to eq(4)
+    end
+
     it "does not create a partial cart when one provider already closed" do
       consumer, = setup_consumer
       open_schedule = create_schedule
@@ -572,6 +586,9 @@ RSpec.describe "Orders", type: :request do
       # subirla se le devuelve: con 1 de saldo puede subsidiar 2 de las 3, y la
       # tercera se cobra a precio de lista.
       it "subsidizes only the meals left in the monthly cap" do
+        # La fixture es para dentro de 3 días: a fin de mes cae en el siguiente y
+        # ya no cuenta para el tope de este.
+        travel_to(order.schedule.date)
         Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now)
         allow_any_instance_of(Consumer).to receive(:remaining_subsidized_meals).and_return(1)
 
