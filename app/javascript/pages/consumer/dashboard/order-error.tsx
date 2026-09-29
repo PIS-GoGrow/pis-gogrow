@@ -22,7 +22,7 @@ export function OrderError({ retry, homeUrl, error }: Props) {
         </h1>
 
         <p className="text-muted-foreground mt-2 max-w-sm text-center text-base leading-6">
-          {error || "Hubo un problema al procesar tu pedido. Intentá de nuevo."}
+          {error ?? "Hubo un problema al procesar tu pedido. Intentá de nuevo."}
         </p>
       </div>
 
