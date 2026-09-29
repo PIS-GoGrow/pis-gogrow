@@ -171,4 +171,22 @@ describe("ConsumerCart delivery address", () => {
       ),
     ).toBeInTheDocument()
   })
+
+  it("lists every office-only provider in a single warning", () => {
+    renderCart({
+      cart: [
+        cartItem("Endulzate by Noe", false, 1),
+        cartItem("Dulce Sur", false, 2),
+        cartItem("La Olla", false, 3),
+        cartItem("Tu Viandita", true, 4),
+      ],
+      address: "Ellauri 1234",
+    })
+
+    expect(
+      screen.getByText(
+        "Endulzate by Noe, Dulce Sur y La Olla entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+      ),
+    ).toBeInTheDocument()
+  })
 })

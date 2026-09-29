@@ -130,11 +130,14 @@ export function ConsumerCart({
               {missingOffice ? (
                 <p>{t("pages.cart.office_address_missing")}</p>
               ) : (
-                officeOnlyProviders.map((provider) => (
-                  <p key={provider}>
-                    {t("pages.cart.office_delivery_warning", { provider })}
-                  </p>
-                ))
+                <p>
+                  {t("pages.cart.office_delivery_warning", {
+                    count: officeOnlyProviders.length,
+                    providers: new Intl.ListFormat("es", {
+                      type: "conjunction",
+                    }).format(officeOnlyProviders),
+                  })}
+                </p>
               )}
             </AlertDescription>
           </Alert>
