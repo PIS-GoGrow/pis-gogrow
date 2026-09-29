@@ -271,7 +271,11 @@ export default function Index({
               setView("cart")
             }}
             homeUrl={consumerDashboard.index().url}
-            error={form.errors.order_error}
+            error={
+              Array.isArray(form.errors.order_error)
+                ? form.errors.order_error[0]
+                : form.errors.order_error
+            }
           />
         )}
       </main>
