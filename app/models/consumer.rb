@@ -21,7 +21,7 @@ class Consumer < ApplicationRecord
   end
 
   def current_benefit
-    benefits.current.monthly.first
+    benefits.current.monthly.first || benefits.current.order(:due_date).first
   end
 
   def benefit_available
