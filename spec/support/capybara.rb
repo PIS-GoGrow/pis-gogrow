@@ -5,12 +5,10 @@
 # Chrome headless.
 RSpec.configure do |config|
   config.before(:each, type: :system) do
-    driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ] do |options|
-      # El sandbox de Chrome no puede arrancar como root y el contenedor de
-      # desarrollo corre como root. Solo se desactiva en ese caso: fuera del
-      # contenedor (root no root) el sandbox sigue aplicando.
-      options.add_argument("--no-sandbox") if Process.uid.zero?
-      options.add_argument("--disable-dev-shm-usage")
+    driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ] do |driver_option|
+      driver_option.add_argument("--no-sandbox")
+      driver_option.add_argument("--disable-dev-shm-usage")
+      driver_option.add_argument("--disable-gpu")
     end
   end
 end
