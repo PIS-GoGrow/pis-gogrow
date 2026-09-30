@@ -58,6 +58,8 @@ es:
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
     order_deadline_updated: "La hora límite de pedidos fue actualizada."
     payment_receipt_submitted: "Comprobante enviado para su validacion."
+    invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
+    invoice_removed: "Factura eliminada."
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -74,6 +76,7 @@ es:
     password_challenge_invalid: "La verificación de contraseña no es válida"
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
+    invoice_not_removable: "Esta factura ya fue revisada y no se puede eliminar."
   activerecord:
     errors:
       models:
@@ -87,6 +90,22 @@ es:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
+        invoice:
+          attributes:
+            account:
+              not_company: "debe ser un período de cobro de una empresa"
+            issued_on:
+              blank: "Ingresá la fecha de emisión."
+              less_than_or_equal_to: "La fecha de emisión no puede ser posterior a hoy."
+            total_amount:
+              not_a_number: "Ingresá el monto total."
+              greater_than: "El monto total debe ser mayor a cero."
+            file:
+              required: "Adjuntá el archivo de la factura."
+              invalid_content_type: "El archivo debe ser PDF, JPG o PNG."
+              too_large: "El archivo no puede superar los 10 MB."
+            base:
+              already_invoiced: "Este período ya tiene una factura enviada."
         delivery_address:
           attributes:
             name:
@@ -340,13 +359,40 @@ es:
       group:
         total: "Total a cobrar"
         confirmed: "%{amount} en cobros confirmados"
-        pending: "%{amount} en cobros pendientes"
-        submitted: "%{amount} en cobros informados"
-        rejected: "%{amount} en cobros rechazados"
+        awaiting_one: "%{count} cobro pendiente de confirmación"
+        awaiting_other: "%{count} cobros pendientes de confirmación"
+        rejected_one: "%{count} cobro rechazado"
+        rejected_other: "%{count} cobros rechazados"
         employees: "Empleados"
         company: "Empresa"
         due: "Vence: %{date}"
         detail: "Ver detalle"
+      invoice:
+        statuses:
+          pending: "Por revisar"
+          approved: "Aprobada"
+          rejected: "Rechazada"
+        select_file: "Seleccionar archivo"
+        no_file: "Sin archivos seleccionados"
+        file_label: "Archivo de la factura"
+        formats: "PDF, JPG o PNG de hasta 10 MB."
+        upload: "Subir factura"
+        uploading: "Subiendo…"
+        download: "Descargar factura"
+        preview: "Ver factura %{name}"
+        rejected_hint: "La factura fue rechazada. Podés subir una nueva."
+        dialog:
+          title: "Subir factura"
+          description: "Completá los datos de la factura de %{month} antes de enviarla."
+          issued_on: "Fecha de emisión"
+          total_amount: "Monto total"
+          expected: "Importe calculado del período: %{amount}"
+          file: "Archivo"
+        remove:
+          trigger: "Eliminar factura"
+          title: "¿Eliminar la factura?"
+          description: "Vas a poder subir otra para este período."
+          confirm: "Eliminar"
       show:
         eyebrow: "Cobro"
         title: "Cobro a %{name}"
