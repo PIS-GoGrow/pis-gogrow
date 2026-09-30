@@ -153,7 +153,7 @@ RSpec.describe "Orders", type: :request do
     it "creates the cart atomically with server prices, benefit and delivery address" do
       consumer, company = setup_consumer
       schedule = create_schedule
-      Benefit.create!(consumer:, amount: 5, percentage: 50, due_date: 1.month.from_now)
+      Benefit.create!(consumer:, description: "Viandas mensuales", amount: 10, percentage: 50, due_date: 1.month.from_now)
 
       expect do
         post orders_path, params: {
@@ -165,7 +165,7 @@ RSpec.describe "Orders", type: :request do
       end.to change(Order, :count).by(1)
 
       order = Order.last
-      expect(response).to redirect_to(dashboard_path(confirmed_order_ids: [ order.id ]))
+      expect(response).to redirect_to(dashboard_confirmation_path(confirmed_order_ids: [ order.id ]))
       expect(order).to have_attributes(
         consumer:,
         schedule:,
@@ -179,20 +179,10 @@ RSpec.describe "Orders", type: :request do
       expect(order).to be_pending
       expect(schedule.reload.remaining_amount).to eq(3)
       follow_redirect!
-      expect(inertia).to render_component("consumer/dashboard/index")
+      expect(inertia).to render_component("consumer/dashboard/confirmation")
       expect(inertia).to have_flash(notice: I18n.t("flash.cart_confirmed"))
-      expect(inertia).to have_props(
-        benefit: {
-          limit: 5,
-          used: 2,
-          percentage: 50,
-          monthly_limit: 20,
-          monthly_used: 2,
-          monthly_remaining: 18
-        }
-      )
-      expect(inertia).to have_props(order_confirmation: {
-        total: 300.0,
+      expect(inertia).to have_props(total: 300.0)
+      expect(inertia).to have_props({
         orders: [
           {
             id: order.id,
@@ -206,6 +196,18 @@ RSpec.describe "Orders", type: :request do
           }
         ]
       })
+
+      get dashboard_path
+      expect(inertia).to have_props(
+        benefit: {
+          limit: 2,
+          used: 2,
+          percentage: 50,
+          monthly_limit: 10,
+          monthly_used: 2,
+          monthly_remaining: 8
+        }
+      )
     end
 
     it "does not create a partial cart when one item is unavailable" do
@@ -346,6 +348,122 @@ RSpec.describe "Orders", type: :request do
       end.to change(Order, :count).by(2).and change(Schedule, :count).by(0).and change(Payment, :count).by(0)
 
       expect(consumer.orders.sum(:discounted_price)).to eq(800)
+    end
+
+    context "when ordering during the weekend for next week" do
+      it "allows creating an order on Saturday for next Monday's schedule" do
+        travel 5.days
+        consumer, company = setup_consumer
+        provider = Provider.find_or_create_by!(user: users(:two))
+        menu = Menu.create!(provider:, name: "Ravioles", price: 300)
+        next_monday_schedule = Schedule.create!(menu:, date: Date.new(2026, 9, 21), amount: 10)
+
+        expect do
+          post orders_path, params: {
+            order: {
+              address: company.address,
+              items: [ { schedule_id: next_monday_schedule.id, quantity: 1 } ]
+            }
+          }
+        end.to change(Order, :count).by(1)
+
+        expect(response).to redirect_to(dashboard_confirmation_path(confirmed_order_ids: [ Order.last.id ]))
+      end
+    end
+
+    context "edge cases and interface bypass" do
+      it "rejects ordering for a schedule beyond next week's Friday (outside allowed_dates)" do
+        consumer, company = setup_consumer
+        provider = Provider.find_or_create_by!(user: users(:two))
+        menu = Menu.create!(provider:, name: "Torta", price: 200)
+        far_future_schedule = Schedule.create!(menu:, date: Date.current.next_week(:friday) + 3.days, amount: 10)
+
+        expect do
+          post orders_path, params: {
+            order: {
+              address: company.address,
+              items: [ { schedule_id: far_future_schedule.id, quantity: 1 } ]
+            }
+          }
+        end.not_to change(Order, :count)
+
+        expect(response).to redirect_to(dashboard_path)
+        follow_redirect!
+        expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
+      end
+
+      it "rejects ordering with an unauthorized delivery address (interface bypass)" do
+        consumer, = setup_consumer
+        schedule = create_schedule
+
+        expect do
+          post orders_path, params: {
+            order: {
+              address: "Avenida Siempreviva 742",
+              items: [ { schedule_id: schedule.id, quantity: 1 } ]
+            }
+          }
+        end.not_to change(Order, :count)
+
+        expect(response).to redirect_to(dashboard_path)
+        follow_redirect!
+        expect(inertia).to have_props(errors: { order_error: I18n.t("validations.invalid_address") })
+      end
+
+      it "rejects ordering with a non-existent schedule id (tampered payload)" do
+        consumer, company = setup_consumer
+
+        expect do
+          post orders_path, params: {
+            order: {
+              address: company.address,
+              items: [ { schedule_id: 999_999, quantity: 1 } ]
+            }
+          }
+        end.not_to change(Order, :count)
+
+        expect(response).to redirect_to(dashboard_path)
+        follow_redirect!
+        expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
+      end
+
+      it "rejects ordering when signed in with a non-consumer role (access control)" do
+        sign_in users(:provider_user)
+        schedule = create_schedule
+
+        expect do
+          post orders_path, params: {
+            order: {
+              address: "18 de Julio 1006",
+              items: [ { schedule_id: schedule.id, quantity: 1 } ]
+            }
+          }
+        end.not_to change(Order, :count)
+
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "rolls back atomically if office delivery is forced but company has no address" do
+        consumer, company = setup_consumer
+        company.update_columns(address: "")
+        consumer.update_columns(address: "Mi Casa 123")
+        office_provider = providers(:office_provider)
+        menu = Menu.create!(provider: office_provider, name: "Chivito", price: 400)
+        schedule = Schedule.create!(menu:, date: Date.current, amount: 5)
+
+        expect do
+          post orders_path, params: {
+            order: {
+              address: "Mi Casa 123",
+              items: [ { schedule_id: schedule.id, quantity: 1 } ]
+            }
+          }
+        end.not_to change(Order, :count)
+
+        expect(response).to redirect_to(dashboard_path)
+        follow_redirect!
+        expect(inertia).to have_props(errors: { order_error: I18n.t("validations.office_address_required") })
+      end
     end
 
     it "creates separate orders for different toppings of the same dish" do
@@ -493,7 +611,7 @@ RSpec.describe "Orders", type: :request do
       expect(consumer.orders.find_by!(schedule: office_only)).to have_attributes(address: company.address, delivery_method: "office")
       expect(consumer.orders.find_by!(schedule: home_schedule)).to have_attributes(address: consumer.address, delivery_method: "home")
       follow_redirect!
-      expect(inertia).to render_component("consumer/dashboard/index")
+      expect(inertia).to render_component("consumer/dashboard/confirmation")
     end
 
     it "keeps office delivery when the employee selects the office" do
@@ -644,7 +762,7 @@ RSpec.describe "Orders", type: :request do
         # La fixture es para dentro de 3 días: a fin de mes cae en el siguiente y
         # ya no cuenta para el tope de este.
         travel_to(order.schedule.date)
-        Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now)
+        Benefit.create!(consumer: consumers(:one), description: "Viandas mensuales", amount: 5, percentage: 50, due_date: 1.month.from_now)
         allow_any_instance_of(Consumer).to receive(:remaining_subsidized_meals).and_return(1)
 
         patch order_path(order), params: update_params(quantity: 3)
@@ -654,7 +772,7 @@ RSpec.describe "Orders", type: :request do
       end
 
       it "applies the active benefit to the new quantity" do
-        Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now)
+        Benefit.create!(consumer: consumers(:one), description: "Viandas mensuales", amount: 5, percentage: 50, due_date: 1.month.from_now)
 
         patch order_path(order), params: update_params(quantity: 2)
 

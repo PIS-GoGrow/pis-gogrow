@@ -42,6 +42,9 @@ menus = [
     name: "Milanesa con papas fritas",
     description: "Opción de carne o pollo",
     price: 300,
+    option_groups_attributes: [
+      { name: "Salsas", limit: 1, options: [ "Mayonesa de ajo", "Ketchup" ] }
+    ],
     day: 0,
     amount: 7
   },
@@ -66,6 +69,9 @@ menus = [
     name: "Ravioles con salsa de tomate",
     description: "Pasta fresca con salsa a elección",
     price: 320,
+    option_groups_attributes: [
+      { name: "Salsas", limit: 1, options: [ "Filetto", "Bolognesa" ] }
+    ],
     day: 3,
     amount: 8
   },
@@ -82,6 +88,10 @@ menus = [
     name: "Sorrentinos de ricota",
     description: "Pasta rellena con opciones a elección",
     price: 300,
+    option_groups_attributes: [
+      { name: "Rellenos", limit: 1, options: [ "Ricota y nuez", "Ricota y espinaca" ] },
+      { name: "Salsas", limit: 1, options: [ "Filetto", "Bolognesa", "Rosa" ] }
+    ],
     day: 0,
     amount: 8
   },
