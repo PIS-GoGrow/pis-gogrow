@@ -29,6 +29,7 @@ end
 #  price                      :decimal(10, 2)
 #  rejection_details          :string
 #  rejection_reason           :integer
+#  selected_options           :jsonb            not null
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null

@@ -33,6 +33,11 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
     end || []
   end
 
+  typelize "Array<{ group_id: number; name: string; values: string[] }>"
+  attribute :selected_options do |order|
+    order.selected_options
+  end
+
   typelize :number, nullable: true
   attribute :discounted_price do |order|
     order.discounted_price&.to_f

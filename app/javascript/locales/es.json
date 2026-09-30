@@ -165,6 +165,10 @@
       "consumer_dashboard": {
         "index": {
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
+        },
+        "options": {
+          "choose": "Elegí tu %{name}",
+          "limit": "Podés elegir hasta %{count}"
         }
       },
       "dashboard": {
@@ -261,7 +265,7 @@
             "address": "Dirección de entrega",
             "back": "Volver",
             "confirm": "Guardar cambios",
-            "description": "Podés cambiar la cantidad, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo.",
+            "description": "Podés cambiar la cantidad, las opciones del plato, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo.",
             "notes": "Notas",
             "notes_placeholder": "Sin salsa, sin cebolla…",
             "quantity": "Cantidad",

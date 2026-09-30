@@ -10,6 +10,7 @@ import type {
   CartItem,
   DeliveryAddressOption,
   Schedule,
+  Selections,
 } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
 import { OrderError } from "./order-error"
@@ -67,8 +68,7 @@ export default function Index({
   const [cart, setCart] = useState<CartItem[]>([])
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
-  const [filling, setFilling] = useState("")
-  const [sauce, setSauce] = useState("")
+  const [selections, setSelections] = useState<Selections>({})
   const [address, setAddress] = useState(addresses[0]?.address ?? "")
   const [unsavedAddresses, setUnsavedAddresses] = useState<
     DeliveryAddressOption[]
@@ -81,6 +81,7 @@ export default function Index({
       schedule_id: number
       quantity: number
       notes: string
+      options: { group_id: number; values: string[] }[]
     }[],
   })
 
@@ -128,28 +129,26 @@ export default function Index({
     setSelected(item)
     setQuantity(1)
     setNotes("")
-    setFilling("")
-    setSauce("")
+    setSelections({})
     setView("detail")
   }
 
   function addToCart() {
     if (!selected || selected.sold_out || selected.orders_closed) return
 
-    const detail = [filling, sauce, notes].filter(Boolean).join(" · ")
+    // Dos veces el mismo plato con distinta personalización son dos líneas del
+    // carrito, así que la clave incluye lo elegido además de las notas.
+    const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}`
 
     setCart((items) => {
-      const found = items.find(
-        (item) => item.id === selected.id && item.notes === detail,
-      )
+      const found = items.find((item) => item.cartId === cartId)
 
       return found
         ? items.map((item) =>
-            item.id === selected.id && item.notes === detail
+            item.cartId === cartId
               ? {
                   ...item,
                   quantity: Math.min(item.remaining, item.quantity + quantity),
-                  notes: detail,
                 }
               : item,
           )
@@ -157,9 +156,10 @@ export default function Index({
             ...items,
             {
               ...selected,
-              cartId: `${selected.id}-${detail}`,
+              cartId,
               quantity: Math.min(selected.remaining, quantity),
-              notes: detail,
+              notes,
+              selections,
             },
           ]
     })
@@ -174,6 +174,10 @@ export default function Index({
       schedule_id: item.id,
       quantity: item.quantity,
       notes: item.notes,
+      options: Object.entries(item.selections).map(([groupId, values]) => ({
+        group_id: Number(groupId),
+        values,
+      })),
     }))
 
     form.transform(() => ({ order: { address, items } }))
@@ -218,11 +222,9 @@ export default function Index({
             quantity={quantity}
             setQuantity={setQuantity}
             notes={notes}
+            selections={selections}
+            setSelections={setSelections}
             setNotes={setNotes}
-            filling={filling}
-            setFilling={setFilling}
-            sauce={sauce}
-            setSauce={setSauce}
             percentage={benefit.percentage}
             back={() => setView("menu")}
             add={addToCart}

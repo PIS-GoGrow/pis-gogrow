@@ -48,6 +48,11 @@ class OrderSerializer < ApplicationSerializer
     order.cancellation_block_reason
   end
 
+  typelize "Array<{ group_id: number; name: string; values: string[] }>"
+  attribute :selected_options do |order|
+    order.selected_options
+  end
+
   typelize :boolean
   attribute :modifiable do |order|
     order.modifiable?
@@ -74,6 +79,7 @@ end
 #  price                      :decimal(10, 2)
 #  rejection_details          :string
 #  rejection_reason           :integer
+#  selected_options           :jsonb            not null
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null

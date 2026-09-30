@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -167,6 +167,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
     t.string "rejection_details"
     t.integer "rejection_reason"
     t.bigint "schedule_id"
+    t.jsonb "selected_options", default: [], null: false
     t.integer "status", default: 0, null: false
     t.integer "status_before_cancellation"
     t.datetime "updated_at", null: false

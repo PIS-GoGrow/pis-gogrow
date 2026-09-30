@@ -3,6 +3,7 @@ import { Pencil } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -23,12 +24,14 @@ import type { ConsumerOrdersShow, Order } from "@/types"
 interface EditOrderSheetProps {
   order: Order
   addresses: ConsumerOrdersShow["delivery_addresses"]
+  optionGroups: ConsumerOrdersShow["option_groups"]
   maxQuantity: number
 }
 
 export default function EditOrderSheet({
   order,
   addresses,
+  optionGroups,
   maxQuantity,
 }: EditOrderSheetProps) {
   const { t } = useTranslation()
@@ -37,7 +40,15 @@ export default function EditOrderSheet({
     quantity: order.amount ?? 1,
     address: order.address ?? addresses[0]?.address ?? "",
     notes: order.notes ?? "",
+    options: optionGroups.map((group) => ({
+      group_id: group.id,
+      values:
+        order.selected_options.find((option) => option.group_id === group.id)
+          ?.values ?? [],
+    })),
   })
+
+  const missingChoice = data.options.some((option) => !option.values.length)
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -65,7 +76,10 @@ export default function EditOrderSheet({
       <SheetContent
         side="bottom"
         showCloseButton={false}
-        className="border-border bg-background text-foreground gap-6 rounded-t-[32px] border px-6 pt-2.5 pb-8 shadow-none md:inset-x-1/2 md:bottom-1/2 md:w-[402px] md:translate-x-[-50%] md:translate-y-1/2 md:rounded-[32px]"
+        // El Sheet inferior crece con el contenido y no trae tope: con varios
+        // grupos de opciones se pasa de la pantalla, así que acá se limita y se
+        // hace scrolleable.
+        className="border-border bg-background text-foreground max-h-[85svh] gap-6 overflow-y-auto rounded-t-[32px] border px-6 pt-2.5 pb-8 shadow-none md:inset-x-1/2 md:bottom-1/2 md:max-h-[80svh] md:w-[402px] md:translate-x-[-50%] md:translate-y-1/2 md:rounded-[32px]"
       >
         <div
           aria-hidden="true"
@@ -129,6 +143,27 @@ export default function EditOrderSheet({
             </RadioGroup>
           </Field>
 
+          {optionGroups.map((group) => (
+            <OptionChoices
+              key={group.id}
+              group={group}
+              values={
+                data.options.find((option) => option.group_id === group.id)
+                  ?.values ?? []
+              }
+              setValues={(values) =>
+                setData(
+                  "options",
+                  data.options.map((option) =>
+                    option.group_id === group.id
+                      ? { ...option, values }
+                      : option,
+                  ),
+                )
+              }
+            />
+          ))}
+
           <Field>
             <FieldLabel htmlFor="notes">
               {t("pages.orders.show.edit_dialog.notes")}
@@ -154,7 +189,7 @@ export default function EditOrderSheet({
             <Button
               type="submit"
               className="h-12 rounded-lg text-base font-medium"
-              disabled={processing}
+              disabled={processing || missingChoice}
             >
               {processing && <Spinner />}
               {t("pages.orders.show.edit_dialog.confirm")}

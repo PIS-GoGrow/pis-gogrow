@@ -142,6 +142,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
 | `Icon` | `@/components/icon` | Renderizar un ícono de lucide recibido como prop |
 | `GoogleMark` | `@/components/branding/google-mark` | Logo de Google en el acceso con Google |
+| `OptionChoices` | `@/components/menus/option-choices` | Elegir las opciones de un grupo de un plato: `RadioGroup` si el grupo admite una, casillas con tope si admite varias |
 | `QuantityInput` | `@/components/quantity-input` | Elegir una cantidad entre un mínimo y un máximo |
 
 `PlaceholderPattern` sólo rellena los dashboards que todavía no están hechos. No se usa en pantallas nuevas.

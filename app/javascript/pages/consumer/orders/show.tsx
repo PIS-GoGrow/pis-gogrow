@@ -34,6 +34,7 @@ export default function Show({
   order,
   delivery_addresses,
   max_quantity,
+  option_groups,
 }: ConsumerOrdersShow) {
   const { t } = useTranslation()
   const { formatMoney, formatDeliveryDate } = useFormatters()
@@ -91,6 +92,12 @@ export default function Show({
                   : t("pages.orders.index.no_date")}
               </Row>
 
+              {order.selected_options.map((option) => (
+                <Row key={option.group_id} label={option.name}>
+                  {option.values.join(", ")}
+                </Row>
+              ))}
+
               <Row label={t("pages.orders.show.delivery_method")}>
                 {t(`pages.orders.delivery_methods.${order.delivery_method}`)}
               </Row>
@@ -135,6 +142,7 @@ export default function Show({
               <EditOrderSheet
                 order={order}
                 addresses={delivery_addresses}
+                optionGroups={option_groups}
                 maxQuantity={max_quantity}
               />
             ) : (
