@@ -89,7 +89,7 @@ class Consumer < ApplicationRecord
 
   # TODO: Cómo obtenemos el cumpleaños/onboarding del empleado?
   attr_accessor :bithday, :onboarding_date
-  
+
   # La oficina va primero y después la última dirección particular a la que se
   # pidió, que es la que el carrito muestra junto a la oficina.
   def delivery_address_options
