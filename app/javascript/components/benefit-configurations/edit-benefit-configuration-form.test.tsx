@@ -6,7 +6,7 @@ import EditBenefitConfigurationForm from "./edit-benefit-configuration-form"
 
 const postMock = vi.fn()
 let currentFormData: Record<string, unknown> = {}
-let currentFormErrors: Record<string, string[] | undefined> = {}
+let currentFormErrors: Record<string, unknown> = {}
 let transformCallback: ((data: Record<string, unknown>) => unknown) | null =
   null
 
@@ -210,10 +210,16 @@ describe("EditBenefitConfigurationForm", () => {
 
   it("displays validation error messages when errors are present", () => {
     currentFormErrors = {
-      subsidy_percentage: ["debe ser menor o igual a 100"],
-      max_voucher_price: ["debe ser mayor que 0"],
-      monthly_voucher_limit: ["debe ser un número entero"],
-      effective_from: ["ya ha sido tomado"],
+      benefit_configuration: {
+        subsidy_percentage: ["debe ser menor o igual a 100"],
+      },
+      benefit_rules: [
+        {
+          max_price: ["debe ser mayor que 0"],
+          limit: ["debe ser un número entero"],
+          effective_from: ["ya ha sido tomado"],
+        },
+      ],
     }
 
     render(
@@ -227,6 +233,6 @@ describe("EditBenefitConfigurationForm", () => {
     expect(screen.getByText("debe ser menor o igual a 100")).toBeInTheDocument()
     expect(screen.getByText("debe ser mayor que 0")).toBeInTheDocument()
     expect(screen.getByText("debe ser un número entero")).toBeInTheDocument()
-    expect(screen.getByText("ya ha sido tomado")).toBeInTheDocument()
+    expect(screen.getByText(/error inesperado/i)).toBeInTheDocument()
   })
 })

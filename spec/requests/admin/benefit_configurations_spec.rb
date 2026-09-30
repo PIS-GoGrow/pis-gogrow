@@ -295,5 +295,39 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       follow_redirect!
       expect(inertia.props[:errors][:benefit_rules].first).to have_key(:effective_from)
     end
+
+    context "casos borde y robustez" do
+      it "responde con 400 Bad Request ante bypass de interfaz sin clave benefit_configuration" do
+        post admin_benefit_configurations_path, params: { unexpected_payload: "bypass" }
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "rechaza porcentajes de subsidio no numéricos o fuera de rango (0-100)" do
+        post admin_benefit_configurations_path, params: {
+          benefit_configuration: { subsidy_percentage: "invalido", max_voucher_price: 150, monthly_voucher_limit: 20 }
+        }
+
+        follow_redirect!
+        expect(inertia.props[:errors][:benefit_configuration]).to have_key(:subsidy_percentage)
+
+        post admin_benefit_configurations_path, params: {
+          benefit_configuration: { subsidy_percentage: 150, max_voucher_price: 150, monthly_voucher_limit: 20 }
+        }
+
+        follow_redirect!
+        expect(inertia.props[:errors][:benefit_configuration]).to have_key(:subsidy_percentage)
+      end
+
+      it "rechaza precios máximos o límites negativos en las reglas" do
+        post admin_benefit_configurations_path, params: {
+          benefit_configuration: { subsidy_percentage: 50, max_voucher_price: -10, monthly_voucher_limit: -5 }
+        }
+
+        follow_redirect!
+        rule_errors = inertia.props[:errors][:benefit_rules].first
+        expect(rule_errors).to have_key(:max_price)
+        expect(rule_errors).to have_key(:limit)
+      end
+    end
   end
 end
