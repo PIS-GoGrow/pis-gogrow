@@ -137,11 +137,31 @@
         }
       },
       "cart": {
+        "add_address": "Agregar",
         "delivery": "Entrega: %{date}",
+        "delivery_address": "Dirección de entrega",
+        "my_addresses": "Ver mis direcciones",
+        "new_address": {
+          "apartment": "Piso / Apartamento (opcional)",
+          "cancel": "Cancelar",
+          "description": "Ingresá dónde querés recibir el pedido.",
+          "name": "Nombre",
+          "name_placeholder": "Ej: Oficina, Casa, etc.",
+          "save_for_later": "Guardar esta dirección para futuros pedidos",
+          "street": "Dirección",
+          "submit": "Agregar",
+          "title": "Agregar una dirección"
+        },
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
-        "office_delivery_warning": "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina.",
-        "other_deliveries": "Las demás viandas irán a la dirección seleccionada.",
-        "remove": "Quitar %{name}"
+        "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+        "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+        "remove": "Quitar %{name}",
+        "saved_addresses": {
+          "cancel": "Cancelar",
+          "description": "Elegí a qué dirección querés recibir el pedido.",
+          "submit": "Seleccionar",
+          "title": "Mis direcciones"
+        }
       },
       "consumer_dashboard": {
         "index": {
@@ -187,7 +207,9 @@
       },
       "orders": {
         "addresses": {
+          "current": "Dirección actual",
           "home": "Casa",
+          "last_used": "Última dirección usada",
           "office": "Oficina"
         },
         "delivery_methods": {

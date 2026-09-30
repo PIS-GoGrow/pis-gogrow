@@ -6,7 +6,7 @@ class Consumer::DashboardController < Consumer::InertiaController
     @week = week_data
     @schedules = schedule_data
     @benefit = benefit_data
-    @addresses = address_data
+    @addresses = @consumer.delivery_address_options
   end
 
   def confirmation
@@ -77,13 +77,6 @@ class Consumer::DashboardController < Consumer::InertiaController
       monthly_used: @consumer.monthly_benefit_used_this_month,
       monthly_remaining: @consumer.remaining_monthly_benefit
     }
-  end
-
-  def address_data
-    [
-      { id: "office", label: "Oficina", address: @consumer.company.address },
-      { id: "home", label: "Casa", address: @consumer.address }
-    ].select { |address| address[:address].present? }
   end
 
   def order_confirmation_data
