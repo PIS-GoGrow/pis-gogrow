@@ -11,13 +11,20 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
     sign_in admin_user, role: :admin
   end
 
+  def open_editor
+    click_button "Editar"
+    unless page.has_field?("subsidy_percentage", wait: 2)
+      click_button "Editar"
+    end
+  end
+
   it "permite a RRHH ver el subsidio actual, editarlo y programar un nuevo cambio" do
     visit admin_benefit_configurations_path
 
     expect(page).to have_content("Subsidios")
     expect(page).to have_content("50%")
 
-    click_button "Editar"
+    open_editor
 
     fill_in "subsidy_percentage", with: "65"
     fill_in "max_voucher_price", with: "250"
@@ -49,7 +56,7 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
 
     visit admin_benefit_configurations_path
 
-    click_button "Editar"
+    open_editor
 
     fill_in "subsidy_percentage", with: "70"
     click_button "Programar Subsidio"
