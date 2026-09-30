@@ -125,7 +125,8 @@ RSpec.describe "Orders", type: :request do
 
       it "keeps the order's address as an option when it is no longer among the employee's addresses" do
         order = orders(:upcoming_pending_future)
-        order.update_columns(address: "Colonia 1370, Apto 4", delivery_method: Order.delivery_methods[:home])
+        # Más vieja que el resto: si no, pasa a ser la "última usada" y ya está entre las opciones.
+        order.update_columns(address: "Colonia 1370, Apto 4", delivery_method: Order.delivery_methods[:home], created_at: 1.year.ago)
 
         get order_path(order)
 

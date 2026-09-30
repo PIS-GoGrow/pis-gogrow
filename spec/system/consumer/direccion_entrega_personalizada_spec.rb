@@ -30,6 +30,12 @@ RSpec.describe "Dirección de entrega personalizada" do
   def open_cart_with(*dishes, as: users(:one))
     sign_in as, role: :consumer
     visit dashboard_path
+    # Las hojas entran deslizándose: en CI el clic en "Agregar" caía mientras se movían.
+    page.execute_script(<<~JS)
+      const style = document.createElement("style")
+      style.textContent = "*, *::before, *::after { animation: none !important; transition: none !important; }"
+      document.head.appendChild(style)
+    JS
     dishes.each do |dish|
       click_button "Agregar #{dish}"
       expect(page).to have_content("Notas para este plato")
