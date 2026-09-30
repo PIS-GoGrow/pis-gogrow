@@ -44,7 +44,7 @@ Rails.application.routes.draw do
     resources :collections, only: [ :index, :show ]
     resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
-    resources :payments, only: [ :index, :update ] do
+    resources :payments, only: [ :update ] do
       get :receipt, on: :member
     end
   end

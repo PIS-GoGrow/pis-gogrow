@@ -42,7 +42,6 @@ menus = [
     name: "Milanesa con papas fritas",
     description: "Opción de carne o pollo",
     price: 300,
-    sauces: [ "Mayonesa de ajo", "Ketchup" ],
     day: 0,
     amount: 7
   },
@@ -67,7 +66,6 @@ menus = [
     name: "Ravioles con salsa de tomate",
     description: "Pasta fresca con salsa a elección",
     price: 320,
-    sauces: [ "Filetto", "Bolognesa" ],
     day: 3,
     amount: 8
   },
@@ -84,8 +82,6 @@ menus = [
     name: "Sorrentinos de ricota",
     description: "Pasta rellena con opciones a elección",
     price: 300,
-    fillings: [ "Ricota y nuez", "Ricota y espinaca" ],
-    sauces: [ "Filetto", "Bolognesa", "Rosa" ],
     day: 0,
     amount: 8
   },
@@ -242,7 +238,10 @@ notification_configuration.consumers << consumer
 # Cobros del proveedor en distintos estados, para que la pantalla no se vea
 # toda pendiente. Las cuentas ya las crearon los pedidos de más arriba.
 def seed_payment(account, status)
-  payment = Payment.new(account:, provider: account.provider, status:)
+  # El modelo exige rejection_reason cuando el estado es rejected.
+  rejection_reason = "Comprobante ilegible, subí uno nuevo." if status == :rejected
+
+  payment = Payment.new(account:, provider: account.provider, status:, rejection_reason:)
   payment.receipt.attach(
     io: Rails.root.join("public/icon.png").open,
     filename: "comprobante.png",
@@ -261,6 +260,16 @@ seed_payment(consumer.accounts.find_by!(provider: tu_viandita, month: Date.curre
 
 { 2.months.ago => [ :approved, :rejected ], 1.month.ago => [ :approved, :approved ] }.each do |date, (company_status, consumer_status)|
   month = date.beginning_of_month
-  seed_payment(company.accounts.create!(provider: tu_viandita, month:, amount: 1_250.00), company_status)
-  seed_payment(consumer.accounts.create!(provider: tu_viandita, month:, amount: 1_250.00), consumer_status)
+
+  # find_or_create_by!, no create!: el mes "hace 2 meses" ya tiene cuenta de
+  # empresa y de empleado creadas por ensure_accounts! (las Order de más
+  # arriba), así que un create! directo pisaría el índice único. Se fuerza el
+  # amount para esta demo sin importar si la cuenta ya existía.
+  company_account = company.accounts.find_or_create_by!(provider: tu_viandita, month:)
+  company_account.update!(amount: 1_250.00)
+  seed_payment(company_account, company_status)
+
+  consumer_account = consumer.accounts.find_or_create_by!(provider: tu_viandita, month:)
+  consumer_account.update!(amount: 1_250.00)
+  seed_payment(consumer_account, consumer_status)
 end

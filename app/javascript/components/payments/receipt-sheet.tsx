@@ -12,6 +12,7 @@ interface ReceiptSheetProps {
   receiptUrl: string
   contentType?: string | null
   filename?: string
+  footer?: ReactNode
 }
 
 export default function ReceiptSheet({
@@ -19,6 +20,7 @@ export default function ReceiptSheet({
   receiptUrl,
   contentType,
   filename,
+  footer,
 }: ReceiptSheetProps) {
   return (
     <Sheet>
@@ -31,21 +33,22 @@ export default function ReceiptSheet({
           </SheetTitle>
         </SheetHeader>
 
-        <div className="bg-background mx-4 mb-4 overflow-hidden rounded-md border">
+        <div className="bg-background mx-4 overflow-hidden rounded-md border">
           {contentType?.startsWith("image/") ? (
             <img
               src={receiptUrl}
               alt="Comprobante de pago"
-              className="max-h-[75vh] w-full object-contain"
+              className="max-h-[65vh] w-full object-contain"
             />
           ) : (
             <iframe
               src={receiptUrl}
               title="Comprobante de pago"
-              className="h-[75vh] w-full"
+              className="h-[65vh] w-full"
             />
           )}
         </div>
+        {footer && <div className="mx-4 mb-4 flex gap-2">{footer}</div>}
       </SheetContent>
     </Sheet>
   )

@@ -3,21 +3,9 @@
 class Provider::PaymentsController < Provider::InertiaController
   before_action :set_payment, only: [ :update, :receipt ]
 
-  # Comprobantes enviados que el proveedor todavía tiene que revisar.
-  def index
-    payments = provider_payments.submitted
-                                .with_attached_receipt
-                                .includes(account: :owner)
-                                .order(:created_at)
-
-    render inertia: "provider/payments/index", props: {
-      payments: Provider::PaymentSerializer.new(payments).as_json
-    }
-  end
-
   def update
     unless @payment.submitted?
-      return redirect_back fallback_location: provider_payments_path,
+      return redirect_back fallback_location: provider_collections_path,
                            alert: t("validations.payment_not_reviewable"), status: :see_other
     end
 
@@ -29,9 +17,9 @@ class Provider::PaymentsController < Provider::InertiaController
       end
 
     if reviewed
-      redirect_to provider_payments_path, notice: t("flash.payment_#{@payment.status}"), status: :see_other
+      redirect_to provider_collections_path, notice: t("flash.payment_#{@payment.status}"), status: :see_other
     else
-      redirect_back fallback_location: provider_payments_path,
+      redirect_back fallback_location: provider_collections_path,
                     inertia: { errors: @payment.errors.to_hash }, status: :see_other
     end
   end

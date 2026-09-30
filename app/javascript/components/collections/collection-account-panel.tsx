@@ -2,7 +2,9 @@ import { Link } from "@inertiajs/react"
 import { Eye, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import { buttonVariants } from "@/components/ui/button"
+import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { SheetTrigger } from "@/components/ui/sheet"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { providerCollections } from "@/routes"
@@ -59,6 +61,7 @@ export default function CollectionAccountPanel({
             {t("pages.provider_collections.meals", { count: account.meals })}
           </span>
         </p>
+
         <Link
           href={providerCollections.show(account.id)}
           className={cn(
@@ -70,6 +73,19 @@ export default function CollectionAccountPanel({
           {t("pages.provider_collections.group.detail")}
         </Link>
       </div>
+
+      {account.status === "submitted" && account.payment_id && (
+        <PaymentReviewSheet
+          paymentId={account.payment_id}
+          receiptUrl={account.receipt_url ?? ""}
+          contentType={account.receipt_content_type}
+          filename={account.owner_name}
+        >
+          <SheetTrigger asChild>
+            <Button className="w-full">Revisar pago</Button>
+          </SheetTrigger>
+        </PaymentReviewSheet>
+      )}
     </div>
   )
 }

@@ -7,7 +7,7 @@ require "rails_helper"
 #
 # Criterio 3: "Los cambios de estado realizados por el proveedor se reflejan sin
 # alterar el historial anterior". El estado de un pago lo cambia el proveedor
-# desde /provider/payments, así que este archivo recorre el circuito completo --
+# desde /provider/collections, así que este archivo recorre el circuito completo --
 # el empleado sube el comprobante, el proveedor lo aprueba o lo rechaza, y el
 # empleado vuelve a su historial en /accounts -- en vez de dar por hecho el
 # estado final con datos armados a mano.
@@ -104,14 +104,23 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
 
     sign_out
     sign_in provider_user, role: :provider
-    visit provider_payments_path
+    visit provider_collections_path
+
+    # La cuenta del empleado vive dentro del grupo "Empleados", colapsado por
+    # defecto: hay que desplegarlo para llegar a su fila.
+    click_on "Empleados"
 
     # Consistencia entre vistas: el importe que el proveedor aprueba es el mismo
     # que el empleado tiene en su cuenta, no dos cálculos distintos.
     expect(page).to have_content(users(:one).name)
+    click_on users(:one).name
     expect(page).to have_content("$300")
 
-    click_on "Aprobar"
+    # El botón de Aprobar vive dentro del sheet del comprobante: hay que
+    # abrirlo primero (PaymentReviewSheet), al que se entra por "Revisar pago"
+    # desde la fila del empleado.
+    click_on "Revisar pago"
+    within(find("[role=dialog]")) { click_on "Aprobar" }
     expect(page).to have_content(I18n.t("flash.payment_approved"))
 
     sign_out
@@ -146,10 +155,20 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
 
     sign_out
     sign_in provider_user, role: :provider
-    visit provider_payments_path
+    visit provider_collections_path
 
-    click_on "Rechazar"
-    within(find("[role=dialog]")) { click_on "Rechazar comprobante" }
+    # La cuenta del empleado vive dentro del grupo "Empleados", colapsado por
+    # defecto: hay que desplegarlo para llegar a su fila.
+    click_on "Empleados"
+    click_on users(:one).name
+
+    # Mismo motivo que en el caso de arriba: primero hay que abrir el
+    # comprobante para llegar al botón de Rechazar, que abre a su vez el
+    # diálogo de motivo. Los dos quedan abiertos a la vez (role=dialog
+    # matchea ambos), así que el segundo find se desambigua por texto.
+    click_on "Revisar pago"
+    within(find("[role=dialog]")) { click_on "Rechazar" }
+    within(find("[role=dialog]", text: "Rechazar comprobante")) { click_on "Rechazar comprobante" }
     expect(page).to have_content(I18n.t("flash.payment_rejected"))
 
     sign_out

@@ -31,7 +31,7 @@ RSpec.describe "Provider payments", type: :request do
 
     patch provider_payment_path(payment), params: { status: "approved" }
 
-    expect(response).to redirect_to(provider_payments_path)
+    expect(response).to redirect_to(provider_collections_path)
     expect(payment.reload).to be_approved
   end
 
@@ -61,7 +61,7 @@ RSpec.describe "Provider payments", type: :request do
 
     patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: " otra vez" }
 
-    expect(response).to redirect_to(provider_payments_path)
+    expect(response).to redirect_to(provider_collections_path)
     expect(payment.reload).to be_approved
     expect(payment.rejection_reason).to be_nil
   end
