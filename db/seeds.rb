@@ -133,7 +133,6 @@ consumer = Consumer.create!(
   user: consumer_user
 )
 
-
 admin_user = User.create!(
   email: "rrhh.gogrow@gmail.com",
   name: "Juan Admin",
@@ -146,7 +145,10 @@ admin = Admin.create!(user: admin_user, company:)
 benefit_config = BenefitConfiguration.create! subsidy_percentage: 50, name: "Subsidio base", company:, created_by: admin_user
 benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: Date.current, type: MonthlyBenefit.name
 
-benefit = Benefit.create!(
+consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
+consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
+
+Benefit.create!(
   consumer:,
   amount: 20,
   description: "Viandas mensuales",

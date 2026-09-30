@@ -123,6 +123,16 @@ RSpec.describe "Orders", type: :request do
         expect(inertia.props[:delivery_addresses].map { it[:address] }).to eq([ "18 de Julio 1006", "Julio Herrera y Reissig 565" ])
       end
 
+      it "keeps the order's address as an option when it is no longer among the employee's addresses" do
+        order = orders(:upcoming_pending_future)
+        # Más vieja que el resto: si no, pasa a ser la "última usada" y ya está entre las opciones.
+        order.update_columns(address: "Colonia 1370, Apto 4", delivery_method: Order.delivery_methods[:home], created_at: 1.year.ago)
+
+        get order_path(order)
+
+        expect(inertia.props[:delivery_addresses].last).to include(id: "current", label: "Dirección actual", address: "Colonia 1370, Apto 4")
+      end
+
       it "explains why an order the provider confirmed cannot be modified" do
         get order_path(orders(:upcoming_confirmed_future))
 
@@ -398,7 +408,7 @@ RSpec.describe "Orders", type: :request do
         expect do
           post orders_path, params: {
             order: {
-              address: "Avenida Siempreviva 742",
+              address: "Avenida Siempreviva",
               items: [ { schedule_id: schedule.id, quantity: 1 } ]
             }
           }
@@ -623,6 +633,52 @@ RSpec.describe "Orders", type: :request do
       expect(consumer.orders.last.address).to eq(company.address)
     end
 
+    describe "custom delivery address (IBP-014)" do
+      it "delivers home to an address the employee saved in their profile" do
+        consumer, = setup_consumer
+        saved = consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892", apartment: "Apto 3")
+        schedule = create_schedule
+
+        post orders_path, params: { order: { address: saved.full_address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+
+        expect(consumer.orders.last).to have_attributes(address: "Canelones 892, Apto 3", delivery_method: "home")
+      end
+
+      it "delivers home to an address entered only for this order" do
+        consumer, = setup_consumer
+        schedule = create_schedule
+
+        expect do
+          post orders_path, params: { order: { address: "Colonia 1370, Apto 4", items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+        end.to change(Order, :count).by(1)
+
+        expect(consumer.orders.last).to have_attributes(address: "Colonia 1370, Apto 4", delivery_method: "home")
+        expect(consumer.saved_addresses).to be_empty
+      end
+
+      # Criterio 1: la dirección personalizada solo aplica si el proveedor entrega a domicilio.
+      it "sends to the office the dishes of a provider that does not deliver home" do
+        consumer, company = setup_consumer
+        schedule = create_schedule
+        schedule.menu.provider.update!(home_delivery: false)
+
+        post orders_path, params: { order: { address: "Colonia 1370, Apto 4", items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+
+        expect(consumer.orders.last).to have_attributes(address: company.address, delivery_method: "office")
+      end
+
+      it "shows the last custom address used next to the office on the next visit" do
+        consumer, = setup_consumer
+        consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
+        schedule = create_schedule
+
+        post orders_path, params: { order: { address: "Canelones 892", items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+        get dashboard_path
+
+        expect(inertia.props[:addresses].first(2).pluck(:label)).to eq([ "Oficina", "Flora Café" ])
+      end
+    end
+
     it "rolls back the cart when an office-only provider has no office address" do
       consumer, company = setup_consumer
       company.update!(address: nil)
@@ -834,6 +890,14 @@ RSpec.describe "Orders", type: :request do
 
         follow_redirect!
         expect(inertia).to have_flash(alert: I18n.t("validations.invalid_address"))
+      end
+
+      it "switches to an address the employee saved in their profile" do
+        consumers(:one).saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
+
+        patch order_path(order), params: update_params(address: "Canelones 892")
+
+        expect(order.reload).to have_attributes(address: "Canelones 892", delivery_method: "home")
       end
 
       it "refuses a quantity that is not a positive integer" do

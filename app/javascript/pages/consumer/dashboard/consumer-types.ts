@@ -6,3 +6,4 @@ export type CartItem = Schedule & {
   quantity: number
   notes: string
 }
+export type DeliveryAddressOption = ConsumerDashboardIndex["addresses"][number]
