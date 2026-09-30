@@ -3,10 +3,16 @@
 require "rails_helper"
 
 RSpec.describe OrderBenefit, type: :model do
-  fixtures :benefits, :orders, :consumers, :schedules, :menus, :providers, :companies, :users, :benefit_configurations, :order_benefits
+  fixtures :benefits, :orders, :consumers, :schedules, :menus, :providers, :companies, :users, :benefit_configurations
 
   describe "associations and validations" do
-    let(:order_benefit) { order_benefits(:one) }
+    let(:order_benefit) do
+      OrderBenefit.create!(
+        benefit: benefits(:monthly),
+        order: orders(:upcoming_pending_future),
+        benefit_used: 1
+      )
+    end
 
     it "belongs to a benefit" do
       expect(order_benefit.benefit).to eq(benefits(:monthly))

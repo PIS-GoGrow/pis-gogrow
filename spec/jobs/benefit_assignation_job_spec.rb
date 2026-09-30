@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe BenefitAssignationJob, type: :job do
-  fixtures :benefit_configurations, :benefit_rules, :consumers, :companies, :users, :consumer_benefit_configurations
+  fixtures :benefit_configurations, :benefit_rules, :consumers, :companies, :users
 
   describe "#perform" do
     it "calls apply_to_all_consumers on each benefit configuration" do

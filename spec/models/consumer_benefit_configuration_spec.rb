@@ -3,10 +3,15 @@
 require "rails_helper"
 
 RSpec.describe ConsumerBenefitConfiguration, type: :model do
-  fixtures :benefit_configurations, :consumers, :companies, :users, :consumer_benefit_configurations
+  fixtures :benefit_configurations, :consumers, :companies, :users
 
   describe "associations" do
-    let(:cbc) { consumer_benefit_configurations(:one) }
+    let(:cbc) do
+      ConsumerBenefitConfiguration.create!(
+        benefit_configuration: benefit_configurations(:monthly),
+        consumer: consumers(:one)
+      )
+    end
 
     it "belongs to a benefit_configuration" do
       expect(cbc.benefit_configuration).to eq(benefit_configurations(:monthly))

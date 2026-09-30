@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe "Ciclo de vida continuo de beneficios", type: :request do
   fixtures :users, :companies, :consumers, :admins, :providers, :menus,
-           :benefit_configurations, :benefit_rules, :consumer_benefit_configurations, :benefits
+           :benefit_configurations, :benefit_rules, :benefits
 
   let(:consumer_user) { users(:one) }
   let(:admin_user) { users(:admin) }
