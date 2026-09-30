@@ -34,14 +34,13 @@ RSpec.describe "Provider::OrderDeadlines", type: :request do
     context "as a provider" do
       before { sign_in users(:provider_user), role: :provider }
 
-      it "saves the new deadline and shows it back in the dashboard" do
+      it "saves the new deadline and shows it back in the operational settings" do
         patch provider_order_deadline_path, params: { order_deadline: "18:30" }
 
-        expect(response).to redirect_to(provider_dashboard_path)
+        expect(response).to redirect_to(provider_operational_settings_path)
         expect(deadline_of(provider)).to eq("18:30")
         follow_redirect!
-        expect(inertia).to render_component("provider/dashboard/index")
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_deadline_updated"))
+        expect(inertia).to render_component("provider/operational_settings/show")
         expect(inertia).to have_props(provider: { order_deadline: "18:30" })
       end
 
@@ -66,7 +65,7 @@ RSpec.describe "Provider::OrderDeadlines", type: :request do
         it "clears the deadline when it is sent as #{blank.inspect}" do
           patch provider_order_deadline_path, params: { order_deadline: blank }
 
-          expect(response).to redirect_to(provider_dashboard_path)
+          expect(response).to redirect_to(provider_operational_settings_path)
           expect(deadline_of(provider)).to be_nil
           follow_redirect!
           expect(inertia).to have_props(provider: { order_deadline: nil })
@@ -77,7 +76,7 @@ RSpec.describe "Provider::OrderDeadlines", type: :request do
         it "rejects #{invalid.inspect} and keeps the previous deadline" do
           patch provider_order_deadline_path, params: { order_deadline: invalid }
 
-          expect(response).to redirect_to(provider_dashboard_path)
+          expect(response).to redirect_to(provider_operational_settings_path)
           expect(deadline_of(provider)).to eq(previous_deadline)
           follow_redirect!
           expect(inertia).to have_props(errors: { order_deadline: [ I18n.t("validations.invalid_order_deadline") ] })

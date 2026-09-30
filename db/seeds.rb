@@ -36,7 +36,9 @@ menus = [
     name: "Milanesa con papas fritas",
     description: "Opción de carne o pollo",
     price: 300,
-    sauces: [ "Mayonesa de ajo", "Ketchup" ],
+    option_groups_attributes: [
+      { name: "Salsas", limit: 1, options: [ "Mayonesa de ajo", "Ketchup" ] }
+    ],
     day: 0,
     amount: 7
   },
@@ -61,7 +63,9 @@ menus = [
     name: "Ravioles con salsa de tomate",
     description: "Pasta fresca con salsa a elección",
     price: 320,
-    sauces: [ "Filetto", "Bolognesa" ],
+    option_groups_attributes: [
+      { name: "Salsas", limit: 1, options: [ "Filetto", "Bolognesa" ] }
+    ],
     day: 3,
     amount: 8
   },
@@ -78,8 +82,10 @@ menus = [
     name: "Sorrentinos de ricota",
     description: "Pasta rellena con opciones a elección",
     price: 300,
-    fillings: [ "Ricota y nuez", "Ricota y espinaca" ],
-    sauces: [ "Filetto", "Bolognesa", "Rosa" ],
+    option_groups_attributes: [
+      { name: "Rellenos", limit: 1, options: [ "Ricota y nuez", "Ricota y espinaca" ] },
+      { name: "Salsas", limit: 1, options: [ "Filetto", "Bolognesa", "Rosa" ] }
+    ],
     day: 0,
     amount: 8
   },
@@ -126,6 +132,8 @@ consumer = Consumer.create!(
   address: "Julio Herrera y Reissig 565",
   user: consumer_user
 )
+consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
+consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
 Benefit.create!(
   consumer:,
   amount: 20,

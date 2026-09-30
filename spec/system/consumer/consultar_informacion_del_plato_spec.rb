@@ -59,7 +59,10 @@ RSpec.describe "Consultar la información de un plato" do
   end
 
   def open_dish(menu)
-    click_on "Agregar #{menu.name}"
+    find_button("Agregar #{menu.name}").click
+    unless page.has_button?("Volver", wait: 2)
+      find_button("Agregar #{menu.name}").click
+    end
   end
 
   # Criterio 1

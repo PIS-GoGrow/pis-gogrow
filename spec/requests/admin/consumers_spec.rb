@@ -51,9 +51,15 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         expect(inertia).to render_component("admin/consumers/show")
         expect(inertia.props[:consumer]).to include(name: "Test User", email: "one@example.com", company_name: "GoGrow")
-        expect(inertia.props[:benefits].pluck(:id)).to contain_exactly(benefits(:one).id)
+        expect(inertia.props[:benefits]).to be_empty
         expect(inertia.props[:debts].pluck(:id)).to contain_exactly(accounts(:one_tuviandita_current).id, accounts(:one_endulzate_current).id)
         expect(inertia.props[:payments].pluck(:id)).to contain_exactly(payments(:one_rejected).id)
+      end
+
+      it "lists the consumer's benefits" do
+        get admin_consumer_path(consumers(:other))
+
+        expect(inertia.props[:benefits].pluck(:id)).to contain_exactly(benefits(:one).id, benefits(:two).id)
       end
     end
   end

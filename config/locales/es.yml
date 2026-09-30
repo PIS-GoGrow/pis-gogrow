@@ -65,6 +65,7 @@ es:
     invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
+    insufficient_stock: "Ya no hay suficiente stock para la cantidad solicitada. Revisá la cantidad e intentá nuevamente."
     order_deadline_passed: "Este proveedor ya cerró la recepción de pedidos para hoy."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
@@ -76,12 +77,27 @@ es:
   activerecord:
     errors:
       models:
+        menu_option_group:
+          attributes:
+            options:
+              invalid: "no pueden tener valores vacíos ni repetidos"
         payment:
           attributes:
             receipt:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
+        delivery_address:
+          attributes:
+            name:
+              blank: "Ingresá un nombre para la dirección."
+              too_long: "Usá como máximo %{count} caracteres."
+            street:
+              blank: "Ingresá la dirección."
+              too_long: "Usá como máximo %{count} caracteres."
+              invalid: "Ingresá la calle y el número de puerta."
+            apartment:
+              too_long: "Usá como máximo %{count} caracteres."
         order:
           attributes:
             rejection_reason:
@@ -89,6 +105,10 @@ es:
             rejection_details:
               blank: "debe especificarse al seleccionar otro motivo"
     attributes:
+      delivery_address:
+        name: "Nombre"
+        street: "Dirección"
+        apartment: "Piso / Apartamento"
       order:
         rejection_reason: "Motivo"
         rejection_details: "Detalle del motivo"
@@ -112,6 +132,15 @@ es:
     menu: "Menú de navegación"
     benefit_configurations: "Beneficio general"
     change_to: "Cambiar a"
+    provider:
+      home: "Inicio"
+      dishes: "Platos"
+      menus: "Publicar menús"
+      menu: "Menú"
+      orders: "Pedidos"
+      payments: "Cobros"
+      account: "Cuenta"
+      mobile_navigation: "Navegación del proveedor"
     settings:
       profile: "Perfil"
       email: "Correo electrónico"
@@ -289,6 +318,8 @@ es:
       addresses:
         office: "Oficina"
         home: "Casa"
+        last_used: "Última dirección usada"
+        current: "Dirección actual"
       statuses:
         pending: "Pendiente"
         confirmed: "Confirmado"
@@ -413,8 +444,6 @@ es:
         menu: "Plato"
         description: "Descripción"
         quantity: "Cantidad"
-        sauces: "Salsas"
-        fillings: "Rellenos"
         notes: "Notas del cliente"
         stock: "Cupo del día"
         stock_detail: "%{remaining} disponibles de %{total} publicados"
@@ -429,12 +458,34 @@ es:
         no_notes: "Sin notas"
         no_stock: "Sin cupo publicado"
         no_price: "Importe no disponible"
+    schedules:
+      index:
+        availability:
+          toggle_label: "En stock"
     cart:
-      office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
-      other_deliveries: "Las demás viandas irán a la dirección seleccionada."
+      delivery_address: "Dirección de entrega"
+      add_address: "Agregar"
+      my_addresses: "Ver mis direcciones"
+      office_delivery_warning_one: "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
+      office_delivery_warning_other: "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
       remove: "Quitar %{name}"
       delivery: "Entrega: %{date}"
+      new_address:
+        title: "Agregar una dirección"
+        description: "Ingresá dónde querés recibir el pedido."
+        name: "Nombre"
+        name_placeholder: "Ej: Oficina, Casa, etc."
+        street: "Dirección"
+        apartment: "Piso / Apartamento (opcional)"
+        save_for_later: "Guardar esta dirección para futuros pedidos"
+        cancel: "Cancelar"
+        submit: "Agregar"
+      saved_addresses:
+        title: "Mis direcciones"
+        description: "Elegí a qué dirección querés recibir el pedido."
+        cancel: "Cancelar"
+        submit: "Seleccionar"
     home:
       title: "Te damos la bienvenida"
       dashboard: "Panel"
@@ -460,6 +511,33 @@ es:
           description: "Definí hasta qué hora aceptás pedidos para hoy."
           label: "Hora límite"
           help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
+    provider_accounts:
+      show:
+        title: "Cuenta"
+        sign_out: "Salir"
+        settings: "Configuración"
+        payment_details: "Datos de cobro"
+        payment_details_description: "Configurá dónde querés recibir tus cobros"
+        operational_settings: "Configuración operativa"
+        operational_settings_description: "Configurá horarios y días sin servicio"
+        deliveries: "Entregas"
+        deliveries_description: "Elegí dónde realizás tus entregas"
+        notifications: "Notificaciones"
+        notifications_description: "Configurá qué alertas querés recibir"
+    provider_operational_settings:
+      show:
+        title: "Configuración operativa"
+        description: "Configurá tus horarios y días sin servicio."
+        back: "Volver a Cuenta"
+        closing_time: "Hora de cierre"
+        closing_time_description: "Hasta qué hora recibís pedidos."
+        add_closing_time: "Agregar hora de cierre"
+        add_closing_time_title: "Agregar Hora de cierre"
+        save_changes: "Guardar cambios"
+        saved_title: "¡Hora de cierre guardada!"
+        saved_description: "El cambio se aplica desde ahora. Los pedidos cerrarán todos los días a las %{time}."
+        saved_description_closed_today: "El cambio se aplica desde ahora. La recepción de pedidos de hoy ya está cerrada. A partir de mañana, cerrará todos los días a las %{time}."
+        done: "Listo"
     consumer_dashboard:
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."

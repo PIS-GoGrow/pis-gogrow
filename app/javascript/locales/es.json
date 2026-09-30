@@ -49,6 +49,16 @@
       "orders": "Mis pedidos",
       "payments": "Pagos",
       "platform": "Plataforma",
+      "provider": {
+        "account": "Cuenta",
+        "dishes": "Platos",
+        "home": "Inicio",
+        "menu": "Menú",
+        "menus": "Publicar menús",
+        "mobile_navigation": "Navegación del proveedor",
+        "orders": "Pedidos",
+        "payments": "Cobros"
+      },
       "settings": {
         "appearance": "Apariencia",
         "email": "Correo electrónico",
@@ -150,11 +160,31 @@
         }
       },
       "cart": {
+        "add_address": "Agregar",
         "delivery": "Entrega: %{date}",
+        "delivery_address": "Dirección de entrega",
+        "my_addresses": "Ver mis direcciones",
+        "new_address": {
+          "apartment": "Piso / Apartamento (opcional)",
+          "cancel": "Cancelar",
+          "description": "Ingresá dónde querés recibir el pedido.",
+          "name": "Nombre",
+          "name_placeholder": "Ej: Oficina, Casa, etc.",
+          "save_for_later": "Guardar esta dirección para futuros pedidos",
+          "street": "Dirección",
+          "submit": "Agregar",
+          "title": "Agregar una dirección"
+        },
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
-        "office_delivery_warning": "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina.",
-        "other_deliveries": "Las demás viandas irán a la dirección seleccionada.",
-        "remove": "Quitar %{name}"
+        "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+        "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+        "remove": "Quitar %{name}",
+        "saved_addresses": {
+          "cancel": "Cancelar",
+          "description": "Elegí a qué dirección querés recibir el pedido.",
+          "submit": "Seleccionar",
+          "title": "Mis direcciones"
+        }
       },
       "consumer_dashboard": {
         "index": {
@@ -200,7 +230,9 @@
       },
       "orders": {
         "addresses": {
+          "current": "Dirección actual",
           "home": "Casa",
+          "last_used": "Última dirección usada",
           "office": "Oficina"
         },
         "delivery_methods": {
@@ -289,6 +321,21 @@
           "title": "Olvidé mi contraseña"
         }
       },
+      "provider_accounts": {
+        "show": {
+          "deliveries": "Entregas",
+          "deliveries_description": "Elegí dónde realizás tus entregas",
+          "notifications": "Notificaciones",
+          "notifications_description": "Configurá qué alertas querés recibir",
+          "operational_settings": "Configuración operativa",
+          "operational_settings_description": "Configurá horarios y días sin servicio",
+          "payment_details": "Datos de cobro",
+          "payment_details_description": "Configurá dónde querés recibir tus cobros",
+          "settings": "Configuración",
+          "sign_out": "Salir",
+          "title": "Cuenta"
+        }
+      },
       "provider_collections": {
         "group": {
           "company": "Empresa",
@@ -362,6 +409,22 @@
           "title": "Panel del proveedor"
         }
       },
+      "provider_operational_settings": {
+        "show": {
+          "add_closing_time": "Agregar hora de cierre",
+          "add_closing_time_title": "Agregar Hora de cierre",
+          "back": "Volver a Cuenta",
+          "closing_time": "Hora de cierre",
+          "closing_time_description": "Hasta qué hora recibís pedidos.",
+          "description": "Configurá tus horarios y días sin servicio.",
+          "done": "Listo",
+          "save_changes": "Guardar cambios",
+          "saved_description": "El cambio se aplica desde ahora. Los pedidos cerrarán todos los días a las %{time}.",
+          "saved_description_closed_today": "El cambio se aplica desde ahora. La recepción de pedidos de hoy ya está cerrada. A partir de mañana, cerrará todos los días a las %{time}.",
+          "saved_title": "¡Hora de cierre guardada!",
+          "title": "Configuración operativa"
+        }
+      },
       "provider_orders": {
         "actions": {
           "confirm": "Confirmar",
@@ -422,7 +485,6 @@
           "email": "Correo",
           "empty": "Sin datos",
           "eyebrow": "Pedido",
-          "fillings": "Rellenos",
           "menu": "Plato",
           "name": "Nombre",
           "no_address": "Sin dirección de entrega",
@@ -437,13 +499,19 @@
           "quantity": "Cantidad",
           "rejection_details": "Detalle del rechazo",
           "rejection_reason": "Motivo de rechazo",
-          "sauces": "Salsas",
           "status": "Estado",
           "stock": "Cupo del día",
           "stock_detail": "%{remaining} disponibles de %{total} publicados",
           "subsidy": "Subsidio",
           "summary": "Resumen",
           "title": "Pedido %{code}"
+        }
+      },
+      "schedules": {
+        "index": {
+          "availability": {
+            "toggle_label": "En stock"
+          }
         }
       },
       "sessions": {
