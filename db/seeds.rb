@@ -148,7 +148,7 @@ benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: 
 consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
 consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
 
-Benefit.create!(
+benefit = Benefit.create!(
   consumer:,
   amount: 20,
   description: "Viandas mensuales",
