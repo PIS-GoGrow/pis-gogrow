@@ -141,6 +141,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_223858) do
     t.index ["consumer_id"], name: "index_delivery_addresses_on_consumer_id"
   end
 
+  create_table "invoices", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.date "issued_on", null: false
+    t.integer "status", default: 0, null: false
+    t.decimal "total_amount", precision: 10, scale: 2, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_invoices_on_account_id"
+    t.index ["account_id"], name: "index_invoices_on_account_id_active", unique: true, where: "(status = ANY (ARRAY[0, 1]))"
+  end
+
   create_table "menu_option_groups", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "limit", default: 1, null: false
@@ -475,6 +486,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_223858) do
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
   add_foreign_key "delivery_addresses", "consumers"
+  add_foreign_key "invoices", "accounts"
   add_foreign_key "menu_option_groups", "menus"
   add_foreign_key "menus", "providers"
   add_foreign_key "order_accounts", "accounts"
