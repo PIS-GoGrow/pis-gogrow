@@ -1,16 +1,19 @@
-import { ChevronLeft, MapPin, TriangleAlert } from "lucide-react"
+import { ChevronLeft, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { RadioGroup } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
-import type { ConsumerDashboardIndex } from "@/types"
 
-import type { CartItem } from "./consumer-types"
+import { AddAddressSheet } from "./add-address-sheet"
+import { AddressOption } from "./address-option"
+import type { CartItem, DeliveryAddressOption } from "./consumer-types"
 import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
+import { SavedAddressesSheet } from "./saved-addresses-sheet"
 
 interface Props {
   monthlyLimit: number
@@ -19,9 +22,10 @@ interface Props {
   fullPriceQuantity: number
   lineDiscounts: Record<string, number>
   cart: CartItem[]
-  addresses: ConsumerDashboardIndex["addresses"]
+  addresses: DeliveryAddressOption[]
   address: string
   setAddress: (value: string) => void
+  onAddAddress: (option: DeliveryAddressOption, saved: boolean) => void
   percentage: number
   subtotal: number
   discount: number
@@ -43,6 +47,7 @@ export function ConsumerCart({
   addresses,
   address,
   setAddress,
+  onAddAddress,
   percentage,
   subtotal,
   discount,
@@ -63,11 +68,24 @@ export function ConsumerCart({
     ),
   ]
   const missingOffice = officeOnlyProviders.length > 0 && !office
+  // Sin ningún proveedor que entregue a domicilio, todo el pedido va a la oficina.
+  const homeDeliveryAvailable = cart.some((item) => item.menu.home_delivery)
+  const customDisabled = processing || !homeDeliveryAvailable
+  const selectedAddress =
+    homeDeliveryAvailable || !office ? address : office.address
+  const customAddresses = addresses.filter((item) => item.id !== "office")
+  const visibleAddresses = [
+    office,
+    customAddresses.find((item) => item.address === selectedAddress) ??
+      customAddresses[0],
+  ].filter((item) => item !== undefined)
   const showDeliveryWarning =
-    officeOnlyProviders.length > 0 && !!address && address !== office?.address
+    officeOnlyProviders.length > 0 &&
+    !!selectedAddress &&
+    selectedAddress !== office?.address
 
   return (
-    <div className="bg-background border-border mx-auto min-h-screen max-w-3xl px-6 pt-6 pb-8 md:my-8 md:min-h-0 md:rounded-2xl md:border md:p-8">
+    <MobileCard>
       <Button
         type="button"
         variant="ghost"
@@ -81,55 +99,31 @@ export function ConsumerCart({
       </Button>
       <h1 className="text-xl font-bold">Tu carrito</h1>
       <section className="border-border mt-8 border-b pb-4">
-        <div className="mb-3 flex justify-between text-xs font-semibold">
-          <h2>Dirección de entrega</h2>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-disabled="true"
-            className="text-foreground text-xs"
-          >
-            ＋ Agregar
-          </Button>
+        <div className="mb-3 flex items-center justify-between text-sm font-semibold">
+          <h2>{t("pages.cart.delivery_address")}</h2>
+          <AddAddressSheet disabled={customDisabled} onAdd={onAddAddress} />
         </div>
         <RadioGroup
-          value={address}
+          value={selectedAddress}
           onValueChange={setAddress}
           disabled={processing}
           className="gap-3"
         >
-          {addresses.map((item) => (
-            <label
+          {visibleAddresses.map((item) => (
+            <AddressOption
               key={item.id}
-              className={cn(
-                "border-border bg-card flex min-h-[66px] gap-3 rounded-lg border p-3",
-                address === item.address && "border-primary bg-muted",
-              )}
-            >
-              <RadioGroupItem
-                value={item.address}
-                className="border-input bg-background text-primary data-[state=checked]:border-primary data-[state=checked]:bg-background mt-0.5 shadow-none"
-              />
-              <span className="text-xs">
-                <b>{item.label}</b>
-                <small className="text-muted-foreground mt-1 block">
-                  {item.address}
-                </small>
-              </span>
-            </label>
+              option={item}
+              selected={selectedAddress === item.address}
+              disabled={item.id !== "office" && customDisabled}
+            />
           ))}
         </RadioGroup>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-disabled="true"
-          className="text-foreground mt-3 px-0 text-xs font-semibold"
-        >
-          <MapPin aria-hidden="true" className="size-4" />
-          Ver mis direcciones
-        </Button>
+        <SavedAddressesSheet
+          addresses={addresses}
+          address={selectedAddress}
+          disabled={customDisabled}
+          onSelect={setAddress}
+        />
         {showDeliveryWarning && (
           <Alert className="mt-3 border-0 bg-transparent p-0 text-amber-700">
             <TriangleAlert aria-hidden="true" className="text-amber-500" />
@@ -137,16 +131,14 @@ export function ConsumerCart({
               {missingOffice ? (
                 <p>{t("pages.cart.office_address_missing")}</p>
               ) : (
-                <>
-                  {officeOnlyProviders.map((provider) => (
-                    <p key={provider}>
-                      {t("pages.cart.office_delivery_warning", { provider })}
-                    </p>
-                  ))}
-                  {cart.some((item) => item.menu.home_delivery) && (
-                    <p>{t("pages.cart.other_deliveries")}</p>
-                  )}
-                </>
+                <p>
+                  {t("pages.cart.office_delivery_warning", {
+                    count: officeOnlyProviders.length,
+                    providers: new Intl.ListFormat("es", {
+                      type: "conjunction",
+                    }).format(officeOnlyProviders),
+                  })}
+                </p>
               )}
             </AlertDescription>
           </Alert>
@@ -174,7 +166,7 @@ export function ConsumerCart({
         </Alert>
       )}
 
-      <section className="border-border mt-6 border-b pb-4 text-xs">
+      <section className="border-border mt-6 pb-4 text-xs md:border-b">
         {cart.map((item) => {
           const line = item.menu.price * item.quantity
           return (
@@ -225,30 +217,34 @@ export function ConsumerCart({
           </p>
         )}
       </section>
-      <OrderSummary
-        subtotal={subtotal}
-        discount={discount}
-        total={total}
-        percentage={percentage}
-        compact
-      />
-      <Button
-        disabled={!cart.length || processing || !address || missingOffice}
-        onClick={confirm}
-        className={cn(
-          "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
-          processing && "bg-muted hover:bg-muted",
-        )}
-      >
-        {processing ? (
-          <>
-            <Spinner />
-            Confirmando pedido
-          </>
-        ) : (
-          "Confirmar pedido"
-        )}
-      </Button>
+      <BottomAction>
+        <OrderSummary
+          subtotal={subtotal}
+          discount={discount}
+          total={total}
+          percentage={percentage}
+          compact
+        />
+        <Button
+          disabled={
+            !cart.length || processing || !selectedAddress || missingOffice
+          }
+          onClick={confirm}
+          className={cn(
+            "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
+            processing && "bg-muted hover:bg-muted",
+          )}
+        >
+          {processing ? (
+            <>
+              <Spinner />
+              Confirmando pedido
+            </>
+          ) : (
+            "Confirmar pedido"
+          )}
+        </Button>
+      </BottomAction>
       {error && (
         <Alert variant="destructive" className="mt-3">
           <AlertDescription>
@@ -256,6 +252,6 @@ export function ConsumerCart({
           </AlertDescription>
         </Alert>
       )}
-    </div>
+    </MobileCard>
   )
 }
