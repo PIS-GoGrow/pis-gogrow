@@ -1,5 +1,15 @@
 # frozen_string_literal: true
 
+# Representa una configuración de beneficios para una empresa.
+# Las configuraciones pueden tener varias reglas (BenefitRule) o una sola,
+# y el beneficio representado por la configuración se aplica solamente si
+# se cumplen las condiciones de todas las reglas.
+# La configuración solo guarda el nombre y porcentaje de beneficio. Los límites
+# de fecha o cantidad dependen de las reglas.
+# Con las funciones new_base_subsidy y base_subsidy_for se crean y obtienen
+# los subsidios base (o mensuales) de la empresa. Los subsidios mensuales se
+# deberían manejar únicamente a través de estas funciones.
+# Al crear un BenefitConfiguration, habría que especificar todas sus reglas.
 class BenefitConfiguration < ApplicationRecord
   belongs_to :company
   belongs_to :created_by, class_name: "User"

@@ -4,6 +4,12 @@
 # Se puede pensar como un cupón, con una límite de uso (de tiempo y de cantidad)
 # y con un porcentaje de subsidio. Guarda además referencia a qué órdenes lo usaron
 # y qué configuración lo generó.
+# Si el límite (de tiempo o cantidad) es nulo, significa que no hay límite.
+# Mientras que BenefitConfiguration es una configuración que puede aplicar a muchos
+# consumidores, Benefit es una instancia particular de una configuración para un
+# único consumidor y sobre la cual se registran usos en órdenes.
+# Las instancias de Benefit de un BenefitConfiguration se crean automáticamente con
+# un Job que corre diariamente.
 class Benefit < ApplicationRecord
   belongs_to :consumer
   has_many :order_benefits, dependent: :destroy

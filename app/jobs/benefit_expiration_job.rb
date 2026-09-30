@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Job para expirar beneficios pasados. Cuando termina, llama a BenefitAssignation
+# Job para expirar beneficios pasados. Cuando termina, llama a BenefitAssignation.
 class BenefitExpirationJob < ApplicationJob
   queue_as :default
 

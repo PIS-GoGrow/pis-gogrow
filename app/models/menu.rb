@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# Representa un plato de un proveedor. Su disponibilidad se asigna
+# con Schedule.
 class Menu < ApplicationRecord
   belongs_to :provider
 
