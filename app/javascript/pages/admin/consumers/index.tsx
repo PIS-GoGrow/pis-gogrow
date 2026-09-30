@@ -1,110 +1,161 @@
-import { Head, Link, router } from "@inertiajs/react"
-import { Search } from "lucide-react"
-import { type FormEvent, useState } from "react"
+import { Head, Link } from "@inertiajs/react"
+import { Search, Users } from "lucide-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
-} from "@/components/ui/card"
+import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
+import ListItemCard from "@/components/list-item-card"
+import PageContainer from "@/components/page-container"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { CardContent } from "@/components/ui/card"
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
+  EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { useFormatters } from "@/hooks/use-formatters"
+import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
 import { adminConsumers } from "@/routes"
-import type { AdminConsumersIndex, BreadcrumbItem } from "@/types"
+import type {
+  AdminConsumerRow,
+  AdminConsumersIndex,
+  BreadcrumbItem,
+} from "@/types"
 
-export default function Index({ query, consumers }: AdminConsumersIndex) {
+type Filter = "all" | "pending" | "completed"
+
+const page = "pages.admin.consumers.index"
+
+export default function Index({ consumers }: AdminConsumersIndex) {
   const { t } = useTranslation()
-  const [search, setSearch] = useState(query)
+  const { formatMoney } = useFormatters()
+  const getInitials = useInitials()
+  const [filter, setFilter] = useState<Filter>("all")
+  const [search, setSearch] = useState("")
+
+  const term = search.trim().toLowerCase()
+
+  // Completado es un mes cerrado: ya pagó o no tuvo nada que pagar.
+  const completed = (status: AdminConsumerRow["status"]) =>
+    !status || status === "approved"
+
+  const shown = consumers.filter((consumer) => {
+    if (filter === "pending" && completed(consumer.status)) return false
+    if (filter === "completed" && !completed(consumer.status)) return false
+
+    return (
+      term === "" ||
+      consumer.name.toLowerCase().includes(term) ||
+      consumer.email.toLowerCase().includes(term)
+    )
+  })
+
+  const emptyKey = consumers.length === 0 ? "empty" : "no_results"
 
   const breadcrumbs: BreadcrumbItem[] = [
-    {
-      title: t("pages.admin.consumers.index.title"),
-      href: adminConsumers.index().url,
-    },
+    { title: t(`${page}.title`), href: adminConsumers.index().url },
   ]
-
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    router.get(
-      adminConsumers.index().url,
-      { query: search },
-      { preserveState: true, replace: true },
-    )
-  }
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={t("pages.admin.consumers.index.title")} />
+      <Head title={t(`${page}.title`)} />
 
-      <div className="mx-auto grid w-full max-w-3xl gap-6 p-5">
-        <h1 className="text-2xl font-bold">
-          {t("pages.admin.consumers.index.title")}
-        </h1>
+      <PageContainer
+        title={t(`${page}.title`)}
+        description={t(`${page}.count`, { count: shown.length })}
+      >
+        <ToggleGroup
+          type="single"
+          variant="outline"
+          value={filter}
+          // Radix manda "" al destildar la opción activa; el filtro siempre tiene una.
+          onValueChange={(value) => value && setFilter(value as Filter)}
+          aria-label={t(`${page}.filter_label`)}
+          className="w-full"
+        >
+          <ToggleGroupItem value="all" className="flex-1">
+            {t(`${page}.all`)}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="completed" className="flex-1">
+            {t(`${page}.completed`)}
+          </ToggleGroupItem>
+          <ToggleGroupItem value="pending" className="flex-1">
+            {t(`${page}.pending`)}
+          </ToggleGroupItem>
+        </ToggleGroup>
 
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <div className="relative">
+          <Search
+            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            aria-hidden="true"
+          />
           <Input
             type="search"
-            name="query"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder={t("pages.admin.consumers.index.search_placeholder")}
-            className="max-w-sm"
+            placeholder={t(`${page}.search_placeholder`)}
+            aria-label={t(`${page}.search_label`)}
+            className="pl-9"
           />
-          <Button type="submit">
-            <Search aria-hidden="true" />
-            {t("pages.admin.consumers.index.search_button")}
-          </Button>
-        </form>
+        </div>
 
-        {consumers.length === 0 ? (
-          <Empty>
+        {shown.length === 0 ? (
+          <Empty className="border">
             <EmptyHeader>
-              <EmptyTitle>
-                {t("pages.admin.consumers.index.empty_title")}
-              </EmptyTitle>
+              <EmptyMedia variant="icon">
+                <Users aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyTitle>{t(`${page}.${emptyKey}_title`)}</EmptyTitle>
               <EmptyDescription>
-                {t("pages.admin.consumers.index.empty_description")}
+                {t(`${page}.${emptyKey}_description`)}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="grid gap-3">
-            {consumers.map((consumer) => (
-              <Card
+          <div className="grid gap-4 md:grid-cols-2">
+            {shown.map((consumer) => (
+              <ListItemCard
                 key={consumer.id}
-                className="hover:bg-accent/40 focus-within:ring-ring/50 relative gap-2 py-4 transition-colors focus-within:ring-[3px]"
+                className="hover:bg-accent/40 focus-within:ring-ring/50 relative transition-colors focus-within:ring-[3px]"
               >
-                <CardContent className="flex items-center justify-between gap-3 px-4">
-                  <div>
-                    <CardTitle>
+                <CardContent className="flex items-center gap-3">
+                  <Avatar size="lg">
+                    <AvatarFallback className="text-foreground text-xs font-semibold">
+                      {getInitials(consumer.name)}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">
                       <Link
                         href={adminConsumers.show(consumer.id).url}
                         className="after:absolute after:inset-0 hover:underline"
                       >
                         {consumer.name}
                       </Link>
-                    </CardTitle>
-                    <CardDescription>{consumer.email}</CardDescription>
+                    </p>
+                    <p className="text-muted-foreground truncate text-sm">
+                      {consumer.email}
+                    </p>
                   </div>
 
-                  <span className="text-muted-foreground shrink-0 text-sm">
-                    {consumer.company_name}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="font-semibold">
+                      {formatMoney(consumer.amount)}
+                    </span>
+                    <ConsumptionStatusBadge status={consumer.status} />
+                  </div>
                 </CardContent>
-              </Card>
+              </ListItemCard>
             ))}
           </div>
         )}
-      </div>
+      </PageContainer>
     </AppLayout>
   )
 }

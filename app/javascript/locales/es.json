@@ -136,27 +136,68 @@
         },
         "consumers": {
           "index": {
-            "empty_description": "Probá con otro nombre, correo o empresa.",
-            "empty_title": "No se encontraron empleados",
-            "search_button": "Buscar",
-            "search_placeholder": "Buscar por nombre, correo o empresa",
+            "all": "Todos",
+            "completed": "Completados",
+            "count_one": "%{count} empleado",
+            "count_other": "%{count} empleados",
+            "empty_description": "Todavía no hay empleados en la organización.",
+            "empty_title": "Sin empleados",
+            "filter_label": "Filtrar empleados",
+            "no_consumption": "Sin consumos",
+            "no_results_description": "Probá con otro nombre o correo, o cambiá el filtro.",
+            "no_results_title": "No se encontraron empleados",
+            "pending": "Pendientes",
+            "search_label": "Buscar empleado por nombre o correo",
+            "search_placeholder": "Buscar empleado...",
             "title": "Empleados"
           },
           "show": {
             "back": "Volver a empleados",
-            "benefit_due_date": "Vence: %{date}",
-            "benefit_percentage": "%{percentage}% de subsidio",
-            "benefits_empty": "No tiene beneficios asignados.",
-            "benefits_tab": "Beneficios",
-            "debt_month": "Mes: %{month}",
-            "debts_empty": "No tiene deudas pendientes.",
-            "debts_tab": "Deudas",
-            "orders_empty": "Todavía no hizo pedidos.",
-            "orders_tab": "Pedidos",
-            "payments_empty": "No registra pagos.",
-            "payments_tab": "Pagos",
-            "title": "Detalle del empleado"
+            "benefit": "Beneficio",
+            "benefit_active": "Activo",
+            "benefit_discount": "de descuento en viandas",
+            "benefit_inactive": "Sin beneficio",
+            "benefit_none": "Este empleado no tiene un beneficio vigente.",
+            "close": "Cerrar",
+            "consumption": "Consumo",
+            "date": "Fecha",
+            "employee": "Empleado",
+            "history": "Historial de consumo",
+            "history_empty_description": "Este empleado todavía no realizó ningún pedido de viandas.",
+            "history_empty_title": "Sin consumos",
+            "meals_one": "%{count} vianda",
+            "meals_other": "%{count} viandas",
+            "meals_used": "%{used} de %{limit} viandas consumidas",
+            "meals_used_no_limit_one": "%{count} vianda consumida",
+            "meals_used_no_limit_other": "%{count} viandas consumidas",
+            "month_detail": "Historial de consumo: %{month}",
+            "month_detail_description": "Pedidos confirmados del mes, con lo que cubre la empresa y lo que paga el empleado.",
+            "no_provider": "Sin proveedor",
+            "orders_empty": "No hay pedidos confirmados en este mes.",
+            "provider": "Proveedor",
+            "quantity": "Cant.",
+            "this_month": "Este mes",
+            "title": "Detalle del empleado",
+            "total": "Total: %{amount}",
+            "view_month": "Ver el detalle de %{month}",
+            "year_label": "Año"
           }
+        },
+        "internal_server_error": {
+          "back_home": "Volver al inicio",
+          "description": "Hubo un problema al procesar tu solicitud. Intentá de nuevo.",
+          "heading": "¡Ups! Algo salió mal",
+          "retry": "Reintentar",
+          "title": "Algo salió mal"
+        },
+        "not_found": {
+          "back_home": "Volver al inicio",
+          "description": "La dirección que buscás no está disponible o fue movida.",
+          "go_to_menu": "Ir a mi menú",
+          "go_to_panel": "Ir a mi panel",
+          "heading": "¡Ups! Esta página no existe",
+          "sign_in": "Iniciar sesión",
+          "title": "Página no encontrada"
         }
       },
       "cart": {
@@ -196,24 +237,6 @@
           "provider": "Panel del proveedor"
         },
         "title": "Panel"
-      },
-      "errors": {
-        "internal_server_error": {
-          "back_home": "Volver al inicio",
-          "description": "Hubo un problema al procesar tu solicitud. Intentá de nuevo.",
-          "heading": "¡Ups! Algo salió mal",
-          "retry": "Reintentar",
-          "title": "Algo salió mal"
-        },
-        "not_found": {
-          "back_home": "Volver al inicio",
-          "description": "La dirección que buscás no está disponible o fue movida.",
-          "go_to_menu": "Ir a mi menú",
-          "go_to_panel": "Ir a mi panel",
-          "heading": "¡Ups! Esta página no existe",
-          "sign_in": "Iniciar sesión",
-          "title": "Página no encontrada"
-        }
       },
       "home": {
         "dashboard": "Panel",

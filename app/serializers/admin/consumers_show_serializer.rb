@@ -2,8 +2,11 @@
 
 class Admin::ConsumersShowSerializer < ApplicationSerializer
   has_one :consumer, resource: ConsumerSerializer
-  has_many :orders, resource: OrderSerializer
-  has_many :benefits, resource: BenefitSerializer
-  has_many :debts, resource: AccountSerializer
-  has_many :payments, resource: PaymentSerializer
+
+  attributes :summary, :benefit_percentage
+
+  typelize summary: "{ amount: number; status: 'pending' | 'submitted' | 'approved' | 'rejected' | null; meals_used: number; meals_limit: number; providers: Array<{ name: string; meals: number }> }"
+  typelize benefit_percentage: "number | null"
+
+  has_many :months, resource: Admin::ConsumerMonthSerializer
 end

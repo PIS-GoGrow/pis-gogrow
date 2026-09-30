@@ -1,65 +1,70 @@
-import { Head, Link, usePage } from "@inertiajs/react"
-import { ArrowLeft } from "lucide-react"
+import { Head, Link } from "@inertiajs/react"
+import { ArrowLeft, ChevronRight, Users } from "lucide-react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import StatusBadge from "@/components/status-badge"
-import { Button } from "@/components/ui/button"
+import ConsumerMonthSheet from "@/components/admin/consumer-month-sheet"
+import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
+import HeadingSmall from "@/components/heading-small"
+import ListItemCard from "@/components/list-item-card"
+import PageContainer from "@/components/page-container"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
-import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
+import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
+import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
+import { cn } from "@/lib/utils"
 import { adminConsumers } from "@/routes"
-import type { AdminConsumersShow, Benefit, BreadcrumbItem } from "@/types"
+import type { AdminConsumersShow, BreadcrumbItem } from "@/types"
 
-function EmptySection({ description }: { description: string }) {
-  return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyTitle>{description}</EmptyTitle>
-      </EmptyHeader>
-    </Empty>
-  )
-}
+const page = "pages.admin.consumers.show"
 
 export default function Show({
   consumer,
-  orders,
-  benefits,
-  debts,
-  payments,
+  summary,
+  benefit_percentage,
+  months,
 }: AdminConsumersShow) {
   const { t } = useTranslation()
-  const { locale } = usePage().props
-  const { formatMoney, formatDeliveryDate } = useFormatters()
+  const { formatMoney } = useFormatters()
+  const getInitials = useInitials()
 
-  const formatMonth = (month: string) => {
-    const date = new Date(month)
-    return Number.isNaN(date.getTime())
-      ? month
-      : new Intl.DateTimeFormat(locale, {
-          month: "long",
-          year: "numeric",
-        }).format(date)
-  }
+  const years = [...new Set(months.map((month) => month.year))]
+  const [year, setYear] = useState(String(years[0] ?? ""))
+  const [selectedKey, setSelectedKey] = useState<string | null>(null)
+  const [sheetOpen, setSheetOpen] = useState(false)
 
-  const formatDate = (date: string) =>
-    new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-      new Date(date),
-    )
+  const visibleMonths = months.filter((month) => String(month.year) === year)
+  const selectedMonth = months.find((month) => month.key === selectedKey)
 
-  const benefitTitle = (benefit: Benefit) =>
-    benefit.description ??
-    t("pages.admin.consumers.show.benefit_percentage", {
-      percentage: benefit.percentage ?? 0,
-    })
+  const progress =
+    summary.meals_limit > 0
+      ? Math.min(100, (summary.meals_used / summary.meals_limit) * 100)
+      : 0
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -71,164 +76,192 @@ export default function Show({
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={consumer.name} />
+      <Head title={t(`${page}.title`)} />
 
-      <div className="mx-auto grid w-full max-w-3xl gap-4 p-5">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="justify-self-start"
-          asChild
-        >
-          <Link href={adminConsumers.index().url}>
-            <ArrowLeft />
-            {t("pages.admin.consumers.show.back")}
+      <PageContainer
+        title={t(`${page}.title`)}
+        back={
+          <Link
+            href={adminConsumers.index()}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "-ml-2.5",
+            )}
+          >
+            <ArrowLeft aria-hidden="true" />
+            {t(`${page}.back`)}
           </Link>
-        </Button>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">{consumer.name}</CardTitle>
-            <CardDescription>{consumer.email}</CardDescription>
-          </CardHeader>
-          <CardContent className="text-muted-foreground text-sm">
-            {consumer.company_name}
-            {consumer.address && <> · {consumer.address}</>}
+        }
+      >
+        <Card className="gap-4 py-4">
+          <CardContent className="flex items-center gap-3 px-4">
+            <Avatar size="lg">
+              <AvatarFallback className="text-foreground text-xs font-semibold">
+                {getInitials(consumer.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-semibold">{consumer.name}</p>
+              <p className="text-muted-foreground truncate text-sm">
+                {consumer.email}
+              </p>
+            </div>
+            <ConsumptionStatusBadge status={summary.status} />
           </CardContent>
         </Card>
 
-        <Tabs defaultValue="orders" className="gap-4">
-          <TabsList className="w-full">
-            <TabsTrigger value="orders">
-              {t("pages.admin.consumers.show.orders_tab")}
-            </TabsTrigger>
-            <TabsTrigger value="benefits">
-              {t("pages.admin.consumers.show.benefits_tab")}
-            </TabsTrigger>
-            <TabsTrigger value="payments">
-              {t("pages.admin.consumers.show.payments_tab")}
-            </TabsTrigger>
-            <TabsTrigger value="debts">
-              {t("pages.admin.consumers.show.debts_tab")}
-            </TabsTrigger>
-          </TabsList>
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="bg-muted/50 gap-3 py-4">
+            <CardHeader className="px-4">
+              <CardDescription>{t(`${page}.consumption`)}</CardDescription>
+              <CardAction>
+                <Badge variant="secondary">{t(`${page}.this_month`)}</Badge>
+              </CardAction>
+            </CardHeader>
+            <CardContent className="grid gap-3 px-4">
+              <p className="flex flex-wrap items-baseline gap-x-2">
+                <strong className="text-2xl">
+                  {formatMoney(summary.amount)}
+                </strong>
+                <span className="text-muted-foreground text-sm">
+                  {"| "}
+                  {summary.meals_limit > 0
+                    ? t(`${page}.meals_used`, {
+                        used: summary.meals_used,
+                        limit: summary.meals_limit,
+                      })
+                    : t(`${page}.meals_used_no_limit`, {
+                        count: summary.meals_used,
+                      })}
+                </span>
+              </p>
 
-          <TabsContent value="orders" className="grid gap-3">
-            {orders.length === 0 ? (
-              <EmptySection
-                description={t("pages.admin.consumers.show.orders_empty")}
-              />
-            ) : (
-              orders.map((order) => (
-                <Card key={order.id} className="gap-2 py-4">
-                  <CardHeader className="gap-1 px-4">
-                    <CardDescription>
-                      {order.provider_name ??
-                        t("pages.orders.index.no_provider")}
-                    </CardDescription>
-                    <CardTitle className="text-base">
-                      {order.menu_name ?? t("pages.orders.index.no_menu")}
-                    </CardTitle>
-                    <CardAction>
-                      <StatusBadge status={order.status} />
-                    </CardAction>
-                  </CardHeader>
-                  <CardContent className="flex items-baseline justify-between gap-3 px-4">
-                    <p className="text-muted-foreground text-sm">
-                      {order.date
-                        ? formatDeliveryDate(order.date)
-                        : t("pages.orders.index.no_date")}
-                    </p>
-                    <p className="text-sm font-medium">
-                      {order.discounted_price != null
-                        ? formatMoney(order.discounted_price)
-                        : t("pages.orders.index.no_price")}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
+              {summary.meals_limit > 0 && (
+                <Progress value={progress} className="h-2" />
+              )}
 
-          <TabsContent value="benefits" className="grid gap-3">
-            {benefits.length === 0 ? (
-              <EmptySection
-                description={t("pages.admin.consumers.show.benefits_empty")}
-              />
-            ) : (
-              benefits.map((benefit) => (
-                <Card key={benefit.id} className="gap-2 py-4">
-                  <CardHeader className="gap-1 px-4">
-                    <CardTitle className="text-base">
-                      {benefitTitle(benefit)}
-                    </CardTitle>
-                    {benefit.due_date && (
-                      <CardDescription>
-                        {t("pages.admin.consumers.show.benefit_due_date", {
-                          date: formatDate(benefit.due_date),
-                        })}
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent className="px-4">
-                    <p className="text-sm font-medium">
-                      {benefit.amount != null
-                        ? formatMoney(benefit.amount)
-                        : t("pages.orders.index.no_price")}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
+              {summary.providers.length > 0 && (
+                <>
+                  <Separator />
+                  <dl className="grid gap-1 text-sm">
+                    {summary.providers.map((provider) => (
+                      <div
+                        key={provider.name}
+                        className="flex items-baseline justify-between gap-4"
+                      >
+                        <dt className="text-muted-foreground">
+                          {provider.name}
+                        </dt>
+                        <dd className="font-medium">
+                          {t(`${page}.meals`, { count: provider.meals })}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
-          <TabsContent value="payments" className="grid gap-3">
-            {payments.length === 0 ? (
-              <EmptySection
-                description={t("pages.admin.consumers.show.payments_empty")}
-              />
-            ) : (
-              payments.map((payment) => (
-                <Card key={payment.id} className="gap-2 py-4">
-                  <CardContent className="flex items-center justify-between gap-3 px-4">
-                    <p className="text-muted-foreground text-sm">
-                      {formatDate(payment.created_at)}
-                    </p>
-                    <StatusBadge status={payment.status} kind="payment" />
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
+          <Card className="bg-muted/50 gap-3 py-4">
+            <CardHeader className="px-4">
+              <CardDescription>{t(`${page}.benefit`)}</CardDescription>
+              <CardAction>
+                <Badge variant="secondary">
+                  {benefit_percentage != null
+                    ? t(`${page}.benefit_active`)
+                    : t(`${page}.benefit_inactive`)}
+                </Badge>
+              </CardAction>
+            </CardHeader>
+            <CardContent className="px-4">
+              {benefit_percentage != null ? (
+                <p className="flex flex-wrap items-baseline gap-x-2">
+                  <strong className="text-2xl">{benefit_percentage}%</strong>
+                  <span className="font-medium">
+                    {t(`${page}.benefit_discount`)}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  {t(`${page}.benefit_none`)}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-          <TabsContent value="debts" className="grid gap-3">
-            {debts.length === 0 ? (
-              <EmptySection
-                description={t("pages.admin.consumers.show.debts_empty")}
-              />
-            ) : (
-              debts.map((debt) => (
-                <Card key={debt.id} className="gap-2 py-4">
-                  <CardContent className="flex items-center justify-between gap-3 px-4">
-                    <p className="text-muted-foreground text-sm">
-                      {debt.month
-                        ? t("pages.admin.consumers.show.debt_month", {
-                            month: formatMonth(debt.month),
-                          })
-                        : null}
-                    </p>
-                    <p className="text-sm font-medium">
-                      {debt.amount != null
-                        ? formatMoney(debt.amount)
-                        : t("pages.orders.index.no_price")}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
+        <div className="flex items-center justify-between gap-4">
+          <HeadingSmall title={t(`${page}.history`)} />
+
+          {years.length > 1 && (
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger size="sm" aria-label={t(`${page}.year_label`)}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((option) => (
+                  <SelectItem key={option} value={String(option)}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        {months.length === 0 ? (
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Users aria-hidden="true" />
+              </EmptyMedia>
+              <EmptyTitle>{t(`${page}.history_empty_title`)}</EmptyTitle>
+              <EmptyDescription>
+                {t(`${page}.history_empty_description`)}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2">
+            {visibleMonths.map((month) => (
+              <ListItemCard
+                key={month.key}
+                className="hover:bg-accent/40 focus-within:ring-ring/50 relative transition-colors focus-within:ring-[3px]"
+              >
+                <CardContent>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedKey(month.key)
+                      setSheetOpen(true)
+                    }}
+                    aria-label={t(`${page}.view_month`, { month: month.label })}
+                    className="flex w-full items-center gap-3 text-left outline-none after:absolute after:inset-0"
+                  >
+                    <span className="flex-1 font-medium">{month.label}</span>
+                    <span className="font-semibold">
+                      {formatMoney(month.amount)}
+                    </span>
+                    <ConsumptionStatusBadge status={month.status} />
+                    <ChevronRight
+                      className="text-muted-foreground size-4 shrink-0"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </CardContent>
+              </ListItemCard>
+            ))}
+          </div>
+        )}
+
+        <ConsumerMonthSheet
+          month={selectedMonth}
+          companyName={consumer.company_name}
+          open={sheetOpen}
+          onClose={() => setSheetOpen(false)}
+        />
+      </PageContainer>
     </AppLayout>
   )
 }

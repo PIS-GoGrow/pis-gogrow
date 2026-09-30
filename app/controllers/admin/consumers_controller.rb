@@ -2,25 +2,23 @@
 
 class Admin::ConsumersController < Admin::InertiaController
   def index
-    @query = params[:query].to_s.strip
-
-    consumers = Consumer.joins(:user, :company).preload(:user, :company)
-    if @query.present?
-      consumers = consumers.where(
-        "users.name ILIKE :q OR users.email ILIKE :q OR companies.name ILIKE :q", q: "%#{@query}%"
-      )
-    end
-
-    @consumers = consumers.order("users.name")
+    @consumers = AdminConsumerSummary.rows_for(company)
   end
 
+  # El find va sobre los empleados de la empresa del admin y no sobre Consumer:
+  # pedir el de otra empresa tiene que ser un 404, no un empleado ajeno.
   def show
-    @consumer = Consumer.preload(:user, :company).find(params[:id])
-    @orders = @consumer.orders.preload(schedule: { menu: { provider: :user } }).order(created_at: :desc)
-    @benefits = @consumer.benefits.order(due_date: :desc)
+    @consumer = company.consumers.preload(:user, :company).find(params[:id])
 
-    accounts = @consumer.accounts.preload(:payments)
-    @debts = accounts.pending
-    @payments = accounts.flat_map(&:payments)
+    summary = AdminConsumerSummary.new(@consumer)
+    @summary = summary.current_month
+    @benefit_percentage = @consumer.current_benefit&.percentage
+    @months = summary.months
+  end
+
+  private
+
+  def company
+    Current.user.admin.company
   end
 end
