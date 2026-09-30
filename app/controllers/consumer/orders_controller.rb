@@ -13,7 +13,7 @@ class Consumer::OrdersController < Consumer::InertiaController
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
     @order = consumer.orders.preload(schedule: { menu: { provider: :user } }).find(params[:id])
-    @delivery_addresses = delivery_address_options(consumer)
+    @delivery_addresses = delivery_address_options(consumer, @order)
     @max_quantity = max_quantity(@order)
   end
 
@@ -27,7 +27,7 @@ class Consumer::OrdersController < Consumer::InertiaController
     # Rechazamos si la dirección es invalida
     # delivery_addresses ya verifica que la dirección no sea blank, por lo que acá
     # está manejado el caso de que no haya dirección de envío.
-    return reject_order(:invalid_address) unless consumer.delivery_addresses.include?(order_params[:address])
+    return reject_order(:invalid_address) unless consumer.delivery_addresses.include?(order_params[:address]) || valid_new_address?(consumer, order_params[:address])
 
     created_orders = []
 
@@ -98,7 +98,7 @@ class Consumer::OrdersController < Consumer::InertiaController
     order = consumer.orders.find(params[:id])
 
     return reject_update(order, :invalid_quantity) unless update_params[:quantity].to_s.match?(/\A[1-9]\d*\z/)
-    return reject_update(order, :invalid_address) unless delivery_addresses(consumer).include?(update_params[:address])
+    return reject_update(order, :invalid_address) unless delivery_address_options(consumer, order).pluck(:address).include?(update_params[:address])
 
     delivery = consumer.delivery_for(order.provider, update_params[:address])
     return reject_update(order, :office_address_required) if delivery[:address].blank?
@@ -164,15 +164,19 @@ class Consumer::OrdersController < Consumer::InertiaController
     consumer.benefits.where("due_date >= ?", Date.current).order(:due_date).first
   end
 
-  def delivery_addresses(consumer)
-    [ consumer.address, consumer.company.address ].compact_blank
+  # Además de las direcciones conocidas, el carrito puede mandar una que el
+  # empleado ingresó sin guardarla para futuros pedidos.
+  def valid_new_address?(consumer, address)
+    consumer.delivery_address_options.pluck(:address).include?(address) || DeliveryAddress.valid_full_address?(address)
   end
 
-  def delivery_address_options(consumer)
-    [
-      { id: "office", label: t("pages.orders.addresses.office"), address: consumer.company.address },
-      { id: "home", label: t("pages.orders.addresses.home"), address: consumer.address }
-    ].select { |address| address[:address].present? }
+  # La dirección actual del pedido se mantiene como opción aunque no esté
+  # guardada, para que modificar la cantidad no obligue a cambiarla.
+  def delivery_address_options(consumer, order)
+    options = consumer.delivery_address_options
+    return options if order.address.blank? || options.pluck(:address).include?(order.address)
+
+    options + [ { id: "current", label: t("pages.orders.addresses.current"), address: order.address } ]
   end
 
   # El cupo del schedule ya descuenta esta orden, así que el máximo que el

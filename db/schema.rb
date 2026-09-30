@@ -106,6 +106,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
     t.index ["user_id"], name: "index_consumers_on_user_id"
   end
 
+  create_table "delivery_addresses", force: :cascade do |t|
+    t.string "apartment"
+    t.bigint "consumer_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "street", null: false
+    t.datetime "updated_at", null: false
+    t.index ["consumer_id"], name: "index_delivery_addresses_on_consumer_id"
+  end
+
   create_table "menu_option_groups", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "limit", default: 1, null: false
@@ -425,6 +435,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
   add_foreign_key "benefits", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
+  add_foreign_key "delivery_addresses", "consumers"
   add_foreign_key "menu_option_groups", "menus"
   add_foreign_key "menus", "providers"
   add_foreign_key "order_accounts", "accounts"

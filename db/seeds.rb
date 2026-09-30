@@ -132,6 +132,8 @@ consumer = Consumer.create!(
   address: "Julio Herrera y Reissig 565",
   user: consumer_user
 )
+consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
+consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
 Benefit.create!(
   consumer:,
   amount: 20,

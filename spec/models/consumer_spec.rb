@@ -25,6 +25,56 @@ RSpec.describe Consumer, type: :model do
     end
   end
 
+  describe "#delivery_address_options" do
+    fixtures :users
+
+    let(:consumer) do
+      Consumer.create!(
+        user: User.create!(email: "addresses-#{SecureRandom.hex(4)}@gmail.com", name: "Sofía", password: "password123456"),
+        company: companies(:gogrow),
+        address: "Ellauri 1234"
+      )
+    end
+
+    def home_order(address, created_at:)
+      menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa", price: 300)
+      schedule = Schedule.create!(menu:, date: Date.current + 1, amount: 5)
+      Order.create!(consumer:, schedule:, amount: 1, price: 300, address:, delivery_method: :home, created_at:)
+    end
+
+    it "lists the office, the profile address and the saved ones, newest first" do
+      consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892", created_at: 2.days.ago)
+      consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
+
+      expect(consumer.delivery_address_options.pluck(:label, :address)).to eq([
+        [ "Oficina", company_address ],
+        [ "Casa", "Ellauri 1234" ],
+        [ "La Bicicleta Café", "Bv. España 2643, Local 2" ],
+        [ "Flora Café", "Canelones 892" ]
+      ])
+    end
+
+    it "puts the last custom address an order went to right after the office" do
+      flora = consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
+      home_order("Ellauri 1234", created_at: 2.days.ago)
+      home_order(flora.full_address, created_at: 1.day.ago)
+
+      expect(consumer.delivery_address_options.pluck(:label).first(2)).to eq([ "Oficina", "Flora Café" ])
+    end
+
+    it "keeps a last used address that was not saved" do
+      home_order("Colonia 1370, Apto 4", created_at: 1.day.ago)
+
+      expect(consumer.delivery_address_options.second).to include(id: "last_used", address: "Colonia 1370, Apto 4")
+    end
+
+    it "does not list another employee's saved addresses" do
+      consumers(:other).saved_addresses.create!(name: "Estudio", street: "Colonia 1370")
+
+      expect(consumer.delivery_address_options.pluck(:label)).not_to include("Estudio")
+    end
+  end
+
   describe "subsidized meals calculations" do
     before do
       # destroy_all y no delete_all: las órdenes cuelgan de cuentas.

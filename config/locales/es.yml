@@ -87,6 +87,17 @@ es:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
+        delivery_address:
+          attributes:
+            name:
+              blank: "Ingresá un nombre para la dirección."
+              too_long: "Usá como máximo %{count} caracteres."
+            street:
+              blank: "Ingresá la dirección."
+              too_long: "Usá como máximo %{count} caracteres."
+              invalid: "Ingresá la calle y el número de puerta."
+            apartment:
+              too_long: "Usá como máximo %{count} caracteres."
         order:
           attributes:
             rejection_reason:
@@ -94,6 +105,10 @@ es:
             rejection_details:
               blank: "debe especificarse al seleccionar otro motivo"
     attributes:
+      delivery_address:
+        name: "Nombre"
+        street: "Dirección"
+        apartment: "Piso / Apartamento"
       order:
         rejection_reason: "Motivo"
         rejection_details: "Detalle del motivo"
@@ -282,6 +297,8 @@ es:
       addresses:
         office: "Oficina"
         home: "Casa"
+        last_used: "Última dirección usada"
+        current: "Dirección actual"
       statuses:
         pending: "Pendiente"
         confirmed: "Confirmado"
@@ -425,11 +442,29 @@ es:
         availability:
           toggle_label: "En stock"
     cart:
-      office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
-      other_deliveries: "Las demás viandas irán a la dirección seleccionada."
+      delivery_address: "Dirección de entrega"
+      add_address: "Agregar"
+      my_addresses: "Ver mis direcciones"
+      office_delivery_warning_one: "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
+      office_delivery_warning_other: "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
       remove: "Quitar %{name}"
       delivery: "Entrega: %{date}"
+      new_address:
+        title: "Agregar una dirección"
+        description: "Ingresá dónde querés recibir el pedido."
+        name: "Nombre"
+        name_placeholder: "Ej: Oficina, Casa, etc."
+        street: "Dirección"
+        apartment: "Piso / Apartamento (opcional)"
+        save_for_later: "Guardar esta dirección para futuros pedidos"
+        cancel: "Cancelar"
+        submit: "Agregar"
+      saved_addresses:
+        title: "Mis direcciones"
+        description: "Elegí a qué dirección querés recibir el pedido."
+        cancel: "Cancelar"
+        submit: "Seleccionar"
     home:
       title: "Te damos la bienvenida"
       dashboard: "Panel"
