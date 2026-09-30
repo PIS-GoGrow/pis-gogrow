@@ -123,6 +123,15 @@ RSpec.describe "Orders", type: :request do
         expect(inertia.props[:delivery_addresses].map { it[:address] }).to eq([ "18 de Julio 1006", "Julio Herrera y Reissig 565" ])
       end
 
+      it "keeps the order's address as an option when it is no longer among the employee's addresses" do
+        order = orders(:upcoming_pending_future)
+        order.update_columns(address: "Colonia 1370, Apto 4", delivery_method: Order.delivery_methods[:home])
+
+        get order_path(order)
+
+        expect(inertia.props[:delivery_addresses].last).to include(id: "current", label: "Dirección actual", address: "Colonia 1370, Apto 4")
+      end
+
       it "explains why an order the provider confirmed cannot be modified" do
         get order_path(orders(:upcoming_confirmed_future))
 

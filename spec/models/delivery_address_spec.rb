@@ -34,6 +34,13 @@ RSpec.describe DeliveryAddress, type: :model do
     expect(address.errors.attribute_names).to contain_exactly(:name, :street, :apartment)
   end
 
+  it "accepts every field at its maximum length" do
+    address = build_address(name: "a" * 40, street: "Calle #{"a" * 112} 1", apartment: "b" * 40)
+
+    expect(address.street.length).to eq(120)
+    expect(address).to be_valid
+  end
+
   it "squishes the fields and drops a blank apartment" do
     address = build_address(name: "  Flora   Café ", street: " Canelones  892 ", apartment: "  ")
 
@@ -58,6 +65,11 @@ RSpec.describe DeliveryAddress, type: :model do
     it "rejects a blank address or one without a door number" do
       expect(described_class.valid_full_address?("")).to be(false)
       expect(described_class.valid_full_address?("Otra dirección")).to be(false)
+    end
+
+    it "accepts up to 164 characters and rejects one more" do
+      expect(described_class.valid_full_address?("Calle #{"a" * 156} 1")).to be(true)
+      expect(described_class.valid_full_address?("Calle #{"a" * 157} 1")).to be(false)
     end
   end
 end
