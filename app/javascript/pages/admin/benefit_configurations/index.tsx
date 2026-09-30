@@ -20,8 +20,8 @@ import type { BreadcrumbItem } from "@/types"
 import type { AdminBenefitConfigurationsIndex } from "@/types/serializers"
 
 export default function Index({
-  benefit_configurations,
-  current_benefit_configuration,
+  pending_base_subsidy,
+  base_subsidy,
 }: AdminBenefitConfigurationsIndex) {
   const { t } = useTranslation()
   const { flash } = usePage()
@@ -49,13 +49,21 @@ export default function Index({
     { title, href: adminBenefitConfigurations.index().url },
   ]
 
-  // Hay un cambio programado (todavia no vigente) cuando existe una fila
-  // con effective_from en el futuro -- por la validacion de unicidad del
-  // modelo solo puede haber una a la vez.
-  const today = new Date().toISOString().slice(0, 10)
-  const pendingBenefitConfiguration = benefit_configurations.find(
-    (benefitConfiguration) => benefitConfiguration.effective_from > today,
-  )
+  const pendingBenefitConfiguration:
+    | {
+        subsidy_percentage: number | ""
+        max_voucher_price: number | ""
+        monthly_voucher_limit: number | ""
+      }
+    | undefined = pending_base_subsidy
+    ? {
+        subsidy_percentage: pending_base_subsidy?.subsidy_percentage ?? "",
+        max_voucher_price:
+          pending_base_subsidy?.benefit_rules[0]?.max_price ?? "",
+        monthly_voucher_limit:
+          pending_base_subsidy?.benefit_rules[0]?.limit ?? "",
+      }
+    : undefined
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -119,18 +127,17 @@ export default function Index({
             {isEditing ? (
               <EditBenefitConfigurationForm
                 defaultValues={{
-                  subsidy_percentage:
-                    current_benefit_configuration?.subsidy_percentage ?? "",
+                  subsidy_percentage: base_subsidy?.subsidy_percentage ?? "",
                   max_voucher_price:
-                    current_benefit_configuration?.max_voucher_price ?? "",
+                    base_subsidy?.benefit_rules[0]?.max_price ?? "",
                   monthly_voucher_limit:
-                    current_benefit_configuration?.monthly_voucher_limit ?? "",
+                    base_subsidy?.benefit_rules[0]?.limit ?? "",
                 }}
                 pendingBenefitConfiguration={pendingBenefitConfiguration}
                 onCancel={() => setIsEditing(false)}
                 onSuccess={() => setIsEditing(false)}
               />
-            ) : current_benefit_configuration ? (
+            ) : base_subsidy ? (
               <dl className="divide-border bg-muted divide-y rounded-lg px-4">
                 <div className="flex items-center justify-between py-3">
                   <dt className="text-muted-foreground">
@@ -139,7 +146,7 @@ export default function Index({
                     )}
                   </dt>
                   <dd className="text-lg font-semibold">
-                    {current_benefit_configuration.subsidy_percentage}%
+                    {base_subsidy.subsidy_percentage}%
                   </dd>
                 </div>
                 <div className="flex items-center justify-between py-3">
@@ -149,7 +156,7 @@ export default function Index({
                     )}
                   </dt>
                   <dd className="text-lg font-semibold">
-                    ≤${current_benefit_configuration.max_voucher_price}
+                    ≤${base_subsidy?.benefit_rules[0]?.max_price}
                   </dd>
                 </div>
                 <div className="flex items-center justify-between py-3">
@@ -159,7 +166,7 @@ export default function Index({
                     )}
                   </dt>
                   <dd className="text-lg font-semibold">
-                    {current_benefit_configuration.monthly_voucher_limit}
+                    {base_subsidy?.benefit_rules[0]?.limit}
                   </dd>
                 </div>
               </dl>

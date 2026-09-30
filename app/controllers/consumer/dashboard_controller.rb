@@ -70,12 +70,12 @@ class Consumer::DashboardController < Consumer::InertiaController
 
   def benefit_data
     {
-      limit: @consumer.benefit_available / 4,
-      used: @consumer.subsidized_meals_used_this_week,
-      percentage: @consumer.current_benefit&.percentage.to_i.clamp(0, 100),
-      monthly_limit: @consumer.benefit_available,
-      monthly_used: @consumer.subsidized_meals_used_this_month,
-      monthly_remaining: @consumer.remaining_subsidized_meals
+      limit: @consumer.monthly_benefit_available / 4,
+      used: @consumer.monthly_benefit_used_this_week,
+      percentage: @consumer.current_monthly_benefit&.percentage.to_i.clamp(0, 100),
+      monthly_limit: @consumer.monthly_benefit_available,
+      monthly_used: @consumer.monthly_benefit_used_this_month,
+      monthly_remaining: @consumer.remaining_monthly_benefit
     }
   end
 

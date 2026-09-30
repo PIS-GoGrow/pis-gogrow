@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe Consumer, type: :model do
-  fixtures :consumers, :companies, :providers
+  fixtures :consumers, :companies, :providers, :benefit_configurations, :benefits
 
   let(:consumer) { consumers(:one) }
   let(:company_address) { companies(:gogrow).address }
@@ -80,7 +80,6 @@ RSpec.describe Consumer, type: :model do
       # destroy_all y no delete_all: las órdenes cuelgan de cuentas.
       Order.destroy_all
       Schedule.delete_all
-      Benefit.create!(consumer:, amount: 20, percentage: 50, due_date: 1.month.from_now, description: "Viandas mensuales")
     end
 
     let(:menu) { menus(:milanesa) }
@@ -90,25 +89,25 @@ RSpec.describe Consumer, type: :model do
       Order.create!(
         consumer:, schedule: today_schedule, amount: 3,
         price: 900, address: consumer.company.address, delivery_method: :office, status: :confirmed
-      )
+      ).apply_benefit! benefits(:monthly), 3
 
-      expect(consumer.subsidized_meals_used_this_month).to eq(3)
-      expect(consumer.remaining_subsidized_meals).to eq(17)
+      expect(consumer.reload.monthly_benefit_used_this_month).to eq(3)
+      expect(consumer.remaining_monthly_benefit).to eq(17)
     end
 
     it "does not count cancelled or rejected orders" do
       Order.create!(
         consumer:, schedule: today_schedule, amount: 2,
         price: 600, address: consumer.company.address, delivery_method: :office, status: :cancelled
-      )
+      ).apply_benefit! benefits(:monthly), 1
       Order.create!(
         consumer:, schedule: today_schedule, amount: 1,
         price: 300, address: consumer.company.address, delivery_method: :office, status: :rejected,
         rejection_reason: :out_of_stock
-      )
+      ).apply_benefit! benefits(:monthly), 1
 
-      expect(consumer.subsidized_meals_used_this_month).to eq(0)
-      expect(consumer.remaining_subsidized_meals).to eq(20)
+      expect(consumer.monthly_benefit_used_this_month).to eq(0)
+      expect(consumer.remaining_monthly_benefit).to eq(20)
     end
 
     it "does not count orders delivered in previous or future months" do
@@ -118,39 +117,36 @@ RSpec.describe Consumer, type: :model do
       Order.create!(
         consumer:, schedule: past_schedule, amount: 5,
         price: 1500, address: consumer.company.address, delivery_method: :office, status: :confirmed
-      )
+      ).apply_benefit! benefits(:monthly), 5
       Order.create!(
         consumer:, schedule: future_schedule, amount: 4,
         price: 1200, address: consumer.company.address, delivery_method: :office, status: :confirmed
-      )
+      ).apply_benefit! benefits(:monthly), 4
 
-      expect(consumer.subsidized_meals_used_this_month).to eq(0)
-      expect(consumer.remaining_subsidized_meals).to eq(20)
+      expect(consumer.monthly_benefit_used_this_month).to eq(0)
+      expect(consumer.remaining_monthly_benefit).to eq(20)
     end
 
     it "clamps remaining subsidized meals to zero when limit is exceeded" do
       Order.create!(
         consumer:, schedule: today_schedule, amount: 25,
         price: 7500, address: consumer.company.address, delivery_method: :office, status: :confirmed
-      )
+      ).apply_benefit! benefits(:monthly), 20
 
-      expect(consumer.subsidized_meals_used_this_month).to eq(25)
-      expect(consumer.remaining_subsidized_meals).to eq(0)
+      expect(consumer.monthly_benefit_used_this_month).to eq(20)
+      expect(consumer.remaining_monthly_benefit).to eq(0)
     end
   end
 
   describe "#benefit_available" do
     it "returns the amount of the active monthly benefit" do
-      Benefit.create!(
-        consumer:, amount: 15, percentage: 50,
-        due_date: 1.month.from_now, description: "Viandas mensuales"
-      )
-
-      expect(consumer.benefit_available).to eq(15)
+      expect(consumer.monthly_benefit_available).to eq(20)
     end
 
     it "returns 0 when there is no active monthly benefit" do
-      expect(consumer.benefit_available).to eq(0)
+      benefits(:monthly).destroy
+
+      expect(consumer.monthly_benefit_available).to eq(0)
     end
   end
 
@@ -202,17 +198,17 @@ RSpec.describe Consumer, type: :model do
       Order.create!(
         consumer:, schedule: today_schedule, amount: 2,
         price: 600, address: consumer.company.address, delivery_method: :office, status: :confirmed
-      )
+      ).apply_benefit! benefits(:monthly), 2
       Order.create!(
         consumer:, schedule: today_schedule, amount: 1,
         price: 300, address: consumer.company.address, delivery_method: :office, status: :pending
-      )
+      ).apply_benefit! benefits(:monthly), 1
       Order.create!(
         consumer:, schedule: today_schedule, amount: 4,
         price: 1200, address: consumer.company.address, delivery_method: :office, status: :cancelled
-      )
+      ).apply_benefit! benefits(:monthly), 4
 
-      expect(consumer.subsidized_meals_used_this_week).to eq(3)
+      expect(consumer.monthly_benefit_used_this_week).to eq(3)
     end
   end
 end

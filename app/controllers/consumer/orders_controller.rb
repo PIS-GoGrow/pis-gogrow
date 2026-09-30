@@ -20,6 +20,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   def create
     consumer = Current.user.consumer
     requested_items = order_params.fetch(:items)
+    benefit_percentage = consumer&.current_monthly_benefit&.percentage.to_i
 
     # Rechazamos si no hay carrito o si las cantidades no son numéricas.
     return reject_order(:empty_cart) if requested_items.empty?
@@ -34,16 +35,16 @@ class Consumer::OrdersController < Consumer::InertiaController
     Order.transaction do
       consumer.lock!
 
-      benefit_percentage = consumer.current_benefit&.percentage.to_i
-      remaining_subsidized = benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
+      remaining_subsidized =
+        benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
+      schedule_ids = requested_items.pluck(:schedule_id)
 
       # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos todos
       # los schedules correspondientes.
-      schedule_ids = requested_items.pluck(:schedule_id).uniq
-      schedules = Schedule.includes(menu: :provider).where(id: schedule_ids, date: allowed_dates).order(:id).lock.index_by(&:id)
+      schedules = Schedule.includes(menu: :provider).where(id: schedule_ids.uniq, date: allowed_dates).order(:id).lock.index_by(&:id)
 
       # Tiramos error si alguno de los schedules no existen o si están fuera del rango de fechas permitidas
-      raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.size
+      raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
       requested_items.each do |item|
         quantity = item[:quantity].to_i
@@ -76,6 +77,7 @@ class Consumer::OrdersController < Consumer::InertiaController
           notes: item[:notes],
           discount_percentage: benefit_percentage,
           subsidized_quantity:,
+          benefits: [ consumer.current_monthly_benefit ].compact,
           **delivery
         )
 
@@ -103,14 +105,14 @@ class Consumer::OrdersController < Consumer::InertiaController
     delivery = consumer.delivery_for(order.provider, update_params[:address])
     return reject_update(order, :office_address_required) if delivery[:address].blank?
 
-    benefit_percentage = active_benefit_for(consumer)&.percentage.to_i
+    benefit_percentage = consumer&.current_monthly_benefit&.percentage.to_i
     modified = order.modify(
       by: Current.user,
       quantity: update_params[:quantity].to_i,
       notes: update_params[:notes],
       delivery:,
       discount_percentage: benefit_percentage,
-      remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
+      remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
     )
 
     if modified
@@ -158,10 +160,6 @@ class Consumer::OrdersController < Consumer::InertiaController
     return :insufficient_stock if schedule && schedule.remaining_amount < order.amount.to_i
 
     :cart_unavailable
-  end
-
-  def active_benefit_for(consumer)
-    consumer.benefits.where("due_date >= ?", Date.current).order(:due_date).first
   end
 
   # Además de las direcciones conocidas, el carrito puede mandar una que el

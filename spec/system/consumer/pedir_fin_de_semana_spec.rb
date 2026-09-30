@@ -12,7 +12,6 @@ RSpec.describe "Pedir durante el fin de semana", type: :system do
     OrderAccount.delete_all
     Order.delete_all
     Schedule.delete_all
-    Benefit.create!(consumer: consumers(:one), description: "Viandas mensuales", amount: 20, percentage: 50, due_date: 1.month.from_now)
   end
 
   it "muestra el menú de la semana que viene un sábado y permite completar el pedido" do
