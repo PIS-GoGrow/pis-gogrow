@@ -1,5 +1,11 @@
 # frozen_string_literal: true
 
+# Para agregar cuentas de meses pasados
+# Por como funciona la creacion de accounts solo se crean para el mes actual, por lo que si se quiere agregar cuentas de meses pasados hay que hacerlo manualmente
+# Con esto le podes hacer creer al sistema que esta en un mes anterior
+require "active_support/testing/time_helpers"
+include ActiveSupport::Testing::TimeHelpers
+
 week_start = Date.current.beginning_of_week(:monday)
 
 company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
@@ -214,6 +220,35 @@ order = Order.create!(
 )
 order.apply_benefit! benefit, 1
 
+
+# Cuentas pendientes de pago de meses anteriores (para probar el historial de pagos)
+[
+  { provider: tu_viandita, months_ago: 2 },
+  { provider: tu_viandita, months_ago: 3 }
+].each do |data|
+  provider = data[:provider]
+  menu = provider.menus.first
+
+  travel_to(data[:months_ago].months.ago.beginning_of_month + 3.days) do
+    schedule = Schedule.create!(
+      menu:,
+      date: Date.current,
+      amount: 5
+    )
+
+    Order.create!(
+      consumer:,
+      schedule:,
+      status: :confirmed,
+      price: menu.price,
+      discounted_price: menu.price / 2,
+      amount: 1,
+      address: company.address,
+      delivery_method: :office
+    )
+  end
+end
+
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 
 notification_configuration = NotificationConfiguration.create!(
@@ -224,7 +259,10 @@ notification_configuration.consumers << consumer
 # Cobros del proveedor en distintos estados, para que la pantalla no se vea
 # toda pendiente. Las cuentas ya las crearon los pedidos de más arriba.
 def seed_payment(account, status)
-  payment = Payment.new(account:, provider: account.provider, status:)
+  # El modelo exige rejection_reason cuando el estado es rejected.
+  rejection_reason = "Comprobante ilegible, subí uno nuevo." if status == :rejected
+
+  payment = Payment.new(account:, provider: account.provider, status:, rejection_reason:)
   payment.receipt.attach(
     io: Rails.root.join("public/icon.png").open,
     filename: "comprobante.png",
@@ -243,8 +281,18 @@ seed_payment(consumer.accounts.find_by!(provider: tu_viandita, month: Date.curre
 
 { 2.months.ago => [ :approved, :rejected ], 1.month.ago => [ :approved, :approved ] }.each do |date, (company_status, consumer_status)|
   month = date.beginning_of_month
-  seed_payment(company.accounts.create!(provider: tu_viandita, month:, amount: 1_250.00), company_status)
-  seed_payment(consumer.accounts.create!(provider: tu_viandita, month:, amount: 1_250.00), consumer_status)
+
+  # find_or_create_by!, no create!: el mes "hace 2 meses" ya tiene cuenta de
+  # empresa y de empleado creadas por ensure_accounts! (las Order de más
+  # arriba), así que un create! directo pisaría el índice único. Se fuerza el
+  # amount para esta demo sin importar si la cuenta ya existía.
+  company_account = company.accounts.find_or_create_by!(provider: tu_viandita, month:)
+  company_account.update!(amount: 1_250.00)
+  seed_payment(company_account, company_status)
+
+  consumer_account = consumer.accounts.find_or_create_by!(provider: tu_viandita, month:)
+  consumer_account.update!(amount: 1_250.00)
+  seed_payment(consumer_account, consumer_status)
 end
 
 # Facturas de TuViandita a GoGrow: el mes pasado aprobada (se descarga desde el
