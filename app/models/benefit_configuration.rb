@@ -76,27 +76,52 @@ class BenefitConfiguration < ApplicationRecord
   # equivalente a correrla una.
   def apply_to_all_consumers
     already_granted_ids = Benefit.current.where(benefit_configuration: self).pluck(:consumer_id).to_set
+    future_granted_ids = Benefit.future.where(benefit_configuration: self).pluck(:consumer_id).to_set
     date = Date.current
 
     consumers.each do |consumer|
-      next if already_granted_ids.include? consumer.id
-      next unless benefit_rules.all? { |rule| rule.applicable_to? consumer, date: }
+      apply_current(consumer, date) unless already_granted_ids.include? consumer.id
+      apply_future(consumer, date) unless future_granted_ids.include? consumer.id
+    end
+  end
 
-      begin
-        consumer.benefits.create!(
-          amount: benefit_limit,
-          due_date: benefit_deadline(consumer, date),
-          percentage: subsidy_percentage,
-          description: name,
-          status: :current,
-          benefit_configuration: self
-        )
-      rescue ActiveRecord::RecordNotUnique
-        # Si llegamos a este caso hay un error de concurrencia: se está corriendo esta
-        # misma función dos veces a la vez. No tenemos nada para hacer y podemos ignorar
-        # el error.
-        next
-      end
+  def apply_current(consumer, date)
+    return unless benefit_rules.all? { |rule| rule.applicable_to? consumer, date: }
+
+    begin
+      consumer.benefits.create!(
+        amount: benefit_limit,
+        due_date: benefit_deadline(consumer, date),
+        percentage: subsidy_percentage,
+        description: name,
+        status: :current,
+        benefit_configuration: self
+      )
+    rescue ActiveRecord::RecordNotUnique
+      # Si llegamos a este caso hay un error de concurrencia: se está corriendo esta
+      # misma función dos veces a la vez. No tenemos nada para hacer y podemos ignorar
+      # el error.
+      return
+    end
+  end
+
+  def apply_future(consumer, date)
+    return unless benefit_rules.any? { |rule| rule.future_applicable_to? consumer, date: }
+
+    begin
+      consumer.benefits.create!(
+        amount: benefit_limit,
+        due_date: future_benefit_deadline(consumer, date),
+        percentage: subsidy_percentage,
+        description: name,
+        status: :future,
+        benefit_configuration: self
+      )
+    rescue ActiveRecord::RecordNotUnique
+      # Si llegamos a este caso hay un error de concurrencia: se está corriendo esta
+      # misma función dos veces a la vez. No tenemos nada para hacer y podemos ignorar
+      # el error.
+      return
     end
   end
 
@@ -104,18 +129,20 @@ class BenefitConfiguration < ApplicationRecord
 
   # Devuelve el menor límite impuesto por las reglas. Si no hay límite, devuelve nil
   def benefit_limit
-    benefit_rules
-      .map(&:benefit_limit)
-      .filter { |limit| !limit.nil? }
-      .min
+    @limit ||= 
+      benefit_rules
+        .map(&:benefit_limit)
+        .filter { |limit| !limit.nil? }
+        .min
   end
 
   # Devuelve el menor deadline impuesto por las reglas. Si no hay deadlines, devuelve nil
   def benefit_deadline(consumer, date)
-    benefit_rules
-      .map { |rule| rule.benefit_deadline consumer, date: }
-      .filter { |deadline| !deadline.nil? }
-      .min
+    @deadline ||=
+      benefit_rules
+        .map { |rule| rule.benefit_deadline consumer, date: }
+        .filter { |deadline| !deadline.nil? }
+        .min
   end
 end
 

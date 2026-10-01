@@ -21,7 +21,7 @@ class Benefit < ApplicationRecord
   validate :only_one_monthly_benefit_per_consumer, if: :monthly?
 
   # Es importante que current sea 0
-  enum :status, { current: 0, expired: 1 }, default: :current
+  enum :status, { current: 0, expired: 1, future: 2 }, default: :current
 
   scope :monthly, -> {
     joins(benefit_configuration: :benefit_rules)
@@ -33,10 +33,19 @@ class Benefit < ApplicationRecord
       .distinct
   }
 
+  # Expira beneficios pasados de fecha y que no deberían poder usarse más.
   def self.expire_old!(date)
-    current
+    where.not(status: :expired)
       .where(due_date: ...date)
       .update_all(status: :expired, updated_at: Time.current)
+  end
+
+  # Permite usar beneficios que estaban marcados para ser usados en el futuro.
+  def self.make_current!(date)
+    future
+      .where(due_date: date..)
+      .where.not(benefit_configuration_id: current.select(:benefit_configuration_id))
+      .update_all(status: :current, updated_at: Time.current)
   end
 
   def monthly?

@@ -28,6 +28,14 @@ class MonthlyBenefit < BenefitRule
     date.end_of_month
   end
 
+  def future_applicable_to?(consumer, date: Date.current)
+    Calendar.new(date).monthly_benefit_assignment <= date
+  end
+
+  def future_benefit_deadline(consumer, date: Date.current)
+    date.next_month.end_of_month
+  end
+
   private
 
   def unique_effective_from_per_company
