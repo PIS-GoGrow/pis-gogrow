@@ -35,6 +35,12 @@ class BenefitConfiguration < ApplicationRecord
       .distinct
   }
 
+  def self.pending_base_subsidies_for(company, effective_from: Date.current)
+    where(company: company)
+      .monthly_ordered
+      .where(benefit_rules: { effective_from: (effective_from + 1.day).. })
+  end
+
   def self.base_subsidy_for(company, effective_from: Date.current)
     where(company: company)
       .monthly_ordered

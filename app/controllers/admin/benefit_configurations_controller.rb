@@ -5,15 +5,14 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
     company = Current.user.admin.company
 
     @benefit_configurations = company.benefit_configurations
-    @pending_base_subsidy = BenefitConfiguration.base_subsidy_for company, effective_from: next_period_effective_from
+    @pending_base_subsidies = BenefitConfiguration.pending_base_subsidies_for company
     @base_subsidy = BenefitConfiguration.base_subsidy_for company
-
-    @pending_base_subsidy = @pending_base_subsidy == @base_subsidy ? nil : @pending_base_subsidy
+    @configurable_month = Calendar.new.configurable_month.strftime("%d/%m/%y")
   end
 
   def create
     company = Current.user.admin.company
-    effective_from = next_period_effective_from
+    effective_from = Calendar.new.configurable_month
     benefit_configuration = nil
 
     # Hacer toda la acción como una transacción: No queremos borrar el beneficio que ya
@@ -61,12 +60,5 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
 
   def benefit_configuration_params
     params.expect(benefit_configuration: [ :subsidy_percentage, :monthly_voucher_limit, :max_voucher_price ])
-  end
-
-  # RRHH ya no elige la fecha de vigencia: el cambio se aplica siempre a
-  # partir del primer día del próximo período (mes), como quedó definido en
-  # el Figma ("Los cambios se aplicarán en el próximo período").
-  def next_period_effective_from
-    Date.current.next_month.beginning_of_month
   end
 end
