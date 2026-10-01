@@ -15,6 +15,16 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
     find("[data-sidebar='sidebar']")
   end
 
+  # El login con Google redirige a la raíz: de ahí tiene que llegar al inicio
+  # de RR. HH. y no a la bienvenida del starter kit.
+  it "lands HR on its home from the root page" do
+    sign_in admin_user, role: :admin
+    visit root_path
+
+    expect(page).to have_current_path(admin_dashboard_path)
+    expect(page).to have_content("Hola, #{admin_user.name.split.first}")
+  end
+
   it "greets HR and shows what is coming to the home" do
     sign_in admin_user, role: :admin
     visit admin_dashboard_path
