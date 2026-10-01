@@ -60,6 +60,9 @@ es:
     payment_receipt_submitted: "Comprobante enviado para su validacion."
     payment_approved: "Comprobante aprobado."
     payment_rejected: "Comprobante rechazado."
+    invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
+    invoice_removed: "Factura eliminada."
+
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -76,7 +79,10 @@ es:
     password_challenge_invalid: "La verificación de contraseña no es válida"
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
+
     payment_not_reviewable: "Este comprobante ya fue revisado."
+    invoice_not_removable: "Esta factura ya fue revisada y no se puede eliminar."
+
   activerecord:
     errors:
       models:
@@ -90,8 +96,36 @@ es:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
+
             rejection_reason:
               blank: "es obligatorio para rechazar un comprobante"
+        invoice:
+          attributes:
+            account:
+              not_company: "debe ser un período de cobro de una empresa"
+            issued_on:
+              blank: "Ingresá la fecha de emisión."
+              less_than_or_equal_to: "La fecha de emisión no puede ser posterior a hoy."
+            total_amount:
+              not_a_number: "Ingresá el monto total."
+              greater_than: "El monto total debe ser mayor a cero."
+            file:
+              required: "Adjuntá el archivo de la factura."
+              invalid_content_type: "El archivo debe ser PDF, JPG o PNG."
+              too_large: "El archivo no puede superar los 10 MB."
+            base:
+              already_invoiced: "Este período ya tiene una factura enviada."
+        delivery_address:
+          attributes:
+            name:
+              blank: "Ingresá un nombre para la dirección."
+              too_long: "Usá como máximo %{count} caracteres."
+            street:
+              blank: "Ingresá la dirección."
+              too_long: "Usá como máximo %{count} caracteres."
+              invalid: "Ingresá la calle y el número de puerta."
+            apartment:
+              too_long: "Usá como máximo %{count} caracteres."
         order:
           attributes:
             rejection_reason:
@@ -99,6 +133,10 @@ es:
             rejection_details:
               blank: "debe especificarse al seleccionar otro motivo"
     attributes:
+      delivery_address:
+        name: "Nombre"
+        street: "Dirección"
+        apartment: "Piso / Apartamento"
       order:
         rejection_reason: "Motivo"
         rejection_details: "Detalle del motivo"
@@ -181,6 +219,7 @@ es:
               description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
+              unexpected: "Error inesperado. Por favor reintentá la operación."
     errors:
       internal_server_error:
         title: "Algo salió mal"
@@ -293,6 +332,8 @@ es:
       addresses:
         office: "Oficina"
         home: "Casa"
+        last_used: "Última dirección usada"
+        current: "Dirección actual"
       statuses:
         pending: "Pendiente"
         confirmed: "Confirmado"
@@ -334,13 +375,40 @@ es:
       group:
         total: "Total a cobrar"
         confirmed: "%{amount} en cobros confirmados"
-        pending: "%{amount} en cobros pendientes"
-        submitted: "%{amount} en cobros informados"
-        rejected: "%{amount} en cobros rechazados"
+        awaiting_one: "%{count} cobro pendiente de confirmación"
+        awaiting_other: "%{count} cobros pendientes de confirmación"
+        rejected_one: "%{count} cobro rechazado"
+        rejected_other: "%{count} cobros rechazados"
         employees: "Empleados"
         company: "Empresa"
         due: "Vence: %{date}"
         detail: "Ver detalle"
+      invoice:
+        statuses:
+          pending: "Por revisar"
+          approved: "Aprobada"
+          rejected: "Rechazada"
+        select_file: "Seleccionar archivo"
+        no_file: "Sin archivos seleccionados"
+        file_label: "Archivo de la factura"
+        formats: "PDF, JPG o PNG de hasta 10 MB."
+        upload: "Subir factura"
+        uploading: "Subiendo…"
+        download: "Descargar factura"
+        preview: "Ver factura %{name}"
+        rejected_hint: "La factura fue rechazada. Podés subir una nueva."
+        dialog:
+          title: "Subir factura"
+          description: "Completá los datos de la factura de %{month} antes de enviarla."
+          issued_on: "Fecha de emisión"
+          total_amount: "Monto total"
+          expected: "Importe calculado del período: %{amount}"
+          file: "Archivo"
+        remove:
+          trigger: "Eliminar factura"
+          title: "¿Eliminar la factura?"
+          description: "Vas a poder subir otra para este período."
+          confirm: "Eliminar"
       show:
         eyebrow: "Cobro"
         title: "Cobro a %{name}"
@@ -436,11 +504,29 @@ es:
         availability:
           toggle_label: "En stock"
     cart:
-      office_delivery_warning: "%{provider} no entrega a domicilio. Sus viandas se entregarán en la oficina."
-      other_deliveries: "Las demás viandas irán a la dirección seleccionada."
+      delivery_address: "Dirección de entrega"
+      add_address: "Agregar"
+      my_addresses: "Ver mis direcciones"
+      office_delivery_warning_one: "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
+      office_delivery_warning_other: "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
       remove: "Quitar %{name}"
       delivery: "Entrega: %{date}"
+      new_address:
+        title: "Agregar una dirección"
+        description: "Ingresá dónde querés recibir el pedido."
+        name: "Nombre"
+        name_placeholder: "Ej: Oficina, Casa, etc."
+        street: "Dirección"
+        apartment: "Piso / Apartamento (opcional)"
+        save_for_later: "Guardar esta dirección para futuros pedidos"
+        cancel: "Cancelar"
+        submit: "Agregar"
+      saved_addresses:
+        title: "Mis direcciones"
+        description: "Elegí a qué dirección querés recibir el pedido."
+        cancel: "Cancelar"
+        submit: "Seleccionar"
     home:
       title: "Te damos la bienvenida"
       dashboard: "Panel"

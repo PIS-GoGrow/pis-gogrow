@@ -138,12 +138,29 @@ consumer = Consumer.create!(
   address: "Julio Herrera y Reissig 565",
   user: consumer_user
 )
-Benefit.create!(
+
+admin_user = User.create!(
+  email: "rrhh.gogrow@gmail.com",
+  name: "Juan Admin",
+  password_digest: "$2a$12$kDAZOZpncJzrsfYTgpE.Xu47ZCiUJWL/a4TI5WcI0Q1LeecxlSsMe",
+  verified: true,
+  google_uid: "101425658623552684238"
+)
+admin = Admin.create!(user: admin_user, company:)
+
+benefit_config = BenefitConfiguration.create! subsidy_percentage: 50, name: "Subsidio base", company:, created_by: admin_user
+benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: Date.current, type: MonthlyBenefit.name
+
+consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
+consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
+
+benefit = Benefit.create!(
   consumer:,
   amount: 20,
   description: "Viandas mensuales",
   percentage: 50,
-  due_date: week_start + 1.month
+  benefit_configuration: benefit_config,
+  due_date: Date.current.end_of_month
 )
 
 # Cubren las dos secciones de "Mis pedidos": pendientes/próximos e historial,
@@ -156,7 +173,7 @@ past_schedule = Schedule.create!(
 
 upcoming_schedules = Schedule.where("date >= ?", Date.current).order(:date)
 if (first_schedule = upcoming_schedules.first)
-  Order.create!(
+  order = Order.create!(
     consumer:,
     schedule: first_schedule,
     status: :pending,
@@ -166,6 +183,7 @@ if (first_schedule = upcoming_schedules.first)
     address: company.address,
     delivery_method: :office
   )
+  order.apply_benefit! benefit, 1
 end
 
 # Una orden confirmada por proveedor genera las cuentas que aparecen en Pagos
@@ -177,7 +195,7 @@ end
                      .first
   next unless schedule
 
-  Order.create!(
+  order = Order.create!(
     consumer:,
     schedule:,
     status: :confirmed,
@@ -187,9 +205,10 @@ end
     address: company.address,
     delivery_method: :office
   )
+  order.apply_benefit! benefit, 1
 end
 
-Order.create!(
+order = Order.create!(
   consumer:,
   schedule: past_schedule,
   status: :confirmed,
@@ -199,6 +218,7 @@ Order.create!(
   address: company.address,
   delivery_method: :office
 )
+order.apply_benefit! benefit, 1
 
 
 # Cuentas pendientes de pago de meses anteriores (para probar el historial de pagos)
@@ -230,15 +250,6 @@ Order.create!(
 end
 
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
-
-admin_user = User.create!(
-  email: "rrhh.gogrow@gmail.com",
-  name: "Juan Admin",
-  password_digest: "$2a$12$kDAZOZpncJzrsfYTgpE.Xu47ZCiUJWL/a4TI5WcI0Q1LeecxlSsMe",
-  verified: true,
-  google_uid: "101425658623552684238"
-)
-Admin.create!(user: admin_user, company:)
 
 notification_configuration = NotificationConfiguration.create!(
   description: "Notificaciones de orden en camino"
@@ -282,4 +293,13 @@ seed_payment(consumer.accounts.find_by!(provider: tu_viandita, month: Date.curre
   consumer_account = consumer.accounts.find_or_create_by!(provider: tu_viandita, month:)
   consumer_account.update!(amount: 1_250.00)
   seed_payment(consumer_account, consumer_status)
+end
+
+# Facturas de TuViandita a GoGrow: el mes pasado aprobada (se descarga desde el
+# Historial), hace dos meses por revisar y este mes todavía sin subir.
+{ 1.month.ago => :approved, 2.months.ago => :pending }.each do |date, status|
+  account = company.accounts.find_by!(provider: tu_viandita, month: date.beginning_of_month)
+  invoice = account.invoices.build(issued_on: account.month.end_of_month, total_amount: account.amount, status:)
+  invoice.file.attach(io: Rails.root.join("public/icon.png").open, filename: "factura.png", content_type: "image/png")
+  invoice.save!
 end

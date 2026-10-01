@@ -3,6 +3,8 @@
 class Admin::BenefitConfigurationsIndexSerializer < ApplicationSerializer
   has_many :benefit_configurations, resource: BenefitConfigurationSerializer
 
-  typelize current_benefit_configuration: "BenefitConfiguration | null"
-  one :current_benefit_configuration, resource: BenefitConfigurationSerializer
+  typelize pending_base_subsidy: "BenefitConfiguration | null"
+  one :pending_base_subsidy, resource: BenefitConfigurationSerializer
+  typelize base_subsidy: "BenefitConfiguration | null"
+  one :base_subsidy, resource: BenefitConfigurationSerializer
 end

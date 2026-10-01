@@ -29,7 +29,7 @@ class Consumer::AccountsController < Consumer::InertiaController
 
     current_month_ordered = current_sums.reduce(0) { |acc, x| acc + x[:amount] }
     current_month_debt = current_sums.reduce(0) { |acc, x| acc + x[:price] }
-    benefit_available = consumer.benefit_available
+    benefit_available = consumer.monthly_benefit_available
 
     render inertia: {
       accounts: AccountSerializer.new(accounts, params: { orders_sum: sums }).as_json,

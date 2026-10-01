@@ -13,13 +13,14 @@ class Consumer::OrdersController < Consumer::InertiaController
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
     @order = consumer.orders.preload(schedule: { menu: { provider: :user } }).find(params[:id])
-    @delivery_addresses = delivery_address_options(consumer)
+    @delivery_addresses = delivery_address_options(consumer, @order)
     @max_quantity = max_quantity(@order)
   end
 
   def create
     consumer = Current.user.consumer
     requested_items = order_params.fetch(:items)
+    benefit_percentage = consumer&.current_monthly_benefit&.percentage.to_i
 
     # Rechazamos si no hay carrito o si las cantidades no son numéricas.
     return reject_order(:empty_cart) if requested_items.empty?
@@ -27,23 +28,23 @@ class Consumer::OrdersController < Consumer::InertiaController
     # Rechazamos si la dirección es invalida
     # delivery_addresses ya verifica que la dirección no sea blank, por lo que acá
     # está manejado el caso de que no haya dirección de envío.
-    return reject_order(:invalid_address) unless consumer.delivery_addresses.include?(order_params[:address])
+    return reject_order(:invalid_address) unless consumer.delivery_addresses.include?(order_params[:address]) || valid_new_address?(consumer, order_params[:address])
 
     created_orders = []
 
     Order.transaction do
       consumer.lock!
 
-      benefit_percentage = consumer.current_benefit&.percentage.to_i
-      remaining_subsidized = benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
+      remaining_subsidized =
+        benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
+      schedule_ids = requested_items.pluck(:schedule_id)
 
       # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos todos
       # los schedules correspondientes.
-      schedule_ids = requested_items.pluck(:schedule_id).uniq
-      schedules = Schedule.includes(menu: :provider).where(id: schedule_ids, date: allowed_dates).order(:id).lock.index_by(&:id)
+      schedules = Schedule.includes(menu: :provider).where(id: schedule_ids.uniq, date: allowed_dates).order(:id).lock.index_by(&:id)
 
       # Tiramos error si alguno de los schedules no existen o si están fuera del rango de fechas permitidas
-      raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.size
+      raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
       requested_items.each do |item|
         quantity = item[:quantity].to_i
@@ -76,6 +77,7 @@ class Consumer::OrdersController < Consumer::InertiaController
           notes: item[:notes],
           discount_percentage: benefit_percentage,
           subsidized_quantity:,
+          benefits: [ consumer.current_monthly_benefit ].compact,
           **delivery
         )
 
@@ -98,19 +100,19 @@ class Consumer::OrdersController < Consumer::InertiaController
     order = consumer.orders.find(params[:id])
 
     return reject_update(order, :invalid_quantity) unless update_params[:quantity].to_s.match?(/\A[1-9]\d*\z/)
-    return reject_update(order, :invalid_address) unless delivery_addresses(consumer).include?(update_params[:address])
+    return reject_update(order, :invalid_address) unless delivery_address_options(consumer, order).pluck(:address).include?(update_params[:address])
 
     delivery = consumer.delivery_for(order.provider, update_params[:address])
     return reject_update(order, :office_address_required) if delivery[:address].blank?
 
-    benefit_percentage = active_benefit_for(consumer)&.percentage.to_i
+    benefit_percentage = consumer&.current_monthly_benefit&.percentage.to_i
     modified = order.modify(
       by: Current.user,
       quantity: update_params[:quantity].to_i,
       notes: update_params[:notes],
       delivery:,
       discount_percentage: benefit_percentage,
-      remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
+      remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
     )
 
     if modified
@@ -160,19 +162,19 @@ class Consumer::OrdersController < Consumer::InertiaController
     :cart_unavailable
   end
 
-  def active_benefit_for(consumer)
-    consumer.benefits.where("due_date >= ?", Date.current).order(:due_date).first
+  # Además de las direcciones conocidas, el carrito puede mandar una que el
+  # empleado ingresó sin guardarla para futuros pedidos.
+  def valid_new_address?(consumer, address)
+    consumer.delivery_address_options.pluck(:address).include?(address) || DeliveryAddress.valid_full_address?(address)
   end
 
-  def delivery_addresses(consumer)
-    [ consumer.address, consumer.company.address ].compact_blank
-  end
+  # La dirección actual del pedido se mantiene como opción aunque no esté
+  # guardada, para que modificar la cantidad no obligue a cambiarla.
+  def delivery_address_options(consumer, order)
+    options = consumer.delivery_address_options
+    return options if order.address.blank? || options.pluck(:address).include?(order.address)
 
-  def delivery_address_options(consumer)
-    [
-      { id: "office", label: t("pages.orders.addresses.office"), address: consumer.company.address },
-      { id: "home", label: t("pages.orders.addresses.home"), address: consumer.address }
-    ].select { |address| address[:address].present? }
+    options + [ { id: "current", label: t("pages.orders.addresses.current"), address: order.address } ]
   end
 
   # El cupo del schedule ya descuenta esta orden, así que el máximo que el

@@ -58,4 +58,8 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     payment = row.account.last_payment
     payment.receipt.content_type if payment&.receipt&.attached?
   end
+
+  # Solo la cuenta de la empresa lleva factura: es la que le cobra el subsidio a GoGrow.
+  typelize invoice: [ nullable: true ]
+  has_one :latest_invoice, key: :invoice, resource: Provider::InvoiceSerializer
 end

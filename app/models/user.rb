@@ -1,5 +1,12 @@
 # frozen_string_literal: true
 
+# Los consumidores, administradores y proveedores tienen todos un usuario
+# asignado. Este usuario representa más que nada una cuenta de Google con la
+# que se puede abrir una nueva sesión.
+# Un usuario puede tener varios roles (consumidor, administrador o proveedor)
+# asignados, lo que se registra en el atributo `roles`. Este atributo se actualiza
+# automáticamente cuando al usuario se le agrega un consumidor, un administrador o
+# un proveedor.
 class User < ApplicationRecord
   class DomainNotAllowed < StandardError; end
 

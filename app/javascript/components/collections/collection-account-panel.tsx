@@ -1,10 +1,12 @@
 import { Link } from "@inertiajs/react"
 import { Eye, TriangleAlert } from "lucide-react"
+import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { SheetTrigger } from "@/components/ui/sheet"
+import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { providerCollections } from "@/routes"
@@ -15,11 +17,16 @@ interface CollectionAccountPanelProps {
   // Qué encabeza el recuadro: el mes con su vencimiento mientras se espera el
   // cobro, la fecha de pago una vez cobrado, o nada si la fila ya la muestra.
   heading?: "month" | "paid_on" | "none"
+  // Reemplaza al vencimiento en el encabezado del mes.
+  aside?: ReactNode
+  children?: ReactNode
 }
 
 export default function CollectionAccountPanel({
   account,
   heading = "month",
+  aside,
+  children,
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -27,30 +34,39 @@ export default function CollectionAccountPanel({
   return (
     <div className="bg-muted/60 grid gap-3 rounded-lg p-3">
       {heading === "paid_on" && (
-        <span className="text-muted-foreground text-sm">{account.paid_on}</span>
+        <>
+          <span className="text-muted-foreground text-sm">
+            {account.paid_on}
+          </span>
+          <Separator />
+        </>
       )}
 
       {heading === "month" && (
-        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-          <span className="text-muted-foreground">{account.month}</span>
-          {account.status !== "approved" && (
-            <span
-              className={cn(
-                "flex items-center gap-1.5 text-xs",
-                account.overdue
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-muted-foreground",
-              )}
-            >
-              {account.overdue && (
-                <TriangleAlert className="size-3.5" aria-hidden="true" />
-              )}
-              {t("pages.provider_collections.group.due", {
-                date: account.due_date,
-              })}
-            </span>
-          )}
-        </div>
+        <>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <span className="text-muted-foreground">{account.month}</span>
+            {aside ??
+              (account.status !== "approved" && (
+                <span
+                  className={cn(
+                    "flex items-center gap-1.5 text-xs",
+                    account.overdue
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {account.overdue && (
+                    <TriangleAlert className="size-3.5" aria-hidden="true" />
+                  )}
+                  {t("pages.provider_collections.group.due", {
+                    date: account.due_date,
+                  })}
+                </span>
+              ))}
+          </div>
+          <Separator />
+        </>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -85,6 +101,13 @@ export default function CollectionAccountPanel({
             <Button className="w-full">Revisar pago</Button>
           </SheetTrigger>
         </PaymentReviewSheet>
+      )}
+
+      {children && (
+        <>
+          <Separator />
+          {children}
+        </>
       )}
     </div>
   )

@@ -10,6 +10,7 @@ class Account < ApplicationRecord
 
   # TODO: Habría que validar que los dependent: :destroy son esperables
   has_many :payments, dependent: :destroy
+  has_many :invoices, dependent: :destroy
   has_many :order_accounts, dependent: :destroy
 
   has_many :orders, through: :order_accounts
@@ -18,6 +19,7 @@ class Account < ApplicationRecord
   before_create :correct_month
 
   scope :current, -> { where(month: Date.current.beginning_of_month) }
+  scope :companies, -> { where(owner_type: "Company") }
 
   # Los dos scopes de abajo asumen que Payment.account_id no es NULL
   # TODO: Hay que cambiar según qué estado sea el que se elija para pagos
@@ -29,6 +31,10 @@ class Account < ApplicationRecord
   scope :history, -> {
     where(id: Payment.approved.select(:account_id))
   }
+
+  def company?
+    owner_type == "Company"
+  end
 
   def current?
     month == Date.current.beginning_of_month
@@ -42,6 +48,10 @@ class Account < ApplicationRecord
   # cuenta. El id desempata dos pagos del mismo instante.
   def last_payment
     payments.max_by { |payment| [ payment.created_at, payment.id ] }
+  end
+
+  def latest_invoice
+    invoices.max_by { |invoice| [ invoice.created_at, invoice.id ] }
   end
 
   # El comprobante cubre la cuenta entera, así que el estado del cobro vive acá
