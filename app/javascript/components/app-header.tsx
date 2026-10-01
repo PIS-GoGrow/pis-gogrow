@@ -1,5 +1,6 @@
 import { Link, usePage } from "@inertiajs/react"
 import {
+  FileText,
   LayoutGrid,
   Menu,
   Package,
@@ -36,6 +37,7 @@ import { useInitials } from "@/hooks/use-initials"
 import { cn } from "@/lib/utils"
 import {
   adminDashboard,
+  adminInvoices,
   consumerDashboard,
   providerCollections,
   providerDashboard,
@@ -87,6 +89,11 @@ export function AppHeader({ breadcrumbs = [] }: AppHeaderProps) {
         title: t("nav.dashboard"),
         href: adminDashboard.index().url,
         icon: LayoutGrid,
+      },
+      {
+        title: t("nav.invoices"),
+        href: adminInvoices.index().url,
+        icon: FileText,
       },
     ],
     consumer: [

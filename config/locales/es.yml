@@ -150,6 +150,7 @@ es:
     orders: "Mis pedidos"
     menu: "Menú de navegación"
     benefit_configurations: "Beneficio general"
+    invoices: "Facturas"
     change_to: "Cambiar a"
     provider:
       home: "Inicio"
@@ -186,6 +187,23 @@ es:
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
     admin:
+      invoices:
+        index:
+          title: "Facturas de proveedores"
+          description: "Las facturas que los proveedores le emiten a GoGrow, con su historial."
+          period: "Período"
+          provider: "Proveedor"
+          issued_on: "Emisión"
+          total_amount: "Facturado"
+          period_amount: "Consumo del período"
+          no_period_amount: "Sin consumo registrado"
+          status: "Estado"
+          file: "Archivo"
+          view: "Ver"
+          download: "Descargar %{name}"
+          no_provider: "Proveedor no disponible"
+          empty_title: "Todavía no hay facturas"
+          empty_description: "Cuando un proveedor cargue la factura de un período, va a aparecer acá."
       benefit_configurations:
         index:
           title: "Subsidios"
