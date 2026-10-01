@@ -2,10 +2,11 @@
 
 class Consumer::OrdersController < Consumer::InertiaController
   def index
-    orders = Current.user.consumer.orders.preload(schedule: { menu: { provider: :user } })
+    consumer = Current.user.consumer
+    orders = consumer.orders.preload(schedule: { menu: { provider: :user } })
 
     @upcoming_orders = orders.upcoming
-    @past_orders = orders.history
+    @past_orders = orders.history.where(created_at: (Date.current - 3.months)..)
   end
 
   def show
@@ -13,8 +14,9 @@ class Consumer::OrdersController < Consumer::InertiaController
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
     @order = consumer.orders.preload(schedule: { menu: { provider: :user } }).find(params[:id])
-    @delivery_addresses = delivery_address_options(consumer, @order)
-    @max_quantity = max_quantity(@order)
+    @delivery_addresses = @order.delivery_address_options consumer
+    @max_quantity = @order.max_quantity
+    @editing = params[:edit] == "1"
   end
 
   def create
@@ -166,23 +168,6 @@ class Consumer::OrdersController < Consumer::InertiaController
   # empleado ingresó sin guardarla para futuros pedidos.
   def valid_new_address?(consumer, address)
     consumer.delivery_address_options.pluck(:address).include?(address) || DeliveryAddress.valid_full_address?(address)
-  end
-
-  # La dirección actual del pedido se mantiene como opción aunque no esté
-  # guardada, para que modificar la cantidad no obligue a cambiarla.
-  def delivery_address_options(consumer, order)
-    options = consumer.delivery_address_options
-    return options if order.address.blank? || options.pluck(:address).include?(order.address)
-
-    options + [ { id: "current", label: t("pages.orders.addresses.current"), address: order.address } ]
-  end
-
-  # El cupo del schedule ya descuenta esta orden, así que el máximo que el
-  # empleado puede elegir es lo que queda más lo que ya tiene reservado.
-  def max_quantity(order)
-    return order.amount.to_i if order.schedule.nil?
-
-    order.schedule.remaining_amount + order.amount.to_i
   end
 
   def update_params

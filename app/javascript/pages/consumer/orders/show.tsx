@@ -1,8 +1,9 @@
 import { Head, Link } from "@inertiajs/react"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Pencil, X } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import CancelOrderSheet from "@/components/orders/cancel-order-sheet"
 import EditOrderSheet from "@/components/orders/edit-order-sheet"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
@@ -34,6 +35,7 @@ export default function Show({
   order,
   delivery_addresses,
   max_quantity,
+  editing,
 }: ConsumerOrdersShow) {
   const { t } = useTranslation()
   const { formatMoney, formatDeliveryDate } = useFormatters()
@@ -130,19 +132,52 @@ export default function Show({
             </div>
           </CardContent>
 
-          <CardFooter className="flex-col items-stretch gap-2">
+          <CardFooter
+            className={
+              "grid items-stretch gap-2" +
+              (order.cancellable && order.modifiable ? " grid-cols-2" : "")
+            }
+          >
+            {order.cancellable ? (
+              <CancelOrderSheet order={order} />
+            ) : (
+              <>
+                <Button type="button" variant="outline" size="sm" disabled>
+                  <X aria-hidden="true" />
+                  {t("pages.orders.index.cancel")}
+                </Button>
+                <p className="text-muted-foreground text-xs">
+                  {t(
+                    `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
+                  )}
+                </p>
+              </>
+            )}
             {order.modifiable ? (
               <EditOrderSheet
                 order={order}
                 addresses={delivery_addresses}
                 maxQuantity={max_quantity}
+                editing={editing}
               />
             ) : (
-              <p className="text-muted-foreground text-xs">
-                {t(
-                  `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
-                )}
-              </p>
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled
+                >
+                  <Pencil aria-hidden="true" />
+                  {t("pages.orders.show.edit")}
+                </Button>
+                <p className="text-muted-foreground text-xs">
+                  {t(
+                    `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+                  )}
+                </p>
+              </>
             )}
           </CardFooter>
         </Card>

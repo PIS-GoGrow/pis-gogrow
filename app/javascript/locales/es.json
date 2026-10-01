@@ -227,7 +227,7 @@
           },
           "cannot_cancel": {
             "already_closed": "Este pedido ya está cerrado.",
-            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar desde la app.",
+            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
           },
           "history_address": "Recibiste en: %{address} (%{delivery_method})",
@@ -241,7 +241,7 @@
           "no_provider": "Proveedor no disponible",
           "quantity": "x%{count}",
           "title": "Mis pedidos",
-          "upcoming_address": "Recibes en: %{address} (%{delivery_method})",
+          "upcoming_address": "Recibís en: %{address} (%{delivery_method})",
           "upcoming_empty_description": "No tienes viandas en camino.",
           "upcoming_empty_title": "No tienes pedidos próximos",
           "upcoming_tab": "Próximos"

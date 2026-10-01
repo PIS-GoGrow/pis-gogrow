@@ -3,18 +3,18 @@ import { Pencil } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 import { consumerOrders } from "@/routes"
@@ -24,15 +24,17 @@ interface EditOrderSheetProps {
   order: Order
   addresses: ConsumerOrdersShow["delivery_addresses"]
   maxQuantity: number
+  editing: boolean
 }
 
 export default function EditOrderSheet({
   order,
   addresses,
   maxQuantity,
+  editing,
 }: EditOrderSheetProps) {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(editing)
   const { data, setData, patch, processing, transform } = useForm({
     quantity: order.amount ?? 1,
     address: order.address ?? addresses[0]?.address ?? "",
@@ -54,31 +56,29 @@ export default function EditOrderSheet({
   }
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <AdaptableDialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next)
+        if (!next)
+          window.history.replaceState(null, "", window.location.pathname)
+      }}
+    >
+      <AdaptableDialogTrigger asChild>
         <Button type="button" variant="outline" size="sm" className="w-full">
           <Pencil aria-hidden="true" />
           {t("pages.orders.show.edit")}
         </Button>
-      </SheetTrigger>
+      </AdaptableDialogTrigger>
 
-      <SheetContent
-        side="bottom"
-        showCloseButton={false}
-        className="border-border bg-background text-foreground gap-6 rounded-t-[32px] border px-6 pt-2.5 pb-8 shadow-none md:inset-x-1/2 md:bottom-1/2 md:w-[402px] md:translate-x-[-50%] md:translate-y-1/2 md:rounded-[32px]"
-      >
-        <div
-          aria-hidden="true"
-          className="bg-muted-foreground/30 mx-auto h-1 w-12 rounded-full"
-        />
-
+      <AdaptableDialogContent showCloseButton={false} className="p-5">
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <SheetTitle className="text-base leading-6 font-semibold tracking-normal">
+          <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
             {t("pages.orders.show.edit_dialog.title")}
-          </SheetTitle>
-          <SheetDescription className="text-base leading-6">
+          </AdaptableDialogTitle>
+          <AdaptableDialogDescription className="text-base leading-6">
             {t("pages.orders.show.edit_dialog.description")}
-          </SheetDescription>
+          </AdaptableDialogDescription>
 
           <Field>
             <FieldLabel htmlFor="quantity">
@@ -161,7 +161,7 @@ export default function EditOrderSheet({
             </Button>
           </div>
         </form>
-      </SheetContent>
-    </Sheet>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }

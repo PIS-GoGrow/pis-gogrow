@@ -302,6 +302,23 @@ class Order < ApplicationRecord
     end
   end
 
+  # El cupo del schedule ya descuenta esta orden, así que el máximo que el
+  # empleado puede elegir es lo que queda más lo que ya tiene reservado.
+  def max_quantity
+    return amount.to_i if schedule.nil?
+
+    schedule.remaining_amount + amount.to_i
+  end
+
+  # La dirección actual del pedido se mantiene como opción aunque no esté
+  # guardada, para que modificar la cantidad no obligue a cambiarla.
+  def delivery_address_options(consumer)
+    options = consumer.delivery_address_options
+    return options if address.blank? || options.pluck(:address).include?(address)
+
+    options + [ { id: "current", label: t("pages.orders.addresses.current"), address: address } ]
+  end
+
   private
 
   # La cuenta de la empresa la comparten todos sus empleados, así que dos pedidos

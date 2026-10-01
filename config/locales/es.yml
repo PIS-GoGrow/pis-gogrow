@@ -269,7 +269,7 @@ es:
         history_empty_title: "No tienes pedidos anteriores"
         history_empty_description: "Tus pedidos completados aparecerán aquí."
         quantity: "x%{count}"
-        upcoming_address: "Recibes en: %{address} (%{delivery_method})"
+        upcoming_address: "Recibís en: %{address} (%{delivery_method})"
         history_address: "Recibiste en: %{address} (%{delivery_method})"
         no_date: "Sin fecha de entrega"
         no_price: "Importe no disponible"
@@ -284,7 +284,7 @@ es:
           back: "Volver"
           confirm: "Cancelar pedido"
         cannot_cancel:
-          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar desde la app."
+          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
       show:
