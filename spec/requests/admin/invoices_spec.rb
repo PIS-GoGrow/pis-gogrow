@@ -33,6 +33,14 @@ RSpec.describe "Admin::Invoices", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    it "redirects a consumer to the home page" do
+      sign_in users(:one), role: :consumer
+
+      get admin_invoices_path
+
+      expect(response).to redirect_to(root_path)
+    end
+
     context "when signed in as HR" do
       before { sign_in users(:admin), role: :admin }
 
@@ -107,6 +115,27 @@ RSpec.describe "Admin::Invoices", type: :request do
       get file_admin_invoice_path(invoice, download: 1)
 
       expect(response.headers["Content-Disposition"]).to start_with("attachment")
+    end
+
+    # PDF es el formato habitual de una factura: tiene que abrirse en el
+    # visor del navegador, no bajarse.
+    it "lets HR preview a PDF invoice" do
+      pdf = Rack::Test::UploadedFile.new(StringIO.new("%PDF-1.4\n%%EOF\n"), "application/pdf", original_filename: "factura.pdf")
+      invoice = Invoice.create!(account: accounts(:gogrow_tuviandita_current), issued_on: Date.current, total_amount: 601, file: pdf)
+      sign_in users(:admin), role: :admin
+
+      get file_admin_invoice_path(invoice)
+
+      expect(response.media_type).to eq("application/pdf")
+      expect(response.headers["Content-Disposition"]).to start_with("inline")
+    end
+
+    it "redirects a consumer to the home page" do
+      sign_in users(:one), role: :consumer
+
+      get file_admin_invoice_path(invoice)
+
+      expect(response).to redirect_to(root_path)
     end
 
     it "redirects a provider to the home page, even the one who issued it" do
