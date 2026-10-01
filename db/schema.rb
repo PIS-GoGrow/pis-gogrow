@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_01_120200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -106,6 +106,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
     t.index ["user_id"], name: "index_consumers_on_user_id"
   end
 
+  create_table "invoices", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.date "issued_on", null: false
+    t.integer "status", default: 0, null: false
+    t.decimal "total_amount", precision: 10, scale: 2, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_invoices_on_account_id"
+    t.index ["account_id"], name: "index_invoices_on_account_id_active", unique: true, where: "(status = ANY (ARRAY[0, 1]))"
+  end
+
+  create_table "menu_agendas", force: :cascade do |t|
+    t.integer "amount", null: false
+    t.datetime "created_at", null: false
+    t.date "ends_on"
+    t.bigint "menu_id", null: false
+    t.date "starts_on", null: false
+    t.datetime "updated_at", null: false
+    t.integer "weekdays", default: [], null: false, array: true
+    t.index ["menu_id"], name: "index_menu_agendas_on_menu_id"
+  end
+
   create_table "menu_option_groups", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "limit", default: 1, null: false
@@ -117,12 +139,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
   end
 
   create_table "menus", force: :cascade do |t|
+    t.bigint "base_menu_id"
     t.datetime "created_at", null: false
     t.string "description"
     t.string "name"
     t.decimal "price", precision: 10, scale: 2
     t.bigint "provider_id", null: false
     t.datetime "updated_at", null: false
+    t.date "valid_from"
+    t.date "valid_until"
+    t.index ["base_menu_id"], name: "index_menus_on_base_menu_id"
     t.index ["provider_id"], name: "index_menus_on_provider_id"
   end
 
@@ -150,6 +176,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
     t.datetime "created_at", null: false
     t.integer "delivery_method", null: false
     t.decimal "discounted_price", precision: 10, scale: 2
+    t.string "menu_description"
+    t.string "menu_name"
+    t.jsonb "menu_option_groups"
     t.datetime "modified_at"
     t.bigint "modified_by_id"
     t.string "notes"
@@ -425,7 +454,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_030821) do
   add_foreign_key "benefits", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
+  add_foreign_key "invoices", "accounts"
+  add_foreign_key "menu_agendas", "menus"
   add_foreign_key "menu_option_groups", "menus"
+  add_foreign_key "menus", "menus", column: "base_menu_id"
   add_foreign_key "menus", "providers"
   add_foreign_key "order_accounts", "accounts"
   add_foreign_key "order_accounts", "orders"
