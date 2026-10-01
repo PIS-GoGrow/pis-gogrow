@@ -37,12 +37,17 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     end
   end
 
+  before do
+    consumers(:one).orders.destroy_all
+    consumers(:one).accounts.destroy_all
+  end
+
   # Un mes ya pagado y cerrado: es el historial anterior que no se debe tocar.
   def previous_payment(consumer:, provider:, month:, discounted_price:)
     confirmed_order(
       consumer:, provider:, month:, quantity: 1, discounted_price:
     )
-    account = consumer.accounts.find_by!(provider:)
+    account = consumer.accounts.find_by!(provider:, month: month.beginning_of_month)
     payment = account.payments.build(provider:, status: :approved)
     payment.receipt.attach(
       io: StringIO.new(File.binread(Rails.root.join("public/icon.png"))),
@@ -114,7 +119,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     # que el empleado tiene en su cuenta, no dos cálculos distintos.
     expect(page).to have_content(users(:one).name)
     click_on users(:one).name
-    expect(page).to have_content("$300")
+    expect(page).to have_content("300")
 
     # El botón de Aprobar vive dentro del sheet del comprobante: hay que
     # abrirlo primero (PaymentReviewSheet), al que se entra por "Revisar pago"

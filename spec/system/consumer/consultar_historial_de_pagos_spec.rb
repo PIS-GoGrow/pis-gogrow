@@ -66,7 +66,7 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
     confirmed_order(
       consumer:, provider:, month:, quantity:, discounted_price:
     )
-    account = consumer.accounts.find_by!(provider:)
+    account = consumer.accounts.find_by!(provider:, month: month.beginning_of_month)
     [ account, payment_for(account, status: :approved, filename: "comprobante.png") ]
   end
 
