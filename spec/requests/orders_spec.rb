@@ -41,6 +41,9 @@ RSpec.describe "Orders", type: :request do
           orders(:history_pending_past).id,
           orders(:history_without_schedule).id
         )
+        expect(inertia.props[:providers].pluck(:id)).to contain_exactly(
+          providers(:tuviandita).id
+        )
       end
 
       it "exposes the data needed to follow an order" do

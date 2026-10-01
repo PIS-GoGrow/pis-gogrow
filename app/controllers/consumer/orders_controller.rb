@@ -9,7 +9,8 @@ class Consumer::OrdersController < Consumer::InertiaController
     @past_orders = orders.history.where(created_at: (Date.current - 3.months)..)
 
     @providers = (@upcoming_orders + @past_orders)
-      .map { |order| order.schedule.menu.provider }
+      .map { |order| order&.schedule&.menu&.provider }
+      .compact_blank
       .uniq
   end
 
@@ -106,7 +107,7 @@ class Consumer::OrdersController < Consumer::InertiaController
     order = consumer.orders.find(params[:id])
 
     return reject_update(order, :invalid_quantity) unless update_params[:quantity].to_s.match?(/\A[1-9]\d*\z/)
-    return reject_update(order, :invalid_address) unless delivery_address_options(consumer, order).pluck(:address).include?(update_params[:address])
+    return reject_update(order, :invalid_address) unless order.delivery_address_options(consumer).pluck(:address).include?(update_params[:address])
 
     delivery = consumer.delivery_for(order.provider, update_params[:address])
     return reject_update(order, :office_address_required) if delivery[:address].blank?

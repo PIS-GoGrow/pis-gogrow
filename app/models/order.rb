@@ -316,7 +316,7 @@ class Order < ApplicationRecord
     options = consumer.delivery_address_options
     return options if address.blank? || options.pluck(:address).include?(address)
 
-    options + [ { id: "current", label: t("pages.orders.addresses.current"), address: address } ]
+    options + [ { id: "current", label: I18n.t("pages.orders.addresses.current"), address: address } ]
   end
 
   private
