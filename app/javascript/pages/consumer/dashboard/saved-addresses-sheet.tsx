@@ -5,12 +5,12 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { RadioGroup } from "@/components/ui/radio-group"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
 
 import { AddressOption } from "./address-option"
 import type { DeliveryAddressOption } from "./consumer-types"
@@ -33,14 +33,14 @@ export function SavedAddressesSheet({
   const [draft, setDraft] = useState(address)
 
   return (
-    <Sheet
+    <AdaptableDialog
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen)
         if (nextOpen) setDraft(address)
       }}
     >
-      <SheetTrigger asChild>
+      <AdaptableDialogTrigger asChild>
         <Button
           type="button"
           variant="ghost"
@@ -51,25 +51,20 @@ export function SavedAddressesSheet({
           <MapPin aria-hidden="true" className="size-4" />
           {t("pages.cart.my_addresses")}
         </Button>
-      </SheetTrigger>
+      </AdaptableDialogTrigger>
 
-      <SheetContent
+      <AdaptableDialogContent
         side="bottom"
         showCloseButton={false}
-        className="border-border bg-background text-foreground max-h-[85svh] gap-6 overflow-y-auto rounded-t-[32px] border px-6 pt-2.5 pb-8 shadow-none md:inset-x-1/2 md:bottom-1/2 md:w-[402px] md:translate-x-[-50%] md:translate-y-1/2 md:rounded-[32px]"
+        className="p-5"
       >
-        <div
-          aria-hidden="true"
-          className="bg-muted-foreground/30 mx-auto h-1 w-12 rounded-full"
-        />
-
         <div className="flex flex-col gap-5">
-          <SheetTitle className="text-base leading-6 font-semibold tracking-normal">
+          <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
             {t("pages.cart.saved_addresses.title")}
-          </SheetTitle>
-          <SheetDescription className="sr-only">
+          </AdaptableDialogTitle>
+          <AdaptableDialogDescription className="sr-only">
             {t("pages.cart.saved_addresses.description")}
-          </SheetDescription>
+          </AdaptableDialogDescription>
 
           <RadioGroup value={draft} onValueChange={setDraft} className="gap-3">
             {addresses.map((option) => (
@@ -103,7 +98,7 @@ export function SavedAddressesSheet({
             </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }

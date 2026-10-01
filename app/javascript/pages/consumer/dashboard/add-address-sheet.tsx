@@ -9,12 +9,12 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { consumerDeliveryAddresses } from "@/routes"
 
@@ -75,8 +75,8 @@ export function AddAddressSheet({ disabled = false, onAdd }: Props) {
   }
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetTrigger asChild>
+    <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
+      <AdaptableDialogTrigger asChild>
         <Button
           type="button"
           variant="ghost"
@@ -87,29 +87,24 @@ export function AddAddressSheet({ disabled = false, onAdd }: Props) {
           <Plus aria-hidden="true" className="size-4" />
           {t("pages.cart.add_address")}
         </Button>
-      </SheetTrigger>
+      </AdaptableDialogTrigger>
 
-      <SheetContent
+      <AdaptableDialogContent
         side="bottom"
         showCloseButton={false}
-        className="border-border bg-background text-foreground gap-6 rounded-t-[32px] border px-6 pt-2.5 pb-8 shadow-none md:inset-x-1/2 md:bottom-1/2 md:w-[402px] md:translate-x-[-50%] md:translate-y-1/2 md:rounded-[32px]"
+        className="p-5"
       >
-        <div
-          aria-hidden="true"
-          className="bg-muted-foreground/30 mx-auto h-1 w-12 rounded-full"
-        />
-
         <form
           onSubmit={handleSubmit}
           className="flex flex-col gap-5"
           noValidate
         >
-          <SheetTitle className="text-base leading-6 font-semibold tracking-normal">
+          <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
             {t("pages.cart.new_address.title")}
-          </SheetTitle>
-          <SheetDescription className="sr-only">
+          </AdaptableDialogTitle>
+          <AdaptableDialogDescription className="sr-only">
             {t("pages.cart.new_address.description")}
-          </SheetDescription>
+          </AdaptableDialogDescription>
 
           <Field data-invalid={!!errors.name} className="gap-2">
             <FieldLabel htmlFor="delivery_address_name">
@@ -212,7 +207,7 @@ export function AddAddressSheet({ disabled = false, onAdd }: Props) {
             </Button>
           </div>
         </form>
-      </SheetContent>
-    </Sheet>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }
