@@ -65,7 +65,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   end
 
   let(:provider) { providers(:tuviandita) }
-  let(:previous_month) { Date.current.beginning_of_month.months_ago(1) }
+  let(:previous_month) { Date.current.change(day: 15).months_ago(1) }
   let(:current_month) { Date.current.beginning_of_month }
 
   # El circuito del empleado: entra a /accounts, sube el comprobante de la cuenta

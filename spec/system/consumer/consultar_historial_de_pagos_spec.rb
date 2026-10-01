@@ -96,7 +96,7 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
 
   let(:employee) { users(:one) }
   let(:provider) { providers(:tuviandita) }
-  let(:previous_month) { Date.current.beginning_of_month.months_ago(1) }
+  let(:previous_month) { Date.current.change(day: 15).months_ago(1) }
   let(:previous_month_label) { I18n.l(previous_month, format: :month_year) }
 
   # Criterio 1
