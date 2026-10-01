@@ -9,6 +9,7 @@ export default function Heading({
   actions,
   back,
   titleVariant = "default",
+  compact = false,
 }: {
   title: string
   description?: string
@@ -16,9 +17,10 @@ export default function Heading({
   actions?: ReactNode
   back?: ReactNode
   titleVariant?: "default" | "prominent"
+  compact?: boolean
 }) {
   return (
-    <div className="mb-8 grid gap-4">
+    <div className={cn("grid gap-4", compact ? "mb-4" : "mb-8")}>
       {back && <div className="flex">{back}</div>}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-0.5">

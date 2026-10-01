@@ -2,6 +2,7 @@ import { Link, usePage } from "@inertiajs/react"
 import type { PropsWithChildren } from "react"
 import { useTranslation } from "react-i18next"
 
+import { AdminMobileNav } from "@/components/admin/admin-mobile-nav"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import Heading from "@/components/heading"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
   const { t } = useTranslation()
   const { url, props } = usePage()
   const isConsumer = props.auth.session.role === "consumer"
+  const isAdmin = props.auth.session.role === "admin"
 
   const sidebarNavItems: NavItem[] = [
     {
@@ -86,6 +88,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
       </div>
 
       {isConsumer && <ConsumerMobileNav />}
+      {isAdmin && <AdminMobileNav />}
     </div>
   )
 }
