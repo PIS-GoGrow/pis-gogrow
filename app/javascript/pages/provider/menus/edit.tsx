@@ -4,14 +4,11 @@ import NewMenuForm from "@/components/menus/new-menu-form"
 import PageContainer from "@/components/page-container"
 import AppLayout from "@/layouts/app-layout"
 import { providerMenus as menusRoutes } from "@/routes"
-import type { Menu } from "@/types"
-import type { BreadcrumbItem } from "@/types"
+import type { BreadcrumbItem, ProviderMenusEdit } from "@/types"
 
-interface EditMenuProps {
-  menu: Menu
-}
+export default function Edit(props: ProviderMenusEdit) {
+  const { menu, saved_menu_id: savedMenuId } = props
 
-export default function Edit({ menu }: EditMenuProps) {
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: "Platos",
@@ -19,11 +16,11 @@ export default function Edit({ menu }: EditMenuProps) {
     },
     {
       title: menu.name ?? "Plato",
-      href: menusRoutes.show(menu.id).url,
+      href: menusRoutes.show(savedMenuId).url,
     },
     {
       title: "Editar",
-      href: menusRoutes.edit(menu.id).url,
+      href: menusRoutes.edit(savedMenuId).url,
     },
   ]
 
@@ -32,7 +29,7 @@ export default function Edit({ menu }: EditMenuProps) {
       <Head title={`Editar | ${menu.name}`} />
 
       <PageContainer eyebrow="Editar plato" title={menu.name ?? "Plato"}>
-        <NewMenuForm menu={menu} />
+        <NewMenuForm menu={menu} edit={props} />
       </PageContainer>
     </AppLayout>
   )
