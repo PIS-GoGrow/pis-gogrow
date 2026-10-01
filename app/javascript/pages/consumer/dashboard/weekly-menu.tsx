@@ -17,7 +17,7 @@ import type { ConsumerDashboardIndex } from "@/types"
 import { BenefitCard } from "./benefit-card"
 import type { CartItem, Schedule } from "./consumer-types"
 import { money } from "./formatters"
-import { ProviderFilterSheet } from "./provider-filter-sheet"
+import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
 
 interface Props {
   name: string

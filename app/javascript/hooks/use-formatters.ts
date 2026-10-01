@@ -11,12 +11,15 @@ export const useFormatters = () => {
       currency: "UYU",
     }).format(amount)
 
-  const formatDeliveryDate = (date: string) =>
-    new Intl.DateTimeFormat(locale, {
+  const formatDeliveryDate = (date: string) => {
+    const formatted = new Intl.DateTimeFormat(locale, {
       weekday: "long",
       day: "numeric",
       month: "long",
     }).format(new Date(`${date}T00:00:00`))
 
+    return formatted.charAt(0).toLocaleUpperCase(locale) + formatted.slice(1)
+  }
+  
   return { formatMoney, formatDeliveryDate }
 }

@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
 import { consumerOrders } from "@/routes"
+import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
+import { useState } from "react"
 import type { BreadcrumbItem, ConsumerOrdersIndex, Order } from "@/types"
 
 // Las órdenes llegan ya ordenadas por fecha, así que alcanza con agrupar por
@@ -34,6 +36,7 @@ const groupByDate = (orders: Order[]) =>
 export default function Index({
   upcoming_orders,
   past_orders,
+  providers,
 }: ConsumerOrdersIndex) {
   const { t } = useTranslation()
   const { formatDeliveryDate } = useFormatters()
@@ -76,12 +79,45 @@ export default function Index({
       ))
     )
 
+  const providersName = providers.map((provider) => provider.name)
+  const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set())
+  const filtered_upcoming_orders =
+    activeProviders.size === 0
+      ? upcoming_orders
+      : upcoming_orders.filter((order) =>
+          activeProviders.has(order.provider_name),
+        )
+  const filtered_past_orders =
+    activeProviders.size === 0
+      ? past_orders
+      : past_orders.filter((order) =>
+          activeProviders.has(order.provider_name),
+        )
+  const filterLabel =
+    activeProviders.size === 0
+      ? "Todos"
+      : providersName.filter((provider) => activeProviders.has(provider)).join(", ")
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.orders.index.title")} />
 
       <div className="mx-auto grid w-full max-w-128 gap-6 p-5 pb-24 md:pb-5">
         <h1 className="text-2xl font-bold">{t("pages.orders.index.title")}</h1>
+
+        <div className="flex items-center">
+          <span className="text-muted-foreground min-w-0 truncate text-sm">
+            Proveedores:{" "}
+            <span className="text-foreground font-medium">
+              {filterLabel}
+            </span>
+          </span>
+          <ProviderFilterSheet
+            providers={providersName}
+            selectedProviders={activeProviders}
+            onApply={setActiveProviders}
+          />
+        </div>
 
         <Tabs defaultValue="upcoming" className="gap-6">
           <TabsList className="w-full">
@@ -94,11 +130,11 @@ export default function Index({
           </TabsList>
 
           <TabsContent value="upcoming" className="grid gap-5">
-            {renderSection("upcoming", upcoming_orders)}
+            {renderSection("upcoming", filtered_upcoming_orders)}
           </TabsContent>
 
           <TabsContent value="history" className="grid gap-5">
-            {renderSection("history", past_orders)}
+            {renderSection("history", filtered_past_orders)}
           </TabsContent>
         </Tabs>
       </div>
