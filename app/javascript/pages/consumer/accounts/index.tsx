@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 
 import AccountCard from "@/components/consumer/accounts/account-card"
 import OrdersTable from "@/components/consumer/accounts/orders-table"
+import PaymentHistoryCard from "@/components/consumer/accounts/payment-history-card"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -35,6 +36,7 @@ import type {
 
 interface AccountProps {
   accounts: Account[]
+  history_accounts: Account[]
   providers: Provider[]
   history: boolean
   current_month_debt: number
@@ -51,6 +53,7 @@ interface AccountDetail {
 
 export default function Index({
   accounts,
+  history_accounts,
   providers,
   history,
   current_month_debt,
@@ -173,7 +176,22 @@ export default function Index({
 
               {providersJSX}
             </TabsContent>
-            <TabsContent value="history"></TabsContent>
+            <TabsContent className="grid w-full gap-2" value="history">
+              {history_accounts.length === 0 ? (
+                <p className="text-muted-foreground text-sm">
+                  {t("pages.accounts.index.history_empty")}
+                </p>
+              ) : (
+                history_accounts.map((account) => (
+                  <PaymentHistoryCard
+                    key={account.id}
+                    account={account}
+                    setDetail={setDetail}
+                    setLoading={setLoading}
+                  />
+                ))
+              )}
+            </TabsContent>
           </Tabs>
 
           <AdaptableDialogContent className="pt-5">
