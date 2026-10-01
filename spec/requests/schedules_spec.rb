@@ -984,6 +984,24 @@ RSpec.describe "Schedules", type: :request do
     end
 
     context "edición válida de un menú publicado" do
+      it "no toma como quitado un plato programado con una variante" do
+        target_date = Date.current.next_week(:monday) + 1.day
+        variant = menu.build_variant(valid_from: target_date, valid_until: target_date)
+        variant.save!
+        schedule = variant.schedules.create!(date: target_date, amount: 10)
+
+        sign_in(provider_user, role: :provider)
+
+        patch update_by_date_schedules_path, params: {
+          date: target_date.to_s,
+          items: [ { menu_id: menu.id, amount: 15 } ]
+        }
+
+        expect(schedule.reload.amount).to eq(15)
+        expect(schedule.menu).to eq(variant)
+        expect(Schedule.where(date: target_date, menu_id: menu.family_ids).count).to eq(1)
+      end
+
       it "actualiza el stock de un plato preservando el ID del schedule original" do
         target_date = Date.current.next_week(:monday) + 1.day
         schedule = menu.schedules.create!(date: target_date, amount: 10)

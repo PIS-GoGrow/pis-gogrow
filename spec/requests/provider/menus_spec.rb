@@ -4,7 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Provider::Menus", type: :request do
-  fixtures :users, :providers, :menus, :consumers, :menu_option_groups
+  fixtures :users, :providers, :menus, :consumers, :menu_option_groups, :schedules, :orders, :companies
 
   let(:provider_user) { users(:provider_user) }
   let(:provider) { providers(:tuviandita) }
@@ -165,6 +165,37 @@ RSpec.describe "Provider::Menus", type: :request do
 
       expect(response).to have_http_status(:not_found)
     end
+
+    it "edits the dish as it is programmed on the day it was opened from" do
+      schedule = schedules(:future)
+
+      get edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id)
+
+      expect(inertia).to have_props { |props|
+        props = props.deep_symbolize_keys
+
+        props[:schedule_date] == schedule.date.iso8601 &&
+          props[:agenda][:mode] == "single" &&
+          props[:agenda][:date] == schedule.date.iso8601 &&
+          props[:scheduled_days].find { it[:date] == schedule.date.iso8601 }[:confirmed_orders] ==
+            schedule.orders.confirmed.count
+      }
+    end
+
+    it "does not open a day programmed with another dish" do
+      get edit_provider_menu_path(menus(:milanesa), schedule_id: schedules(:sorrentinos_today).id)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "does not open a variant as if it were a saved dish" do
+      variant = menus(:milanesa).build_variant(valid_from: Date.current, valid_until: Date.current)
+      variant.save!
+
+      get edit_provider_menu_path(variant)
+
+      expect(response).to have_http_status(:not_found)
+    end
   end
 
   describe "PATCH /provider/menus/:id" do
@@ -251,6 +282,65 @@ RSpec.describe "Provider::Menus", type: :request do
       end.to change(MenuOptionGroup, :count).by(-1)
 
       expect(response).to redirect_to(edit_provider_menu_path(menu))
+    end
+  end
+
+  describe "PATCH /provider/menus/:id from a programmed day" do
+    before { sign_in provider_user, role: :provider }
+
+    let(:schedule) { schedules(:future) }
+    let(:params) do
+      {
+        menu: { name: "Milanesa napolitana", description: "Con jamón y queso", price: 350 },
+        agenda: { mode: "single", date: schedule.date.iso8601, amount: schedule.amount },
+        scope: "day",
+        schedule_id: schedule.id
+      }
+    end
+
+    # El día de la programación de los fixtures puede caer en fin de semana.
+    before { schedule.update!(date: Date.current.next_occurring(:wednesday)) }
+
+    it "changes only that day and leaves the saved dish untouched" do
+      patch provider_menu_path(menus(:milanesa)), params: params
+
+      expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id))
+      expect(schedule.reload.menu.name).to eq("Milanesa napolitana")
+      expect(menus(:milanesa).reload.name).to eq("Milanesa con papas fritas")
+    end
+
+    it "rejects the confirmed orders of that day when the provider asks to" do
+      patch provider_menu_path(menus(:milanesa)), params: params.merge(confirmed_orders: "reject")
+
+      expect(orders(:upcoming_confirmed_future).reload).to be_rejected
+      expect(orders(:upcoming_confirmed_future)).to be_rejection_reason_dish_modified
+      expect(orders(:upcoming_pending_future).reload).to be_pending
+    end
+
+    it "keeps showing the old dish on the orders it already had" do
+      order = Order.reserve(consumer: consumers(:one), schedule:, delivery_method: :office, address: nil)
+
+      patch provider_menu_path(menus(:milanesa)), params: params
+
+      sign_in users(:one), role: :consumer
+      get order_path(order)
+
+      expect(inertia.props[:order][:menu_name]).to eq("Milanesa con papas fritas")
+    end
+
+    it "returns the agenda errors" do
+      patch provider_menu_path(menus(:milanesa)), params: params.deep_merge(agenda: { amount: 0 })
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to have_key(:agenda)
+    end
+
+    it "keeps the variants out of the saved dishes list" do
+      patch provider_menu_path(menus(:milanesa)), params: params
+
+      get provider_menus_path
+
+      expect(inertia.props[:menus].pluck("name")).not_to include("Milanesa napolitana")
     end
   end
 

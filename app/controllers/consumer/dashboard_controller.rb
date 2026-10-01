@@ -103,7 +103,7 @@ class Consumer::DashboardController < Consumer::InertiaController
           address: order.address,
           delivery_method: order.delivery_method,
           provider_name: menu.provider_name,
-          name: menu.name,
+          name: order.menu_name,
           quantity: order.amount,
           discounted_price: order.discounted_price.to_f
         }
