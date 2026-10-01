@@ -1,5 +1,7 @@
 import * as React from "react"
 
+import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogClose,
@@ -20,12 +22,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 
 /**
  * Cómo se comporta el componente en desktop.
- * En mobile SIEMPRE es un Sheet con side="bottom".
+ * En mobile siempre es un Sheet con side="bottom".
+ * En deskrop puede ser un Sheet con side="bottom" o un Dialog.
  */
 export type AdaptableDialogDesktopVariant = "dialog" | "sheet"
 
@@ -36,9 +37,7 @@ const AdaptableDialogContext = React.createContext<Mode | null>(null)
 function useMode(): Mode {
   const mode = React.useContext(AdaptableDialogContext)
   if (!mode) {
-    throw new Error(
-      "Los componentes AdaptableDialog* deben usarse dentro de <AdaptableDialog>",
-    )
+    throw new Error("Los componentes AdaptableDialog* deben usarse dentro de <AdaptableDialog>")
   }
   return mode
 }
@@ -47,16 +46,46 @@ function useMode(): Mode {
 /* Root                                                                       */
 /* -------------------------------------------------------------------------- */
 
-type AdaptableDialogProps = React.ComponentProps<typeof Dialog> & {
-  /** Qué usar cuando NO es mobile. Default: "dialog". */
+type AdaptableDialogProps = Omit<
+  React.ComponentProps<typeof Dialog>,
+  "open" | "defaultOpen" | "onOpenChange"
+> & {
+  /** Qué usar cuando no es mobile. Por defecto: "dialog". */
   desktopVariant?: AdaptableDialogDesktopVariant
+  /** Estado controlado. Si no se pasa, el componente maneja su propio estado. */
+  open?: boolean
+  /** Se llama cada vez que cambia el estado (compatible con un setState de useState). */
+  setOpen?: (open: boolean) => void
+  /** Valor inicial cuando el estado es interno. Por defecto: false. */
+  defaultOpen?: boolean
 }
 
+
+// Define un Dialog que se adapta al tamaño de pantalla automáticamente. Cuando
+// Se ve desde mobile, se comporta como un Sheet inferior. En desktop se puede
+// configurar para que se comporte como un Sheet a la derecha o como un Dialog.
+// Habría que usarlo para tener interfaces consistentes entre pantallas, que además
+// se ven bien en mobile y desktop.
 function AdaptableDialog({
   desktopVariant = "dialog",
+  open,
+  setOpen,
+  defaultOpen = false,
   ...props
 }: AdaptableDialogProps) {
   const isMobile = useIsMobile()
+
+  const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
+  const isControlled = open !== undefined
+  const currentOpen = isControlled ? open : internalOpen
+
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!isControlled) setInternalOpen(next)
+      setOpen?.(next)
+    },
+    [isControlled, setOpen]
+  )
 
   const mode: Mode = isMobile
     ? "sheet-bottom"
@@ -64,13 +93,11 @@ function AdaptableDialog({
       ? "sheet-right"
       : "dialog"
 
-  // Sheet y Dialog de shadcn son ambos el Root de Radix Dialog, así que
-  // comparten las mismas props (open, onOpenChange, defaultOpen, modal).
   const Root = mode === "dialog" ? Dialog : Sheet
 
   return (
     <AdaptableDialogContext.Provider value={mode}>
-      <Root {...props} />
+      <Root open={currentOpen} onOpenChange={handleOpenChange} {...props} />
     </AdaptableDialogContext.Provider>
   )
 }
@@ -80,14 +107,16 @@ function AdaptableDialog({
 /* -------------------------------------------------------------------------- */
 
 function AdaptableDialogTrigger(
-  props: React.ComponentProps<typeof DialogTrigger>,
+  props: React.ComponentProps<typeof DialogTrigger>
 ) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogTrigger : SheetTrigger
   return <Comp {...props} />
 }
 
-function AdaptableDialogClose(props: React.ComponentProps<typeof DialogClose>) {
+function AdaptableDialogClose(
+  props: React.ComponentProps<typeof DialogClose>
+) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogClose : SheetClose
   return <Comp {...props} />
@@ -130,7 +159,7 @@ function AdaptableDialogContent({
 /* -------------------------------------------------------------------------- */
 
 function AdaptableDialogHeader(
-  props: React.ComponentProps<typeof DialogHeader>,
+  props: React.ComponentProps<typeof DialogHeader>
 ) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogHeader : SheetHeader
@@ -138,21 +167,23 @@ function AdaptableDialogHeader(
 }
 
 function AdaptableDialogFooter(
-  props: React.ComponentProps<typeof DialogFooter>,
+  props: React.ComponentProps<typeof DialogFooter>
 ) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogFooter : SheetFooter
   return <Comp {...props} />
 }
 
-function AdaptableDialogTitle(props: React.ComponentProps<typeof DialogTitle>) {
+function AdaptableDialogTitle(
+  props: React.ComponentProps<typeof DialogTitle>
+) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogTitle : SheetTitle
   return <Comp {...props} />
 }
 
 function AdaptableDialogDescription(
-  props: React.ComponentProps<typeof DialogDescription>,
+  props: React.ComponentProps<typeof DialogDescription>
 ) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogDescription : SheetDescription
