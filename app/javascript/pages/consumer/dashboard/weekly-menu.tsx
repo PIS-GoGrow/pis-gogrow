@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
+import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -17,7 +18,6 @@ import type { ConsumerDashboardIndex } from "@/types"
 import { BenefitCard } from "./benefit-card"
 import type { CartItem, Schedule } from "./consumer-types"
 import { money } from "./formatters"
-import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
 
 interface Props {
   name: string

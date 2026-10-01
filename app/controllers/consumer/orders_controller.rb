@@ -7,7 +7,7 @@ class Consumer::OrdersController < Consumer::InertiaController
 
     @upcoming_orders = orders.upcoming
     @past_orders = orders.history.where(created_at: (Date.current - 3.months)..)
-    
+
     @providers = (@upcoming_orders + @past_orders)
       .map { |order| order.schedule.menu.provider }
       .uniq

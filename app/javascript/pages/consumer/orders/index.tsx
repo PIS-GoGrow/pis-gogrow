@@ -1,7 +1,9 @@
 import { Head } from "@inertiajs/react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
+import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
 import OrderCard from "@/components/orders/order-card"
 import {
   Empty,
@@ -13,8 +15,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
 import { consumerOrders } from "@/routes"
-import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
-import { useState } from "react"
 import type { BreadcrumbItem, ConsumerOrdersIndex, Order } from "@/types"
 
 // Las órdenes llegan ya ordenadas por fecha, así que alcanza con agrupar por
@@ -85,18 +85,20 @@ export default function Index({
     activeProviders.size === 0
       ? upcoming_orders
       : upcoming_orders.filter((order) =>
-          activeProviders.has(order.provider_name),
+          activeProviders.has(order.provider_name ?? ""),
         )
   const filtered_past_orders =
     activeProviders.size === 0
       ? past_orders
       : past_orders.filter((order) =>
-          activeProviders.has(order.provider_name),
+          activeProviders.has(order.provider_name ?? ""),
         )
   const filterLabel =
     activeProviders.size === 0
       ? "Todos"
-      : providersName.filter((provider) => activeProviders.has(provider)).join(", ")
+      : providersName
+          .filter((provider) => activeProviders.has(provider))
+          .join(", ")
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -108,9 +110,7 @@ export default function Index({
         <div className="flex items-center">
           <span className="text-muted-foreground min-w-0 truncate text-sm">
             Proveedores:{" "}
-            <span className="text-foreground font-medium">
-              {filterLabel}
-            </span>
+            <span className="text-foreground font-medium">{filterLabel}</span>
           </span>
           <ProviderFilterSheet
             providers={providersName}

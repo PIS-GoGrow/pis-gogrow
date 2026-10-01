@@ -1,16 +1,15 @@
 import { SlidersHorizontal } from "lucide-react"
 import { useState } from "react"
 
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
 import {
   AdaptableDialog,
   AdaptableDialogContent,
-  AdaptableDialogDescription,
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 
 interface Props {
   providers: string[]
@@ -58,18 +57,14 @@ export function ProviderFilterSheet({
       </AdaptableDialogTrigger>
 
       <AdaptableDialogContent
-        side="bottom"
         showCloseButton={false}
         data-provider-filter-sheet
         className="p-5"
       >
         <div className="flex flex-col gap-5">
           <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
-            Filtrar por Proveedores
+            Filtrar por proveedores
           </AdaptableDialogTitle>
-          <AdaptableDialogDescription className="sr-only">
-            Seleccioná los proveedores que querés ver en el menú.
-          </AdaptableDialogDescription>
 
           <div className="flex flex-col">
             <div className="flex h-12 items-center gap-3 rounded-sm px-2 py-3">

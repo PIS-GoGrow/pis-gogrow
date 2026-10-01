@@ -20,6 +20,6 @@ export const useFormatters = () => {
 
     return formatted.charAt(0).toLocaleUpperCase(locale) + formatted.slice(1)
   }
-  
+
   return { formatMoney, formatDeliveryDate }
 }
