@@ -46,7 +46,8 @@ class Admin::PaymentsController < Admin::InertiaController
   def current_month_summary
     current = company.accounts.current
     meals = Account.amount_and_price_sum(current.pluck(:id)).values.sum { it[:amount].to_i }
-    limit = BenefitConfiguration.current_for(company)&.monthly_voucher_limit
+    base_subsidy = BenefitConfiguration.base_subsidy_for(company)
+    limit = base_subsidy&.benefit_rules&.find_by(type: MonthlyBenefit.name)&.limit
 
     { amount: current.sum(:amount).to_f, meals:, limit: limit && limit * company.consumers.count }
   end
