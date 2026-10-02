@@ -89,10 +89,30 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
       click_on "Subir comprobante de pago"
     end
 
-    expect(page).to have_content(I18n.t("flash.payment_receipt_submitted"))
+    expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     within(find("[role=tabpanel]")) do
       expect(page).to have_content("Enviado")
     end
+  end
+
+  it "shows an error notification and saves nothing when the receipt format is invalid" do
+    confirmed_order(
+      consumer: consumers(:one), provider:, month: current_month,
+      quantity: 2, discounted_price: 300
+    )
+    sign_in employee
+
+    visit accounts_path
+    within(find("[role=tabpanel]")) { click_on "Subir comprobante de pago" }
+    within(find("[role=dialog]")) do
+      attach_file("Seleccionar archivo", Rails.root.join("public/robots.txt"), make_visible: true)
+      click_on "Subir comprobante de pago"
+    end
+
+    expect(page).to have_content(I18n.t("pages.accounts.show.receipt_error_title"))
+    expect(page).to have_content(I18n.t("pages.accounts.show.receipt_error_description"))
+    expect(page).to have_button(I18n.t("pages.accounts.show.receipt_error_action"))
+    expect(consumers(:one).accounts.find_by!(provider:).payments).to be_empty
   end
 
   # Criterio 3 -- aprobado

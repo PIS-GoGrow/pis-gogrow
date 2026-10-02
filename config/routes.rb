@@ -68,7 +68,7 @@ Rails.application.routes.draw do
       patch :cancel, on: :member, as: :cancel_consumer
     end
 
-    resources :payments, only: [ :create, :update ] do
+    resources :payments, only: [ :create, :update, :destroy ] do
       get :receipt, on: :member
     end
 
@@ -79,7 +79,7 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
     resources :consumers, only: [ :index, :show ]
-    resources :invoices, only: [] do
+    resources :invoices, only: [ :index ] do
       get :file, on: :member
     end
   end

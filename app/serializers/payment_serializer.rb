@@ -4,6 +4,10 @@ class PaymentSerializer < ApplicationSerializer
   typelize_from Payment
   attributes :id, :status, :created_at, :rejection_reason
 
+  typelize :string
+  attribute :receipt_uploaded_at do |payment|
+    I18n.l(payment.created_at.to_date)
+  end
 
   typelize :string?
   attribute :receipt_url do |payment|

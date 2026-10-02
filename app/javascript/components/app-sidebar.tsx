@@ -4,6 +4,7 @@ import {
   CalendarPlus,
   ClipboardList,
   CreditCard,
+  FileText,
   LayoutGrid,
   Package,
   Percent,
@@ -28,6 +29,7 @@ import {
 import {
   adminBenefitConfigurations,
   adminConsumers,
+  adminInvoices,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
@@ -85,6 +87,11 @@ export function AppSidebar() {
         title: t("pages.admin.consumers.index.title"),
         href: adminConsumers.index().url,
         icon: Users,
+      },
+      {
+        title: t("nav.invoices"),
+        href: adminInvoices.index().url,
+        icon: FileText,
       },
     ],
     consumer: [
