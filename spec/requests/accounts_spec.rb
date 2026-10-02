@@ -162,6 +162,55 @@ RSpec.describe "Consumer Accounts", type: :request do
           p[:accounts].one?
       }
     end
+
+    # IBP-020, criterio 1: el historial son las cuentas con un pago aprobado, y
+    # son un subconjunto distinto del de pendientes.
+    it "sends the accounts with an approved payment as history, ordered from the newest month" do
+      user, consumer, = setup_consumer
+      provider = setup_provider
+      sign_in(user, role: :consumer)
+
+      create_order(consumer:, provider:, price: 300, amount: 1, status: :confirmed)
+      unpaid_account = consumer.accounts.find_by!(provider:)
+
+      paid_old = Account.create!(
+        owner: consumer, provider:, month: 2.months.ago.beginning_of_month, amount: 700
+      )
+      paid_new = Account.create!(
+        owner: consumer, provider:, month: 1.month.ago.beginning_of_month, amount: 500
+      )
+      paid_old.payments.create!(provider:, status: :approved)
+      paid_new.payments.create!(provider:, status: :approved)
+
+      get accounts_path
+
+      expect(response).to have_http_status(:ok)
+      expect(inertia).to render_component("consumer/accounts/index")
+      expect(inertia).to have_props { |props|
+        p = props.deep_symbolize_keys
+        p[:history] == false &&
+          p[:history_accounts].map { |a| a[:id] } == [ paid_new.id, paid_old.id ] &&
+          p[:history_accounts].none? { |a| a[:id] == unpaid_account.id } &&
+          p[:accounts].map { |a| a[:id] }.include?(unpaid_account.id)
+      }
+    end
+
+    it "opens the history tab when the request asks for it" do
+      user, consumer, = setup_consumer
+      provider = setup_provider
+      sign_in(user, role: :consumer)
+
+      create_order(consumer:, provider:, price: 300, amount: 1, status: :confirmed)
+      account = consumer.accounts.find_by!(provider:)
+      account.payments.create!(provider:, status: :approved)
+
+      get accounts_path, params: { type: "history" }
+
+      expect(response).to have_http_status(:ok)
+      expect(inertia).to have_props { |props|
+        props.deep_symbolize_keys[:history] == true
+      }
+    end
   end
 
   describe "GET /accounts/:id" do

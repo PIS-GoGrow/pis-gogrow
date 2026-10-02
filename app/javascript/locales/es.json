@@ -41,9 +41,19 @@
       }
     },
     "nav": {
+      "admin": {
+        "account": "Cuenta",
+        "employees": "Empleados",
+        "home": "Inicio",
+        "mobile_navigation": "Navegación de RRHH",
+        "payments": "Pagos"
+      },
       "benefit_configurations": "Beneficio general",
       "change_to": "Cambiar a",
       "collections": "Cobros",
+      "consumer": {
+        "menu": "Menú del día"
+      },
       "dashboard": "Panel",
       "menu": "Menú de navegación",
       "orders": "Mis pedidos",
@@ -71,6 +81,7 @@
       "accounts": {
         "index": {
           "history": "Historial",
+          "history_empty": "Todavía no hiciste ningún pago.",
           "no_debt": "¡Sin deudas pendientes con este proveedor!",
           "payments": "Pagos",
           "pending": "Pendientes",
@@ -82,6 +93,7 @@
         "show": {
           "amount": "Cant.",
           "date": "Fecha",
+          "download_receipt": "Descargar comprobante de pago",
           "due": "Vence: ",
           "lunch": "vianda",
           "lunches": "viandas",
@@ -101,6 +113,10 @@
           "receipt_view_edit": "Ver o editar comprobante",
           "see_detail": "Ver detalle",
           "spending": "Consumo",
+          "status_accepted": "Aceptado",
+          "status_pending": "Pendiente",
+          "status_rejected": "Rechazado",
+          "status_submitted": "Enviado",
           "total": "Total"
         }
       },
@@ -119,7 +135,8 @@
                 "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
                 "keep": "Mantener el programado",
                 "replace": "Reemplazar por este",
-                "title": "Ya hay un cambio programado para el próximo período"
+                "title": "Ya hay un cambio programado para el próximo período",
+                "unexpected": "Error inesperado. Por favor reintentá la operación."
               },
               "scheduled_banner": {
                 "description": "La nueva configuración de subsidios se aplicará a partir del próximo período.",
@@ -183,21 +200,32 @@
             "year_label": "Año"
           }
         },
-        "internal_server_error": {
-          "back_home": "Volver al inicio",
-          "description": "Hubo un problema al procesar tu solicitud. Intentá de nuevo.",
-          "heading": "¡Ups! Algo salió mal",
-          "retry": "Reintentar",
-          "title": "Algo salió mal"
-        },
-        "not_found": {
-          "back_home": "Volver al inicio",
-          "description": "La dirección que buscás no está disponible o fue movida.",
-          "go_to_menu": "Ir a mi menú",
-          "go_to_panel": "Ir a mi panel",
-          "heading": "¡Ups! Esta página no existe",
-          "sign_in": "Iniciar sesión",
-          "title": "Página no encontrada"
+        "dashboard": {
+          "alert": {
+            "pending": "Los avisos por WhatsApp estarán disponibles próximamente.",
+            "title": "Avisos de pagos pendientes"
+          },
+          "coming_soon": "Próximamente",
+          "consumption": {
+            "participation": "Participación",
+            "spending": "Gasto",
+            "title": "Tu consumo",
+            "view_detail": "Ver detalle del consumo"
+          },
+          "debts": {
+            "pending": "Acá verás hasta tres empleados con saldos pendientes.",
+            "title": "Ranking deuda de empleados",
+            "view": "Ver empleados con saldos pendientes"
+          },
+          "greeting": "Hola, %{name} 👋",
+          "payments": {
+            "pending": "El estado de los pagos a proveedores estará disponible próximamente.",
+            "title": "Tus pagos de %{month}",
+            "view": "Ver pagos a proveedores"
+          },
+          "pending_value": "—",
+          "this_month": "Este mes",
+          "title": "Inicio"
         }
       },
       "cart": {
@@ -237,6 +265,24 @@
           "provider": "Panel del proveedor"
         },
         "title": "Panel"
+      },
+      "errors": {
+        "internal_server_error": {
+          "back_home": "Volver al inicio",
+          "description": "Hubo un problema al procesar tu solicitud. Intentá de nuevo.",
+          "heading": "¡Ups! Algo salió mal",
+          "retry": "Reintentar",
+          "title": "Algo salió mal"
+        },
+        "not_found": {
+          "back_home": "Volver al inicio",
+          "description": "La dirección que buscás no está disponible o fue movida.",
+          "go_to_menu": "Ir a mi menú",
+          "go_to_panel": "Ir a mi panel",
+          "heading": "¡Ups! Esta página no existe",
+          "sign_in": "Iniciar sesión",
+          "title": "Página no encontrada"
+        }
       },
       "home": {
         "dashboard": "Panel",
@@ -361,14 +407,15 @@
       },
       "provider_collections": {
         "group": {
+          "awaiting_one": "%{count} cobro pendiente de confirmación",
+          "awaiting_other": "%{count} cobros pendientes de confirmación",
           "company": "Empresa",
           "confirmed": "%{amount} en cobros confirmados",
           "detail": "Ver detalle",
           "due": "Vence: %{date}",
           "employees": "Empleados",
-          "pending": "%{amount} en cobros pendientes",
-          "rejected": "%{amount} en cobros rechazados",
-          "submitted": "%{amount} en cobros informados",
+          "rejected_one": "%{count} cobro rechazado",
+          "rejected_other": "%{count} cobros rechazados",
           "total": "Total a cobrar"
         },
         "index": {
@@ -393,6 +440,36 @@
           "this_month": "Este mes",
           "title": "Cobros",
           "total_debt": "Deuda total"
+        },
+        "invoice": {
+          "dialog": {
+            "description": "Completá los datos de la factura de %{month} antes de enviarla.",
+            "expected": "Importe calculado del período: %{amount}",
+            "file": "Archivo",
+            "issued_on": "Fecha de emisión",
+            "title": "Subir factura",
+            "total_amount": "Monto total"
+          },
+          "download": "Descargar factura",
+          "file_label": "Archivo de la factura",
+          "formats": "PDF, JPG o PNG de hasta 10 MB.",
+          "no_file": "Sin archivos seleccionados",
+          "preview": "Ver factura %{name}",
+          "rejected_hint": "La factura fue rechazada. Podés subir una nueva.",
+          "remove": {
+            "confirm": "Eliminar",
+            "description": "Vas a poder subir otra para este período.",
+            "title": "¿Eliminar la factura?",
+            "trigger": "Eliminar factura"
+          },
+          "select_file": "Seleccionar archivo",
+          "statuses": {
+            "approved": "Aprobada",
+            "pending": "Por revisar",
+            "rejected": "Rechazada"
+          },
+          "upload": "Subir factura",
+          "uploading": "Subiendo…"
         },
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
@@ -421,15 +498,45 @@
       },
       "provider_dashboard": {
         "index": {
+          "coming_soon": "Próximamente",
           "description": "Administrá la recepción de pedidos de tus menús.",
           "eyebrow": "Operación diaria",
+          "greeting": "Hola, %{name} 👋",
+          "insights": {
+            "description": "Los hallazgos basados en las valoraciones estarán disponibles próximamente.",
+            "dishes": "Platos",
+            "generated": "Generado por IA",
+            "orders": "Pedidos",
+            "rating": "Valoración",
+            "title": "Hallazgos del mes"
+          },
           "order_deadline": {
             "description": "Definí hasta qué hora aceptás pedidos para hoy.",
             "help": "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos.",
             "label": "Hora límite",
             "title": "Recepción de pedidos"
           },
-          "title": "Panel del proveedor"
+          "orders": {
+            "confirmed": "Confirmados",
+            "deadline": "Recibiendo pedidos hasta %{time}",
+            "home": "Envío a domicilio",
+            "office": "Envío a oficina",
+            "pending": "Pendientes",
+            "title": "Pedidos",
+            "today": "Hoy",
+            "view": "Ver pedidos"
+          },
+          "payments": {
+            "description": "Los cobros pendientes aparecerán acá próximamente.",
+            "pending": "Cobros pendientes",
+            "title": "Resumen de cobros",
+            "total": "Deuda total"
+          },
+          "profile": {
+            "description": "La configuración de los pasos estará disponible próximamente.",
+            "title": "Completá tu cuenta"
+          },
+          "title": "Inicio"
         }
       },
       "provider_operational_settings": {

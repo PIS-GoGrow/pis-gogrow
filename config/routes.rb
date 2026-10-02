@@ -42,8 +42,14 @@ Rails.application.routes.draw do
       end
     end
     resources :collections, only: [ :index, :show ]
+    resources :invoices, only: [ :create, :destroy ] do
+      get :file, on: :member
+    end
     resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :payments, only: [ :update ] do
+      get :receipt, on: :member
+    end
   end
 
   resources :schedules, only: [ :index, :create ] do
@@ -73,6 +79,10 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
     resources :consumers, only: [ :index, :show ]
+    resources :invoices, only: [] do
+      get :file, on: :member
+    end
+
   end
 
   root "home#index"

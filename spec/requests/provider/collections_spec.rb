@@ -89,6 +89,24 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(group_for(:history, 1.month.ago.to_date)[:company][:paid_on]).to be_present
     end
 
+    it "shows the invoice uploaded for the company period" do
+      Invoice.create!(
+        account: accounts(:gogrow_tuviandita_current),
+        issued_on: Date.current,
+        total_amount: 601,
+        file: Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png", original_filename: "factura.png")
+      )
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      group = group_for(:pending, Date.current)
+
+      expect(group[:company][:invoice]).to include(status: "pending", file_name: "factura.png", removable: true, total_amount: 601.0)
+      expect(group[:employees].pluck(:invoice)).to all(be_nil)
+      expect(group_for(:history, 1.month.ago.to_date)[:company][:invoice]).to be_nil
+    end
+
     it "leaves out the accounts of other providers" do
       sign_in provider_user, role: :provider
 

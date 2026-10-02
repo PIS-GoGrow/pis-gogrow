@@ -16,7 +16,7 @@ class ProviderCollectionSummary
   EMPLOYEES_STATUS_PRIORITY = %w[rejected pending submitted approved].freeze
 
   AccountRow = Data.define(:account, :meals) do
-    delegate :id, :amount, :collection_status, :month, :due_date, to: :account
+    delegate :id, :amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
 
     def owner_name
       ProviderCollectionSummary.owner_name(account)
@@ -102,7 +102,7 @@ class ProviderCollectionSummary
 
   def accounts
     @accounts ||= begin
-      records = @provider.accounts.preload(:payments, :owner).to_a
+      records = @provider.accounts.preload(:payments, :owner, invoices: { file_attachment: :blob }).to_a
 
       # owner es polimórfico y Company no responde a :user, así que los
       # empleados se completan aparte.

@@ -56,7 +56,7 @@ RSpec.describe "Payments", type: :request do
 
   it "updates an existing rejected payment with a new receipt" do
     user, account, provider = setup_payment_account
-    payment = account.payments.create!(provider:, status: :rejected)
+    payment = account.payments.create!(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
     payment.receipt.attach(
       io: StringIO.new("old receipt"),
       filename: "old.png",
@@ -198,5 +198,30 @@ RSpec.describe "Payments", type: :request do
     get receipt_payment_path(payment)
 
     expect(response).to have_http_status(:not_found)
+  end
+
+  # El lado que la pantalla no puede cubrir: el modelo rechaza el adjunto y el
+  # controller tiene que volver con los errores sin dejar el pago a medias.
+  it "sends back the errors and persists nothing when the receipt is not an accepted format" do
+    user, account, = setup_payment_account
+    sign_in(user, role: :consumer)
+    text_file = Rack::Test::UploadedFile.new(
+      Rails.root.join("public/robots.txt"),
+      "text/plain",
+      original_filename: "comprobante.txt"
+    )
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: text_file }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+    expect(account.reload.payments).to be_empty
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.invalid_content_type") ] }
+    )
   end
 end

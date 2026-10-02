@@ -13,6 +13,9 @@ class Consumer < ApplicationRecord
   has_many :user_notifications, as: :user
   has_many :notification_configurations, through: :user_notifications, source: :notification_configuration
 
+  has_many :consumer_benefit_configurations
+  has_many :benefit_configurations, through: :consumer_benefit_configurations
+
   def total_debt
     accounts.pending.sum :amount
   end
@@ -21,34 +24,51 @@ class Consumer < ApplicationRecord
     accounts.current.sum :amount
   end
 
-  def current_benefit
-    benefits.current.monthly.first || benefits.current.order(:due_date).first
+  # Devuelve todos los beneficios mensuales del cliente
+  def monthly_benefits
+    benefits.joins(benefit_configuration: :benefit_rules)
+            .where(benefit_rules: { type: MonthlyBenefit.name })
   end
 
-  def benefit_available
-    current_benefit&.amount || 0
+  def current_monthly_benefit
+    benefits.current.monthly.first
   end
 
-  # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes
-  def subsidized_meals_used_this_month
-    orders
-      .joins(:schedule)
-      .where(schedules: { date: Date.current.all_month })
-      .where.not(status: [ :rejected, :cancelled ])
-      .sum(:amount)
+  def monthly_benefit_available
+    current_monthly_benefit&.amount || 0
+  end
+
+  # Devuelve la cantidad de beneficios mensuales usados en total en un determinado
+  # rango de fechas y especificando si contar órdenes pendientes.
+  # Si se hizo una orden pidiendo dos viandas con un beneficio, esa orden cuenta
+  # por dos.
+  def monthly_benefit_used_in(date_range, count_pending: false)
+    valid_status = [ :rejected, :cancelled ]
+    valid_status << :pending if count_pending
+
+    OrderBenefit
+      .joins(order: :schedule)
+      .where(schedules: { date: date_range })
+      .where.not(orders: { status:  valid_status })
+      .where(benefit_id: monthly_benefits)
+      .sum(:benefit_used)
+  end
+
+  # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes, para
+  # las que se usó un beneficio mensual
+  def monthly_benefit_used_this_month
+    monthly_benefit_used_in Date.current.all_month
   end
 
   # Devuelve la cantidad de viandas compradas en órdenes confirmadas esta semana
-  def subsidized_meals_used_this_week
-    orders
-      .joins(:schedule)
-      .where(schedules: { date: Date.current.all_week })
-      .where.not(status: [ :rejected, :cancelled ])
-      .sum(:amount)
+  def monthly_benefit_used_this_week
+    monthly_benefit_used_in Date.current.all_week
   end
 
-  def remaining_subsidized_meals
-    [ benefit_available - subsidized_meals_used_this_month, 0 ].max
+  # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes,
+  # contando solo las órdenes confirmadas
+  def remaining_monthly_benefit
+    [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
   end
 
   # Se espera que no se incluyan direcciones blank acá
@@ -66,6 +86,9 @@ class Consumer < ApplicationRecord
       { delivery_method: "office", address: company.address }
     end
   end
+
+  # TODO: Cómo obtenemos el cumpleaños/onboarding del empleado?
+  attr_accessor :bithday, :onboarding_date
 
   # La oficina va primero y después la última dirección particular a la que se
   # pidió, que es la que el carrito muestra junto a la oficina.
