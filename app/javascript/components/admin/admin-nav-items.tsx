@@ -9,7 +9,12 @@ import { CreditCard, House, UserRound, UsersRound } from "lucide-react"
 import type { ReactElement } from "react"
 import { useTranslation } from "react-i18next"
 
-import { adminConsumers, adminDashboard, settingsProfiles } from "@/routes"
+import {
+  adminConsumers,
+  adminDashboard,
+  adminPayments,
+  settingsProfiles,
+} from "@/routes"
 import type { NavItem } from "@/types"
 
 type AdminPrimaryNavItem = NavItem & {
@@ -49,9 +54,8 @@ export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
     },
     {
       title: t("nav.admin.payments"),
-      href: adminDashboard.index().url,
+      href: adminPayments.index().url,
       icon: CreditCard,
-      disabled: true,
       mobileIcon: (
         <HugeiconsIcon
           icon={CreditCardPosIcon}

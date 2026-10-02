@@ -6,6 +6,7 @@ export { default as adminBenefitConfigurations } from './Admin/BenefitConfigurat
 export { default as adminConsumers } from './Admin/ConsumersController'
 export { default as adminDashboard } from './Admin/DashboardController'
 export { default as adminInvoices } from './Admin/InvoicesController'
+export { default as adminPayments } from './Admin/PaymentsController'
 export { default as consumerAccounts } from './Consumer/AccountsController'
 export { default as consumerDashboard } from './Consumer/DashboardController'
 export { default as consumerDeliveryAddresses } from './Consumer/DeliveryAddressesController'
@@ -36,6 +37,7 @@ export { default as users } from './UsersController'
 
 import _consumerAccounts from './Consumer/AccountsController'
 import _adminConsumers from './Admin/ConsumersController'
+import _adminPayments from './Admin/PaymentsController'
 import _omniauthCallbacks from './OmniauthCallbacksController'
 import _schedules from './SchedulesController'
 import _consumerOrders from './Consumer/OrdersController'
@@ -65,6 +67,7 @@ import _turboNativeNavigation from './Turbo/Native/NavigationController'
 export const account = _consumerAccounts.show
 export const accounts = _consumerAccounts.index
 export const adminConsumer = _adminConsumers.show
+export const adminPayment = _adminPayments.show
 export const authFailure = _omniauthCallbacks.failure
 export const authGoogleOauth2Callback = _omniauthCallbacks.googleOauth2
 export const availabilitySchedule = _schedules.availability

@@ -18,6 +18,7 @@ import {
   adminConsumers,
   adminDashboard,
   adminInvoices,
+  adminPayments,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
@@ -93,6 +94,12 @@ export function getNavigationItems(
         title: t("nav.invoices"),
         href: adminInvoices.index().url,
         icon: FileText,
+      },
+      {
+        key: "payments",
+        title: t("nav.admin.payments"),
+        href: adminPayments.index().url,
+        icon: CreditCard,
       },
     ],
     consumer: [

@@ -82,6 +82,7 @@ Rails.application.routes.draw do
     resources :invoices, only: [ :index ] do
       get :file, on: :member
     end
+    resources :payments, only: [ :index, :show ]
   end
 
   root "home#index"
