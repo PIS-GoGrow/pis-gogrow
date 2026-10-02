@@ -102,10 +102,18 @@
           "receipt": "Subir comprobante de pago",
           "receipt_approved": "Pago aprobado",
           "receipt_description": "Adjuntá el comprobante correspondiente a este pago.",
+          "receipt_error_action": "Entendido",
+          "receipt_error_description": "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
+          "receipt_error_title": "No se pudo subir el comprobante",
           "receipt_file": "Seleccionar archivo",
           "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
           "receipt_preview": "Vista previa del comprobante",
+          "receipt_remove": "Eliminar comprobante",
           "receipt_replace": "Reemplazar archivo",
+          "receipt_sent_at": "Enviado: %{date}",
+          "receipt_success_action": "Listo",
+          "receipt_success_description": "Tu comprobante fue enviado correctamente y está pendiente de revisión.",
+          "receipt_success_title": "Comprobante enviado",
           "receipt_title": "Subir comprobante",
           "receipt_unavailable": "Comprobante no disponible",
           "receipt_update": "Actualizar comprobante",
@@ -444,7 +452,7 @@
           "approved": "Confirmado",
           "pending": "Pendiente",
           "rejected": "Rechazado",
-          "submitted": "Por revisar"
+          "submitted": "En revisión"
         }
       },
       "provider_dashboard": {

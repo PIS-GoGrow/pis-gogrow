@@ -68,7 +68,7 @@ Rails.application.routes.draw do
       patch :cancel, on: :member, as: :cancel_consumer
     end
 
-    resources :payments, only: [ :create, :update ] do
+    resources :payments, only: [ :create, :update, :destroy ] do
       get :receipt, on: :member
     end
 
