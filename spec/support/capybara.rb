@@ -22,4 +22,9 @@ end
 # aria-label ("Agregar <plato>", "Semana anterior"). Sin esto, find_button no
 # los encuentra y habría que bajar a selectores de CSS.
 Capybara.enable_aria_label = true
-Capybara.default_max_wait_time = 10
+
+# El server de desarrollo con Vite responde mucho más lento que uno de test: el
+# panel de detalle de /accounts pide /accounts/:id por fetch, y la subida del
+# comprobante (multipart contra Puma en development) tarda por sí sola ~10s. Con
+# los 2s por defecto la aserción gana antes de que llegue la respuesta.
+Capybara.default_max_wait_time = 30
