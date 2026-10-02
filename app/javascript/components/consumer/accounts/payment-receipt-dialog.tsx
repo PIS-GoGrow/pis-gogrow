@@ -21,6 +21,12 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import { Spinner } from "@/components/ui/spinner"
 import { consumerPayments } from "@/routes"
 import type { Payment } from "@/types"
@@ -29,6 +35,8 @@ interface PaymentReceiptDialogProps {
   accountId: number
   payments: Payment[]
 }
+
+type UploadResult = "success" | "error" | null
 
 export default function PaymentReceiptDialog({
   accountId,
@@ -39,6 +47,7 @@ export default function PaymentReceiptDialog({
   const [open, setOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [uploadResult, setUploadResult] = useState<UploadResult>(null)
 
   useEffect(() => {
     return () => {
@@ -61,14 +70,24 @@ export default function PaymentReceiptDialog({
     setPreviewUrl(file ? URL.createObjectURL(file) : null)
   }
 
+  function handleUploadSuccess() {
+    handleOpenChange(false)
+    setUploadResult("success")
+  }
+
+  function handleUploadError() {
+    handleOpenChange(false)
+    setUploadResult("error")
+  }
+
   return (
     <div className="grid gap-3">
       {receipts.map((payment) => (
         <div
           key={payment.id}
-          className="grid min-w-0 gap-2 rounded-md border bg-background p-3 text-sm"
+          className="bg-background grid min-w-0 gap-2 rounded-md border p-3 text-sm"
         >
-          <div className="flex items-center justify-between gap-2 text-muted-foreground text-xs">
+          <div className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
             <span>
               {t("pages.accounts.show.receipt_sent_at", {
                 date: payment.receipt_uploaded_at,
@@ -82,7 +101,7 @@ export default function PaymentReceiptDialog({
           <div className="flex min-w-0 items-center gap-2">
             <FileText aria-hidden="true" className="size-4 shrink-0" />
             <a
-              className="block min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap font-medium hover:underline"
+              className="block min-w-0 flex-1 overflow-hidden font-medium text-ellipsis whitespace-nowrap hover:underline"
               href={payment.receipt_url}
               download
             >
@@ -115,9 +134,7 @@ export default function PaymentReceiptDialog({
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button className="w-full">
-            {t("pages.accounts.show.receipt")}
-          </Button>
+          <Button className="w-full">{t("pages.accounts.show.receipt")}</Button>
         </DialogTrigger>
 
         <DialogContent className="sm:max-w-md">
@@ -132,14 +149,15 @@ export default function PaymentReceiptDialog({
             action={consumerPayments.create()}
             className="grid min-w-0 gap-3 rounded-lg bg-zinc-100 p-3 dark:bg-zinc-900"
             errorBag={`payment-account-${accountId}`}
-            onSuccess={() => handleOpenChange(false)}
+            onError={handleUploadError}
+            onSuccess={handleUploadSuccess}
             options={{ preserveScroll: true }}
             resetOnSuccess
           >
             {({ errors, processing, progress }) => (
               <>
                 {previewUrl && selectedFile && (
-                  <div className="overflow-hidden rounded-md border bg-background">
+                  <div className="bg-background overflow-hidden rounded-md border">
                     {selectedFile.type.startsWith("image/") ? (
                       <img
                         src={previewUrl}
@@ -153,7 +171,7 @@ export default function PaymentReceiptDialog({
                         className="h-72 w-full"
                       />
                     )}
-                    <p className="block max-w-full overflow-hidden text-ellipsis whitespace-nowrap border-t px-3 py-2 text-sm text-muted-foreground">
+                    <p className="text-muted-foreground block max-w-full overflow-hidden border-t px-3 py-2 text-sm text-ellipsis whitespace-nowrap">
                       {selectedFile.name}
                     </p>
                   </div>
@@ -173,7 +191,7 @@ export default function PaymentReceiptDialog({
                     aria-invalid={Boolean(errors.receipt)}
                     disabled={processing}
                     id={`payment-receipt-${accountId}`}
-                    className="min-w-0 w-full"
+                    className="w-full min-w-0"
                     name="payment[receipt]"
                     onChange={handleFileChange}
                     required
@@ -200,6 +218,46 @@ export default function PaymentReceiptDialog({
           </Form>
         </DialogContent>
       </Dialog>
+
+      <Sheet
+        open={uploadResult !== null}
+        onOpenChange={(nextOpen) => {
+          if (!nextOpen) setUploadResult(null)
+        }}
+      >
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="border-border bg-background text-foreground gap-6 rounded-t-[32px] border px-6 pt-2.5 pb-8 shadow-none md:inset-x-1/2 md:bottom-1/2 md:w-[402px] md:translate-x-[-50%] md:translate-y-1/2 md:rounded-[32px]"
+        >
+          <div
+            aria-hidden="true"
+            className="bg-muted-foreground/30 mx-auto h-1 w-12 rounded-full"
+          />
+
+          <div className="flex flex-col gap-5">
+            <SheetTitle className="text-base leading-6 font-semibold tracking-normal">
+              {uploadResult === "success"
+                ? t("pages.accounts.show.receipt_success_title")
+                : t("pages.accounts.show.receipt_error_title")}
+            </SheetTitle>
+            <SheetDescription className="text-base leading-6">
+              {uploadResult === "success"
+                ? t("pages.accounts.show.receipt_success_description")
+                : t("pages.accounts.show.receipt_error_description")}
+            </SheetDescription>
+            <Button
+              type="button"
+              className="h-12 w-full rounded-lg text-base font-medium"
+              onClick={() => setUploadResult(null)}
+            >
+              {uploadResult === "success"
+                ? t("pages.accounts.show.receipt_success_action")
+                : t("pages.accounts.show.receipt_error_action")}
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

@@ -80,7 +80,7 @@ class Consumer::PaymentsController < Consumer::InertiaController
   def persist_payment
     # Payment valida tipo, tamaño y presencia del adjunto antes de impactar la BD.
     if @payment.save
-      redirect_back fallback_location: accounts_path, notice: t("flash.payment_receipt_submitted"), status: :see_other
+      redirect_back fallback_location: accounts_path, status: :see_other
     else
       redirect_back fallback_location: accounts_path, inertia: { errors: @payment.errors.to_hash }, status: :see_other
     end
