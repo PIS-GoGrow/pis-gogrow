@@ -17,7 +17,9 @@ RSpec.describe "Configuración de subsidios especiales por RRHH", type: :system 
 
   def choose_option(label, option)
     find("[role=combobox][aria-label='#{label}']").click
-    find("[role=option]", text: option, exact_text: true).click
+    # Radix abre las opciones en un portal fuera del sheet, así que se buscan en
+    # todo el documento y no dentro del within("[role=dialog]") que lo llama.
+    page.document.find("[role=option]", text: option, exact_text: true).click
   end
 
   it "permite agregar un subsidio especial para empleados seleccionados" do
