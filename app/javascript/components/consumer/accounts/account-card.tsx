@@ -142,7 +142,14 @@ export default function AccountCard({
           </div>
         )}
 
-        <PaymentReceiptDialog accountId={account.id} payment={payment} />
+        <PaymentReceiptDialog
+          accountId={account.id}
+          payments={[...account.payments].sort(
+            (first, second) =>
+              new Date(second.created_at).getTime() -
+              new Date(first.created_at).getTime(),
+          )}
+        />
       </CardHeader>
     </Card>
   )

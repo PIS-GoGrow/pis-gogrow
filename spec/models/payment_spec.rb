@@ -131,6 +131,38 @@ RSpec.describe Payment, type: :model do
       expect(payment.rejection_reason).to eq("Los montos no coinciden")
     end
   end
+
+  describe "multiple receipts and deletion integrity" do
+    it "allows an account to have multiple payments" do
+      payment1 = payment_with_receipt(filename: "comprobante_1.png")
+      payment1.save!
+      payment2 = payment_with_receipt(filename: "comprobante_2.png")
+      payment2.save!
+
+      expect(account.payments.count).to eq(2)
+      expect(account.payments).to include(payment1, payment2)
+    end
+
+    it "destroys attached receipt and leaves other payments intact when one payment is destroyed" do
+      payment1 = payment_with_receipt(filename: "comprobante_1.png")
+      payment1.save!
+      payment2 = payment_with_receipt(filename: "comprobante_2.png")
+      payment2.save!
+
+      attachment1_id = payment1.receipt.attachment.id
+      attachment2_id = payment2.receipt.attachment.id
+
+      expect {
+        payment1.destroy!
+      }.to change(described_class, :count).by(-1)
+
+      expect(described_class.exists?(payment1.id)).to be(false)
+      expect(described_class.exists?(payment2.id)).to be(true)
+      expect(ActiveStorage::Attachment.exists?(attachment1_id)).to be(false)
+      expect(ActiveStorage::Attachment.exists?(attachment2_id)).to be(true)
+      expect(account.reload.payments).to contain_exactly(payment2)
+    end
+  end
 end
 
 # == Schema Information
