@@ -9,6 +9,9 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
     @base_subsidy = BenefitConfiguration.base_subsidy_for company
 
     @pending_base_subsidy = @pending_base_subsidy == @base_subsidy ? nil : @pending_base_subsidy
+
+    @special_subsidies = company.benefit_configurations.active.special.includes(:benefit_rules, :consumers).order(:created_at)
+    @employees = company.consumers.includes(:user).order("users.name").references(:user)
   end
 
   def create

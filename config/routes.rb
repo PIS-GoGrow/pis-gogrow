@@ -78,6 +78,7 @@ Rails.application.routes.draw do
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
+    resources :special_subsidies, only: [ :create, :update, :destroy ]
     resources :invoices, only: [] do
       get :file, on: :member
     end
