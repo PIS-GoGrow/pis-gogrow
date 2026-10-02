@@ -32,6 +32,17 @@ RSpec.describe "Payments", type: :request do
     { "HTTP_REFERER" => accounts_url }
   end
 
+  def submitted_payment(account:, provider:)
+    payment = account.payments.build(provider:, status: :submitted)
+    payment.receipt.attach(
+      io: StringIO.new("receipt"),
+      filename: "receipt.png",
+      content_type: "image/png"
+    )
+    payment.save!
+    payment
+  end
+
   it "creates a submitted payment with a receipt for an account without payments" do
     user, account, provider = setup_payment_account
     sign_in(user, role: :consumer)
@@ -136,6 +147,108 @@ RSpec.describe "Payments", type: :request do
     expect(response).to redirect_to(accounts_path)
     expect(payment.reload).to be_approved
     expect(payment.receipt.blob_id).to eq(original_blob_id)
+  end
+
+  it "allows the owner to remove a receipt that is still under review" do
+    user, account, provider = setup_payment_account
+    payment = submitted_payment(account:, provider:)
+    sign_in(user, role: :consumer)
+
+    expect {
+      delete payment_path(payment), headers: account_page_headers
+    }.to change(Payment, :count).by(-1)
+
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_flash(notice: I18n.t("flash.payment_receipt_removed"))
+  end
+
+  it "allows the owner to remove a rejected receipt" do
+    user, account, provider = setup_payment_account
+    payment = account.payments.build(
+      provider:,
+      status: :rejected,
+      rejection_reason: "Comprobante ilegible"
+    )
+    payment.receipt.attach(
+      io: StringIO.new("rejected receipt"),
+      filename: "rejected.png",
+      content_type: "image/png"
+    )
+    payment.save!
+    sign_in(user, role: :consumer)
+
+    expect {
+      delete payment_path(payment), headers: account_page_headers
+    }.to change(Payment, :count).by(-1)
+
+    expect(response).to redirect_to(accounts_path)
+  end
+
+  it "does not remove a receipt that has already been reviewed" do
+    user, account, provider = setup_payment_account
+    payment = account.payments.create!(provider:, status: :approved)
+    sign_in(user, role: :consumer)
+
+    expect {
+      delete payment_path(payment), headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_flash(alert: I18n.t("validations.payment_not_removable"))
+  end
+
+  it "does not allow one consumer to remove another consumer's receipt" do
+    user, = setup_payment_account
+    other_user = User.create!(
+      email: "other-payment-removal-consumer@gmail.com",
+      name: "Other consumer",
+      password: "password123456"
+    )
+    other_consumer = Consumer.create!(
+      user: other_user,
+      company: Company.first,
+      address: "Colonia 1234"
+    )
+    provider = Provider.first
+    other_account = Account.create!(
+      owner: other_consumer,
+      provider:,
+      month: Date.current,
+      amount: 250
+    )
+    payment = submitted_payment(account: other_account, provider:)
+    sign_in(user, role: :consumer)
+
+    expect {
+      delete payment_path(payment), headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to have_http_status(:not_found)
+  end
+
+  it "does not allow an unauthenticated user to remove a receipt" do
+    _user, account, provider = setup_payment_account
+    payment = submitted_payment(account:, provider:)
+
+    expect {
+      delete payment_path(payment), headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(sign_in_path)
+  end
+
+  it "does not allow a provider to remove a consumer's receipt" do
+    _user, account, provider = setup_payment_account
+    payment = submitted_payment(account:, provider:)
+    sign_in(provider.user, role: :provider)
+
+    expect {
+      delete payment_path(payment), headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(root_path)
   end
 
   it "allows the owner to access the receipt" do

@@ -11,4 +11,5 @@ class Provider::CollectionPaymentSerializer < ApplicationSerializer
   attribute :date do |payment|
     payment.created_at.strftime("%d/%m/%y")
   end
+
 end

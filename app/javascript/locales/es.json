@@ -95,7 +95,9 @@
           "receipt_file": "Seleccionar archivo",
           "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
           "receipt_preview": "Vista previa del comprobante",
+          "receipt_remove": "Eliminar comprobante",
           "receipt_replace": "Reemplazar archivo",
+          "receipt_sent_at": "Enviado: %{date}",
           "receipt_title": "Subir comprobante",
           "receipt_unavailable": "Comprobante no disponible",
           "receipt_update": "Actualizar comprobante",
@@ -407,7 +409,7 @@
           "approved": "Confirmado",
           "pending": "Pendiente",
           "rejected": "Rechazado",
-          "submitted": "Por revisar"
+          "submitted": "En revisión"
         }
       },
       "provider_dashboard": {
