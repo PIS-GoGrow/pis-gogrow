@@ -4,7 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Provider::Dashboard", type: :request do
-  fixtures :users, :companies, :providers, :consumers, :menus, :schedules, :orders, :reviews, :admins
+  fixtures :users, :companies, :providers, :consumers, :menus, :schedules, :orders, :reviews, :admins, :accounts, :order_accounts, :payments
 
   let(:provider_user) { users(:provider_user) }
   let(:provider) { providers(:tuviandita) }

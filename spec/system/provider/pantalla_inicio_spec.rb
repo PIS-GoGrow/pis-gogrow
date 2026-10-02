@@ -6,7 +6,7 @@
 require "rails_helper"
 
 RSpec.describe "Pantalla de inicio del proveedor", type: :system do
-  fixtures :users, :companies, :providers, :consumers, :menus, :schedules, :orders, :reviews
+  fixtures :users, :companies, :providers, :consumers, :menus, :schedules, :orders, :reviews, :accounts, :order_accounts, :payments
 
   let(:provider_user) { users(:provider_user) }
   let(:provider) { providers(:tuviandita) }
