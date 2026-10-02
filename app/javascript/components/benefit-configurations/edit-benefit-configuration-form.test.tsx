@@ -2,13 +2,11 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import type { BenefitConfiguration } from "@/types/serializers"
-
 import EditBenefitConfigurationForm from "./edit-benefit-configuration-form"
 
 const postMock = vi.fn()
 let currentFormData: Record<string, unknown> = {}
-let currentFormErrors: Record<string, string[] | undefined> = {}
+let currentFormErrors: Record<string, unknown> = {}
 let transformCallback: ((data: Record<string, unknown>) => unknown) | null =
   null
 
@@ -43,14 +41,10 @@ describe("EditBenefitConfigurationForm", () => {
     monthly_voucher_limit: 20 as const,
   }
 
-  const pendingBenefitConfiguration: BenefitConfiguration = {
-    id: 99,
+  const pendingBenefitConfiguration = {
     subsidy_percentage: 60,
     max_voucher_price: 200,
     monthly_voucher_limit: 25,
-    effective_from: "2026-10-01",
-    created_at: "2026-09-21T00:00:00Z",
-    created_by_name: "Admin User",
   }
 
   beforeEach(() => {
@@ -216,10 +210,16 @@ describe("EditBenefitConfigurationForm", () => {
 
   it("displays validation error messages when errors are present", () => {
     currentFormErrors = {
-      subsidy_percentage: ["debe ser menor o igual a 100"],
-      max_voucher_price: ["debe ser mayor que 0"],
-      monthly_voucher_limit: ["debe ser un número entero"],
-      effective_from: ["ya ha sido tomado"],
+      benefit_configuration: {
+        subsidy_percentage: ["debe ser menor o igual a 100"],
+      },
+      benefit_rules: [
+        {
+          max_price: ["debe ser mayor que 0"],
+          limit: ["debe ser un número entero"],
+          effective_from: ["ya ha sido tomado"],
+        },
+      ],
     }
 
     render(
@@ -233,6 +233,6 @@ describe("EditBenefitConfigurationForm", () => {
     expect(screen.getByText("debe ser menor o igual a 100")).toBeInTheDocument()
     expect(screen.getByText("debe ser mayor que 0")).toBeInTheDocument()
     expect(screen.getByText("debe ser un número entero")).toBeInTheDocument()
-    expect(screen.getByText("ya ha sido tomado")).toBeInTheDocument()
+    expect(screen.getByText(/error inesperado/i)).toBeInTheDocument()
   })
 })

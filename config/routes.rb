@@ -32,6 +32,8 @@ Rails.application.routes.draw do
   end
 
   namespace :provider do
+    get "account", to: "accounts#show", as: :account
+    get "operational_settings", to: "operational_settings#show", as: :operational_settings
     resources :menus
     resources :orders, only: [ :index, :show ] do
       member do
@@ -40,15 +42,27 @@ Rails.application.routes.draw do
       end
     end
     resources :collections, only: [ :index, :show ]
+    resources :invoices, only: [ :create, :destroy ] do
+      get :file, on: :member
+    end
     resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :payments, only: [ :update ] do
+      get :receipt, on: :member
+    end
   end
 
-  resources :schedules, only: [ :index, :create ]
+  resources :schedules, only: [ :index, :create ] do
+    patch :update_by_date, on: :collection
+    patch :availability, on: :member
+  end
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
+    get "dashboard/confirmation", to: "dashboard#confirmation", as: :dashboard_confirmation
+
     resources :menus, only: [ :index ]
+    resources :delivery_addresses, only: [ :create ]
 
     resources :orders, only: [ :index, :show, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer
@@ -64,6 +78,9 @@ Rails.application.routes.draw do
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
+    resources :invoices, only: [] do
+      get :file, on: :member
+    end
   end
 
   root "home#index"

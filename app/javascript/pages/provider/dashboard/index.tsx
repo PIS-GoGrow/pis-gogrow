@@ -59,6 +59,7 @@ export default function ProviderDashboard({
           name: auth.user.name,
         })}
       >
+<<<<<<< HEAD
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="dark:border-border dark:bg-muted dark:hover:bg-accent gap-3 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] py-4 shadow-none transition-colors hover:bg-[#EEEEEE] lg:col-span-2">
             <CardContent className="px-4">

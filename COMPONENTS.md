@@ -137,6 +137,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `AlertError` | `@/components/alert-error` | `Alert` destructivo con una lista de errores |
 | `StatusBadge` | `@/components/status-badge` | Estado de un pedido o de un pago: `Badge variant="outline"` con `data-status` y color por estado |
 | `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail` y `badge` opcionales |
+| `MobileNav` | `@/components/mobile-nav` | Barra inferior móvil de RRHH; recibe ítems con ícono, ruta opcional y estado activo |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
@@ -688,8 +689,9 @@ Reemplazan los `Header` y `ScreenHeader` del prototipo. Ambos reciben `title` y 
 ### AppLayout y navegación
 
 - Toda pantalla con sesión iniciada se envuelve en `AppLayout`, que incluye el sidebar del rol de la sesión y los breadcrumbs.
-- Para agregar una sección a la navegación de un rol, se agrega un ítem en [`app-navigation.ts`](app/javascript/components/app-navigation.ts), con `title`, `href` (helper de `@/routes`) e `icon` de lucide. No se arma una navegación propia por dashboard.
-- En móvil, el proveedor usa una barra inferior que toma los destinos disponibles de `app-navigation.ts`; el empleado mantiene su navegación móvil propia y el resto usa el sidebar como `Sheet`.
+- Para agregar una sección a la navegación de un rol, se agrega un ítem a `navItems[rol]` en [`app-sidebar.tsx`](app/javascript/components/app-sidebar.tsx), con `title`, `href` (helper de `@/routes`) e `icon` de lucide. No se arma una navegación propia por dashboard.
+- En móvil, el sidebar se abre como `Sheet`; eso ya lo resuelve `Sidebar`. El proveedor y RRHH usan su propia barra inferior (`ProviderMobileNav` y `MobileNav`).
+- La barra inferior móvil de RRHH usa `MobileNav` y comparte sus ítems y rutas con el sidebar mediante `useAdminPrimaryNavItems`; los ítems sin pantalla de destino conservan el aspecto interactivo y no navegan.
 
 ```tsx
 <AppLayout breadcrumbs={[{ title: "Platos", href: providerMenus.index().url }]}>

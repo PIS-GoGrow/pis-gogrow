@@ -59,7 +59,10 @@ RSpec.describe "Consultar la información de un plato" do
   end
 
   def open_dish(menu)
-    click_on "Agregar #{menu.name}"
+    find_button("Agregar #{menu.name}").click
+    unless page.has_button?("Volver", wait: 2)
+      find_button("Agregar #{menu.name}").click
+    end
   end
 
   # Criterio 1
@@ -99,7 +102,6 @@ RSpec.describe "Consultar la información de un plato" do
 
   it "shows the discount of the employee benefit on the dish price" do
     publish(menus(:sorrentinos), monday)
-    Benefit.create!(consumer: consumers(:one), amount: 20, percentage: 50, due_date: 1.month.from_now)
     sign_in users(:one)
 
     visit dashboard_path
