@@ -87,11 +87,11 @@ describe("CollectionPaymentHistory", () => {
     expect(rejectedLink).toHaveAttribute("href", "/provider/payments/2/receipt")
     expect(screen.getAllByRole("link")).toHaveLength(2)
 
-    const approvedEntry = approvedLink.closest("div.grid")!
+    const approvedEntry = approvedLink.closest<HTMLElement>("div.grid")!
     expect(within(approvedEntry).getByText("02/10/26")).toBeInTheDocument()
     expect(within(approvedEntry).getByText("Confirmado")).toBeInTheDocument()
 
-    const rejectedEntry = rejectedLink.closest("div.grid")!
+    const rejectedEntry = rejectedLink.closest<HTMLElement>("div.grid")!
     expect(within(rejectedEntry).getByText("30/09/26")).toBeInTheDocument()
     expect(within(rejectedEntry).getByText("Rechazado")).toBeInTheDocument()
   })
