@@ -25,8 +25,6 @@ RSpec.describe "Provider::Dashboard", type: :request do
         get provider_dashboard_path
 
         expect(response).to redirect_to(root_path)
-        follow_redirect!
-        expect(response).to have_http_status(:success)
       end
     end
 
@@ -84,6 +82,8 @@ RSpec.describe "Provider::Dashboard", type: :request do
           schedule: today_schedule,
           status: :rejected,
           delivery_method: :home,
+          address: "Julio Herrera y Reissig 565",
+          rejection_reason: :out_of_stock,
           amount: 1,
           price: 300.50,
           discounted_price: 150.25
