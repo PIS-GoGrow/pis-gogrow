@@ -8,7 +8,6 @@ import {
   LayoutGrid,
   Package,
   Percent,
-  Users,
   Utensils,
   Wallet,
 } from "lucide-react"
@@ -28,7 +27,6 @@ import {
 } from "@/components/ui/sidebar"
 import {
   adminBenefitConfigurations,
-  adminConsumers,
   adminInvoices,
   consumerAccounts,
   consumerDashboard,
@@ -82,11 +80,6 @@ export function AppSidebar() {
         title: t("nav.benefit_configurations"),
         href: adminBenefitConfigurations.index().url,
         icon: Percent,
-      },
-      {
-        title: t("pages.admin.consumers.index.title"),
-        href: adminConsumers.index().url,
-        icon: Users,
       },
       {
         title: t("nav.invoices"),

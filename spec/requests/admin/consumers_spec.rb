@@ -5,7 +5,7 @@ require "inertia_rails/rspec"
 
 RSpec.describe "Admin::Consumers", type: :request do
   fixtures :users, :admins, :consumers, :companies, :orders, :schedules, :menus, :providers,
-    :benefits, :accounts, :payments, :order_accounts
+    :benefits, :benefit_configurations, :benefit_rules, :accounts, :payments, :order_accounts
 
   # Un empleado de otra empresa: no tiene que aparecer nunca en la de este admin.
   let!(:outsider) do
@@ -59,8 +59,8 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         expect(inertia).to render_component("admin/consumers/show")
         expect(inertia.props[:consumer]).to include(name: "Test User", email: "one@example.com", company_name: "GoGrow")
-        expect(inertia.props[:summary]).to include(amount: 950.75, status: "pending", meals_limit: 0)
-        expect(inertia.props[:benefit_percentage]).to be_nil
+        expect(inertia.props[:summary]).to include(amount: 950.75, status: "pending", meals_limit: 20)
+        expect(inertia.props[:benefit_percentage]).to eq(50)
       end
 
       it "groups the consumption history by month with its providers and confirmed orders" do
@@ -77,7 +77,7 @@ RSpec.describe "Admin::Consumers", type: :request do
       end
 
       it "shows the active benefit percentage" do
-        get admin_consumer_path(consumers(:other))
+        get admin_consumer_path(consumers(:one))
 
         expect(inertia.props[:benefit_percentage]).to eq(50)
       end

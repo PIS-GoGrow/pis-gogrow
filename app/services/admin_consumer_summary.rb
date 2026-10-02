@@ -67,8 +67,8 @@ class AdminConsumerSummary
     {
       amount: self.class.amount_of(current),
       status: self.class.status_of(current),
-      meals_used: @consumer.subsidized_meals_used_this_month,
-      meals_limit: @consumer.benefit_available,
+      meals_used: @consumer.monthly_benefit_used_this_month,
+      meals_limit: @consumer.monthly_benefit_available,
       providers: meals_by_provider
     }
   end
@@ -87,15 +87,16 @@ class AdminConsumerSummary
                            .to_a
   end
 
-  # Mismo criterio que Consumer#subsidized_meals_used_this_month, abierto por proveedor.
+  # Mismo criterio que Consumer#monthly_benefit_used_this_month, abierto por proveedor.
   def meals_by_provider
-    @consumer.orders
-             .joins(schedule: { menu: { provider: :user } })
-             .where(schedules: { date: Date.current.all_month })
-             .where.not(status: [ :rejected, :cancelled ])
-             .group("users.name")
-             .sum(:amount)
-             .sort
-             .map { |name, meals| { name:, meals: } }
+    OrderBenefit
+      .joins(order: { schedule: { menu: { provider: :user } } })
+      .where(schedules: { date: Date.current.all_month })
+      .where.not(orders: { status: [ :rejected, :cancelled ] })
+      .where(benefit_id: @consumer.monthly_benefits)
+      .group("users.name")
+      .sum(:benefit_used)
+      .sort
+      .map { |name, meals| { name:, meals: } }
   end
 end
