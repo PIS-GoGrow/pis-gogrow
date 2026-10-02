@@ -31,7 +31,11 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_content("Proveedores: Todos")
 
     find("button[aria-label='Filtrar por proveedores']").click
-    within("[data-provider-filter-sheet]") do
+    unless page.has_selector?("[role=dialog]", wait: 2)
+      find("button[aria-label='Filtrar por proveedores']").click
+    end
+
+    within("[role=dialog]") do
       expect(page).to have_content("Filtrar por proveedores")
       find("label", text: "Provider User").click
       click_button "Aplicar"
@@ -39,6 +43,7 @@ RSpec.describe "Pedidos del consumidor" do
 
     expect(page).to have_content("Proveedores: Provider User")
   end
+
 
   it "permite cancelar un pedido desde la lista de órdenes" do
     visit orders_path
@@ -61,12 +66,12 @@ RSpec.describe "Pedidos del consumidor" do
 
     order_card = find("[data-slot=card]", text: "Milanesa con papas fritas", match: :first)
     within(order_card) do
-      click_link "Modificar pedido"
+      click_link "Editar"
     end
 
     expect(page).to have_current_path(/edit=1/)
     within("[role=dialog]") do
-      expect(page).to have_content("Modificar pedido")
+      expect(page).to have_content("Editar")
       fill_in "notes", with: "Sin cebolla por favor"
       click_button "Guardar cambios"
     end
@@ -81,7 +86,7 @@ RSpec.describe "Pedidos del consumidor" do
     visit order_path(order)
 
     # Modificar desde el detalle
-    click_button "Modificar pedido"
+    click_button "Editar"
     within("[role=dialog]") do
       fill_in "notes", with: "Con servilletas extras"
       click_button "Guardar cambios"
@@ -98,6 +103,21 @@ RSpec.describe "Pedidos del consumidor" do
 
     expect(page).to have_content("Pedido cancelado")
   end
+
+  it "muestra ambos botones deshabilitados sin los textos de advertencia cuando el pedido está confirmado para hoy" do
+    confirmed = orders(:upcoming_pending_today)
+    confirmed.update_columns(status: Order.statuses[:confirmed])
+
+    visit order_path(confirmed)
+
+    expect(page).to have_button("Cancelar", disabled: true)
+    expect(page).to have_button("Editar", disabled: true)
+    expect(page).not_to have_content("Ya está confirmado para hoy, así que no se puede cancelar.")
+    expect(page).not_to have_content("El proveedor ya confirmó este pedido, así que no se puede modificar.")
+  end
+
+
+
 
   it "muestra el motivo de rechazo en la vista de detalle de un pedido rechazado" do
     rejected = orders(:history_rejected_future)

@@ -79,26 +79,29 @@ export default function OrderCard({ order, section }: OrderCardProps) {
       {/* El ::after de la tarjeta cubre todo para hacerla clickeable, así que
           las acciones necesitan quedar por encima para poder tocarlas. */}
       {section === "upcoming" && (
-        <CardFooter
-          className={
-            "relative grid items-stretch gap-2" +
-            (order.cancellable && order.modifiable ? " grid-cols-2" : "")
-          }
-        >
+        <CardFooter className="relative grid grid-cols-2 items-start gap-2">
           {order.cancellable ? (
             <CancelOrderSheet order={order} />
           ) : (
-            <>
-              <Button type="button" variant="outline" size="sm" disabled>
+            <div className="flex flex-col gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled
+              >
                 <X aria-hidden="true" />
                 {t("pages.orders.index.cancel")}
               </Button>
-              <p className="text-muted-foreground text-xs">
-                {t(
-                  `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
-                )}
-              </p>
-            </>
+              {order.status !== "confirmed" && (
+                <p className="text-muted-foreground text-xs">
+                  {t(
+                    `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
+                  )}
+                </p>
+              )}
+            </div>
           )}
           {order.modifiable ? (
             <Button
@@ -116,7 +119,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               </Link>
             </Button>
           ) : (
-            <>
+            <div className="flex flex-col gap-1">
               <Button
                 type="button"
                 variant="outline"
@@ -127,12 +130,14 @@ export default function OrderCard({ order, section }: OrderCardProps) {
                 <Pencil aria-hidden="true" />
                 {t("pages.orders.show.edit")}
               </Button>
-              <p className="text-muted-foreground text-xs">
-                {t(
-                  `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
-                )}
-              </p>
-            </>
+              {order.status !== "confirmed" && (
+                <p className="text-muted-foreground text-xs">
+                  {t(
+                    `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+                  )}
+                </p>
+              )}
+            </div>
           )}
         </CardFooter>
       )}

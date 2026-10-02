@@ -312,7 +312,10 @@ class Order < ApplicationRecord
 
   # La dirección actual del pedido se mantiene como opción aunque no esté
   # guardada, para que modificar la cantidad no obligue a cambiarla.
+  # Si el proveedor no admite envíos a domicilio, sólo se ofrece la dirección de la oficina.
   def delivery_address_options(consumer)
+    return [ { id: "office", label: I18n.t("pages.orders.addresses.office"), address: consumer.company.address } ] unless provider&.home_delivery?
+
     options = consumer.delivery_address_options
     return options if address.blank? || options.pluck(:address).include?(address)
 

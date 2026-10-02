@@ -106,7 +106,7 @@ export default function EditOrderSheet({
             <RadioGroup
               value={data.address}
               onValueChange={(address) => setData("address", address)}
-              disabled={processing}
+              disabled={processing || addresses.length <= 1}
               className="gap-3"
             >
               {addresses.map((item) => (

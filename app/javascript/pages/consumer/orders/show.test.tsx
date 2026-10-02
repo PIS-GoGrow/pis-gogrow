@@ -136,7 +136,40 @@ describe("Consumer::Orders Show Page", () => {
     const dialog = screen.getByRole("dialog")
     expect(dialog).toBeInTheDocument()
     expect(
-      within(dialog).getByRole("heading", { name: "Modificar pedido" }),
+      within(dialog).getByRole("heading", { name: "Editar" }),
     ).toBeInTheDocument()
+  })
+
+  it("does not show block reason texts when order is confirmed and shows disabled buttons", () => {
+    const confirmedOrder: Order = {
+      ...baseOrder,
+      status: "confirmed",
+      cancellable: false,
+      cancellation_block_reason: "already_confirmed",
+      modifiable: false,
+      modification_block_reason: "already_confirmed",
+    }
+
+    render(
+      <Show
+        order={confirmedOrder}
+        delivery_addresses={deliveryAddresses}
+        max_quantity={5}
+        editing={false}
+      />,
+    )
+
+    expect(
+      screen.queryByText(
+        "Ya está confirmado para hoy, así que no se puede cancelar.",
+      ),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(
+        "El proveedor ya confirmó este pedido, así que no se puede modificar.",
+      ),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /Editar/i })).toBeDisabled()
   })
 })

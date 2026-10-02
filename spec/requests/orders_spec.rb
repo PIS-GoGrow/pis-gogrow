@@ -973,6 +973,17 @@ RSpec.describe "Orders", type: :request do
         expect(inertia).to have_flash(alert: I18n.t("validations.invalid_address"))
       end
 
+      it "refuses home delivery when the provider does not offer home delivery" do
+        order.provider.update!(home_delivery: false)
+
+        patch order_path(order), params: update_params(address: consumers(:one).address)
+
+        expect(order.reload.address).to eq("Julio Herrera y Reissig 565")
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.invalid_address"))
+      end
+
+
       it "switches to an address the employee saved in their profile" do
         consumers(:one).saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
 
