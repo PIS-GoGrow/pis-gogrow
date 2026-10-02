@@ -4,6 +4,7 @@ import {
   CalendarPlus,
   ClipboardList,
   CreditCard,
+  FileText,
   LayoutGrid,
   Package,
   Percent,
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/sidebar"
 import {
   adminBenefitConfigurations,
+  adminInvoices,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
@@ -78,6 +80,11 @@ export function AppSidebar() {
         title: t("nav.benefit_configurations"),
         href: adminBenefitConfigurations.index().url,
         icon: Percent,
+      },
+      {
+        title: t("nav.invoices"),
+        href: adminInvoices.index().url,
+        icon: FileText,
       },
     ],
     consumer: [
