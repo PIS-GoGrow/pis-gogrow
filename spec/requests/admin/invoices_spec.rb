@@ -14,6 +14,14 @@ RSpec.describe "Admin::Invoices", type: :request do
     )
   end
 
+  # Los ids son correlativos, así que sin filtrar por empresa alcanza con probar
+  # ids para bajarse las facturas de otra.
+  let(:other_company_invoice) do
+    other_company = Company.create!(name: "Otra", address: "Rivera 1234")
+    other_account = Account.create!(owner: other_company, provider: providers(:tuviandita), month: Date.current.beginning_of_month, amount: 100)
+    Invoice.create!(account: other_account, issued_on: Date.current, total_amount: 100, file: upload)
+  end
+
   def upload(name = "factura.png")
     Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png", original_filename: name)
   end
@@ -81,13 +89,9 @@ RSpec.describe "Admin::Invoices", type: :request do
       end
 
       it "leaves out the invoices of another company" do
-        other_company = Company.create!(name: "Otra", address: "Rivera 1234")
-        other_account = Account.create!(owner: other_company, provider: providers(:tuviandita), month: Date.current.beginning_of_month, amount: 100)
-        hidden = Invoice.create!(account: other_account, issued_on: Date.current, total_amount: 100, file: upload)
-
         get admin_invoices_path
 
-        expect(inertia.props[:invoices].pluck(:id)).not_to include(hidden.id)
+        expect(inertia.props[:invoices].pluck(:id)).not_to include(other_company_invoice.id)
       end
 
       it "renders the empty state with no invoices" do
@@ -128,6 +132,22 @@ RSpec.describe "Admin::Invoices", type: :request do
 
       expect(response.media_type).to eq("application/pdf")
       expect(response.headers["Content-Disposition"]).to start_with("inline")
+    end
+
+    it "does not serve the invoice of another company" do
+      sign_in users(:admin), role: :admin
+
+      get file_admin_invoice_path(other_company_invoice)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "does not let it be downloaded either" do
+      sign_in users(:admin), role: :admin
+
+      get file_admin_invoice_path(other_company_invoice, download: 1)
+
+      expect(response).to have_http_status(:not_found)
     end
 
     it "redirects a consumer to the home page" do
