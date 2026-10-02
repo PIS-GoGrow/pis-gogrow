@@ -32,5 +32,43 @@ RSpec.describe BenefitAssignationJob, type: :job do
 
       expect { described_class.perform_now }.not_to raise_error
     end
+
+    context "con un subsidio especial" do
+      include ActiveSupport::Testing::TimeHelpers
+
+      let(:special) do
+        BenefitConfiguration.create!(
+          company: companies(:gogrow), created_by: users(:admin), name: "Cumpleaños", subsidy_percentage: 20,
+          consumers: [ consumers(:one), consumers(:other) ]
+        ).tap { it.benefit_rules.create!(type: BirthdayBenefit.name, limit: 1, deadline_days: 3) }
+      end
+
+      it "asigna el beneficio solo a quien cumple la condición, dentro de su vigencia" do
+        travel_to Date.new(2026, 5, 11) do
+          special
+          described_class.perform_now
+        end
+
+        expect(special.benefits.sole).to have_attributes(consumer: consumers(:one), due_date: Date.new(2026, 5, 13), percentage: 20)
+      end
+
+      it "no asigna nada fuera de la vigencia" do
+        travel_to Date.new(2026, 5, 14) do
+          special
+          described_class.perform_now
+        end
+
+        expect(special.benefits).to be_empty
+      end
+
+      it "no asigna nada si el subsidio está desactivado" do
+        travel_to Date.new(2026, 5, 11) do
+          special.update!(deactivated_at: Time.current)
+          described_class.perform_now
+        end
+
+        expect(special.benefits).to be_empty
+      end
+    end
   end
 end
