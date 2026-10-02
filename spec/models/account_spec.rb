@@ -3,7 +3,18 @@
 require "rails_helper"
 
 RSpec.describe Account, type: :model do
-  fixtures :users
+  fixtures :accounts, :payments, :consumers, :companies, :users, :providers
+
+  describe ".pending" do
+    it "includes accounts with no payment, or none approved, and excludes settled ones" do
+      expect(Account.pending).to contain_exactly(
+        accounts(:gogrow_tuviandita_current),
+        accounts(:one_tuviandita_current),
+        accounts(:other_tuviandita_current),
+        accounts(:one_endulzate_current)
+      )
+    end
+  end
 
   let(:company) { Company.create!(name: "GoGrow", address: "18 de Julio 1006") }
   let(:consumer_user) { User.create!(email: "consumer-account-test@gmail.com", name: "Lucía", password: "password123456") }

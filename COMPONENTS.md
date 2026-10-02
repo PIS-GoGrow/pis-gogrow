@@ -137,6 +137,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `AlertError` | `@/components/alert-error` | `Alert` destructivo con una lista de errores |
 | `StatusBadge` | `@/components/status-badge` | Estado de un pedido o de un pago: `Badge variant="outline"` con `data-status` y color por estado |
 | `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail` y `badge` opcionales |
+| `MobileNav` | `@/components/mobile-nav` | Barra inferior móvil de RRHH; recibe ítems con ícono, ruta opcional y estado activo |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
@@ -170,10 +171,11 @@ Por ahora no queda ninguno pendiente.
 | `Tabs` | Pendiente de agregar | Instalado | El del repo |
 | `Switch`, `Progress` | Pendientes de agregar | No instalados | Los de shadcn, cuando se necesiten |
 | Encabezado de sección (`Header`, `ScreenHeader`) | Duplicado en cuatro pantallas | `Heading`, `HeadingSmall` | Los del repo |
-| Navegación lateral y barra inferior | Una por dashboard | `AppLayout` con sidebar por rol | `AppLayout` |
+| Navegación lateral y barra inferior | Una por dashboard | `AppLayout` con navegación por rol | `AppLayout` |
 | Mensaje temporal | `styles.toast` con `setTimeout` | Flash del servidor que muestra Sonner | Flash del servidor |
 | Colores de estado | Duplicados | `StatusBadge` | El del repo |
-| `Stat`, control de cantidad | Duplicados | No existen | [Propios a crear](#propios-a-crear) |
+| `Stat` | Duplicado | Instalado | El del repo |
+| Control de cantidad | Duplicado | No existe | [Propio a crear](#propios-a-crear) |
 | `GoogleMark` | `branding/google-mark` | Igual | El mismo |
 
 ## Detalle por componente
@@ -688,8 +690,8 @@ Reemplazan los `Header` y `ScreenHeader` del prototipo. Ambos reciben `title` y 
 
 - Toda pantalla con sesión iniciada se envuelve en `AppLayout`, que incluye el sidebar del rol de la sesión y los breadcrumbs.
 - Para agregar una sección a la navegación de un rol, se agrega un ítem a `navItems[rol]` en [`app-sidebar.tsx`](app/javascript/components/app-sidebar.tsx), con `title`, `href` (helper de `@/routes`) e `icon` de lucide. No se arma una navegación propia por dashboard.
-- En móvil, el sidebar se abre como `Sheet`; eso ya lo resuelve `Sidebar`.
-- La barra inferior del prototipo no existe acá. Si el equipo decide tenerla, se crea un único componente compartido que use los mismos `navItems`.
+- En móvil, el sidebar se abre como `Sheet`; eso ya lo resuelve `Sidebar`. El proveedor y RRHH usan su propia barra inferior (`ProviderMobileNav` y `MobileNav`).
+- La barra inferior móvil de RRHH usa `MobileNav` y comparte sus ítems y rutas con el sidebar mediante `useAdminPrimaryNavItems`; los ítems sin pantalla de destino conservan el aspecto interactivo y no navegan.
 
 ```tsx
 <AppLayout breadcrumbs={[{ title: "Platos", href: providerMenus.index().url }]}>
@@ -730,7 +732,6 @@ Relevamiento del 12/09/2026. Al migrar un patrón, borrar su fila.
 | Confirmación de borrado con el botón en `variant` por defecto y sin botón de cancelar | [`components/menus/delete-menu-dialog.tsx`](app/javascript/components/menus/delete-menu-dialog.tsx) | `variant="destructive"` y `DialogClose` con «Cancelar» |
 | Control segmentado armado con `<button>` a mano | [`components/appearance-tabs.tsx`](app/javascript/components/appearance-tabs.tsx) (plantilla) | `ToggleGroup` |
 | Aviso «Saved» con `Transition` de `@headlessui/react` | `pages/settings/profiles/show.tsx`, `passwords/show.tsx`, `emails/show.tsx` (plantilla) | Flash del servidor; al migrar los tres, evaluar quitar `@headlessui/react` |
-| `navItems` por rol definidos dos veces | [`components/app-sidebar.tsx`](app/javascript/components/app-sidebar.tsx) y [`components/app-header.tsx`](app/javascript/components/app-header.tsx) | Extraer una única lista compartida |
 | Dashboards con `PlaceholderPattern` | [`components/dashboard.tsx`](app/javascript/components/dashboard.tsx) | Reemplazar al construir cada dashboard |
 
 ## Checklist para revisiones y agentes de IA
