@@ -66,4 +66,4 @@ EXPOSE 3000 5173
 # juntos (mismo par de procesos que corre bin/dev localmente vía Procfile.dev).
 # bash, no sh: "wait -n" (frena el contenedor si cualquiera de los dos
 # procesos muere) es sintaxis de bash, dash no lo soporta.
-CMD ["bash", "-c", "rm -f tmp/pids/server.pid && bin/rails db:prepare && (bin/rails server -b 0.0.0.0 -p 3000 & npx vite --host 0.0.0.0 & wait -n)"]
+CMD ["bash", "bin/docker-dev-entrypoint"]

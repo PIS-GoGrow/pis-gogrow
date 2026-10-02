@@ -51,7 +51,11 @@
       "benefit_configurations": "Beneficio general",
       "change_to": "Cambiar a",
       "collections": "Cobros",
+      "consumer": {
+        "menu": "Menú del día"
+      },
       "dashboard": "Panel",
+      "invoices": "Facturas",
       "menu": "Menú de navegación",
       "orders": "Mis pedidos",
       "payments": "Pagos",
@@ -182,6 +186,25 @@
           "pending_value": "—",
           "this_month": "Este mes",
           "title": "Inicio"
+        },
+        "invoices": {
+          "index": {
+            "description": "Las facturas que los proveedores le emiten a GoGrow, con su historial.",
+            "download": "Descargar %{name}",
+            "empty_description": "Cuando un proveedor cargue la factura de un período, va a aparecer acá.",
+            "empty_title": "Todavía no hay facturas",
+            "file": "Archivo",
+            "issued_on": "Emisión",
+            "no_period_amount": "Sin consumo registrado",
+            "no_provider": "Proveedor no disponible",
+            "period": "Período",
+            "period_amount": "Consumo del período",
+            "provider": "Proveedor",
+            "status": "Estado",
+            "title": "Facturas de proveedores",
+            "total_amount": "Facturado",
+            "view": "Ver"
+          }
         }
       },
       "cart": {
@@ -454,15 +477,45 @@
       },
       "provider_dashboard": {
         "index": {
+          "coming_soon": "Próximamente",
           "description": "Administrá la recepción de pedidos de tus menús.",
           "eyebrow": "Operación diaria",
+          "greeting": "Hola, %{name} 👋",
+          "insights": {
+            "description": "Los hallazgos basados en las valoraciones estarán disponibles próximamente.",
+            "dishes": "Platos",
+            "generated": "Generado por IA",
+            "orders": "Pedidos",
+            "rating": "Valoración",
+            "title": "Hallazgos del mes"
+          },
           "order_deadline": {
             "description": "Definí hasta qué hora aceptás pedidos para hoy.",
             "help": "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos.",
             "label": "Hora límite",
             "title": "Recepción de pedidos"
           },
-          "title": "Panel del proveedor"
+          "orders": {
+            "confirmed": "Confirmados",
+            "deadline": "Recibiendo pedidos hasta %{time}",
+            "home": "Envío a domicilio",
+            "office": "Envío a oficina",
+            "pending": "Pendientes",
+            "title": "Pedidos",
+            "today": "Hoy",
+            "view": "Ver pedidos"
+          },
+          "payments": {
+            "description": "Los cobros pendientes aparecerán acá próximamente.",
+            "pending": "Cobros pendientes",
+            "title": "Resumen de cobros",
+            "total": "Deuda total"
+          },
+          "profile": {
+            "description": "La configuración de los pasos estará disponible próximamente.",
+            "title": "Completá tu cuenta"
+          },
+          "title": "Inicio"
         }
       },
       "provider_operational_settings": {
