@@ -348,7 +348,7 @@
           },
           "cannot_cancel": {
             "already_closed": "Este pedido ya está cerrado.",
-            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar desde la app.",
+            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
           },
           "history_address": "Recibiste en: %{address} (%{delivery_method})",
@@ -362,7 +362,7 @@
           "no_provider": "Proveedor no disponible",
           "quantity": "x%{count}",
           "title": "Mis pedidos",
-          "upcoming_address": "Recibes en: %{address} (%{delivery_method})",
+          "upcoming_address": "Lo recibís en: %{address} (%{delivery_method})",
           "upcoming_empty_description": "No tienes viandas en camino.",
           "upcoming_empty_title": "No tienes pedidos próximos",
           "upcoming_tab": "Próximos"
@@ -378,7 +378,7 @@
           },
           "date": "Fecha de entrega",
           "delivery_method": "Modalidad de entrega",
-          "edit": "Modificar pedido",
+          "edit": "Editar",
           "edit_dialog": {
             "address": "Dirección de entrega",
             "back": "Volver",
@@ -388,11 +388,12 @@
             "notes_placeholder": "Sin salsa, sin cebolla…",
             "quantity": "Cantidad",
             "remaining": "Quedan %{count} disponibles para esta fecha",
-            "title": "Modificar pedido"
+            "title": "Editar"
           },
           "no_notes": "Sin notas",
           "notes": "Notas",
           "quantity": "Cantidad",
+          "rejection_reason": "Motivo de rechazo",
           "subsidy": "Subsidio aplicado",
           "title": "Detalle del pedido",
           "total": "Importe final"
