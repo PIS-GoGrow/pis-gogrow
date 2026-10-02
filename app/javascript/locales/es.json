@@ -148,6 +148,68 @@
               "title": "Subsidio Base"
             },
             "description": "Gestioná los subsidios de tu compañía",
+            "special": {
+              "add": "Agregar",
+              "applies_to": "Aplicado a",
+              "applies_to_all": "Todos",
+              "applies_to_selection": "Selección",
+              "condition": "Condición",
+              "conditions": {
+                "birthday": "Cumpleaños",
+                "gift": "Premio",
+                "onboarding": "Onboarding",
+                "seniority": "Antigüedad"
+              },
+              "delete": "Eliminar «%{name}»",
+              "delete_dialog": {
+                "cancel": "Cancelar",
+                "confirm": "Eliminar",
+                "description": "Los empleados dejan de recibir este subsidio desde hoy. Los pedidos que ya lo usaron no cambian.",
+                "title": "¿Eliminar «%{name}»?"
+              },
+              "description": "Los subsidios especiales se suman al Base.",
+              "discount": "Descuento",
+              "edit": "Editar «%{name}»",
+              "empty": {
+                "description": "Celebrá fechas especiales o reconocé la antigüedad de tus empleados con subsidios especiales.",
+                "title": "No hay subsidios especiales"
+              },
+              "form": {
+                "add": "Agregar",
+                "add_title": "Agregar subsidio especial",
+                "all_employees": "Todos los empleados",
+                "applies_to": "Aplicar a:",
+                "birthday_help": "Comienza automáticamente en la fecha de cumpleaños.",
+                "cancel": "Cancelar",
+                "condition": "Si se cumplen las condiciones:",
+                "condition_placeholder": "Seleccionar condición",
+                "description": "Los subsidios especiales se suman al Base.",
+                "edit_title": "Modificar subsidio especial",
+                "effective_from": "Disponible desde",
+                "limit_prefix": "Cantidad de",
+                "limit_suffix": "vianda(s)",
+                "min_years_prefix": "Es mayor a",
+                "min_years_suffix": "año(s)",
+                "name": "Nombre del subsidio",
+                "name_placeholder": "Ej. Antigüedad, Cumpleaños",
+                "no_employees_found": "No encontramos empleados con ese nombre.",
+                "onboarding_help": "Comienza automáticamente en el primer día en la empresa.",
+                "remove_employee": "Quitar a %{name}",
+                "search_employee": "Buscar empleado…",
+                "select_employees": "Seleccionar empleados",
+                "selected_employees": "Empleados seleccionados",
+                "subsidy_percentage": "% de descuento",
+                "update": "Modificar",
+                "validity": "Validez",
+                "validity_unit": "Unidad de validez",
+                "validity_units": {
+                  "days": "días",
+                  "months": "meses",
+                  "weeks": "semanas"
+                }
+              },
+              "title": "Subsidios especiales"
+            },
             "title": "Subsidios"
           }
         },
