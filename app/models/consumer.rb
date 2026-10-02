@@ -87,9 +87,6 @@ class Consumer < ApplicationRecord
     end
   end
 
-  # TODO: Cómo obtenemos el cumpleaños/onboarding del empleado?
-  attr_accessor :bithday, :onboarding_date
-
   # La oficina va primero y después la última dirección particular a la que se
   # pidió, que es la que el carrito muestra junto a la oficina.
   def delivery_address_options
@@ -114,12 +111,14 @@ end
 #
 # Table name: consumers
 #
-#  id         :bigint           not null, primary key
-#  address    :string
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  company_id :bigint           not null
-#  user_id    :bigint           not null
+#  id              :bigint           not null, primary key
+#  address         :string
+#  birthday        :date
+#  onboarding_date :date
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  company_id      :bigint           not null
+#  user_id         :bigint           not null
 #
 # Indexes
 #

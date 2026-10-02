@@ -136,7 +136,9 @@ consumer_user = User.create!(
 consumer = Consumer.create!(
   company:,
   address: "Julio Herrera y Reissig 565",
-  user: consumer_user
+  user: consumer_user,
+  birthday: Date.new(1994, 7, 14),
+  onboarding_date: Date.new(2023, 3, 1)
 )
 
 admin_user = User.create!(
