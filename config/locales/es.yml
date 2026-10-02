@@ -58,6 +58,7 @@ es:
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
     order_deadline_updated: "La hora límite de pedidos fue actualizada."
     payment_receipt_submitted: "Comprobante enviado para su validacion."
+    payment_receipt_removed: "Comprobante eliminado."
     payment_approved: "Comprobante aprobado."
     payment_rejected: "Comprobante rechazado."
     invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
@@ -79,6 +80,7 @@ es:
     password_challenge_invalid: "La verificación de contraseña no es válida"
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
+    payment_not_removable: "Solo podés eliminar comprobantes en revisión o rechazados."
 
     payment_not_reviewable: "Este comprobante ya fue revisado."
     invoice_not_removable: "Esta factura ya fue revisada y no se puede eliminar."
@@ -184,6 +186,8 @@ es:
       appearance: "Apariencia"
     payments: "Pagos"
     collections: "Cobros"
+    consumer:
+      menu: "Menú del día"
   components:
     appearance:
       toggle_theme: "Cambiar tema"
@@ -266,6 +270,52 @@ es:
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
               unexpected: "Error inesperado. Por favor reintentá la operación."
+      consumers:
+        index:
+          title: "Empleados"
+          count_one: "%{count} empleado"
+          count_other: "%{count} empleados"
+          filter_label: "Filtrar empleados"
+          all: "Todos"
+          pending: "Pendientes"
+          completed: "Completados"
+          search_placeholder: "Buscar empleado..."
+          search_label: "Buscar empleado por nombre o correo"
+          no_consumption: "Sin consumos"
+          empty_title: "Sin empleados"
+          empty_description: "Todavía no hay empleados en la organización."
+          no_results_title: "No se encontraron empleados"
+          no_results_description: "Probá con otro nombre o correo, o cambiá el filtro."
+        show:
+          title: "Detalle del empleado"
+          back: "Volver a empleados"
+          consumption: "Consumo"
+          this_month: "Este mes"
+          meals_used: "%{used} de %{limit} viandas consumidas"
+          meals_used_no_limit_one: "%{count} vianda consumida"
+          meals_used_no_limit_other: "%{count} viandas consumidas"
+          meals_one: "%{count} vianda"
+          meals_other: "%{count} viandas"
+          benefit: "Beneficio"
+          benefit_active: "Activo"
+          benefit_inactive: "Sin beneficio"
+          benefit_discount: "de descuento en viandas"
+          benefit_none: "Este empleado no tiene un beneficio vigente."
+          history: "Historial de consumo"
+          year_label: "Año"
+          view_month: "Ver el detalle de %{month}"
+          history_empty_title: "Sin consumos"
+          history_empty_description: "Este empleado todavía no realizó ningún pedido de viandas."
+          month_detail: "Historial de consumo: %{month}"
+          month_detail_description: "Pedidos confirmados del mes, con lo que cubre la empresa y lo que paga el empleado."
+          date: "Fecha"
+          provider: "Proveedor"
+          quantity: "Cant."
+          employee: "Empleado"
+          no_provider: "Sin proveedor"
+          orders_empty: "No hay pedidos confirmados en este mes."
+          total: "Total: %{amount}"
+          close: "Cerrar"       
     errors:
       internal_server_error:
         title: "Algo salió mal"
@@ -304,6 +354,14 @@ es:
         receipt_file: "Seleccionar archivo"
         receipt_formats: "PDF, JPG o PNG. Tamaño máximo: 10 MB."
         receipt_uploading: "Subiendo comprobante..."
+        receipt_success_title: "Comprobante enviado"
+        receipt_success_description: "Tu comprobante fue enviado correctamente y está pendiente de revisión."
+        receipt_success_action: "Listo"
+        receipt_error_title: "No se pudo subir el comprobante"
+        receipt_error_description: "Ocurrió un problema al subir el archivo. Intentá nuevamente."
+        receipt_error_action: "Entendido"
+        receipt_sent_at: "Enviado: %{date}"
+        receipt_remove: "Eliminar comprobante"
         receipt_approved: "Pago aprobado"
         receipt_unavailable: "Comprobante no disponible"
         receipt_preview: "Vista previa del comprobante"
@@ -391,7 +449,7 @@ es:
     provider_collections:
       statuses:
         pending: "Pendiente"
-        submitted: "Por revisar"
+        submitted: "En revisión"
         approved: "Confirmado"
         rejected: "Rechazado"
       meals_one: "%{count} vianda"
@@ -545,6 +603,42 @@ es:
         no_notes: "Sin notas"
         no_stock: "Sin cupo publicado"
         no_price: "Importe no disponible"
+    provider_dashboard:
+      index:
+        title: "Inicio"
+        greeting: "Hola, %{name} 👋"
+        coming_soon: "Próximamente"
+        eyebrow: "Operación diaria"
+        description: "Administrá la recepción de pedidos de tus menús."
+        order_deadline:
+          title: "Recepción de pedidos"
+          description: "Definí hasta qué hora aceptás pedidos para hoy."
+          label: "Hora límite"
+          help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
+        profile:
+          title: "Completá tu cuenta"
+          description: "La configuración de los pasos estará disponible próximamente."
+        orders:
+          title: "Pedidos"
+          today: "Hoy"
+          confirmed: "Confirmados"
+          pending: "Pendientes"
+          office: "Envío a oficina"
+          home: "Envío a domicilio"
+          view: "Ver pedidos"
+          deadline: "Recibiendo pedidos hasta %{time}"
+        insights:
+          title: "Hallazgos del mes"
+          orders: "Pedidos"
+          dishes: "Platos"
+          rating: "Valoración"
+          description: "Los hallazgos basados en las valoraciones estarán disponibles próximamente."
+          generated: "Generado por IA"
+        payments:
+          title: "Resumen de cobros"
+          pending: "Cobros pendientes"
+          total: "Deuda total"
+          description: "Los cobros pendientes aparecerán acá próximamente."
     schedules:
       index:
         availability:
@@ -588,16 +682,6 @@ es:
       title: "Panel"
       roles:
         provider: "Panel del proveedor"
-    provider_dashboard:
-      index:
-        eyebrow: "Operación diaria"
-        title: "Panel del proveedor"
-        description: "Administrá la recepción de pedidos de tus menús."
-        order_deadline:
-          title: "Recepción de pedidos"
-          description: "Definí hasta qué hora aceptás pedidos para hoy."
-          label: "Hora límite"
-          help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
     provider_accounts:
       show:
         title: "Cuenta"

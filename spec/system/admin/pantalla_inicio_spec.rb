@@ -43,9 +43,10 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
     within(sidebar) do
       expect(page).to have_css("[data-active='true']", text: "Inicio")
       expect(page).to have_link("Beneficio general")
+      expect(page).to have_link("Empleados")
       expect(page).to have_link("Cuenta")
 
-      %w[Empleados Pagos].each do |pending|
+      %w[Pagos].each do |pending|
         expect(page).to have_no_link(pending)
         expect(page).to have_css("[aria-disabled='true'][title='Próximamente']", text: pending)
       end
