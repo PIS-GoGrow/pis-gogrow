@@ -40,6 +40,9 @@ describe("Provider Dashboard Page", () => {
     month_orders_count: 42,
     month_dishes_count: 8,
     average_rating: 4.8,
+    provider: {
+      order_deadline: "11:30",
+    },
   }
 
   it("saluda al proveedor por su nombre y muestra la fecha del día", () => {
@@ -80,7 +83,7 @@ describe("Provider Dashboard Page", () => {
   })
 
   it("muestra 'Próximamente' en la hora límite cuando no está configurada", () => {
-    render(<ProviderDashboard {...defaultProps} order_deadline={null} />)
+    render(<ProviderDashboard {...defaultProps} order_deadline={undefined} />)
 
     expect(screen.getByText("Próximamente")).toBeInTheDocument()
   })
@@ -95,7 +98,7 @@ describe("Provider Dashboard Page", () => {
   })
 
   it("muestra un guión cuando el proveedor aún no tiene valoraciones", () => {
-    render(<ProviderDashboard {...defaultProps} average_rating={null} />)
+    render(<ProviderDashboard {...defaultProps} average_rating={undefined} />)
 
     expect(screen.getByText("—")).toBeInTheDocument()
   })
