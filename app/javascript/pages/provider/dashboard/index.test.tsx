@@ -13,13 +13,9 @@ vi.mock("@inertiajs/react", async () => {
       url: "/provider/dashboard",
       props: { auth: { user: { name: "Doña Petrona" } } },
     }),
-    Link: ({
-      children,
-      href,
-    }: {
-      children: React.ReactNode
-      href: string
-    }) => <a href={href}>{children}</a>,
+    Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
+      <a href={href}>{children}</a>
+    ),
   }
 })
 
