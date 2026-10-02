@@ -9,6 +9,7 @@ interface PageContainerProps {
   actions?: ReactNode
   back?: ReactNode
   titleVariant?: "default" | "prominent"
+  compactHeading?: boolean
   children: ReactNode
 }
 
@@ -19,6 +20,7 @@ export default function PageContainer({
   actions,
   back,
   titleVariant,
+  compactHeading,
   children,
 }: PageContainerProps) {
   return (
@@ -30,6 +32,7 @@ export default function PageContainer({
         actions={actions}
         back={back}
         titleVariant={titleVariant}
+        compact={compactHeading}
       />
       <div className="flex flex-col gap-4">{children}</div>
     </div>
