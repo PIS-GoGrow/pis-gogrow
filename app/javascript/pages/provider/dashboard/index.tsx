@@ -34,6 +34,7 @@ export default function ProviderDashboard({
   office_orders_count,
   home_orders_count,
   order_deadline,
+  order_deadline_passed_today,
   month_orders_count,
   month_dishes_count,
   average_rating,
@@ -144,11 +145,17 @@ export default function ProviderDashboard({
                   aria-hidden="true"
                 />
                 <span className="flex-1">
-                  {order_deadline
-                    ? t("pages.provider_dashboard.index.orders.deadline", {
-                        time: order_deadline,
-                      })
-                    : t("pages.provider_dashboard.index.coming_soon")}
+                  {!order_deadline
+                    ? t(
+                        "pages.provider_dashboard.index.orders.deadline_all_day",
+                      )
+                    : order_deadline_passed_today
+                      ? t(
+                          "pages.provider_dashboard.index.orders.deadline_closed",
+                        )
+                      : t("pages.provider_dashboard.index.orders.deadline", {
+                          time: order_deadline,
+                        })}
                 </span>
                 <ChevronRight
                   className="text-foreground size-4 transition-transform group-hover:translate-x-0.5"
