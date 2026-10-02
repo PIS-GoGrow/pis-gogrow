@@ -47,7 +47,7 @@ export function AppSidebar() {
   const navItems: Record<string, NavItem[]> = {
     provider: [
       {
-        title: t("nav.dashboard"),
+        title: t("nav.provider.home"),
         href: providerDashboard.index().url,
         icon: LayoutGrid,
       },
