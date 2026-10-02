@@ -337,4 +337,153 @@ RSpec.describe "Payments", type: :request do
       errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.invalid_content_type") ] }
     )
   end
+
+  it "allows uploading multiple receipts for the same account and serializes them in accounts view" do
+    user, account, provider = setup_payment_account
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "receipt_1.png") }
+      }, headers: account_page_headers
+    }.to change(Payment, :count).by(1)
+    expect(response).to redirect_to(accounts_path)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "receipt_2.png") }
+      }, headers: account_page_headers
+    }.to change(Payment, :count).by(1)
+    expect(response).to redirect_to(accounts_path)
+
+    expect(account.reload.payments.count).to eq(2)
+    expect(account.payments.map(&:status)).to contain_exactly("submitted", "submitted")
+    expect(account.payments.map { |p| p.receipt.filename.to_s }).to contain_exactly("receipt_1.png", "receipt_2.png")
+
+    get accounts_path
+    expect(response).to have_http_status(:ok)
+    expect(inertia).to have_props { |props|
+      accounts = props.deep_symbolize_keys[:accounts]
+      target_account = accounts.find { |a| a[:id] == account.id }
+      payments = target_account[:payments]
+      payments.size == 2 &&
+        payments.all? { |p| p[:status] == "submitted" && p[:receipt_url].present? && p[:receipt_filename].present? && p[:receipt_uploaded_at].present? }
+    }
+  end
+
+  it "deletes only the targeted receipt when an account has multiple receipts and preserves the others" do
+    user, account, provider = setup_payment_account
+    payment1 = submitted_payment(account:, provider:)
+    payment2 = account.payments.build(provider:, status: :rejected, rejection_reason: "Foto ilegible")
+    payment2.receipt.attach(io: StringIO.new("receipt 2"), filename: "receipt_2.png", content_type: "image/png")
+    payment2.save!
+
+    sign_in(user, role: :consumer)
+    expect(account.reload.payments.count).to eq(2)
+
+    expect {
+      delete payment_path(payment1), headers: account_page_headers
+    }.to change(Payment, :count).by(-1)
+
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_flash(notice: I18n.t("flash.payment_receipt_removed"))
+
+    expect(Payment.exists?(payment1.id)).to be(false)
+    expect(Payment.exists?(payment2.id)).to be(true)
+    expect(payment2.reload.receipt).to be_attached
+    expect(account.reload.payments).to contain_exactly(payment2)
+  end
+
+  it "does not allow an admin to create a payment" do
+    _user, account, = setup_payment_account
+    admin_user = User.create!(email: "admin-payment@gmail.com", name: "Admin", password: "password123456")
+    Admin.create!(user: admin_user, company: account.owner.company)
+
+    sign_in(admin_user, role: :admin)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(root_path)
+  end
+
+  it "does not allow an admin to remove a consumer's receipt" do
+    _user, account, provider = setup_payment_account
+    payment = submitted_payment(account:, provider:)
+    admin_user = User.create!(email: "admin-removal@gmail.com", name: "Admin", password: "password123456")
+    Admin.create!(user: admin_user, company: account.owner.company)
+
+    sign_in(admin_user, role: :admin)
+
+    expect {
+      delete payment_path(payment), headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(root_path)
+  end
+
+  it "does not allow a provider to create a payment" do
+    _user, account, provider = setup_payment_account
+    sign_in(provider.user, role: :provider)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(root_path)
+  end
+
+  it "redirects with validation error when receipt parameter is missing" do
+    user, account, = setup_payment_account
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.required") ] }
+    )
+  end
+
+  it "returns bad request when payment parameter hash is missing" do
+    user, = setup_payment_account
+    sign_in(user, role: :consumer)
+
+    post payments_path, params: {}, headers: account_page_headers
+    expect(response).to have_http_status(:bad_request)
+  end
+
+  it "returns not found when deleting a non-existent payment" do
+    user, = setup_payment_account
+    sign_in(user, role: :consumer)
+
+    delete payment_path(id: 999_999), headers: account_page_headers
+    expect(response).to have_http_status(:not_found)
+  end
+
+  it "does not remove a receipt that is in pending status" do
+    user, account, provider = setup_payment_account
+    payment = account.payments.create!(provider:, status: :pending)
+    sign_in(user, role: :consumer)
+
+    expect {
+      delete payment_path(payment), headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_flash(alert: I18n.t("validations.payment_not_removable"))
+    expect(Payment.exists?(payment.id)).to be(true)
+  end
 end
