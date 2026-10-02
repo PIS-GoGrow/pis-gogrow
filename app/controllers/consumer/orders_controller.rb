@@ -16,8 +16,7 @@ class Consumer::OrdersController < Consumer::InertiaController
 
   def show
     consumer = Current.user.consumer
-    # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
-    # tiene que ser un 404, no una página ajena.
+
     @order = consumer.orders.preload(schedule: { menu: { provider: :user } }).find(params[:id])
     @delivery_addresses = @order.delivery_address_options consumer
     @max_quantity = @order.max_quantity

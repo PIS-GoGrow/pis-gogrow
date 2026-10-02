@@ -83,6 +83,17 @@ export default function Show({
 
           <CardContent>
             <dl className="divide-border divide-y">
+              {order.rejection_reason && (
+                <Row label={t("pages.orders.show.rejection_reason")}>
+                  {order.rejection_reason === "other"
+                    ? order.rejection_details
+                    : t(
+                        "pages.provider_orders.rejection_reasons." +
+                          order.rejection_reason,
+                      )}
+                </Row>
+              )}
+
               <Row label={t("pages.orders.show.quantity")}>
                 {order.amount ?? 0}
               </Row>

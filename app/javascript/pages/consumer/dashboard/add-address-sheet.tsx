@@ -3,11 +3,6 @@ import { Plus } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   AdaptableDialog,
   AdaptableDialogContent,
@@ -15,6 +10,11 @@ import {
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
 import { consumerDeliveryAddresses } from "@/routes"
 

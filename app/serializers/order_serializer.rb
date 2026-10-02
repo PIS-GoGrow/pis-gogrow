@@ -3,7 +3,7 @@
 class OrderSerializer < ApplicationSerializer
   typelize_from Order
 
-  attributes :id, :status, :delivery_method, :amount, :notes, :address
+  attributes :id, :status, :delivery_method, :amount, :notes, :address, :rejection_details
 
   typelize :string?
   attribute :date do |order|
@@ -56,6 +56,11 @@ class OrderSerializer < ApplicationSerializer
   typelize :string?
   attribute :modification_block_reason do |order|
     order.modification_block_reason
+  end
+
+  typelize :string?
+  attribute :rejection_reason do |order|
+    order.rejection_reason
   end
 end
 

@@ -4,6 +4,12 @@ import { useState } from "react"
 import type { JSX } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogClose,
+  AdaptableDialogContent,
+  AdaptableDialogFooter,
+} from "@/components/adaptable-dialog"
 import AccountCard from "@/components/consumer/accounts/account-card"
 import OrdersTable from "@/components/consumer/accounts/orders-table"
 import PaymentHistoryCard from "@/components/consumer/accounts/payment-history-card"
@@ -17,12 +23,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  AdaptableDialog,
-  AdaptableDialogClose,
-  AdaptableDialogContent,
-  AdaptableDialogFooter,
-} from "@/components/adaptable-dialog"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"

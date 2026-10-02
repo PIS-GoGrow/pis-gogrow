@@ -278,6 +278,7 @@
           "no_notes": "Sin notas",
           "notes": "Notas",
           "quantity": "Cantidad",
+          "rejection_reason": "Motivo de rechazo",
           "subsidy": "Subsidio aplicado",
           "title": "Detalle del pedido",
           "total": "Importe final"

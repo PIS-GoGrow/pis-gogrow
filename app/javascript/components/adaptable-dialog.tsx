@@ -1,7 +1,5 @@
 import * as React from "react"
 
-import { useIsMobile } from "@/hooks/use-mobile"
-import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogClose,
@@ -22,6 +20,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { cn } from "@/lib/utils"
 
 /**
  * Cómo se comporta el componente en desktop.
@@ -37,7 +37,9 @@ const AdaptableDialogContext = React.createContext<Mode | null>(null)
 function useMode(): Mode {
   const mode = React.useContext(AdaptableDialogContext)
   if (!mode) {
-    throw new Error("Los componentes AdaptableDialog* deben usarse dentro de <AdaptableDialog>")
+    throw new Error(
+      "Los componentes AdaptableDialog* deben usarse dentro de <AdaptableDialog>",
+    )
   }
   return mode
 }
@@ -59,7 +61,6 @@ type AdaptableDialogProps = Omit<
   /** Valor inicial cuando el estado es interno. Por defecto: false. */
   defaultOpen?: boolean
 }
-
 
 // Define un Dialog que se adapta al tamaño de pantalla automáticamente. Cuando
 // Se ve desde mobile, se comporta como un Sheet inferior. En desktop se puede
@@ -84,7 +85,7 @@ function AdaptableDialog({
       if (!isControlled) setInternalOpen(next)
       setOpen?.(next)
     },
-    [isControlled, setOpen]
+    [isControlled, setOpen],
   )
 
   const mode: Mode = isMobile
@@ -107,16 +108,14 @@ function AdaptableDialog({
 /* -------------------------------------------------------------------------- */
 
 function AdaptableDialogTrigger(
-  props: React.ComponentProps<typeof DialogTrigger>
+  props: React.ComponentProps<typeof DialogTrigger>,
 ) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogTrigger : SheetTrigger
   return <Comp {...props} />
 }
 
-function AdaptableDialogClose(
-  props: React.ComponentProps<typeof DialogClose>
-) {
+function AdaptableDialogClose(props: React.ComponentProps<typeof DialogClose>) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogClose : SheetClose
   return <Comp {...props} />
@@ -159,7 +158,7 @@ function AdaptableDialogContent({
 /* -------------------------------------------------------------------------- */
 
 function AdaptableDialogHeader(
-  props: React.ComponentProps<typeof DialogHeader>
+  props: React.ComponentProps<typeof DialogHeader>,
 ) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogHeader : SheetHeader
@@ -167,23 +166,21 @@ function AdaptableDialogHeader(
 }
 
 function AdaptableDialogFooter(
-  props: React.ComponentProps<typeof DialogFooter>
+  props: React.ComponentProps<typeof DialogFooter>,
 ) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogFooter : SheetFooter
   return <Comp {...props} />
 }
 
-function AdaptableDialogTitle(
-  props: React.ComponentProps<typeof DialogTitle>
-) {
+function AdaptableDialogTitle(props: React.ComponentProps<typeof DialogTitle>) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogTitle : SheetTitle
   return <Comp {...props} />
 }
 
 function AdaptableDialogDescription(
-  props: React.ComponentProps<typeof DialogDescription>
+  props: React.ComponentProps<typeof DialogDescription>,
 ) {
   const mode = useMode()
   const Comp = mode === "dialog" ? DialogDescription : SheetDescription

@@ -2,8 +2,6 @@ import { MapPin } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Button } from "@/components/ui/button"
-import { RadioGroup } from "@/components/ui/radio-group"
 import {
   AdaptableDialog,
   AdaptableDialogContent,
@@ -11,6 +9,8 @@ import {
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
+import { Button } from "@/components/ui/button"
+import { RadioGroup } from "@/components/ui/radio-group"
 
 import { AddressOption } from "./address-option"
 import type { DeliveryAddressOption } from "./consumer-types"
