@@ -21,6 +21,7 @@ RSpec.describe "Pantalla de inicio del proveedor", type: :system do
 
   describe "vista de escritorio" do
     before do
+      page.current_window.resize_to(1400, 1400)
       sign_in provider_user, role: :provider
       visit provider_dashboard_path
     end
@@ -65,9 +66,13 @@ RSpec.describe "Pantalla de inicio del proveedor", type: :system do
 
   describe "vista móvil" do
     before do
-      sign_in provider_user, role: :provider
       page.current_window.resize_to(375, 667)
+      sign_in provider_user, role: :provider
       visit provider_dashboard_path
+    end
+
+    after do
+      page.current_window.resize_to(1400, 1400)
     end
 
     it "muestra la barra de navegación inferior con accesos disponibles" do
