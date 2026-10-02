@@ -93,9 +93,7 @@ describe("Consumer::Orders Show Page", () => {
     )
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
-    expect(
-      screen.getByText("Sin stock disponible"),
-    ).toBeInTheDocument()
+    expect(screen.getByText("Sin stock disponible")).toBeInTheDocument()
   })
 
   it("displays custom rejection details when reason is 'other'", () => {

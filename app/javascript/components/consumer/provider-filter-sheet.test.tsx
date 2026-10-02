@@ -62,7 +62,9 @@ describe("ProviderFilterSheet", () => {
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
     expect(onApply).toHaveBeenCalledWith(new Set(["TuViandita"]))
-    expect(screen.queryByText("Filtrar por proveedores")).not.toBeInTheDocument()
+    expect(
+      screen.queryByText("Filtrar por proveedores"),
+    ).not.toBeInTheDocument()
   })
 
   it("resets filter when clicking 'Todos' and applying", async () => {

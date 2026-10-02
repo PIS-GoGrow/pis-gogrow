@@ -68,7 +68,9 @@ describe("AdaptableDialog", () => {
     const user = userEvent.setup()
     render(<TestDialog />)
 
-    expect(screen.getByRole("button", { name: "Abrir diálogo" })).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Abrir diálogo" }),
+    ).toBeInTheDocument()
     expect(screen.queryByText("Título del diálogo")).not.toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: "Abrir diálogo" }))
@@ -121,7 +123,9 @@ describe("AdaptableDialog", () => {
     // Suppress React error boundary console log for this test
     const consoleSpy = vi.spyOn(console, "error").mockReturnValue()
 
-    expect(() => render(<AdaptableDialogTitle>Inválido</AdaptableDialogTitle>)).toThrow(
+    expect(() =>
+      render(<AdaptableDialogTitle>Inválido</AdaptableDialogTitle>),
+    ).toThrow(
       "Los componentes AdaptableDialog* deben usarse dentro de <AdaptableDialog>",
     )
 
