@@ -41,6 +41,13 @@
       }
     },
     "nav": {
+      "admin": {
+        "account": "Cuenta",
+        "employees": "Empleados",
+        "home": "Inicio",
+        "mobile_navigation": "Navegación de RRHH",
+        "payments": "Pagos"
+      },
       "benefit_configurations": "Beneficio general",
       "change_to": "Cambiar a",
       "collections": "Cobros",
@@ -140,6 +147,33 @@
             "description": "Gestioná los subsidios de tu compañía",
             "title": "Subsidios"
           }
+        },
+        "dashboard": {
+          "alert": {
+            "pending": "Los avisos por WhatsApp estarán disponibles próximamente.",
+            "title": "Avisos de pagos pendientes"
+          },
+          "coming_soon": "Próximamente",
+          "consumption": {
+            "participation": "Participación",
+            "spending": "Gasto",
+            "title": "Tu consumo",
+            "view_detail": "Ver detalle del consumo"
+          },
+          "debts": {
+            "pending": "Acá verás hasta tres empleados con saldos pendientes.",
+            "title": "Ranking deuda de empleados",
+            "view": "Ver empleados con saldos pendientes"
+          },
+          "greeting": "Hola, %{name} 👋",
+          "payments": {
+            "pending": "El estado de los pagos a proveedores estará disponible próximamente.",
+            "title": "Tus pagos de %{month}",
+            "view": "Ver pagos a proveedores"
+          },
+          "pending_value": "—",
+          "this_month": "Este mes",
+          "title": "Inicio"
         }
       },
       "cart": {

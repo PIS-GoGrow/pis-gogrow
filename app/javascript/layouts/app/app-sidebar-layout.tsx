@@ -11,8 +11,10 @@ import type { BreadcrumbItem } from "@/types"
 export default function AppSidebarLayout({
   children,
   breadcrumbs = [],
+  hideMobileHeader = false,
 }: PropsWithChildren<{
   breadcrumbs?: BreadcrumbItem[]
+  hideMobileHeader?: boolean
 }>) {
   const { auth } = usePage().props
   const isProvider = auth.session.role === "provider"
@@ -28,7 +30,10 @@ export default function AppSidebarLayout({
             : "overflow-x-hidden"
         }
       >
-        <AppSidebarHeader breadcrumbs={breadcrumbs} />
+        <AppSidebarHeader
+          breadcrumbs={breadcrumbs}
+          hideMobile={hideMobileHeader}
+        />
         {children}
       </AppContent>
       {isProvider && <ProviderMobileNav />}

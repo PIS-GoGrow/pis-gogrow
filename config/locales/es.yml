@@ -169,6 +169,12 @@ es:
       payments: "Cobros"
       account: "Cuenta"
       mobile_navigation: "Navegación del proveedor"
+    admin:
+      home: "Inicio"
+      employees: "Empleados"
+      payments: "Pagos"
+      account: "Cuenta"
+      mobile_navigation: "Navegación de RRHH"
     settings:
       profile: "Perfil"
       email: "Correo electrónico"
@@ -195,6 +201,28 @@ es:
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
     admin:
+      dashboard:
+        title: "Inicio"
+        greeting: "Hola, %{name} 👋"
+        this_month: "Este mes"
+        coming_soon: "Próximamente"
+        pending_value: "—"
+        alert:
+          title: "Avisos de pagos pendientes"
+          pending: "Los avisos por WhatsApp estarán disponibles próximamente."
+        consumption:
+          title: "Tu consumo"
+          participation: "Participación"
+          spending: "Gasto"
+          view_detail: "Ver detalle del consumo"
+        payments:
+          title: "Tus pagos de %{month}"
+          pending: "El estado de los pagos a proveedores estará disponible próximamente."
+          view: "Ver pagos a proveedores"
+        debts:
+          title: "Ranking deuda de empleados"
+          pending: "Acá verás hasta tres empleados con saldos pendientes."
+          view: "Ver empleados con saldos pendientes"
       benefit_configurations:
         index:
           title: "Subsidios"
