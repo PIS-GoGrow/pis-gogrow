@@ -57,7 +57,7 @@ type AdaptableDialogProps = Omit<
   /** Estado controlado. Si no se pasa, el componente maneja su propio estado. */
   open?: boolean
   /** Se llama cada vez que cambia el estado (compatible con un setState de useState). */
-  setOpen?: (open: boolean) => void
+  onOpenChange?: (open: boolean) => void
   /** Valor inicial cuando el estado es interno. Por defecto: false. */
   defaultOpen?: boolean
 }
@@ -70,7 +70,7 @@ type AdaptableDialogProps = Omit<
 function AdaptableDialog({
   desktopVariant = "dialog",
   open,
-  setOpen,
+  onOpenChange,
   defaultOpen = false,
   ...props
 }: AdaptableDialogProps) {
@@ -83,9 +83,9 @@ function AdaptableDialog({
   const handleOpenChange = React.useCallback(
     (next: boolean) => {
       if (!isControlled) setInternalOpen(next)
-      setOpen?.(next)
+      onOpenChange?.(next)
     },
-    [isControlled, setOpen],
+    [isControlled, onOpenChange],
   )
 
   const mode: Mode = isMobile

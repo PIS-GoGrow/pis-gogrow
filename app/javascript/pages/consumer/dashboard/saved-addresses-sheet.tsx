@@ -53,11 +53,7 @@ export function SavedAddressesSheet({
         </Button>
       </AdaptableDialogTrigger>
 
-      <AdaptableDialogContent
-        side="bottom"
-        showCloseButton={false}
-        className="p-5"
-      >
+      <AdaptableDialogContent showCloseButton={false} className="p-5">
         <div className="flex flex-col gap-5">
           <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
             {t("pages.cart.saved_addresses.title")}

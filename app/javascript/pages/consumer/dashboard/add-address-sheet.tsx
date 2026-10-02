@@ -89,11 +89,7 @@ export function AddAddressSheet({ disabled = false, onAdd }: Props) {
         </Button>
       </AdaptableDialogTrigger>
 
-      <AdaptableDialogContent
-        side="bottom"
-        showCloseButton={false}
-        className="p-5"
-      >
+      <AdaptableDialogContent showCloseButton={false} className="p-5">
         <form
           onSubmit={handleSubmit}
           className="flex flex-col gap-5"
