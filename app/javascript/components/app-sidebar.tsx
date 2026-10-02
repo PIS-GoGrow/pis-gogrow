@@ -26,16 +26,16 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
-adminBenefitConfigurations,
-adminConsumers,
-consumerAccounts,
-consumerDashboard,
-consumerOrders,
-providerCollections,
-providerDashboard,
-providerMenus,
-providerOrders,
-schedules,
+  adminBenefitConfigurations,
+  adminConsumers,
+  consumerAccounts,
+  consumerDashboard,
+  consumerOrders,
+  providerCollections,
+  providerDashboard,
+  providerMenus,
+  providerOrders,
+  schedules,
 } from "@/routes"
 import type { NavItem } from "@/types"
 
