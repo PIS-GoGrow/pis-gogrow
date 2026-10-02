@@ -8,13 +8,12 @@
 class Account < ApplicationRecord
   belongs_to :owner, polymorphic: true
 
-  # TODO: Habría que validar que los dependent: :destroy son esperables
+  belongs_to :provider
+
   has_many :payments, dependent: :destroy
   has_many :invoices, dependent: :destroy
   has_many :order_accounts, dependent: :destroy
-
   has_many :orders, through: :order_accounts
-  belongs_to :provider
 
   before_create :correct_month
 

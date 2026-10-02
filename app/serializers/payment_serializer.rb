@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class PaymentSerializer < ApplicationSerializer
+  typelize_from Payment
   attributes :id, :status, :created_at, :rejection_reason
 
   typelize :string
@@ -25,6 +26,7 @@ class PaymentSerializer < ApplicationSerializer
     payment.receipt.content_type if payment.receipt.attached?
   end
 end
+
 # == Schema Information
 #
 # Table name: payments
