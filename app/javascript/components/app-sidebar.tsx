@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { useAdminPrimaryNavItems } from "@/components/admin/admin-nav-items"
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import {
@@ -25,7 +26,6 @@ import {
 } from "@/components/ui/sidebar"
 import {
   adminBenefitConfigurations,
-  adminDashboard,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
@@ -42,11 +42,12 @@ import AppLogo from "./app-logo"
 export function AppSidebar() {
   const { t } = useTranslation()
   const { auth } = usePage().props
+  const adminPrimaryNavItems = useAdminPrimaryNavItems()
 
   const navItems: Record<string, NavItem[]> = {
     provider: [
       {
-        title: t("nav.dashboard"),
+        title: t("nav.provider.home"),
         href: providerDashboard.index().url,
         icon: LayoutGrid,
       },
@@ -72,11 +73,7 @@ export function AppSidebar() {
       },
     ],
     admin: [
-      {
-        title: t("nav.dashboard"),
-        href: adminDashboard.index().url,
-        icon: LayoutGrid,
-      },
+      ...adminPrimaryNavItems,
       {
         title: t("nav.benefit_configurations"),
         href: adminBenefitConfigurations.index().url,

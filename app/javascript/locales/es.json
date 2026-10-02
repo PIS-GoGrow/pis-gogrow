@@ -41,9 +41,19 @@
       }
     },
     "nav": {
+      "admin": {
+        "account": "Cuenta",
+        "employees": "Empleados",
+        "home": "Inicio",
+        "mobile_navigation": "Navegación de RRHH",
+        "payments": "Pagos"
+      },
       "benefit_configurations": "Beneficio general",
       "change_to": "Cambiar a",
       "collections": "Cobros",
+      "consumer": {
+        "menu": "Menú del día"
+      },
       "dashboard": "Panel",
       "menu": "Menú de navegación",
       "orders": "Mis pedidos",
@@ -140,6 +150,33 @@
             "description": "Gestioná los subsidios de tu compañía",
             "title": "Subsidios"
           }
+        },
+        "dashboard": {
+          "alert": {
+            "pending": "Los avisos por WhatsApp estarán disponibles próximamente.",
+            "title": "Avisos de pagos pendientes"
+          },
+          "coming_soon": "Próximamente",
+          "consumption": {
+            "participation": "Participación",
+            "spending": "Gasto",
+            "title": "Tu consumo",
+            "view_detail": "Ver detalle del consumo"
+          },
+          "debts": {
+            "pending": "Acá verás hasta tres empleados con saldos pendientes.",
+            "title": "Ranking deuda de empleados",
+            "view": "Ver empleados con saldos pendientes"
+          },
+          "greeting": "Hola, %{name} 👋",
+          "payments": {
+            "pending": "El estado de los pagos a proveedores estará disponible próximamente.",
+            "title": "Tus pagos de %{month}",
+            "view": "Ver pagos a proveedores"
+          },
+          "pending_value": "—",
+          "this_month": "Este mes",
+          "title": "Inicio"
         }
       },
       "cart": {
@@ -413,15 +450,45 @@
       },
       "provider_dashboard": {
         "index": {
+          "coming_soon": "Próximamente",
           "description": "Administrá la recepción de pedidos de tus menús.",
           "eyebrow": "Operación diaria",
+          "greeting": "Hola, %{name} 👋",
+          "insights": {
+            "description": "Los hallazgos basados en las valoraciones estarán disponibles próximamente.",
+            "dishes": "Platos",
+            "generated": "Generado por IA",
+            "orders": "Pedidos",
+            "rating": "Valoración",
+            "title": "Hallazgos del mes"
+          },
           "order_deadline": {
             "description": "Definí hasta qué hora aceptás pedidos para hoy.",
             "help": "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos.",
             "label": "Hora límite",
             "title": "Recepción de pedidos"
           },
-          "title": "Panel del proveedor"
+          "orders": {
+            "confirmed": "Confirmados",
+            "deadline": "Recibiendo pedidos hasta %{time}",
+            "home": "Envío a domicilio",
+            "office": "Envío a oficina",
+            "pending": "Pendientes",
+            "title": "Pedidos",
+            "today": "Hoy",
+            "view": "Ver pedidos"
+          },
+          "payments": {
+            "description": "Los cobros pendientes aparecerán acá próximamente.",
+            "pending": "Cobros pendientes",
+            "title": "Resumen de cobros",
+            "total": "Deuda total"
+          },
+          "profile": {
+            "description": "La configuración de los pasos estará disponible próximamente.",
+            "title": "Completá tu cuenta"
+          },
+          "title": "Inicio"
         }
       },
       "provider_operational_settings": {

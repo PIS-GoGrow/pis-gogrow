@@ -44,5 +44,17 @@ RSpec.describe "Admins", type: :request do
       expect(response).to have_http_status(:success)
       expect(inertia).to render_component("admin/dashboard/index")
     end
+
+    # A las 22:30 en Montevideo ya es el día siguiente en UTC: la fecha tiene
+    # que salir de la zona horaria de la app.
+    it "shows today's date and the payment month in Montevideo time" do
+      travel_to Time.zone.local(2026, 10, 1, 22, 30) do
+        sign_in admin_user, role: :admin
+
+        get admin_dashboard_path
+
+        expect(inertia).to have_props(today: "Jueves 1 de octubre", payment_month: "octubre")
+      end
+    end
   end
 end
