@@ -41,12 +41,16 @@ describe("AdminMobileNav", () => {
       "/admin/dashboard",
     )
     expect(menu.getByRole("link", { name: "Cuenta" })).toBeInTheDocument()
+    expect(menu.getByRole("link", { name: "Empleados" })).toHaveAttribute(
+      "href",
+      "/admin/consumers",
+    )
   })
 
   it("keeps the sections still to come out of reach", () => {
     const menu = nav()
 
-    for (const name of ["Empleados", "Pagos"]) {
+    for (const name of ["Pagos"]) {
       expect(menu.queryByRole("link", { name })).not.toBeInTheDocument()
       expect(menu.getByRole("button", { name })).toHaveAttribute(
         "aria-disabled",
