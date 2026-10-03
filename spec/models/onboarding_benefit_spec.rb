@@ -191,6 +191,20 @@ RSpec.describe OnboardingBenefit, type: :model do
       end
     end
   end
+
+  describe "#benefit_deadline" do
+    it "es la fecha de ingreso más deadline_days" do
+      expect(rule.benefit_deadline(consumer, date: Date.new(2025, 5, 12))).to eq(Date.new(2025, 5, 15))
+    end
+
+    context "cuando el consumer no tiene onboarding_date" do
+      let(:onboarding_date) { nil }
+
+      it "es nil" do
+        expect(rule.benefit_deadline(consumer)).to be_nil
+      end
+    end
+  end
 end
 
 # == Schema Information

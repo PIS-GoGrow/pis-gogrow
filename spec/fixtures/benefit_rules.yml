@@ -12,7 +12,7 @@ gift:
   benefit_configuration: gift
 
 seniority:
-  type: "GiftBenefit"
+  type: "SeniorityBenefit"
   min_years: 2
   benefit_configuration: seniority
 # == Schema Information

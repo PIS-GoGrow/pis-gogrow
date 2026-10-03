@@ -985,7 +985,7 @@ RSpec.describe "Schedules", type: :request do
 
     context "edición válida de un menú publicado" do
       it "actualiza el stock de un plato preservando el ID del schedule original" do
-        target_date = Date.current.next_week(:monday) + 1.day
+        target_date = Date.current + 4.days
         schedule = menu.schedules.create!(date: target_date, amount: 10)
         original_schedule_id = schedule.id
 
@@ -1109,7 +1109,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "rechaza stock con valor cero" do
-        target_date = Date.current.next_week(:monday) + 1.day
+        target_date = Date.current + 4.days
         schedule = menu.schedules.create!(date: target_date, amount: 10)
 
         sign_in(provider_user, role: :provider)
@@ -1126,7 +1126,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "rechaza stock con valor negativo" do
-        target_date = Date.current.next_week(:monday) + 1.day
+        target_date = Date.current + 4.days
         schedule = menu.schedules.create!(date: target_date, amount: 10)
 
         sign_in(provider_user, role: :provider)
@@ -1143,7 +1143,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "rechaza stock no numérico" do
-        target_date = Date.current.next_week(:monday) + 1.day
+        target_date = Date.current + 4.days
         schedule = menu.schedules.create!(date: target_date, amount: 10)
 
         sign_in(provider_user, role: :provider)
@@ -1160,7 +1160,7 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "devuelve 404 y revierte la transacción si se intenta incluir un plato de otro proveedor" do
-        target_date = Date.current.next_week(:monday) + 1.day
+        target_date = Date.current + 4.days
         schedule = menu.schedules.create!(date: target_date, amount: 10)
         foreign_menu = menus(:sorrentinos)
 

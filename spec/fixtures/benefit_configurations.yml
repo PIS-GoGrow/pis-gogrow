@@ -18,6 +18,7 @@ seniority:
 #
 #  id                 :bigint           not null, primary key
 #  applies_to_all     :boolean          default(FALSE)
+#  deactivated_at     :datetime
 #  name               :string
 #  subsidy_percentage :integer          not null
 #  created_at         :datetime         not null
