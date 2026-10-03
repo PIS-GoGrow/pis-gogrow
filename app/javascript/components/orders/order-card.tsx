@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react"
-import { X } from "lucide-react"
+import { Pencil, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import CancelOrderSheet from "@/components/orders/cancel-order-sheet"
@@ -30,8 +30,6 @@ export default function OrderCard({ order, section }: OrderCardProps) {
   // El empleado paga el precio ya subsidiado; el base se muestra al lado solo
   // cuando el subsidio efectivamente lo bajó.
   const charged = order.discounted_price ?? order.price
-  const basePrice =
-    order.price != null && order.price !== charged ? order.price : null
 
   return (
     <Card className="hover:bg-accent/40 focus-within:ring-ring/50 relative gap-2 py-4 transition-colors focus-within:ring-[3px]">
@@ -73,19 +71,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
           {charged == null ? (
             t("pages.orders.index.no_price")
           ) : (
-            <>
-              {basePrice != null && (
-                <span
-                  className="text-muted-foreground me-1.5 font-normal line-through"
-                  aria-label={t("pages.orders.index.base_price", {
-                    amount: formatMoney(basePrice),
-                  })}
-                >
-                  {formatMoney(basePrice)}
-                </span>
-              )}
-              {formatMoney(charged)}
-            </>
+            <>{formatMoney(charged)}</>
           )}
         </p>
       </CardContent>
@@ -93,21 +79,65 @@ export default function OrderCard({ order, section }: OrderCardProps) {
       {/* El ::after de la tarjeta cubre todo para hacerla clickeable, así que
           las acciones necesitan quedar por encima para poder tocarlas. */}
       {section === "upcoming" && (
-        <CardFooter className="relative z-10 flex-col items-stretch gap-2 px-4">
+        <CardFooter className="relative grid grid-cols-2 items-start gap-2">
           {order.cancellable ? (
             <CancelOrderSheet order={order} />
           ) : (
-            <>
-              <Button type="button" variant="outline" size="sm" disabled>
+            <div className="flex flex-col gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled
+              >
                 <X aria-hidden="true" />
                 {t("pages.orders.index.cancel")}
               </Button>
-              <p className="text-muted-foreground text-xs">
-                {t(
-                  `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
-                )}
-              </p>
-            </>
+              {order.status !== "confirmed" && (
+                <p className="text-muted-foreground text-xs">
+                  {t(
+                    `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
+                  )}
+                </p>
+              )}
+            </div>
+          )}
+          {order.modifiable ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              asChild
+            >
+              <Link
+                href={consumerOrders.show(order.id, { query: { edit: 1 } })}
+              >
+                <Pencil aria-hidden="true" />
+                {t("pages.orders.show.edit")}
+              </Link>
+            </Button>
+          ) : (
+            <div className="flex flex-col gap-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                disabled
+              >
+                <Pencil aria-hidden="true" />
+                {t("pages.orders.show.edit")}
+              </Button>
+              {order.status !== "confirmed" && (
+                <p className="text-muted-foreground text-xs">
+                  {t(
+                    `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+                  )}
+                </p>
+              )}
+            </div>
           )}
         </CardFooter>
       )}

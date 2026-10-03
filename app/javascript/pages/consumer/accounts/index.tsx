@@ -4,6 +4,12 @@ import { useState } from "react"
 import type { JSX } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogClose,
+  AdaptableDialogContent,
+  AdaptableDialogFooter,
+} from "@/components/adaptable-dialog"
 import AccountCard from "@/components/consumer/accounts/account-card"
 import OrdersTable from "@/components/consumer/accounts/orders-table"
 import PaymentHistoryCard from "@/components/consumer/accounts/payment-history-card"
@@ -17,15 +23,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetFooter,
-} from "@/components/ui/sheet"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useIsMobile } from "@/hooks/use-mobile"
 import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
 import type {
@@ -63,7 +62,6 @@ export default function Index({
   benefit_available,
 }: AccountProps) {
   const { t } = useTranslation()
-  const isMobile = useIsMobile()
 
   const [loading, setLoading] = useState(false)
   const [detail, setDetail] = useState<AccountDetail | null>(null)
@@ -150,7 +148,7 @@ export default function Index({
           {t("pages.accounts.index.payments")}{" "}
         </h1>
 
-        <Sheet>
+        <AdaptableDialog desktopVariant="sheet">
           <Tabs
             defaultValue={history ? "history" : "pending"}
             className="w-full"
@@ -196,7 +194,7 @@ export default function Index({
             </TabsContent>
           </Tabs>
 
-          <SheetContent side={isMobile ? "bottom" : "right"} className="pt-8">
+          <AdaptableDialogContent className="pt-5">
             {loading ? (
               <Spinner className="mx-auto size-8" />
             ) : (
@@ -207,13 +205,13 @@ export default function Index({
               />
             )}
 
-            <SheetFooter>
-              <SheetClose asChild>
+            <AdaptableDialogFooter>
+              <AdaptableDialogClose asChild>
                 <Button>{t("common.close")}</Button>
-              </SheetClose>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+              </AdaptableDialogClose>
+            </AdaptableDialogFooter>
+          </AdaptableDialogContent>
+        </AdaptableDialog>
       </div>
 
       <ConsumerMobileNav />
