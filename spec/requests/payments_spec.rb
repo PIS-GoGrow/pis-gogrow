@@ -15,7 +15,7 @@ RSpec.describe "Payments", type: :request do
     consumer = Consumer.create!(user: consumer_user, company:, address: "Ellauri 1234")
     provider_user = User.create!(email: "payment-provider@gmail.com", name: "Provider", password: "password123456")
     provider = Provider.create!(user: provider_user)
-    account = Account.create!(owner: consumer, provider:, month: Date.current, amount: 500)
+    account = Account.create!(owner: consumer, provider:, month: Date.current.prev_month, amount: 500)
 
     [ consumer_user, account, provider ]
   end
@@ -89,6 +89,43 @@ RSpec.describe "Payments", type: :request do
     expect(payment.receipt).to be_attached
     expect(payment.receipt.filename.to_s).to eq("replacement.png")
     expect(payment.receipt.blob_id).not_to eq(original_blob_id)
+  end
+
+  # El mes en curso todavía puede sumar pedidos: no se paga hasta que cierre.
+  it "does not create a payment for the account of the current month" do
+    user, account, = setup_payment_account
+    account.update!(month: Date.current.beginning_of_month)
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("validations.payment_current_account") ] }
+    )
+  end
+
+  it "does not replace a rejected receipt of the current month" do
+    user, account, provider = setup_payment_account
+    account.update!(month: Date.current.beginning_of_month)
+    payment = account.payments.build(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
+    payment.receipt.attach(io: StringIO.new("old receipt"), filename: "old.png", content_type: "image/png")
+    payment.save!
+    original_blob_id = payment.receipt.blob_id
+    sign_in(user, role: :consumer)
+
+    patch payment_path(payment), params: {
+      payment: { receipt: receipt_upload(filename: "replacement.png") }
+    }, headers: account_page_headers
+
+    expect(response).to redirect_to(accounts_path)
+    expect(payment.reload).to be_rejected
+    expect(payment.receipt.blob_id).to eq(original_blob_id)
   end
 
   it "does not create a payment for an account owned by another consumer" do

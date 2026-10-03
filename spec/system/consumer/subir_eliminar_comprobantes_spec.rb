@@ -19,6 +19,19 @@ RSpec.describe "Subida de varios comprobantes y eliminación por el empleado", t
     # Dejamos solo la cuenta de tuviandita para consumers(:one) y sin pagos previos
     consumers(:one).accounts.where.not(id: account.id).destroy_all
     Payment.where(account:).destroy_all
+    account.update!(month: Date.current.prev_month.beginning_of_month)
+  end
+
+  it "no deja subir comprobantes de la cuenta del mes en curso" do
+    account.update!(month: Date.current.beginning_of_month)
+    sign_in employee
+
+    visit accounts_path
+
+    within(find("[role=tabpanel]")) do
+      expect(page).to have_content(account.amount.to_i.to_s)
+      expect(page).to have_no_button(I18n.t("pages.accounts.show.receipt"))
+    end
   end
 
   it "permite subir múltiples comprobantes para la misma cuenta y eliminar uno en revisión" do
