@@ -549,6 +549,8 @@
           "orders": {
             "confirmed": "Confirmados",
             "deadline": "Recibiendo pedidos hasta %{time}",
+            "deadline_all_day": "Recibiendo pedidos todo el día",
+            "deadline_closed": "Recepción de pedidos cerrada",
             "home": "Envío a domicilio",
             "office": "Envío a oficina",
             "pending": "Pendientes",

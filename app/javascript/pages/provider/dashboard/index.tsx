@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils"
 import {
   providerCollections,
   providerDashboard,
+  providerOperationalSettings,
   providerOrders,
 } from "@/routes"
 import type { BreadcrumbItem, ProviderDashboardIndex } from "@/types"
@@ -34,6 +35,7 @@ export default function ProviderDashboard({
   office_orders_count,
   home_orders_count,
   order_deadline,
+  order_deadline_passed_today,
   month_orders_count,
   month_dishes_count,
   average_rating,
@@ -135,25 +137,33 @@ export default function ProviderDashboard({
                 </Link>
               </Button>
               <Button
-                type="button"
+                asChild
                 variant="ghost"
                 className="group h-auto w-full cursor-pointer justify-start gap-2 px-0 py-1 text-left text-sm font-normal whitespace-normal text-amber-700 hover:bg-amber-500/10 hover:text-amber-700 has-[>svg]:px-0 dark:text-amber-300 dark:hover:text-amber-300"
               >
-                <Clock3
-                  className="size-4 shrink-0 text-amber-400"
-                  aria-hidden="true"
-                />
-                <span className="flex-1">
-                  {order_deadline
-                    ? t("pages.provider_dashboard.index.orders.deadline", {
-                        time: order_deadline,
-                      })
-                    : t("pages.provider_dashboard.index.coming_soon")}
-                </span>
-                <ChevronRight
-                  className="text-foreground size-4 transition-transform group-hover:translate-x-0.5"
-                  aria-hidden="true"
-                />
+                <Link href={providerOperationalSettings.show().url}>
+                  <Clock3
+                    className="size-4 shrink-0 text-amber-400"
+                    aria-hidden="true"
+                  />
+                  <span className="flex-1">
+                    {!order_deadline
+                      ? t(
+                          "pages.provider_dashboard.index.orders.deadline_all_day",
+                        )
+                      : order_deadline_passed_today
+                        ? t(
+                            "pages.provider_dashboard.index.orders.deadline_closed",
+                          )
+                        : t("pages.provider_dashboard.index.orders.deadline", {
+                            time: order_deadline,
+                          })}
+                  </span>
+                  <ChevronRight
+                    className="text-foreground size-4 transition-transform group-hover:translate-x-0.5"
+                    aria-hidden="true"
+                  />
+                </Link>
               </Button>
             </CardContent>
           </Card>
