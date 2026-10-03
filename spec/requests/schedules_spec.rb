@@ -344,7 +344,7 @@ RSpec.describe "Schedules", type: :request do
     it "marks future and today published schedules as editable" do
       user = users(:one)
       provider = Provider.create!(user: user)
-      menu = provider.menus.create!(name: "Milanesa", price: 350)
+      menu = provider.menus.create!(name: "Milanesa", description: "Rica milanesa", price: 350)
 
       travel_to(Date.current.beginning_of_week(:monday) + 1.day) do
         today_date = Date.current
@@ -373,7 +373,7 @@ RSpec.describe "Schedules", type: :request do
     it "marks past published schedules as not editable" do
       user = users(:one)
       provider = Provider.create!(user: user)
-      menu = provider.menus.create!(name: "Milanesa", price: 350)
+      menu = provider.menus.create!(name: "Milanesa", description: "Rica milanesa", price: 350)
 
       week_start = Date.current.beginning_of_week(:monday) - 1.week
       past_date = week_start + 1.day
