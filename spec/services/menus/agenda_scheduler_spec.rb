@@ -66,4 +66,21 @@ RSpec.describe Menus::AgendaScheduler do
 
     expect(scheduled_dates(menu)).to eq([ Date.new(2030, 1, 9), Date.new(2030, 1, 10) ])
   end
+
+  it "does nothing when the menu has no agendas" do
+    expect { described_class.call(menu) }.not_to change(Schedule, :count)
+  end
+
+  describe ".call_all" do
+    it "programs schedules for all saved dishes with active agendas" do
+      menu.agendas.create!(weekdays: [ 1 ], starts_on: Date.current, amount: 5)
+      other_menu = providers(:endulzate).menus.create!(name: "Tarta", description: "De calabaza", price: 200)
+      other_menu.agendas.create!(weekdays: [ 5 ], starts_on: Date.current, amount: 4)
+
+      described_class.call_all
+
+      expect(scheduled_dates(menu)).to include(Date.new(2030, 1, 14))
+      expect(scheduled_dates(other_menu)).to include(Date.new(2030, 1, 11))
+    end
+  end
 end

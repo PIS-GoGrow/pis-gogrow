@@ -26,7 +26,7 @@ RSpec.describe Menus::Update do
   end
 
   def order_for(schedule, status: :confirmed)
-    Order.reserve(consumer: consumers(:one), schedule:, delivery_method: :office, address: nil).tap do |order|
+    Order.reserve(consumer: consumers(:one), schedule:, delivery_method: :office, address: nil, benefits: []).tap do |order|
       order.update!(status:)
     end
   end
@@ -156,6 +156,50 @@ RSpec.describe Menus::Update do
 
       expect(day.affected_schedules.pluck(:date)).to eq([ thursday ])
       expect(range.affected_schedules.order(:date).pluck(:date)).to eq([ thursday, friday ])
+    end
+  end
+
+  describe "edge cases and database integrity" do
+    it "rejects single mode on a weekend date" do
+      saturday = Date.new(2030, 1, 12)
+      service = described_class.new(menu:, attributes:, agenda: { mode: "single", date: saturday.iso8601, amount: 5 }, scope: "day")
+
+      expect(service.call).to be(false)
+      expect(service.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_date"))
+    end
+
+    it "rejects range mode when ends_on is before starts_on" do
+      service = described_class.new(menu:, attributes:, agenda: { mode: "range", weekdays: [ "1" ], starts_on: friday.iso8601, ends_on: thursday.iso8601, amount: 5 })
+
+      expect(service.call).to be(false)
+      expect(service.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_range"))
+    end
+
+    it "rejects invalid amounts such as zero or negative" do
+      service = described_class.new(menu:, attributes:, agenda: { mode: "single", date: thursday.iso8601, amount: -3 }, scope: "day")
+
+      expect(service.call).to be(false)
+      expect(service.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_amount"))
+    end
+
+    it "rolls back all database changes and preserves orders when record validation fails" do
+      schedule = menu.schedules.create!(date: thursday, amount: 5)
+      order = order_for(schedule)
+
+      invalid_attrs = attributes.merge(price: -100)
+      service = described_class.new(
+        menu:,
+        attributes: invalid_attrs,
+        agenda: { mode: "single", date: thursday.iso8601, amount: 5 },
+        scope: "day",
+        confirmed_orders: "reject"
+      )
+
+      expect { service.call }.not_to change(Menu, :count)
+      expect(schedule.reload.menu).to eq(menu)
+      expect(order.reload).to be_confirmed
+      expect(menu.reload.name).to eq("Milanesa")
+      expect(service.errors[:price]).to be_present
     end
   end
 end

@@ -4,7 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Provider::Menus", type: :request do
-  fixtures :users, :providers, :menus, :consumers, :menu_option_groups, :schedules, :orders, :companies
+  fixtures :users, :providers, :menus, :consumers, :menu_option_groups, :schedules, :orders, :companies, :admins
 
   let(:provider_user) { users(:provider_user) }
   let(:provider) { providers(:tuviandita) }
@@ -146,62 +146,140 @@ RSpec.describe "Provider::Menus", type: :request do
   end
 
   describe "GET /provider/menus/:id/edit" do
-    before { sign_in provider_user, role: :provider }
+    it "redirects visitors without a session to the sign in page" do
+      get edit_provider_menu_path(menus(:milanesa))
 
-    it "renders the edit page for the provider's own dish" do
-      menu = menus(:milanesa)
-
-      get edit_provider_menu_path(menu)
-
-      expect(response).to have_http_status(:success)
-      expect(inertia).to render_component("provider/menus/edit")
-      expect(inertia.props[:menu]["id"]).to eq(menu.id)
-      expect(inertia.props[:menu]["name"]).to eq(menu.name)
-      expect(inertia.props[:menu]).to have_key("option_groups")
+      expect(response).to redirect_to(sign_in_path)
     end
 
-    it "returns not found when attempting to edit another provider's dish" do
-      get edit_provider_menu_path(menus(:sorrentinos))
+    it "redirects consumers to the root page" do
+      sign_in users(:one), role: :consumer
 
-      expect(response).to have_http_status(:not_found)
+      get edit_provider_menu_path(menus(:milanesa))
+
+      expect(response).to redirect_to(root_path)
     end
 
-    it "edits the dish as it is programmed on the day it was opened from" do
-      schedule = schedules(:future)
+    it "redirects admins to the root page" do
+      sign_in users(:admin), role: :admin
 
-      get edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id)
+      get edit_provider_menu_path(menus(:milanesa))
 
-      expect(inertia).to have_props { |props|
-        props = props.deep_symbolize_keys
-
-        props[:schedule_date] == schedule.date.iso8601 &&
-          props[:agenda][:mode] == "single" &&
-          props[:agenda][:date] == schedule.date.iso8601 &&
-          props[:scheduled_days].find { it[:date] == schedule.date.iso8601 }[:confirmed_orders] ==
-            schedule.orders.confirmed.count
-      }
+      expect(response).to redirect_to(root_path)
     end
 
-    it "does not open a day programmed with another dish" do
-      get edit_provider_menu_path(menus(:milanesa), schedule_id: schedules(:sorrentinos_today).id)
+    context "when signed in as provider" do
+      before { sign_in provider_user, role: :provider }
 
-      expect(response).to have_http_status(:not_found)
-    end
+      it "renders the edit page for the provider's own dish" do
+        menu = menus(:milanesa)
 
-    it "does not open a variant as if it were a saved dish" do
-      variant = menus(:milanesa).build_variant(valid_from: Date.current, valid_until: Date.current)
-      variant.save!
+        get edit_provider_menu_path(menu)
 
-      get edit_provider_menu_path(variant)
+        expect(response).to have_http_status(:success)
+        expect(inertia).to render_component("provider/menus/edit")
+        expect(inertia.props[:menu]["id"]).to eq(menu.id)
+        expect(inertia.props[:menu]["name"]).to eq(menu.name)
+        expect(inertia.props[:menu]).to have_key("option_groups")
+      end
 
-      expect(response).to have_http_status(:not_found)
+      it "serializes exact Inertia props for a dish with an existing weekly agenda" do
+        menu = menus(:milanesa)
+        menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 8)
+
+        get edit_provider_menu_path(menu)
+
+        expect(response).to have_http_status(:success)
+        expect(inertia).to render_component("provider/menus/edit")
+        expect(inertia).to have_props(
+          saved_menu_id: menu.id,
+          schedule_date: nil,
+          today: Date.current.iso8601,
+          maximum_publish_date: Schedule.maximum_publish_date.iso8601
+        )
+        agenda_prop = inertia.props[:agenda].deep_symbolize_keys
+        expect(agenda_prop[:mode]).to eq("weekly")
+        expect(agenda_prop[:weekdays]).to eq([ 1, 3 ])
+        expect(agenda_prop[:amount]).to eq(8)
+      end
+
+      it "serializes mode none when dish has no agenda and no schedule" do
+        menu = provider.menus.create!(name: "Pastel", description: "De carne", price: 200)
+
+        get edit_provider_menu_path(menu)
+
+        agenda_prop = inertia.props[:agenda].deep_symbolize_keys
+        expect(agenda_prop[:mode]).to eq("none")
+        expect(agenda_prop[:weekdays]).to eq([])
+        expect(agenda_prop[:amount]).to be_nil
+      end
+
+      it "returns not found when attempting to edit another provider's dish" do
+        get edit_provider_menu_path(menus(:sorrentinos))
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "edits the dish as it is programmed on the day it was opened from" do
+        schedule = schedules(:future)
+
+        get edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id)
+
+        expect(inertia).to have_props { |props|
+          props = props.deep_symbolize_keys
+
+          props[:schedule_date] == schedule.date.iso8601 &&
+            props[:agenda][:mode] == "single" &&
+            props[:agenda][:date] == schedule.date.iso8601 &&
+            props[:scheduled_days].find { it[:date] == schedule.date.iso8601 }[:confirmed_orders] ==
+              schedule.orders.confirmed.count
+        }
+      end
+
+      it "does not open a day programmed with another dish" do
+        get edit_provider_menu_path(menus(:milanesa), schedule_id: schedules(:sorrentinos_today).id)
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "does not open a variant as if it were a saved dish" do
+        variant = menus(:milanesa).build_variant(valid_from: Date.current, valid_until: Date.current)
+        variant.save!
+
+        get edit_provider_menu_path(variant)
+
+        expect(response).to have_http_status(:not_found)
+      end
     end
   end
 
   describe "PATCH /provider/menus/:id" do
-    before { sign_in provider_user, role: :provider }
+    it "redirects visitors without a session to the sign in page" do
+      patch provider_menu_path(menus(:milanesa)), params: { menu: { name: "Nuevo" } }
 
-    it "updates option groups of an existing dish" do
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "redirects consumers to the root page" do
+      sign_in users(:one), role: :consumer
+
+      patch provider_menu_path(menus(:milanesa)), params: { menu: { name: "Nuevo" } }
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects admins to the root page" do
+      sign_in users(:admin), role: :admin
+
+      patch provider_menu_path(menus(:milanesa)), params: { menu: { name: "Nuevo" } }
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    context "when signed in as provider" do
+      before { sign_in provider_user, role: :provider }
+
+      it "updates option groups of an existing dish" do
       menu = menus(:milanesa)
       group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1)
 
@@ -216,72 +294,73 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(group.reload.limit).to eq(2)
     end
 
-    it "updates the provider's dish information" do
-      menu = menus(:milanesa)
+      it "updates the provider's dish information" do
+        menu = menus(:milanesa)
 
-      patch provider_menu_path(menu), params: {
-        menu: {
-          name: "Milanesa napolitana",
-          description: "Con papas fritas",
-          price: 420.50
-        }
-      }
-
-      expect(response).to redirect_to(edit_provider_menu_path(menu))
-
-      menu.reload
-      expect(menu.name).to eq("Milanesa napolitana")
-      expect(menu.description).to eq("Con papas fritas")
-      expect(menu.price).to eq(420.50)
-    end
-
-    it "returns validation errors when the changes are invalid" do
-      menu = menus(:milanesa)
-
-      patch provider_menu_path(menu), params: {
-        menu: {
-          name: "",
-          description: "",
-          price: 0
-        }
-      }
-
-      expect(response).to redirect_to(edit_provider_menu_path(menu))
-
-      follow_redirect!
-      expect(inertia.props[:errors]).to have_key(:name)
-      expect(inertia.props[:errors]).to have_key(:price)
-      expect(inertia.props[:errors]).to have_key(:description)
-    end
-
-    it "returns not found when attempting to update another provider's dish" do
-      menu = menus(:sorrentinos)
-      original_name = menu.name
-
-      patch provider_menu_path(menu), params: {
-        menu: {
-          name: "No debería cambiar",
-          price: 999
-        }
-      }
-
-      expect(response).to have_http_status(:not_found)
-      expect(menu.reload.name).to eq(original_name)
-    end
-
-    it "removes an option group with _destroy" do
-      menu = menus(:milanesa)
-      group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1)
-
-      expect do
         patch provider_menu_path(menu), params: {
           menu: {
-            option_groups_attributes: [ { id: group.id, _destroy: true } ]
+            name: "Milanesa napolitana",
+            description: "Con papas fritas",
+            price: 420.50
           }
         }
-      end.to change(MenuOptionGroup, :count).by(-1)
 
-      expect(response).to redirect_to(edit_provider_menu_path(menu))
+        expect(response).to redirect_to(edit_provider_menu_path(menu))
+
+        menu.reload
+        expect(menu.name).to eq("Milanesa napolitana")
+        expect(menu.description).to eq("Con papas fritas")
+        expect(menu.price).to eq(420.50)
+      end
+
+      it "returns validation errors when the changes are invalid" do
+        menu = menus(:milanesa)
+
+        patch provider_menu_path(menu), params: {
+          menu: {
+            name: "",
+            description: "",
+            price: 0
+          }
+        }
+
+        expect(response).to redirect_to(edit_provider_menu_path(menu))
+
+        follow_redirect!
+        expect(inertia.props[:errors]).to have_key(:name)
+        expect(inertia.props[:errors]).to have_key(:price)
+        expect(inertia.props[:errors]).to have_key(:description)
+      end
+
+      it "returns not found when attempting to update another provider's dish" do
+        menu = menus(:sorrentinos)
+        original_name = menu.name
+
+        patch provider_menu_path(menu), params: {
+          menu: {
+            name: "No debería cambiar",
+            price: 999
+          }
+        }
+
+        expect(response).to have_http_status(:not_found)
+        expect(menu.reload.name).to eq(original_name)
+      end
+
+      it "removes an option group with _destroy" do
+          menu = menus(:milanesa)
+          group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1)
+
+          expect do
+            patch provider_menu_path(menu), params: {
+              menu: {
+                option_groups_attributes: [ { id: group.id, _destroy: true } ]
+              }
+            }
+          end.to change(MenuOptionGroup, :count).by(-1)
+
+          expect(response).to redirect_to(edit_provider_menu_path(menu))
+        end
     end
   end
 
@@ -317,8 +396,23 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(orders(:upcoming_pending_future).reload).to be_pending
     end
 
+    it "keeps confirmed orders when confirmed_orders param is omitted" do
+      patch provider_menu_path(menus(:milanesa)), params: params.except(:confirmed_orders)
+
+      expect(orders(:upcoming_confirmed_future).reload).to be_confirmed
+    end
+
+    it "returns 404 when attempting to update a variant ID directly" do
+      variant = menus(:milanesa).build_variant(valid_from: Date.current, valid_until: Date.current)
+      variant.save!
+
+      patch provider_menu_path(variant), params: params
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     it "keeps showing the old dish on the orders it already had" do
-      order = Order.reserve(consumer: consumers(:one), schedule:, delivery_method: :office, address: nil)
+      order = Order.reserve(consumer: consumers(:one), schedule:, delivery_method: :office, address: nil, benefits: [])
 
       patch provider_menu_path(menus(:milanesa)), params: params
 
@@ -330,6 +424,15 @@ RSpec.describe "Provider::Menus", type: :request do
 
     it "returns the agenda errors" do
       patch provider_menu_path(menus(:milanesa)), params: params.deep_merge(agenda: { amount: 0 })
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to have_key(:agenda)
+    end
+
+    it "returns agenda errors for malformed or invalid agenda parameters" do
+      patch provider_menu_path(menus(:milanesa)), params: params.deep_merge(
+        agenda: { mode: "range", weekdays: [], starts_on: "invalid-date", ends_on: "invalid-date" }
+      )
 
       follow_redirect!
       expect(inertia.props[:errors]).to have_key(:agenda)

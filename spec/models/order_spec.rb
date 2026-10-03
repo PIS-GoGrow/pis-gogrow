@@ -537,6 +537,57 @@ RSpec.describe Order, type: :model do
       )
     end
   end
+
+  describe "#reject_for_dish_change!" do
+    let(:order) { orders(:upcoming_confirmed_future) }
+
+    it "rejects confirmed order with dish_modified reason" do
+      expect(order.reject_for_dish_change!).to be(true)
+      expect(order.reload).to be_rejected
+      expect(order).to be_rejection_reason_dish_modified
+    end
+
+    it "does not reject pending, cancelled or already rejected orders" do
+      pending_order = orders(:upcoming_pending_today)
+      cancelled_order = orders(:history_cancelled_future)
+      rejected_order = orders(:history_rejected_future)
+
+      expect(pending_order.reject_for_dish_change!).to be(false)
+      expect(pending_order.reload).to be_pending
+
+      expect(cancelled_order.reject_for_dish_change!).to be(false)
+      expect(cancelled_order.reload).to be_cancelled
+
+      expect(rejected_order.reject_for_dish_change!).to be(false)
+      expect(rejected_order.reload).to be_rejected
+    end
+  end
+
+  describe "menu snapshotting" do
+    let(:schedule) { schedules(:future) }
+
+    it "captures menu snapshot upon creation" do
+      order = Order.create!(
+        consumer: consumers(:one),
+        schedule:,
+        delivery_method: :office,
+        amount: 1,
+        price: 300
+      )
+
+      expect(order.menu_name).to eq(schedule.menu.name)
+      expect(order.menu_description).to eq(schedule.menu.description)
+      expect(order.menu_option_groups).to eq(schedule.menu.option_groups_snapshot)
+    end
+
+    it "falls back to schedule menu attributes when snapshot columns are nil" do
+      order = Order.new(schedule:, menu_name: nil, menu_description: nil, menu_option_groups: nil)
+
+      expect(order.menu_name).to eq(schedule.menu.name)
+      expect(order.menu_description).to eq(schedule.menu.description)
+      expect(order.menu_option_groups).to eq(schedule.menu.option_groups_snapshot)
+    end
+  end
 end
 
 # == Schema Information
