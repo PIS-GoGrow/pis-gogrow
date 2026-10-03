@@ -7,6 +7,7 @@ class Provider::DashboardIndexSerializer < ApplicationSerializer
     :office_orders_count,
     :home_orders_count,
     :order_deadline,
+    :order_deadline_passed_today,
     :month_orders_count,
     :month_dishes_count,
     :average_rating
@@ -17,6 +18,7 @@ class Provider::DashboardIndexSerializer < ApplicationSerializer
   typelize office_orders_count: :number
   typelize home_orders_count: :number
   typelize order_deadline: :string?
+  typelize order_deadline_passed_today: :boolean
   typelize month_orders_count: :number
   typelize month_dishes_count: :number
   typelize average_rating: :number?

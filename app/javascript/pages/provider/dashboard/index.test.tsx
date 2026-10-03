@@ -33,6 +33,7 @@ describe("Provider Dashboard Page", () => {
     office_orders_count: 3,
     home_orders_count: 1,
     order_deadline: "11:30",
+    order_deadline_passed_today: false,
     month_orders_count: 42,
     month_dishes_count: 8,
     average_rating: 4.8,
@@ -78,10 +79,29 @@ describe("Provider Dashboard Page", () => {
     ).toBeInTheDocument()
   })
 
-  it("muestra 'Próximamente' en la hora límite cuando no está configurada", () => {
+  it("indica que recibe pedidos todo el día cuando no hay hora de cierre", () => {
     render(<ProviderDashboard {...defaultProps} order_deadline={undefined} />)
 
-    expect(screen.getByText("Próximamente")).toBeInTheDocument()
+    expect(
+      screen.getByText("Recibiendo pedidos todo el día"),
+    ).toBeInTheDocument()
+  })
+
+  it("indica que la recepción está cerrada una vez pasada la hora de cierre", () => {
+    render(<ProviderDashboard {...defaultProps} order_deadline_passed_today />)
+
+    expect(screen.getByText("Recepción de pedidos cerrada")).toBeInTheDocument()
+    expect(
+      screen.queryByText("Recibiendo pedidos hasta 11:30"),
+    ).not.toBeInTheDocument()
+  })
+
+  it("lleva a la configuración operativa desde la hora de cierre", () => {
+    render(<ProviderDashboard {...defaultProps} />)
+
+    expect(
+      screen.getByRole("link", { name: "Recibiendo pedidos hasta 11:30" }),
+    ).toHaveAttribute("href", "/provider/operational_settings")
   })
 
   it("muestra los hallazgos del mes con pedidos, platos y valoración", () => {
