@@ -9,7 +9,7 @@ RSpec.describe Menu, type: :model do
 
   describe "validations" do
     it "is valid with valid attributes" do
-      menu = described_class.new(name: "Pastel de papa", price: 280, provider:)
+      menu = described_class.new(name: "Pastel de papa", description: "Plato de prueba", price: 280, provider:)
       expect(menu).to be_valid
     end
 
@@ -20,13 +20,13 @@ RSpec.describe Menu, type: :model do
     end
 
     it "requires a price greater than zero" do
-      expect(described_class.new(name: "Plato", price: 0, provider:)).not_to be_valid
-      expect(described_class.new(name: "Plato", price: -10, provider:)).not_to be_valid
-      expect(described_class.new(name: "Plato", price: 150, provider:)).to be_valid
+      expect(described_class.new(name: "Plato", description: "Plato de prueba", price: 0, provider:)).not_to be_valid
+      expect(described_class.new(name: "Plato", description: "Plato de prueba", price: -10, provider:)).not_to be_valid
+      expect(described_class.new(name: "Plato", description: "Plato de prueba", price: 150, provider:)).to be_valid
     end
 
     it "requires a provider" do
-      menu = described_class.new(name: "Plato", price: 150, provider: nil)
+      menu = described_class.new(name: "Plato", description: "Plato de prueba", price: 150, provider: nil)
       expect(menu).not_to be_valid
       expect(menu.errors[:provider]).to be_present
     end
