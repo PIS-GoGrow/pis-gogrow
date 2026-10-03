@@ -632,6 +632,8 @@ es:
           home: "Envío a domicilio"
           view: "Ver pedidos"
           deadline: "Recibiendo pedidos hasta %{time}"
+          deadline_closed: "Recepción de pedidos cerrada"
+          deadline_all_day: "Recibiendo pedidos todo el día"
         insights:
           title: "Hallazgos del mes"
           orders: "Pedidos"
