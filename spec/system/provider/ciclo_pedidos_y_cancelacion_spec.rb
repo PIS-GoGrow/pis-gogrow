@@ -127,7 +127,7 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
 
       within find("a[href='#{order_path(order_a)}']").ancestor("[data-slot='card']") do
         expect(page).to have_button("Cancelar", disabled: true)
-        expect(page).to have_content("Ya está confirmado para hoy, así que no se puede cancelar desde la app.")
+        expect(page).to have_button("Editar", disabled: true)
       end
     end
 
@@ -162,12 +162,16 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
     end
 
     it "bloquea nuevos pedidos sin alterar los pedidos y cobros ya confirmados" do
-      sched_today.update!(available: false)
+      visible_date = Date.current.on_weekend? ? Date.current.next_week(:monday) : Date.current
+      visible_schedule = Schedule.find_or_create_by!(menu: milanesa, date: visible_date) do |s|
+        s.amount = 5
+      end
+      visible_schedule.update!(available: false)
 
       sign_in consumer_user, role: :consumer
       visit dashboard_path
 
-      find("button", text: /\b#{Date.current.day}\b/).click
+      find("button", text: /\b#{visible_date.day}\b/).click
 
       expect(page).to have_content("Agotado")
       expect(page).not_to have_button("Agregar #{milanesa.name}")
