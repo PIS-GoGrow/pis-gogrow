@@ -19,8 +19,27 @@ RSpec.describe "Cierre de recepción de pedidos visto por el empleado" do
     Order.delete_all
     Schedule.delete_all
     providers(:endulzate).update!(order_deadline: nil)
-    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", price: 300))
-    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider: providers(:endulzate), name: "Ñoquis caseros", price: 280))
+    Schedule.create!(
+      date: monday,
+      amount: 5,
+      menu: Menu.create!(
+        provider: providers(:tuviandita),
+        name: "Milanesa al pan",
+        description: "Milanesa al pan",
+        price: 300
+      )
+    )
+
+    Schedule.create!(
+      date: monday,
+      amount: 5,
+      menu: Menu.create!(
+        provider: providers(:endulzate),
+        name: "Ñoquis caseros",
+        description: "Ñoquis caseros",
+        price: 280
+      )
+    )
   end
 
   def set_deadline_as_provider(value)

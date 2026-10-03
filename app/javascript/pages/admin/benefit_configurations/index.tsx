@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import EditBenefitConfigurationForm from "@/components/benefit-configurations/edit-benefit-configuration-form"
+import SpecialSubsidiesSection from "@/components/benefit-configurations/special-subsidies-section"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,6 +24,8 @@ export default function Index({
   pending_base_subsidies,
   base_subsidy,
   configurable_month,
+  special_subsidies,
+  employees,
 }: AdminBenefitConfigurationsIndex) {
   const { t } = useTranslation()
   const [isEditing, setIsEditing] = useState(false)
@@ -172,6 +175,11 @@ export default function Index({
             )}
           </CardContent>
         </Card>
+
+        <SpecialSubsidiesSection
+          specialSubsidies={special_subsidies}
+          employees={employees}
+        />
       </div>
     </AppLayout>
   )

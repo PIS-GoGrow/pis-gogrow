@@ -85,6 +85,8 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     render(
       <Index
         benefit_configurations={[]}
+        special_subsidies={[]}
+        employees={[]}
         pending_base_subsidy={null}
         base_subsidy={null}
       />,
@@ -99,6 +101,8 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     render(
       <Index
         benefit_configurations={[]}
+        special_subsidies={[]}
+        employees={[]}
         pending_base_subsidy={null}
         base_subsidy={currentConfig}
       />,
@@ -115,6 +119,8 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     render(
       <Index
         benefit_configurations={[]}
+        special_subsidies={[]}
+        employees={[]}
         pending_base_subsidy={null}
         base_subsidy={currentConfig}
       />,
@@ -141,6 +147,8 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     render(
       <Index
         benefit_configurations={[]}
+        special_subsidies={[]}
+        employees={[]}
         pending_base_subsidy={pendingConfig}
         base_subsidy={currentConfig}
       />,
@@ -162,6 +170,8 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     render(
       <Index
         benefit_configurations={[currentConfig]}
+        special_subsidies={[]}
+        employees={[]}
         pending_base_subsidy={pendingConfig}
         base_subsidy={currentConfig}
       />,

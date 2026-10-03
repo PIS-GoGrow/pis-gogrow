@@ -31,9 +31,15 @@ export default function MenuCard({
         <CardDescription>{menu.description}</CardDescription>
         <CardAction className="ml-auto">
           {showLink && (
-            <Button className="mr-2" asChild>
-              <Link href={providerMenus.show(menu.id)}> Ver </Link>
-            </Button>
+            <>
+              <Button className="mr-2" asChild>
+                <Link href={providerMenus.show(menu.id)}> Ver </Link>
+              </Button>
+
+              <Button className="mr-2" variant="outline" asChild>
+                <Link href={providerMenus.edit(menu.id)}>Editar</Link>
+              </Button>
+            </>
           )}
           <DialogTrigger asChild>
             <Button

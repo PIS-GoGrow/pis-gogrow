@@ -8,6 +8,9 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
     @pending_base_subsidies = BenefitConfiguration.pending_base_subsidies_for company
     @base_subsidy = BenefitConfiguration.base_subsidy_for company
     @configurable_month = Calendar.new.configurable_month.strftime("%d/%m/%y")
+
+    @special_subsidies = company.benefit_configurations.active.special.includes(:benefit_rules, :consumers).order(:created_at)
+    @employees = company.consumers.includes(:user).order("users.name").references(:user)
   end
 
   def create
