@@ -1,0 +1,650 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+# SYS-02: IBP-050, IBP-051, IBP-053, IBP-065, IBP-022, IBP-068, IBP-014, IBP-066,
+# IBP-067 e IBP-008. El proveedor publica y edita un menú, el empleado pide y edita
+# su pedido, y los datos tienen que coincidir entre la confirmación, el historial
+# del empleado y la vista del proveedor.
+#
+# TODO(integración): falta implementar que el empleado elija las opciones de
+# personalización al pedir antes de poder testear el paso "E1 elige opción" y que
+# la opción elegida coincida entre las vistas. Hoy el inicio del empleado manda
+# fillings/sauces vacíos (Consumer::DashboardController#schedules_data) y el pedido
+# no tiene dónde guardar la opción elegida. Historias: IBP-022 "seleccionar
+# opciones al pedir" (CA1, CA2) e IBP-065 "opciones por plato" (CA4, CA5, CA6).
+#
+# TODO(integración): falta implementar activar y desactivar una opción de
+# personalización sin borrarla antes de poder testear ese caso de IBP-065 CA2.
+# Historia: IBP-065 "opciones por plato".
+#
+# TODO(integración): falta implementar que el proveedor configure si entrega a
+# domicilio (hoy Provider#home_delivery solo cambia por consola) antes de poder
+# testear IBP-068 CA1, CA2 y CA4. Historia: IBP-068 "modalidades de entrega".
+#
+# TODO(integración): falta implementar mover un menú publicado a otra fecha antes
+# de poder testear esa parte de IBP-051 CA2, y registrar quién y cuándo editó un
+# menú publicado para IBP-051 CA5 ("queda registrada"). Historia: IBP-051 "editar
+# menús".
+#
+# TODO(integración): falta implementar el registro de qué campos cambiaron al
+# modificar un pedido (hoy solo se guardan modified_by y modified_at) antes de
+# poder testear esa parte de IBP-008 CA3. Historia: IBP-008 "modificar pedido".
+RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
+  fixtures :users, :providers, :consumers, :companies
+
+  let(:p1) { providers(:tuviandita) }
+  let(:p1_user) { users(:provider_user) }
+  let(:p2_user) { users(:other_provider_user) }
+  let(:e1) { consumers(:one) }
+  let(:e1_user) { users(:one) }
+  let(:e2) { consumers(:other) }
+  let(:e2_user) { users(:other_consumer_user) }
+
+  let(:monday) { Date.current.next_week(:monday) }
+  let(:tuesday) { monday + 1.day }
+
+  let!(:p1_milanesa) { p1.menus.create!(name: "Milanesa al pan", description: "Con papas", price: 300) }
+  let!(:p1_wok) { p1.menus.create!(name: "Wok de vegetales", description: "Salteado", price: 290) }
+
+  around do |example|
+    travel_to(Time.zone.local(monday.year, monday.month, monday.day, 10, 0)) { example.run }
+  end
+
+  before do
+    OrderBenefit.delete_all
+    OrderAccount.delete_all
+    Order.delete_all
+    Schedule.delete_all
+    Provider.update_all(order_deadline: nil)
+  end
+
+  # Las hojas entran deslizándose: en CI el clic caía mientras se movían.
+  def without_animations
+    page.execute_script(<<~JS)
+      const style = document.createElement("style")
+      style.textContent = "*, *::before, *::after { animation: none !important; transition: none !important; }"
+      document.head.appendChild(style)
+    JS
+  end
+
+  def open_publication_day(date)
+    visit schedules_path(week_start: date.beginning_of_week(:monday).to_s)
+    without_animations
+    find("button", text: /\b#{date.day}\b/).click
+  end
+
+  def pick_dish(dish, amount)
+    find("p", text: dish.name, exact_text: true).click
+    fill_in "amount-#{dish.id}", with: amount.to_s
+  end
+
+  def open_menu(as:, day:)
+    sign_in as, role: :consumer
+    visit dashboard_path
+    without_animations
+    within("[role=radiogroup]") { find("[role=radio]", text: /\b#{day.day}\b/).click }
+  end
+
+  def add_to_cart(dish, notes: nil)
+    click_button "Agregar #{dish.name}"
+    fill_in "notes", with: notes if notes
+    click_button "Agregar"
+  end
+
+  def open_cart
+    first(:button, "Ver carrito").click
+    expect(page).to have_content("Tu carrito")
+  end
+
+  def use_new_address(name:, street:)
+    click_button "Agregar"
+    within("[role=dialog]", text: "Agregar una dirección") do
+      fill_in "Nombre", with: name
+      fill_in "Dirección", with: street
+      click_button "Agregar"
+    end
+  end
+
+  def publish(dish, date, amount: 5)
+    dish.schedules.create!(date:, amount:)
+  end
+
+  def place_order(consumer, schedule, quantity: 1, notes: nil)
+    Order.reserve(
+      consumer:, schedule:, quantity:, notes:, delivery_method: :office,
+      address: consumer.company.address, benefits: []
+    ).tap { expect(it).to be_persisted }
+  end
+
+  def edit_order(order)
+    visit order_path(order)
+    click_button "Editar"
+  end
+
+  # La confirmación redondea a pesos; las demás vistas usan el formato de moneda.
+  def confirmation_money(amount) = "$#{amount.round}"
+  def uyu(amount) = /#{amount.to_i},00/
+
+  describe "Pasos: P1 publica y edita, E1 pide y edita, P1 consulta" do
+    it "deja el mismo pedido, importe, datos y estado en la confirmación, el historial y el proveedor" do
+      # P1 publica un menú para el martes y después lo edita.
+      sign_in p1_user, role: :provider
+      open_publication_day(tuesday)
+      pick_dish(p1_milanesa, 5)
+      click_button "Publicar menú"
+      expect(page).to have_content("Publicado")
+
+      click_button "Editar menú"
+      expect(page).to have_content("Editando menú publicado")
+      fill_in "amount-#{p1_milanesa.id}", with: "8"
+      pick_dish(p1_wok, 3)
+      click_button "Publicar menú"
+      expect(page).to have_content("Menú actualizado con éxito.")
+
+      milanesa_tuesday = p1_milanesa.schedules.find_by!(date: tuesday)
+      expect(milanesa_tuesday.amount).to eq(8)
+      expect(p1_wok.schedules.find_by!(date: tuesday).amount).to eq(3)
+      sign_out
+
+      # E1 elige fecha, plato, nota, entrega y dirección, y confirma.
+      open_menu(as: e1_user, day: tuesday)
+      expect(page).to have_button("Agregar #{p1_wok.name}")
+      add_to_cart(p1_milanesa, notes: "Sin sal")
+      open_cart
+      use_new_address(name: "Estudio", street: "Colonia 1370")
+      click_button "Confirmar pedido"
+      expect(page).to have_content("¡Pedido recibido!")
+
+      order = e1.orders.sole
+      expect(order).to have_attributes(
+        schedule: milanesa_tuesday, menu_name: "Milanesa al pan", amount: 1, notes: "Sin sal",
+        delivery_method: "home", address: "Colonia 1370", status: "pending"
+      )
+      expect(page).to have_content("Milanesa al pan")
+      expect(page).to have_content(confirmation_money(order.discounted_price))
+
+      # E1 abre Mis pedidos y edita el pedido: cantidad y nota.
+      visit orders_path
+      within(find("[data-slot=card]", text: "Milanesa al pan")) { click_link "Editar" }
+      within("[role=dialog]") do
+        click_button "Agregar uno"
+        fill_in "notes", with: "Sin sal, con limón"
+        click_button "Guardar cambios"
+      end
+      expect(page).to have_content("Pedido actualizado")
+
+      edited = Order.find(order.id)
+      expect(e1.orders.count).to eq(1)
+      expect(edited).to have_attributes(
+        amount: 2, notes: "Sin sal, con limón", price: order.price * 2,
+        modified_by: e1_user, status: "pending", address: "Colonia 1370"
+      )
+      expect(edited.modified_at).to be_present
+
+      visit order_path(edited)
+      expect(page).to have_content("Milanesa al pan")
+      expect(page).to have_content("Sin sal, con limón")
+      expect(page).to have_content("Colonia 1370")
+      expect(page).to have_content("Pendiente")
+      expect(page).to have_content(uyu(edited.price))
+      sign_out
+
+      # P1 consulta el mismo pedido y ve los mismos datos.
+      sign_in p1_user, role: :provider
+      visit provider_order_path(edited)
+      expect(page).to have_content("Milanesa al pan")
+      expect(page).to have_content("Sin sal, con limón")
+      expect(page).to have_content("Colonia 1370")
+      expect(page).to have_content("Pendiente")
+      expect(page).to have_content(uyu(edited.price))
+      expect(page).to have_content(uyu(edited.discounted_price))
+      sign_out
+
+      # Persistencia: E1 vuelve a entrar y ve el pedido igual.
+      sign_in e1_user, role: :consumer
+      visit order_path(edited)
+      expect(page).to have_content("Sin sal, con limón")
+      expect(page).to have_content(uyu(edited.price))
+    end
+  end
+
+  describe "Repetir con plato agotado (IBP-053)" do
+    let!(:wok_tuesday) { publish(p1_wok, tuesday, amount: 5) }
+    let!(:e2_order) { place_order(e2, wok_tuesday) }
+
+    def toggle_wok_stock
+      sign_in p1_user, role: :provider
+      open_publication_day(tuesday)
+      within(find("[data-slot=card]", text: p1_wok.name)) { find("[role=switch]").click }
+    end
+
+    it "deja el plato visible como agotado, sin poder pedirlo, y registra quién y cuándo" do
+      toggle_wok_stock
+      expect(page).to have_css("[data-slot=card]", text: p1_wok.name) do |card|
+        card.has_css?("[role=switch][aria-checked=false]")
+      end
+      expect(wok_tuesday.reload).to have_attributes(
+        available: false, availability_changed_by: p1_user, availability_changed_at: Time.current
+      )
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+      expect(page).to have_content("Agotado")
+      expect(page).to have_button("Agregar #{p1_wok.name}", disabled: true)
+      expect(e1.orders).to be_empty
+    end
+
+    it "vuelve a admitir pedidos cuando el proveedor lo marca disponible otra vez" do
+      wok_tuesday.set_availability(available: false, by: p1_user)
+      toggle_wok_stock
+      expect(page).to have_css("[role=switch][aria-checked=true]")
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+      expect(page).to have_button("Agregar #{p1_wok.name}", disabled: false)
+    end
+
+    it "no cambia los pedidos existentes: siguen pendientes y el proveedor los gestiona" do
+      toggle_wok_stock
+      expect(page).to have_css("[role=switch][aria-checked=false]")
+
+      expect(e2_order.reload).to be_pending
+      visit provider_order_path(e2_order)
+      expect(page).to have_content("Pendiente")
+      expect(page).to have_button("Confirmar")
+      expect(page).to have_button("Rechazar")
+    end
+
+    # IBP-008 CA2: al editar se vuelve a validar la disponibilidad.
+    it "no deja que el empleado aumente la cantidad de un pedido sobre un plato agotado" do
+      wok_tuesday.set_availability(available: false, by: p1_user)
+      sign_in e2_user, role: :consumer
+
+      edit_order(e2_order)
+      within("[role=dialog]") do
+        click_button "Agregar uno"
+        click_button "Guardar cambios"
+      end
+
+      expect(page).to have_content("Este plato ya no está disponible para la fecha seleccionada.")
+      expect(e2_order.reload.amount).to eq(1)
+    end
+  end
+
+  describe "Repetir sin cupo (IBP-051 CA4, IBP-008 CA2)" do
+    it "marca agotado el plato cuyo cupo ya se pidió entero" do
+      wok_tuesday = publish(p1_wok, tuesday, amount: 1)
+      place_order(e2, wok_tuesday)
+
+      open_menu(as: e1_user, day: tuesday)
+
+      expect(page).to have_content("Agotado")
+      expect(page).to have_button("Agregar #{p1_wok.name}", disabled: true)
+    end
+
+    it "rechaza confirmar si otro se llevó el último lugar mientras estaba en el carrito" do
+      wok_tuesday = publish(p1_wok, tuesday, amount: 1)
+      open_menu(as: e1_user, day: tuesday)
+      add_to_cart(p1_wok)
+      open_cart
+
+      place_order(e2, wok_tuesday)
+      click_button "Confirmar pedido"
+
+      expect(page).to have_content("Ya no hay suficiente stock para la cantidad solicitada.")
+      expect(e1.orders).to be_empty
+      expect(wok_tuesday.orders.count).to eq(1)
+    end
+
+    it "no deja pasar la cantidad del pedido más allá del cupo que queda" do
+      wok_tuesday = publish(p1_wok, tuesday, amount: 2)
+      e1_order = place_order(e1, wok_tuesday)
+      place_order(e2, wok_tuesday)
+      sign_in e1_user, role: :consumer
+
+      edit_order(e1_order)
+
+      within("[role=dialog]") { expect(page).to have_button("Agregar uno", disabled: true) }
+    end
+
+    it "refleja para el empleado el stock que el proveedor sube en un menú publicado" do
+      wok_tuesday = publish(p1_wok, tuesday, amount: 1)
+      place_order(e2, wok_tuesday)
+      sign_in p1_user, role: :provider
+      open_publication_day(tuesday)
+      click_button "Editar menú"
+      fill_in "amount-#{p1_wok.id}", with: "4"
+      click_button "Publicar menú"
+      expect(page).to have_content("Menú actualizado con éxito.")
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+
+      expect(page).to have_button("Agregar #{p1_wok.name}", disabled: false)
+      expect(wok_tuesday.reload.id).to eq(wok_tuesday.id)
+    end
+  end
+
+  describe "Repetir con hora límite vencida (IBP-066, IBP-008 CA4)" do
+    let!(:milanesa_monday) { publish(p1_milanesa, monday) }
+
+    it "no deja pedir para hoy pasada la hora límite e informa el motivo" do
+      p1.update!(order_deadline: "09:00")
+
+      open_menu(as: e1_user, day: monday)
+
+      expect(page).to have_content("Este proveedor ya cerró la recepción de pedidos para hoy.")
+      expect(page).to have_button("Agregar #{p1_milanesa.name}", disabled: true)
+      expect(e1.orders).to be_empty
+    end
+
+    it "deja pedir para hoy mientras no llegó la hora límite" do
+      p1.update!(order_deadline: "10:15")
+
+      open_menu(as: e1_user, day: monday)
+      add_to_cart(p1_milanesa)
+      open_cart
+      click_button "Confirmar pedido"
+
+      expect(page).to have_content("¡Pedido recibido!")
+      expect(e1.orders.sole.schedule).to eq(milanesa_monday)
+    end
+
+    it "conserva el estado de los pedidos hechos antes del límite" do
+      order = place_order(e1, milanesa_monday)
+      p1.update!(order_deadline: "09:00")
+      sign_in e1_user, role: :consumer
+
+      visit order_path(order)
+
+      expect(page).to have_content("Pendiente")
+      expect(order.reload).to be_pending
+    end
+  end
+
+  describe "editar o agotar un plato no altera pedidos anteriores (IBP-050, IBP-065 CA7)" do
+    let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday) }
+    let!(:e1_order) do
+      p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ])
+      place_order(e1, milanesa_tuesday).tap { it.update!(status: :confirmed) }
+    end
+
+    it "informa la programación afectada, pide qué hacer con los confirmados y los mantiene" do
+      sign_in p1_user, role: :provider
+      visit edit_provider_menu_path(p1_milanesa)
+      fill_in "name", with: "Milanesa napolitana", fill_options: { clear: :backspace }
+      fill_in "price", with: "380", fill_options: { clear: :backspace }
+      click_button "Modificar"
+
+      expect(page).to have_content("¿Aplicar cambios desde esta fecha?")
+      find("label", text: "Mantener los pedidos confirmados").click
+      click_button "Aplicar cambios"
+      expect(page).to have_content("¡Plato modificado!")
+
+      expect(milanesa_tuesday.reload.menu.name).to eq("Milanesa napolitana")
+      expect(e1_order.reload).to have_attributes(status: "confirmed", menu_name: "Milanesa al pan", price: 300)
+
+      visit provider_order_path(e1_order)
+      expect(page).to have_content("Milanesa al pan")
+      expect(page).to have_content(uyu(300))
+      sign_out
+
+      sign_in e1_user, role: :consumer
+      visit order_path(e1_order)
+      expect(page).to have_content("Milanesa al pan")
+      expect(page).to have_content("Confirmado")
+      expect(page).to have_content(uyu(300))
+    end
+
+    it "conserva en el pedido las opciones que tenía el plato cuando se pidió" do
+      sign_in p1_user, role: :provider
+      visit edit_provider_menu_path(p1_milanesa)
+      click_button "Editar Guarnición"
+      within("[role=dialog]") do
+        fill_in "group-options", with: "Ensalada, Boniato", fill_options: { clear: :backspace }
+        click_button "Guardar"
+      end
+      click_button "Modificar"
+      click_button "Aplicar cambios"
+      expect(page).to have_content("¡Plato modificado!")
+      expect(p1_milanesa.reload.option_groups.sole.options).to eq([ "Ensalada", "Boniato" ])
+
+      visit provider_order_path(e1_order)
+
+      expect(page).to have_content("Papas")
+      expect(page).to have_no_content("Boniato")
+    end
+
+    it "no altera los pedidos al agotar el plato" do
+      milanesa_tuesday.set_availability(available: false, by: p1_user)
+
+      expect(e1_order.reload).to have_attributes(status: "confirmed", amount: 1, price: 300)
+    end
+  end
+
+  describe "IBP-050: editar la información básica de un plato sin programación" do
+    before do
+      sign_in p1_user, role: :provider
+      visit edit_provider_menu_path(p1_wok)
+    end
+
+    def save_with_simple_confirmation
+      click_button "Modificar"
+      expect(page).to have_content("¿Modificar el plato guardado?")
+      click_button "Aplicar cambios"
+    end
+
+    it "guarda nombre, descripción, precio y opciones con una confirmación simple" do
+      fill_in "name", with: "Wok de pollo", fill_options: { clear: :backspace }
+      fill_in "description", with: "Con fideos de arroz", fill_options: { clear: :backspace }
+      fill_in "price", with: "320", fill_options: { clear: :backspace }
+      click_button "Agregar", exact: true
+      within("[role=dialog]") do
+        fill_in "group-name", with: "Salsa"
+        fill_in "group-options", with: "Soja, Agridulce"
+        click_button "Agregar"
+      end
+      save_with_simple_confirmation
+
+      expect(page).to have_content("¡Plato modificado!")
+      expect(p1_wok.reload).to have_attributes(name: "Wok de pollo", description: "Con fideos de arroz", price: 320)
+      expect(p1_wok.option_groups.pluck(:name, :options)).to eq([ [ "Salsa", [ "Soja", "Agridulce" ] ] ])
+      expect(p1_wok.modified_by).to eq(p1_user)
+    end
+
+    it "borra un grupo de opciones" do
+      p1_wok.option_groups.create!(name: "Salsa", options: [ "Soja" ])
+      visit edit_provider_menu_path(p1_wok)
+
+      click_button "Borrar Salsa"
+      save_with_simple_confirmation
+
+      expect(page).to have_content("¡Plato modificado!")
+      expect(p1_wok.reload.option_groups).to be_empty
+    end
+
+    {
+      "nombre vacío" => [ "name", "" ],
+      "nombre solo con espacios" => [ "name", "   " ],
+      "descripción vacía" => [ "description", "" ],
+      "descripción solo con espacios" => [ "description", "   " ],
+      "precio vacío" => [ "price", "" ]
+    }.each do |label, (field, value)|
+      it "rechaza #{label} y no guarda nada" do
+        fill_in field, with: value, fill_options: { clear: :backspace }
+        click_button "Modificar"
+        click_button "Aplicar cambios" if page.has_button?("Aplicar cambios", wait: 1)
+
+        expect(page).to have_css("[data-invalid=true]")
+        expect(page).to have_no_content("¡Plato modificado!")
+        expect(p1_wok.reload).to have_attributes(name: "Wok de vegetales", description: "Salteado", price: 290)
+      end
+    end
+
+    { "precio cero" => "0", "precio negativo" => "-5" }.each do |label, value|
+      it "rechaza #{label} y no guarda nada" do
+        fill_in "price", with: value, fill_options: { clear: :backspace }
+        click_button "Modificar"
+
+        expect(page).to have_no_content("¿Modificar el plato guardado?")
+        expect(p1_wok.reload.price).to eq(290)
+      end
+    end
+
+    it "acepta el precio mínimo de un centésimo" do
+      fill_in "price", with: "0.01", fill_options: { clear: :backspace }
+      save_with_simple_confirmation
+
+      expect(page).to have_content("¡Plato modificado!")
+      expect(p1_wok.reload.price).to eq(0.01)
+    end
+  end
+
+  describe "IBP-065 CA3: el diálogo de opciones no deja guardar datos inválidos" do
+    before do
+      sign_in p1_user, role: :provider
+      visit edit_provider_menu_path(p1_wok)
+      click_button "Agregar", exact: true
+    end
+
+    {
+      "sin nombre" => [ "", "Soja, Agridulce" ],
+      "con nombre solo de espacios" => [ "   ", "Soja" ],
+      "sin alternativas" => [ "Salsa", "" ],
+      "con alternativas solo de comas y espacios" => [ "Salsa", " , , " ],
+      "con alternativas duplicadas" => [ "Salsa", "Soja, soja" ]
+    }.each do |label, (name, options)|
+      it "no deja agregar un grupo #{label}" do
+        within("[role=dialog]") do
+          fill_in "group-name", with: name
+          fill_in "group-options", with: options
+          expect(page).to have_button("Agregar", disabled: true)
+        end
+      end
+    end
+  end
+
+  describe "IBP-051 CA5: editar un menú publicado no cambia los pedidos ya creados" do
+    let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday, amount: 5) }
+    let!(:wok_tuesday) { publish(p1_wok, tuesday, amount: 5) }
+    let!(:e1_order) { place_order(e1, milanesa_tuesday, quantity: 2) }
+
+    before do
+      sign_in p1_user, role: :provider
+      open_publication_day(tuesday)
+      click_button "Editar menú"
+    end
+
+    it "mantiene el pedido al bajar el stock del plato" do
+      fill_in "amount-#{p1_milanesa.id}", with: "3"
+      click_button "Publicar menú"
+      expect(page).to have_content("Menú actualizado con éxito.")
+
+      expect(e1_order.reload).to have_attributes(status: "pending", amount: 2, schedule_id: milanesa_tuesday.id)
+    end
+  end
+
+  describe "IBP-008: qué se puede modificar y cuándo" do
+    let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday) }
+
+    it "no deja editar un pedido que el proveedor ya confirmó" do
+      order = place_order(e1, milanesa_tuesday).tap { it.update!(status: :confirmed) }
+      sign_in e1_user, role: :consumer
+
+      visit order_path(order)
+
+      expect(page).to have_button("Editar", disabled: true)
+    end
+
+    it "deja cambiar la dirección a otra guardada y la ve el proveedor" do
+      e1.saved_addresses.create!(name: "Estudio", street: "Colonia 1370")
+      order = place_order(e1, milanesa_tuesday)
+      sign_in e1_user, role: :consumer
+
+      edit_order(order)
+      within("[role=dialog]") do
+        find("label", text: "Colonia 1370").click
+        click_button "Guardar cambios"
+      end
+      expect(page).to have_content("Pedido actualizado")
+      expect(order.reload).to have_attributes(delivery_method: "home", address: "Colonia 1370")
+      sign_out
+
+      sign_in p1_user, role: :provider
+      visit provider_order_path(order)
+      expect(page).to have_content("Colonia 1370")
+    end
+  end
+
+  describe "IBP-022 CA3: la nota tiene un máximo de 140 caracteres" do
+    let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday) }
+
+    it "no deja escribir más de 140 caracteres al pedir" do
+      open_menu(as: e1_user, day: tuesday)
+      click_button "Agregar #{p1_milanesa.name}"
+
+      fill_in "notes", with: "a" * 141
+
+      expect(find_field("notes").value.length).to eq(140)
+    end
+  end
+
+  describe "IBP-068 CA5: cambiar las modalidades no toca los pedidos ya creados" do
+    it "deja el pedido a domicilio aunque el proveedor pase a entregar solo en la oficina" do
+      order = place_order(e1, publish(p1_milanesa, tuesday))
+      order.update!(delivery_method: :home, address: "Colonia 1370")
+      p1.update!(home_delivery: false)
+
+      sign_in e1_user, role: :consumer
+      visit order_path(order)
+      expect(page).to have_content("Colonia 1370")
+      sign_out
+
+      sign_in p1_user, role: :provider
+      visit provider_order_path(order)
+      expect(page).to have_content("Colonia 1370")
+      expect(order.reload).to have_attributes(delivery_method: "home", address: "Colonia 1370")
+    end
+  end
+
+  describe "permisos y privacidad entre pares" do
+    let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday) }
+    let!(:e1_order) { place_order(e1, milanesa_tuesday, notes: "Sin sal") }
+
+    it "P2 no ve el pedido de P1 entrando por URL" do
+      sign_in p2_user, role: :provider
+      visit provider_order_path(e1_order)
+
+      expect(page).to have_no_content("Sin sal")
+      expect(page).to have_no_content(p1_milanesa.name)
+    end
+
+    it "P2 no abre la edición de un plato de P1 entrando por URL" do
+      sign_in p2_user, role: :provider
+      visit edit_provider_menu_path(p1_milanesa)
+
+      expect(page).to have_no_field("name", with: p1_milanesa.name)
+    end
+
+    it "E2 no ve el pedido de E1 entrando por URL" do
+      sign_in e2_user, role: :consumer
+      visit order_path(e1_order)
+
+      expect(page).to have_no_content("Sin sal")
+    end
+
+    it "un empleado no llega a la edición de platos" do
+      sign_in e1_user, role: :consumer
+      visit edit_provider_menu_path(p1_milanesa)
+
+      expect(page).to have_no_current_path(edit_provider_menu_path(p1_milanesa))
+    end
+
+    it "un visitante sin sesión no ve el pedido" do
+      visit order_path(e1_order)
+
+      expect(page).to have_current_path(sign_in_path)
+    end
+  end
+end
