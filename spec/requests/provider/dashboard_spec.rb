@@ -62,6 +62,28 @@ RSpec.describe "Provider::Dashboard", type: :request do
         )
       end
 
+      context "con la hora de cierre configurada" do
+        around do |example|
+          travel_to(Time.current.change(hour: 12)) { example.run }
+        end
+
+        it "indica que la recepción sigue abierta antes de la hora de cierre" do
+          provider.update!(order_deadline: Time.zone.parse("12:01"))
+
+          get provider_dashboard_path
+
+          expect(inertia).to have_props(order_deadline: "12:01", order_deadline_passed_today: false)
+        end
+
+        it "indica que la recepción está cerrada al llegar a la hora de cierre" do
+          provider.update!(order_deadline: Time.zone.parse("12:00"))
+
+          get provider_dashboard_path
+
+          expect(inertia).to have_props(order_deadline: "12:00", order_deadline_passed_today: true)
+        end
+      end
+
       it "envía order_deadline como nil cuando no está configurada" do
         provider.update!(order_deadline: nil)
 
@@ -69,6 +91,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
         expect(inertia).to have_props(
           order_deadline: nil,
+          order_deadline_passed_today: false,
           provider: { order_deadline: nil }
         )
       end

@@ -18,6 +18,10 @@ class ProviderCollectionSummary
   AccountRow = Data.define(:account, :meals) do
     delegate :id, :amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
 
+    def payments
+      account.payments.sort_by { |payment| [ payment.created_at, payment.id ] }.reverse
+    end
+
     def owner_name
       ProviderCollectionSummary.owner_name(account)
     end

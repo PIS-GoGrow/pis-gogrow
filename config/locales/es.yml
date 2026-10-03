@@ -437,7 +437,7 @@ es:
         history_empty_title: "No tienes pedidos anteriores"
         history_empty_description: "Tus pedidos completados aparecerán aquí."
         quantity: "x%{count}"
-        upcoming_address: "Recibes en: %{address} (%{delivery_method})"
+        upcoming_address: "Lo recibís en: %{address} (%{delivery_method})"
         history_address: "Recibiste en: %{address} (%{delivery_method})"
         no_date: "Sin fecha de entrega"
         no_price: "Importe no disponible"
@@ -452,7 +452,7 @@ es:
           back: "Volver"
           confirm: "Cancelar pedido"
         cannot_cancel:
-          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar desde la app."
+          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
       show:
@@ -467,9 +467,10 @@ es:
         total: "Importe final"
         notes: "Notas"
         no_notes: "Sin notas"
-        edit: "Modificar pedido"
+        edit: "Editar"
+        rejection_reason: "Motivo de rechazo"
         edit_dialog:
-          title: "Modificar pedido"
+          title: "Editar"
           description: "Podés cambiar la cantidad, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo."
           quantity: "Cantidad"
           address: "Dirección de entrega"
@@ -676,6 +677,8 @@ es:
           home: "Envío a domicilio"
           view: "Ver pedidos"
           deadline: "Recibiendo pedidos hasta %{time}"
+          deadline_closed: "Recepción de pedidos cerrada"
+          deadline_all_day: "Recibiendo pedidos todo el día"
         insights:
           title: "Hallazgos del mes"
           orders: "Pedidos"

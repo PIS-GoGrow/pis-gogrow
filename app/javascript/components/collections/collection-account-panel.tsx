@@ -3,6 +3,7 @@ import { Eye, TriangleAlert } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import CollectionPaymentHistory from "@/components/collections/collection-payment-history"
 import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -22,11 +23,20 @@ interface CollectionAccountPanelProps {
   children?: ReactNode
 }
 
+interface CollectionAccountPanelProps {
+  account: ProviderCollectionAccount
+  heading?: "month" | "paid_on" | "none"
+  aside?: ReactNode
+  children?: ReactNode
+  showPaymentHistory?: boolean
+}
+
 export default function CollectionAccountPanel({
   account,
   heading = "month",
   aside,
   children,
+  showPaymentHistory = false,
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -101,6 +111,9 @@ export default function CollectionAccountPanel({
             <Button className="w-full">Revisar pago</Button>
           </SheetTrigger>
         </PaymentReviewSheet>
+      )}
+      {showPaymentHistory && (
+        <CollectionPaymentHistory payments={account.payments} />
       )}
 
       {children && (

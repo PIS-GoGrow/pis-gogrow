@@ -197,6 +197,7 @@ export default function CollectionGroupCard({
                       <CollectionAccountPanel
                         account={employee}
                         heading={settled ? "none" : "month"}
+                        showPaymentHistory={settled}
                       />
                     </CollapsibleContent>
                   </Collapsible>
@@ -218,6 +219,7 @@ export default function CollectionGroupCard({
                 <CollectionAccountPanel
                   account={group.company}
                   heading={settled ? "paid_on" : "month"}
+                  showPaymentHistory={settled}
                   aside={
                     group.company.invoice && (
                       <StatusBadge

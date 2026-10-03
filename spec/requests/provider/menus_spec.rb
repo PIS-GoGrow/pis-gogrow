@@ -68,7 +68,11 @@ RSpec.describe "Provider::Menus", type: :request do
     it "creates a dish without option groups" do
       expect do
         post provider_menus_path, params: {
-          menu: { name: "Ensalada César", price: 290.0 }
+          menu: {
+            name: "Ensalada César",
+            description: "Ensalada con pollo, lechuga y aderezo César",
+            price: 290.0
+          }
         }
       end.to change(provider.menus, :count).by(1)
 
@@ -141,6 +145,28 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
+  describe "GET /provider/menus/:id/edit" do
+    before { sign_in provider_user, role: :provider }
+
+    it "renders the edit page for the provider's own dish" do
+      menu = menus(:milanesa)
+
+      get edit_provider_menu_path(menu)
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to render_component("provider/menus/edit")
+      expect(inertia.props[:menu]["id"]).to eq(menu.id)
+      expect(inertia.props[:menu]["name"]).to eq(menu.name)
+      expect(inertia.props[:menu]).to have_key("option_groups")
+    end
+
+    it "returns not found when attempting to edit another provider's dish" do
+      get edit_provider_menu_path(menus(:sorrentinos))
+
+      expect(response).to have_http_status(:not_found)
+    end
+  end
+
   describe "PATCH /provider/menus/:id" do
     before { sign_in provider_user, role: :provider }
 
@@ -154,9 +180,62 @@ RSpec.describe "Provider::Menus", type: :request do
         }
       }
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(edit_provider_menu_path(menu))
       expect(group.reload.options).to eq([ "Tuco", "Caruso" ])
       expect(group.reload.limit).to eq(2)
+    end
+
+    it "updates the provider's dish information" do
+      menu = menus(:milanesa)
+
+      patch provider_menu_path(menu), params: {
+        menu: {
+          name: "Milanesa napolitana",
+          description: "Con papas fritas",
+          price: 420.50
+        }
+      }
+
+      expect(response).to redirect_to(edit_provider_menu_path(menu))
+
+      menu.reload
+      expect(menu.name).to eq("Milanesa napolitana")
+      expect(menu.description).to eq("Con papas fritas")
+      expect(menu.price).to eq(420.50)
+    end
+
+    it "returns validation errors when the changes are invalid" do
+      menu = menus(:milanesa)
+
+      patch provider_menu_path(menu), params: {
+        menu: {
+          name: "",
+          description: "",
+          price: 0
+        }
+      }
+
+      expect(response).to redirect_to(edit_provider_menu_path(menu))
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to have_key(:name)
+      expect(inertia.props[:errors]).to have_key(:price)
+      expect(inertia.props[:errors]).to have_key(:description)
+    end
+
+    it "returns not found when attempting to update another provider's dish" do
+      menu = menus(:sorrentinos)
+      original_name = menu.name
+
+      patch provider_menu_path(menu), params: {
+        menu: {
+          name: "No debería cambiar",
+          price: 999
+        }
+      }
+
+      expect(response).to have_http_status(:not_found)
+      expect(menu.reload.name).to eq(original_name)
     end
 
     it "removes an option group with _destroy" do
@@ -171,7 +250,7 @@ RSpec.describe "Provider::Menus", type: :request do
         }
       end.to change(MenuOptionGroup, :count).by(-1)
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(edit_provider_menu_path(menu))
     end
   end
 
@@ -179,7 +258,11 @@ RSpec.describe "Provider::Menus", type: :request do
     before { sign_in provider_user, role: :provider }
 
     it "deletes the dish and redirects to index" do
-      menu_to_delete = provider.menus.create!(name: "Pastel de carne", price: 280)
+      menu_to_delete = provider.menus.create!(
+        name: "Pastel de carne",
+        description: "Pastel de carne con puré",
+        price: 280
+      )
 
       expect do
         delete provider_menu_path(menu_to_delete)
