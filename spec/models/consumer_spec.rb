@@ -37,7 +37,7 @@ RSpec.describe Consumer, type: :model do
     end
 
     def home_order(address, created_at:)
-      menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa", price: 300)
+      menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa", description: "Plato de prueba", price: 300)
       schedule = Schedule.create!(menu:, date: Date.current + 1, amount: 5)
       Order.create!(consumer:, schedule:, amount: 1, price: 300, address:, delivery_method: :home, created_at:)
     end

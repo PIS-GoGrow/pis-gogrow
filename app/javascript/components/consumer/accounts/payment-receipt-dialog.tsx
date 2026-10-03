@@ -4,6 +4,14 @@ import type { ComponentProps } from "react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,12 +32,6 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { Spinner } from "@/components/ui/spinner"
 import { consumerPayments } from "@/routes"
 import type { Payment } from "@/types"
@@ -170,18 +172,20 @@ export default function PaymentReceiptDialog({
         </div>
       ))}
 
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogTrigger asChild>
+      <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
+        <AdaptableDialogTrigger asChild>
           <Button className="w-full">{t("pages.accounts.show.receipt")}</Button>
-        </DialogTrigger>
+        </AdaptableDialogTrigger>
 
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{t("pages.accounts.show.receipt_title")}</DialogTitle>
-            <DialogDescription>
+        <AdaptableDialogContent className="p-5">
+          <AdaptableDialogHeader className="px-0 py-2">
+            <AdaptableDialogTitle>
+              {t("pages.accounts.show.receipt_title")}
+            </AdaptableDialogTitle>
+            <AdaptableDialogDescription>
               {t("pages.accounts.show.receipt_description")}
-            </DialogDescription>
-          </DialogHeader>
+            </AdaptableDialogDescription>
+          </AdaptableDialogHeader>
 
           <Form
             action={createAction}
@@ -254,36 +258,27 @@ export default function PaymentReceiptDialog({
               </>
             )}
           </Form>
-        </DialogContent>
-      </Dialog>
+        </AdaptableDialogContent>
+      </AdaptableDialog>
 
-      <Sheet
+      <AdaptableDialog
         open={uploadResult !== null}
         onOpenChange={(nextOpen) => {
           if (!nextOpen) setUploadResult(null)
         }}
       >
-        <SheetContent
-          side="bottom"
-          showCloseButton={false}
-          className="border-border bg-background text-foreground gap-6 rounded-t-[32px] border px-6 pt-2.5 pb-8 shadow-none md:inset-x-1/2 md:bottom-1/2 md:w-[402px] md:translate-x-[-50%] md:translate-y-1/2 md:rounded-[32px]"
-        >
-          <div
-            aria-hidden="true"
-            className="bg-muted-foreground/30 mx-auto h-1 w-12 rounded-full"
-          />
-
+        <AdaptableDialogContent showCloseButton={false} className="p-5">
           <div className="flex flex-col gap-5">
-            <SheetTitle className="text-base leading-6 font-semibold tracking-normal">
+            <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
               {uploadResult === "success"
                 ? t("pages.accounts.show.receipt_success_title")
                 : t("pages.accounts.show.receipt_error_title")}
-            </SheetTitle>
-            <SheetDescription className="text-base leading-6">
+            </AdaptableDialogTitle>
+            <AdaptableDialogDescription className="text-base leading-6">
               {uploadResult === "success"
                 ? t("pages.accounts.show.receipt_success_description")
                 : t("pages.accounts.show.receipt_error_description")}
-            </SheetDescription>
+            </AdaptableDialogDescription>
             <Button
               type="button"
               className="h-12 w-full rounded-lg text-base font-medium"
@@ -294,8 +289,8 @@ export default function PaymentReceiptDialog({
                 : t("pages.accounts.show.receipt_error_action")}
             </Button>
           </div>
-        </SheetContent>
-      </Sheet>
+        </AdaptableDialogContent>
+      </AdaptableDialog>
     </div>
   )
 }
