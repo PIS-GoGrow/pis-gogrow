@@ -23,14 +23,14 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
 
   typelize :string, nullable: true
   attribute :menu_description do |order|
-    order.schedule&.menu&.description
+    order.menu_description
   end
 
   typelize "{ id: number; name: string; options: string[]; limit: number }[]"
   attribute :menu_option_groups do |order|
-    order.schedule&.menu&.option_groups&.map do |g|
-      { id: g.id, name: g.name, options: g.options, limit: g.limit }
-    end || []
+    order.menu_option_groups.map.with_index do |g, index|
+      { id: index, name: g["name"], options: g["options"], limit: g["limit"] }
+    end
   end
 
   typelize :number, nullable: true

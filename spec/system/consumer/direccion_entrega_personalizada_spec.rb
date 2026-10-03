@@ -23,8 +23,8 @@ RSpec.describe "Dirección de entrega personalizada" do
     Order.delete_all
     Schedule.delete_all
     Provider.update_all(order_deadline: nil)
-    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", price: 300))
-    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider: providers(:office_provider), name: "Ensalada de quinoa", price: 250))
+    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Plato de prueba", price: 300))
+    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider: providers(:office_provider), name: "Ensalada de quinoa", description: "Plato de prueba", price: 250))
   end
 
   def open_cart_with(*dishes, as: users(:one))

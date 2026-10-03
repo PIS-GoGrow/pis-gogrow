@@ -20,6 +20,7 @@ class Provider::DashboardController < Provider::InertiaController
     @office_orders_count = today_orders.office.count
     @home_orders_count = today_orders.home.count
     @order_deadline = @provider.order_deadline && I18n.l(@provider.order_deadline, format: "%H:%M")
+    @order_deadline_passed_today = @provider.order_deadline_passed_today?
     @month_orders_count = month_orders.count
     @month_dishes_count = @provider.menus.count
     @average_rating = Review.joins(:menu).where(menus: { provider_id: @provider.id }).average(:rating)&.round(1)&.to_f
