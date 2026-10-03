@@ -136,7 +136,7 @@ RSpec.describe "Cierre de recepción de pedidos visto por el proveedor" do
   # Consistencia entre vistas: cuando el proveedor ve la recepción cerrada, el
   # empleado tampoco puede pedirle para hoy.
   it "matches what the employee sees on today's menu" do
-    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider:, name: "Milanesa al pan", price: 300))
+    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider:, name: "Milanesa al pan", description: "Plato de prueba", price: 300))
     provider.update!(order_deadline: Time.zone.parse("11:00"))
 
     visit_dashboard_as_provider
