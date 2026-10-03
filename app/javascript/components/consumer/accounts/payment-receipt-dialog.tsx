@@ -1,5 +1,6 @@
 import { Form } from "@inertiajs/react"
 import { FileText, Trash2 } from "lucide-react"
+import type { ComponentProps } from "react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -34,6 +35,9 @@ import type { Payment } from "@/types"
 interface PaymentReceiptDialogProps {
   accountId: number
   payments: Payment[]
+  allowDelete?: boolean
+  createAction?: ComponentProps<typeof Form>["action"]
+  destroyAction?: (paymentId: number) => ComponentProps<typeof Form>["action"]
 }
 
 type UploadResult = "success" | "error" | null
@@ -41,6 +45,9 @@ type UploadResult = "success" | "error" | null
 export default function PaymentReceiptDialog({
   accountId,
   payments,
+  allowDelete = true,
+  createAction = consumerPayments.create(),
+  destroyAction = consumerPayments.destroy,
 }: PaymentReceiptDialogProps) {
   const { t } = useTranslation()
   const receipts = payments.filter((payment) => payment.receipt_url)
@@ -107,27 +114,28 @@ export default function PaymentReceiptDialog({
             >
               {payment.receipt_filename}
             </a>
-            {(payment.status === "submitted" ||
-              payment.status === "rejected") && (
-              <Form
-                action={consumerPayments.destroy(payment.id)}
-                className="shrink-0"
-                method="delete"
-                options={{ preserveScroll: true }}
-              >
-                {({ processing }) => (
-                  <Button
-                    aria-label={t("pages.accounts.show.receipt_remove")}
-                    disabled={processing}
-                    size="icon-sm"
-                    type="submit"
-                    variant="ghost"
-                  >
-                    {processing ? <Spinner /> : <Trash2 aria-hidden="true" />}
-                  </Button>
-                )}
-              </Form>
-            )}
+            {allowDelete &&
+              (payment.status === "submitted" ||
+                payment.status === "rejected") && (
+                <Form
+                  action={destroyAction(payment.id)}
+                  className="shrink-0"
+                  method="delete"
+                  options={{ preserveScroll: true }}
+                >
+                  {({ processing }) => (
+                    <Button
+                      aria-label={t("pages.accounts.show.receipt_remove")}
+                      disabled={processing}
+                      size="icon-sm"
+                      type="submit"
+                      variant="ghost"
+                    >
+                      {processing ? <Spinner /> : <Trash2 aria-hidden="true" />}
+                    </Button>
+                  )}
+                </Form>
+              )}
           </div>
         </div>
       ))}
@@ -146,7 +154,7 @@ export default function PaymentReceiptDialog({
           </DialogHeader>
 
           <Form
-            action={consumerPayments.create()}
+            action={createAction}
             className="grid min-w-0 gap-3 rounded-lg bg-zinc-100 p-3 dark:bg-zinc-900"
             errorBag={`payment-account-${accountId}`}
             onError={handleUploadError}

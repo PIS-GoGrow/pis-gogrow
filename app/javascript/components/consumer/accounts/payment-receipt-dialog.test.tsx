@@ -168,6 +168,43 @@ describe("PaymentReceiptDialog", () => {
     expect(deleteButtons).toHaveLength(2)
   })
 
+  it("uses the supplied delete route for every removable receipt", () => {
+    const destroyAction = vi.fn((paymentId: number) => ({
+      url: `/admin/payments/${paymentId}`,
+      method: "delete" as const,
+    }))
+
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        createAction={{ url: "/admin/payments", method: "post" }}
+        destroyAction={destroyAction}
+        payments={[submittedPayment, rejectedPayment, approvedPayment]}
+      />,
+    )
+
+    expect(destroyAction).toHaveBeenCalledTimes(2)
+    expect(destroyAction).toHaveBeenNthCalledWith(1, submittedPayment.id)
+    expect(destroyAction).toHaveBeenNthCalledWith(2, rejectedPayment.id)
+  })
+
+  it("can hide deletion actions without hiding receipt states", () => {
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        allowDelete={false}
+        payments={[submittedPayment, rejectedPayment, approvedPayment]}
+      />,
+    )
+
+    expect(
+      screen.queryByRole("button", { name: "Eliminar comprobante" }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText("En revisión")).toBeInTheDocument()
+    expect(screen.getByText("Rechazado")).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+  })
+
   it("opens the upload dialog when clicking the main trigger button", async () => {
     const user = userEvent.setup()
     render(
