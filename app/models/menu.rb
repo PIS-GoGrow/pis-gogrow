@@ -12,6 +12,7 @@ class Menu < ApplicationRecord
   accepts_nested_attributes_for :option_groups, allow_destroy: true, reject_if: :all_blank
 
   validates :name, presence: true
+  validates :description, presence: true
   validates :price, comparison: { greater_than: 0 }
 
   def provider_name

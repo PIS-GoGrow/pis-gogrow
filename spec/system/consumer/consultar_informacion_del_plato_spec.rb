@@ -114,7 +114,7 @@ RSpec.describe "Consultar la información de un plato" do
 
   # Criterio 3
   it "does not fill in a description the dish never had" do
-    menus(:milanesa).update!(description: nil)
+    menus(:milanesa).update_column(:description, nil)
     publish(menus(:milanesa), monday)
     sign_in users(:one)
 

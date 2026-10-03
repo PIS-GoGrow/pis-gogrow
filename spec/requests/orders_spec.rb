@@ -418,7 +418,7 @@ RSpec.describe "Orders", type: :request do
         travel 5.days
         consumer, company = setup_consumer
         provider = Provider.find_or_create_by!(user: users(:two))
-        menu = Menu.create!(provider:, name: "Ravioles", price: 300)
+        menu = Menu.create!(provider:, name: "Ravioles", description: "Plato de prueba", price: 300)
         next_monday_schedule = Schedule.create!(menu:, date: Date.new(2026, 9, 21), amount: 10)
 
         expect do
@@ -438,7 +438,7 @@ RSpec.describe "Orders", type: :request do
       it "rejects ordering for a schedule beyond next week's Friday (outside allowed_dates)" do
         consumer, company = setup_consumer
         provider = Provider.find_or_create_by!(user: users(:two))
-        menu = Menu.create!(provider:, name: "Torta", price: 200)
+        menu = Menu.create!(provider:, name: "Torta", description: "Plato de prueba", price: 200)
         far_future_schedule = Schedule.create!(menu:, date: Date.current.next_week(:friday) + 3.days, amount: 10)
 
         expect do
@@ -511,7 +511,7 @@ RSpec.describe "Orders", type: :request do
         company.update_columns(address: "")
         consumer.update_columns(address: "Mi Casa 123")
         office_provider = providers(:office_provider)
-        menu = Menu.create!(provider: office_provider, name: "Chivito", price: 400)
+        menu = Menu.create!(provider: office_provider, name: "Chivito", description: "Plato de prueba", price: 400)
         schedule = Schedule.create!(menu:, date: Date.current, amount: 5)
 
         expect do
@@ -661,7 +661,12 @@ RSpec.describe "Orders", type: :request do
       office_only = create_schedule
       office_only.menu.provider.update!(home_delivery: false)
       home_provider = Provider.create!(user: consumer.user, home_delivery: true)
-      home_menu = Menu.create!(provider: home_provider, name: "Ensalada", price: 250)
+      home_menu = Menu.create!(
+        provider: home_provider,
+        name: "Ensalada",
+        description: "Ensalada",
+        price: 250
+      )
       home_schedule = Schedule.create!(menu: home_menu, date: Date.current, amount: 5)
 
       expect do
