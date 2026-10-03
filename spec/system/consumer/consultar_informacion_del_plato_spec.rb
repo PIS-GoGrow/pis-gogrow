@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-# Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
+# Historia IBP-004: "Como EMPLEADO, quiero consultar la información relevante de cada
 # plato, para tomar una decisión informada."
 #
 # El detalle del plato no tiene ruta propia: es una vista del dashboard que se
@@ -98,6 +98,29 @@ RSpec.describe "Consultar la información de un plato" do
     # Con una sola unidad publicada para el miércoles, no se puede subir la
     # cantidad: el cupo del lunes no se arrastra.
     expect(page).to have_button("Agregar uno", disabled: true)
+  end
+
+  # Criterio 2: el proveedor puede cambiar el plato solo para un día (una variante,
+  # IBP-050). El precio y el descuento que ve el empleado siguen al día elegido.
+  it "shows the price and discount of the date picked when the dish changed for that day" do
+    variant = menus(:sorrentinos).build_variant(valid_from: wednesday, valid_until: wednesday)
+    variant.price = 450
+    variant.save!
+    publish(menus(:sorrentinos), monday)
+    publish(variant, wednesday)
+    sign_in users(:one)
+
+    visit dashboard_path
+    open_dish(menus(:sorrentinos))
+    expect(page).to have_content("$320")
+    expect(page).to have_content("$160")
+
+    click_on "Volver"
+    pick_day(wednesday)
+    open_dish(variant)
+    expect(page).to have_content("$450")
+    expect(page).to have_content("$225")
+    expect(page).to have_no_content("$320")
   end
 
   it "shows the discount of the employee benefit on the dish price" do
