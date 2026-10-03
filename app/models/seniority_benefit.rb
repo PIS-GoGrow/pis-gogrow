@@ -4,6 +4,7 @@
 # estuvo min_years años en la empresa
 class SeniorityBenefit < BenefitRule
   validates :min_years, presence: true
+  validates :min_years, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true, on: :special_subsidy
 
   def applicable_to?(consumer, date: Date.current)
     onboarding = consumer&.onboarding_date

@@ -357,19 +357,19 @@ RSpec.describe "Provider::Menus", type: :request do
       end
 
       it "removes an option group with _destroy" do
-          menu = menus(:milanesa)
-          group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1)
+        menu = menus(:milanesa)
+        group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1)
 
-          expect do
-            patch provider_menu_path(menu), params: {
-              menu: {
-                option_groups_attributes: [ { id: group.id, _destroy: true } ]
-              }
+        expect do
+          patch provider_menu_path(menu), params: {
+            menu: {
+              option_groups_attributes: [ { id: group.id, _destroy: true } ]
             }
-          end.to change(MenuOptionGroup, :count).by(-1)
+          }
+        end.to change(MenuOptionGroup, :count).by(-1)
 
-          expect(response).to redirect_to(edit_provider_menu_path(menu))
-        end
+        expect(response).to redirect_to(edit_provider_menu_path(menu))
+      end
     end
   end
 

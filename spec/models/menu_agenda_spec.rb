@@ -26,3 +26,25 @@ RSpec.describe MenuAgenda, type: :model do
     expect(agenda).not_to be_valid
   end
 end
+
+# == Schema Information
+#
+# Table name: menu_agendas
+#
+#  id         :bigint           not null, primary key
+#  amount     :integer          not null
+#  ends_on    :date
+#  starts_on  :date             not null
+#  weekdays   :integer          default([]), not null, is an Array
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#  menu_id    :bigint           not null
+#
+# Indexes
+#
+#  index_menu_agendas_on_menu_id  (menu_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (menu_id => menus.id)
+#

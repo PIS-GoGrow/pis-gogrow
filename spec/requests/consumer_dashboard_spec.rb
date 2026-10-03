@@ -36,6 +36,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   end
 
   it "renders the protected weekly menu with its server props" do
+    travel_to(Time.zone.local(2026, 9, 14, 10))
     Order.destroy_all
     Schedule.delete_all
     user = consumer_user
