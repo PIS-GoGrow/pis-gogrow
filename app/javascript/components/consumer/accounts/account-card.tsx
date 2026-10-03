@@ -43,6 +43,8 @@ export default function AccountCard({
       )
       .find(({ status }) => status !== "approved") ??
     account.payments.find(({ status }) => status === "approved")
+  const showReceiptSection =
+    !account.current || account.payments.some(({ receipt_url }) => receipt_url)
 
   // Sin comprobante todavía = pendiente; el mismo estado "submitted" cubre
   // tanto el primer envío como un reenvío luego de un rechazo.
@@ -128,7 +130,9 @@ export default function AccountCard({
           </SheetTrigger>
         </CardTitle>
 
-        <Separator />
+        {(payment?.status === "rejected" || showReceiptSection) && (
+          <Separator />
+        )}
 
         {payment?.status === "rejected" && (
           <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
@@ -142,15 +146,17 @@ export default function AccountCard({
           </div>
         )}
 
-        <PaymentReceiptDialog
-          accountId={account.id}
-          canUpload={!account.current}
-          payments={[...account.payments].sort(
-            (first, second) =>
-              new Date(second.created_at).getTime() -
-              new Date(first.created_at).getTime(),
-          )}
-        />
+        {showReceiptSection && (
+          <PaymentReceiptDialog
+            accountId={account.id}
+            canUpload={!account.current}
+            payments={[...account.payments].sort(
+              (first, second) =>
+                new Date(second.created_at).getTime() -
+                new Date(first.created_at).getTime(),
+            )}
+          />
+        )}
       </CardHeader>
     </Card>
   )
