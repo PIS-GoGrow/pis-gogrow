@@ -29,7 +29,7 @@ RSpec.describe "Edición de plato programado en el menú (flujo complejo)", type
 
     expect(page).to have_content(milanesa.name)
 
-    fill_in "name", with: "Milanesa Especial del Día"
+    fill_in "name", with: "Milanesa Especial del Día", fill_options: { clear: :backspace }
 
     click_button "Modificar"
 
@@ -72,7 +72,9 @@ RSpec.describe "Edición de plato programado en el menú (flujo complejo)", type
 
     visit edit_provider_menu_path(milanesa, schedule_id: schedule.id)
 
-    fill_in "name", with: "Milanesa con Salsa Criolla"
+    expect(page).to have_content(milanesa.name)
+
+    fill_in "name", with: "Milanesa con Salsa Criolla", fill_options: { clear: :backspace }
 
     click_button "Modificar"
 
