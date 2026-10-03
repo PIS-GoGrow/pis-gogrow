@@ -53,7 +53,8 @@ class Provider::MenusController < Provider::InertiaController
       attributes: menu_params.to_h.deep_symbolize_keys,
       agenda: agenda_params.to_h,
       scope: params[:scope],
-      confirmed_orders: params[:confirmed_orders]
+      confirmed_orders: params[:confirmed_orders],
+      by: Current.user
     )
     path = edit_provider_menu_path(menu, schedule_id: params[:schedule_id].presence)
 

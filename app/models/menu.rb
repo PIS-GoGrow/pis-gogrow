@@ -7,6 +7,7 @@
 class Menu < ApplicationRecord
   belongs_to :provider
   belongs_to :base_menu, class_name: "Menu", optional: true
+  belongs_to :modified_by, class_name: "User", optional: true
 
   has_many :schedules, dependent: :destroy
   has_many :reviews, -> { order(created_at: :desc) }, dependent: :destroy

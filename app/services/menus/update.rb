@@ -23,12 +23,13 @@ class Menus::Update
 
   attr_reader :errors
 
-  def initialize(menu:, attributes:, agenda:, scope: nil, confirmed_orders: "keep")
+  def initialize(menu:, attributes:, agenda:, scope: nil, confirmed_orders: "keep", by: nil)
     @saved = menu.saved_menu
     @attributes = attributes
     @agenda = agenda.to_h.symbolize_keys
     @scope = scope
     @reject = confirmed_orders == "reject"
+    @by = by
     @errors = ActiveModel::Errors.new(@saved)
   end
 
@@ -121,6 +122,7 @@ class Menus::Update
     end
 
     assign(@saved)
+    record_audit(@saved)
     @saved.save!
   end
 
@@ -150,6 +152,14 @@ class Menus::Update
     @saved.build_variant(valid_from: from, valid_until: to).tap do |variant|
       variant.option_groups = []
       assign(variant)
+      diff = %w[name description price].each_with_object({}) do |attr, hash|
+        old_val = @saved.public_send(attr)
+        new_val = variant.public_send(attr)
+        hash[attr] = [ old_val, new_val ] if old_val.to_s != new_val.to_s
+      end
+      variant.modified_by = @by if @by
+      variant.modified_at = Time.current
+      variant.modified_values = diff if diff.present?
     end
   end
 
@@ -225,5 +235,14 @@ class Menus::Update
 
   def reject_confirmed(schedules)
     schedules.flat_map(&:orders).select(&:confirmed?).each(&:reject_for_dish_change!)
+  end
+
+  def record_audit(record)
+    changes = record.changes.slice("name", "description", "price")
+    return if changes.blank? && @by.nil?
+
+    record.modified_by = @by if @by
+    record.modified_at = Time.current
+    record.modified_values = changes if changes.present?
   end
 end

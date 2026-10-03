@@ -202,4 +202,58 @@ RSpec.describe Menus::Update do
       expect(service.errors[:price]).to be_present
     end
   end
+
+  describe "auditoría de edición" do
+    let(:author) { users(:provider_user) }
+
+    it "registra el autor, la fecha y los valores modificados al editar el plato guardado" do
+      freeze_time do
+        described_class.new(
+          menu:,
+          attributes: { name: "Milanesa de cerdo", price: 340.0, description: "Con limón" },
+          agenda: { mode: "none" },
+          by: author
+        ).call
+
+        expect(menu.reload).to have_attributes(
+          name: "Milanesa de cerdo",
+          price: 340.0,
+          description: "Con limón",
+          modified_by: author,
+          modified_at: Time.current
+        )
+        expect(menu.modified_values).to eq(
+          "name" => [ "Milanesa", "Milanesa de cerdo" ],
+          "price" => [ "300.0", "340.0" ],
+          "description" => [ "Con papas", "Con limón" ]
+        )
+      end
+    end
+
+    it "registra el autor, la fecha y los valores modificados al crear una variante por día" do
+      freeze_time do
+        described_class.new(
+          menu:,
+          attributes: { name: "Milanesa especial", price: 350.0, description: "Con queso" },
+          agenda: { mode: "single", date: thursday.iso8601, amount: 10 },
+          scope: "day",
+          by: author
+        ).call
+
+        variant = menu.variants.last
+        expect(variant).to have_attributes(
+          name: "Milanesa especial",
+          price: 350.0,
+          description: "Con queso",
+          modified_by: author,
+          modified_at: Time.current
+        )
+        expect(variant.modified_values).to eq(
+          "name" => [ "Milanesa", "Milanesa especial" ],
+          "price" => [ "300.0", "350.0" ],
+          "description" => [ "Con papas", "Con queso" ]
+        )
+      end
+    end
+  end
 end

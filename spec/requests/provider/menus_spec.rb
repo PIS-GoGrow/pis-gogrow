@@ -294,23 +294,32 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(group.reload.limit).to eq(2)
     end
 
-      it "updates the provider's dish information" do
+      it "updates the provider's dish information and records audit data" do
         menu = menus(:milanesa)
 
-        patch provider_menu_path(menu), params: {
-          menu: {
-            name: "Milanesa napolitana",
-            description: "Con papas fritas",
-            price: 420.50
+        freeze_time do
+          patch provider_menu_path(menu), params: {
+            menu: {
+              name: "Milanesa napolitana",
+              description: "Con papas fritas y ensalada",
+              price: 420.50
+            }
           }
-        }
 
-        expect(response).to redirect_to(edit_provider_menu_path(menu))
+          expect(response).to redirect_to(edit_provider_menu_path(menu))
 
-        menu.reload
-        expect(menu.name).to eq("Milanesa napolitana")
-        expect(menu.description).to eq("Con papas fritas")
-        expect(menu.price).to eq(420.50)
+          menu.reload
+          expect(menu.name).to eq("Milanesa napolitana")
+          expect(menu.description).to eq("Con papas fritas y ensalada")
+          expect(menu.price).to eq(420.50)
+          expect(menu.modified_by).to eq(provider_user)
+          expect(menu.modified_at).to eq(Time.current)
+          expect(menu.modified_values).to eq(
+            "name" => [ "Milanesa con papas fritas", "Milanesa napolitana" ],
+            "description" => [ "Opción de carne o pollo", "Con papas fritas y ensalada" ],
+            "price" => [ "300.5", "420.5" ]
+          )
+        end
       end
 
       it "returns validation errors when the changes are invalid" do
