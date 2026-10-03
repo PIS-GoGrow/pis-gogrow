@@ -27,6 +27,7 @@ import type { Payment } from "@/types"
 
 interface PaymentReceiptDialogProps {
   accountId: number
+  canUpload?: boolean
   payments: Payment[]
 }
 
@@ -34,6 +35,7 @@ type UploadResult = "success" | "error" | null
 
 export default function PaymentReceiptDialog({
   accountId,
+  canUpload = true,
   payments,
 }: PaymentReceiptDialogProps) {
   const { t } = useTranslation()
@@ -126,10 +128,14 @@ export default function PaymentReceiptDialog({
         </div>
       ))}
 
-      <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
-        <AdaptableDialogTrigger asChild>
-          <Button className="w-full">{t("pages.accounts.show.receipt")}</Button>
-        </AdaptableDialogTrigger>
+      <AdaptableDialog open={canUpload && open} onOpenChange={handleOpenChange}>
+        {canUpload && (
+          <AdaptableDialogTrigger asChild>
+            <Button className="w-full">
+              {t("pages.accounts.show.receipt")}
+            </Button>
+          </AdaptableDialogTrigger>
+        )}
 
         <AdaptableDialogContent className="p-5">
           <AdaptableDialogHeader className="px-0 py-2">
