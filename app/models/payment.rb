@@ -8,11 +8,27 @@ class Payment < ApplicationRecord
 
   has_one_attached :receipt
 
+  before_validation :clear_rejection_reason, if: :submitted?
+
+  validates :rejection_reason, presence: true, if: :rejected?
+
   validate :receipt_is_attached_when_submitted
   validate :receipt_has_allowed_type
   validate :receipt_is_within_size_limit
 
+  def approve
+    update(status: :approved, rejection_reason: nil)
+  end
+
+  def reject_with(reason)
+    update(status: :rejected, rejection_reason: reason)
+  end
+
   private
+
+  def clear_rejection_reason
+    self.rejection_reason = nil
+  end
 
   def receipt_is_attached_when_submitted
     errors.add(:receipt, :required) if submitted? && !receipt.attached?
@@ -37,12 +53,13 @@ end
 #
 # Table name: payments
 #
-#  id          :bigint           not null, primary key
-#  status      :integer          default(0), not null
-#  created_at  :datetime         not null
-#  updated_at  :datetime         not null
-#  account_id  :bigint           not null
-#  provider_id :bigint
+#  id               :bigint           not null, primary key
+#  rejection_reason :text
+#  status           :integer          default(0), not null
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  account_id       :bigint           not null
+#  provider_id      :bigint
 #
 # Indexes
 #

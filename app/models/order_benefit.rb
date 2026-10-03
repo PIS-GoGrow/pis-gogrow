@@ -1,0 +1,28 @@
+# frozen_string_literal: true
+
+class OrderBenefit < ApplicationRecord
+  belongs_to :benefit
+  belongs_to :order
+end
+
+# == Schema Information
+#
+# Table name: order_benefits
+#
+#  id           :bigint           not null, primary key
+#  benefit_used :integer          not null
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
+#  benefit_id   :bigint           not null
+#  order_id     :bigint           not null
+#
+# Indexes
+#
+#  index_order_benefits_on_benefit_id  (benefit_id)
+#  index_order_benefits_on_order_id    (order_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (benefit_id => benefits.id)
+#  fk_rails_...  (order_id => orders.id)
+#

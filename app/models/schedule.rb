@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# Representa una instancia particular de un plato (Menu) para un día dado.
+# Es decir, representa un día en el cual un plato está disponible.
 class Schedule < ApplicationRecord
   belongs_to :menu
   belongs_to :availability_changed_by, class_name: "User", optional: true

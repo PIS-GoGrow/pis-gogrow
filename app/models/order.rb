@@ -37,6 +37,9 @@ class Order < ApplicationRecord
   has_many :order_accounts, dependent: :destroy
   has_many :accounts, through: :order_accounts
 
+  has_many :order_benefits, dependent: :destroy
+  has_many :benefits, through: :order_benefits
+
   validates :amount, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :discounted_price, comparison: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true
@@ -83,6 +86,11 @@ class Order < ApplicationRecord
     ]
   end
 
+  # Inicializa una orden, donde a una cantidad (subsidized_quantity) de las viandas
+  # pedidas se le aplican determinados beneficios (benefits), acumulando entre todos
+  # discount_percentage en total.
+  # Se asume que cada uno de los beneficios se aplica por igual a todas las viandas
+  # subsidiadas.
   def self.reserve(
     consumer:,
     schedule:,
@@ -91,7 +99,8 @@ class Order < ApplicationRecord
     quantity: 1,
     notes: nil,
     discount_percentage: 0,
-    subsidized_quantity: nil
+    subsidized_quantity: nil,
+    benefits:
   )
     gross_price, discounted_price = price_breakdown(
       unit_price: schedule.menu.price,
@@ -111,6 +120,10 @@ class Order < ApplicationRecord
       delivery_method:
     )
 
+    benefits.each do |benefit|
+      order.apply_benefit benefit, subsidized_quantity
+    end
+
     return order unless order.valid?
 
     schedule.with_lock do
@@ -127,6 +140,14 @@ class Order < ApplicationRecord
     end
 
     order
+  end
+
+  def apply_benefit(benefit, benefit_used)
+    order_benefits.new benefit:, benefit_used:
+  end
+
+  def apply_benefit!(benefit, benefit_used)
+    order_benefits.create! benefit:, benefit_used:
   end
 
   def delivery_method_allowed_by_provider
@@ -229,6 +250,8 @@ class Order < ApplicationRecord
           modified_by: by,
           **delivery
         )
+
+        order_benefits.update_all benefit_used: subsidized_quantity
       end
     end
   end
@@ -277,6 +300,26 @@ class Order < ApplicationRecord
 
       account.sync_amount!
     end
+  end
+
+  # El cupo del schedule ya descuenta esta orden, así que el máximo que el
+  # empleado puede elegir es lo que queda más lo que ya tiene reservado.
+  def max_quantity
+    return amount.to_i if schedule.nil?
+
+    schedule.remaining_amount + amount.to_i
+  end
+
+  # La dirección actual del pedido se mantiene como opción aunque no esté
+  # guardada, para que modificar la cantidad no obligue a cambiarla.
+  # Si el proveedor no admite envíos a domicilio, sólo se ofrece la dirección de la oficina.
+  def delivery_address_options(consumer)
+    return [ { id: "office", label: I18n.t("pages.orders.addresses.office"), address: consumer.company.address } ] unless provider&.home_delivery?
+
+    options = consumer.delivery_address_options
+    return options if address.blank? || options.pluck(:address).include?(address)
+
+    options + [ { id: "current", label: I18n.t("pages.orders.addresses.current"), address: address } ]
   end
 
   private

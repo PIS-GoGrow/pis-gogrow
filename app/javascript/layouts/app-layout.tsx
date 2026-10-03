@@ -6,15 +6,21 @@ import type { BreadcrumbItem } from "@/types"
 interface AppLayoutProps {
   children: ReactNode
   breadcrumbs?: BreadcrumbItem[]
+  hideMobileHeader?: boolean
 }
 
 export default function AppLayout({
   children,
   breadcrumbs,
+  hideMobileHeader,
   ...props
 }: AppLayoutProps) {
   return (
-    <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
+    <AppLayoutTemplate
+      breadcrumbs={breadcrumbs}
+      hideMobileHeader={hideMobileHeader}
+      {...props}
+    >
       {children}
     </AppLayoutTemplate>
   )

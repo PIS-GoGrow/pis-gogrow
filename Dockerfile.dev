@@ -10,6 +10,11 @@
 ARG RUBY_VERSION=4.0.5
 FROM docker.io/library/ruby:$RUBY_VERSION-slim
 
+# Si se cambia esta bandera a true, se instala firefox en el docker.
+# Se usa para correr los tests de sistema en Mac, que si no da fallos con
+# chrome.
+ARG INSTALL_FIREFOX=false
+
 WORKDIR /rails
 
 # Paquetes de sistema para compilar gemas nativas y correr Postgres/libvips.
@@ -18,6 +23,18 @@ RUN apt-get update -qq && \
       curl libjemalloc2 libvips postgresql-client \
       build-essential git libpq-dev libyaml-dev node-gyp pkg-config python-is-python3 && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Instalar Firefox and GeckoDriver (solo si INSTALL_FIREFOX=true)
+RUN if [ "$INSTALL_FIREFOX" = "true" ]; then \
+    apt-get update && apt-get install -y \
+    firefox-esr \
+    wget \
+    && wget https://github.com/mozilla/geckodriver/releases/download/v0.37.1/geckodriver-v0.37.1-linux64.tar.gz \
+    && tar -xzf geckodriver-v0.37.1-linux64.tar.gz \
+    && mv geckodriver /usr/local/bin/ \
+    && chmod +x /usr/local/bin/geckodriver \
+    && rm geckodriver-v0.37.1-linux64.tar.gz; \
+fi
 
 # Node, para Vite y el resto del toolchain de frontend.
 ARG NODE_VERSION=24.16.0
@@ -49,4 +66,4 @@ EXPOSE 3000 5173
 # juntos (mismo par de procesos que corre bin/dev localmente vía Procfile.dev).
 # bash, no sh: "wait -n" (frena el contenedor si cualquiera de los dos
 # procesos muere) es sintaxis de bash, dash no lo soporta.
-CMD ["bash", "-c", "rm -f tmp/pids/server.pid && bin/rails db:prepare && (bin/rails server -b 0.0.0.0 -p 3000 & npx vite --host 0.0.0.0 & wait -n)"]
+CMD ["bash", "bin/docker-dev-entrypoint"]

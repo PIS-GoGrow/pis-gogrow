@@ -490,6 +490,53 @@ RSpec.describe Order, type: :model do
     expect(described_class.upcoming.ids & described_class.history.ids).to be_empty
     expect(described_class.upcoming.count + described_class.history.count).to eq(described_class.count)
   end
+
+  describe "#max_quantity" do
+    it "returns the order amount when schedule is nil" do
+      order = orders(:history_without_schedule)
+      expect(order.schedule).to be_nil
+      expect(order.max_quantity).to eq(order.amount)
+    end
+
+    it "returns the sum of remaining amount and current order amount when schedule is present" do
+      order = orders(:upcoming_pending_future)
+      expect(order.max_quantity).to eq(order.schedule.remaining_amount + order.amount)
+    end
+  end
+
+  describe "#delivery_address_options" do
+    let(:consumer) { consumers(:one) }
+
+    it "returns only the office address when the provider does not allow home delivery" do
+      order = Order.new(consumer:, schedule: schedules(:office), address: consumer.address)
+      expect(order.provider.home_delivery?).to be(false)
+
+      expect(order.delivery_address_options(consumer)).to eq([
+        { id: "office", label: I18n.t("pages.orders.addresses.office"), address: consumer.company.address }
+      ])
+    end
+
+    it "returns consumer options when order address is blank and provider allows home delivery" do
+      order = Order.new(consumer:, schedule: schedules(:future), address: nil)
+      expect(order.delivery_address_options(consumer)).to eq(consumer.delivery_address_options)
+    end
+
+    it "returns consumer options without duplicate when order address is already in consumer options" do
+      order = Order.new(consumer:, schedule: schedules(:future), address: consumer.address)
+      expect(order.delivery_address_options(consumer)).to eq(consumer.delivery_address_options)
+    end
+
+    it "appends the current address option when order address is not in consumer options" do
+      order = Order.new(consumer:, schedule: schedules(:future), address: "Rambla Gandhi 123")
+      options = order.delivery_address_options(consumer)
+
+      expect(options.last).to eq(
+        id: "current",
+        label: I18n.t("pages.orders.addresses.current"),
+        address: "Rambla Gandhi 123"
+      )
+    end
+  end
 end
 
 # == Schema Information

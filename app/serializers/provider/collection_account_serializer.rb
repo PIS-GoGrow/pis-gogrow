@@ -39,4 +39,28 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   attribute :paid_on do |row|
     row.paid_on&.strftime("%d/%m/%y")
   end
+
+  typelize :number, nullable: true
+  attribute :payment_id do |row|
+    row.account.last_payment&.id
+  end
+
+  typelize :string, nullable: true
+  attribute :receipt_url do |row|
+    payment = row.account.last_payment
+    next unless payment&.receipt&.attached?
+
+    Rails.application.routes.url_helpers.receipt_provider_payment_path(payment)
+  end
+
+  typelize :string, nullable: true
+  attribute :receipt_content_type do |row|
+    payment = row.account.last_payment
+    payment.receipt.content_type if payment&.receipt&.attached?
+  end
+
+  # Solo la cuenta de la empresa lleva factura: es la que le cobra el subsidio a GoGrow.
+  typelize invoice: [ nullable: true ]
+  has_one :latest_invoice, key: :invoice, resource: Provider::InvoiceSerializer
+  has_many :payments, resource: Provider::CollectionPaymentSerializer
 end
