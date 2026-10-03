@@ -30,7 +30,7 @@ describe("MobileNav", () => {
     render(
       <MobileNav
         label="Navegación de prueba"
-        className="bottom-6 custom-test-class"
+        className="custom-test-class bottom-6"
         items={[
           {
             label: "Inicio",
