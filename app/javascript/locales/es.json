@@ -55,6 +55,7 @@
         "menu": "Menú del día"
       },
       "dashboard": "Panel",
+      "invoices": "Facturas",
       "menu": "Menú de navegación",
       "orders": "Mis pedidos",
       "payments": "Pagos",
@@ -102,10 +103,18 @@
           "receipt": "Subir comprobante de pago",
           "receipt_approved": "Pago aprobado",
           "receipt_description": "Adjuntá el comprobante correspondiente a este pago.",
+          "receipt_error_action": "Entendido",
+          "receipt_error_description": "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
+          "receipt_error_title": "No se pudo subir el comprobante",
           "receipt_file": "Seleccionar archivo",
           "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
           "receipt_preview": "Vista previa del comprobante",
+          "receipt_remove": "Eliminar comprobante",
           "receipt_replace": "Reemplazar archivo",
+          "receipt_sent_at": "Enviado: %{date}",
+          "receipt_success_action": "Listo",
+          "receipt_success_description": "Tu comprobante fue enviado correctamente y está pendiente de revisión.",
+          "receipt_success_title": "Comprobante enviado",
           "receipt_title": "Subir comprobante",
           "receipt_unavailable": "Comprobante no disponible",
           "receipt_update": "Actualizar comprobante",
@@ -213,6 +222,55 @@
             "title": "Subsidios"
           }
         },
+        "consumers": {
+          "index": {
+            "all": "Todos",
+            "completed": "Completados",
+            "count_one": "%{count} empleado",
+            "count_other": "%{count} empleados",
+            "empty_description": "Todavía no hay empleados en la organización.",
+            "empty_title": "Sin empleados",
+            "filter_label": "Filtrar empleados",
+            "no_consumption": "Sin consumos",
+            "no_results_description": "Probá con otro nombre o correo, o cambiá el filtro.",
+            "no_results_title": "No se encontraron empleados",
+            "pending": "Pendientes",
+            "search_label": "Buscar empleado por nombre o correo",
+            "search_placeholder": "Buscar empleado...",
+            "title": "Empleados"
+          },
+          "show": {
+            "back": "Volver a empleados",
+            "benefit": "Beneficio",
+            "benefit_active": "Activo",
+            "benefit_discount": "de descuento en viandas",
+            "benefit_inactive": "Sin beneficio",
+            "benefit_none": "Este empleado no tiene un beneficio vigente.",
+            "close": "Cerrar",
+            "consumption": "Consumo",
+            "date": "Fecha",
+            "employee": "Empleado",
+            "history": "Historial de consumo",
+            "history_empty_description": "Este empleado todavía no realizó ningún pedido de viandas.",
+            "history_empty_title": "Sin consumos",
+            "meals_one": "%{count} vianda",
+            "meals_other": "%{count} viandas",
+            "meals_used": "%{used} de %{limit} viandas consumidas",
+            "meals_used_no_limit_one": "%{count} vianda consumida",
+            "meals_used_no_limit_other": "%{count} viandas consumidas",
+            "month_detail": "Historial de consumo: %{month}",
+            "month_detail_description": "Pedidos confirmados del mes, con lo que cubre la empresa y lo que paga el empleado.",
+            "no_provider": "Sin proveedor",
+            "orders_empty": "No hay pedidos confirmados en este mes.",
+            "provider": "Proveedor",
+            "quantity": "Cant.",
+            "this_month": "Este mes",
+            "title": "Detalle del empleado",
+            "total": "Total: %{amount}",
+            "view_month": "Ver el detalle de %{month}",
+            "year_label": "Año"
+          }
+        },
         "dashboard": {
           "alert": {
             "pending": "Los avisos por WhatsApp estarán disponibles próximamente.",
@@ -239,6 +297,25 @@
           "pending_value": "—",
           "this_month": "Este mes",
           "title": "Inicio"
+        },
+        "invoices": {
+          "index": {
+            "description": "Las facturas que los proveedores le emiten a GoGrow, con su historial.",
+            "download": "Descargar %{name}",
+            "empty_description": "Cuando un proveedor cargue la factura de un período, va a aparecer acá.",
+            "empty_title": "Todavía no hay facturas",
+            "file": "Archivo",
+            "issued_on": "Emisión",
+            "no_period_amount": "Sin consumo registrado",
+            "no_provider": "Proveedor no disponible",
+            "period": "Período",
+            "period_amount": "Consumo del período",
+            "provider": "Proveedor",
+            "status": "Estado",
+            "title": "Facturas de proveedores",
+            "total_amount": "Facturado",
+            "view": "Ver"
+          }
         }
       },
       "cart": {
@@ -506,7 +583,7 @@
           "approved": "Confirmado",
           "pending": "Pendiente",
           "rejected": "Rechazado",
-          "submitted": "Por revisar"
+          "submitted": "En revisión"
         }
       },
       "provider_dashboard": {

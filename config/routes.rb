@@ -13,7 +13,7 @@ Rails.application.routes.draw do
 
 
   # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the
-  # OmniAuth middleware before it reaches the router — only the callback and
+  # OmniAuth middleware before it reaches the router â€” only the callback and
   # failure paths need a route.
   get "auth/google_oauth2/callback", to: "omniauth_callbacks#google_oauth2"
   get "auth/failure", to: "omniauth_callbacks#failure"
@@ -68,7 +68,7 @@ Rails.application.routes.draw do
       patch :cancel, on: :member, as: :cancel_consumer
     end
 
-    resources :payments, only: [ :create, :update ] do
+    resources :payments, only: [ :create, :update, :destroy ] do
       get :receipt, on: :member
     end
 
@@ -79,7 +79,8 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
     resources :special_subsidies, only: [ :create, :update, :destroy ]
-    resources :invoices, only: [] do
+    resources :consumers, only: [ :index, :show ]
+    resources :invoices, only: [ :index ] do
       get :file, on: :member
     end
   end

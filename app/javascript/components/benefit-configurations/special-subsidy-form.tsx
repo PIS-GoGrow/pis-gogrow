@@ -92,8 +92,11 @@ export default function SpecialSubsidyForm({
 
   const { data, setData, post, patch, processing, transform } = form
   const { condition } = data
+  const now = new Date()
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+  const originalEffectiveFrom = subsidy?.condition?.effective_from ?? ""
   // El servidor devuelve los errores con los nombres de los campos del formulario,
-  // incluidos los de la condición (limit, validity_amount…), que acá van anidados.
+  // incluidos los de la condiciÃ³n (limit, validity_amountâ€¦), que acÃ¡ van anidados.
   const errors = form.errors as Partial<Record<string, string | string[]>>
 
   function fieldErrors(key: string) {
@@ -113,7 +116,10 @@ export default function SpecialSubsidyForm({
       : condition.type !== "" &&
         isPositiveInteger(condition.limit) &&
         isPositiveInteger(condition.validity_amount) &&
-        (condition.type !== "gift" || condition.effective_from !== "")
+        (condition.type !== "gift" ||
+          (condition.effective_from !== "" &&
+            (condition.effective_from >= today ||
+              condition.effective_from === originalEffectiveFrom)))
 
   const isValid =
     data.name.trim() !== "" &&
@@ -490,6 +496,7 @@ export default function SpecialSubsidyForm({
                   id="condition_effective_from"
                   name="effective_from"
                   type="date"
+                  min={today}
                   className="w-44"
                   value={condition.effective_from}
                   aria-invalid={!!errors.effective_from}

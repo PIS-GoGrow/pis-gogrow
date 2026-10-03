@@ -297,11 +297,54 @@ seed_payment(consumer.accounts.find_by!(provider: tu_viandita, month: Date.curre
   seed_payment(consumer_account, consumer_status)
 end
 
+# Un PDF de una página armado a mano: el proyecto no tiene librería de PDF y
+# para las seeds alcanza con que el archivo abra y se lea como una factura.
+# Las cadenas van en Latin-1, que es lo que entiende WinAnsiEncoding.
+def invoice_pdf(lines)
+  content = lines.each_with_index.map do |line, index|
+    text = line.encode("ISO-8859-1", invalid: :replace, undef: :replace, replace: "?").gsub(/[\\()]/) { "\\#{it}" }
+    "BT /F1 #{index.zero? ? 18 : 12} Tf 64 #{740 - index * 28} Td (#{text}) Tj ET"
+  end.join("\n")
+
+  objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>",
+    "<< /Length #{content.bytesize} >>\nstream\n#{content}\nendstream",
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>"
+  ]
+
+  pdf = +"%PDF-1.4\n"
+  offsets = objects.each_with_index.map do |object, index|
+    offset = pdf.bytesize
+    pdf << "#{index + 1} 0 obj\n#{object}\nendobj\n"
+    offset
+  end
+
+  xref_offset = pdf.bytesize
+  pdf << "xref\n0 #{objects.size + 1}\n0000000000 65535 f \n"
+  offsets.each { pdf << format("%010d 00000 n \n", it) }
+  pdf << "trailer\n<< /Size #{objects.size + 1} /Root 1 0 R >>\nstartxref\n#{xref_offset}\n%%EOF\n"
+
+  StringIO.new(pdf.force_encoding(Encoding::BINARY))
+end
+
 # Facturas de TuViandita a GoGrow: el mes pasado aprobada (se descarga desde el
 # Historial), hace dos meses por revisar y este mes todavía sin subir.
 { 1.month.ago => :approved, 2.months.ago => :pending }.each do |date, status|
   account = company.accounts.find_by!(provider: tu_viandita, month: date.beginning_of_month)
+  period = I18n.l(account.month, format: "%B %Y")
   invoice = account.invoices.build(issued_on: account.month.end_of_month, total_amount: account.amount, status:)
-  invoice.file.attach(io: Rails.root.join("public/icon.png").open, filename: "factura.png", content_type: "image/png")
+  invoice.file.attach(
+    io: invoice_pdf([
+      "TuViandita",
+      "Factura a #{company.name} - #{company.address}",
+      "Periodo: #{period}",
+      "Fecha de emision: #{I18n.l(account.month.end_of_month, format: "%d/%m/%Y")}",
+      "Total: $ #{account.amount.to_i}"
+    ]),
+    filename: "factura-#{account.month.strftime("%Y-%m")}.pdf",
+    content_type: "application/pdf"
+  )
   invoice.save!
 end

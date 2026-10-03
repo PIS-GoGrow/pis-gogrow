@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
@@ -16,10 +16,12 @@ let transformCallback: ((data: Record<string, unknown>) => unknown) | null =
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   const { useState } = await vi.importActual<typeof React>("react")
+
   return {
     ...actual,
     useForm: (initialValues: Record<string, unknown>) => {
       const [data, setFormData] = useState(initialValues)
+
       return {
         data,
         setData: (key: string, value: unknown) =>
@@ -58,6 +60,13 @@ const gift: SpecialSubsidy = {
     validity_amount: 2,
     validity_unit: "weeks",
   },
+}
+
+function localDateString(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}-${String(date.getDate()).padStart(2, "0")}`
 }
 
 function renderForm(subsidy?: SpecialSubsidy) {
@@ -101,14 +110,19 @@ describe("SpecialSubsidyForm", () => {
     expect(screen.getByLabelText(/nombre del subsidio/i)).toHaveValue(
       "Desafío de Pasos",
     )
+
     await user.click(screen.getByRole("button", { name: "Modificar" }))
 
     expect(patchMock).toHaveBeenCalledWith(
       "/admin/special_subsidies/7",
       expect.anything(),
     )
+
     const payload = transformCallback!({ name: "Desafío de Pasos" })
-    expect(payload).toEqual({ special_subsidy: { name: "Desafío de Pasos" } })
+
+    expect(payload).toEqual({
+      special_subsidy: { name: "Desafío de Pasos" },
+    })
   })
 
   it("disables the submit button when a required field is cleared", async () => {
@@ -120,11 +134,32 @@ describe("SpecialSubsidyForm", () => {
     expect(screen.getByRole("button", { name: "Modificar" })).toBeDisabled()
   })
 
+  it("does not allow a past effective date for a gift", () => {
+    renderForm(gift)
+
+    const effectiveFrom = screen.getByLabelText(/disponible desde/i)
+
+    const today = localDateString(new Date())
+
+    const yesterdayDate = new Date()
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1)
+    const yesterday = localDateString(yesterdayDate)
+
+    expect(effectiveFrom).toHaveAttribute("min", today)
+
+    fireEvent.change(effectiveFrom, {
+      target: { value: yesterday },
+    })
+
+    expect(screen.getByRole("button", { name: "Modificar" })).toBeDisabled()
+  })
+
   it("requires at least one employee when selecting employees", async () => {
     const user = userEvent.setup()
     renderForm(gift)
 
     await user.click(screen.getByLabelText(/seleccionar empleados/i))
+
     expect(screen.getByRole("button", { name: "Modificar" })).toBeDisabled()
 
     await user.type(screen.getByLabelText(/buscar empleado/i), "mati")
@@ -136,11 +171,13 @@ describe("SpecialSubsidyForm", () => {
     await user.click(
       screen.getByRole("button", { name: "Quitar a Matías Rodríguez" }),
     )
+
     expect(screen.queryByText("Matías R.")).not.toBeInTheDocument()
   })
 
   it("shows the server errors next to each field", () => {
     currentFormErrors = { name: ["no puede estar en blanco"] }
+
     renderForm(gift)
 
     expect(screen.getByText("no puede estar en blanco")).toBeInTheDocument()
