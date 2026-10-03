@@ -8,9 +8,11 @@ export function AdminMobileNav() {
   const { t } = useTranslation()
   const { url } = usePage()
   const navItems = useAdminPrimaryNavItems()
+  const pathname = url.split("?")[0]
 
   return (
     <MobileNav
+      className="bottom-6"
       label={t("nav.admin.mobile_navigation")}
       pendingTitle={t("pages.admin.dashboard.coming_soon")}
       items={navItems.map((item) => ({
@@ -19,7 +21,9 @@ export function AdminMobileNav() {
         href: item.disabled ? undefined : item.href,
         active:
           !item.disabled &&
-          url.startsWith(item.mobileActivePrefix ?? item.href),
+          (item.mobileActivePaths ?? [item.href]).some(
+            (path) => pathname === path || pathname.startsWith(`${path}/`),
+          ),
       }))}
     />
   )

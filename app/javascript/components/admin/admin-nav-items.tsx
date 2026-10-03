@@ -1,6 +1,6 @@
 import {
   CreditCardPosIcon,
-  Home01Icon,
+  Home09Icon,
   UserGroupIcon,
   UserIcon,
 } from "@hugeicons/core-free-icons"
@@ -9,12 +9,17 @@ import { CreditCard, House, UserRound, UsersRound } from "lucide-react"
 import type { ReactElement } from "react"
 import { useTranslation } from "react-i18next"
 
-import { adminConsumers, adminDashboard, settingsProfiles } from "@/routes"
+import {
+  adminBenefitConfigurations,
+  adminConsumers,
+  adminDashboard,
+  settingsProfiles,
+} from "@/routes"
 import type { NavItem } from "@/types"
 
 type AdminPrimaryNavItem = NavItem & {
   mobileIcon: ReactElement
-  mobileActivePrefix?: string
+  mobileActivePaths?: string[]
 }
 
 export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
@@ -27,7 +32,7 @@ export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
       icon: House,
       mobileIcon: (
         <HugeiconsIcon
-          icon={Home01Icon}
+          icon={Home09Icon}
           className="size-6"
           strokeWidth={2}
           aria-hidden="true"
@@ -65,7 +70,7 @@ export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
       title: t("nav.admin.account"),
       href: settingsProfiles.show().url,
       icon: UserRound,
-      mobileActivePrefix: "/settings",
+      mobileActivePaths: ["/settings", adminBenefitConfigurations.index().url],
       mobileIcon: (
         <HugeiconsIcon
           icon={UserIcon}
