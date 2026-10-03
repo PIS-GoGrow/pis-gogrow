@@ -8,8 +8,8 @@ import {
   LayoutGrid,
   Package,
   Percent,
-  Utensils,
   UsersRound,
+  Utensils,
   Wallet,
 } from "lucide-react"
 
