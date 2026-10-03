@@ -4,11 +4,13 @@ import { describe, expect, it, vi } from "vitest"
 
 import { AdminMobileNav } from "./admin-mobile-nav"
 
+let currentUrl = "/admin/dashboard"
+
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
-    usePage: () => ({ url: "/admin/dashboard", props: {} }),
+    usePage: () => ({ url: currentUrl, props: {} }),
     Link: ({
       children,
       href,
@@ -67,6 +69,72 @@ describe("AdminMobileNav", () => {
       "page",
     )
     expect(menu.getByRole("link", { name: "Cuenta" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("mantiene Empleados activo al ver el detalle de un empleado", () => {
+    currentUrl = "/admin/consumers/42"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Empleados" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("mantiene Empleados activo cuando la URL contiene parámetros de búsqueda", () => {
+    currentUrl = "/admin/consumers?search=juan&page=2"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Empleados" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+  })
+
+  it("marca Cuenta como activo en /settings/profile", () => {
+    currentUrl = "/settings/profile"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("marca Cuenta como activo en Subsidios (/admin/benefit_configurations)", () => {
+    currentUrl = "/admin/benefit_configurations"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("mantiene Pagos inactivo y no clickeable en facturas (/admin/invoices)", () => {
+    currentUrl = "/admin/invoices"
+    const menu = nav()
+
+    expect(menu.queryByRole("link", { name: "Pagos" })).not.toBeInTheDocument()
+    const pagosButton = menu.getByRole("button", { name: "Pagos" })
+    expect(pagosButton).toHaveAttribute("aria-disabled", "true")
+    expect(pagosButton).toBeDisabled()
+    expect(pagosButton).not.toHaveAttribute("aria-current")
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+    expect(menu.getByRole("link", { name: "Empleados" })).not.toHaveAttribute(
       "aria-current",
     )
   })

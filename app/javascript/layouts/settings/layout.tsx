@@ -2,7 +2,6 @@ import { Link, usePage } from "@inertiajs/react"
 import type { PropsWithChildren } from "react"
 import { useTranslation } from "react-i18next"
 
-import { AdminMobileNav } from "@/components/admin/admin-mobile-nav"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import Heading from "@/components/heading"
 import { Button } from "@/components/ui/button"
@@ -52,7 +51,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
   ]
 
   return (
-    <div className="px-4 py-6 pb-24 md:pb-6">
+    <div className={cn("px-4 py-6 md:pb-6", !isAdmin && "pb-24")}>
       <Heading
         title={t("components.settings_layout.title")}
         description={t("components.settings_layout.description")}
@@ -88,7 +87,6 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
       </div>
 
       {isConsumer && <ConsumerMobileNav />}
-      {isAdmin && <AdminMobileNav />}
     </div>
   )
 }
