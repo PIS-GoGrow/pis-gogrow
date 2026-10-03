@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import EditBenefitConfigurationForm from "@/components/benefit-configurations/edit-benefit-configuration-form"
+import SpecialSubsidiesSection from "@/components/benefit-configurations/special-subsidies-section"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -22,6 +23,8 @@ import type { AdminBenefitConfigurationsIndex } from "@/types/serializers"
 export default function Index({
   pending_base_subsidy,
   base_subsidy,
+  special_subsidies,
+  employees,
 }: AdminBenefitConfigurationsIndex) {
   const { t } = useTranslation()
   const { flash } = usePage()
@@ -183,6 +186,11 @@ export default function Index({
             )}
           </CardContent>
         </Card>
+
+        <SpecialSubsidiesSection
+          specialSubsidies={special_subsidies}
+          employees={employees}
+        />
       </div>
     </AppLayout>
   )

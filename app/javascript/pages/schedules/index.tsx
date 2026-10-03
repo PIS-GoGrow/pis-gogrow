@@ -73,7 +73,7 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
 
     const currentAmounts: Record<number, string> = {}
     schedules.forEach((schedule) => {
-      currentAmounts[schedule.menu.id] = String(schedule.amount)
+      currentAmounts[schedule.saved_menu_id] = String(schedule.amount)
     })
 
     setSelections((prev) => ({ ...prev, [selectedDate]: currentAmounts }))
@@ -232,7 +232,10 @@ export default function Index({ week, menus, days }: SchedulesIndexProps) {
               No hay ninguna fecha seleccionada.
             </p>
           ) : selectedDay.published && !isEditingPublished ? (
-            <PublishedDayView schedules={selectedDay.schedules} />
+            <PublishedDayView
+              schedules={selectedDay.schedules}
+              editable={selectedDay.editable}
+            />
           ) : selectedDay.publishable || isEditingPublished ? (
             <MenuSelectionList
               menus={menus}

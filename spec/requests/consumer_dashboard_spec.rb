@@ -36,6 +36,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   end
 
   it "renders the protected weekly menu with its server props" do
+    travel_to(Time.zone.local(2026, 9, 14, 10))
     Order.destroy_all
     Schedule.delete_all
     user = consumer_user
@@ -336,7 +337,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     # Criterio 3: un dato opcional ausente viaja como ausente, no como texto
     # inventado ni como cadena vacía que la pantalla pueda confundir con un dato.
     it "sends optional data that was never filled in as null" do
-      menus(:milanesa).update!(description: nil)
+      menus(:milanesa).update_column(:description, nil)
       publish(menus(:milanesa), monday)
       publish(menus(:office_menu), monday)
       sign_in users(:one)
@@ -434,7 +435,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       travel_to(saturday) do
         provider_user = User.create!(email: "provider-weekend@gmail.com", name: "Viandas FinDe", password: "password123456")
         provider = Provider.create!(user: provider_user)
-        menu = Menu.create!(provider:, name: "Wok de vegetales", price: 300)
+        menu = Menu.create!(provider:, name: "Wok de vegetales", description: "Plato de prueba", price: 300)
 
         # Schedule for this past Friday (should not be included)
         Schedule.create!(menu:, date: Date.new(2026, 10, 2), amount: 10)
@@ -493,7 +494,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     it "renders the confirmation page with order details and totals" do
       provider_user = User.create!(email: "prov-conf-2@gmail.com", name: "La Cocina", password: "password123456")
       provider = Provider.create!(user: provider_user)
-      menu = Menu.create!(provider:, name: "Tarta Pascualina", price: 250)
+      menu = Menu.create!(provider:, name: "Tarta Pascualina", description: "Plato de prueba", price: 250)
       schedule = Schedule.create!(menu:, date: Date.current, amount: 10)
       order = Order.create!(
         consumer:,
@@ -533,7 +534,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       other_consumer = Consumer.create!(user: other_user, company: consumer.company, address: "Dir 123")
       provider_user = User.create!(email: "prov-conf-3@gmail.com", name: "La Cocina", password: "password123456")
       provider = Provider.create!(user: provider_user)
-      menu = Menu.create!(provider:, name: "Guiso de lentejas", price: 250)
+      menu = Menu.create!(provider:, name: "Guiso de lentejas", description: "Plato de prueba", price: 250)
       schedule = Schedule.create!(menu:, date: Date.current, amount: 10)
       other_order = Order.create!(
         consumer: other_consumer,

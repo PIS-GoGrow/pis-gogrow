@@ -12,7 +12,7 @@ class OrderSerializer < ApplicationSerializer
 
   typelize :string?
   attribute :menu_name do |order|
-    order.schedule&.menu&.name
+    order.menu_name
   end
 
   # El proveedor no tiene nombre propio: se identifica por el del usuario dueño.
@@ -74,6 +74,9 @@ end
 #  cancelled_at               :datetime
 #  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
+#  menu_description           :string
+#  menu_name                  :string
+#  menu_option_groups         :jsonb
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)

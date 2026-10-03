@@ -19,13 +19,17 @@ class Order < ApplicationRecord
     duplicate_order: 1,
     customer_request: 2,
     order_error: 3,
-    other: 4
+    other: 4,
+    dish_modified: 5
   }, prefix: :rejection_reason
 
   # Esta línea tiene que estar antes de has_many :order_accounts.
   # Antes de que se borre la orden, se tiene que registrar sus cuentas
   # asociadas para que estas actualicen su monto.
   before_destroy :remember_accounts
+  # El pedido conserva el plato tal como estaba al pedirlo: editarlo después no
+  # tiene que reescribir el historial.
+  before_create :snapshot_menu
 
   belongs_to :consumer
   belongs_to :schedule
@@ -279,6 +283,22 @@ class Order < ApplicationRecord
     end
   end
 
+  # Los pedidos creados sin pasar por las validaciones (fixtures, consola) no
+  # tienen la copia del plato: para esos se muestra el plato actual.
+  def menu_name = super || schedule&.menu&.name
+  def menu_description = super || schedule&.menu&.description
+  def menu_option_groups = super || schedule&.menu&.option_groups_snapshot || []
+
+  # El proveedor modificó el plato de esta programación y eligió no mantener los
+  # pedidos ya confirmados. Igual que #withdraw!, no respeta la ventana de RN-12/13.
+  def reject_for_dish_change!
+    with_lock do
+      return false unless confirmed?
+
+      update!(status: :rejected, rejection_reason: :dish_modified)
+    end
+  end
+
   # Asigna la orden a las dos cuentas que le corresponden y las hace recalcular
   # su monto: la del empleado, que paga su parte, y la de su empresa, que paga el
   # subsidio. Es idempotente, así que sirve también para completar las cuentas de
@@ -324,6 +344,15 @@ class Order < ApplicationRecord
 
   private
 
+  def snapshot_menu
+    menu = schedule&.menu
+    return if menu.nil?
+
+    self[:menu_name] ||= menu.name
+    self[:menu_description] ||= menu.description
+    self[:menu_option_groups] ||= menu.option_groups_snapshot
+  end
+
   # La cuenta de la empresa la comparten todos sus empleados, así que dos pedidos
   # simultáneos pueden intentar crearla a la vez. create_or_find_by! inserta en un
   # savepoint: si el índice único rechaza el segundo INSERT, busca la que creó el
@@ -359,6 +388,9 @@ end
 #  cancelled_at               :datetime
 #  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
+#  menu_description           :string
+#  menu_name                  :string
+#  menu_option_groups         :jsonb
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
