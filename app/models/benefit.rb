@@ -18,7 +18,7 @@ class Benefit < ApplicationRecord
 
   validates :percentage, presence: true,
     numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
-  validate :only_one_monthly_benefit_per_consumer, if: :monthly?
+  validate :only_one_monthly_benefit_per_consumer, if: [:monthly?, :current?]
 
   # Es importante que current sea 0
   enum :status, { current: 0, expired: 1, future: 2 }, default: :current
@@ -34,6 +34,7 @@ class Benefit < ApplicationRecord
   }
 
   # Expira beneficios pasados de fecha y que no deberían poder usarse más.
+  # Incluye beneficios futuros pero pasados de fecha.
   def self.expire_old!(date)
     where.not(status: :expired)
       .where(due_date: ...date)
@@ -41,6 +42,9 @@ class Benefit < ApplicationRecord
   end
 
   # Permite usar beneficios que estaban marcados para ser usados en el futuro.
+  # Un beneficio puede ser marcado como current, si hacerlo no implica tener
+  # dos beneficios current con la misma benefit_configuration_id, y si no
+  # está pasado de fecha.
   def self.make_current!(date)
     future
       .where(due_date: date..)

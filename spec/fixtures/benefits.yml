@@ -11,13 +11,19 @@ one:
   description: "Viandas mensuales"
   amount: 20
   due_date: <%= Date.current + 5 %>
-
 two:
   consumer: other
   percentage: 50
   amount: 20
   description: "Viandas mensuales"
   due_date: <%= Date.current + 5 %>
+future:
+  benefit_configuration: monthly
+  consumer: one
+  amount: 20
+  percentage: 50
+  due_date: <%= Date.current + 10 %>
+  status: future
 # == Schema Information
 #
 # Table name: benefits

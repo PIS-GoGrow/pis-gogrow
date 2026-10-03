@@ -13,11 +13,7 @@ RSpec.describe Calendar, type: :model do
   #   12  13  14  15  16  17  18
   #
   # Semana "esta": lunes 5/10 a domingo 11/10.
-
-  def date(year, month, day)
-    Date.new(year, month, day)
-  end
-
+  
   def calendar_on(today)
     described_class.new(today: today)
   end
@@ -34,11 +30,11 @@ RSpec.describe Calendar, type: :model do
   describe "#schedule_week_range" do
     context "cuando hoy es un día de semana" do
       {
-        "lunes" => [Date.new(2026, 10, 5), Date.new(2026, 10, 5)..Date.new(2026, 10, 9)],
-        "martes" => [Date.new(2026, 10, 6), Date.new(2026, 10, 5)..Date.new(2026, 10, 9)],
-        "miércoles" => [Date.new(2026, 10, 7), Date.new(2026, 10, 5)..Date.new(2026, 10, 9)],
-        "jueves" => [Date.new(2026, 10, 8), Date.new(2026, 10, 5)..Date.new(2026, 10, 9)],
-        "viernes" => [Date.new(2026, 10, 9), Date.new(2026, 10, 5)..Date.new(2026, 10, 9)]
+        "lunes" => [ Date.new(2026, 10, 5), Date.new(2026, 10, 5)..Date.new(2026, 10, 9) ],
+        "martes" => [ Date.new(2026, 10, 6), Date.new(2026, 10, 5)..Date.new(2026, 10, 9) ],
+        "miércoles" => [ Date.new(2026, 10, 7), Date.new(2026, 10, 5)..Date.new(2026, 10, 9) ],
+        "jueves" => [ Date.new(2026, 10, 8), Date.new(2026, 10, 5)..Date.new(2026, 10, 9) ],
+        "viernes" => [ Date.new(2026, 10, 9), Date.new(2026, 10, 5)..Date.new(2026, 10, 9) ]
       }.each do |weekday, (today, expected)|
         it "devuelve la semana actual si es #{weekday}" do
           expect(calendar_on(today).schedule_week_range).to eq(expected)
@@ -120,13 +116,13 @@ RSpec.describe Calendar, type: :model do
 
   describe "#monthly_benefit_assignment" do
     {
-      "viernes" => [Date.new(2027, 4, 30), Date.new(2027, 4, 30)],
-      "sábado" => [Date.new(2026, 10, 31), Date.new(2026, 10, 31)],
-      "domingo" => [Date.new(2027, 1, 31), Date.new(2027, 1, 30)],
-      "lunes" => [Date.new(2026, 11, 30), Date.new(2026, 11, 28)],
-      "martes" => [Date.new(2027, 8, 31), Date.new(2027, 8, 28)],
-      "miércoles" => [Date.new(2027, 3, 31), Date.new(2027, 3, 27)],
-      "jueves" => [Date.new(2026, 12, 31), Date.new(2026, 12, 26)]
+      "viernes" => [ Date.new(2027, 4, 30), Date.new(2027, 4, 30) ],
+      "sábado" => [ Date.new(2026, 10, 31), Date.new(2026, 10, 31) ],
+      "domingo" => [ Date.new(2027, 1, 31), Date.new(2027, 1, 30) ],
+      "lunes" => [ Date.new(2026, 11, 30), Date.new(2026, 11, 28) ],
+      "martes" => [ Date.new(2027, 8, 31), Date.new(2027, 8, 28) ],
+      "miércoles" => [ Date.new(2027, 3, 31), Date.new(2027, 3, 27) ],
+      "jueves" => [ Date.new(2026, 12, 31), Date.new(2026, 12, 26) ]
     }.each do |weekday, (last_day_of_month, expected)|
       it "cuando el mes termina en #{weekday} devuelve #{expected}" do
         expect(calendar_on(last_day_of_month.beginning_of_month).monthly_benefit_assignment)
@@ -155,7 +151,7 @@ RSpec.describe Calendar, type: :model do
         calendar_on(day).monthly_benefit_assignment
       end
 
-      expect(results.uniq).to eq([Date.new(2026, 10, 31)])
+      expect(results.uniq).to eq([ Date.new(2026, 10, 31) ])
     end
 
     it "siempre cae en el mismo mes que hoy, en viernes o sábado" do
@@ -223,7 +219,7 @@ RSpec.describe Calendar, type: :model do
         calendar_on(day).configuration_cutoff
       end
 
-      expect(results.uniq).to eq([Date.new(2026, 11, 27)])
+      expect(results.uniq).to eq([ Date.new(2026, 11, 27) ])
     end
 
     it "siempre es estrictamente anterior a monthly_benefit_assignment" do
@@ -297,13 +293,13 @@ RSpec.describe Calendar, type: :model do
 
   describe ".last_saturday" do
     {
-      "un mes que termina en sábado" => [Date.new(2026, 10, 1), Date.new(2026, 10, 31)],
-      "un mes que termina en domingo" => [Date.new(2027, 1, 1), Date.new(2027, 1, 30)],
-      "un mes que termina en lunes" => [Date.new(2026, 11, 1), Date.new(2026, 11, 28)],
-      "un mes que termina en jueves" => [Date.new(2026, 12, 1), Date.new(2026, 12, 26)],
-      "un mes que termina en viernes" => [Date.new(2027, 4, 1), Date.new(2027, 4, 24)],
-      "febrero no bisiesto" => [Date.new(2027, 2, 1), Date.new(2027, 2, 27)],
-      "febrero bisiesto" => [Date.new(2028, 2, 1), Date.new(2028, 2, 26)]
+      "un mes que termina en sábado" => [ Date.new(2026, 10, 1), Date.new(2026, 10, 31) ],
+      "un mes que termina en domingo" => [ Date.new(2027, 1, 1), Date.new(2027, 1, 30) ],
+      "un mes que termina en lunes" => [ Date.new(2026, 11, 1), Date.new(2026, 11, 28) ],
+      "un mes que termina en jueves" => [ Date.new(2026, 12, 1), Date.new(2026, 12, 26) ],
+      "un mes que termina en viernes" => [ Date.new(2027, 4, 1), Date.new(2027, 4, 24) ],
+      "febrero no bisiesto" => [ Date.new(2027, 2, 1), Date.new(2027, 2, 27) ],
+      "febrero bisiesto" => [ Date.new(2028, 2, 1), Date.new(2028, 2, 26) ]
     }.each do |description, (month_start, expected)|
       it "devuelve #{expected} para #{description}" do
         expect(described_class.last_saturday(month_start)).to eq(expected)

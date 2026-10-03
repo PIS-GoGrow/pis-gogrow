@@ -5,8 +5,9 @@ class BenefitRuleSerializer < ApplicationSerializer
 
   attributes :id, :type, :limit, :max_price, :deadline_date, :deadline_days, :min_years, :created_at
 
+  typelize effective_from: :string?
   attribute :effective_from do |rule|
-    rule.effective_from.strftime("%d/%m/%y")
+    rule.effective_from?.strftime("%d/%m/%y")
   end
 end
 # == Schema Information

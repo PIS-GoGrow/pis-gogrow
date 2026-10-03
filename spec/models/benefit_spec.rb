@@ -45,6 +45,111 @@ RSpec.describe Benefit, type: :model do
     end
   end
 
+  describe ".make_current!" do
+    fixtures :consumers, :benefit_configurations, :benefits
+
+    # Supuestos: `date` es cualquier día del mes cuyos beneficios future se activan
+    # (se filtran por due_date dentro de ese mes), y los fixtures :one y :two
+    # existen en consumers y benefit_configurations. Ajustá nombres y filtro si difieren.
+    let(:date) { Date.new(2026, 11, 1) }
+    let(:consumer) { consumers(:one) }
+    let(:other_consumer) { consumers(:other) }
+    let(:configuration) { benefit_configurations(:monthly) }
+    let(:other_configuration) { benefit_configurations(:gift) }
+
+    before { Benefit.delete_all }
+
+    def create_benefit(status:, due_date: date.end_of_month, consumer: self.consumer, configuration: self.configuration)
+      Benefit.create!(
+        consumer: consumer,
+        benefit_configuration_id: configuration.id,
+        status: status,
+        due_date: due_date,
+        amount: 1000,
+        percentage: 50,
+        description: "Beneficio de prueba"
+      )
+    end
+
+    it "marca como current un beneficio future si no hay otro current con la misma configuración" do
+      benefit = create_benefit(status: :future)
+
+      Benefit.make_current!(date)
+
+      expect(benefit.reload).to be_current
+    end
+
+    it "marca como current beneficios future de distintos consumidores" do
+      first = create_benefit(status: :future, consumer: consumer)
+      second = create_benefit(status: :future, consumer: other_consumer)
+
+      Benefit.make_current!(date)
+
+      expect(first.reload).to be_current
+      expect(second.reload).to be_current
+    end
+
+    it "no marca como current un beneficio future si ya hay uno current con la misma configuración" do
+      current = create_benefit(status: :current, due_date: date.prev_month.end_of_month)
+      future = create_benefit(status: :future)
+
+      Benefit.make_current!(date)
+
+      expect(future.reload).to be_future
+      expect(current.reload).to be_current
+    end
+
+    it "marca el future si el beneficio current de la misma configuración es de otro consumidor y la configuración es distinta" do
+      create_benefit(status: :current, consumer: other_consumer, configuration: other_configuration)
+      future = create_benefit(status: :future, consumer: consumer, configuration: configuration)
+
+      Benefit.make_current!(date)
+
+      expect(future.reload).to be_current
+    end
+
+    it "no marca como current un beneficio future si hay un current de la misma configuración, aunque haya otros future que sí se puedan marcar" do
+      create_benefit(status: :current, due_date: date.prev_month.end_of_month)
+      blocked = create_benefit(status: :future)
+      allowed = create_benefit(status: :future, configuration: other_configuration)
+
+      Benefit.make_current!(date)
+
+      expect(blocked.reload).to be_future
+      expect(allowed.reload).to be_current
+    end
+
+    it "no modifica los beneficios expired" do
+      expired = create_benefit(status: :expired, due_date: date.prev_month.end_of_month)
+      create_benefit(status: :future)
+
+      Benefit.make_current!(date)
+
+      expect(expired.reload).to be_expired
+    end
+
+    it "no modifica los beneficios que ya son current" do
+      current = create_benefit(status: :current)
+
+      expect { Benefit.make_current!(date) }.not_to(change { current.reload.attributes })
+    end
+
+    it "no hace nada si no hay beneficios future" do
+      create_benefit(status: :current)
+      create_benefit(status: :expired)
+
+      expect { Benefit.make_current!(date) }.not_to(change { Benefit.order(:id).pluck(:id, :status) })
+    end
+
+    it "es idempotente" do
+      benefit = create_benefit(status: :future)
+
+      Benefit.make_current!(date)
+
+      expect { Benefit.make_current!(date) }.not_to(change { benefit.reload.attributes })
+    end
+  end
+
   describe "scopes" do
     before do
       benefits(:monthly).destroy
