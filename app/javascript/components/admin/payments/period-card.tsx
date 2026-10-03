@@ -97,14 +97,12 @@ export default function PeriodCard({
           </SheetTrigger>
         </div>
 
-        {status !== "approved" && (
-          <PaymentReceiptDialog
-            accountId={account.id}
-            createAction={adminPayments.create()}
-            destroyAction={adminPayments.destroy}
-            payments={account.payments}
-          />
-        )}
+        <PaymentReceiptDialog
+          accountId={account.id}
+          createAction={adminPayments.create()}
+          destroyAction={adminPayments.destroy}
+          payments={account.payments}
+        />
       </CardContent>
     </Card>
   )

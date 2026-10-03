@@ -8,8 +8,10 @@ import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -117,24 +119,52 @@ export default function PaymentReceiptDialog({
             {allowDelete &&
               (payment.status === "submitted" ||
                 payment.status === "rejected") && (
-                <Form
-                  action={destroyAction(payment.id)}
-                  className="shrink-0"
-                  method="delete"
-                  options={{ preserveScroll: true }}
-                >
-                  {({ processing }) => (
+                <Dialog>
+                  <DialogTrigger asChild>
                     <Button
                       aria-label={t("pages.accounts.show.receipt_remove")}
-                      disabled={processing}
                       size="icon-sm"
-                      type="submit"
                       variant="ghost"
                     >
-                      {processing ? <Spinner /> : <Trash2 aria-hidden="true" />}
+                      <Trash2 aria-hidden="true" />
                     </Button>
-                  )}
-                </Form>
+                  </DialogTrigger>
+
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        {t("pages.accounts.show.receipt_remove_title")}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {t("pages.accounts.show.receipt_remove_description")}
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button type="button" variant="outline">
+                          {t("common.cancel")}
+                        </Button>
+                      </DialogClose>
+                      <Form
+                        action={destroyAction(payment.id)}
+                        method="delete"
+                        options={{ preserveScroll: true }}
+                      >
+                        {({ processing }) => (
+                          <Button
+                            disabled={processing}
+                            type="submit"
+                            variant="destructive"
+                          >
+                            {processing && <Spinner />}
+                            {t("pages.accounts.show.receipt_remove_confirm")}
+                          </Button>
+                        )}
+                      </Form>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               )}
           </div>
         </div>
