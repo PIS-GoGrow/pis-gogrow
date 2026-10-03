@@ -42,8 +42,14 @@ Rails.application.routes.draw do
       end
     end
     resources :collections, only: [ :index, :show ]
+    resources :invoices, only: [ :create, :destroy ] do
+      get :file, on: :member
+    end
     resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :payments, only: [ :update ] do
+      get :receipt, on: :member
+    end
   end
 
   resources :schedules, only: [ :index, :create ] do
@@ -56,12 +62,13 @@ Rails.application.routes.draw do
     get "dashboard/confirmation", to: "dashboard#confirmation", as: :dashboard_confirmation
 
     resources :menus, only: [ :index ]
+    resources :delivery_addresses, only: [ :create ]
 
     resources :orders, only: [ :index, :show, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer
     end
 
-    resources :payments, only: [ :create, :update ] do
+    resources :payments, only: [ :create, :update, :destroy ] do
       get :receipt, on: :member
     end
 
@@ -71,6 +78,10 @@ Rails.application.routes.draw do
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
+    resources :consumers, only: [ :index, :show ]
+    resources :invoices, only: [ :index ] do
+      get :file, on: :member
+    end
   end
 
   root "home#index"

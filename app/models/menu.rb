@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+# Representa un plato de un proveedor. Su disponibilidad se asigna con Schedule.
 # Un plato guardado tiene base_menu_id nil. Una variante es una copia del plato
 # con otros datos para las fechas valid_from..valid_until: las programaciones de
 # esas fechas apuntan a la variante y el resto sigue usando el plato guardado.

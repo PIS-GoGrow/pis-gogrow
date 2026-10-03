@@ -7,10 +7,14 @@ class Consumer < ApplicationRecord
   belongs_to :user
 
   has_many :orders, dependent: :destroy
+  has_many :saved_addresses, class_name: "DeliveryAddress", dependent: :destroy
   has_many :benefits, dependent: :destroy
   has_many :accounts, as: :owner
   has_many :user_notifications, as: :user
   has_many :notification_configurations, through: :user_notifications, source: :notification_configuration
+
+  has_many :consumer_benefit_configurations
+  has_many :benefit_configurations, through: :consumer_benefit_configurations
 
   def total_debt
     accounts.pending.sum :amount
@@ -20,34 +24,51 @@ class Consumer < ApplicationRecord
     accounts.current.sum :amount
   end
 
-  def current_benefit
-    benefits.current.monthly.first || benefits.current.order(:due_date).first
+  # Devuelve todos los beneficios mensuales del cliente
+  def monthly_benefits
+    benefits.joins(benefit_configuration: :benefit_rules)
+            .where(benefit_rules: { type: MonthlyBenefit.name })
   end
 
-  def benefit_available
-    current_benefit&.amount || 0
+  def current_monthly_benefit
+    benefits.current.monthly.first
   end
 
-  # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes
-  def subsidized_meals_used_this_month
-    orders
-      .joins(:schedule)
-      .where(schedules: { date: Date.current.all_month })
-      .where.not(status: [ :rejected, :cancelled ])
-      .sum(:amount)
+  def monthly_benefit_available
+    current_monthly_benefit&.amount || 0
+  end
+
+  # Devuelve la cantidad de beneficios mensuales usados en total en un determinado
+  # rango de fechas y especificando si contar órdenes pendientes.
+  # Si se hizo una orden pidiendo dos viandas con un beneficio, esa orden cuenta
+  # por dos.
+  def monthly_benefit_used_in(date_range, count_pending: false)
+    valid_status = [ :rejected, :cancelled ]
+    valid_status << :pending if count_pending
+
+    OrderBenefit
+      .joins(order: :schedule)
+      .where(schedules: { date: date_range })
+      .where.not(orders: { status:  valid_status })
+      .where(benefit_id: monthly_benefits)
+      .sum(:benefit_used)
+  end
+
+  # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes, para
+  # las que se usó un beneficio mensual
+  def monthly_benefit_used_this_month
+    monthly_benefit_used_in Date.current.all_month
   end
 
   # Devuelve la cantidad de viandas compradas en órdenes confirmadas esta semana
-  def subsidized_meals_used_this_week
-    orders
-      .joins(:schedule)
-      .where(schedules: { date: Date.current.all_week })
-      .where.not(status: [ :rejected, :cancelled ])
-      .sum(:amount)
+  def monthly_benefit_used_this_week
+    monthly_benefit_used_in Date.current.all_week
   end
 
-  def remaining_subsidized_meals
-    [ benefit_available - subsidized_meals_used_this_month, 0 ].max
+  # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes,
+  # contando solo las órdenes confirmadas
+  def remaining_monthly_benefit
+    [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
   end
 
   # Se espera que no se incluyan direcciones blank acá
@@ -64,6 +85,28 @@ class Consumer < ApplicationRecord
     else
       { delivery_method: "office", address: company.address }
     end
+  end
+
+  # TODO: Cómo obtenemos el cumpleaños/onboarding del empleado?
+  attr_accessor :bithday, :onboarding_date
+
+  # La oficina va primero y después la última dirección particular a la que se
+  # pidió, que es la que el carrito muestra junto a la oficina.
+  def delivery_address_options
+    last_used = orders.home.order(created_at: :desc).pick(:address)
+    saved = saved_addresses.order(created_at: :desc).map do |delivery_address|
+      { id: "address-#{delivery_address.id}", label: delivery_address.name, address: delivery_address.full_address }
+    end
+    custom = [
+      { id: "home", label: I18n.t("pages.orders.addresses.home"), address: },
+      *saved,
+      { id: "last_used", label: I18n.t("pages.orders.addresses.last_used"), address: last_used }
+    ]
+
+    [
+      { id: "office", label: I18n.t("pages.orders.addresses.office"), address: company.address },
+      *custom.partition { it[:address] == last_used }.flatten
+    ].select { it[:address].present? }.uniq { it[:address] }
   end
 end
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Consumer::PaymentsController < Consumer::InertiaController
-  before_action :set_payment, only: [ :update, :receipt ]
+  before_action :set_payment, only: [ :update, :destroy, :receipt ]
 
   def create
     # La cuenta se busca dentro de las cuentas del consumidor autenticado. Esto
@@ -42,6 +42,18 @@ class Consumer::PaymentsController < Consumer::InertiaController
     )
   end
 
+  def destroy
+    unless @payment.submitted? || @payment.rejected?
+      return redirect_back fallback_location: accounts_path,
+                           alert: t("validations.payment_not_removable"), status: :see_other
+    end
+
+    @payment.destroy!
+
+    redirect_back fallback_location: accounts_path,
+                  notice: t("flash.payment_receipt_removed"), status: :see_other
+  end
+
   private
 
   def set_payment
@@ -68,7 +80,7 @@ class Consumer::PaymentsController < Consumer::InertiaController
   def persist_payment
     # Payment valida tipo, tamaño y presencia del adjunto antes de impactar la BD.
     if @payment.save
-      redirect_back fallback_location: accounts_path, notice: t("flash.payment_receipt_submitted"), status: :see_other
+      redirect_back fallback_location: accounts_path, status: :see_other
     else
       redirect_back fallback_location: accounts_path, inertia: { errors: @payment.errors.to_hash }, status: :see_other
     end

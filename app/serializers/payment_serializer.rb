@@ -1,7 +1,13 @@
 # frozen_string_literal: true
 
 class PaymentSerializer < ApplicationSerializer
-  attributes :id, :status, :created_at
+  typelize_from Payment
+  attributes :id, :status, :created_at, :rejection_reason
+
+  typelize :string
+  attribute :receipt_uploaded_at do |payment|
+    I18n.l(payment.created_at.to_date)
+  end
 
   typelize :string?
   attribute :receipt_url do |payment|
@@ -20,16 +26,18 @@ class PaymentSerializer < ApplicationSerializer
     payment.receipt.content_type if payment.receipt.attached?
   end
 end
+
 # == Schema Information
 #
 # Table name: payments
 #
-#  id          :bigint           not null, primary key
-#  status      :integer          default(0), not null
-#  created_at  :datetime         not null
-#  updated_at  :datetime         not null
-#  account_id  :bigint           not null
-#  provider_id :bigint
+#  id               :bigint           not null, primary key
+#  rejection_reason :text
+#  status           :integer          default(0), not null
+#  created_at       :datetime         not null
+#  updated_at       :datetime         not null
+#  account_id       :bigint           not null
+#  provider_id      :bigint
 #
 # Indexes
 #
