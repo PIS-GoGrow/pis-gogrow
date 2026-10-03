@@ -6,7 +6,7 @@ class Admin::BenefitConfigurationsIndexSerializer < ApplicationSerializer
 
   typelize base_subsidy: "BenefitConfiguration | null"
   one :base_subsidy, resource: BenefitConfigurationSerializer
-  
+
   typelize configurable_month: "string"
   attributes :configurable_month
 end

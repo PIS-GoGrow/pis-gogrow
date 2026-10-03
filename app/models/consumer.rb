@@ -73,7 +73,7 @@ class Consumer < ApplicationRecord
 
   # Devuelve el beneficio mensual que puede ser aplicado en un schedule.
   # Esto es, el current_monthly_benefit si la fecha del schedule lo permite,
-  # o el siguiente si no.  
+  # o el siguiente si no.
   def monthly_benefit_for(schedule)
     benefits
       .where.not(status: :expired)

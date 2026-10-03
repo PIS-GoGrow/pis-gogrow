@@ -248,7 +248,8 @@ export default function EditBenefitConfigurationForm({
               <AlertCircleIcon />
               <AlertTitle className="font-bold">
                 {t(
-                  "pages.admin.benefit_configurations.index.current.pending_conflict.title", { date: configurableMonth },
+                  "pages.admin.benefit_configurations.index.current.pending_conflict.title",
+                  { date: configurableMonth },
                 )}
               </AlertTitle>
               <AlertDescription>
@@ -292,7 +293,9 @@ export default function EditBenefitConfigurationForm({
             <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500">
               <TriangleAlert className="size-4 shrink-0" />
               <span>
-                {t("pages.admin.benefit_configurations.index.current.notice", { date: configurableMonth })}
+                {t("pages.admin.benefit_configurations.index.current.notice", {
+                  date: configurableMonth,
+                })}
               </span>
             </div>
 

@@ -107,7 +107,7 @@ class BenefitConfiguration < ApplicationRecord
       # Si llegamos a este caso hay un error de concurrencia: se está corriendo esta
       # misma función dos veces a la vez. No tenemos nada para hacer y podemos ignorar
       # el error.
-      return
+      nil
     end
   end
 
@@ -127,7 +127,7 @@ class BenefitConfiguration < ApplicationRecord
       # Si llegamos a este caso hay un error de concurrencia: se está corriendo esta
       # misma función dos veces a la vez. No tenemos nada para hacer y podemos ignorar
       # el error.
-      return
+      nil
     end
   end
 
@@ -135,7 +135,7 @@ class BenefitConfiguration < ApplicationRecord
 
   # Devuelve el menor límite impuesto por las reglas. Si no hay límite, devuelve nil
   def benefit_limit
-    @limit ||= 
+    @limit ||=
       benefit_rules
         .map(&:benefit_limit)
         .filter { |limit| !limit.nil? }

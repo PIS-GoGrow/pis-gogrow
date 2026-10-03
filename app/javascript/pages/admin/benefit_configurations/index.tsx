@@ -1,5 +1,5 @@
-import { Head, usePage } from "@inertiajs/react"
-import { AlertCircleIcon, PencilIcon, XIcon } from "lucide-react"
+import { Head } from "@inertiajs/react"
+import { AlertCircleIcon, PencilIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -25,24 +25,7 @@ export default function Index({
   configurable_month,
 }: AdminBenefitConfigurationsIndex) {
   const { t } = useTranslation()
-  const { flash } = usePage()
   const [isEditing, setIsEditing] = useState(false)
-
-  // El cartel de "Tus cambios estan programados" solo se muestra justo
-  // despues de programar un cambio (cuando el redirect del create trae un
-  // flash.notice), no cada vez que se entra a la pantalla con un cambio
-  // pendiente -- asi lo pidio Fran. flash.notice desaparece solo en la
-  // proxima visita/recarga (Rails lo descarta despues de leerlo una vez),
-  // asi que no hace falta un estado "dismissed" separado para eso.
-  const [showScheduledBanner, setShowScheduledBanner] = useState(
-    Boolean(flash.notice),
-  )
-  const [previousFlashNotice, setPreviousFlashNotice] = useState(flash.notice)
-
-  if (flash.notice !== previousFlashNotice) {
-    setPreviousFlashNotice(flash.notice)
-    setShowScheduledBanner(Boolean(flash.notice))
-  }
 
   const title = t("pages.admin.benefit_configurations.index.title")
 
@@ -50,7 +33,9 @@ export default function Index({
     { title, href: adminBenefitConfigurations.index().url },
   ]
   console.log(pending_base_subsidies)
-  const pendingBenefitSubsidy = pending_base_subsidies.find((config) => config.benefit_rules[0].effective_from === configurable_month)
+  const pendingBenefitSubsidy = pending_base_subsidies.find(
+    (config) => config.benefit_rules[0].effective_from === configurable_month,
+  )
 
   const pendingBenefitConfiguration:
     | {
@@ -116,74 +101,74 @@ export default function Index({
               />
             ) : (
               <>
-              {pending_base_subsidies.map((subsidy) =>(
-                <Alert>
-                  <AlertCircleIcon />
-                  <AlertTitle className="font-bold">
-                    {t(
-                      "pages.admin.benefit_configurations.index.current.pending_conflict.title_alt", { date: configurable_month },
-                    )}
-                  </AlertTitle>
-                  <AlertDescription>
-                    {t(
-                      "pages.admin.benefit_configurations.index.current.pending_conflict.description",
-                      {
-                        subsidy_percentage:
-                          subsidy.subsidy_percentage,
-                        max_voucher_price:
-                          subsidy.benefit_rules[0]?.max_price,
-                        monthly_voucher_limit:
-                          subsidy.benefit_rules[0]?.limit,
-                      },
-                    )}
-                  </AlertDescription>
-                </Alert>
-              ))}
-              {base_subsidy ? (
-              <dl className="divide-border bg-muted divide-y rounded-lg px-4">
-                <div className="flex items-center justify-between py-3">
-                  <dt className="text-muted-foreground">
-                    {t(
-                      "pages.admin.benefit_configurations.index.current.subsidy_percentage",
-                    )}
-                  </dt>
-                  <dd className="text-lg font-semibold">
-                    {base_subsidy.subsidy_percentage}%
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between py-3">
-                  <dt className="text-muted-foreground">
-                    {t(
-                      "pages.admin.benefit_configurations.index.current.max_voucher_price",
-                    )}
-                  </dt>
-                  <dd className="text-lg font-semibold">
-                    ≤${base_subsidy?.benefit_rules[0]?.max_price}
-                  </dd>
-                </div>
-                <div className="flex items-center justify-between py-3">
-                  <dt className="text-muted-foreground">
-                    {t(
-                      "pages.admin.benefit_configurations.index.current.monthly_voucher_limit",
-                    )}
-                  </dt>
-                  <dd className="text-lg font-semibold">
-                    {base_subsidy?.benefit_rules[0]?.limit}
-                  </dd>
-                </div>
-              </dl>
-            ) : (
-              <Empty>
-                <EmptyHeader>
-                  <EmptyTitle>
-                    {t(
-                      "pages.admin.benefit_configurations.index.current.empty",
-                    )}
-                  </EmptyTitle>
-                </EmptyHeader>
-              </Empty>
-            )}
-            </>
+                {pending_base_subsidies.map((subsidy) => (
+                  <Alert key={subsidy.id}>
+                    <AlertCircleIcon />
+                    <AlertTitle className="font-bold">
+                      {t(
+                        "pages.admin.benefit_configurations.index.current.pending_conflict.title_alt",
+                        { date: configurable_month },
+                      )}
+                    </AlertTitle>
+                    <AlertDescription>
+                      {t(
+                        "pages.admin.benefit_configurations.index.current.pending_conflict.description",
+                        {
+                          subsidy_percentage: subsidy.subsidy_percentage,
+                          max_voucher_price:
+                            subsidy.benefit_rules[0]?.max_price,
+                          monthly_voucher_limit:
+                            subsidy.benefit_rules[0]?.limit,
+                        },
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                ))}
+                {base_subsidy ? (
+                  <dl className="divide-border bg-muted divide-y rounded-lg px-4">
+                    <div className="flex items-center justify-between py-3">
+                      <dt className="text-muted-foreground">
+                        {t(
+                          "pages.admin.benefit_configurations.index.current.subsidy_percentage",
+                        )}
+                      </dt>
+                      <dd className="text-lg font-semibold">
+                        {base_subsidy.subsidy_percentage}%
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between py-3">
+                      <dt className="text-muted-foreground">
+                        {t(
+                          "pages.admin.benefit_configurations.index.current.max_voucher_price",
+                        )}
+                      </dt>
+                      <dd className="text-lg font-semibold">
+                        ≤${base_subsidy?.benefit_rules[0]?.max_price}
+                      </dd>
+                    </div>
+                    <div className="flex items-center justify-between py-3">
+                      <dt className="text-muted-foreground">
+                        {t(
+                          "pages.admin.benefit_configurations.index.current.monthly_voucher_limit",
+                        )}
+                      </dt>
+                      <dd className="text-lg font-semibold">
+                        {base_subsidy?.benefit_rules[0]?.limit}
+                      </dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyTitle>
+                        {t(
+                          "pages.admin.benefit_configurations.index.current.empty",
+                        )}
+                      </EmptyTitle>
+                    </EmptyHeader>
+                  </Empty>
+                )}
+              </>
             )}
           </CardContent>
         </Card>
