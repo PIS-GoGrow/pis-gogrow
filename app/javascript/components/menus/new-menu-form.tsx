@@ -1,7 +1,17 @@
 import { Link, useForm } from "@inertiajs/react"
 import { Pencil, Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
+import EditMenuSheet, {
+  type ConfirmedOrders,
+  type EditScope,
+} from "@/components/menus/edit-menu-sheet"
+import MenuAgendaFields, {
+  type AgendaDraft,
+  agendaPayload,
+  initialAgenda,
+} from "@/components/menus/menu-agenda-fields"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,17 +24,9 @@ import {
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
 import { providerMenus as menusRoutes } from "@/routes"
-import type { Menu } from "@/types"
+import type { Menu, ProviderMenusEdit } from "@/types"
 
 interface OptionGroupDraft {
   id?: number
@@ -38,9 +40,21 @@ const emptyDraft: OptionGroupDraft = { name: "", options: "", limit: 1 }
 interface MenuFormProps {
   formSuccess?: () => void
   menu?: Menu
+  edit?: ProviderMenusEdit
 }
 
-export default function MenuForm({ formSuccess, menu }: MenuFormProps) {
+function agendaIsComplete(agenda: AgendaDraft) {
+  if (agenda.weekdays.length === 0) return true
+  if (!(Number(agenda.amount) > 0)) return false
+  if (agenda.mode === "single") return agenda.date !== ""
+  if (agenda.mode === "range")
+    return agenda.starts_on !== "" && agenda.ends_on >= agenda.starts_on
+
+  return agenda.starts_on !== ""
+}
+
+export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
+  const { t } = useTranslation()
   const [groups, setGroups] = useState<OptionGroupDraft[]>(() =>
     menu
       ? menu.option_groups.map((group) => ({
@@ -57,9 +71,11 @@ export default function MenuForm({ formSuccess, menu }: MenuFormProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [draft, setDraft] = useState<OptionGroupDraft>(emptyDraft)
   const [saveSheetOpen, setSaveSheetOpen] = useState(false)
-  const [saveSheetStage, setSaveSheetStage] = useState<"confirm" | "saved">(
-    "confirm",
+  const [saved, setSaved] = useState(false)
+  const [agenda, setAgenda] = useState<AgendaDraft | null>(() =>
+    edit ? initialAgenda(edit.agenda) : null,
   )
+  const [agendaError, setAgendaError] = useState<string | null>(null)
 
   const {
     data,
@@ -149,29 +165,16 @@ export default function MenuForm({ formSuccess, menu }: MenuFormProps) {
       return
     }
 
-    transform((formData) => ({
-      menu: {
-        ...formData,
-        option_groups_attributes: [
-          ...groups.map((g) => ({
-            ...(g.id !== undefined ? { id: g.id } : {}),
-            name: g.name,
-            options: g.options
-              .split(",")
-              .map((o) => o.trim())
-              .filter(Boolean),
-            limit: g.limit,
-          })),
-          ...removedGroupIds.map((id) => ({
-            id,
-            _destroy: true,
-          })),
-        ],
-      },
-    }))
+    transform((formData) => ({ menu: menuPayload(formData) }))
 
-    if (menu) {
-      setSaveSheetStage("confirm")
+    if (edit && agenda) {
+      if (!agendaIsComplete(agenda)) {
+        setAgendaError(t("pages.provider_menus.edit.agenda.incomplete"))
+        return
+      }
+
+      setAgendaError(null)
+      setSaved(false)
       setSaveSheetOpen(true)
       return
     }
@@ -181,22 +184,55 @@ export default function MenuForm({ formSuccess, menu }: MenuFormProps) {
     })
   }
 
-  function applyChanges() {
-    if (!menu) return
+  function menuPayload(formData: typeof data) {
+    return {
+      ...formData,
+      option_groups_attributes: [
+        ...groups.map((g) => ({
+          ...(g.id !== undefined ? { id: g.id } : {}),
+          name: g.name,
+          options: g.options
+            .split(",")
+            .map((o) => o.trim())
+            .filter(Boolean),
+          limit: g.limit,
+        })),
+        ...removedGroupIds.map((id) => ({
+          id,
+          _destroy: true,
+        })),
+      ],
+    }
+  }
 
-    patch(menusRoutes.update(menu.id).url, {
+  function applyChanges(scope: EditScope, confirmedOrders: ConfirmedOrders) {
+    if (!edit || !agenda) return
+
+    transform((formData) => ({
+      menu: menuPayload(formData),
+      agenda: agendaPayload(agenda),
+      scope,
+      confirmed_orders: confirmedOrders,
+      schedule_id: new URLSearchParams(window.location.search).get(
+        "schedule_id",
+      ),
+    }))
+
+    patch(menusRoutes.update(edit.saved_menu_id).url, {
       preserveScroll: true,
       preserveState: true,
       onSuccess: () => {
-        setSaveSheetStage("saved")
+        setSaved(true)
         formSuccess?.()
       },
       onError: () => {
         setSaveSheetOpen(false)
-        setSaveSheetStage("confirm")
       },
     })
   }
+
+  const serverAgendaError = (errors as Record<string, string | undefined>)
+    .agenda
 
   return (
     <>
@@ -338,6 +374,21 @@ export default function MenuForm({ formSuccess, menu }: MenuFormProps) {
           </div>
         </div>
 
+        {edit && agenda && (
+          <div className="mt-6">
+            <MenuAgendaFields
+              value={agenda}
+              onChange={(value) => {
+                setAgenda(value)
+                setAgendaError(null)
+              }}
+              today={edit.today}
+              maximumPublishDate={edit.maximum_publish_date}
+              error={agendaError ?? serverAgendaError}
+            />
+          </div>
+        )}
+
         <Dialog open={groupDialogOpen} onOpenChange={setGroupDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -440,78 +491,17 @@ export default function MenuForm({ formSuccess, menu }: MenuFormProps) {
         )}
       </form>
 
-      {menu && (
-        <Sheet
+      {edit && agenda && (
+        <EditMenuSheet
           open={saveSheetOpen}
-          onOpenChange={(open) => {
-            setSaveSheetOpen(open)
-
-            if (!open) {
-              setSaveSheetStage("confirm")
-            }
-          }}
-        >
-          <SheetContent
-            side="bottom"
-            showCloseButton={false}
-            className="mx-auto gap-0 rounded-t-3xl pb-[env(safe-area-inset-bottom)] md:max-w-xl"
-          >
-            <div className="bg-muted-foreground/30 mx-auto mt-3 h-1 w-10 rounded-full" />
-
-            {saveSheetStage === "confirm" ? (
-              <>
-                <SheetHeader className="items-start px-6 pt-8 text-left">
-                  <SheetTitle className="text-base">
-                    ¿Modificar el plato guardado?
-                  </SheetTitle>
-
-                  <SheetDescription className="text-base">
-                    Este plato se modificará en tus platos guardados.
-                  </SheetDescription>
-                </SheetHeader>
-
-                <SheetFooter className="flex-row gap-3 px-6 pt-6 pb-6">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="h-11 flex-1"
-                    onClick={() => setSaveSheetOpen(false)}
-                    disabled={processing}
-                  >
-                    Volver
-                  </Button>
-
-                  <Button
-                    type="button"
-                    className="h-11 flex-1"
-                    onClick={applyChanges}
-                    disabled={processing}
-                  >
-                    {processing ? "Aplicando..." : "Aplicar cambios"}
-                  </Button>
-                </SheetFooter>
-              </>
-            ) : (
-              <>
-                <SheetHeader className="items-start px-6 pt-8 text-left">
-                  <SheetTitle className="text-base">
-                    ¡Plato modificado!
-                  </SheetTitle>
-
-                  <SheetDescription className="text-base">
-                    Tu plato fue modificado correctamente.
-                  </SheetDescription>
-                </SheetHeader>
-
-                <SheetFooter className="px-6 pt-6 pb-6">
-                  <Button type="button" className="h-11 w-full" asChild>
-                    <Link href={menusRoutes.index().url}>Listo</Link>
-                  </Button>
-                </SheetFooter>
-              </>
-            )}
-          </SheetContent>
-        </Sheet>
+          onOpenChange={setSaveSheetOpen}
+          saved={saved}
+          processing={processing}
+          agenda={agendaPayload(agenda)}
+          today={edit.today}
+          scheduledDays={edit.scheduled_days}
+          onApply={applyChanges}
+        />
       )}
     </>
   )

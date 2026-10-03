@@ -7,7 +7,7 @@ class Provider::CollectionOrderSerializer < ApplicationSerializer
 
   typelize :string
   attribute :menu_name do |order|
-    order.schedule&.menu&.name.to_s
+    order.menu_name.to_s
   end
 
   typelize :string
