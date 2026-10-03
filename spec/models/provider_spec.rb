@@ -26,6 +26,38 @@ RSpec.describe Provider, type: :model do
       expect(providers(:tuviandita).allows_delivery_method?(:home)).to be true
     end
   end
+
+  describe "#order_deadline_passed_today?" do
+    let(:provider) { providers(:tuviandita) }
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 10, 2, 11, 30)) { example.run }
+    end
+
+    it "is false without a deadline" do
+      provider.order_deadline = nil
+
+      expect(provider.order_deadline_passed_today?).to be false
+    end
+
+    it "is false a minute before the deadline" do
+      provider.order_deadline = Time.zone.parse("11:31")
+
+      expect(provider.order_deadline_passed_today?).to be false
+    end
+
+    it "is true right at the deadline" do
+      provider.order_deadline = Time.zone.parse("11:30")
+
+      expect(provider.order_deadline_passed_today?).to be true
+    end
+
+    it "is true once the deadline has passed" do
+      provider.order_deadline = Time.zone.parse("11:29")
+
+      expect(provider.order_deadline_passed_today?).to be true
+    end
+  end
 end
 
 # == Schema Information

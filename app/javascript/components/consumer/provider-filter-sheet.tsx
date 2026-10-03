@@ -1,16 +1,15 @@
 import { SlidersHorizontal } from "lucide-react"
 import { useState } from "react"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 
 interface Props {
   providers: string[]
@@ -38,14 +37,14 @@ export function ProviderFilterSheet({
   }
 
   return (
-    <Sheet
+    <AdaptableDialog
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen)
         if (nextOpen) setDraftProviders(new Set(selectedProviders))
       }}
     >
-      <SheetTrigger asChild>
+      <AdaptableDialogTrigger asChild>
         <Button
           type="button"
           variant="outline"
@@ -55,26 +54,17 @@ export function ProviderFilterSheet({
         >
           <SlidersHorizontal aria-hidden="true" className="size-4" />
         </Button>
-      </SheetTrigger>
+      </AdaptableDialogTrigger>
 
-      <SheetContent
-        side="bottom"
+      <AdaptableDialogContent
         showCloseButton={false}
         data-provider-filter-sheet
-        className="border-border bg-background text-foreground gap-6 rounded-t-[32px] border px-6 pt-2.5 pb-8 shadow-none md:inset-x-1/2 md:bottom-1/2 md:w-[402px] md:translate-x-[-50%] md:translate-y-1/2 md:rounded-[32px]"
+        className="p-5"
       >
-        <div
-          aria-hidden="true"
-          className="bg-muted-foreground/30 mx-auto h-1 w-12 rounded-full"
-        />
-
         <div className="flex flex-col gap-5">
-          <SheetTitle className="text-base leading-6 font-semibold tracking-normal">
-            Filtrar por Proveedores
-          </SheetTitle>
-          <SheetDescription className="sr-only">
-            Seleccioná los proveedores que querés ver en el menú.
-          </SheetDescription>
+          <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
+            Filtrar por proveedores
+          </AdaptableDialogTitle>
 
           <div className="flex flex-col">
             <div className="flex h-12 items-center gap-3 rounded-sm px-2 py-3">
@@ -134,7 +124,7 @@ export function ProviderFilterSheet({
             </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }
