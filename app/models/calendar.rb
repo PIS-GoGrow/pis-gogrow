@@ -18,7 +18,7 @@ class Calendar
 
   # Define en qué fechas se puede hacer un pedido. Si es fin de semana, es toda la
   # semana que viene, y si no es entre hoy y el próximo viernes de esta semana
-  # (hoy si ya estamos a viernes).
+  # (solo hoy si ya estamos a viernes).
   def allowed_order_dates
     start_date = @today.on_weekend? ? @today.next_occurring(:monday) : @today
     end_date = start_date.friday? ? start_date : start_date.next_occurring(:friday)
@@ -28,12 +28,26 @@ class Calendar
 
   # Define en qué día de este mes se deberían asignar los beneficios mensuales para
   # el mes que viene.
+  # Es igual a:
+  # - El último día del mes si este cae viernes
+  # - El último sábado del mes sino
+  # Esto es para tener la certeza de que hasta el día que se asignen los beneficios,
+  # el cliente no va a haber podido hacer pedidos para el mes que viene
+  # Observar que siempre que se cumple que
+  #   allowed_order_dates.include?(@today.next_month.beginning_of_month)
+  # entonces también se cumple que
+  #   monthly_benefit_assignment <= @today
+  # Además, monthly_benefit_assignment es el mayor día de este mes que cumple esto.
   def monthly_benefit_assignment
-    self.class.last_saturday @today.beginning_of_month
+    if @today.end_of_month.friday?
+      @today.end_of_month
+    else
+      self.class.last_saturday @today.beginning_of_month
+    end
   end
 
-  # Define el último día en el que se pueden configurar los beneficios para el
-  # mes próximo.
+  # Define el último día de este mes en el que se pueden configurar los beneficios
+  # para el mes próximo.
   # Observar que el día en el que se asignan beneficios ya no se pueden hacer
   # configuraciones para el mes que viene, porque los beneficios para el mes que
   # viene ya se asignaron.
@@ -42,6 +56,9 @@ class Calendar
   end
 
   # Define en qué día se aplica una configuración si se crea hoy.
+  # La configuración no puede aplicar para el mes que viene si pasamos
+  # configuration_cutoff porque ya se asignaron los beneficios, tiene que pasar para
+  # el otro
   def configurable_month
     if @today <= configuration_cutoff
       @today.next_month.beginning_of_month
