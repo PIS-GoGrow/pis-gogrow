@@ -123,6 +123,46 @@ RSpec.describe "Orders", type: :request do
         expect(inertia.props[:delivery_addresses].map { it[:address] }).to eq([ "18 de Julio 1006", "Julio Herrera y Reissig 565" ])
       end
 
+      # IBP-022: el detalle manda los grupos del plato y lo que el empleado eligió,
+      # que son los dos datos que el diálogo de modificación necesita para no
+      # empezar con la pantalla vacía.
+      it "exposes the groups of the dish and the options the employee picked" do
+        order = Order.create!(
+          consumer: consumers(:one),
+          schedule: schedules(:sorrentinos_today),
+          amount: 1,
+          price: 320,
+          discounted_price: 320,
+          address: "18 de Julio 1006",
+          delivery_method: :office,
+          selected_options: selection_for(schedules(:sorrentinos_today).menu)
+        )
+
+        get order_path(order)
+
+        expect(inertia.props[:option_groups]).to eq(
+          [
+            { "id" => menu_option_groups(:salsa_sorrentinos).id, "name" => "Salsa", "options" => [ "Filetto", "Bolognesa" ], "limit" => 1 },
+            { "id" => menu_option_groups(:relleno_sorrentinos).id, "name" => "Relleno", "options" => [ "Ricota y nuez", "Espinaca y queso" ], "limit" => 1 }
+          ]
+        )
+        expect(inertia.props[:order][:selected_options]).to eq(
+          [
+            { "group_id" => menu_option_groups(:salsa_sorrentinos).id, "name" => "Salsa", "values" => [ "Filetto" ] },
+            { "group_id" => menu_option_groups(:relleno_sorrentinos).id, "name" => "Relleno", "values" => [ "Ricota y nuez" ] }
+          ]
+        )
+      end
+
+      # Un plato sin grupos no tiene nada que elegir: la lista llega vacía y el
+      # pedido no carga ninguna selección.
+      it "exposes no groups for a dish that offers none" do
+        get order_path(orders(:upcoming_pending_future))
+
+        expect(inertia.props[:option_groups]).to eq([])
+        expect(inertia.props[:order][:selected_options]).to eq([])
+      end
+
       it "keeps the order's address as an option when it is no longer among the employee's addresses" do
         order = orders(:upcoming_pending_future)
         # Más vieja que el resto: si no, pasa a ser la "última usada" y ya está entre las opciones.

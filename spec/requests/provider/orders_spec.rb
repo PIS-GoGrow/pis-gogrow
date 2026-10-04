@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Provider::Orders", type: :request do
-  fixtures :users, :companies, :providers, :consumers, :menus, :schedules, :orders
+  fixtures :users, :companies, :providers, :consumers, :menus, :menu_option_groups, :schedules, :orders
 
   # El pedido del otro proveedor se crea acá y no en los fixtures: los specs de
   # "Mis pedidos" cuentan órdenes y una fila más les cambiaría las listas.
@@ -188,6 +188,26 @@ RSpec.describe "Provider::Orders", type: :request do
             [ "Ricota y nuez", "Espinaca y queso" ]
           ]
       }
+    end
+
+    # IBP-022: el proveedor tiene que preparar lo que el empleado pidió, no todo lo
+    # que el plato ofrece. Las dos listas viajan juntas y no son la misma.
+    it "lists the options the employee picked next to the ones the dish offers" do
+      sign_in users(:other_provider_user), role: :provider
+
+      get provider_order_path(other_provider_order)
+
+      order = inertia.props.deep_symbolize_keys[:order]
+
+      expect(order[:menu_option_groups].pluck(:options)).to eq(
+        [ [ "Filetto", "Bolognesa" ], [ "Ricota y nuez", "Espinaca y queso" ] ]
+      )
+      expect(order[:selected_options]).to eq(
+        [
+          { group_id: menu_option_groups(:salsa_sorrentinos).id, name: "Salsa", values: [ "Filetto" ] },
+          { group_id: menu_option_groups(:relleno_sorrentinos).id, name: "Relleno", values: [ "Ricota y nuez" ] }
+        ]
+      )
     end
 
     it "responds with not found for an order of another provider" do
