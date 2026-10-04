@@ -2,7 +2,7 @@
 # pedidos próximos e historial se define contra Date.current.
 future:
   menu: milanesa
-  date: <%= Date.current + 3 %>
+  date: <%= Date.current + 12 %>
   amount: 10
 
 today:
