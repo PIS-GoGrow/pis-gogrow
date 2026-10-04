@@ -39,7 +39,7 @@ RSpec.describe "Configuración de subsidios especiales por RRHH", type: :system 
 
       # Esperar a que el input esté disponible
       find('input[name="employee_search"]')
-      
+
       fill_in "input[name=\"employee_search\"]", with: "Test"
       click_button "Test User"
       expect(page).to have_content("Test U.")
