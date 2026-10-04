@@ -3,7 +3,7 @@
 class OrderSerializer < ApplicationSerializer
   typelize_from Order
 
-  attributes :id, :status, :delivery_method, :amount, :notes, :address
+  attributes :id, :status, :delivery_method, :amount, :notes, :address, :rejection_details
 
   typelize :string?
   attribute :date do |order|
@@ -12,7 +12,7 @@ class OrderSerializer < ApplicationSerializer
 
   typelize :string?
   attribute :menu_name do |order|
-    order.schedule&.menu&.name
+    order.menu_name
   end
 
   # El proveedor no tiene nombre propio: se identifica por el del usuario dueño.
@@ -47,6 +47,21 @@ class OrderSerializer < ApplicationSerializer
   attribute :cancellation_block_reason do |order|
     order.cancellation_block_reason
   end
+
+  typelize :boolean
+  attribute :modifiable do |order|
+    order.modifiable?
+  end
+
+  typelize :string?
+  attribute :modification_block_reason do |order|
+    order.modification_block_reason
+  end
+
+  typelize :string?
+  attribute :rejection_reason do |order|
+    order.rejection_reason
+  end
 end
 
 # == Schema Information
@@ -59,25 +74,34 @@ end
 #  cancelled_at               :datetime
 #  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
+#  menu_description           :string
+#  menu_name                  :string
+#  menu_option_groups         :jsonb
+#  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  rejection_details          :string
+#  rejection_reason           :integer
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null
 #  updated_at                 :datetime         not null
 #  cancelled_by_id            :bigint
 #  consumer_id                :bigint           not null
+#  modified_by_id             :bigint
 #  schedule_id                :bigint
 #
 # Indexes
 #
 #  index_orders_on_cancelled_by_id  (cancelled_by_id)
 #  index_orders_on_consumer_id      (consumer_id)
+#  index_orders_on_modified_by_id   (modified_by_id)
 #  index_orders_on_schedule_id      (schedule_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (cancelled_by_id => users.id)
 #  fk_rails_...  (consumer_id => consumers.id)
+#  fk_rails_...  (modified_by_id => users.id)
 #  fk_rails_...  (schedule_id => schedules.id)
 #

@@ -3,7 +3,18 @@
 require "rails_helper"
 
 RSpec.describe Account, type: :model do
-  fixtures :users
+  fixtures :accounts, :payments, :consumers, :companies, :users, :providers
+
+  describe ".pending" do
+    it "includes accounts with no payment, or none approved, and excludes settled ones" do
+      expect(Account.pending).to contain_exactly(
+        accounts(:gogrow_tuviandita_current),
+        accounts(:one_tuviandita_current),
+        accounts(:other_tuviandita_current),
+        accounts(:one_endulzate_current)
+      )
+    end
+  end
 
   let(:company) { Company.create!(name: "GoGrow", address: "18 de Julio 1006") }
   let(:consumer_user) { User.create!(email: "consumer-account-test@gmail.com", name: "Lucía", password: "password123456") }
@@ -99,6 +110,99 @@ RSpec.describe Account, type: :model do
 
       expect(account.reload.amount).to eq(450.to_d)
     end
+
+    it "sums the subsidy of confirmed orders for a company account" do
+      menu = Menu.create!(provider:, name: "Wok", description: "De verduras", price: 400)
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
+
+      Order.create!(
+        consumer:,
+        schedule:,
+        amount: 1,
+        price: 400,
+        discounted_price: 250,
+        address: company.address,
+        delivery_method: :office,
+        status: :confirmed
+      )
+
+      account = company.accounts.find_by!(provider:, month: Date.current.beginning_of_month)
+
+      expect(account.amount).to eq(150.to_d)
+    end
+  end
+
+  describe "#collection_status" do
+    let(:account) { consumer.accounts.create!(provider:, month: Date.current, amount: 500) }
+
+    # Un pago informado exige comprobante adjunto.
+    def create_payment(status:, created_at: Time.current, rejection_reason: nil)
+      rejection_reason ||= "Comprobante ilegible" if status == :rejected
+      payment = Payment.new(account:, status:, created_at:, rejection_reason:)
+      payment.receipt.attach(
+        io: Rails.root.join("public/icon.png").open,
+        filename: "receipt.png",
+        content_type: "image/png"
+      )
+      payment.save!
+      payment
+    end
+
+    it "is pending when there is no payment" do
+      expect(account.collection_status).to eq("pending")
+    end
+
+    it "is pending when the only payment is still pending" do
+      create_payment(status: :pending)
+
+      expect(account.collection_status).to eq("pending")
+    end
+
+    it "follows the status of the payment" do
+      create_payment(status: :submitted)
+
+      expect(account.collection_status).to eq("submitted")
+    end
+
+    it "takes the most recent payment when there are several" do
+      create_payment(status: :rejected, created_at: 2.days.ago)
+      create_payment(status: :approved, created_at: 1.day.ago)
+
+      expect(account.collection_status).to eq("approved")
+    end
+
+    it "breaks a tie between payments of the same instant with the newest record" do
+      instant = 1.day.ago
+      create_payment(status: :rejected, created_at: instant)
+      create_payment(status: :submitted, created_at: instant)
+
+      expect(account.collection_status).to eq("submitted")
+    end
+
+    # Una cuenta de empresa no debe la deuda final sino el subsidio: lo que la
+    # empresa subsidia es la diferencia entre el precio de lista y el de lista
+    # menos el descuento.
+    it "sets the amount of a company account to the subsidy its employees got" do
+      menu = Menu.create!(provider:, name: "Tarta", description: "Pascualina", price: 300)
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
+      company_account = consumer.company.accounts.create!(provider:, month: Date.current, amount: 0)
+
+      order = Order.create!(
+        consumer:,
+        schedule:,
+        amount: 2,
+        price: 600,
+        discounted_price: 300,
+        address: consumer.company.address,
+        delivery_method: :office,
+        status: :confirmed
+      )
+      OrderAccount.find_or_create_by!(order:, account: company_account)
+      company_account.sync_amount!
+
+      # 2 viandas de 300 (600 de lista) a 150 subsidized: el subsidio es la mitad.
+      expect(company_account.reload.amount).to eq(300.to_d)
+    end
   end
 
   describe ".amount_and_price_sum" do
@@ -154,7 +258,7 @@ RSpec.describe Account, type: :model do
         month: 1.month.ago,
         amount: 300
       )
-      Payment.create!(account: paid_account, status: 0)
+      Payment.create!(account: paid_account, status: :approved)
 
       zero_account = Account.create!(
         owner: consumer,

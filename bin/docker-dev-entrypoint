@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if ! cmp -s package-lock.json node_modules/.package-lock.gogrow; then
+  npm ci
+  cp package-lock.json node_modules/.package-lock.gogrow
+fi
+
+rm -f tmp/pids/server.pid
+bin/rails db:prepare
+
+bin/rails server -b 0.0.0.0 -p 3000 &
+npx vite --host 0.0.0.0 &
+wait -n

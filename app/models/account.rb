@@ -8,26 +8,32 @@
 class Account < ApplicationRecord
   belongs_to :owner, polymorphic: true
 
-  # TODO: Habría que validar que los dependent: :destroy son esperables
-  has_many :payments, dependent: :destroy
-  has_many :order_accounts, dependent: :destroy
-
-  has_many :orders, through: :order_accounts
   belongs_to :provider
+
+  has_many :payments, dependent: :destroy
+  has_many :invoices, dependent: :destroy
+  has_many :order_accounts, dependent: :destroy
+  has_many :orders, through: :order_accounts
 
   before_create :correct_month
 
   scope :current, -> { where(month: Date.current.beginning_of_month) }
+  scope :companies, -> { where(owner_type: "Company") }
 
   # Los dos scopes de abajo asumen que Payment.account_id no es NULL
   # TODO: Hay que cambiar según qué estado sea el que se elija para pagos
-  # aprobados.
+  # Cuentas con deuda que no tienen un pago aprobado
   scope :pending, -> {
-    where.not(id: Payment.where(status: 0).select(:account_id)).where.not(amount: ..0)
+    where.not(id: Payment.approved.select(:account_id)).where.not(amount: ..0)
   }
+  # Cuentas con pago aprobado
   scope :history, -> {
-    where(id: Payment.where(status: 0).select(:account_id))
+    where(id: Payment.approved.select(:account_id))
   }
+
+  def company?
+    owner_type == "Company"
+  end
 
   def current?
     month == Date.current.beginning_of_month
@@ -37,15 +43,39 @@ class Account < ApplicationRecord
     month + 1.month + 4.days
   end
 
+  # Se busca en memoria para que un preload(:payments) evite una consulta por
+  # cuenta. El id desempata dos pagos del mismo instante.
+  def last_payment
+    payments.max_by { |payment| [ payment.created_at, payment.id ] }
+  end
+
+  def latest_invoice
+    invoices.max_by { |invoice| [ invoice.created_at, invoice.id ] }
+  end
+
+  # El comprobante cubre la cuenta entera, así que el estado del cobro vive acá
+  # y no en cada pago. Si hubo varios intentos manda el último; un pago en
+  # pending es un estado intermedio, no un comprobante informado.
+  def collection_status
+    last = last_payment
+    return "pending" if last.nil? || last.pending?
+
+    last.status
+  end
+
   # Sincroniza la deuda como la suma del importe final (con subsidio aplicado)
   # de las órdenes asociadas para el consumidor.
   # Si es de Empresa, se suma el subsidio (diferencia entre precio base y precio con descuento).
+  # El lock es necesario: sobre la cuenta de una empresa escriben en paralelo
+  # los pedidos de todos sus empleados a ese proveedor.
   def sync_amount!
     # TODO: Habría que validar que se tengan solo en cuenta las órdenes confirmadas
-    if owner_type == "Consumer"
-      update! amount: orders.confirmed.sum("COALESCE(orders.discounted_price, orders.price)")
-    else
-      update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
+    with_lock do
+      if owner_type == "Consumer"
+        update! amount: orders.confirmed.sum("COALESCE(orders.discounted_price, orders.price)")
+      else
+        update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
+      end
     end
   end
 

@@ -4,6 +4,8 @@ class Company < ApplicationRecord
   has_many :admins
   has_many :consumers
   has_many :accounts, as: :owner
+  has_many :invoices, through: :accounts
+  has_many :benefit_configurations
 end
 
 # == Schema Information

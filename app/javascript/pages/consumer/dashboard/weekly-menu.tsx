@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
+import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -17,7 +18,6 @@ import type { ConsumerDashboardIndex } from "@/types"
 import { BenefitCard } from "./benefit-card"
 import type { CartItem, Schedule } from "./consumer-types"
 import { money } from "./formatters"
-import { ProviderFilterSheet } from "./provider-filter-sheet"
 
 interface Props {
   name: string
@@ -80,7 +80,7 @@ export function WeeklyMenu({
           </p>
         </header>
 
-        <div className="md:grid md:grid-cols-[minmax(0,1fr)_330px] md:gap-8">
+        <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_330px] lg:gap-8">
           <section className="min-w-0">
             <BenefitCard benefit={benefit} mobile />
 
@@ -130,6 +130,7 @@ export function WeeklyMenu({
                       price={item.menu.price}
                       description={item.menu.description}
                       soldOut={item.sold_out}
+                      ordersClosed={item.orders_closed}
                       isPast={item.date < currentDate}
                       addedQuantity={addedQuantity || undefined}
                       onSelect={() => openDetail(item)}
@@ -140,7 +141,7 @@ export function WeeklyMenu({
             )}
           </section>
 
-          <aside className="hidden space-y-4 md:block">
+          <aside className="hidden space-y-4 lg:block">
             <BenefitCard benefit={benefit} />
             <div className="border-border bg-card rounded-xl border p-5">
               <p className="text-muted-foreground text-sm">Tu carrito</p>

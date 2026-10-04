@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import HeadingSmall from "@/components/heading-small"
+import ProviderOrderActions from "@/components/orders/provider-order-actions"
 import PageContainer from "@/components/page-container"
 import StatusBadge from "@/components/status-badge"
 import { buttonVariants } from "@/components/ui/button"
@@ -69,6 +70,18 @@ export default function Show({ order }: ProviderOrdersShow) {
           <Row label={t("pages.provider_orders.show.status")}>
             <StatusBadge status={order.status} />
           </Row>
+          {order.rejection_reason && (
+            <Row label={t("pages.provider_orders.show.rejection_reason")}>
+              {t(
+                `pages.provider_orders.rejection_reasons.${order.rejection_reason}`,
+              )}
+            </Row>
+          )}
+          {order.rejection_details && (
+            <Row label={t("pages.provider_orders.show.rejection_details")}>
+              {order.rejection_details}
+            </Row>
+          )}
           <Row label={t("pages.provider_orders.show.delivery_date")}>
             {order.date
               ? formatDeliveryDate(order.date)
@@ -108,16 +121,11 @@ export default function Show({ order }: ProviderOrdersShow) {
           <Row label={t("pages.provider_orders.show.quantity")}>
             {order.amount ?? empty}
           </Row>
-          {order.menu_sauces.length > 0 && (
-            <Row label={t("pages.provider_orders.show.sauces")}>
-              {order.menu_sauces.join(" · ")}
+          {order.menu_option_groups.map((group) => (
+            <Row key={group.id} label={group.name}>
+              {group.options.join(" · ")}
             </Row>
-          )}
-          {order.menu_fillings.length > 0 && (
-            <Row label={t("pages.provider_orders.show.fillings")}>
-              {order.menu_fillings.join(" · ")}
-            </Row>
-          )}
+          ))}
           <Row label={t("pages.provider_orders.show.notes")}>
             {order.notes ?? t("pages.provider_orders.show.no_notes")}
           </Row>
@@ -148,6 +156,7 @@ export default function Show({ order }: ProviderOrdersShow) {
             </span>
           </Row>
         </Section>
+        <ProviderOrderActions order={order} className="sm:ml-auto sm:w-80" />
       </PageContainer>
     </AppLayout>
   )

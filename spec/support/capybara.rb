@@ -3,21 +3,16 @@
 # Todas las pantallas son React montadas por Inertia: no hay fallback a HTML
 # plano, así que rack_test no renderiza nada. Todo spec de sistema va por
 # Chrome headless.
+# Si se usa la bandera USE_FIREFOX, se usa Firefox en vez de chrome (es un
+# workaround porque en Mac Selenium con Chrome no funciona)
 RSpec.configure do |config|
   config.before(:each, type: :system) do
-    driven_by :selenium, using: :headless_chrome, screen_size: [ 1400, 1400 ] do |options|
-      # --no-sandbox solo como root: el contenedor de desarrollo corre como root y
-      # el sandbox de Chrome no arranca en ese caso
-      # ("Running as root without --no-sandbox is not supported", crbug.com/638180),
-      # lo que hace fallar a ChromeDriver con "Chrome instance exited". Fuera del
-      # contenedor el sandbox sigue aplicando.
-      #
-      # Van en un bloque y no en options: porque Capybara construye sus propias
-      # Options para :headless_chrome y las manipula después (iguala el headless
-      # con #delete), cosa que un objeto ya construido no soporta.
-      options.add_argument("--no-sandbox") if Process.uid.zero?
-      options.add_argument("--disable-dev-shm-usage")
-      options.add_argument("--disable-gpu")
+    browser = ENV["USE_FIREFOX"] ? :firefox : :headless_chrome
+
+    driven_by :selenium, using: browser, screen_size: [ 1400, 1400 ] do |driver_option|
+      driver_option.add_argument("--no-sandbox")
+      driver_option.add_argument("--disable-dev-shm-usage")
+      driver_option.add_argument("--disable-gpu")
     end
   end
 end
@@ -27,9 +22,8 @@ end
 # los encuentra y habría que bajar a selectores de CSS.
 Capybara.enable_aria_label = true
 
-# El PATCH del switch de modalidad de entrega tarda varios segundos con el
-# frontend real (compilación de Vite + SSR). Con el default de 2s los matchers
-# expiran antes de que el server responda y el fallo se lee como "el switch no
-# cambió" cuando en realidad la base sí guardó. Ningún spec usa sleep: los
-# matchers de Capybara reintentan solos con este margen.
-Capybara.default_max_wait_time = 15
+# El server de desarrollo con Vite responde mucho más lento que uno de test: el
+# panel de detalle de /accounts pide /accounts/:id por fetch, y la subida del
+# comprobante (multipart contra Puma en development) tarda por sí sola ~10s. Con
+# los 2s por defecto la aserción gana antes de que llegue la respuesta.
+Capybara.default_max_wait_time = 30

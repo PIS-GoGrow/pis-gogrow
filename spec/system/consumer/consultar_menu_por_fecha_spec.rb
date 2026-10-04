@@ -41,7 +41,7 @@ RSpec.describe "Consultar el menú disponible por fecha" do
     # Los fixtures publican con fechas relativas a la fecha real; bajo travel_to
     # caen fuera de la semana mostrada. Se limpia para que cada ejemplo declare
     # exactamente lo que espera ver en pantalla.
-    Order.delete_all
+    Order.destroy_all
     Schedule.delete_all
   end
 
@@ -117,6 +117,19 @@ RSpec.describe "Consultar el menú disponible por fecha" do
   # simulable. La otra mitad del criterio —que el server tampoco lo acepte—
   # se cubre en spec/requests/orders_spec.rb, que es donde vive la guarda real
   # (Order.reserve), no en la pantalla.
+
+  # IBP-053, criterio 2 y 4: un plato que el proveedor marcó agotado se ve como
+  # tal en el menú de empleados aunque su schedule todavía tenga cupo.
+  it "marks a dish the provider turned off as sold out even with quota left" do
+    schedule = publish(menus(:milanesa), monday, amount: 5)
+    schedule.update!(available: false)
+    sign_in users(:one)
+
+    visit dashboard_path
+
+    expect(page).to have_content("Agotado")
+    expect(page).to have_button("Agregar Milanesa con papas fritas", disabled: true)
+  end
 
   # Criterio 4
   it "shows an informative empty state for a day with nothing published" do

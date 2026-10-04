@@ -1,5 +1,7 @@
 import { ChevronLeft, Star } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
+import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
@@ -40,6 +42,7 @@ export function DishDetail({
   back,
   add,
 }: Props) {
+  const { t } = useTranslation()
   const subtotal = item.menu.price * quantity
 
   const subsidizedQuantity = Math.min(quantity, Math.max(monthlyRemaining, 0))
@@ -51,10 +54,10 @@ export function DishDetail({
   const choicesMissing =
     (item.menu.fillings.length > 0 && !filling) ||
     (item.menu.sauces.length > 0 && !sauce)
-  const addDisabled = item.sold_out || choicesMissing
+  const addDisabled = item.sold_out || item.orders_closed || choicesMissing
 
   return (
-    <div className="bg-background border-border mx-auto min-h-screen max-w-3xl px-6 pt-6 pb-28 md:my-8 md:min-h-0 md:rounded-2xl md:border md:p-8">
+    <MobileCard>
       <Button
         type="button"
         variant="ghost"
@@ -71,6 +74,11 @@ export function DishDetail({
         {item.menu.description}
       </p>
       <p className="mt-1 font-bold">{money(item.menu.price)}</p>
+      {item.orders_closed && (
+        <p className="text-destructive mt-3 text-sm">
+          {t("pages.consumer_dashboard.index.orders_closed")}
+        </p>
+      )}
       {item.menu.fillings.length > 0 && (
         <Choices
           title="Elige tu relleno"
@@ -151,7 +159,7 @@ export function DishDetail({
         total={total}
         percentage={percentage}
       />
-      <div className="bg-background border-border fixed inset-x-0 bottom-0 flex gap-2 border-t p-6 md:static md:mt-5 md:border-0 md:p-0">
+      <BottomAction className="flex">
         <QuantityInput
           value={quantity}
           max={item.remaining}
@@ -164,8 +172,8 @@ export function DishDetail({
         >
           Agregar
         </Button>
-      </div>
-    </div>
+      </BottomAction>
+    </MobileCard>
   )
 }
 

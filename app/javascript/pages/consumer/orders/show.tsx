@@ -1,8 +1,10 @@
 import { Head, Link } from "@inertiajs/react"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Pencil, X } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import CancelOrderSheet from "@/components/orders/cancel-order-sheet"
+import EditOrderSheet from "@/components/orders/edit-order-sheet"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,6 +12,7 @@ import {
   CardAction,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -28,7 +31,12 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-export default function Show({ order }: ConsumerOrdersShow) {
+export default function Show({
+  order,
+  delivery_addresses,
+  max_quantity,
+  editing,
+}: ConsumerOrdersShow) {
   const { t } = useTranslation()
   const { formatMoney, formatDeliveryDate } = useFormatters()
 
@@ -75,6 +83,17 @@ export default function Show({ order }: ConsumerOrdersShow) {
 
           <CardContent>
             <dl className="divide-border divide-y">
+              {order.rejection_reason && (
+                <Row label={t("pages.orders.show.rejection_reason")}>
+                  {order.rejection_reason === "other"
+                    ? order.rejection_details
+                    : t(
+                        "pages.provider_orders.rejection_reasons." +
+                          order.rejection_reason,
+                      )}
+                </Row>
+              )}
+
               <Row label={t("pages.orders.show.quantity")}>
                 {order.amount ?? 0}
               </Row>
@@ -123,6 +142,60 @@ export default function Show({ order }: ConsumerOrdersShow) {
               </p>
             </div>
           </CardContent>
+
+          <CardFooter className="grid grid-cols-2 items-start gap-2">
+            {order.cancellable ? (
+              <CancelOrderSheet order={order} />
+            ) : (
+              <div className="flex flex-col gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled
+                >
+                  <X aria-hidden="true" />
+                  {t("pages.orders.index.cancel")}
+                </Button>
+                {order.status !== "confirmed" && (
+                  <p className="text-muted-foreground text-xs">
+                    {t(
+                      `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
+            {order.modifiable ? (
+              <EditOrderSheet
+                order={order}
+                addresses={delivery_addresses}
+                maxQuantity={max_quantity}
+                editing={editing}
+              />
+            ) : (
+              <div className="flex flex-col gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled
+                >
+                  <Pencil aria-hidden="true" />
+                  {t("pages.orders.show.edit")}
+                </Button>
+                {order.status !== "confirmed" && (
+                  <p className="text-muted-foreground text-xs">
+                    {t(
+                      `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+                    )}
+                  </p>
+                )}
+              </div>
+            )}
+          </CardFooter>
         </Card>
       </div>
     </AppLayout>

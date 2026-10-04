@@ -23,17 +23,14 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
 
   typelize :string, nullable: true
   attribute :menu_description do |order|
-    order.schedule&.menu&.description
+    order.menu_description
   end
 
-  typelize "string[]"
-  attribute :menu_sauces do |order|
-    order.schedule&.menu&.sauces || []
-  end
-
-  typelize "string[]"
-  attribute :menu_fillings do |order|
-    order.schedule&.menu&.fillings || []
+  typelize "{ id: number; name: string; options: string[]; limit: number }[]"
+  attribute :menu_option_groups do |order|
+    order.menu_option_groups.map.with_index do |g, index|
+      { id: index, name: g["name"], options: g["options"], limit: g["limit"] }
+    end
   end
 
   typelize :number, nullable: true
@@ -55,5 +52,15 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
   typelize :number, nullable: true
   attribute :remaining_amount do |order|
     order.schedule&.remaining_amount
+  end
+
+  typelize :string, nullable: true
+  attribute :rejection_reason do |order|
+    order.rejection_reason
+  end
+
+  typelize :string, nullable: true
+  attribute :rejection_details do |order|
+    order.rejection_details
   end
 end

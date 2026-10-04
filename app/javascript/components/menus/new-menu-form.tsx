@@ -1,60 +1,250 @@
-import { useForm } from "@inertiajs/react"
+import { Link, useForm } from "@inertiajs/react"
+import { Pencil, Plus, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
+import EditMenuSheet, {
+  type ConfirmedOrders,
+  type EditScope,
+} from "@/components/menus/edit-menu-sheet"
+import MenuAgendaFields, {
+  type AgendaDraft,
+  agendaPayload,
+  initialAgenda,
+} from "@/components/menus/menu-agenda-fields"
+import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
+import { Textarea } from "@/components/ui/textarea"
 import { providerMenus as menusRoutes } from "@/routes"
+import type { Menu, ProviderMenusEdit } from "@/types"
 
-interface NewMenuProps {
-  formSuccess: () => void
+interface OptionGroupDraft {
+  id?: number
+  name: string
+  options: string
+  limit: number
 }
 
-export default function NewMenuForm({ formSuccess }: NewMenuProps) {
+const emptyDraft: OptionGroupDraft = { name: "", options: "", limit: 1 }
+
+interface MenuFormProps {
+  formSuccess?: () => void
+  menu?: Menu
+  edit?: ProviderMenusEdit
+}
+
+function agendaIsComplete(agenda: AgendaDraft) {
+  if (agenda.weekdays.length === 0) return true
+  if (!(Number(agenda.amount) > 0)) return false
+  if (agenda.mode === "single") return agenda.date !== ""
+  if (agenda.mode === "range")
+    return agenda.starts_on !== "" && agenda.ends_on >= agenda.starts_on
+
+  return agenda.starts_on !== ""
+}
+
+export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
+  const { t } = useTranslation()
+  const [groups, setGroups] = useState<OptionGroupDraft[]>(() =>
+    menu
+      ? menu.option_groups.map((group) => ({
+          id: group.id,
+          name: group.name,
+          options: group.options.join(", "),
+          limit: group.limit,
+        }))
+      : [],
+  )
+
+  const [removedGroupIds, setRemovedGroupIds] = useState<number[]>([])
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [draft, setDraft] = useState<OptionGroupDraft>(emptyDraft)
+  const [saveSheetOpen, setSaveSheetOpen] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [agenda, setAgenda] = useState<AgendaDraft | null>(() =>
+    edit ? initialAgenda(edit.agenda) : null,
+  )
+  const [agendaError, setAgendaError] = useState<string | null>(null)
+
   const {
     data,
     setData,
     post,
+    patch,
     processing,
     errors,
     setError,
     clearErrors,
     transform,
   } = useForm({
-    name: "",
-    description: "",
-    price: "",
-    fillings: "",
-    sauces: "",
+    name: menu?.name ?? "",
+    description: menu?.description ?? "",
+    price: menu?.price?.toString() ?? "",
   })
+
+  const draftOptions = draft.options
+    .split(",")
+    .map((o) => o.trim())
+    .filter(Boolean)
+
+  const normalizedDraftOptions = draftOptions.map((option) =>
+    option.toLocaleLowerCase("es"),
+  )
+
+  const hasDuplicateOptions =
+    new Set(normalizedDraftOptions).size !== normalizedDraftOptions.length
+
+  const canSaveDraft =
+    draft.name.trim() !== "" && draftOptions.length > 0 && !hasDuplicateOptions
+
+  function openAddGroupDialog() {
+    setEditingIndex(null)
+    setDraft(emptyDraft)
+    setGroupDialogOpen(true)
+  }
+
+  function openEditGroupDialog(index: number) {
+    setEditingIndex(index)
+    setDraft(groups[index])
+    setGroupDialogOpen(true)
+  }
+
+  function saveDraft() {
+    if (!canSaveDraft) return
+
+    const groupToSave: OptionGroupDraft = {
+      ...draft,
+      limit: Math.min(draft.limit, draftOptions.length),
+    }
+
+    setGroups((prev) =>
+      editingIndex === null
+        ? [...prev, groupToSave]
+        : prev.map((g, i) => (i === editingIndex ? groupToSave : g)),
+    )
+
+    setGroupDialogOpen(false)
+  }
+
+  function removeGroup(index: number) {
+    const group = groups[index]
+
+    if (group.id !== undefined) {
+      setRemovedGroupIds((prev) => [...prev, group.id!])
+    }
+
+    setGroups((prev) => prev.filter((_, i) => i !== index))
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    // No validamos que exista descripción porque no se requiere
-    if (data.name === "") setError("name", ["No puede estar vacío."])
-    else if (data.price === "") setError("price", ["No puede estar vacío."])
-    else {
-      transform((data) => ({
-        menu: {
-          ...data,
-          fillings: optionsFrom(data.fillings),
-          sauces: optionsFrom(data.sauces),
-        },
-      }))
-      post(menusRoutes.create().url, {
-        onSuccess: () => {
-          formSuccess()
-        },
-      })
+    if (data.name === "") {
+      setError("name", ["No puede estar vacío."])
+      return
+    }
+
+    if (data.description.trim() === "") {
+      setError("description", ["No puede estar vacío."])
+      return
+    }
+
+    if (data.price === "") {
+      setError("price", ["No puede estar vacío."])
+      return
+    }
+
+    transform((formData) => ({ menu: menuPayload(formData) }))
+
+    if (edit && agenda) {
+      if (!agendaIsComplete(agenda)) {
+        setAgendaError(t("pages.provider_menus.edit.agenda.incomplete"))
+        return
+      }
+
+      setAgendaError(null)
+      setSaved(false)
+      setSaveSheetOpen(true)
+      return
+    }
+
+    post(menusRoutes.create().url, {
+      onSuccess: () => formSuccess?.(),
+    })
+  }
+
+  function menuPayload(formData: typeof data) {
+    return {
+      ...formData,
+      option_groups_attributes: [
+        ...groups.map((g) => ({
+          ...(g.id !== undefined ? { id: g.id } : {}),
+          name: g.name,
+          options: g.options
+            .split(",")
+            .map((o) => o.trim())
+            .filter(Boolean),
+          limit: g.limit,
+        })),
+        ...removedGroupIds.map((id) => ({
+          id,
+          _destroy: true,
+        })),
+      ],
     }
   }
 
+  function applyChanges(scope: EditScope, confirmedOrders: ConfirmedOrders) {
+    if (!edit || !agenda) return
+
+    transform((formData) => ({
+      menu: menuPayload(formData),
+      agenda: agendaPayload(agenda),
+      scope,
+      confirmed_orders: confirmedOrders,
+      schedule_id: new URLSearchParams(window.location.search).get(
+        "schedule_id",
+      ),
+    }))
+
+    patch(menusRoutes.update(edit.saved_menu_id).url, {
+      preserveScroll: true,
+      preserveState: true,
+      onSuccess: () => {
+        setSaved(true)
+        formSuccess?.()
+      },
+      onError: () => {
+        setSaveSheetOpen(false)
+      },
+    })
+  }
+
+  const serverAgendaError = (errors as Record<string, string | undefined>)
+    .agenda
+
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="flex flex-col gap-3">
-        <div className="grid gap-2">
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className={menu ? "mx-auto w-full max-w-3xl" : undefined}
+      >
+        <div className="flex flex-col gap-3">
           <Field data-invalid={!!errors.name?.length}>
-            <FieldLabel htmlFor="name">Nombre</FieldLabel>
+            <FieldLabel htmlFor="name">
+              Nombre <span className="text-destructive">*</span>
+            </FieldLabel>
             <Input
               type="text"
               name="name"
@@ -68,24 +258,36 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
               <FieldDescription>{errors.name}</FieldDescription>
             )}
           </Field>
-        </div>
-        <div className="grid gap-2">
-          <Field data-invalid={!!errors.description?.length}>
-            <FieldLabel htmlFor="description">Descripción</FieldLabel>
-            <Input
-              type="text"
+
+          <Field
+            data-invalid={!!errors.description?.length}
+            className={menu ? "sm:col-span-2" : undefined}
+          >
+            <FieldLabel htmlFor="description">
+              Descripción <span className="text-destructive">*</span>
+            </FieldLabel>
+            <Textarea
               name="description"
               value={data.description}
-              onChange={(e) => setData("description", e.target.value)}
+              className="min-h-24 resize-none"
+              onChange={(e) => {
+                setData("description", e.target.value)
+                clearErrors("description")
+              }}
             />
+
             {!!errors.description?.length && (
               <FieldDescription>{errors.description}</FieldDescription>
             )}
           </Field>
-        </div>
-        <div className="grid gap-2">
-          <Field data-invalid={!!errors.price?.length}>
-            <FieldLabel htmlFor="price">Precio</FieldLabel>
+
+          <Field
+            data-invalid={!!errors.price?.length}
+            className={menu ? "sm:col-start-2 sm:row-start-1" : undefined}
+          >
+            <FieldLabel htmlFor="price">
+              Precio <span className="text-destructive">*</span>
+            </FieldLabel>
             <Input
               type="number"
               min="0.01"
@@ -101,48 +303,206 @@ export default function NewMenuForm({ formSuccess }: NewMenuProps) {
               <FieldDescription>{errors.price}</FieldDescription>
             )}
           </Field>
-        </div>
-        <div className="grid gap-2">
-          <Field>
-            <FieldLabel htmlFor="fillings">Rellenos disponibles</FieldLabel>
-            <Input
-              type="text"
-              name="fillings"
-              value={data.fillings}
-              onChange={(e) => setData("fillings", e.target.value)}
-              placeholder="Ricota y nuez, Ricota y espinaca"
-            />
-            <FieldDescription>
-              Separalos con comas. Dejalo vacío si no aplica.
-            </FieldDescription>
-          </Field>
-        </div>
-        <div className="grid gap-2">
-          <Field>
-            <FieldLabel htmlFor="sauces">Salsas disponibles</FieldLabel>
-            <Input
-              type="text"
-              name="sauces"
-              value={data.sauces}
-              onChange={(e) => setData("sauces", e.target.value)}
-              placeholder="Filetto, Bolognesa"
-            />
-            <FieldDescription>
-              Separalas con comas. Dejalo vacío si no aplica.
-            </FieldDescription>
-          </Field>
-        </div>
-      </div>
-      <Button type="submit" className="mt-4 w-full" disabled={processing}>
-        {processing ? "Creando..." : "Crear"}
-      </Button>
-    </form>
-  )
-}
 
-function optionsFrom(value: string) {
-  return value
-    .split(",")
-    .map((option) => option.trim())
-    .filter(Boolean)
+          <div
+            className={
+              menu ? "flex flex-col gap-3 sm:col-span-2" : "flex flex-col gap-2"
+            }
+          >
+            <div className="flex items-center justify-between">
+              <FieldLabel className="text-base font-semibold">
+                Opciones
+              </FieldLabel>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={openAddGroupDialog}
+              >
+                <Plus aria-hidden="true" className="h-4 w-4" />
+                Agregar
+              </Button>
+            </div>
+            {groups.length === 0 ? (
+              <p className="text-muted-foreground py-2 text-sm">
+                ¿Tiene sabores para elegir? ¡Agrégalos!
+              </p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {groups.map((group, index) => (
+                  <div
+                    key={group.id ?? index}
+                    className="bg-background rounded-xl border p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{group.name}</span>
+
+                      <div className="flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Editar ${group.name}`}
+                          onClick={() => openEditGroupDialog(index)}
+                        >
+                          <Pencil aria-hidden="true" className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`Borrar ${group.name}`}
+                          onClick={() => removeGroup(index)}
+                        >
+                          <Trash2 aria-hidden="true" className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    <Separator className="my-2" />
+
+                    <div className="text-muted-foreground flex items-start justify-between gap-2 text-sm">
+                      <span>{group.options}</span>
+                      <span className="shrink-0">Límite {group.limit}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {edit && agenda && (
+          <div className="mt-6">
+            <MenuAgendaFields
+              value={agenda}
+              onChange={(value) => {
+                setAgenda(value)
+                setAgendaError(null)
+              }}
+              today={edit.today}
+              maximumPublishDate={edit.maximum_publish_date}
+              error={agendaError ?? serverAgendaError}
+            />
+          </div>
+        )}
+
+        <Dialog open={groupDialogOpen} onOpenChange={setGroupDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Agregá opciones</DialogTitle>
+            </DialogHeader>
+
+            <div className="flex flex-col gap-3">
+              <Field>
+                <FieldLabel htmlFor="group-name">Nombre del grupo</FieldLabel>
+
+                <Input
+                  id="group-name"
+                  type="text"
+                  placeholder="Ej: Salsa"
+                  value={draft.name}
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                />
+              </Field>
+
+              <Field>
+                <FieldLabel htmlFor="group-options">Opciones</FieldLabel>
+
+                <Textarea
+                  id="group-options"
+                  spellCheck={false}
+                  placeholder="Ej: Boloñesa, Caruso, 4 quesos"
+                  value={draft.options}
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, options: e.target.value }))
+                  }
+                />
+
+                <FieldDescription>
+                  Ingresá las opciones separadas por coma.
+                </FieldDescription>
+
+                {hasDuplicateOptions && (
+                  <p className="text-destructive text-sm">
+                    No se permiten opciones repetidas.
+                  </p>
+                )}
+              </Field>
+
+              <Field>
+                <FieldLabel>
+                  ¿Cuántas opciones pueden elegir a la vez?
+                </FieldLabel>
+
+                <div>
+                  <QuantityInput
+                    value={Math.min(
+                      draft.limit,
+                      Math.max(draftOptions.length, 1),
+                    )}
+                    max={Math.max(draftOptions.length, 1)}
+                    onChange={(value) =>
+                      setDraft((prev) => ({ ...prev, limit: value }))
+                    }
+                  />
+                </div>
+              </Field>
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setGroupDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                type="button"
+                disabled={!canSaveDraft}
+                onClick={saveDraft}
+              >
+                {editingIndex === null ? "Agregar" : "Guardar"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {menu ? (
+          <div className="mt-8 flex justify-end gap-3">
+            <Button type="button" variant="outline" asChild>
+              <Link href={menusRoutes.index().url}>Cancelar</Link>
+            </Button>
+
+            <Button type="submit" disabled={processing}>
+              {processing ? "Guardando..." : "Modificar"}
+            </Button>
+          </div>
+        ) : (
+          <Button type="submit" className="mt-4 w-full" disabled={processing}>
+            {processing ? "Creando..." : "Crear"}
+          </Button>
+        )}
+      </form>
+
+      {edit && agenda && (
+        <EditMenuSheet
+          open={saveSheetOpen}
+          onOpenChange={setSaveSheetOpen}
+          saved={saved}
+          processing={processing}
+          agenda={agendaPayload(agenda)}
+          today={edit.today}
+          scheduledDays={edit.scheduled_days}
+          onApply={applyChanges}
+        />
+      )}
+    </>
+  )
 }

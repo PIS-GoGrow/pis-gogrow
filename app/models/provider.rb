@@ -7,8 +7,10 @@ class Provider < ApplicationRecord
   has_many :schedules, through: :menus
   has_many :orders, through: :schedules
   has_many :accounts, dependent: :destroy
+  has_many :invoices, through: :accounts
   has_many :schedules, through: :menus
   has_many :orders, through: :schedules
+  has_many :payments, through: :accounts
 
   def delivery_methods
     home_delivery? ? Order.delivery_methods.keys : [ "office" ]
@@ -16,6 +18,15 @@ class Provider < ApplicationRecord
 
   def allows_delivery_method?(method)
     delivery_methods.include?(method.to_s)
+  end
+
+  def order_deadline_passed_today?
+    deadline = order_deadline
+    return false unless deadline
+
+    today = Date.current
+    deadline_at = Time.zone.local(today.year, today.month, today.day, deadline.hour, deadline.min, deadline.sec)
+    Time.current >= deadline_at
   end
 end
 
