@@ -31,8 +31,8 @@ class MonthlyBenefit < BenefitRule
   # Un beneficio mensual es aplicable para el mes que viene si es aplicable en el primer
   # día del siguiente mes y si el calendario lo permite.
   def future_applicable_to?(consumer, date: Date.current)
-    applicable_to?(consumer, date.next_month.beginning_of_month)
-      && Calendar.new(date).monthly_benefit_assignment <= date
+    applicable_to?(consumer, date: date.next_month.beginning_of_month)
+      && Calendar.new(date: date).monthly_benefit_assignment <= date
   end
 
   def future_benefit_deadline(consumer, date: Date.current)

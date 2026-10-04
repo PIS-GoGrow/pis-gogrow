@@ -174,6 +174,7 @@ class BenefitConfiguration < ApplicationRecord
           percentage: subsidy_percentage,
           description: name
         )
+        puts benefit_rules.inspect
       else
         benefit.expired!
       end
@@ -306,20 +307,18 @@ class BenefitConfiguration < ApplicationRecord
 
   # Devuelve el menor límite impuesto por las reglas. Si no hay límite, devuelve nil
   def benefit_limit
-    @limit ||=
-      benefit_rules
-        .map(&:benefit_limit)
-        .filter { |limit| !limit.nil? }
-        .min
+    benefit_rules
+      .map(&:benefit_limit)
+      .filter { |limit| !limit.nil? }
+      .min
   end
 
   # Devuelve el menor deadline impuesto por las reglas. Si no hay deadlines, devuelve nil
   def benefit_deadline(consumer, date)
-    @deadline ||=
-      benefit_rules
-        .map { |rule| rule.benefit_deadline consumer, date: }
-        .filter { |deadline| !deadline.nil? }
-        .min
+    benefit_rules
+      .map { |rule| rule.benefit_deadline consumer, date: }
+      .filter { |deadline| !deadline.nil? }
+      .min
   end
 end
 
