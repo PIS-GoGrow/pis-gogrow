@@ -9,7 +9,7 @@ class Admin::BenefitConfigurationsIndexSerializer < ApplicationSerializer
 
   typelize configurable_month: "string"
   attributes :configurable_month
-  
+
   has_many :special_subsidies, resource: SpecialSubsidySerializer
   has_many :employees, resource: EmployeeSerializer
 end

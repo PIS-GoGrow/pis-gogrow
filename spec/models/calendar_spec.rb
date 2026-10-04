@@ -13,7 +13,7 @@ RSpec.describe Calendar, type: :model do
   #   12  13  14  15  16  17  18
   #
   # Semana "esta": lunes 5/10 a domingo 11/10.
-  
+
   def calendar_on(today)
     described_class.new(today: today)
   end

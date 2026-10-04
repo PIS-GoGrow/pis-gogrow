@@ -60,9 +60,11 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
+    expect(screen.getByText("12/12/2026")).toBeInTheDocument()
     expect(screen.getByLabelText(/se descuenta/i)).toHaveValue(50)
     expect(
       screen.getByLabelText(/cuando el precio por vianda es/i),
@@ -80,6 +82,7 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={vi.fn()}
         onSuccess={onSuccess}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
@@ -114,6 +117,7 @@ describe("EditBenefitConfigurationForm", () => {
         pendingBenefitConfiguration={pendingBenefitConfiguration}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
@@ -143,6 +147,7 @@ describe("EditBenefitConfigurationForm", () => {
         pendingBenefitConfiguration={pendingBenefitConfiguration}
         onCancel={onCancel}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
@@ -165,6 +170,7 @@ describe("EditBenefitConfigurationForm", () => {
         pendingBenefitConfiguration={pendingBenefitConfiguration}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
@@ -201,6 +207,7 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={onCancel}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
@@ -227,6 +234,7 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 

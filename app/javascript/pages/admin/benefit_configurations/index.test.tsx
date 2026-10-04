@@ -87,8 +87,9 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         benefit_configurations={[]}
         special_subsidies={[]}
         employees={[]}
-        pending_base_subsidy={null}
+        pending_base_subsidies={[]}
         base_subsidy={null}
+        configurable_month={""}
       />,
     )
 
@@ -103,8 +104,9 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         benefit_configurations={[]}
         special_subsidies={[]}
         employees={[]}
-        pending_base_subsidy={null}
+        pending_base_subsidies={[]}
         base_subsidy={currentConfig}
+        configurable_month={""}
       />,
     )
 
@@ -121,8 +123,9 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         benefit_configurations={[]}
         special_subsidies={[]}
         employees={[]}
-        pending_base_subsidy={null}
+        pending_base_subsidies={[]}
         base_subsidy={currentConfig}
+        configurable_month={"12/12/2026"}
       />,
     )
 
@@ -134,6 +137,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     expect(
       screen.getByRole("button", { name: /cancelar/i }),
     ).toBeInTheDocument()
+    expect(screen.getByText("12/12/2026")).toBeInTheDocument()
 
     // Clicking cancel toggles back to read-only view
     await user.click(screen.getByRole("button", { name: /cancelar/i }))
@@ -149,8 +153,9 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         benefit_configurations={[]}
         special_subsidies={[]}
         employees={[]}
-        pending_base_subsidy={pendingConfig}
+        pending_base_subsidies={[pendingConfig]}
         base_subsidy={currentConfig}
+        configurable_month={""}
       />,
     )
 
@@ -172,8 +177,9 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         benefit_configurations={[currentConfig]}
         special_subsidies={[]}
         employees={[]}
-        pending_base_subsidy={pendingConfig}
+        pending_base_subsidies={[pendingConfig]}
         base_subsidy={currentConfig}
+        configurable_month={""}
       />,
     )
 

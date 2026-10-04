@@ -18,7 +18,7 @@ class Benefit < ApplicationRecord
 
   validates :percentage, presence: true,
     numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
-  validate :only_one_monthly_benefit_per_consumer, if: [:monthly?, :current?]
+  validate :only_one_monthly_benefit_per_consumer, if: [ :monthly?, :current? ]
 
   # Es importante que current sea 0
   enum :status, { current: 0, expired: 1, future: 2 }, default: :current
