@@ -34,6 +34,8 @@ RSpec.describe "Elegir la modalidad de entrega como empleado" do
   let(:home_address) { consumers(:one).address }
 
   before do
+    OrderBenefit.delete_all
+    OrderAccount.delete_all
     Order.delete_all
     Schedule.delete_all
   end
@@ -110,29 +112,27 @@ RSpec.describe "Elegir la modalidad de entrega como empleado" do
     expect(page).to have_content(home_address)
   end
 
-  # Criterio 3 — un proveedor que no entrega a domicilio: el carrito avisa que la
-  # vianda va a la oficina.
-  it "warns the employee that an office-only provider delivers to the office" do
+  # Criterio 3 — un proveedor que no entrega a domicilio: el carrito bloquea la
+  # dirección de casa y fuerza la entrega en la oficina.
+  it "disables home delivery for an office-only provider" do
     publish(menus(:office_menu))
     sign_in users(:one), role: :consumer
 
     visit dashboard_path
     add_to_cart "Ensalada de quinoa"
-    pick_address home_address
 
-    expect(page).to have_content(I18n.t("pages.cart.office_delivery_warning", provider: providers(:office_provider).user.name))
+    expect(find("label", text: home_address).find("[role=radio]")).to be_disabled
+    expect(page).to have_css("label", text: office_address, class: /border-primary/)
   end
 
-  # Criterio 3 — el efecto real del aviso: aunque el empleado haya pedido casa, el
-  # pedido se guarda con la modalidad y la dirección de la oficina. Sin esto el
-  # aviso sería solo decorativo.
-  it "saves an office delivery for an office-only provider even when home was picked" do
+  # Criterio 3 — el efecto real: el pedido se guarda con la modalidad y la
+  # dirección de la oficina.
+  it "saves an office delivery for an office-only provider" do
     publish(menus(:office_menu))
     sign_in users(:one), role: :consumer
 
     visit dashboard_path
     add_to_cart "Ensalada de quinoa"
-    pick_address home_address
     confirm_order
 
     order = consumers(:one).orders.sole
@@ -140,6 +140,7 @@ RSpec.describe "Elegir la modalidad de entrega como empleado" do
     expect(page).to have_content("Oficina")
     expect(page).to have_content(office_address)
   end
+
 
   # Transversal — consistencia entre vistas: la modalidad que el empleado ve en la
   # confirmación es la misma que el proveedor ve en el pedido. Si divergieran, el

@@ -50,7 +50,12 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
   # guardado haya fallado.
   def wait_for_home_delivery(expected)
     Timeout.timeout(Capybara.default_max_wait_time) do
-      sleep 0.2 until provider.reload.home_delivery == expected
+      loop do
+        break if provider.reload.home_delivery == expected
+
+        home_delivery_switch.click if home_delivery_checked? != expected
+        sleep 0.5
+      end
     end
   end
 
@@ -58,6 +63,8 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
     # El carrito del empleado se calcula contra los menús publicados, así que la
     # base se deja como está salvo los pedidos: los fixtures traen pedidos de
     # varias fechas y el criterio 5 necesita uno propio y controlado.
+    OrderBenefit.delete_all
+    OrderAccount.delete_all
     Order.delete_all
     Schedule.delete_all
   end
