@@ -8,8 +8,14 @@ require "rails_helper"
 # Criterio 1: "El empleado solo puede seleccionar opciones customizables agregadas
 # al plato por el proveedor."
 # Criterio 2: "No se podrá confirmar el pedido si faltan rellenar campos obligatorios."
-# Criterio 3: "El pedido puede tener ya sea campos opcionales o también se puede
-# llenar el campo de notas para dar especificaciones sobre el plato."
+# Criterio 3: "Se acepta un mensaje de aclaraciones (opcional) de máximo 400
+# caracteres."
+#
+# El máximo de 400 caracteres del criterio 3 NO está implementado y por indicación
+# de quien pidió esta corrida no se cubre: la pantalla del plato limita a 140
+# (dish-detail.tsx) y el diálogo de modificar el pedido no limita nada, sin
+# validación en el servidor. Registrado en
+# docs/reports/defects/DEFECT-limite-400-caracteres-claraciones-04-10-2026.md
 #
 # Los grupos se cargan por modelo y no desde la pantalla del proveedor: esa
 # pantalla (Provider::MenusController + new-menu-form.tsx) tiene specs de request
@@ -28,14 +34,19 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   let(:salsa) { sorrentinos.option_groups.find_by!(name: "Salsa") }
   let(:relleno) { sorrentinos.option_groups.find_by!(name: "Relleno") }
   let(:extras) { milanesa.option_groups.find_by!(name: "Extras") }
+  # Las publicaciones se guardan en un let y no se buscan por plato: schedules.yml
+  # ya trae una publicación de sorrentinos para hoy, así que un find_by(menu:)
+  # puede devolver la del fixture en vez de la de acá.
+  let(:sorrentinos_schedule) { Schedule.create!(menu: sorrentinos, date: monday, amount: 10) }
+  let(:milanesa_schedule) { Schedule.create!(menu: milanesa, date: monday, amount: 10) }
 
   before do
     # Los dos platos se publican el mismo día: el de sorrentinos trae los grupos
     # de los fixtures y el de milanesa uno con límite 2, para poder probar las dos
     # formas de elegir (una sola opción o varias).
-    Schedule.create!(menu: sorrentinos, date: monday, amount: 10)
     milanesa.option_groups.create!(name: "Extras", options: [ "Papaya", "Arándanos", "Limón" ], limit: 2)
-    Schedule.create!(menu: milanesa, date: monday, amount: 10)
+    sorrentinos_schedule
+    milanesa_schedule
 
     sign_in users(:one), role: :consumer
     visit dashboard_path
@@ -84,7 +95,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   def order_with_selections
     Order.create!(
       consumer: consumers(:one),
-      schedule: Schedule.find_by!(menu: sorrentinos),
+      schedule: sorrentinos_schedule,
       amount: 1,
       price: sorrentinos.price,
       discounted_price: sorrentinos.price,
@@ -100,7 +111,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   def milanesa_order(values)
     Order.create!(
       consumer: consumers(:one),
-      schedule: Schedule.find_by!(menu: milanesa),
+      schedule: milanesa_schedule,
       amount: 1,
       price: milanesa.price,
       discounted_price: milanesa.price,
@@ -165,7 +176,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       pick_option("Extras", "Papaya")
 
       within("section", text: "Elegí tu Extras") do
-        expect(find("[role=checkbox][aria-label='Limón']")).to be_enabled
+        expect(find("[role=checkbox][aria-label='Limón']")).not_to be_disabled
       end
     end
 
@@ -210,6 +221,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
     it "no deja guardar los cambios de un pedido con un grupo sin responder" do
       order = milanesa_order([ "Papaya" ])
       visit order_path(order)
+      calm_animations
 
       click_button "Modificar pedido"
       within("[role=dialog]") do
@@ -221,6 +233,53 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       end
 
       expect(order.reload.selected_options.first["values"]).to eq([ "Papaya" ])
+    end
+
+    # Un pedido anterior a la funcionalidad no tiene elección guardada, así que el
+    # diálogo arranca con los grupos sin responder: tampoco se puede cambiar solo
+    # la cantidad hasta elegir la personalización.
+    it "exige elegir la personalización de un pedido hecho antes de la funcionalidad" do
+      order = order_with_selections
+      order.update_column(:selected_options, [])
+      visit order_path(order)
+      calm_animations
+
+      click_button "Modificar pedido"
+      within("[role=dialog]") do
+        expect(page).to have_button("Guardar cambios", disabled: true)
+
+        pick_option("Salsa", "Bolognesa")
+        pick_option("Relleno", "Ricota y nuez")
+
+        expect(page).to have_button("Guardar cambios", disabled: false)
+        click_button "Guardar cambios"
+      end
+      expect(page).to have_no_selector("[role=dialog]")
+
+      expect(order.reload.selected_options.map { it["values"] })
+        .to contain_exactly([ "Bolognesa" ], [ "Ricota y nuez" ])
+    end
+
+    it "guarda la personalización cambiada del pedido y la muestra en su detalle" do
+      order = order_with_selections
+      visit order_path(order)
+      calm_animations
+
+      click_button "Modificar pedido"
+      within("[role=dialog]") do
+        pick_option("Salsa", "Filetto")
+        # El clic y el PATCH son visitas de Inertia: sin esperar a que el radio
+        # refleje el cambio, el envío puede llevar la personalización anterior.
+        expect(checked_option("Salsa")).to include("Filetto")
+
+        click_button "Guardar cambios"
+      end
+      expect(page).to have_no_selector("[role=dialog]")
+
+      expect(order.reload.selected_options.map { it["values"] })
+        .to contain_exactly([ "Filetto" ], [ "Ricota y nuez" ])
+      expect(page).to have_content("Filetto")
+      expect(page).to have_no_content("Bolognesa")
     end
 
     # La pantalla es la primera barrera, pero un POST directo no pasa por ella: el

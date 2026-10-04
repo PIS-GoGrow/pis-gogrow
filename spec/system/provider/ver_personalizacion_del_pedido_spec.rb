@@ -86,4 +86,53 @@ RSpec.describe "Ver la personalización del pedido", type: :system do
     expect(page).to have_no_content("Bolognesa")
     expect(page).to have_no_content("Ricota y nuez")
   end
+
+  # La otra mitad del chequeo de consistencia: la personalización no se arma en el
+  # modelo, se pide desde la pantalla del empleado y tiene que llegar igual al
+  # detalle del proveedor.
+  it "le muestra al proveedor lo que el empleado acaba de pedir desde la app" do
+    # El `let` es perezoso: sin esta llamada no se publica el plato y el menú del
+    # empleado no muestra nada que pedir.
+    schedule
+
+    sign_in users(:one), role: :consumer
+    visit dashboard_path
+    calm_animations
+
+    click_button "Agregar #{menu.name}"
+    expect(page).to have_content("Notas para este plato")
+    find("section", text: "Elegí tu Salsa").find("label", text: "Bolognesa").click
+    find("section", text: "Elegí tu Relleno").find("label", text: "Espinaca y queso").click
+    click_button "Agregar"
+    first(:button, "Ver carrito").click
+    expect(page).to have_content("Tu carrito")
+    click_button "Confirmar pedido"
+    expect(page).to have_content("¡Pedido recibido!")
+
+    order = Order.last
+    expect(order.selected_options.map { it["values"] }).to contain_exactly(
+      [ "Bolognesa" ], [ "Espinaca y queso" ]
+    )
+
+    sign_out
+
+    sign_in users(:other_provider_user), role: :provider
+    visit provider_order_path(order)
+
+    expect(page).to have_content("Salsa")
+    expect(page).to have_content("Bolognesa")
+    expect(page).to have_content("Relleno")
+    expect(page).to have_content("Espinaca y queso")
+    expect(page).to have_no_content("Filetto")
+    expect(page).to have_no_content("Ricota y nuez")
+  end
+
+  # Las hojas entran deslizándose: en CI el clic caía mientras se movían.
+  def calm_animations
+    page.execute_script(<<~JS)
+      const style = document.createElement("style")
+      style.textContent = "*, *::before, *::after { animation: none !important; transition: none !important; }"
+      document.head.appendChild(style)
+    JS
+  end
 end
