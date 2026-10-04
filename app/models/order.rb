@@ -304,12 +304,8 @@ class Order < ApplicationRecord
   # subsidio. Es idempotente, así que sirve también para completar las cuentas de
   # órdenes viejas: una orden cuelga siempre de una sola cuenta de cada dueño.
   def ensure_accounts!
-    # El mes es el de cuando se hizo el pedido, no el de hoy: si no, completar una
-    # orden vieja la colgaría también de una cuenta de este mes.
-    # Habría que validar si queremos que el pedido se descuente en el mes en el que
-    # será enviado. En ese caso, habría que cambiar la siguiente línea por:
-    #   month = schedule.date.beginning_of_month
-    month = created_at.to_date.beginning_of_month
+    # Descontamos el pedido de la cuenta del mes en el que va a ser enviado
+    month = schedule.date.beginning_of_month
     provider =
       self.provider or raise "La orden #{id} no tiene proveedor. Puede ser que no tenga un schedule asignado, que su schedule no tenga un menú o que ese menú no tenga un proveedor"
 
