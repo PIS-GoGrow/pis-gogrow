@@ -291,6 +291,36 @@ RSpec.describe Calendar, type: :model do
     end
   end
 
+  describe "#maximum_publish_date" do
+    {
+      "lunes" => [Date.new(2026, 10, 5), Date.new(2026, 10, 16)],
+      "miércoles" => [Date.new(2026, 10, 7), Date.new(2026, 10, 16)],
+      "viernes" => [Date.new(2026, 10, 9), Date.new(2026, 10, 16)]
+    }.each do |weekday, (today, expected)|
+      it "es el viernes de la semana siguiente si es #{weekday}" do
+        expect(calendar_on(today).maximum_publish_date).to eq(expected)
+      end
+    end
+
+    it "para sábado y domingo, define el criterio de fin de semana" do
+      expect(calendar_on(Date.new(2026, 10, 10)).maximum_publish_date).to eq(Date.new(2026, 10, 16))
+      expect(calendar_on(Date.new(2026, 10, 11)).maximum_publish_date).to eq(Date.new(2026, 10, 16))
+    end
+
+    it "cruza el cambio de mes y de año" do
+      expect(calendar_on(Date.new(2026, 12, 30)).maximum_publish_date).to eq(Date.new(2027, 1, 8))
+    end
+
+    it "siempre devuelve un viernes posterior a hoy" do
+      (Date.new(2026, 1, 1)..Date.new(2030, 12, 31)).each do |day|
+        result = calendar_on(day).maximum_publish_date
+
+        expect(result).to be_friday
+        expect(result).to be > day
+      end
+    end
+  end
+
   describe ".last_saturday" do
     {
       "un mes que termina en sábado" => [ Date.new(2026, 10, 1), Date.new(2026, 10, 31) ],

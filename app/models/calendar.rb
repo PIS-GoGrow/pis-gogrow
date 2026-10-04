@@ -26,6 +26,11 @@ class Calendar
     start_date..end_date
   end
 
+  # Se puede publicar un menú como mucho hasta el viernes de la semana siguiente.
+  def maximum_publish_date
+    @today.next_week(:monday) + 4.days
+  end
+
   # Define en qué día de este mes se deberían asignar los beneficios mensuales para
   # el mes que viene.
   # Es igual a:

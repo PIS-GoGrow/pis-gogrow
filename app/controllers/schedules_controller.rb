@@ -223,7 +223,7 @@ class SchedulesController < Provider::InertiaController
   end
 
   def maximum_publish_date
-    Schedule.maximum_publish_date
+    @maximum_publish_date ||= Calendar.new.maximum_publish_date
   end
 
   def requested_week_start
