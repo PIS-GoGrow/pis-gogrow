@@ -1027,8 +1027,12 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "permite agregar un nuevo plato al menú ya publicado del día" do
-        target_date = Date.current.next_week(:monday) + 2.days
-        Schedule.where(date: target_date).destroy_all
+        # Usar el `target_date` del let (no redefinirlo con una variable local):
+        # este spec fallaba solo los domingos porque una fecha local distinta
+        # ("próximo miércoles") coincidía ese día con la fixture `future`
+        # (milanesa, Date.current + 3), y el `before` de arriba solo limpia la
+        # fecha del let ("próximo jueves"), así que el choque con la fixture
+        # nunca se limpiaba.
         menu.schedules.create!(date: target_date, amount: 10)
 
         second_menu = provider.menus.create!(

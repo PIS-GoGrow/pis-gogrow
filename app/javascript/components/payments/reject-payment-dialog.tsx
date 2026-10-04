@@ -13,13 +13,14 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
 import { cn } from "@/lib/utils"
 import { providerPayments as paymentsRoutes } from "@/routes"
 
 const REJECTION_REASONS = [
   "La imagen está borrosa",
   "El archivo enviado no corresponde a un comprobante",
-  "Los montos de deuda y pago no coinciden",
+  PARTIAL_PAYMENT_REJECTION_REASON,
 ]
 
 const OTHER_OPTION = "other"

@@ -21,14 +21,8 @@ interface CollectionAccountPanelProps {
   // Reemplaza al vencimiento en el encabezado del mes.
   aside?: ReactNode
   children?: ReactNode
-}
-
-interface CollectionAccountPanelProps {
-  account: ProviderCollectionAccount
-  heading?: "month" | "paid_on" | "none"
-  aside?: ReactNode
-  children?: ReactNode
   showPaymentHistory?: boolean
+  showDownloadAll?: boolean
 }
 
 export default function CollectionAccountPanel({
@@ -37,6 +31,7 @@ export default function CollectionAccountPanel({
   aside,
   children,
   showPaymentHistory = false,
+  showDownloadAll = false,
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -113,7 +108,10 @@ export default function CollectionAccountPanel({
         </PaymentReviewSheet>
       )}
       {showPaymentHistory && (
-        <CollectionPaymentHistory payments={account.payments} />
+        <CollectionPaymentHistory
+          payments={account.payments}
+          showDownloadAll={showDownloadAll}
+        />
       )}
 
       {children && (

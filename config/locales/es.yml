@@ -458,6 +458,7 @@ es:
         status_accepted: "Aceptado"
         status_rejected: "Rechazado"
         status_submitted: "Enviado"
+        partial_payment_warning: "Falta una parte del pago."
     orders:
       index:
         title: "Mis pedidos"

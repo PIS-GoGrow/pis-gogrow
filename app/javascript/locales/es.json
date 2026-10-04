@@ -99,6 +99,7 @@
           "lunch": "vianda",
           "lunches": "viandas",
           "menu": "Plato",
+          "partial_payment_warning": "Falta una parte del pago.",
           "price": "Monto",
           "receipt": "Subir comprobante de pago",
           "receipt_approved": "Pago aprobado",
