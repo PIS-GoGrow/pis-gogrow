@@ -75,13 +75,12 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
       end
     end
 
-    it "en Facturas mantiene Pagos no activo y deshabilitado" do
+    it "en Facturas mantiene Pagos disponible pero no activo" do
       visit admin_invoices_path
       expect(page).to have_current_path(admin_invoices_path)
 
       within(mobile_nav) do
-        expect(page).to have_no_css("a", text: "Pagos")
-        expect(page).to have_css("button[aria-disabled='true'][disabled]", text: "Pagos")
+        expect(page).to have_link("Pagos", href: admin_payments_path)
         expect(page).to have_no_css("[aria-current='page']", text: "Pagos")
       end
     end
