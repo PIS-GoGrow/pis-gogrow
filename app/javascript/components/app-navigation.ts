@@ -4,16 +4,21 @@ import {
   CalendarPlus,
   ClipboardList,
   CreditCard,
+  FileText,
   LayoutGrid,
   Package,
   Percent,
+  UsersRound,
   Utensils,
   Wallet,
 } from "lucide-react"
 
 import {
   adminBenefitConfigurations,
+  adminConsumers,
   adminDashboard,
+  adminInvoices,
+  adminPayments,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
@@ -77,6 +82,24 @@ export function getNavigationItems(
         title: t("nav.benefit_configurations"),
         href: adminBenefitConfigurations.index().url,
         icon: Percent,
+      },
+      {
+        key: "consumers",
+        title: t("nav.admin.employees"),
+        href: adminConsumers.index().url,
+        icon: UsersRound,
+      },
+      {
+        key: "invoices",
+        title: t("nav.invoices"),
+        href: adminInvoices.index().url,
+        icon: FileText,
+      },
+      {
+        key: "payments",
+        title: t("nav.admin.payments"),
+        href: adminPayments.index().url,
+        icon: CreditCard,
       },
     ],
     consumer: [

@@ -13,6 +13,7 @@ import {
   adminBenefitConfigurations,
   adminConsumers,
   adminDashboard,
+  adminPayments,
   settingsProfiles,
 } from "@/routes"
 import type { NavItem } from "@/types"
@@ -54,9 +55,8 @@ export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
     },
     {
       title: t("nav.admin.payments"),
-      href: adminDashboard.index().url,
+      href: adminPayments.index().url,
       icon: CreditCard,
-      disabled: true,
       mobileIcon: (
         <HugeiconsIcon
           icon={CreditCardPosIcon}

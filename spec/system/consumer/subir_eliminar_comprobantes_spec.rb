@@ -83,6 +83,10 @@ RSpec.describe "Subida de varios comprobantes y eliminación por el empleado", t
       first(:button, I18n.t("pages.accounts.show.receipt_remove")).click
     end
 
+    within(find("[role=dialog]")) do
+      click_on I18n.t("pages.accounts.show.receipt_remove_confirm")
+    end
+
     expect(page).to have_content(I18n.t("flash.payment_receipt_removed"))
 
     within(find("[role=tabpanel]")) do
