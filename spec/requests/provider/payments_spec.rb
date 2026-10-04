@@ -16,7 +16,7 @@ RSpec.describe "Provider payments", type: :request do
     consumer_user = User.create!(email: "review-consumer@gmail.com", name: "Consumer", password: "password123456")
     consumer = Consumer.create!(user: consumer_user, company:, address: "Ellauri 1234")
     provider = create_provider("review-provider@gmail.com")
-    account = Account.create!(owner: consumer, provider:, month: Date.current, amount: 500)
+    account = Account.create!(owner: consumer, provider:, month: Date.current.prev_month, amount: 500)
 
     payment = account.payments.build(provider:, status: :submitted)
     payment.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
@@ -33,6 +33,30 @@ RSpec.describe "Provider payments", type: :request do
 
     expect(response).to redirect_to(provider_collections_path)
     expect(payment.reload).to be_approved
+  end
+
+  it "does not approve a payment of the current month" do
+    user, payment = setup_submitted_payment
+    payment.account.update!(month: Date.current.beginning_of_month)
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "approved" }
+
+    expect(response).to redirect_to(provider_collections_path)
+    follow_redirect!
+    expect(inertia).to have_flash(alert: I18n.t("validations.payment_current_account"))
+    expect(payment.reload).to be_submitted
+  end
+
+  # Solo se bloquea aprobar: rechazar un comprobante del mes en curso sigue permitido.
+  it "still rejects a payment of the current month" do
+    user, payment = setup_submitted_payment
+    payment.account.update!(month: Date.current.beginning_of_month)
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: "Imagen borrosa" }
+
+    expect(payment.reload).to be_rejected
   end
 
   it "rejects a submitted payment with a reason" do

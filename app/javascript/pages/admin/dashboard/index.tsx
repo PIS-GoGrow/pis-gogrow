@@ -2,7 +2,6 @@ import { Head, usePage } from "@inertiajs/react"
 import { ChevronRight, Info } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import { AdminMobileNav } from "@/components/admin/admin-mobile-nav"
 import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -27,7 +26,7 @@ export default function AdminDashboard({
   const title = t("pages.admin.dashboard.title")
   const firstName = auth.user.name.split(" ")[0]
   return (
-    <AppLayout hideMobileHeader>
+    <AppLayout>
       <Head title={title} />
 
       <PageContainer
@@ -36,7 +35,7 @@ export default function AdminDashboard({
         titleVariant="prominent"
         compactHeading
       >
-        <div className="grid gap-4 pb-18 md:pb-0 lg:grid-cols-2 lg:gap-8">
+        <div className="grid gap-4 lg:grid-cols-2 lg:gap-8">
           <Alert role="status" className="lg:col-span-2">
             <Info aria-hidden="true" />
             <AlertTitle>{t("pages.admin.dashboard.alert.title")}</AlertTitle>
@@ -94,7 +93,6 @@ export default function AdminDashboard({
           </div>
         </div>
       </PageContainer>
-      <AdminMobileNav />
     </AppLayout>
   )
 }
