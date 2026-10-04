@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_01_210455) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,28 +64,56 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
     t.index ["user_id"], name: "index_admins_on_user_id"
   end
 
+  create_table "benefit_configuration_changes", force: :cascade do |t|
+    t.integer "action", null: false
+    t.bigint "benefit_configuration_id", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "details", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["benefit_configuration_id"], name: "idx_on_benefit_configuration_id_62ffbb5770"
+    t.index ["user_id"], name: "index_benefit_configuration_changes_on_user_id"
+  end
+
   create_table "benefit_configurations", force: :cascade do |t|
+    t.boolean "applies_to_all", default: false
     t.bigint "company_id", null: false
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
-    t.date "effective_from", null: false
-    t.decimal "max_voucher_price", precision: 10, scale: 2, null: false
-    t.integer "monthly_voucher_limit", null: false
+    t.datetime "deactivated_at"
+    t.string "name"
     t.integer "subsidy_percentage", null: false
     t.datetime "updated_at", null: false
-    t.index ["company_id", "effective_from"], name: "index_benefit_configurations_on_company_id_and_effective_from", unique: true
     t.index ["company_id"], name: "index_benefit_configurations_on_company_id"
     t.index ["created_by_id"], name: "index_benefit_configurations_on_created_by_id"
   end
 
+  create_table "benefit_rules", force: :cascade do |t|
+    t.bigint "benefit_configuration_id", null: false
+    t.datetime "created_at", null: false
+    t.date "deadline_date"
+    t.integer "deadline_days"
+    t.date "effective_from"
+    t.integer "limit"
+    t.decimal "max_price", precision: 10, scale: 2
+    t.integer "min_years"
+    t.string "type"
+    t.datetime "updated_at", null: false
+    t.index ["benefit_configuration_id"], name: "index_benefit_rules_on_benefit_configuration_id"
+  end
+
   create_table "benefits", force: :cascade do |t|
     t.integer "amount"
+    t.bigint "benefit_configuration_id"
     t.bigint "consumer_id", null: false
     t.datetime "created_at", null: false
     t.string "description"
     t.date "due_date"
     t.integer "percentage"
+    t.integer "status"
     t.datetime "updated_at", null: false
+    t.index ["benefit_configuration_id"], name: "index_benefits_on_benefit_configuration_id"
+    t.index ["consumer_id", "benefit_configuration_id"], name: "index_benefits_unique_active_per_consumer_config", unique: true, where: "(status = 0)"
     t.index ["consumer_id"], name: "index_benefits_on_consumer_id"
   end
 
@@ -96,10 +124,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "consumer_benefit_configurations", force: :cascade do |t|
+    t.bigint "benefit_configuration_id", null: false
+    t.bigint "consumer_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["benefit_configuration_id"], name: "idx_on_benefit_configuration_id_5005c4988d"
+    t.index ["consumer_id"], name: "index_consumer_benefit_configurations_on_consumer_id"
+  end
+
   create_table "consumers", force: :cascade do |t|
     t.string "address"
+    t.date "birthday"
     t.bigint "company_id", null: false
     t.datetime "created_at", null: false
+    t.date "onboarding_date"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["company_id"], name: "index_consumers_on_company_id"
@@ -116,6 +155,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
     t.index ["consumer_id"], name: "index_delivery_addresses_on_consumer_id"
   end
 
+  create_table "invoices", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.date "issued_on", null: false
+    t.integer "status", default: 0, null: false
+    t.decimal "total_amount", precision: 10, scale: 2, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_invoices_on_account_id"
+    t.index ["account_id"], name: "index_invoices_on_account_id_active", unique: true, where: "(status = ANY (ARRAY[0, 1]))"
+  end
+
+  create_table "menu_agendas", force: :cascade do |t|
+    t.integer "amount", null: false
+    t.datetime "created_at", null: false
+    t.date "ends_on"
+    t.bigint "menu_id", null: false
+    t.date "starts_on", null: false
+    t.datetime "updated_at", null: false
+    t.integer "weekdays", default: [], null: false, array: true
+    t.index ["menu_id"], name: "index_menu_agendas_on_menu_id"
+  end
+
   create_table "menu_option_groups", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "limit", default: 1, null: false
@@ -127,12 +188,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
   end
 
   create_table "menus", force: :cascade do |t|
+    t.bigint "base_menu_id"
     t.datetime "created_at", null: false
     t.string "description"
+    t.datetime "modified_at"
+    t.bigint "modified_by_id"
+    t.jsonb "modified_values"
     t.string "name"
     t.decimal "price", precision: 10, scale: 2
     t.bigint "provider_id", null: false
     t.datetime "updated_at", null: false
+    t.date "valid_from"
+    t.date "valid_until"
+    t.index ["base_menu_id"], name: "index_menus_on_base_menu_id"
+    t.index ["modified_by_id"], name: "index_menus_on_modified_by_id"
     t.index ["provider_id"], name: "index_menus_on_provider_id"
   end
 
@@ -151,6 +220,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
     t.index ["order_id"], name: "index_order_accounts_on_order_id"
   end
 
+  create_table "order_benefits", force: :cascade do |t|
+    t.bigint "benefit_id", null: false
+    t.integer "benefit_used", null: false
+    t.datetime "created_at", null: false
+    t.bigint "order_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["benefit_id"], name: "index_order_benefits_on_benefit_id"
+    t.index ["order_id"], name: "index_order_benefits_on_order_id"
+  end
+
   create_table "orders", force: :cascade do |t|
     t.string "address"
     t.integer "amount"
@@ -160,6 +239,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
     t.datetime "created_at", null: false
     t.integer "delivery_method", null: false
     t.decimal "discounted_price", precision: 10, scale: 2
+    t.string "menu_description"
+    t.string "menu_name"
+    t.jsonb "menu_option_groups"
     t.datetime "modified_at"
     t.bigint "modified_by_id"
     t.string "notes"
@@ -182,6 +264,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
     t.bigint "provider_id"
+    t.text "rejection_reason"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_payments_on_account_id"
@@ -431,16 +514,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_120000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "admins", "companies"
   add_foreign_key "admins", "users"
+  add_foreign_key "benefit_configuration_changes", "benefit_configurations"
+  add_foreign_key "benefit_configuration_changes", "users"
   add_foreign_key "benefit_configurations", "companies"
   add_foreign_key "benefit_configurations", "users", column: "created_by_id"
+  add_foreign_key "benefit_rules", "benefit_configurations"
+  add_foreign_key "benefits", "benefit_configurations"
   add_foreign_key "benefits", "consumers"
+  add_foreign_key "consumer_benefit_configurations", "benefit_configurations"
+  add_foreign_key "consumer_benefit_configurations", "consumers"
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
   add_foreign_key "delivery_addresses", "consumers"
+  add_foreign_key "invoices", "accounts"
+  add_foreign_key "menu_agendas", "menus"
   add_foreign_key "menu_option_groups", "menus"
+  add_foreign_key "menus", "menus", column: "base_menu_id"
   add_foreign_key "menus", "providers"
+  add_foreign_key "menus", "users", column: "modified_by_id"
   add_foreign_key "order_accounts", "accounts"
   add_foreign_key "order_accounts", "orders"
+  add_foreign_key "order_benefits", "benefits"
+  add_foreign_key "order_benefits", "orders"
   add_foreign_key "orders", "consumers"
   add_foreign_key "orders", "schedules"
   add_foreign_key "orders", "users", column: "cancelled_by_id"

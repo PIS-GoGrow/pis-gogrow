@@ -1,4 +1,4 @@
-import { router } from "@inertiajs/react"
+import { Link, router } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -10,14 +10,22 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
-import { schedules as schedulesRoutes } from "@/routes"
+import { cn } from "@/lib/utils"
+import { providerMenus, schedules as schedulesRoutes } from "@/routes"
 import type { Schedule } from "@/types"
 
 interface PublishedDayViewProps {
   schedules: Schedule[]
+  editable: boolean
 }
 
-function PublishedScheduleRow({ schedule }: { schedule: Schedule }) {
+function PublishedScheduleRow({
+  schedule,
+  editable,
+}: {
+  schedule: Schedule
+  editable: boolean
+}) {
   const { t } = useTranslation()
   const [processing, setProcessing] = useState(false)
 
@@ -36,10 +44,33 @@ function PublishedScheduleRow({ schedule }: { schedule: Schedule }) {
   }
 
   return (
-    <Card className="w-full">
+    <Card
+      className={cn(
+        "relative w-full",
+        editable && "hover:bg-muted/40 transition-colors",
+      )}
+    >
       <CardHeader>
         <CardTitle>
-          {schedule.menu.name} | {schedule.menu.price}$
+          {editable ? (
+            <Link
+              href={
+                providerMenus.edit(schedule.saved_menu_id, {
+                  query: { schedule_id: schedule.id },
+                }).url
+              }
+              aria-label={t("pages.schedules.index.edit_dish", {
+                name: schedule.menu.name,
+              })}
+              className="after:absolute after:inset-0 after:rounded-xl"
+            >
+              {schedule.menu.name} | {schedule.menu.price}$
+            </Link>
+          ) : (
+            <>
+              {schedule.menu.name} | {schedule.menu.price}$
+            </>
+          )}
         </CardTitle>
         <CardDescription>{schedule.menu.description}</CardDescription>
       </CardHeader>
@@ -48,7 +79,7 @@ function PublishedScheduleRow({ schedule }: { schedule: Schedule }) {
         <p className="text-muted-foreground text-sm font-medium">
           Stock: {schedule.amount}
         </p>
-        <label className="flex items-center gap-2 text-sm">
+        <label className="relative z-10 flex items-center gap-2 text-sm">
           {t("pages.schedules.index.availability.toggle_label")}
           <Switch
             checked={schedule.available}
@@ -62,11 +93,18 @@ function PublishedScheduleRow({ schedule }: { schedule: Schedule }) {
   )
 }
 
-export default function PublishedDayView({ schedules }: PublishedDayViewProps) {
+export default function PublishedDayView({
+  schedules,
+  editable,
+}: PublishedDayViewProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
       {schedules.map((schedule) => (
-        <PublishedScheduleRow key={schedule.id} schedule={schedule} />
+        <PublishedScheduleRow
+          key={schedule.id}
+          schedule={schedule}
+          editable={editable}
+        />
       ))}
     </div>
   )

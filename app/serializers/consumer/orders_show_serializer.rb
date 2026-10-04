@@ -8,4 +8,9 @@ class Consumer::OrdersShowSerializer < ApplicationSerializer
   typelize delivery_addresses: "Array<{ id: string; label: string; address: string }>"
   typelize max_quantity: :number
   typelize option_groups: "Array<{ id: number; name: string; options: string[]; limit: number }>"
+  attributes :delivery_addresses, :max_quantity, :editing
+
+  typelize delivery_addresses: "Array<{ id: string; label: string; address: string }>"
+  typelize max_quantity: :number
+  typelize editing: :boolean
 end

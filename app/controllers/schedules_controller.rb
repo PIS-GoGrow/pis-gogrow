@@ -3,7 +3,10 @@
 class SchedulesController < Provider::InertiaController
   def index
     provider = Current.user.provider
-    menus = provider.menus.order(:id)
+    menus = provider.menus.saved.order(:id)
+    # El job diario es el que completa las agendas; esto cubre los entornos en los
+    # que no corre (desarrollo) y lo que haya cambiado desde la última pasada.
+    menus.each { Menus::AgendaScheduler.call(it) }
 
     serialized_menus = menus.map do |menu|
       MenuSerializer.new(menu).to_inertia
@@ -128,7 +131,7 @@ class SchedulesController < Provider::InertiaController
 
     Schedule.transaction do
       items.each do |item|
-        menu = provider.menus.find(item.require(:menu_id))
+        menu = provider.menus.saved.find(item.require(:menu_id))
 
         menu.schedules.create!(
         date: date,
@@ -162,8 +165,12 @@ class SchedulesController < Provider::InertiaController
 
       existing_schedules = Schedule.joins(:menu)
                                     .where(menus: { provider_id: provider.id }, date: date)
+                                    .includes(:menu)
+                                    .to_a
 
-      removed_schedules = existing_schedules.where.not(menu_id: new_menu_ids).to_a
+      # Una programación puede apuntar a una variante del plato: se compara por
+      # el plato guardado, que es el que elige el proveedor.
+      removed_schedules = existing_schedules.reject { new_menu_ids.include?(it.menu.saved_menu.id) }
 
       # Si el proveedor saca un plato que ya tenía pedidos, esos pedidos se
       # cancelan automáticamente antes de borrar la publicación del plato.
@@ -179,14 +186,14 @@ class SchedulesController < Provider::InertiaController
         menu_id = item.require(:menu_id).to_i
         amount = item.require(:amount)
 
-        schedule = existing_schedules.find_by(menu_id: menu_id)
+        schedule = existing_schedules.find { it.menu.saved_menu.id == menu_id }
 
         if schedule
           # Si el plato ya estaba publicado, SOLO actualizamos el stock.
           # Esto preserva el mismo ID del Schedule y evita romper los pedidos existentes.
           schedule.update!(amount: amount)
         else
-          menu = provider.menus.find(menu_id)
+          menu = provider.menus.saved.find(menu_id)
           menu.schedules.create!(date: date, amount: amount)
         end
       end
@@ -216,7 +223,7 @@ class SchedulesController < Provider::InertiaController
   end
 
   def maximum_publish_date
-    Date.current.next_week(:monday) + 4.days
+    Schedule.maximum_publish_date
   end
 
   def requested_week_start

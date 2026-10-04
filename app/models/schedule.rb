@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+# Representa una instancia particular de un plato (Menu) para un día dado.
+# Es decir, representa un día en el cual un plato está disponible.
 class Schedule < ApplicationRecord
   belongs_to :menu
   belongs_to :availability_changed_by, class_name: "User", optional: true
@@ -17,6 +19,11 @@ class Schedule < ApplicationRecord
             }
 
   validates :menu_id, uniqueness: { scope: :date }
+
+  # Se publica como mucho hasta el viernes de la semana siguiente.
+  def self.maximum_publish_date
+    Date.current.next_week(:monday) + 4.days
+  end
 
   def remaining_amount
     # amount representa el cupo TOTAL de esta oferta; no lo descontamos al reservar.

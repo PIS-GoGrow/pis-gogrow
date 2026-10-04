@@ -8,6 +8,7 @@ type ConsumerOrdersShow = {
   delivery_addresses: Array<{ id: string; label: string; address: string }>;
   max_quantity: number;
   option_groups: Array<{ id: number; name: string; options: string[]; limit: number }>;
+  editing: boolean;
 }
 
 export type { ConsumerOrdersShow };

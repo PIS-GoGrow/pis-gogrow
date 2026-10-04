@@ -102,7 +102,6 @@ RSpec.describe "Consultar la información de un plato" do
 
   it "shows the discount of the employee benefit on the dish price" do
     publish(menus(:sorrentinos), monday)
-    Benefit.create!(consumer: consumers(:one), amount: 20, percentage: 50, due_date: 1.month.from_now)
     sign_in users(:one)
 
     visit dashboard_path
@@ -115,7 +114,7 @@ RSpec.describe "Consultar la información de un plato" do
 
   # Criterio 3
   it "does not fill in a description the dish never had" do
-    menus(:milanesa).update!(description: nil)
+    menus(:milanesa).update_column(:description, nil)
     publish(menus(:milanesa), monday)
     sign_in users(:one)
 

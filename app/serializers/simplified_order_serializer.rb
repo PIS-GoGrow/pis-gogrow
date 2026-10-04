@@ -17,7 +17,7 @@ class SimplifiedOrderSerializer < ApplicationSerializer
 
   typelize :string?
   attribute :menu_name do |order|
-    order.schedule&.menu&.name
+    order.menu_name
   end
 end
 

@@ -89,6 +89,90 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(group_for(:history, 1.month.ago.to_date)[:company][:paid_on]).to be_present
     end
 
+    it "includes every payment receipt in the history, newest first" do
+      employee_account = accounts(:one_tuviandita_current)
+      other_employee_account = accounts(:other_tuviandita_current)
+      company_account = accounts(:gogrow_tuviandita_current)
+
+      employee_account.payments.destroy_all
+
+      rejected = employee_account.payments.create!(
+        provider: employee_account.provider,
+        status: :rejected,
+        rejection_reason: "Comprobante inválido",
+        created_at: 2.days.ago,
+        receipt: Rack::Test::UploadedFile.new(
+          Rails.root.join("public/icon.png"),
+          "image/png",
+          original_filename: "rechazado.png"
+        )
+      )
+
+      approved = employee_account.payments.create!(
+        provider: employee_account.provider,
+        status: :approved,
+        created_at: 1.day.ago,
+        receipt: Rack::Test::UploadedFile.new(
+          Rails.root.join("public/icon.png"),
+          "image/png",
+          original_filename: "aprobado.png"
+        )
+      )
+
+      other_employee_account.payments.create!(
+        provider: other_employee_account.provider,
+        status: :approved
+      )
+
+      company_account.payments.create!(
+        provider: company_account.provider,
+        status: :approved
+      )
+
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      employee = group_for(:history, Date.current)[:employees]
+        .find { it[:id] == employee_account.id }
+
+      expect(employee[:payments].pluck(:id)).to eq([ approved.id, rejected.id ])
+
+      expect(employee[:payments].first).to include(
+        status: "approved",
+        date: approved.created_at.strftime("%d/%m/%y"),
+        receipt_url: receipt_provider_payment_path(approved),
+        receipt_filename: "aprobado.png",
+        receipt_content_type: "image/png"
+      )
+
+      expect(employee[:payments].second).to include(
+        status: "rejected",
+        date: rejected.created_at.strftime("%d/%m/%y"),
+        receipt_url: receipt_provider_payment_path(rejected),
+        receipt_filename: "rechazado.png",
+        receipt_content_type: "image/png"
+      )
+    end
+
+    it "shows the invoice uploaded for the company period" do
+      Invoice.create!(
+        account: accounts(:gogrow_tuviandita_current),
+        issued_on: Date.current,
+        total_amount: 601,
+        file: Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png", original_filename: "factura.png")
+      )
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      group = group_for(:pending, Date.current)
+
+      expect(group[:company][:invoice]).to include(status: "pending", file_name: "factura.png", removable: true, total_amount: 601.0)
+      expect(group[:employees].pluck(:invoice)).to all(be_nil)
+      expect(group_for(:history, 1.month.ago.to_date)[:company][:invoice]).to be_nil
+    end
+
     it "leaves out the accounts of other providers" do
       sign_in provider_user, role: :provider
 

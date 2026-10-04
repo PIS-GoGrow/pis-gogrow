@@ -2,14 +2,22 @@
 
 class Consumer::OrdersController < Consumer::InertiaController
   def index
-    orders = Current.user.consumer.orders.preload(schedule: { menu: { provider: :user } })
+    consumer = Current.user.consumer
+    orders = consumer.orders.preload(schedule: { menu: { provider: :user } })
 
     @upcoming_orders = orders.upcoming
-    @past_orders = orders.history
+    @past_orders = orders.history.where(created_at: (Date.current - 3.months)..)
+
+    @providers = (@upcoming_orders + @past_orders)
+      .map { |order| order&.schedule&.menu&.provider }
+      .compact_blank
+      .uniq
   end
 
   def show
     consumer = Current.user.consumer
+=begin
+ feature/ibp-022-seleccionar-personalizacion
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
     @order = consumer.orders.preload(schedule: { menu: [ :option_groups, { provider: :user } ] }).find(params[:id])
@@ -18,11 +26,43 @@ class Consumer::OrdersController < Consumer::InertiaController
     @option_groups = @order.schedule&.menu&.option_groups.to_a.map do |group|
       { id: group.id, name: group.name, options: group.options, limit: group.limit }
     end
+=======
+
+    @order = consumer.orders.preload(schedule: { menu: { provider: :user } }).find(params[:id])
+    @delivery_addresses = @order.delivery_address_options consumer
+    @max_quantity = @order.max_quantity
+    @editing = params[:edit] == "1"
+ develop
+=end
+ def show
+  consumer = Current.user.consumer
+
+  # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
+  # tiene que ser un 404, no una página ajena.
+  @order = consumer.orders.preload(
+    schedule: { menu: [ :option_groups, { provider: :user } ] }
+  ).find(params[:id])
+
+  @delivery_addresses = delivery_address_options(consumer, @order)
+  @max_quantity = max_quantity(@order)
+
+  @option_groups = @order.schedule&.menu&.option_groups.to_a.map do |group|
+    {
+      id: group.id,
+      name: group.name,
+      options: group.options,
+      limit: group.limit
+    }
+  end
+
+  @editing = params[:edit] == "1"
+end
   end
 
   def create
     consumer = Current.user.consumer
     requested_items = order_params.fetch(:items)
+    benefit_percentage = consumer&.current_monthly_benefit&.percentage.to_i
 
     # Rechazamos si no hay carrito o si las cantidades no son numéricas.
     return reject_order(:empty_cart) if requested_items.empty?
@@ -37,16 +77,16 @@ class Consumer::OrdersController < Consumer::InertiaController
     Order.transaction do
       consumer.lock!
 
-      benefit_percentage = consumer.current_benefit&.percentage.to_i
-      remaining_subsidized = benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0
+      remaining_subsidized =
+        benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
+      schedule_ids = requested_items.pluck(:schedule_id)
 
       # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos todos
       # los schedules correspondientes.
-      schedule_ids = requested_items.pluck(:schedule_id).uniq
-      schedules = Schedule.includes(menu: :provider).where(id: schedule_ids, date: allowed_dates).order(:id).lock.index_by(&:id)
+      schedules = Schedule.includes(menu: :provider).where(id: schedule_ids.uniq, date: allowed_dates).order(:id).lock.index_by(&:id)
 
       # Tiramos error si alguno de los schedules no existen o si están fuera del rango de fechas permitidas
-      raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.size
+      raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
       requested_items.each do |item|
         quantity = item[:quantity].to_i
@@ -80,6 +120,7 @@ class Consumer::OrdersController < Consumer::InertiaController
           discount_percentage: benefit_percentage,
           subsidized_quantity:,
           selected_options: selected_options_for(schedule.menu, item[:options]),
+          benefits: [ consumer.current_monthly_benefit ].compact,
           **delivery
         )
 
@@ -102,12 +143,12 @@ class Consumer::OrdersController < Consumer::InertiaController
     order = consumer.orders.find(params[:id])
 
     return reject_update(order, :invalid_quantity) unless update_params[:quantity].to_s.match?(/\A[1-9]\d*\z/)
-    return reject_update(order, :invalid_address) unless delivery_address_options(consumer, order).pluck(:address).include?(update_params[:address])
+    return reject_update(order, :invalid_address) unless order.delivery_address_options(consumer).pluck(:address).include?(update_params[:address])
 
     delivery = consumer.delivery_for(order.provider, update_params[:address])
     return reject_update(order, :office_address_required) if delivery[:address].blank?
 
-    benefit_percentage = active_benefit_for(consumer)&.percentage.to_i
+    benefit_percentage = consumer&.current_monthly_benefit&.percentage.to_i
     modified = order.modify(
       by: Current.user,
       quantity: update_params[:quantity].to_i,
@@ -116,6 +157,7 @@ class Consumer::OrdersController < Consumer::InertiaController
       discount_percentage: benefit_percentage,
       remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0,
       selected_options: selected_options_for(order.schedule&.menu, update_params[:options])
+      remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
     )
 
     if modified
@@ -164,10 +206,6 @@ class Consumer::OrdersController < Consumer::InertiaController
     return :insufficient_stock if schedule && schedule.remaining_amount < order.amount.to_i
 
     :cart_unavailable
-  end
-
-  def active_benefit_for(consumer)
-    consumer.benefits.where("due_date >= ?", Date.current).order(:due_date).first
   end
 
   # Además de las direcciones conocidas, el carrito puede mandar una que el

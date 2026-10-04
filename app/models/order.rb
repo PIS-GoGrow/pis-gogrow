@@ -19,13 +19,17 @@ class Order < ApplicationRecord
     duplicate_order: 1,
     customer_request: 2,
     order_error: 3,
-    other: 4
+    other: 4,
+    dish_modified: 5
   }, prefix: :rejection_reason
 
   # Esta línea tiene que estar antes de has_many :order_accounts.
   # Antes de que se borre la orden, se tiene que registrar sus cuentas
   # asociadas para que estas actualicen su monto.
   before_destroy :remember_accounts
+  # El pedido conserva el plato tal como estaba al pedirlo: editarlo después no
+  # tiene que reescribir el historial.
+  before_create :snapshot_menu
 
   belongs_to :consumer
   belongs_to :schedule
@@ -36,6 +40,9 @@ class Order < ApplicationRecord
 
   has_many :order_accounts, dependent: :destroy
   has_many :accounts, through: :order_accounts
+
+  has_many :order_benefits, dependent: :destroy
+  has_many :benefits, through: :order_benefits
 
   validates :amount, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :discounted_price, comparison: { greater_than_or_equal_to: 0 }, allow_nil: true
@@ -87,6 +94,11 @@ class Order < ApplicationRecord
     ]
   end
 
+  # Inicializa una orden, donde a una cantidad (subsidized_quantity) de las viandas
+  # pedidas se le aplican determinados beneficios (benefits), acumulando entre todos
+  # discount_percentage en total.
+  # Se asume que cada uno de los beneficios se aplica por igual a todas las viandas
+  # subsidiadas.
   def self.reserve(
     consumer:,
     schedule:,
@@ -97,6 +109,7 @@ class Order < ApplicationRecord
     discount_percentage: 0,
     subsidized_quantity: nil,
     selected_options: []
+    benefits:
   )
     gross_price, discounted_price = price_breakdown(
       unit_price: schedule.menu.price,
@@ -117,6 +130,10 @@ class Order < ApplicationRecord
       selected_options:
     )
 
+    benefits.each do |benefit|
+      order.apply_benefit benefit, subsidized_quantity
+    end
+
     return order unless order.valid?
 
     schedule.with_lock do
@@ -133,6 +150,14 @@ class Order < ApplicationRecord
     end
 
     order
+  end
+
+  def apply_benefit(benefit, benefit_used)
+    order_benefits.new benefit:, benefit_used:
+  end
+
+  def apply_benefit!(benefit, benefit_used)
+    order_benefits.create! benefit:, benefit_used:
   end
 
   def delivery_method_allowed_by_provider
@@ -236,6 +261,8 @@ class Order < ApplicationRecord
           modified_by: by,
           **delivery
         )
+
+        order_benefits.update_all benefit_used: subsidized_quantity
       end
     end
   end
@@ -263,6 +290,22 @@ class Order < ApplicationRecord
     end
   end
 
+  # Los pedidos creados sin pasar por las validaciones (fixtures, consola) no
+  # tienen la copia del plato: para esos se muestra el plato actual.
+  def menu_name = super || schedule&.menu&.name
+  def menu_description = super || schedule&.menu&.description
+  def menu_option_groups = super || schedule&.menu&.option_groups_snapshot || []
+
+  # El proveedor modificó el plato de esta programación y eligió no mantener los
+  # pedidos ya confirmados. Igual que #withdraw!, no respeta la ventana de RN-12/13.
+  def reject_for_dish_change!
+    with_lock do
+      return false unless confirmed?
+
+      update!(status: :rejected, rejection_reason: :dish_modified)
+    end
+  end
+
   # Asigna la orden a las dos cuentas que le corresponden y las hace recalcular
   # su monto: la del empleado, que paga su parte, y la de su empresa, que paga el
   # subsidio. Es idempotente, así que sirve también para completar las cuentas de
@@ -286,6 +329,26 @@ class Order < ApplicationRecord
     end
   end
 
+  # El cupo del schedule ya descuenta esta orden, así que el máximo que el
+  # empleado puede elegir es lo que queda más lo que ya tiene reservado.
+  def max_quantity
+    return amount.to_i if schedule.nil?
+
+    schedule.remaining_amount + amount.to_i
+  end
+
+  # La dirección actual del pedido se mantiene como opción aunque no esté
+  # guardada, para que modificar la cantidad no obligue a cambiarla.
+  # Si el proveedor no admite envíos a domicilio, sólo se ofrece la dirección de la oficina.
+  def delivery_address_options(consumer)
+    return [ { id: "office", label: I18n.t("pages.orders.addresses.office"), address: consumer.company.address } ] unless provider&.home_delivery?
+
+    options = consumer.delivery_address_options
+    return options if address.blank? || options.pluck(:address).include?(address)
+
+    options + [ { id: "current", label: I18n.t("pages.orders.addresses.current"), address: address } ]
+  end
+
   private
 
   # Cada grupo que el plato ofrece tiene que venir una sola vez y con entre 1 y
@@ -305,6 +368,13 @@ class Order < ApplicationRecord
   def chosen_within_group?(values, group)
     values.is_a?(Array) && values.any? && values.size <= group.limit &&
       values.uniq.size == values.size && values.all? { group.options.include?(it) }
+  def snapshot_menu
+    menu = schedule&.menu
+    return if menu.nil?
+
+    self[:menu_name] ||= menu.name
+    self[:menu_description] ||= menu.description
+    self[:menu_option_groups] ||= menu.option_groups_snapshot
   end
 
   # La cuenta de la empresa la comparten todos sus empleados, así que dos pedidos
@@ -342,6 +412,9 @@ end
 #  cancelled_at               :datetime
 #  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
+#  menu_description           :string
+#  menu_name                  :string
+#  menu_option_groups         :jsonb
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)

@@ -39,9 +39,19 @@ describe("Admin::BenefitConfigurations Index Page", () => {
   const currentConfig: BenefitConfiguration = {
     id: 1,
     subsidy_percentage: 50,
-    max_voucher_price: 150,
-    monthly_voucher_limit: 20,
-    effective_from: "2026-09-01",
+    benefit_rules: [
+      {
+        id: 2,
+        type: "MonthlyBenefit",
+        max_price: 150,
+        limit: 20,
+        effective_from: "2026-09-01",
+        deadline_date: null,
+        deadline_days: null,
+        min_years: null,
+        created_at: "2026-09-01T10:00:00Z",
+      },
+    ],
     created_at: "2026-09-01T10:00:00Z",
     created_by_name: "Admin User",
   }
@@ -49,9 +59,19 @@ describe("Admin::BenefitConfigurations Index Page", () => {
   const pendingConfig: BenefitConfiguration = {
     id: 2,
     subsidy_percentage: 60,
-    max_voucher_price: 200,
-    monthly_voucher_limit: 25,
-    effective_from: "2026-10-01",
+    benefit_rules: [
+      {
+        id: 2,
+        type: "MonthlyBenefit",
+        max_price: 200,
+        limit: 25,
+        effective_from: "2026-09-01",
+        deadline_date: null,
+        deadline_days: null,
+        min_years: null,
+        created_at: "2026-09-01T10:00:00Z",
+      },
+    ],
     created_at: "2026-09-20T10:00:00Z",
     created_by_name: "Admin User",
   }
@@ -65,7 +85,10 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     render(
       <Index
         benefit_configurations={[]}
-        current_benefit_configuration={null}
+        special_subsidies={[]}
+        employees={[]}
+        pending_base_subsidy={null}
+        base_subsidy={null}
       />,
     )
 
@@ -77,8 +100,11 @@ describe("Admin::BenefitConfigurations Index Page", () => {
   it("renders current benefit configuration details when present", () => {
     render(
       <Index
-        benefit_configurations={[currentConfig]}
-        current_benefit_configuration={currentConfig}
+        benefit_configurations={[]}
+        special_subsidies={[]}
+        employees={[]}
+        pending_base_subsidy={null}
+        base_subsidy={currentConfig}
       />,
     )
 
@@ -92,8 +118,11 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     const user = userEvent.setup()
     render(
       <Index
-        benefit_configurations={[currentConfig]}
-        current_benefit_configuration={currentConfig}
+        benefit_configurations={[]}
+        special_subsidies={[]}
+        employees={[]}
+        pending_base_subsidy={null}
+        base_subsidy={currentConfig}
       />,
     )
 
@@ -117,8 +146,11 @@ describe("Admin::BenefitConfigurations Index Page", () => {
 
     render(
       <Index
-        benefit_configurations={[currentConfig, pendingConfig]}
-        current_benefit_configuration={currentConfig}
+        benefit_configurations={[]}
+        special_subsidies={[]}
+        employees={[]}
+        pending_base_subsidy={pendingConfig}
+        base_subsidy={currentConfig}
       />,
     )
 
@@ -137,8 +169,11 @@ describe("Admin::BenefitConfigurations Index Page", () => {
   it("does not show scheduled banner when there is no flash notice", () => {
     render(
       <Index
-        benefit_configurations={[currentConfig, pendingConfig]}
-        current_benefit_configuration={currentConfig}
+        benefit_configurations={[currentConfig]}
+        special_subsidies={[]}
+        employees={[]}
+        pending_base_subsidy={pendingConfig}
+        base_subsidy={currentConfig}
       />,
     )
 

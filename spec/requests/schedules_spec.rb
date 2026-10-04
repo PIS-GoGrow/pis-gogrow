@@ -344,7 +344,7 @@ RSpec.describe "Schedules", type: :request do
     it "marks future and today published schedules as editable" do
       user = users(:one)
       provider = Provider.create!(user: user)
-      menu = provider.menus.create!(name: "Milanesa", price: 350)
+      menu = provider.menus.create!(name: "Milanesa", description: "Rica milanesa", price: 350)
 
       travel_to(Date.current.beginning_of_week(:monday) + 1.day) do
         today_date = Date.current
@@ -373,7 +373,7 @@ RSpec.describe "Schedules", type: :request do
     it "marks past published schedules as not editable" do
       user = users(:one)
       provider = Provider.create!(user: user)
-      menu = provider.menus.create!(name: "Milanesa", price: 350)
+      menu = provider.menus.create!(name: "Milanesa", description: "Rica milanesa", price: 350)
 
       week_start = Date.current.beginning_of_week(:monday) - 1.week
       past_date = week_start + 1.day
@@ -958,6 +958,9 @@ RSpec.describe "Schedules", type: :request do
     let(:provider_user) { users(:provider_user) }
     let(:provider) { providers(:tuviandita) }
     let(:menu) { menus(:milanesa) }
+    let(:target_date) { Date.current.next_week(:thursday) }
+
+    before { Schedule.where(date: target_date).destroy_all }
 
     context "control de acceso por rol" do
       it "redirige a iniciar sesión si el visitante no tiene sesión" do
@@ -984,8 +987,24 @@ RSpec.describe "Schedules", type: :request do
     end
 
     context "edición válida de un menú publicado" do
+      it "no toma como quitado un plato programado con una variante" do
+        variant = menu.build_variant(valid_from: target_date, valid_until: target_date)
+        variant.save!
+        schedule = variant.schedules.create!(date: target_date, amount: 10)
+
+        sign_in(provider_user, role: :provider)
+
+        patch update_by_date_schedules_path, params: {
+          date: target_date.to_s,
+          items: [ { menu_id: menu.id, amount: 15 } ]
+        }
+
+        expect(schedule.reload.amount).to eq(15)
+        expect(schedule.menu).to eq(variant)
+        expect(Schedule.where(date: target_date, menu_id: menu.family_ids).count).to eq(1)
+      end
+
       it "actualiza el stock de un plato preservando el ID del schedule original" do
-        target_date = Date.current.next_week(:monday) + 1.day
         schedule = menu.schedules.create!(date: target_date, amount: 10)
         original_schedule_id = schedule.id
 
@@ -1009,6 +1028,7 @@ RSpec.describe "Schedules", type: :request do
 
       it "permite agregar un nuevo plato al menú ya publicado del día" do
         target_date = Date.current.next_week(:monday) + 2.days
+        Schedule.where(date: target_date).destroy_all
         menu.schedules.create!(date: target_date, amount: 10)
 
         second_menu = provider.menus.create!(
@@ -1109,7 +1129,6 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "rechaza stock con valor cero" do
-        target_date = Date.current.next_week(:monday) + 1.day
         schedule = menu.schedules.create!(date: target_date, amount: 10)
 
         sign_in(provider_user, role: :provider)
@@ -1126,7 +1145,6 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "rechaza stock con valor negativo" do
-        target_date = Date.current.next_week(:monday) + 1.day
         schedule = menu.schedules.create!(date: target_date, amount: 10)
 
         sign_in(provider_user, role: :provider)
@@ -1143,7 +1161,6 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "rechaza stock no numérico" do
-        target_date = Date.current.next_week(:monday) + 1.day
         schedule = menu.schedules.create!(date: target_date, amount: 10)
 
         sign_in(provider_user, role: :provider)
@@ -1160,7 +1177,6 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "devuelve 404 y revierte la transacción si se intenta incluir un plato de otro proveedor" do
-        target_date = Date.current.next_week(:monday) + 1.day
         schedule = menu.schedules.create!(date: target_date, amount: 10)
         foreign_menu = menus(:sorrentinos)
 

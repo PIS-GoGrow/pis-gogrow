@@ -1,11 +1,4 @@
 es:
-  activerecord:
-    errors:
-      models:
-        benefit_configuration:
-          attributes:
-            effective_from:
-              taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
   common:
     cancel: "Cancelar"
     close: "Cerrar"
@@ -58,6 +51,11 @@ es:
     not_signed_in: "Tenés que iniciar sesión para acceder a este recurso."
     order_deadline_updated: "La hora límite de pedidos fue actualizada."
     payment_receipt_submitted: "Comprobante enviado para su validacion."
+    payment_receipt_removed: "Comprobante eliminado."
+    payment_approved: "Comprobante aprobado."
+    payment_rejected: "Comprobante rechazado."
+    invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
+    invoice_removed: "Factura eliminada."
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -75,9 +73,22 @@ es:
     password_challenge_invalid: "La verificación de contraseña no es válida"
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
+    payment_current_account: "No se puede subir ni aprobar un comprobante mientras el mes siga en curso."
+    payment_not_removable: "Solo podés eliminar comprobantes en revisión o rechazados."
+    payment_not_reviewable: "Este comprobante ya fue revisado."
+    invoice_not_removable: "Esta factura ya fue revisada y no se puede eliminar."
+    menu_agenda:
+      invalid_date: "Elegí un día hábil desde hoy y dentro del período de publicación."
+      invalid_range: "La fecha de fin no puede ser anterior a la de inicio."
+      invalid_amount: "El stock por día debe ser un entero mayor a 0."
+      invalid_weekdays: "Elegí al menos un día de lunes a viernes."
   activerecord:
     errors:
       models:
+        benefit_configuration:
+          attributes:
+            effective_from:
+              taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
         menu_option_group:
           attributes:
             options:
@@ -88,6 +99,24 @@ es:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
+            rejection_reason:
+              blank: "es obligatorio para rechazar un comprobante"
+        invoice:
+          attributes:
+            account:
+              not_company: "debe ser un período de cobro de una empresa"
+            issued_on:
+              blank: "Ingresá la fecha de emisión."
+              less_than_or_equal_to: "La fecha de emisión no puede ser posterior a hoy."
+            total_amount:
+              not_a_number: "Ingresá el monto total."
+              greater_than: "El monto total debe ser mayor a cero."
+            file:
+              required: "Adjuntá el archivo de la factura."
+              invalid_content_type: "El archivo debe ser PDF, JPG o PNG."
+              too_large: "El archivo no puede superar los 10 MB."
+            base:
+              already_invoiced: "Este período ya tiene una factura enviada."
         delivery_address:
           attributes:
             name:
@@ -132,6 +161,7 @@ es:
     orders: "Mis pedidos"
     menu: "Menú de navegación"
     benefit_configurations: "Beneficio general"
+    invoices: "Facturas"
     change_to: "Cambiar a"
     provider:
       home: "Inicio"
@@ -142,6 +172,12 @@ es:
       payments: "Cobros"
       account: "Cuenta"
       mobile_navigation: "Navegación del proveedor"
+    admin:
+      home: "Inicio"
+      employees: "Empleados"
+      payments: "Pagos"
+      account: "Cuenta"
+      mobile_navigation: "Navegación de RRHH"
     settings:
       profile: "Perfil"
       email: "Correo electrónico"
@@ -150,6 +186,8 @@ es:
       appearance: "Apariencia"
     payments: "Pagos"
     collections: "Cobros"
+    consumer:
+      menu: "Menú del día"
   components:
     appearance:
       toggle_theme: "Cambiar tema"
@@ -168,6 +206,45 @@ es:
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
   pages:
     admin:
+      dashboard:
+        title: "Inicio"
+        greeting: "Hola, %{name} 👋"
+        this_month: "Este mes"
+        coming_soon: "Próximamente"
+        pending_value: "—"
+        alert:
+          title: "Avisos de pagos pendientes"
+          pending: "Los avisos por WhatsApp estarán disponibles próximamente."
+        consumption:
+          title: "Tu consumo"
+          participation: "Participación"
+          spending: "Gasto"
+          view_detail: "Ver detalle del consumo"
+        payments:
+          title: "Tus pagos de %{month}"
+          pending: "El estado de los pagos a proveedores estará disponible próximamente."
+          view: "Ver pagos a proveedores"
+        debts:
+          title: "Ranking deuda de empleados"
+          pending: "Acá verás hasta tres empleados con saldos pendientes."
+          view: "Ver empleados con saldos pendientes"
+      invoices:
+        index:
+          title: "Facturas de proveedores"
+          description: "Las facturas que los proveedores le emiten a GoGrow, con su historial."
+          period: "Período"
+          provider: "Proveedor"
+          issued_on: "Emisión"
+          total_amount: "Facturado"
+          period_amount: "Consumo del período"
+          no_period_amount: "Sin consumo registrado"
+          status: "Estado"
+          file: "Archivo"
+          view: "Ver"
+          download: "Descargar %{name}"
+          no_provider: "Proveedor no disponible"
+          empty_title: "Todavía no hay facturas"
+          empty_description: "Cuando un proveedor cargue la factura de un período, va a aparecer acá."
       benefit_configurations:
         index:
           title: "Subsidios"
@@ -192,6 +269,130 @@ es:
               description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
+              unexpected: "Error inesperado. Por favor reintentá la operación."
+          special:
+            title: "Subsidios especiales"
+            description: "Los subsidios especiales se suman al Base."
+            add: "Agregar"
+            edit: "Editar «%{name}»"
+            delete: "Eliminar «%{name}»"
+            empty:
+              title: "No hay subsidios especiales"
+              description: "Celebrá fechas especiales o reconocé la antigüedad de tus empleados con subsidios especiales."
+            discount: "Descuento"
+            applies_to: "Aplicado a"
+            applies_to_all: "Todos"
+            applies_to_selection: "Selección"
+            condition: "Condición"
+            conditions:
+              seniority: "Antigüedad"
+              birthday: "Cumpleaños"
+              onboarding: "Onboarding"
+              gift: "Premio"
+            form:
+              add_title: "Agregar subsidio especial"
+              edit_title: "Modificar subsidio especial"
+              description: "Los subsidios especiales se suman al Base."
+              name: "Nombre del subsidio"
+              name_placeholder: "Ej. Antigüedad, Cumpleaños"
+              subsidy_percentage: "% de descuento"
+              applies_to: "Aplicar a:"
+              all_employees: "Todos los empleados"
+              select_employees: "Seleccionar empleados"
+              search_employee: "Buscar empleado…"
+              no_employees_found: "No encontramos empleados con ese nombre."
+              selected_employees: "Empleados seleccionados"
+              remove_employee: "Quitar a %{name}"
+              condition: "Si se cumplen las condiciones:"
+              condition_placeholder: "Seleccionar condición"
+              min_years_prefix: "Es mayor a"
+              min_years_suffix: "año(s)"
+              birthday_help: "Comienza automáticamente en la fecha de cumpleaños."
+              onboarding_help: "Comienza automáticamente en el primer día en la empresa."
+              effective_from: "Disponible desde"
+              limit_prefix: "Cantidad de"
+              limit_suffix: "vianda(s)"
+              validity: "Validez"
+              validity_unit: "Unidad de validez"
+              validity_units:
+                days: "días"
+                weeks: "semanas"
+                months: "meses"
+              cancel: "Cancelar"
+              add: "Agregar"
+              update: "Modificar"
+            delete_dialog:
+              title: "¿Eliminar «%{name}»?"
+              description: "Los empleados dejan de recibir este subsidio desde hoy. Los pedidos que ya lo usaron no cambian."
+              cancel: "Cancelar"
+              confirm: "Eliminar"
+      consumers:
+        index:
+          title: "Empleados"
+          count_one: "%{count} empleado"
+          count_other: "%{count} empleados"
+          filter_label: "Filtrar empleados"
+          all: "Todos"
+          pending: "Pendientes"
+          completed: "Completados"
+          search_placeholder: "Buscar empleado..."
+          search_label: "Buscar empleado por nombre o correo"
+          no_consumption: "Sin consumos"
+          empty_title: "Sin empleados"
+          empty_description: "Todavía no hay empleados en la organización."
+          no_results_title: "No se encontraron empleados"
+          no_results_description: "Probá con otro nombre o correo, o cambiá el filtro."
+        show:
+          title: "Detalle del empleado"
+          back: "Volver a empleados"
+          consumption: "Consumo"
+          this_month: "Este mes"
+          meals_used: "%{used} de %{limit} viandas consumidas"
+          meals_used_no_limit_one: "%{count} vianda consumida"
+          meals_used_no_limit_other: "%{count} viandas consumidas"
+          meals_one: "%{count} vianda"
+          meals_other: "%{count} viandas"
+          benefit: "Beneficio"
+          benefit_active: "Activo"
+          benefit_inactive: "Sin beneficio"
+          benefit_discount: "de descuento en viandas"
+          benefit_none: "Este empleado no tiene un beneficio vigente."
+          history: "Historial de consumo"
+          year_label: "Año"
+          view_month: "Ver el detalle de %{month}"
+          history_empty_title: "Sin consumos"
+          history_empty_description: "Este empleado todavía no realizó ningún pedido de viandas."
+          month_detail: "Historial de consumo: %{month}"
+          month_detail_description: "Pedidos confirmados del mes, con lo que cubre la empresa y lo que paga el empleado."
+          date: "Fecha"
+          provider: "Proveedor"
+          quantity: "Cant."
+          employee: "Empleado"
+          no_provider: "Sin proveedor"
+          orders_empty: "No hay pedidos confirmados en este mes."
+          total: "Total: %{amount}"
+          close: "Cerrar"
+      payments:
+        index:
+          title: "Pagos"
+          section: "Pagos"
+          spending: "Consumo de la empresa"
+          this_month: "Este mes"
+          meals_used_one: "%{count} vianda consumida"
+          meals_used_other: "%{count} viandas consumidas"
+          meals_used_with_limit: "%{meals} de %{limit} viandas consumidas"
+          pending_tab: "Pendientes"
+          history_tab: "Historial"
+          pending_payments: "Pagos pendientes"
+          total_debt: "Deuda total"
+          no_debt: "¡Sin deudas pendientes con este proveedor!"
+          meals_one: "%{count} vianda"
+          meals_other: "%{count} viandas"
+          due: "Vence: %{date}"
+          see_detail: "Ver detalle"
+          detail_title: "Detalle del período"
+          empty_history_title: "Todavía no hay períodos pagados"
+          empty_history_description: "Cuando termines de pagar un período, va a aparecer acá."
     errors:
       internal_server_error:
         title: "Algo salió mal"
@@ -217,6 +418,7 @@ es:
         pending: "Pendientes"
         history: "Historial"
         no_debt: "¡Sin deudas pendientes con este proveedor!"
+        history_empty: "Todavía no hiciste ningún pago."
       show:
         see_detail: "Ver detalle"
         spending: "Consumo"
@@ -229,6 +431,17 @@ es:
         receipt_file: "Seleccionar archivo"
         receipt_formats: "PDF, JPG o PNG. Tamaño máximo: 10 MB."
         receipt_uploading: "Subiendo comprobante..."
+        receipt_success_title: "Comprobante enviado"
+        receipt_success_description: "Tu comprobante fue enviado correctamente y está pendiente de revisión."
+        receipt_success_action: "Listo"
+        receipt_error_title: "No se pudo subir el comprobante"
+        receipt_error_description: "Ocurrió un problema al subir el archivo. Intentá nuevamente."
+        receipt_error_action: "Entendido"
+        receipt_sent_at: "Enviado: %{date}"
+        receipt_remove: "Eliminar comprobante"
+        receipt_remove_title: "¿Eliminar comprobante?"
+        receipt_remove_description: "Esta acción no se puede deshacer. Podés volver a subir el comprobante mientras el pago no esté aprobado."
+        receipt_remove_confirm: "Eliminar"
         receipt_approved: "Pago aprobado"
         receipt_unavailable: "Comprobante no disponible"
         receipt_preview: "Vista previa del comprobante"
@@ -240,6 +453,11 @@ es:
         amount: "Cant."
         price: "Monto"
         total: "Total"
+        download_receipt: "Descargar comprobante de pago"
+        status_pending: "Pendiente"
+        status_accepted: "Aceptado"
+        status_rejected: "Rechazado"
+        status_submitted: "Enviado"
     orders:
       index:
         title: "Mis pedidos"
@@ -250,7 +468,7 @@ es:
         history_empty_title: "No tienes pedidos anteriores"
         history_empty_description: "Tus pedidos completados aparecerán aquí."
         quantity: "x%{count}"
-        upcoming_address: "Recibes en: %{address} (%{delivery_method})"
+        upcoming_address: "Lo recibís en: %{address} (%{delivery_method})"
         history_address: "Recibiste en: %{address} (%{delivery_method})"
         no_date: "Sin fecha de entrega"
         no_price: "Importe no disponible"
@@ -265,7 +483,7 @@ es:
           back: "Volver"
           confirm: "Cancelar pedido"
         cannot_cancel:
-          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar desde la app."
+          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
       show:
@@ -280,7 +498,8 @@ es:
         total: "Importe final"
         notes: "Notas"
         no_notes: "Sin notas"
-        edit: "Modificar pedido"
+        edit: "Editar"
+        rejection_reason: "Motivo de rechazo"
         edit_dialog:
           title: "Modificar pedido"
           description: "Podés cambiar la cantidad, las opciones del plato, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo."
@@ -311,7 +530,7 @@ es:
     provider_collections:
       statuses:
         pending: "Pendiente"
-        submitted: "Por revisar"
+        submitted: "En revisión"
         approved: "Confirmado"
         rejected: "Rechazado"
       meals_one: "%{count} vianda"
@@ -341,13 +560,40 @@ es:
       group:
         total: "Total a cobrar"
         confirmed: "%{amount} en cobros confirmados"
-        pending: "%{amount} en cobros pendientes"
-        submitted: "%{amount} en cobros informados"
-        rejected: "%{amount} en cobros rechazados"
+        awaiting_one: "%{count} cobro pendiente de confirmación"
+        awaiting_other: "%{count} cobros pendientes de confirmación"
+        rejected_one: "%{count} cobro rechazado"
+        rejected_other: "%{count} cobros rechazados"
         employees: "Empleados"
         company: "Empresa"
         due: "Vence: %{date}"
         detail: "Ver detalle"
+      invoice:
+        statuses:
+          pending: "Por revisar"
+          approved: "Aprobada"
+          rejected: "Rechazada"
+        select_file: "Seleccionar archivo"
+        no_file: "Sin archivos seleccionados"
+        file_label: "Archivo de la factura"
+        formats: "PDF, JPG o PNG de hasta 10 MB."
+        upload: "Subir factura"
+        uploading: "Subiendo…"
+        download: "Descargar factura"
+        preview: "Ver factura %{name}"
+        rejected_hint: "La factura fue rechazada. Podés subir una nueva."
+        dialog:
+          title: "Subir factura"
+          description: "Completá los datos de la factura de %{month} antes de enviarla."
+          issued_on: "Fecha de emisión"
+          total_amount: "Monto total"
+          expected: "Importe calculado del período: %{amount}"
+          file: "Archivo"
+        remove:
+          trigger: "Eliminar factura"
+          title: "¿Eliminar la factura?"
+          description: "Vas a poder subir otra para este período."
+          confirm: "Eliminar"
       show:
         eyebrow: "Cobro"
         title: "Cobro a %{name}"
@@ -381,6 +627,7 @@ es:
         customer_request: "Solicitud del cliente"
         order_error: "Error en el pedido"
         other: "Otro motivo"
+        dish_modified: "Plato modificado"
       index:
         title: "Pedidos"
         eyebrow: "Operación diaria"
@@ -438,10 +685,105 @@ es:
         no_notes: "Sin notas"
         no_stock: "Sin cupo publicado"
         no_price: "Importe no disponible"
+    provider_dashboard:
+      index:
+        title: "Inicio"
+        greeting: "Hola, %{name} 👋"
+        coming_soon: "Próximamente"
+        eyebrow: "Operación diaria"
+        description: "Administrá la recepción de pedidos de tus menús."
+        order_deadline:
+          title: "Recepción de pedidos"
+          description: "Definí hasta qué hora aceptás pedidos para hoy."
+          label: "Hora límite"
+          help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
+        profile:
+          title: "Completá tu cuenta"
+          description: "La configuración de los pasos estará disponible próximamente."
+        orders:
+          title: "Pedidos"
+          today: "Hoy"
+          confirmed: "Confirmados"
+          pending: "Pendientes"
+          office: "Envío a oficina"
+          home: "Envío a domicilio"
+          view: "Ver pedidos"
+          deadline: "Recibiendo pedidos hasta %{time}"
+          deadline_closed: "Recepción de pedidos cerrada"
+          deadline_all_day: "Recibiendo pedidos todo el día"
+        insights:
+          title: "Hallazgos del mes"
+          orders: "Pedidos"
+          dishes: "Platos"
+          rating: "Valoración"
+          description: "Los hallazgos basados en las valoraciones estarán disponibles próximamente."
+          generated: "Generado por IA"
+        payments:
+          title: "Resumen de cobros"
+          pending: "Cobros pendientes"
+          total: "Deuda total"
+          description: "Los cobros pendientes aparecerán acá próximamente."
     schedules:
       index:
         availability:
           toggle_label: "En stock"
+        edit_dish: "Editar %{name}"
+    provider_menus:
+      edit:
+        agenda:
+          title: "Agenda"
+          weekdays_label: "Días de la semana"
+          weekdays:
+            "1": "L"
+            "2": "M"
+            "3": "M"
+            "4": "J"
+            "5": "V"
+          weekday_names:
+            "1": "Lunes"
+            "2": "Martes"
+            "3": "Miércoles"
+            "4": "Jueves"
+            "5": "Viernes"
+          modes:
+            single: "No repetir"
+            weekly: "Repetir todas las semanas"
+            range: "Repetir en un rango personalizado"
+          date: "Día específico"
+          starts_on: "Desde"
+          ends_on: "Hasta"
+          amount: "Stock por día"
+          incomplete: "Completá las fechas y el stock por día."
+        sheet:
+          back: "Volver"
+          apply: "Aplicar cambios"
+          applying: "Aplicando..."
+          continue: "Continuar"
+          done: "Listo"
+          simple:
+            title: "¿Modificar el plato guardado?"
+            description: "Este plato se modificará en tus platos guardados."
+          scope:
+            title: "¿Cómo querés guardar los cambios?"
+            day: "Modificar solo para este día"
+            day_description: "Modifica únicamente el menú programado para este %{date}."
+            saved: "Modificar el plato guardado"
+            saved_description: "Aplica los cambios a la fecha programada y actualiza el plato para próximos menús."
+          from:
+            title: "¿Aplicar cambios desde esta fecha?"
+            description: "Los cambios se aplicarán desde el %{date} a todas las repeticiones siguientes."
+          range:
+            title: "¿Aplicar cambios durante este período?"
+            description: "Los cambios se aplicarán del %{from} al %{to}. Después, el plato volverá automáticamente a su configuración anterior."
+          orders:
+            title: "¿Cómo querés guardar los cambios?"
+            keep: "Mantener los pedidos confirmados"
+            keep_description: "Los pedidos afectados que están confirmados no se modificarán."
+            reject: "Rechazar los pedidos confirmados"
+            reject_description: "Los pedidos afectados que están confirmados se cancelarán."
+          saved:
+            title: "¡Plato modificado!"
+            description: "Tu plato fue modificado correctamente."
     cart:
       delivery_address: "Dirección de entrega"
       add_address: "Agregar"
@@ -481,16 +823,6 @@ es:
       title: "Panel"
       roles:
         provider: "Panel del proveedor"
-    provider_dashboard:
-      index:
-        eyebrow: "Operación diaria"
-        title: "Panel del proveedor"
-        description: "Administrá la recepción de pedidos de tus menús."
-        order_deadline:
-          title: "Recepción de pedidos"
-          description: "Definí hasta qué hora aceptás pedidos para hoy."
-          label: "Hora límite"
-          help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
     provider_accounts:
       show:
         title: "Cuenta"
@@ -564,6 +896,9 @@ es:
         title: "Configuración del perfil"
         heading: "Información del perfil"
         description: "Actualiza tu nombre"
+        home_delivery:
+          heading: "Editar información de pedidos"
+          label: "También realizo entregas a domicilio"
       password:
         title: "Configuración de contraseña"
         heading: "Actualizar contraseña"

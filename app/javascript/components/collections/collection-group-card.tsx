@@ -10,6 +10,7 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import CollectionAccountPanel from "@/components/collections/collection-account-panel"
+import InvoiceSection from "@/components/collections/invoice-section"
 import StatusBadge from "@/components/status-badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -87,24 +88,6 @@ export default function CollectionGroupCard({
   const { formatMoney } = useFormatters()
   const getInitials = useInitials()
 
-  const accounts = [
-    ...(group.company ? [group.company] : []),
-    ...group.employees,
-  ]
-
-  const amountsByStatus: Record<PaymentStatus, number> = {
-    pending: 0,
-    submitted: 0,
-    approved: 0,
-    rejected: 0,
-  }
-
-  accounts.forEach((account) => {
-    if (account.status) {
-      amountsByStatus[account.status] += account.amount
-    }
-  })
-
   const employeeStatuses = group.employees.map((employee) => employee.status)
 
   const employeesStatus =
@@ -114,7 +97,7 @@ export default function CollectionGroupCard({
       : null
 
   const progress =
-    group.total > 0 ? (amountsByStatus.approved / group.total) * 100 : 0
+    group.total > 0 ? (group.confirmed_total / group.total) * 100 : 0
 
   return (
     <Card className="gap-4 py-4">
@@ -158,33 +141,24 @@ export default function CollectionGroupCard({
           <li className="flex items-center gap-2 text-green-700 dark:text-green-400">
             <CircleCheck className="size-4" aria-hidden="true" />
             {t("pages.provider_collections.group.confirmed", {
-              amount: formatMoney(amountsByStatus.approved),
+              amount: formatMoney(group.confirmed_total),
             })}
           </li>
 
-          {amountsByStatus.pending > 0 && (
+          {group.awaiting_count > 0 && (
             <li className="flex items-center gap-2 text-amber-700 dark:text-amber-400">
               <TriangleAlert className="size-4" aria-hidden="true" />
-              {t("pages.provider_collections.group.pending", {
-                amount: formatMoney(amountsByStatus.pending),
+              {t("pages.provider_collections.group.awaiting", {
+                count: group.awaiting_count,
               })}
             </li>
           )}
 
-          {amountsByStatus.submitted > 0 && (
-            <li className="flex items-center gap-2 text-sky-700 dark:text-sky-400">
-              <TriangleAlert className="size-4" aria-hidden="true" />
-              {t("pages.provider_collections.group.submitted", {
-                amount: formatMoney(amountsByStatus.submitted),
-              })}
-            </li>
-          )}
-
-          {amountsByStatus.rejected > 0 && (
+          {group.rejected_count > 0 && (
             <li className="flex items-center gap-2 text-red-700 dark:text-red-400">
               <TriangleAlert className="size-4" aria-hidden="true" />
               {t("pages.provider_collections.group.rejected", {
-                amount: formatMoney(amountsByStatus.rejected),
+                count: group.rejected_count,
               })}
             </li>
           )}
@@ -223,6 +197,7 @@ export default function CollectionGroupCard({
                       <CollectionAccountPanel
                         account={employee}
                         heading={settled ? "none" : "month"}
+                        showPaymentHistory={settled}
                       />
                     </CollapsibleContent>
                   </Collapsible>
@@ -244,7 +219,20 @@ export default function CollectionGroupCard({
                 <CollectionAccountPanel
                   account={group.company}
                   heading={settled ? "paid_on" : "month"}
-                />
+                  showPaymentHistory={settled}
+                  aside={
+                    group.company.invoice && (
+                      <StatusBadge
+                        status={group.company.invoice.status}
+                        kind="invoice"
+                      />
+                    )
+                  }
+                >
+                  {(!settled || group.company.invoice) && (
+                    <InvoiceSection account={group.company} settled={settled} />
+                  )}
+                </CollectionAccountPanel>
               </OwnerGroup>
             </>
           )}
