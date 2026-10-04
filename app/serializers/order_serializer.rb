@@ -3,7 +3,7 @@
 class OrderSerializer < ApplicationSerializer
   typelize_from Order
 
-  attributes :id, :status, :delivery_method, :amount, :notes, :address
+  attributes :id, :status, :delivery_method, :amount, :notes, :address, :rejection_details
 
   typelize :string?
   attribute :date do |order|
@@ -12,7 +12,7 @@ class OrderSerializer < ApplicationSerializer
 
   typelize :string?
   attribute :menu_name do |order|
-    order.schedule&.menu&.name
+    order.menu_name
   end
 
   # El proveedor no tiene nombre propio: se identifica por el del usuario dueño.
@@ -57,6 +57,11 @@ class OrderSerializer < ApplicationSerializer
   attribute :modification_block_reason do |order|
     order.modification_block_reason
   end
+
+  typelize :string?
+  attribute :rejection_reason do |order|
+    order.rejection_reason
+  end
 end
 
 # == Schema Information
@@ -69,6 +74,9 @@ end
 #  cancelled_at               :datetime
 #  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
+#  menu_description           :string
+#  menu_name                  :string
+#  menu_option_groups         :jsonb
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)

@@ -1,6 +1,7 @@
 import { Eye, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import PaymentReceiptDialog from "@/components/consumer/accounts/payment-receipt-dialog"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,6 +14,7 @@ import {
 import { SheetTrigger } from "@/components/ui/sheet"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
+import { adminPayments } from "@/routes"
 import type { Account, PaymentStatus } from "@/types"
 
 interface PeriodCardProps {
@@ -94,6 +96,13 @@ export default function PeriodCard({
             </Button>
           </SheetTrigger>
         </div>
+
+        <PaymentReceiptDialog
+          accountId={account.id}
+          createAction={adminPayments.create()}
+          destroyAction={adminPayments.destroy}
+          payments={account.payments}
+        />
       </CardContent>
     </Card>
   )

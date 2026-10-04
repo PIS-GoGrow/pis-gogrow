@@ -1,29 +1,33 @@
 import { Link } from "@inertiajs/react"
 import { X } from "lucide-react"
 
+import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Button } from "@/components/ui/button"
 
 interface Props {
   retry: () => void
   homeUrl: string
+  error?: string
 }
 
-export function OrderError({ retry, homeUrl }: Props) {
+export function OrderError({ retry, homeUrl, error }: Props) {
   return (
-    <div className="bg-background border-border text-foreground mx-auto flex min-h-screen max-w-3xl flex-col px-6 py-8 md:my-8 md:min-h-0 md:rounded-2xl md:border md:p-8">
+    <MobileCard>
       <div className="flex flex-1 flex-col items-center justify-center pb-16">
         <div className="bg-primary text-primary-foreground flex size-20 items-center justify-center rounded-full">
           <X aria-hidden="true" className="size-10" strokeWidth={2.5} />
         </div>
+
         <h1 className="mt-7 text-center text-2xl font-bold">
-          ¡Ups! Algo salió mal
+          No se pudo procesar el pedido
         </h1>
+
         <p className="text-muted-foreground mt-2 max-w-sm text-center text-base leading-6">
-          Hubo un problema al procesar tu pedido. Intentá de nuevo.
+          {error ?? "Hubo un problema al procesar tu pedido. Intentá de nuevo."}
         </p>
       </div>
 
-      <div className="space-y-3">
+      <BottomAction className="flex">
         <Button
           type="button"
           onClick={retry}
@@ -31,6 +35,7 @@ export function OrderError({ retry, homeUrl }: Props) {
         >
           Reintentar
         </Button>
+
         <Button
           asChild
           type="button"
@@ -41,7 +46,7 @@ export function OrderError({ retry, homeUrl }: Props) {
             Volver a Menú
           </Link>
         </Button>
-      </div>
-    </div>
+      </BottomAction>
+    </MobileCard>
   )
 }

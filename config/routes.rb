@@ -13,7 +13,7 @@ Rails.application.routes.draw do
 
 
   # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the
-  # OmniAuth middleware before it reaches the router — only the callback and
+  # OmniAuth middleware before it reaches the router â€” only the callback and
   # failure paths need a route.
   get "auth/google_oauth2/callback", to: "omniauth_callbacks#google_oauth2"
   get "auth/failure", to: "omniauth_callbacks#failure"
@@ -32,6 +32,8 @@ Rails.application.routes.draw do
   end
 
   namespace :provider do
+    get "account", to: "accounts#show", as: :account
+    get "operational_settings", to: "operational_settings#show", as: :operational_settings
     resources :menus
     resources :orders, only: [ :index, :show ] do
       member do
@@ -40,21 +42,33 @@ Rails.application.routes.draw do
       end
     end
     resources :collections, only: [ :index, :show ]
+    resources :invoices, only: [ :create, :destroy ] do
+      get :file, on: :member
+    end
     resource :order_deadline, only: [ :update ]
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resources :payments, only: [ :update ] do
+      get :receipt, on: :member
+    end
   end
 
-  resources :schedules, only: [ :index, :create ]
+  resources :schedules, only: [ :index, :create ] do
+    patch :update_by_date, on: :collection
+    patch :availability, on: :member
+  end
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
+    get "dashboard/confirmation", to: "dashboard#confirmation", as: :dashboard_confirmation
+
     resources :menus, only: [ :index ]
+    resources :delivery_addresses, only: [ :create ]
 
     resources :orders, only: [ :index, :show, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer
     end
 
-    resources :payments, only: [ :create, :update ] do
+    resources :payments, only: [ :create, :update, :destroy ] do
       get :receipt, on: :member
     end
 
@@ -64,7 +78,14 @@ Rails.application.routes.draw do
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
-    resources :payments, only: [ :index, :show ]
+    resources :special_subsidies, only: [ :create, :update, :destroy ]
+    resources :consumers, only: [ :index, :show ]
+    resources :invoices, only: [ :index ] do
+      get :file, on: :member
+    end
+    resources :payments, only: [ :index, :show, :create, :destroy ] do
+      get :receipt, on: :member
+    end
   end
 
   root "home#index"

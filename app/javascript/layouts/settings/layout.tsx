@@ -20,6 +20,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
   const { t } = useTranslation()
   const { url, props } = usePage()
   const isConsumer = props.auth.session.role === "consumer"
+  const isAdmin = props.auth.session.role === "admin"
 
   const sidebarNavItems: NavItem[] = [
     {
@@ -50,7 +51,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
   ]
 
   return (
-    <div className="px-4 py-6 pb-24 md:pb-6">
+    <div className={cn("px-4 py-6 md:pb-6", !isAdmin && "pb-24")}>
       <Heading
         title={t("components.settings_layout.title")}
         description={t("components.settings_layout.description")}

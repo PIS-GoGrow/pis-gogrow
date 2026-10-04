@@ -37,7 +37,7 @@ class Provider::OrderSerializer < ApplicationSerializer
 
   typelize :string
   attribute :menu_name do |order|
-    order.schedule.menu.name
+    order.menu_name.to_s
   end
 
   typelize :string, nullable: true

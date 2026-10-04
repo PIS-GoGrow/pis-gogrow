@@ -1,21 +1,38 @@
 # frozen_string_literal: true
 
 class ConsumerSerializer < ApplicationSerializer
-  typelize_from Menu
+  typelize_from Consumer
 
-  attributes :id, :name, :description, :price, :created_at, :updated_at
+  attributes :id, :address
+
+  typelize :string
+  attribute :name do |consumer|
+    consumer.user.name
+  end
+
+  typelize :string
+  attribute :email do |consumer|
+    consumer.user.email
+  end
+
+  typelize :string
+  attribute :company_name do |consumer|
+    consumer.company.name
+  end
 end
 
 # == Schema Information
 #
 # Table name: consumers
 #
-#  id         :bigint           not null, primary key
-#  address    :string
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
-#  company_id :bigint           not null
-#  user_id    :bigint           not null
+#  id              :bigint           not null, primary key
+#  address         :string
+#  birthday        :date
+#  onboarding_date :date
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  company_id      :bigint           not null
+#  user_id         :bigint           not null
 #
 # Indexes
 #

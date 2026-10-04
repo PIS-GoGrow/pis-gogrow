@@ -4,32 +4,59 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
   def index
     company = Current.user.admin.company
 
-    @benefit_configurations = company.benefit_configurations.ordered
-    @current_benefit_configuration = BenefitConfiguration.current_for(company)
+    @benefit_configurations = company.benefit_configurations
+    @pending_base_subsidy = BenefitConfiguration.base_subsidy_for company, effective_from: next_period_effective_from
+    @base_subsidy = BenefitConfiguration.base_subsidy_for company
+
+    @pending_base_subsidy = @pending_base_subsidy == @base_subsidy ? nil : @pending_base_subsidy
+
+    @special_subsidies = company.benefit_configurations.active.special.includes(:benefit_rules, :consumers).order(:created_at)
+    @employees = company.consumers.includes(:user).order("users.name").references(:user)
   end
 
   def create
     company = Current.user.admin.company
     effective_from = next_period_effective_from
+    benefit_configuration = nil
 
-    # RRHH ya vio que hay un cambio programado (todavia no vigente) para el
-    # proximo periodo y eligio explicitamente reemplazarlo por este nuevo
-    # -- el front se lo pregunta antes de mandar este parametro (ver
-    # "Alert" de conflicto en edit-benefit-configuration-form.tsx). Solo
-    # se borra la fila que todavia no entro en vigencia, nunca una ya
-    # aplicada.
-    if ActiveModel::Type::Boolean.new.cast(params[:replace_pending])
-      company.benefit_configurations.where(effective_from: effective_from).destroy_all
+    # Hacer toda la acción como una transacción: No queremos borrar el beneficio que ya
+    # está si no podemos crear uno nuevo.
+    ActiveRecord::Base.transaction do
+      # RRHH ya vio que hay un cambio programado (todavia no vigente) para el
+      # proximo periodo y eligio explicitamente reemplazarlo por este nuevo
+      # -- el front se lo pregunta antes de mandar este parametro (ver
+      # "Alert" de conflicto en edit-benefit-configuration-form.tsx). Solo
+      # se borra la fila que todavia no entro en vigencia, nunca una ya
+      # aplicada.
+      if ActiveModel::Type::Boolean.new.cast(params[:replace_pending])
+        company.benefit_configurations
+               .monthly
+               .where(benefit_rules: { effective_from: effective_from })
+               .destroy_all
+      end
+
+      benefit_configuration = BenefitConfiguration.new_base_subsidy(
+        created_by: Current.user,
+        company:,
+        effective_from:,
+        subsidy_percentage: benefit_configuration_params[:subsidy_percentage],
+        max_price: benefit_configuration_params[:max_voucher_price],
+        limit: benefit_configuration_params[:monthly_voucher_limit]
+      )
+
+      raise ActiveRecord::Rollback unless benefit_configuration.save
     end
 
-    benefit_configuration = company.benefit_configurations.new(benefit_configuration_params)
-    benefit_configuration.created_by = Current.user
-    benefit_configuration.effective_from = effective_from
-
-    if benefit_configuration.save
+    if benefit_configuration.persisted?
       redirect_to admin_benefit_configurations_path, notice: t("flash.benefit_configuration_created")
     else
-      redirect_back fallback_location: admin_benefit_configurations_path, inertia: { errors: benefit_configuration.errors }
+      errors_hash = {
+        benefit_configuration: benefit_configuration.errors,
+        benefit_rules: benefit_configuration.benefit_rules.map(&:errors)
+      }
+
+      redirect_back fallback_location: admin_benefit_configurations_path,
+                    inertia: { errors: errors_hash }
     end
   end
 

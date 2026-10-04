@@ -2,6 +2,7 @@
 
 class Admin::DashboardController < Admin::InertiaController
   def index
-    @role = params[:role]
+    @today = I18n.l(Date.current, format: "%A %-d de %B").capitalize
+    @payment_month = I18n.l(Date.current, format: "%B").downcase
   end
 end
