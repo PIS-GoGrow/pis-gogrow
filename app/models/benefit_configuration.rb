@@ -174,7 +174,6 @@ class BenefitConfiguration < ApplicationRecord
           percentage: subsidy_percentage,
           description: name
         )
-        puts benefit_rules.inspect
       else
         benefit.expired!
       end
