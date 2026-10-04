@@ -17,7 +17,6 @@ RSpec.configure do |config|
   end
 end
 
-
 # Los botones de acción de la app no tienen texto visible, solo un ícono y un
 # aria-label ("Agregar <plato>", "Semana anterior"). Sin esto, find_button no
 # los encuentra y habría que bajar a selectores de CSS.
