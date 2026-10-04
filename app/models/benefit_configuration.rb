@@ -122,7 +122,8 @@ class BenefitConfiguration < ApplicationRecord
         percentage: subsidy_percentage,
         description: name,
         status: :current,
-        benefit_configuration: self
+        benefit_configuration: self,
+        max_price: benefit_max_price
       )
     rescue ActiveRecord::RecordNotUnique
       # Si llegamos a este caso hay un error de concurrencia: se está corriendo esta
@@ -142,7 +143,8 @@ class BenefitConfiguration < ApplicationRecord
         percentage: subsidy_percentage,
         description: name,
         status: :future,
-        benefit_configuration: self
+        benefit_configuration: self,
+        max_price: benefit_max_price
       )
     rescue ActiveRecord::RecordNotUnique
       # Si llegamos a este caso hay un error de concurrencia: se está corriendo esta
@@ -317,6 +319,14 @@ class BenefitConfiguration < ApplicationRecord
     benefit_rules
       .map { |rule| rule.benefit_deadline consumer, date: }
       .filter { |deadline| !deadline.nil? }
+      .min
+  end
+
+  # Devuelve el menor max_price impuesto por las reglas. Si no hay, devuelve nil
+  def benefit_max_price
+    benefit_rules
+      .map { |rule| rule.benefit_max_price }
+      .filter { |max_price| !max_price.nil? }
       .min
   end
 end
