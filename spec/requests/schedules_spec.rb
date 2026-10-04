@@ -1027,7 +1027,8 @@ RSpec.describe "Schedules", type: :request do
       end
 
       it "permite agregar un nuevo plato al menú ya publicado del día" do
-        target_date = Date.current.next_week(:monday) + 1.week + 2.days
+        target_date = Date.current.next_week(:monday) + 2.days
+        Schedule.where(date: target_date).destroy_all
         menu.schedules.create!(date: target_date, amount: 10)
 
         second_menu = provider.menus.create!(
