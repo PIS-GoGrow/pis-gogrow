@@ -119,6 +119,12 @@ RSpec.describe "Provider::Collections", type: :request do
         )
       )
 
+      # Se destruye el comprobante "submitted" de la fixture: desde que
+      # collection_status prioriza cualquier pago sin revisar (ver
+      # Account#payment_pending_review), dejarlo vivo mantendría a este grupo
+      # en Pendientes en vez de pasar a Historial.
+      other_employee_account.payments.destroy_all
+
       other_employee_account.payments.create!(
         provider: other_employee_account.provider,
         status: :approved
