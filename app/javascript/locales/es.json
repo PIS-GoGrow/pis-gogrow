@@ -479,7 +479,7 @@
             "notes_placeholder": "Sin salsa, sin cebolla…",
             "quantity": "Cantidad",
             "remaining": "Quedan %{count} disponibles para esta fecha",
-            "title": "Editar"
+            "title": "Modificar pedido"
           },
           "no_notes": "Sin notas",
           "notes": "Notas",

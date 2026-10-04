@@ -34,29 +34,29 @@ class Consumer::OrdersController < Consumer::InertiaController
     @editing = params[:edit] == "1"
  develop
 =end
- def show
-  consumer = Current.user.consumer
+    def show
+      consumer = Current.user.consumer
 
-  # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
-  # tiene que ser un 404, no una página ajena.
-  @order = consumer.orders.preload(
-    schedule: { menu: [ :option_groups, { provider: :user } ] }
-  ).find(params[:id])
+      # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
+      # tiene que ser un 404, no una página ajena.
+      @order = consumer.orders.preload(
+        schedule: { menu: [ :option_groups, { provider: :user } ] }
+      ).find(params[:id])
 
-  @delivery_addresses = delivery_address_options(consumer, @order)
-  @max_quantity = max_quantity(@order)
+      @delivery_addresses = delivery_address_options(consumer, @order)
+      @max_quantity = max_quantity(@order)
 
-  @option_groups = @order.schedule&.menu&.option_groups.to_a.map do |group|
-    {
-      id: group.id,
-      name: group.name,
-      options: group.options,
-      limit: group.limit
-    }
-  end
+      @option_groups = @order.schedule&.menu&.option_groups.to_a.map do |group|
+        {
+          id: group.id,
+          name: group.name,
+          options: group.options,
+          limit: group.limit
+        }
+      end
 
-  @editing = params[:edit] == "1"
-end
+      @editing = params[:edit] == "1"
+   end
   end
 
   def create
@@ -155,8 +155,7 @@ end
       notes: update_params[:notes],
       delivery:,
       discount_percentage: benefit_percentage,
-      remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_subsidized_meals : 0,
-      selected_options: selected_options_for(order.schedule&.menu, update_params[:options])
+      selected_options: selected_options_for(order.schedule&.menu, update_params[:options]),
       remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
     )
 

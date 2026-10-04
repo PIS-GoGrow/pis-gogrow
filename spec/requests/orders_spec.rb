@@ -4,16 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Orders", type: :request do
-fixtures :orders,
-  :schedules,
-  :menus,
-  :menu_option_groups,
-  :providers,
-  :consumers,
-  :companies,
-  :users,
-  :benefit_configurations,
-  :benefits
+  fixtures :orders, :schedules, :menus, :menu_option_groups, :providers, :consumers, :companies, :users, :benefit_configurations, :benefits
   describe "GET /orders" do
     it "redirects visitors to the sign in page" do
       get orders_path

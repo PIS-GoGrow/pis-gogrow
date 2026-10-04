@@ -108,7 +108,7 @@ class Order < ApplicationRecord
     notes: nil,
     discount_percentage: 0,
     subsidized_quantity: nil,
-    selected_options: []
+    selected_options: [],
     benefits:
   )
     gross_price, discounted_price = price_breakdown(
@@ -368,6 +368,7 @@ class Order < ApplicationRecord
   def chosen_within_group?(values, group)
     values.is_a?(Array) && values.any? && values.size <= group.limit &&
       values.uniq.size == values.size && values.all? { group.options.include?(it) }
+  end
   def snapshot_menu
     menu = schedule&.menu
     return if menu.nil?
