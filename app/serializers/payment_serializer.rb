@@ -13,7 +13,13 @@ class PaymentSerializer < ApplicationSerializer
   attribute :receipt_url do |payment|
     next unless payment.receipt.attached?
 
-    Rails.application.routes.url_helpers.receipt_payment_path(payment)
+    routes = Rails.application.routes.url_helpers
+
+    if payment.account.owner_type == "Company"
+      routes.receipt_admin_payment_path(payment)
+    else
+      routes.receipt_payment_path(payment)
+    end
   end
 
   typelize :string?

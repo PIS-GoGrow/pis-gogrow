@@ -110,6 +110,9 @@
           "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
           "receipt_preview": "Vista previa del comprobante",
           "receipt_remove": "Eliminar comprobante",
+          "receipt_remove_confirm": "Eliminar",
+          "receipt_remove_description": "Esta acción no se puede deshacer. Podés volver a subir el comprobante mientras el pago no esté aprobado.",
+          "receipt_remove_title": "¿Eliminar comprobante?",
           "receipt_replace": "Reemplazar archivo",
           "receipt_sent_at": "Enviado: %{date}",
           "receipt_success_action": "Listo",
@@ -315,6 +318,29 @@
             "title": "Facturas de proveedores",
             "total_amount": "Facturado",
             "view": "Ver"
+          }
+        },
+        "payments": {
+          "index": {
+            "detail_title": "Detalle del período",
+            "due": "Vence: %{date}",
+            "empty_history_description": "Cuando termines de pagar un período, va a aparecer acá.",
+            "empty_history_title": "Todavía no hay períodos pagados",
+            "history_tab": "Historial",
+            "meals_one": "%{count} vianda",
+            "meals_other": "%{count} viandas",
+            "meals_used_one": "%{count} vianda consumida",
+            "meals_used_other": "%{count} viandas consumidas",
+            "meals_used_with_limit": "%{meals} de %{limit} viandas consumidas",
+            "no_debt": "¡Sin deudas pendientes con este proveedor!",
+            "pending_payments": "Pagos pendientes",
+            "pending_tab": "Pendientes",
+            "section": "Pagos",
+            "see_detail": "Ver detalle",
+            "spending": "Consumo de la empresa",
+            "this_month": "Este mes",
+            "title": "Pagos",
+            "total_debt": "Deuda total"
           }
         }
       },

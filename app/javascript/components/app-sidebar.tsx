@@ -112,7 +112,9 @@ export function AppSidebar() {
     <Sidebar
       collapsible="icon"
       variant="inset"
-      hideOnMobile={role === "consumer" || role === "provider"}
+      hideOnMobile={
+        role === "consumer" || role === "provider" || role === "admin"
+      }
     >
       <SidebarHeader>
         <SidebarMenu>
