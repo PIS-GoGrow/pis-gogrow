@@ -293,9 +293,9 @@ RSpec.describe Calendar, type: :model do
 
   describe "#maximum_publish_date" do
     {
-      "lunes" => [Date.new(2026, 10, 5), Date.new(2026, 10, 16)],
-      "miércoles" => [Date.new(2026, 10, 7), Date.new(2026, 10, 16)],
-      "viernes" => [Date.new(2026, 10, 9), Date.new(2026, 10, 16)]
+      "lunes" => [ Date.new(2026, 10, 5), Date.new(2026, 10, 16) ],
+      "miércoles" => [ Date.new(2026, 10, 7), Date.new(2026, 10, 16) ],
+      "viernes" => [ Date.new(2026, 10, 9), Date.new(2026, 10, 16) ]
     }.each do |weekday, (today, expected)|
       it "es el viernes de la semana siguiente si es #{weekday}" do
         expect(calendar_on(today).maximum_publish_date).to eq(expected)
