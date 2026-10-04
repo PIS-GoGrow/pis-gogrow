@@ -179,6 +179,13 @@ RSpec.describe Account, type: :model do
       expect(account.collection_status).to eq("submitted")
     end
 
+    it "stays submitted when a newer payment was already approved but an older one is still unreviewed" do
+      create_payment(status: :submitted, created_at: 2.days.ago)
+      create_payment(status: :approved, created_at: 1.day.ago)
+
+      expect(account.collection_status).to eq("submitted")
+    end
+
     # Una cuenta de empresa no debe la deuda final sino el subsidio: lo que la
     # empresa subsidia es la diferencia entre el precio de lista y el de lista
     # menos el descuento.
@@ -202,6 +209,42 @@ RSpec.describe Account, type: :model do
 
       # 2 viandas de 300 (600 de lista) a 150 subsidized: el subsidio es la mitad.
       expect(company_account.reload.amount).to eq(300.to_d)
+    end
+  end
+
+  describe "#payment_pending_review" do
+    let(:account) { consumer.accounts.create!(provider:, month: Date.current, amount: 500) }
+
+    def create_payment(status:, created_at: Time.current, rejection_reason: nil)
+      rejection_reason ||= "Comprobante ilegible" if status == :rejected
+      payment = Payment.new(account:, status:, created_at:, rejection_reason:)
+      payment.receipt.attach(
+        io: Rails.root.join("public/icon.png").open,
+        filename: "receipt.png",
+        content_type: "image/png"
+      )
+      payment.save!
+      payment
+    end
+
+    it "is nil when nothing is submitted" do
+      create_payment(status: :approved)
+
+      expect(account.payment_pending_review).to be_nil
+    end
+
+    it "picks the oldest submitted payment when two were sent without reviewing either" do
+      older = create_payment(status: :submitted, created_at: 2.days.ago)
+      create_payment(status: :submitted, created_at: 1.day.ago)
+
+      expect(account.payment_pending_review).to eq(older)
+    end
+
+    it "still finds the submitted payment even if a newer one was already resolved" do
+      older = create_payment(status: :submitted, created_at: 2.days.ago)
+      create_payment(status: :approved, created_at: 1.day.ago)
+
+      expect(account.payment_pending_review).to eq(older)
     end
   end
 

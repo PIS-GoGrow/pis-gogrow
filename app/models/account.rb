@@ -49,14 +49,27 @@ class Account < ApplicationRecord
     payments.max_by { |payment| [ payment.created_at, payment.id ] }
   end
 
+  # El pago que el proveedor tiene que revisar. Puede haber más de uno en
+  # submitted a la vez (por ej. dos comprobantes enviados sin refrescar entre
+  # pestañas), así que se resuelven de a uno, del más viejo al más nuevo, para
+  # que ninguno quede sin revisión posible.
+  def payment_pending_review
+    payments.select(&:submitted?).min_by { |payment| [ payment.created_at, payment.id ] }
+  end
+
   def latest_invoice
     invoices.max_by { |invoice| [ invoice.created_at, invoice.id ] }
   end
 
   # El comprobante cubre la cuenta entera, así que el estado del cobro vive acá
-  # y no en cada pago. Si hubo varios intentos manda el último; un pago en
-  # pending es un estado intermedio, no un comprobante informado.
+  # y no en cada pago. Mientras quede algún pago en submitted sin revisar, el
+  # estado es "submitted" aunque un pago más nuevo ya esté aprobado o
+  # rechazado: si no, ese pago pendiente quedaría invisible para el proveedor.
+  # Resuelto eso, manda el estado del último pago; uno en pending es un estado
+  # intermedio, no un comprobante informado.
   def collection_status
+    return "submitted" if payment_pending_review
+
     last = last_payment
     return "pending" if last.nil? || last.pending?
 
