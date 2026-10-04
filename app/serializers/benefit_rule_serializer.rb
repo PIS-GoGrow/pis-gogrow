@@ -7,7 +7,7 @@ class BenefitRuleSerializer < ApplicationSerializer
 
   typelize effective_from: :string?
   attribute :effective_from do |rule|
-    rule.effective_from?.strftime("%d/%m/%y")
+    rule.effective_from&.strftime("%d/%m/%y")
   end
 end
 # == Schema Information
