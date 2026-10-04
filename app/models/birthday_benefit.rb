@@ -8,19 +8,7 @@ class BirthdayBenefit < BenefitRule
   validates :limit, presence: true, numericality: { greater_than: 0 }
 
   def applicable_to?(consumer, date: Date.current)
-    birthday = consumer&.birthday
-    return false unless birthday
-
-    # Probamos con el cumpleaños del año de `date` y con el del año anterior:
-    # la ventana puede haber arrancado en diciembre y seguir en enero
-    # (ej: cumpleaños el 31/12 y hoy es 01/01).
-    [ date.year - 1, date.year ].any? do |year|
-      next false if year < birthday.year
-
-      # `advance` resuelve el 29/02 en años no bisiestos como 28/02.
-      start = birthday.advance(years: year - birthday.year)
-      (start..(start + deadline_days)).cover?(date)
-    end
+    window_start(consumer, date).present?
   end
 
   def benefit_limit
@@ -28,7 +16,25 @@ class BirthdayBenefit < BenefitRule
   end
 
   def benefit_deadline(consumer, date: Date.current)
-    (birthday + deadline_days.days).change year: date.year
+    window_start(consumer, date)&.+(deadline_days)
+  end
+
+  private
+
+  def window_start(consumer, date)
+    birthday = consumer&.birthday
+    return unless birthday
+
+    # Probamos con el cumpleaños del año de `date` y con el del año anterior:
+    # la ventana puede haber arrancado en diciembre y seguir en enero
+    # (ej: cumpleaños el 31/12 y hoy es 01/01).
+    [ date.year - 1, date.year ].filter_map do |year|
+      next if year < birthday.year
+
+      # `advance` resuelve el 29/02 en años no bisiestos como 28/02.
+      start = birthday.advance(years: year - birthday.year)
+      start if (start..(start + deadline_days)).cover?(date)
+    end.last
   end
 end
 # == Schema Information

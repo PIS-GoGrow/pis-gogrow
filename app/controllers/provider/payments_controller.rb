@@ -9,6 +9,11 @@ class Provider::PaymentsController < Provider::InertiaController
                            alert: t("validations.payment_not_reviewable"), status: :see_other
     end
 
+    if params[:status] == "approved" && @payment.account.current?
+      return redirect_back fallback_location: provider_collections_path,
+                           alert: t("validations.payment_current_account"), status: :see_other
+    end
+
     reviewed =
       case params[:status]
       when "approved" then @payment.approve

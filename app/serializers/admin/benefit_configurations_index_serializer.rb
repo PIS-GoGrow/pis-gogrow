@@ -7,4 +7,6 @@ class Admin::BenefitConfigurationsIndexSerializer < ApplicationSerializer
   one :pending_base_subsidy, resource: BenefitConfigurationSerializer
   typelize base_subsidy: "BenefitConfiguration | null"
   one :base_subsidy, resource: BenefitConfigurationSerializer
+  has_many :special_subsidies, resource: SpecialSubsidySerializer
+  has_many :employees, resource: EmployeeSerializer
 end

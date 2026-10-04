@@ -161,7 +161,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
       sign_in_as_hr
 
-      within(:css, "[data-status='submitted']") { expect(page).to have_content("Por revisar") }
+      expect(page).to have_selector("[data-status='submitted']", text: "En revisión", minimum: 1)
       expect(page).to have_content(money(current_period.amount))
       # Informado no es confirmado: el período sigue debiéndose y con vencimiento.
       expect(page).to have_content(due_label(current_period))

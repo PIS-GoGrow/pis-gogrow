@@ -21,7 +21,7 @@ class OnboardingBenefit < BenefitRule
   end
 
   def benefit_deadline(consumer, date: Date.current)
-    onboarding + deadline_days.days
+    consumer&.onboarding_date&.+(deadline_days)
   end
 end
 # == Schema Information

@@ -69,7 +69,7 @@ RSpec.describe "Admin::Payments", type: :request do
       it "counts the subsidy and the meals of the current month" do
         get admin_payments_path
 
-        expect(inertia.props[:current_month]).to eq("amount" => 601.0, "meals" => 4, "limit" => nil)
+        expect(inertia.props[:current_month]).to eq("amount" => 601.0, "meals" => 4, "limit" => 40)
       end
 
       it "lists every provider so the ones without debt also show up" do

@@ -22,7 +22,6 @@ RSpec.describe "Historial de pagos del proveedor" do
   let(:provider_user) { users(:provider_user) }
   let(:employee) { users(:one) }
   let(:previous_month) { Date.current.beginning_of_month.months_ago(1) }
-  let(:current_month) { Date.current.beginning_of_month }
 
   before do
     Account.where(provider:).destroy_all
@@ -214,8 +213,8 @@ RSpec.describe "Historial de pagos del proveedor" do
   # empleado vuelve a subir y el proveedor aprueba. El intento rechazado sigue en
   # el historial con su motivo, y el empleado ve el mismo estado e importe.
   it "keeps the rejected attempt in the history after the employee resubmits and the provider approves" do
-    confirmed_order(month: current_month)
-    payment_on(company_account(current_month), status: :approved, at: 1.minute.ago)
+    confirmed_order(month: previous_month)
+    payment_on(company_account(previous_month), status: :approved, at: 1.minute.ago)
 
     sign_in employee
     employee_uploads_receipt
@@ -232,7 +231,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     sign_in provider_user, role: :provider
     review_employee_payment(:approve)
 
-    payments = employee_account(current_month).payments.order(:created_at)
+    payments = employee_account(previous_month).payments.order(:created_at)
     expect(payments.map(&:status)).to eq(%w[rejected approved])
     expect(payments.first.rejection_reason).to eq("El importe no coincide")
 

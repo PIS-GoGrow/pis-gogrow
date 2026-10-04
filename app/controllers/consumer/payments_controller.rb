@@ -7,6 +7,8 @@ class Consumer::PaymentsController < Consumer::InertiaController
     # La cuenta se busca dentro de las cuentas del consumidor autenticado. Esto
     # evita que un account_id enviado desde el navegador cree pagos para otro empleado.
     account = consumer_accounts.find(payment_account_id)
+    return reject_current_account if account.current?
+
     @payment = account.payments.build(
       provider: account.provider,
       receipt: payment_params[:receipt],
@@ -22,6 +24,8 @@ class Consumer::PaymentsController < Consumer::InertiaController
         errors: { receipt: [ t("validations.payment_closed") ] }
       }, status: :see_other
     end
+
+    return reject_current_account if @payment.account.current?
 
     # Active Storage reemplaza el comprobante anterior, manteniendo el mismo
     # Payment y, por lo tanto, su asociación original con Account.
@@ -84,5 +88,11 @@ class Consumer::PaymentsController < Consumer::InertiaController
     else
       redirect_back fallback_location: accounts_path, inertia: { errors: @payment.errors.to_hash }, status: :see_other
     end
+  end
+
+  def reject_current_account
+    redirect_back fallback_location: accounts_path, inertia: {
+      errors: { receipt: [ t("validations.payment_current_account") ] }
+    }, status: :see_other
   end
 end

@@ -4,6 +4,11 @@ class ScheduleSerializer < ApplicationSerializer
   typelize_from Schedule
 
   attributes :id, :menu_id, :amount, :available
+
+  typelize :number
+  attribute :saved_menu_id do |schedule|
+    schedule.menu.base_menu_id || schedule.menu_id
+  end
   one :menu, resource: MenuSerializer
 end
 

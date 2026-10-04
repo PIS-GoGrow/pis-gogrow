@@ -1,11 +1,4 @@
 es:
-  activerecord:
-    errors:
-      models:
-        benefit_configuration:
-          attributes:
-            effective_from:
-              taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
   common:
     cancel: "Cancelar"
     close: "Cerrar"
@@ -63,7 +56,6 @@ es:
     payment_rejected: "Comprobante rechazado."
     invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
     invoice_removed: "Factura eliminada."
-
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -80,14 +72,22 @@ es:
     password_challenge_invalid: "La verificación de contraseña no es válida"
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
+    payment_current_account: "No se puede subir ni aprobar un comprobante mientras el mes siga en curso."
     payment_not_removable: "Solo podés eliminar comprobantes en revisión o rechazados."
-
     payment_not_reviewable: "Este comprobante ya fue revisado."
     invoice_not_removable: "Esta factura ya fue revisada y no se puede eliminar."
-
+    menu_agenda:
+      invalid_date: "Elegí un día hábil desde hoy y dentro del período de publicación."
+      invalid_range: "La fecha de fin no puede ser anterior a la de inicio."
+      invalid_amount: "El stock por día debe ser un entero mayor a 0."
+      invalid_weekdays: "Elegí al menos un día de lunes a viernes."
   activerecord:
     errors:
       models:
+        benefit_configuration:
+          attributes:
+            effective_from:
+              taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
         menu_option_group:
           attributes:
             options:
@@ -98,7 +98,6 @@ es:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
-
             rejection_reason:
               blank: "es obligatorio para rechazar un comprobante"
         invoice:
@@ -270,6 +269,62 @@ es:
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
               unexpected: "Error inesperado. Por favor reintentá la operación."
+          special:
+            title: "Subsidios especiales"
+            description: "Los subsidios especiales se suman al Base."
+            add: "Agregar"
+            edit: "Editar «%{name}»"
+            delete: "Eliminar «%{name}»"
+            empty:
+              title: "No hay subsidios especiales"
+              description: "Celebrá fechas especiales o reconocé la antigüedad de tus empleados con subsidios especiales."
+            discount: "Descuento"
+            applies_to: "Aplicado a"
+            applies_to_all: "Todos"
+            applies_to_selection: "Selección"
+            condition: "Condición"
+            conditions:
+              seniority: "Antigüedad"
+              birthday: "Cumpleaños"
+              onboarding: "Onboarding"
+              gift: "Premio"
+            form:
+              add_title: "Agregar subsidio especial"
+              edit_title: "Modificar subsidio especial"
+              description: "Los subsidios especiales se suman al Base."
+              name: "Nombre del subsidio"
+              name_placeholder: "Ej. Antigüedad, Cumpleaños"
+              subsidy_percentage: "% de descuento"
+              applies_to: "Aplicar a:"
+              all_employees: "Todos los empleados"
+              select_employees: "Seleccionar empleados"
+              search_employee: "Buscar empleado…"
+              no_employees_found: "No encontramos empleados con ese nombre."
+              selected_employees: "Empleados seleccionados"
+              remove_employee: "Quitar a %{name}"
+              condition: "Si se cumplen las condiciones:"
+              condition_placeholder: "Seleccionar condición"
+              min_years_prefix: "Es mayor a"
+              min_years_suffix: "año(s)"
+              birthday_help: "Comienza automáticamente en la fecha de cumpleaños."
+              onboarding_help: "Comienza automáticamente en el primer día en la empresa."
+              effective_from: "Disponible desde"
+              limit_prefix: "Cantidad de"
+              limit_suffix: "vianda(s)"
+              validity: "Validez"
+              validity_unit: "Unidad de validez"
+              validity_units:
+                days: "días"
+                weeks: "semanas"
+                months: "meses"
+              cancel: "Cancelar"
+              add: "Agregar"
+              update: "Modificar"
+            delete_dialog:
+              title: "¿Eliminar «%{name}»?"
+              description: "Los empleados dejan de recibir este subsidio desde hoy. Los pedidos que ya lo usaron no cambian."
+              cancel: "Cancelar"
+              confirm: "Eliminar"
       consumers:
         index:
           title: "Empleados"
@@ -571,6 +626,7 @@ es:
         customer_request: "Solicitud del cliente"
         order_error: "Error en el pedido"
         other: "Otro motivo"
+        dish_modified: "Plato modificado"
       index:
         title: "Pedidos"
         eyebrow: "Operación diaria"
@@ -670,6 +726,63 @@ es:
       index:
         availability:
           toggle_label: "En stock"
+        edit_dish: "Editar %{name}"
+    provider_menus:
+      edit:
+        agenda:
+          title: "Agenda"
+          weekdays_label: "Días de la semana"
+          weekdays:
+            "1": "L"
+            "2": "M"
+            "3": "M"
+            "4": "J"
+            "5": "V"
+          weekday_names:
+            "1": "Lunes"
+            "2": "Martes"
+            "3": "Miércoles"
+            "4": "Jueves"
+            "5": "Viernes"
+          modes:
+            single: "No repetir"
+            weekly: "Repetir todas las semanas"
+            range: "Repetir en un rango personalizado"
+          date: "Día específico"
+          starts_on: "Desde"
+          ends_on: "Hasta"
+          amount: "Stock por día"
+          incomplete: "Completá las fechas y el stock por día."
+        sheet:
+          back: "Volver"
+          apply: "Aplicar cambios"
+          applying: "Aplicando..."
+          continue: "Continuar"
+          done: "Listo"
+          simple:
+            title: "¿Modificar el plato guardado?"
+            description: "Este plato se modificará en tus platos guardados."
+          scope:
+            title: "¿Cómo querés guardar los cambios?"
+            day: "Modificar solo para este día"
+            day_description: "Modifica únicamente el menú programado para este %{date}."
+            saved: "Modificar el plato guardado"
+            saved_description: "Aplica los cambios a la fecha programada y actualiza el plato para próximos menús."
+          from:
+            title: "¿Aplicar cambios desde esta fecha?"
+            description: "Los cambios se aplicarán desde el %{date} a todas las repeticiones siguientes."
+          range:
+            title: "¿Aplicar cambios durante este período?"
+            description: "Los cambios se aplicarán del %{from} al %{to}. Después, el plato volverá automáticamente a su configuración anterior."
+          orders:
+            title: "¿Cómo querés guardar los cambios?"
+            keep: "Mantener los pedidos confirmados"
+            keep_description: "Los pedidos afectados que están confirmados no se modificarán."
+            reject: "Rechazar los pedidos confirmados"
+            reject_description: "Los pedidos afectados que están confirmados se cancelarán."
+          saved:
+            title: "¡Plato modificado!"
+            description: "Tu plato fue modificado correctamente."
     cart:
       delivery_address: "Dirección de entrega"
       add_address: "Agregar"

@@ -147,6 +147,33 @@ RSpec.describe BirthdayBenefit, type: :model do
     end
   end
 
+  describe "#benefit_deadline" do
+    it "es el cumpleaños del año más deadline_days" do
+      expect(rule.benefit_deadline(consumer, date: Date.new(2025, 5, 12))).to eq(Date.new(2025, 5, 15))
+    end
+
+    context "cuando el rango cruza el fin de año" do
+      let(:birthday)      { Date.new(1990, 12, 28) }
+      let(:deadline_days) { 10 }
+
+      it "vence en enero del año siguiente si hoy es diciembre" do
+        expect(rule.benefit_deadline(consumer, date: Date.new(2025, 12, 30))).to eq(Date.new(2026, 1, 7))
+      end
+
+      it "vence en enero del mismo año si hoy ya es enero" do
+        expect(rule.benefit_deadline(consumer, date: Date.new(2026, 1, 3))).to eq(Date.new(2026, 1, 7))
+      end
+    end
+
+    it "es nil fuera del rango" do
+      expect(rule.benefit_deadline(consumer, date: Date.new(2025, 8, 1))).to be_nil
+    end
+
+    it "es nil cuando el consumidor no tiene cumpleaños" do
+      expect(rule.benefit_deadline(double("Consumer", birthday: nil), date: Date.new(2025, 5, 10))).to be_nil
+    end
+  end
+
   def birthday_in(year)
     Date.new(year, birthday.month, birthday.day)
   end
