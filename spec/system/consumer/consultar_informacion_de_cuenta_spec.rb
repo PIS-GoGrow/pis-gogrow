@@ -84,7 +84,16 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
   end
 
   # Criterio 2 -- cerrar sesión. No alcanza con que el botón exista: tiene que
-  # dejar de haber sesión y mandar a sign in, y no sólo ocultarlo en pantalla.
+  # destruir la sesión de verdad y dejar la pantalla sin acceso. SessionsController
+  # redirige a root_path y es HomeController el que rebota a sign_in, así que no se
+  # afirma la URL del redirect sino el efecto: la sesión ya no existe y /profile
+  # manda a sign in.
+  #
+  # FALLA HOY, y por un defecto de la app, no del spec: show.tsx:50 pasa el objeto
+  # entero de sessions.destroy(...) al href del <Link> en vez de su .url, así que el
+  # DELETE nunca se dispara y la sesión sigue viva. El criterio 2 de la historia está
+  # sin cumplir. Ver
+  # docs/reports/defects/DEFECT-salir-no-cierra-sesion-05-10-2026.md
   it "signs the employee out from the account screen" do
     sign_in employee
     visit profile_path
@@ -92,9 +101,12 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
 
     click_on "Salir"
 
+    # Session.exists? y no reload: recargar una fila ya borrada devuelve un objeto
+    # nuevo que no sabe del delete, así que destroyed? seguiría en false.
+    expect(Session.exists?(session_id.id)).to be false
+
+    visit profile_path
     expect(page).to have_current_path(sign_in_path)
-    expect(page).to have_content(/Esa sesión fue cerrada/)
-    expect(session_id.reload).to be_destroyed
   end
 
   # Transversal -- permisos: la pantalla es del empleado y no se alcanza con otro
