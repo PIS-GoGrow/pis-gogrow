@@ -44,6 +44,11 @@ class Order < ApplicationRecord
   has_many :order_benefits, dependent: :destroy
   has_many :benefits, through: :order_benefits
 
+  # El mensaje de aclaraciones es opcional: la pantalla manda "" cuando el
+  # empleado no escribe nada, y sin esto el pedido queda con un string vacío que
+  # las vistas no distinguen de un nil (muestran "Notas" en vez de "Sin notas").
+  normalizes :notes, with: ->(value) { value.presence }
+
   validates :amount, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :discounted_price, comparison: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true

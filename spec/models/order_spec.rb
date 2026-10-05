@@ -98,6 +98,36 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  # IBP-022, criterio 3: el mensaje de aclaraciones es opcional, y la pantalla
+  # manda "" cuando el empleado no escribe nada. Sin normalizar, el pedido queda
+  # con un string vacío y las vistas muestran "Notas" en vez de "Sin notas".
+  describe "notes" do
+    def order_with_notes(notes)
+      Order.create!(
+        consumer: consumers(:one),
+        schedule: schedules(:future),
+        amount: 1,
+        price: 100,
+        discounted_price: 100,
+        delivery_method: :office,
+        notes:,
+        benefits: []
+      )
+    end
+
+    it "stores nil when the employee writes nothing" do
+      expect(order_with_notes("").notes).to be_nil
+    end
+
+    it "stores nil when the message is only whitespace" do
+      expect(order_with_notes("   ").notes).to be_nil
+    end
+
+    it "keeps the message when there is content" do
+      expect(order_with_notes("Sin sal, por favor").notes).to eq("Sin sal, por favor")
+    end
+  end
+
   # IBP-022 — Como EMPLEADO, quiero seleccionar las opciones de personalización que el
   # plato admita al momento de pedir, para recibir la vianda según mi preferencia.
   # Criterio 1: lo elegido tiene que ser una de las opciones que el proveedor cargó al
