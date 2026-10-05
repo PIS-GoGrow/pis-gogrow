@@ -28,11 +28,13 @@ const OTHER_OPTION = "other"
 interface RejectPaymentDialogProps {
   children: ReactNode
   paymentId: number
+  onRejected?: (reason: string) => void
 }
 
 export default function RejectPaymentDialog({
   children,
   paymentId,
+  onRejected,
 }: RejectPaymentDialogProps) {
   const [open, setOpen] = useState(false)
   const [selectedReason, setSelectedReason] = useState<string>(
@@ -59,9 +61,11 @@ export default function RejectPaymentDialog({
       paymentsRoutes.update(paymentId).url,
       { status: "rejected", rejection_reason: finalReason },
       {
+        preserveState: true,
         onSuccess: () => {
           setOpen(false)
           resetForm()
+          onRejected?.(finalReason)
         },
         onFinish: () => setProcessing(false),
       },

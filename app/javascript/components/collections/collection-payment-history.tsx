@@ -1,12 +1,15 @@
 import { Download, Eye, FileText } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import StatusBadge from "@/components/status-badge"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
 import type { ProviderCollectionPayment } from "@/types"
 
 interface CollectionPaymentHistoryProps {
@@ -18,6 +21,7 @@ export default function CollectionPaymentHistory({
   payments,
   showDownloadAll = false,
 }: CollectionPaymentHistoryProps) {
+  const { t } = useTranslation()
   const receipts = payments.filter((payment) => payment.receipt_url)
 
   if (receipts.length === 0) return null
@@ -46,7 +50,19 @@ export default function CollectionPaymentHistory({
             <span className="text-muted-foreground text-xs">
               {payment.date}
             </span>
-            <StatusBadge status={payment.status} kind="payment" />
+            <div className="flex items-center gap-1.5">
+              {payment.rejection_reason ===
+                PARTIAL_PAYMENT_REJECTION_REASON && (
+                <Badge
+                  variant="outline"
+                  className="gap-1.5 border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500"
+                >
+                  <span className="size-1.5 rounded-full" />
+                  {t("pages.provider_collections.partial_payment_badge")}
+                </Badge>
+              )}
+              <StatusBadge status={payment.status} kind="payment" />
+            </div>
           </div>
           <div className="flex min-w-0 items-center gap-2">
             <FileText aria-hidden="true" className="size-4 shrink-0" />

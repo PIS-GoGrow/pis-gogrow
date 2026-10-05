@@ -22,7 +22,10 @@ class Provider::PaymentsController < Provider::InertiaController
       end
 
     if reviewed
-      redirect_to provider_collections_path, notice: t("flash.payment_#{@payment.status}"), status: :see_other
+      # Sin notice: el frontend ya confirma el resultado con su propio diálogo
+      # (PaymentReviewSheet), distinto según se aprobó, se rechazó por pago
+      # parcial o por otro motivo.
+      redirect_to provider_collections_path, status: :see_other
     else
       redirect_back fallback_location: provider_collections_path,
                     inertia: { errors: @payment.errors.to_hash }, status: :see_other

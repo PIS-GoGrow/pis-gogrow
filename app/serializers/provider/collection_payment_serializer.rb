@@ -6,7 +6,7 @@
 class Provider::CollectionPaymentSerializer < ApplicationSerializer
   typelize_from Payment
 
-  attributes :id, :status
+  attributes :id, :status, :rejection_reason
 
   typelize :string
   attribute :date do |payment|

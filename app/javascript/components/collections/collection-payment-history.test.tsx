@@ -12,6 +12,7 @@ function payment(
   return {
     id: 1,
     status: "approved",
+    rejection_reason: null,
     date: "02/10/26",
     receipt_url: "/provider/payments/1/receipt",
     receipt_filename: "aprobado.png",

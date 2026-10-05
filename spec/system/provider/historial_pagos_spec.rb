@@ -103,7 +103,7 @@ RSpec.describe "Historial de pagos del proveedor" do
 
     if decision == :approve
       within(find("[role=dialog]")) { click_on "Aprobar" }
-      expect(page).to have_content(I18n.t("flash.payment_approved"))
+      expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     else
       within(find("[role=dialog]")) { click_on "Rechazar" }
       within(find("[role=dialog]", text: "Rechazar comprobante")) do
@@ -111,8 +111,10 @@ RSpec.describe "Historial de pagos del proveedor" do
         fill_in "Motivo", with: "El importe no coincide"
         click_on "Rechazar comprobante"
       end
-      expect(page).to have_content(I18n.t("flash.payment_rejected"))
+      expect(page).to have_content(I18n.t("pages.provider_collections.review.rejected_title"))
     end
+
+    click_on I18n.t("pages.provider_collections.review.done")
   end
 
   def employee_uploads_receipt

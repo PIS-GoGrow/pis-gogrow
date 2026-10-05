@@ -52,8 +52,6 @@ es:
     order_deadline_updated: "La hora límite de pedidos fue actualizada."
     payment_receipt_submitted: "Comprobante enviado para su validacion."
     payment_receipt_removed: "Comprobante eliminado."
-    payment_approved: "Comprobante aprobado."
-    payment_rejected: "Comprobante rechazado."
     invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
     invoice_removed: "Factura eliminada."
   validations:
@@ -534,6 +532,7 @@ es:
         submitted: "En revisión"
         approved: "Confirmado"
         rejected: "Rechazado"
+      partial_payment_badge: "Pago parcial"
       meals_one: "%{count} vianda"
       meals_other: "%{count} viandas"
       index:
@@ -569,6 +568,14 @@ es:
         company: "Empresa"
         due: "Vence: %{date}"
         detail: "Ver detalle"
+      review:
+        approved_title: "Cobro confirmado"
+        approved_description: "El cobro fue confirmado correctamente. Se notificará al usuario."
+        partial_title: "Pago parcial registrado"
+        partial_description: "El comprobante quedó registrado como pago parcial. Se notificará al usuario para que abone el monto restante."
+        rejected_title: "Comprobante rechazado"
+        rejected_description: "El comprobante fue rechazado. El cobro continúa pendiente y se notificará al usuario."
+        done: "Listo"
       invoice:
         statuses:
           pending: "Por revisar"
