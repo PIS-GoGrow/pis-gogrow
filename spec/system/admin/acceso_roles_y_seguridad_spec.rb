@@ -4,7 +4,8 @@ require "rails_helper"
 
 RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system do
   fixtures :users, :companies, :consumers, :admins, :providers, :menus, :schedules, :orders,
-           :accounts, :order_accounts, :benefits, :benefit_configurations, :benefit_rules
+           :accounts, :order_accounts, :benefits, :benefit_configurations, :benefit_rules,
+           :menu_option_groups
 
   let(:consumer_user) { users(:one) }
   let(:admin_user) { users(:admin) }
@@ -149,7 +150,8 @@ RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system
         price: 320,
         discounted_price: 160,
         delivery_method: :office,
-        address: "Oficina"
+        address: "Oficina",
+        selected_options: selection_for(schedule_p2.menu)
       )
     end
 
