@@ -121,11 +121,19 @@ export default function Show({ order }: ProviderOrdersShow) {
           <Row label={t("pages.provider_orders.show.quantity")}>
             {order.amount ?? empty}
           </Row>
-          {order.menu_option_groups.map((group) => (
-            <Row key={group.id} label={group.name}>
-              {group.options.join(" · ")}
-            </Row>
-          ))}
+          {order.menu_option_groups.map((group) => {
+            // Lo que el empleado eligió, no todo lo que el plato ofrece: los
+            // pedidos anteriores a la personalización no tienen elección.
+            const chosen = order.selected_options.find(
+              (option) => option.group_id === group.id,
+            )
+
+            return (
+              <Row key={group.id} label={group.name}>
+                {chosen?.values.length ? chosen.values.join(" · ") : empty}
+              </Row>
+            )
+          })}
           <Row label={t("pages.provider_orders.show.notes")}>
             {order.notes ?? t("pages.provider_orders.show.no_notes")}
           </Row>

@@ -61,6 +61,7 @@ es:
     empty_cart: "Agregá al menos un plato al carrito."
     invalid_address: "Seleccioná una dirección de entrega válida."
     invalid_quantity: "La cantidad de cada plato debe ser un número entero mayor que cero."
+    invalid_options: "Elegí las opciones que el plato admite antes de confirmar."
     cart_unavailable: "Uno de los platos ya no está disponible para esa fecha o cantidad. Revisá el carrito e intentá nuevamente."
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
     insufficient_stock: "Ya no hay suficiente stock para la cantidad solicitada. Revisá la cantidad e intentá nuevamente."
@@ -500,8 +501,8 @@ es:
         edit: "Editar"
         rejection_reason: "Motivo de rechazo"
         edit_dialog:
-          title: "Editar"
-          description: "Podés cambiar la cantidad, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo."
+          title: "Modificar pedido"
+          description: "Podés cambiar la cantidad, las opciones del plato, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo."
           quantity: "Cantidad"
           address: "Dirección de entrega"
           notes: "Notas"
@@ -852,6 +853,9 @@ es:
     consumer_dashboard:
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
+      options:
+        choose: "Elegí tu %{name}"
+        limit: "Podés elegir hasta %{count}"
     sessions:
       new:
         title: "Iniciar sesión"

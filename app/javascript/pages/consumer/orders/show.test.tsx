@@ -49,6 +49,7 @@ describe("Consumer::Orders Show Page", () => {
     discounted_price: 250,
     cancellable: true,
     modifiable: true,
+    selected_options: [],
   }
 
   const deliveryAddresses = [
@@ -61,6 +62,7 @@ describe("Consumer::Orders Show Page", () => {
         order={baseOrder}
         delivery_addresses={deliveryAddresses}
         max_quantity={5}
+        option_groups={[]}
         editing={false}
       />,
     )
@@ -88,6 +90,7 @@ describe("Consumer::Orders Show Page", () => {
         order={rejectedOrder}
         delivery_addresses={deliveryAddresses}
         max_quantity={5}
+        option_groups={[]}
         editing={false}
       />,
     )
@@ -113,6 +116,7 @@ describe("Consumer::Orders Show Page", () => {
         order={rejectedOrder}
         delivery_addresses={deliveryAddresses}
         max_quantity={5}
+        option_groups={[]}
         editing={false}
       />,
     )
@@ -129,6 +133,7 @@ describe("Consumer::Orders Show Page", () => {
         order={baseOrder}
         delivery_addresses={deliveryAddresses}
         max_quantity={5}
+        option_groups={[]}
         editing={true}
       />,
     )
@@ -136,7 +141,7 @@ describe("Consumer::Orders Show Page", () => {
     const dialog = screen.getByRole("dialog")
     expect(dialog).toBeInTheDocument()
     expect(
-      within(dialog).getByRole("heading", { name: "Editar" }),
+      within(dialog).getByRole("heading", { name: "Modificar pedido" }),
     ).toBeInTheDocument()
   })
 
@@ -155,6 +160,7 @@ describe("Consumer::Orders Show Page", () => {
         order={confirmedOrder}
         delivery_addresses={deliveryAddresses}
         max_quantity={5}
+        option_groups={[]}
         editing={false}
       />,
     )

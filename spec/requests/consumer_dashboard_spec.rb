@@ -351,13 +351,13 @@ RSpec.describe "Consumer dashboard", type: :request do
       expect(review).to include(description: nil, rating: nil)
     end
 
-    it "sends the toppings of a dish that has none as an empty list" do
+    it "sends the option groups of a dish that has none as an empty list" do
       publish(menus(:milanesa), monday)
       sign_in users(:one)
 
       get dashboard_path
 
-      expect(inertia.props[:schedules].first[:menu]).to include(fillings: [], sauces: [])
+      expect(inertia.props[:schedules].first[:menu]).to include(option_groups: [])
     end
 
     # TODO: El siguiente test es correcto, pero falla. Este es un defecto conocido y documentado.
@@ -368,22 +368,24 @@ RSpec.describe "Consumer dashboard", type: :request do
     # acá es esa regla; que el mismo número se aplique a los días de la semana
     # que ya caen en el mes siguiente es un defecto, y está anotado como
     # TODO(integración) en el system spec de la historia.
-    # it "counts the monthly quota by delivery date inside the current month" do
-    #  this_month = publish(menus(:milanesa), monday, amount: 30)
-    #  next_month = publish(menus(:sorrentinos), Date.new(2026, 10, 1), amount: 30)
-    #  [ [ this_month, 3 ], [ next_month, 7 ] ].each do |schedule, quantity|
-    #    Order.create!(
-    #      consumer: consumers(:one), schedule:, amount: quantity,
-    #      price: schedule.menu.price * quantity,
-    #      address: consumers(:one).company.address, delivery_method: :office
-    #    )
-    #  end
-    #  sign_in users(:one)
-    #
-    #  get dashboard_path
-    #
-    #  expect(inertia.props[:benefit]).to include(monthly_used: 3, monthly_remaining: 17)
-    # end
+    it "counts the monthly quota by delivery date inside the current month" do
+      this_month = publish(menus(:milanesa), monday, amount: 30)
+      next_month = publish(menus(:sorrentinos), Date.new(2026, 10, 1), amount: 30)
+      Benefit.create!(consumer: consumers(:one), description: "Viandas mensuales", amount: 20, percentage: 50, due_date: 1.month.from_now)
+      [ [ this_month, 3 ], [ next_month, 7 ] ].each do |schedule, quantity|
+        Order.create!(
+          consumer: consumers(:one), schedule:, amount: quantity,
+          price: schedule.menu.price * quantity,
+          address: consumers(:one).company.address, delivery_method: :office,
+          selected_options: selection_for(schedule.menu)
+        )
+      end
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(inertia.props[:benefit]).to include(monthly_used: 3, monthly_remaining: 17)
+    end
   end
 
   it "rejects a session with a different role" do
