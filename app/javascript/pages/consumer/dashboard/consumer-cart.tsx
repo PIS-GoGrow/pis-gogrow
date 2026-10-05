@@ -189,6 +189,15 @@ export function ConsumerCart({
                 </span>
                 <span>{money(line)}</span>
               </div>
+              {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
+                  aparte, así que el carrito lo muestra por su cuenta. */}
+              {item.menu.option_groups
+                .filter((group) => item.selections[group.id]?.length)
+                .map((group) => (
+                  <p key={group.id} className="text-muted-foreground mt-2">
+                    {group.name}: {item.selections[group.id].join(", ")}
+                  </p>
+                ))}
               {item.notes && (
                 <p className="text-muted-foreground mt-2">{item.notes}</p>
               )}

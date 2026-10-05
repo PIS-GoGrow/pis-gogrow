@@ -10,6 +10,7 @@ import {
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
+import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -23,6 +24,7 @@ import type { ConsumerOrdersShow, Order } from "@/types"
 interface EditOrderSheetProps {
   order: Order
   addresses: ConsumerOrdersShow["delivery_addresses"]
+  optionGroups: ConsumerOrdersShow["option_groups"]
   maxQuantity: number
   editing: boolean
 }
@@ -30,23 +32,35 @@ interface EditOrderSheetProps {
 export default function EditOrderSheet({
   order,
   addresses,
+  optionGroups,
   maxQuantity,
   editing,
 }: EditOrderSheetProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(editing)
+
   const { data, setData, patch, processing, transform } = useForm({
     quantity: order.amount ?? 1,
     address: order.address ?? addresses[0]?.address ?? "",
     notes: order.notes ?? "",
+    options: optionGroups.map((group) => ({
+      group_id: group.id,
+      values:
+        order.selected_options.find((option) => option.group_id === group.id)
+          ?.values ?? [],
+    })),
   })
+
+  const missingChoice = data.options.some((option) => !option.values.length)
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
     transform((data) => ({ order: data }))
+
     patch(consumerOrders.update(order.id).url, {
       preserveScroll: true,
+
       // El servidor puede rechazar el cambio (cupo, plazo) y aun así responder
       // una visita exitosa: el flash de error es lo que distingue los dos casos.
       onSuccess: (page) => {
@@ -60,6 +74,7 @@ export default function EditOrderSheet({
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
+
         if (!next)
           window.history.replaceState(null, "", window.location.pathname)
       }}
@@ -76,6 +91,7 @@ export default function EditOrderSheet({
           <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
             {t("pages.orders.show.edit_dialog.title")}
           </AdaptableDialogTitle>
+
           <AdaptableDialogDescription className="text-base leading-6">
             {t("pages.orders.show.edit_dialog.description")}
           </AdaptableDialogDescription>
@@ -84,13 +100,16 @@ export default function EditOrderSheet({
             <FieldLabel htmlFor="quantity">
               {t("pages.orders.show.edit_dialog.quantity")}
             </FieldLabel>
+
             <div className="flex items-center gap-3">
               <QuantityInput
                 value={data.quantity}
                 max={maxQuantity}
                 onChange={(quantity) => setData("quantity", quantity)}
               />
+
               <input type="hidden" id="quantity" value={data.quantity} />
+
               <p className="text-muted-foreground text-xs">
                 {t("pages.orders.show.edit_dialog.remaining", {
                   count: maxQuantity,
@@ -103,6 +122,7 @@ export default function EditOrderSheet({
             <FieldLabel>
               {t("pages.orders.show.edit_dialog.address")}
             </FieldLabel>
+
             <RadioGroup
               value={data.address}
               onValueChange={(address) => setData("address", address)}
@@ -118,8 +138,10 @@ export default function EditOrderSheet({
                   )}
                 >
                   <RadioGroupItem value={item.address} className="mt-0.5" />
+
                   <span className="text-xs">
                     <b>{item.label}</b>
+
                     <small className="text-muted-foreground mt-1 block">
                       {item.address}
                     </small>
@@ -129,10 +151,32 @@ export default function EditOrderSheet({
             </RadioGroup>
           </Field>
 
+          {optionGroups.map((group) => (
+            <OptionChoices
+              key={group.id}
+              group={group}
+              values={
+                data.options.find((option) => option.group_id === group.id)
+                  ?.values ?? []
+              }
+              setValues={(values) =>
+                setData(
+                  "options",
+                  data.options.map((option) =>
+                    option.group_id === group.id
+                      ? { ...option, values }
+                      : option,
+                  ),
+                )
+              }
+            />
+          ))}
+
           <Field>
             <FieldLabel htmlFor="notes">
               {t("pages.orders.show.edit_dialog.notes")}
             </FieldLabel>
+
             <Input
               id="notes"
               name="notes"
@@ -151,10 +195,11 @@ export default function EditOrderSheet({
             >
               {t("pages.orders.show.edit_dialog.back")}
             </Button>
+
             <Button
               type="submit"
               className="h-12 rounded-lg text-base font-medium"
-              disabled={processing}
+              disabled={processing || missingChoice}
             >
               {processing && <Spinner />}
               {t("pages.orders.show.edit_dialog.confirm")}

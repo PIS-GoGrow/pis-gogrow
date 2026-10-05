@@ -59,6 +59,7 @@ Rails.application.routes.draw do
 
   scope module: :consumer do
     get "dashboard", to: "dashboard#index", as: :dashboard
+    resource :profile, only: [ :show ]
     get "dashboard/confirmation", to: "dashboard#confirmation", as: :dashboard_confirmation
 
     resources :menus, only: [ :index ]

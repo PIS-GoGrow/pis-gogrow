@@ -4,8 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Orders", type: :request do
-  fixtures :orders, :schedules, :menus, :providers, :consumers, :companies, :users, :benefit_configurations, :benefits
-
+  fixtures :orders, :schedules, :menus, :menu_option_groups, :providers, :consumers, :companies, :users, :benefit_configurations, :benefits
   describe "GET /orders" do
     it "redirects visitors to the sign in page" do
       get orders_path
@@ -141,6 +140,46 @@ RSpec.describe "Orders", type: :request do
         expect(inertia.props[:delivery_addresses].map { it[:address] }).to eq([ "18 de Julio 1006", "Julio Herrera y Reissig 565" ])
       end
 
+      # IBP-022: el detalle manda los grupos del plato y lo que el empleado eligió,
+      # que son los dos datos que el diálogo de modificación necesita para no
+      # empezar con la pantalla vacía.
+      it "exposes the groups of the dish and the options the employee picked" do
+        order = Order.create!(
+          consumer: consumers(:one),
+          schedule: schedules(:sorrentinos_today),
+          amount: 1,
+          price: 320,
+          discounted_price: 320,
+          address: "18 de Julio 1006",
+          delivery_method: :office,
+          selected_options: selection_for(schedules(:sorrentinos_today).menu)
+        )
+
+        get order_path(order)
+
+        expect(inertia.props[:option_groups]).to eq(
+          [
+            { "id" => menu_option_groups(:salsa_sorrentinos).id, "name" => "Salsa", "options" => [ "Filetto", "Bolognesa" ], "limit" => 1 },
+            { "id" => menu_option_groups(:relleno_sorrentinos).id, "name" => "Relleno", "options" => [ "Ricota y nuez", "Espinaca y queso" ], "limit" => 1 }
+          ]
+        )
+        expect(inertia.props[:order][:selected_options]).to eq(
+          [
+            { "group_id" => menu_option_groups(:salsa_sorrentinos).id, "name" => "Salsa", "values" => [ "Filetto" ] },
+            { "group_id" => menu_option_groups(:relleno_sorrentinos).id, "name" => "Relleno", "values" => [ "Ricota y nuez" ] }
+          ]
+        )
+      end
+
+      # Un plato sin grupos no tiene nada que elegir: la lista llega vacía y el
+      # pedido no carga ninguna selección.
+      it "exposes no groups for a dish that offers none" do
+        get order_path(orders(:upcoming_pending_future))
+
+        expect(inertia.props[:option_groups]).to eq([])
+        expect(inertia.props[:order][:selected_options]).to eq([])
+      end
+
       it "keeps the order's address as an option when it is no longer among the employee's addresses" do
         order = orders(:upcoming_pending_future)
         # Más vieja que el resto: si no, pasa a ser la "última usada" y ya está entre las opciones.
@@ -212,6 +251,72 @@ RSpec.describe "Orders", type: :request do
       provider = Provider.find_or_create_by!(user: users(:two))
       menu = Menu.create!(provider:, name: "Milanesa", description: "Con puré", price:)
       Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount:, available:)
+    end
+
+    def create_schedule_with_options(limit: 1)
+      schedule = create_schedule
+      schedule.menu.option_groups.create!(name: "Salsa", options: [ "Filetto", "Puerro" ], limit:)
+      schedule
+    end
+
+    def cart_params(company, schedule, options:, quantity: 1)
+      { order: { address: company.address, items: [ { schedule_id: schedule.id, quantity:, options: } ] } }
+    end
+
+    # IBP-022: lo elegido se guarda como copia con el nombre del grupo, para que
+    # el pedido siga diciendo qué se pidió aunque el proveedor edite el plato.
+    it "stores the options the employee picked for the dish" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options
+      group = schedule.menu.option_groups.first
+
+      post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: [ "Puerro" ] } ])
+
+      expect(Order.last.selected_options).to eq(
+        [ { "group_id" => group.id, "name" => "Salsa", "values" => [ "Puerro" ] } ]
+      )
+    end
+
+    it "accepts as many options as the group allows" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options(limit: 2)
+      group = schedule.menu.option_groups.first
+
+      post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: [ "Filetto", "Puerro" ] } ])
+
+      expect(Order.last.selected_options.first["values"]).to eq([ "Filetto", "Puerro" ])
+    end
+
+    it "refuses a cart that leaves a group of the dish unanswered" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [])
+      end.not_to change(Order, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.invalid_options") })
+    end
+
+    it "refuses an option the dish does not offer" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options
+      group = schedule.menu.option_groups.first
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: [ "Carbonara" ] } ])
+      end.not_to change(Order, :count)
+    end
+
+    it "refuses more options than the group allows" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options
+      group = schedule.menu.option_groups.first
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: [ "Filetto", "Puerro" ] } ])
+      end.not_to change(Order, :count)
     end
 
     it "creates the cart atomically with server prices, benefit and delivery address" do
@@ -849,8 +954,8 @@ RSpec.describe "Orders", type: :request do
   describe "PATCH /orders/:id" do
     let(:order) { orders(:upcoming_pending_future) }
 
-    def update_params(quantity: 1, address: "18 de Julio 1006", notes: nil)
-      { order: { quantity:, address:, notes: } }
+    def update_params(quantity: 1, address: "18 de Julio 1006", notes: nil, options: [])
+      { order: { quantity:, address:, notes:, options: } }
     end
 
     it "redirects visitors to the sign in page" do
@@ -891,6 +996,63 @@ RSpec.describe "Orders", type: :request do
         expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
       end
 
+      # El pedido de los fixtures es de un plato sin grupos; para probar la
+      # selección hace falta uno que sí los tenga.
+      context "when the dish has option groups" do
+        let(:group) { menu_option_groups(:salsa_sorrentinos) }
+        let(:other_group) { menu_option_groups(:relleno_sorrentinos) }
+        let(:order) do
+          Order.create!(
+            consumer: consumers(:one),
+            schedule: schedules(:sorrentinos_today),
+            amount: 1,
+            price: 320,
+            discounted_price: 160,
+            address: "18 de Julio 1006",
+            delivery_method: :office,
+            selected_options: [
+              { group_id: group.id, name: group.name, values: [ "Filetto" ] },
+              { group_id: other_group.id, name: other_group.name, values: [ "Ricota y nuez" ] }
+            ]
+          )
+        end
+
+        def options_params(values)
+          [ { group_id: group.id, values: values }, { group_id: other_group.id, values: [ "Ricota y nuez" ] } ]
+        end
+
+        it "changes the options the employee picked" do
+          patch order_path(order), params: update_params(options: options_params([ "Bolognesa" ]))
+
+          expect(order.reload.selected_options).to include(
+            { "group_id" => group.id, "name" => "Salsa", "values" => [ "Bolognesa" ] }
+          )
+        end
+
+        it "refuses to leave a group unanswered and keeps what was chosen" do
+          patch order_path(order), params: update_params(options: [ { group_id: group.id, values: [ "Bolognesa" ] } ])
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
+        it "refuses an option the dish does not offer" do
+          patch order_path(order), params: update_params(options: options_params([ "Carbonara" ]))
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+        end
+
+        # Los pedidos anteriores a esta funcionalidad no tienen elección
+        # guardada; el proveedor tiene que poder confirmarlos igual.
+        it "still lets an order made before the feature be confirmed" do
+          order.update_column(:selected_options, [])
+
+          expect(order.reload.update(status: :confirmed)).to be(true)
+        end
+      end
+
       it "records who modified the order and when" do
         freeze_time do
           patch order_path(order), params: update_params(quantity: 2)
@@ -909,10 +1071,17 @@ RSpec.describe "Orders", type: :request do
         Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
         allow_any_instance_of(Consumer).to receive(:remaining_monthly_benefit).and_return(1)
 
-        patch order_path(order), params: update_params(quantity: 3)
+        # El tope es mensual, así que la fecha importa: con una entrega del mes que
+        # viene el pedido no tiene unidades que devolverle al saldo. Se fija el
+        # día para que el resultado no dependa de cuándo se corra el spec.
+        travel_to(Time.zone.local(2026, 9, 14, 10)) do
+          order.schedule.update!(date: Date.new(2026, 9, 16))
 
-        # 150.25 * 2 subsidiadas + 300.50 a precio de lista
-        expect(order.reload).to have_attributes(price: 901.50.to_d, discounted_price: 601.to_d)
+          patch order_path(order), params: update_params(quantity: 3)
+
+          # 150.25 * 2 subsidiadas + 300.50 a precio de lista
+          expect(order.reload).to have_attributes(price: 901.50.to_d, discounted_price: 601.to_d)
+        end
       end
 
       it "applies the active benefit to the new quantity" do

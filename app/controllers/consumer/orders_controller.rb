@@ -17,10 +17,24 @@ class Consumer::OrdersController < Consumer::InertiaController
   def show
     consumer = Current.user.consumer
 
-    @order = consumer.orders.preload(schedule: { menu: { provider: :user } }).find(params[:id])
+    # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
+    # tiene que ser un 404, no una página ajena.
+    @order = consumer.orders.preload(
+      schedule: { menu: [ :option_groups, { provider: :user } ] }
+    ).find(params[:id])
+
     @delivery_addresses = @order.delivery_address_options consumer
     @max_quantity = @order.max_quantity
     @editing = params[:edit] == "1"
+
+    @option_groups = @order.schedule&.menu&.option_groups.to_a.map do |group|
+      {
+        id: group.id,
+        name: group.name,
+        options: group.options,
+        limit: group.limit
+      }
+    end
   end
 
   def create
@@ -83,6 +97,7 @@ class Consumer::OrdersController < Consumer::InertiaController
           notes: item[:notes],
           discount_percentage: benefit_percentage,
           subsidized_quantity:,
+          selected_options: selected_options_for(schedule.menu, item[:options]),
           benefits: [ consumer.current_monthly_benefit ].compact,
           **delivery
         )
@@ -118,6 +133,7 @@ class Consumer::OrdersController < Consumer::InertiaController
       notes: update_params[:notes],
       delivery:,
       discount_percentage: benefit_percentage,
+      selected_options: selected_options_for(order.schedule&.menu, update_params[:options]),
       remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
     )
 
@@ -159,6 +175,7 @@ class Consumer::OrdersController < Consumer::InertiaController
 
   def order_error_reason(order)
     return :order_deadline_passed if order.errors[:schedule_id].include?(t("validations.order_deadline_passed"))
+    return :invalid_options if order.errors[:base].include?(t("validations.invalid_options"))
 
     schedule = order.schedule
 
@@ -174,11 +191,41 @@ class Consumer::OrdersController < Consumer::InertiaController
     consumer.delivery_address_options.pluck(:address).include?(address) || DeliveryAddress.valid_full_address?(address)
   end
 
+  # La dirección actual del pedido se mantiene como opción aunque no esté
+  # guardada, para que modificar la cantidad no obligue a cambiarla.
+  def delivery_address_options(consumer, order)
+    options = consumer.delivery_address_options
+    return options if order.address.blank? || options.pluck(:address).include?(order.address)
+
+    options + [ { id: "current", label: t("pages.orders.addresses.current"), address: order.address } ]
+  end
+
+  # El cupo del schedule ya descuenta esta orden, así que el máximo que el
+  # empleado puede elegir es lo que queda más lo que ya tiene reservado.
+  # Del parámetro solo se confía el id del grupo y los valores: el nombre se toma
+  # del plato, así la copia guardada no depende de lo que mande el cliente.
+  def selected_options_for(menu, options)
+    groups = menu&.option_groups.to_a.index_by(&:id)
+
+    options.to_a.filter_map do |option|
+      group = groups[option[:group_id].to_i]
+      next if group.nil?
+
+      { group_id: group.id, name: group.name, values: Array(option[:values]).map(&:to_s) }
+    end
+  end
+
+  def max_quantity(order)
+    return order.amount.to_i if order.schedule.nil?
+
+    order.schedule.remaining_amount + order.amount.to_i
+  end
+
   def update_params
-    params.expect(order: [ :quantity, :address, :notes ])
+    params.expect(order: [ :quantity, :address, :notes, options: [ [ :group_id, { values: [] } ] ] ])
   end
 
   def order_params
-    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes ] ] ])
+    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] } ] ] ])
   end
 end

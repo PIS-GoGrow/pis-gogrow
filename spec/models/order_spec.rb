@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe Order, type: :model do
-  fixtures :orders, :schedules, :menus, :providers, :consumers, :companies, :users, :accounts
+  fixtures :orders, :schedules, :menus, :menu_option_groups, :providers, :consumers, :companies, :users, :accounts
 
   it { is_expected.to define_enum_for(:status).with_values(pending: 0, confirmed: 1, cancelled: 2, rejected: 3) }
   it { is_expected.to define_enum_for(:delivery_method).with_values(office: 0, home: 1) }
@@ -95,6 +95,159 @@ RSpec.describe Order, type: :model do
       order.valid?
 
       expect(order.errors[:delivery_method]).to be_empty
+    end
+  end
+
+  # IBP-022, criterio 3: el mensaje de aclaraciones es opcional, y la pantalla
+  # manda "" cuando el empleado no escribe nada. Sin normalizar, el pedido queda
+  # con un string vacío y las vistas muestran "Notas" en vez de "Sin notas".
+  describe "notes" do
+    def order_with_notes(notes)
+      Order.create!(
+        consumer: consumers(:one),
+        schedule: schedules(:future),
+        amount: 1,
+        price: 100,
+        discounted_price: 100,
+        delivery_method: :office,
+        notes:,
+        benefits: []
+      )
+    end
+
+    it "stores nil when the employee writes nothing" do
+      expect(order_with_notes("").notes).to be_nil
+    end
+
+    it "stores nil when the message is only whitespace" do
+      expect(order_with_notes("   ").notes).to be_nil
+    end
+
+    it "keeps the message when there is content" do
+      expect(order_with_notes("Sin sal, por favor").notes).to eq("Sin sal, por favor")
+    end
+  end
+
+  # IBP-022 — Como EMPLEADO, quiero seleccionar las opciones de personalización que el
+  # plato admita al momento de pedir, para recibir la vianda según mi preferencia.
+  # Criterio 1: lo elegido tiene que ser una de las opciones que el proveedor cargó al
+  # plato, y todos los grupos del plato tienen que estar respondidos.
+  describe "selected options" do
+    let(:salsa) { menu_option_groups(:salsa_sorrentinos) }
+    let(:relleno) { menu_option_groups(:relleno_sorrentinos) }
+
+    def order_for(schedule, selected_options)
+      Order.new(
+        consumer: consumers(:one),
+        schedule:,
+        amount: 1,
+        price: schedule.menu.price,
+        discounted_price: schedule.menu.price,
+        delivery_method: :office,
+        selected_options:
+      )
+    end
+
+    def chosen(*groups)
+      groups.map { |group| { "group_id" => group.id, "name" => group.name, "values" => [ group.options.first ] } }
+    end
+
+    it "accepts one option of every group the dish offers" do
+      expect(order_for(schedules(:sorrentinos_today), chosen(salsa, relleno))).to be_valid
+    end
+
+    it "requires an answer for every group the dish offers" do
+      order = order_for(schedules(:sorrentinos_today), chosen(salsa))
+
+      expect(order).not_to be_valid
+      expect(order.errors[:base]).to include(I18n.t("validations.invalid_options"))
+    end
+
+    it "rejects a group answered with an empty list" do
+      selection = chosen(salsa) + [ { "group_id" => relleno.id, "name" => relleno.name, "values" => [] } ]
+
+      expect(order_for(schedules(:sorrentinos_today), selection)).not_to be_valid
+    end
+
+    # El mismo grupo existe en el otro plato: no es que el dato no exista.
+    it "rejects a group that belongs to another dish" do
+      otros = menus(:milanesa).option_groups.create!(name: "Extras", options: [ "Papaya" ])
+
+      expect(order_for(schedules(:sorrentinos_today), chosen(salsa, relleno, otros))).not_to be_valid
+    end
+
+    it "rejects the same group twice" do
+      expect(order_for(schedules(:sorrentinos_today), chosen(salsa, relleno, salsa))).not_to be_valid
+    end
+
+    it "rejects an option the group does not offer" do
+      selection = chosen(salsa, relleno)
+      selection[0]["values"] = [ "Carbonara" ]
+
+      expect(order_for(schedules(:sorrentinos_today), selection)).not_to be_valid
+    end
+
+    it "rejects the same option twice inside a group" do
+      selection = chosen(salsa, relleno)
+      selection[0]["values"] = [ "Filetto", "Filetto" ]
+
+      expect(order_for(schedules(:sorrentinos_today), selection)).not_to be_valid
+    end
+
+    it "rejects options for a dish that offers none" do
+      expect(order_for(schedules(:future), chosen(salsa))).not_to be_valid
+    end
+
+    context "when a group allows more than one option" do
+      let(:extras) do
+        menus(:milanesa).option_groups.create!(name: "Extras", options: [ "Papaya", "Arándanos", "Limón" ], limit: 2)
+      end
+
+      def milanesa_order(values)
+        order_for(schedules(:future), [ { "group_id" => extras.id, "name" => extras.name, "values" => values } ])
+      end
+
+      # Borde del límite del grupo: N entra, N+1 no.
+      it "accepts exactly as many options as the limit allows" do
+        expect(milanesa_order([ "Papaya", "Arándanos" ])).to be_valid
+      end
+
+      it "rejects one option more than the limit allows" do
+        expect(milanesa_order([ "Papaya", "Arándanos", "Limón" ])).not_to be_valid
+      end
+    end
+
+    # La guarda solo corre al crear o cuando el empleado toca la selección: un
+    # pedido anterior a esta funcionalidad no tiene elección guardada, y el
+    # proveedor tiene que poder confirmarlo igual.
+    context "with an order made before the selection existed" do
+      let(:order) do
+        Order.create!(
+          consumer: consumers(:one),
+          schedule: schedules(:sorrentinos_today),
+          amount: 1,
+          price: 320,
+          discounted_price: 320,
+          delivery_method: :office,
+          selected_options: chosen(salsa, relleno)
+        )
+      end
+
+      before { order.update_column(:selected_options, []) }
+
+      it "does not check the selection again while it stays untouched" do
+        expect(order.update(notes: "Sin sal")).to be(true)
+      end
+
+      it "does check it as soon as the employee changes the selection" do
+        order.selected_options = chosen(salsa)
+
+        expect(order).not_to be_valid
+      end
+
+      it "lets the provider confirm it" do
+        expect(order.update(status: :confirmed)).to be(true)
+      end
     end
   end
 
@@ -608,6 +761,7 @@ end
 #  price                      :decimal(10, 2)
 #  rejection_details          :string
 #  rejection_reason           :integer
+#  selected_options           :jsonb            not null
 #  status                     :integer          default(0), not null
 #  status_before_cancellation :integer
 #  created_at                 :datetime         not null

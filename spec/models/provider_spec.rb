@@ -15,6 +15,28 @@ RSpec.describe Provider, type: :model do
     end
   end
 
+  describe "#home_delivery" do
+    it "defaults to true for a new provider" do
+      expect(described_class.new.home_delivery).to be true
+    end
+
+    it "persists false when disabling home delivery" do
+      provider = providers(:tuviandita)
+      provider.update!(home_delivery: false)
+
+      expect(provider.reload.home_delivery).to be false
+      expect(provider.delivery_methods).to eq([ "office" ])
+    end
+
+    it "raises NotNullViolation when home_delivery is set to nil (database integrity)" do
+      provider = providers(:tuviandita)
+
+      expect {
+        provider.update_column(:home_delivery, nil)
+      }.to raise_error(ActiveRecord::NotNullViolation)
+    end
+  end
+
   describe "#allows_delivery_method?" do
     it "is false for a method outside the provider policy" do
       expect(providers(:office_provider).allows_delivery_method?(:home)).to be false

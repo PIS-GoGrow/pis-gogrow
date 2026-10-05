@@ -1028,6 +1028,7 @@ RSpec.describe "Schedules", type: :request do
 
       it "permite agregar un nuevo plato al menú ya publicado del día" do
         target_date = Date.current.next_week(:monday) + 2.days
+        Schedule.where(date: target_date).destroy_all
         menu.schedules.create!(date: target_date, amount: 10)
 
         second_menu = provider.menus.create!(
@@ -1238,6 +1239,27 @@ RSpec.describe "Schedules", type: :request do
       patch availability_schedule_path(schedule), params: { available: true }
 
       expect(schedule.reload.available).to be(true)
+    end
+
+    it "sends back the errors and changes nothing when the publication can't be saved" do
+      user = users(:one)
+      provider = Provider.create!(user: user)
+      menu = provider.menus.create!(name: "Milanesa", description: "Con puré", price: 350)
+      schedule = menu.schedules.create!(date: next_publishable_date, amount: 10)
+      # La base ya rechaza los datos que harían fallar el update: se simula.
+      allow_any_instance_of(Schedule).to receive(:set_availability) do |record|
+        record.errors.add(:base, "No se pudo guardar")
+        false
+      end
+
+      sign_in_with_role(user, role: :provider)
+
+      patch availability_schedule_path(schedule), params: { available: false }
+
+      expect(response).to redirect_to(schedules_path)
+      expect(schedule.reload).to have_attributes(available: true, availability_changed_by: nil)
+      follow_redirect!
+      expect(inertia.props[:errors]).to have_key(:base)
     end
 
     it "returns not found when attempting to toggle another provider's publication" do

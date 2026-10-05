@@ -48,8 +48,13 @@ class Menu < ApplicationRecord
     agendas.where(ends_on: nil).or(agendas.where(ends_on: Date.current..)).order(:starts_on).last
   end
 
+  # El id del grupo se copia junto con el nombre: es lo que permite cruzar el
+  # snapshot con la elección que el empleado guardó en el pedido, para que el
+  # proveedor vea lo pidió y no lo que el plato ofrece.
   def option_groups_snapshot
-    option_groups.map { |g| { "name" => g.name, "options" => g.options, "limit" => g.limit } }
+    option_groups.map do |g|
+      { "id" => g.id, "name" => g.name, "options" => g.options, "limit" => g.limit }
+    end
   end
 
   def build_variant(valid_from:, valid_until:)
