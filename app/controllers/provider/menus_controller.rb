@@ -80,15 +80,15 @@ class Provider::MenusController < Provider::InertiaController
     variant_agenda = schedule&.menu&.agendas&.first
     current = saved_menu.current_agenda
 
-    if variant_agenda
+    if variant_agenda && !variant_agenda.ends_on.nil?
       { mode: "range", weekdays: variant_agenda.weekdays, starts_on: [ variant_agenda.starts_on, Date.current ].max.iso8601,
         ends_on: variant_agenda.ends_on.iso8601, date: nil, amount: variant_agenda.amount }
-    elsif schedule
-      { mode: "single", weekdays: [ schedule.date.cwday ], starts_on: nil, ends_on: nil, date: schedule.date.iso8601,
-        amount: schedule.amount }
     elsif current
       { mode: "weekly", weekdays: current.weekdays, starts_on: [ current.starts_on, Date.current ].max.iso8601,
         ends_on: nil, date: nil, amount: current.amount }
+    elsif schedule
+      { mode: "single", weekdays: [ schedule.date.cwday ], starts_on: nil, ends_on: nil, date: schedule.date.iso8601,
+        amount: schedule.amount }
     else
       { mode: "none", weekdays: [], starts_on: nil, ends_on: nil, date: nil, amount: nil }
     end
