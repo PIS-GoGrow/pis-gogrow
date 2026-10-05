@@ -150,7 +150,7 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    if (data.name === "") {
+    if (data.name.trim() === "") {
       setError("name", ["No puede estar vacío."])
       return
     }
@@ -160,7 +160,7 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
       return
     }
 
-    if (data.price === "") {
+    if (data.price.trim() === "") {
       setError("price", ["No puede estar vacío."])
       return
     }

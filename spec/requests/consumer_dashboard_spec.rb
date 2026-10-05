@@ -270,7 +270,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   # como ausente. Cómo se pinta eso en pantalla —y qué se muestra cuando falta—
   # se cubre en app/javascript/pages/consumer/dashboard/dish-detail.test.tsx.
   describe "GET /dashboard — información de cada plato" do
-    fixtures :users, :consumers, :companies, :providers, :menus, :reviews
+    fixtures :users, :consumers, :companies, :providers, :menus, :reviews, :benefit_configurations, :benefits
 
     around do |example|
       travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
@@ -360,9 +360,6 @@ RSpec.describe "Consumer dashboard", type: :request do
       expect(inertia.props[:schedules].first[:menu]).to include(option_groups: [])
     end
 
-    # TODO: El siguiente test es correcto, pero falla. Este es un defecto conocido y documentado.
-    # en Clickup que habrá que resolver más adelante.
-    # Llegado al caso, habría que descomentarlo.
 
     # Criterio 2: el cupo subsidiado se cuenta por mes de entrega. Lo que se fija
     # acá es esa regla; que el mismo número se aplique a los días de la semana
@@ -371,10 +368,8 @@ RSpec.describe "Consumer dashboard", type: :request do
     it "counts the monthly quota by delivery date inside the current month" do
       this_month = publish(menus(:milanesa), monday, amount: 30)
       next_month = publish(menus(:sorrentinos), Date.new(2026, 10, 1), amount: 30)
-      # El beneficio mensual lo pone benefits.yml (amount: 20, status: current):
-      # crear otro acá choca con la validación de un solo beneficio mensual por
-      # cliente, y borrarlo para poder crearlo elimina justo lo que el criterio
-      # necesita para estar.
+      benefit = benefits(:monthly)
+      benefit.update!(due_date: 1.month.from_now, amount: 20, percentage: 50)
       [ [ this_month, 3 ], [ next_month, 7 ] ].each do |schedule, quantity|
         order = Order.create!(
           consumer: consumers(:one), schedule:, amount: quantity,
@@ -382,7 +377,7 @@ RSpec.describe "Consumer dashboard", type: :request do
           address: consumers(:one).company.address, delivery_method: :office,
           selected_options: selection_for(schedule.menu)
         )
-        order.apply_benefit! benefits(:monthly), quantity
+        order.apply_benefit! benefit, quantity
       end
       sign_in users(:one)
 
