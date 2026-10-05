@@ -41,6 +41,7 @@
       }
     },
     "nav": {
+      "account": "Cuenta",
       "admin": {
         "account": "Cuenta",
         "employees": "Empleados",
@@ -378,6 +379,21 @@
         "options": {
           "choose": "Elegí tu %{name}",
           "limit": "Podés elegir hasta %{count}"
+        }
+      },
+      "consumer_profiles": {
+        "show": {
+          "benefit": "Tu beneficio",
+          "due_date": "Vigente hasta",
+          "max_price": "Tope por vianda",
+          "meals_one": "%{count} vianda",
+          "meals_other": "%{count} viandas",
+          "monthly_limit": "Viandas subsidiadas por mes",
+          "monthly_remaining": "Te quedan este mes",
+          "no_benefit": "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa.",
+          "percentage": "Subsidio de la empresa",
+          "sign_out": "Salir",
+          "title": "Mi cuenta"
         }
       },
       "dashboard": {
