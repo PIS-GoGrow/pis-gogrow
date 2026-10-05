@@ -371,14 +371,18 @@ RSpec.describe "Consumer dashboard", type: :request do
     it "counts the monthly quota by delivery date inside the current month" do
       this_month = publish(menus(:milanesa), monday, amount: 30)
       next_month = publish(menus(:sorrentinos), Date.new(2026, 10, 1), amount: 30)
-      Benefit.create!(consumer: consumers(:one), description: "Viandas mensuales", amount: 20, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
+      # El beneficio mensual lo pone benefits.yml (amount: 20, status: current):
+      # crear otro acá choca con la validación de un solo beneficio mensual por
+      # cliente, y borrarlo para poder crearlo elimina justo lo que el criterio
+      # necesita para estar.
       [ [ this_month, 3 ], [ next_month, 7 ] ].each do |schedule, quantity|
-        Order.create!(
+        order = Order.create!(
           consumer: consumers(:one), schedule:, amount: quantity,
           price: schedule.menu.price * quantity,
           address: consumers(:one).company.address, delivery_method: :office,
           selected_options: selection_for(schedule.menu)
         )
+        order.apply_benefit! benefits(:monthly), quantity
       end
       sign_in users(:one)
 

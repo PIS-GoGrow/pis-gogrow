@@ -71,7 +71,7 @@ RSpec.describe "Pedidos del consumidor" do
 
     expect(page).to have_current_path(/edit=1/)
     within("[role=dialog]") do
-      expect(page).to have_content("Modificar pedido") 
+      expect(page).to have_content("Modificar pedido")
       fill_in "notes", with: "Sin cebolla por favor"
       click_button "Guardar cambios"
     end
