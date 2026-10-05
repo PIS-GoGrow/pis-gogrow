@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useEffect, useState } from "react"
 
 export default function useSessionStorage<T>(key: string, initialValue: T) {
   // Inicialización perezosa: lee de sessionStorage una sola vez

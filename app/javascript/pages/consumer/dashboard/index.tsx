@@ -2,7 +2,6 @@ import { Head, useForm, usePage } from "@inertiajs/react"
 import { useMemo, useState } from "react"
 
 import useSessionStorage from "@/hooks/use-session-storage"
-
 import AppLayout from "@/layouts/app-layout"
 import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
