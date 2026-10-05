@@ -7,20 +7,9 @@ require "rails_helper"
 # su pedido, y los datos tienen que coincidir entre la confirmación, el historial
 # del empleado y la vista del proveedor.
 #
-# TODO(integración): falta implementar que el empleado elija las opciones de
-# personalización al pedir antes de poder testear el paso "E1 elige opción" y que
-# la opción elegida coincida entre las vistas. Hoy el inicio del empleado manda
-# fillings/sauces vacíos (Consumer::DashboardController#schedules_data) y el pedido
-# no tiene dónde guardar la opción elegida. Historias: IBP-022 "seleccionar
-# opciones al pedir" (CA1, CA2) e IBP-065 "opciones por plato" (CA4, CA5, CA6).
-#
 # TODO(integración): falta implementar activar y desactivar una opción de
 # personalización sin borrarla antes de poder testear ese caso de IBP-065 CA2.
 # Historia: IBP-065 "opciones por plato".
-#
-# TODO(integración): falta implementar que el proveedor configure si entrega a
-# domicilio (hoy Provider#home_delivery solo cambia por consola) antes de poder
-# testear IBP-068 CA1, CA2 y CA4. Historia: IBP-068 "modalidades de entrega".
 #
 # TODO(integración): falta implementar mover un menú publicado a otra fecha antes
 # de poder testear esa parte de IBP-051 CA2, y registrar quién y cuándo editó un
@@ -86,10 +75,17 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     within("[role=radiogroup]") { find("[role=radio]", text: /\b#{day.day}\b/).click }
   end
 
-  def add_to_cart(dish, notes: nil)
+  def add_to_cart(dish, notes: nil, options: {})
     click_button "Agregar #{dish.name}"
+    options.each { |group, option| pick_option(group, option) }
     fill_in "notes", with: notes if notes
     click_button "Agregar"
+  end
+
+  # Cada grupo es una <section> "Elegí tu <nombre>": buscar por el título evita
+  # elegir la opción de otro grupo.
+  def pick_option(group, option)
+    find("section", text: "Elegí tu #{group}").find("label", text: option).click
   end
 
   def open_cart
@@ -113,13 +109,20 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   def place_order(consumer, schedule, quantity: 1, notes: nil)
     Order.reserve(
       consumer:, schedule:, quantity:, notes:, delivery_method: :office,
-      address: consumer.company.address, benefits: []
+      address: consumer.company.address, benefits: [], selected_options: selection_for(schedule.menu)
     ).tap { expect(it).to be_persisted }
   end
 
   def edit_order(order)
     visit order_path(order)
     click_button "Editar"
+  end
+
+  # Las dos vistas del pedido muestran solo lo elegido, no todo lo que ofrece el plato.
+  def expect_chosen_garnish(chosen, instead_of:)
+    expect(page).to have_content("Guarnición")
+    expect(page).to have_content(chosen)
+    expect(page).to have_no_content(instead_of)
   end
 
   # La confirmación redondea a pesos; las demás vistas usan el formato de moneda.
@@ -142,16 +145,24 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       click_button "Publicar menú"
       expect(page).to have_content("Menú actualizado con éxito.")
 
+      p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ])
       milanesa_tuesday = p1_milanesa.schedules.find_by!(date: tuesday)
       expect(milanesa_tuesday.amount).to eq(8)
       expect(p1_wok.schedules.find_by!(date: tuesday).amount).to eq(3)
       sign_out
 
-      # E1 elige fecha, plato, nota, entrega y dirección, y confirma.
+      # E1 elige fecha, plato, opción, nota, entrega y dirección, y confirma.
       open_menu(as: e1_user, day: tuesday)
       expect(page).to have_button("Agregar #{p1_wok.name}")
-      add_to_cart(p1_milanesa, notes: "Sin sal")
+      click_button "Agregar #{p1_milanesa.name}"
+      within("section", text: "Elegí tu Guarnición") do
+        expect(page).to have_css("[role=radio]", count: 2)
+      end
+      expect(page).to have_button("Agregar", exact: true, disabled: true)
+      click_button "Volver"
+      add_to_cart(p1_milanesa, notes: "Sin sal", options: { "Guarnición" => "Puré" })
       open_cart
+      expect(page).to have_content("Guarnición: Puré")
       use_new_address(name: "Estudio", street: "Colonia 1370")
       click_button "Confirmar pedido"
       expect(page).to have_content("¡Pedido recibido!")
@@ -159,16 +170,18 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       order = e1.orders.sole
       expect(order).to have_attributes(
         schedule: milanesa_tuesday, menu_name: "Milanesa al pan", amount: 1, notes: "Sin sal",
-        delivery_method: "home", address: "Colonia 1370", status: "pending"
+        delivery_method: "home", address: "Colonia 1370", status: "pending",
+        selected_options: [ { "group_id" => p1_milanesa.option_groups.sole.id, "name" => "Guarnición", "values" => [ "Puré" ] } ]
       )
       expect(page).to have_content("Milanesa al pan")
       expect(page).to have_content(confirmation_money(order.discounted_price))
 
-      # E1 abre Mis pedidos y edita el pedido: cantidad y nota.
+      # E1 abre Mis pedidos y edita el pedido: cantidad, opción y nota.
       visit orders_path
       within(find("[data-slot=card]", text: "Milanesa al pan")) { click_link "Editar" }
       within("[role=dialog]") do
         click_button "Agregar uno"
+        pick_option("Guarnición", "Papas")
         fill_in "notes", with: "Sin sal, con limón"
         click_button "Guardar cambios"
       end
@@ -180,11 +193,13 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
         amount: 2, notes: "Sin sal, con limón", price: order.price * 2,
         modified_by: e1_user, status: "pending", address: "Colonia 1370"
       )
+      expect(edited.selected_options.sole["values"]).to eq([ "Papas" ])
       expect(edited.modified_at).to be_present
 
       visit order_path(edited)
       expect(page).to have_content("Milanesa al pan")
       expect(page).to have_content("Sin sal, con limón")
+      expect_chosen_garnish("Papas", instead_of: "Puré")
       expect(page).to have_content("Colonia 1370")
       expect(page).to have_content("Pendiente")
       expect(page).to have_content(uyu(edited.price))
@@ -195,6 +210,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       visit provider_order_path(edited)
       expect(page).to have_content("Milanesa al pan")
       expect(page).to have_content("Sin sal, con limón")
+      expect_chosen_garnish("Papas", instead_of: "Puré")
       expect(page).to have_content("Colonia 1370")
       expect(page).to have_content("Pendiente")
       expect(page).to have_content(uyu(edited.price))
@@ -205,6 +221,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e1_user, role: :consumer
       visit order_path(edited)
       expect(page).to have_content("Sin sal, con limón")
+      expect_chosen_garnish("Papas", instead_of: "Puré")
       expect(page).to have_content(uyu(edited.price))
     end
   end
@@ -411,9 +428,13 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       expect(p1_milanesa.reload.option_groups.sole.options).to eq([ "Ensalada", "Boniato" ])
 
       visit provider_order_path(e1_order)
+      expect_chosen_garnish("Papas", instead_of: "Boniato")
+      sign_out
 
-      expect(page).to have_content("Papas")
-      expect(page).to have_no_content("Boniato")
+      sign_in e1_user, role: :consumer
+      visit order_path(e1_order)
+      expect_chosen_garnish("Papas", instead_of: "Boniato")
+      expect(e1_order.reload.selected_options.sole["values"]).to eq([ "Papas" ])
     end
 
     it "no altera los pedidos al agotar el plato" do
@@ -590,13 +611,44 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     end
   end
 
-  describe "IBP-068 CA5: cambiar las modalidades no toca los pedidos ya creados" do
-    it "deja el pedido a domicilio aunque el proveedor pase a entregar solo en la oficina" do
-      order = place_order(e1, publish(p1_milanesa, tuesday))
-      order.update!(delivery_method: :home, address: "Colonia 1370")
-      p1.update!(home_delivery: false)
+  describe "IBP-068: P1 cambia las modalidades y E1 solo elige las habilitadas" do
+    # El switch cambia al instante y queda deshabilitado mientras dura el PATCH:
+    # esperar el estado nuevo prueba que React ya hidrató, y esperar que se
+    # habilite otra vez, que el servidor respondió.
+    def turn_off_home_delivery
+      visit settings_profile_path
+      find("#home_delivery[aria-checked=true]:not([disabled])").click
+      expect(page).to have_css("#home_delivery[aria-checked=false]")
+      expect(page).to have_css("#home_delivery:not([disabled])")
+    end
 
-      sign_in e1_user, role: :consumer
+    it "deja pedir solo en la oficina y no toca el pedido a domicilio ya creado" do
+      milanesa_tuesday = publish(p1_milanesa, tuesday)
+      order = place_order(e1, milanesa_tuesday)
+      order.update!(delivery_method: :home, address: "Colonia 1370")
+
+      # CA1 y CA2: P1 deja de entregar a domicilio desde su configuración.
+      sign_in p1_user, role: :provider
+      turn_off_home_delivery
+      expect(p1.reload.home_delivery).to be(false)
+      expect(providers(:endulzate).reload.home_delivery).to be(true)
+      # CA4: la oficina sigue habilitada y el menú publicado sigue en pie.
+      expect(milanesa_tuesday.reload).to be_persisted
+      sign_out
+
+      # CA3: E1 ya no puede elegir su casa para ese proveedor.
+      open_menu(as: e1_user, day: tuesday)
+      add_to_cart(p1_milanesa)
+      open_cart
+      expect(find("label", text: "Colonia 1370").find("[role=radio]")).to be_disabled
+      expect(page).to have_css("label", text: e1.company.address, class: /border-primary/)
+      click_button "Confirmar pedido"
+      expect(page).to have_content("¡Pedido recibido!")
+      expect(e1.orders.order(:id).last).to have_attributes(
+        delivery_method: "office", address: e1.company.address
+      )
+
+      # CA5: el pedido anterior sigue a domicilio para los dos roles.
       visit order_path(order)
       expect(page).to have_content("Colonia 1370")
       sign_out
