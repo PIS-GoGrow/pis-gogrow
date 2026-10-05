@@ -84,29 +84,34 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
   end
 
   # Criterio 2 -- cerrar sesión. No alcanza con que el botón exista: tiene que
-  # destruir la sesión de verdad y dejar la pantalla sin acceso. SessionsController
-  # redirige a root_path y es HomeController el que rebota a sign_in, así que no se
-  # afirma la URL del redirect sino el efecto: la sesión ya no existe y /profile
-  # manda a sign in.
+  # mandar el DELETE y dejar la pantalla sin acceso.
   #
-  # FALLA HOY, y por un defecto de la app, no del spec: show.tsx:50 pasa el objeto
-  # entero de sessions.destroy(...) al href del <Link> en vez de su .url, así que el
-  # DELETE nunca se dispara y la sesión sigue viva. El criterio 2 de la historia está
-  # sin cumplir. Ver
-  # docs/reports/defects/DEFECT-salir-no-cierra-sesion-05-10-2026.md
+  # El borrado de la fila no se afirma desde adentro del ejemplo a propósito: los
+  # system specs corren en una transacción que se revierte al terminar, así que
+  # Session.exists? seguiría dando true aunque el DELETE hubiera funcionado. Lo que
+  # sí es observable desde el browser es el efecto: sale el DELETE y /profile deja
+  # de servir la pantalla. Que la fila se borre de verdad lo cubre el request spec
+  # de Sessions (spec/requests/sessions_spec.rb, "destroys the session").
   it "signs the employee out from the account screen" do
     sign_in employee
     visit profile_path
-    session_id = employee.sessions.order(:id).last
+    expect(page).to have_content(employee.name)
 
     click_on "Salir"
 
-    # Session.exists? y no reload: recargar una fila ya borrada devuelve un objeto
-    # nuevo que no sabe del delete, así que destroyed? seguiría en false.
-    expect(Session.exists?(session_id.id)).to be false
+    # El flash es la señal de que el DELETE ya aterrizó: lo emite el mismo redirect
+    # de SessionsController#destroy. Sin esta espera el visit siguiente compite
+    # contra el XHR en vuelo. La aserción reintenta sola, no hace falta un sleep.
+    expect(page).to have_content("Esa sesión fue cerrada")
 
+    # No se afirma la URL del redirect: SessionsController va a root_path y el
+    # destino final depende de a dónde caiga el 302. Lo que el criterio exige es que
+    # la sesión se haya cerrado, y eso se ve en que /profile ya no le sirve la
+    # pantalla a nadie.
     visit profile_path
     expect(page).to have_current_path(sign_in_path)
+    expect(page).to have_no_content(employee.name)
+    expect(page).to have_no_content(employee.email)
   end
 
   # Transversal -- permisos: la pantalla es del empleado y no se alcanza con otro

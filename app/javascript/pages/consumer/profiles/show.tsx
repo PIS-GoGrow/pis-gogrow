@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage } from "@inertiajs/react"
+import { Head, router, usePage } from "@inertiajs/react"
 import { LogOut } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -44,16 +44,23 @@ export default function Show({ benefit }: ConsumerProfilesShow) {
             className="gap-1.5 px-1 font-semibold text-red-700 hover:text-red-700 has-[>svg]:px-1 dark:text-red-400 dark:hover:text-red-400"
             asChild
           >
-            {/* flushAll limpia la caché de páginas para que la sesión cerrada no
-                quede visible al volver atrás. */}
-            <Link
-              href={sessions.destroy(auth.session.id)}
-              as="button"
-              onClick={() => router.flushAll()}
+            {/* El Link con method no servía: combinándolo con el Button asChild y el
+                as="button" renderizaba un <button> sin href ni form, así que el
+                click no mandaba el DELETE. router.delete sí, y es el patrón que
+                usan los demás deletes de la app. flushAll limpia la caché de
+                páginas para que la sesión cerrada no quede visible al volver
+                atrás. */}
+            <button
+              type="button"
+              onClick={() => {
+                router.delete(sessions.destroy(auth.session.id), {
+                  onSuccess: () => router.flushAll(),
+                })
+              }}
             >
               <LogOut className="size-4" aria-hidden="true" />
               {t(`${page}.sign_out`)}
-            </Link>
+            </button>
           </Button>
         }
       >
