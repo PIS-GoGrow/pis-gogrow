@@ -3,7 +3,6 @@ import { Pencil } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import OptionChoices from "@/components/menus/option-choices"
 import {
   AdaptableDialog,
   AdaptableDialogContent,
@@ -11,6 +10,7 @@ import {
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
+import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"

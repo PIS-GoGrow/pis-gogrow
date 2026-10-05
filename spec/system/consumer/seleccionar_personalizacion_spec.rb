@@ -223,7 +223,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       visit order_path(order)
       calm_animations
 
-      click_button "Modificar pedido"
+      click_button "Editar"
       within("[role=dialog]") do
         expect(page).to have_button("Guardar cambios", disabled: false)
 
@@ -244,7 +244,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       visit order_path(order)
       calm_animations
 
-      click_button "Modificar pedido"
+      click_button "Editar"
       within("[role=dialog]") do
         expect(page).to have_button("Guardar cambios", disabled: true)
 
@@ -265,7 +265,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       visit order_path(order)
       calm_animations
 
-      click_button "Modificar pedido"
+      click_button "Editar"
       within("[role=dialog]") do
         pick_option("Salsa", "Filetto")
         # El clic y el PATCH son visitas de Inertia: sin esperar a que el radio

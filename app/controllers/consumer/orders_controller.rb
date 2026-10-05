@@ -16,47 +16,25 @@ class Consumer::OrdersController < Consumer::InertiaController
 
   def show
     consumer = Current.user.consumer
-=begin
- feature/ibp-022-seleccionar-personalizacion
+
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
-    @order = consumer.orders.preload(schedule: { menu: [ :option_groups, { provider: :user } ] }).find(params[:id])
-    @delivery_addresses = delivery_address_options(consumer, @order)
-    @max_quantity = max_quantity(@order)
-    @option_groups = @order.schedule&.menu&.option_groups.to_a.map do |group|
-      { id: group.id, name: group.name, options: group.options, limit: group.limit }
-    end
-=======
+    @order = consumer.orders.preload(
+      schedule: { menu: [ :option_groups, { provider: :user } ] }
+    ).find(params[:id])
 
-    @order = consumer.orders.preload(schedule: { menu: { provider: :user } }).find(params[:id])
     @delivery_addresses = @order.delivery_address_options consumer
     @max_quantity = @order.max_quantity
     @editing = params[:edit] == "1"
- develop
-=end
-    def show
-      consumer = Current.user.consumer
 
-      # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
-      # tiene que ser un 404, no una página ajena.
-      @order = consumer.orders.preload(
-        schedule: { menu: [ :option_groups, { provider: :user } ] }
-      ).find(params[:id])
-
-      @delivery_addresses = delivery_address_options(consumer, @order)
-      @max_quantity = max_quantity(@order)
-
-      @option_groups = @order.schedule&.menu&.option_groups.to_a.map do |group|
-        {
-          id: group.id,
-          name: group.name,
-          options: group.options,
-          limit: group.limit
-        }
-      end
-
-      @editing = params[:edit] == "1"
-   end
+    @option_groups = @order.schedule&.menu&.option_groups.to_a.map do |group|
+      {
+        id: group.id,
+        name: group.name,
+        options: group.options,
+        limit: group.limit
+      }
+    end
   end
 
   def create
