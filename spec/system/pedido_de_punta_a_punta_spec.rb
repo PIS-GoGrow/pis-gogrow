@@ -114,8 +114,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   end
 
   def edit_order(order)
-    visit order_path(order)
-    click_button "Editar"
+    visit order_path(order, edit: 1)
   end
 
   # Las dos vistas del pedido muestran solo lo elegido, no todo lo que ofrece el plato.
@@ -617,7 +616,10 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     # habilite otra vez, que el servidor respondió.
     def turn_off_home_delivery
       visit settings_profile_path
-      find("#home_delivery[aria-checked=true]:not([disabled])").click
+      without_animations
+      switch = find("#home_delivery:not([disabled])")
+      switch.click
+      switch.click unless has_css?("#home_delivery[aria-checked=false]", wait: 1)
       expect(page).to have_css("#home_delivery[aria-checked=false]")
       expect(page).to have_css("#home_delivery:not([disabled])")
     end
