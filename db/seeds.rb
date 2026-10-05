@@ -11,11 +11,11 @@ week_start = Date.current.beginning_of_week(:monday)
 company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
 
 tu_viandita_user = User.create!(
-  email: "pis2026.tuviandita@gmail.com",
+  email: "olmedo.juanandres5@gmail.com",
   name: "TuViandita",
   password_digest: "$2a$12$bJmXACYR/Ob7pRPwQQ90BeTxYrZ8zRuUkJc8rBM/zaWcKY0wsxmku",
   verified: true,
-  google_uid: "108316160859916934526"
+  google_uid: "102930033563007478886"
 )
 tu_viandita = Provider.create!(
   order_deadline: Time.current + 3.hours,
@@ -153,7 +153,6 @@ admin = Admin.create!(user: admin_user, company:)
 benefit_config = BenefitConfiguration.create! subsidy_percentage: 50, name: "Subsidio base", company:, created_by: admin_user
 benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: Date.current, type: MonthlyBenefit.name
 
-consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
 consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
 
 benefit = Benefit.create!(
@@ -182,7 +181,7 @@ def default_selection_for(menu)
 end
 
 upcoming_schedules = Schedule.where("date >= ?", Date.current).order(:date)
-if (first_schedule = upcoming_schedules.first)
+if (first_schedule = upcoming_schedules.last)
   order = Order.create!(
     consumer:,
     schedule: first_schedule,
@@ -233,6 +232,57 @@ order = Order.create!(
 )
 order.apply_benefit! benefit, 1
 
+names = [
+  "María García", "Carlos López", "Ana Martínez", "Roberto Sánchez",
+  "Elena Rodríguez", "Francisco Díaz", "Laura Fernández", "Diego Moreno",
+  "Isabel Núñez", "Antonio Ramírez", "Sofía Castillo", "Miguel Herrera",
+  "Catalina Ortiz", "Pedro Vega", "Valentina Flores", "Javier Ruiz",
+  "Martina Gómez", "Luis Medina", "Aurora Romero", "Andrés Navarro"
+]
+
+streets = [
+  "Avenida Rivera", "Avenida Italia", "Avenida 8 de Octubre", "Boulevar Artigas",
+  "Avenida Agraciada", "21 de Setiembre", "Julio Herrera y Reissig", "Canelones",
+  "Avenida 18 de Julio", "Avenida Uruguay", "Avenida Luis Alberto de Herrera", "Boulevar España"
+]
+
+10.times do |i|
+  # Email aleatorio
+  random_email = "usuario#{SecureRandom.hex(4)}@gmail.com"
+  
+  # Nombre
+  name = names[i]
+  
+  # Dirección (calle + número)
+  street = streets.sample
+  number = rand(100..9999)
+  address = "#{street} #{number}"
+  
+  # Fecha de nacimiento (1970-2005)
+  birthday = Date.new(rand(1970..2005), rand(1..12), rand(1..28))
+  
+  # Fecha de onboarding (2023-2026)
+  onboarding_date = Date.new(rand(2023..2026), rand(1..12), rand(1..28))
+  
+  # Crear usuario
+  user = User.create!(
+    email: random_email,
+    name: name,
+    password_digest: "$2a$12$w4gRBetBMUY0nAyf0T3aU.Vzpk/.Wu75sHOcs3aGX4k.gF7qsG3/q",
+    verified: true,
+    google_uid: i.to_s
+  )
+  
+  # Crear consumer
+  Consumer.create!(
+    company: company,
+    address: address,
+    user: user,
+    birthday: birthday,
+    onboarding_date: onboarding_date
+  )
+end
+
 
 # Cuentas pendientes de pago de meses anteriores (para probar el historial de pagos)
 [
@@ -257,7 +307,8 @@ order.apply_benefit! benefit, 1
       discounted_price: menu.price / 2,
       amount: 1,
       address: company.address,
-      delivery_method: :office
+      delivery_method: :office,
+      selected_options: default_selection_for(schedule.menu)
     )
   end
 end
@@ -285,14 +336,11 @@ def seed_payment(account, status)
 end
 
 # TuViandita queda con los cuatro estados repartidos en las dos pestañas:
-# - este mes (cuentas reales de los pedidos): el empleado informó su pago y la
-#   empresa todavía no, así que va a Pendientes;
 # - hace dos meses: la empresa pagó pero al empleado le rechazaron el
 #   comprobante, así que sigue en Pendientes;
 # - el mes pasado: todo confirmado, así que va al Historial.
-seed_payment(consumer.accounts.find_by!(provider: tu_viandita, month: Date.current.beginning_of_month), :submitted)
 
-{ 2.months.ago => [ :approved, :rejected ], 1.month.ago => [ :approved, :approved ] }.each do |date, (company_status, consumer_status)|
+{ 1.month.ago => [ :approved, :approved ] }.each do |date, (company_status, consumer_status)|
   month = date.beginning_of_month
 
   # find_or_create_by!, no create!: el mes "hace 2 meses" ya tiene cuenta de
@@ -359,3 +407,20 @@ end
   )
   invoice.save!
 end
+
+session = tu_viandita_user.sessions.create! role: :provider
+request = ActionDispatch::TestRequest.create
+jar = request.cookie_jar
+
+session = tu_viandita_user.sessions.create! role: :provider
+jar.signed[:session_token] = session.id
+puts "Proveedor: " + jar[:session_token]
+
+session = consumer_user.sessions.create! role: :consumer
+jar.signed[:session_token] = session.id
+puts "Consumidor: " + jar[:session_token]
+
+session = admin_user.sessions.create! role: :admin
+jar.signed[:session_token] = session.id
+puts "Admin: " + jar[:session_token]
+
