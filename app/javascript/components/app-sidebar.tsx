@@ -8,6 +8,7 @@ import {
   LayoutGrid,
   Package,
   Percent,
+  UserRound,
   Utensils,
   Wallet,
 } from "lucide-react"
@@ -32,6 +33,7 @@ import {
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
+  consumerProfiles,
   providerCollections,
   providerDashboard,
   providerMenus,
@@ -86,6 +88,8 @@ export function AppSidebar() {
         title: t("nav.payments"),
         href: adminPayments.index().url,
         icon: CreditCard,
+      },
+      {
         title: t("nav.invoices"),
         href: adminInvoices.index().url,
         icon: FileText,
@@ -106,6 +110,11 @@ export function AppSidebar() {
         title: t("nav.payments"),
         href: consumerAccounts.index().url,
         icon: CreditCard,
+      },
+      {
+        title: t("nav.account"),
+        href: consumerProfiles.show().url,
+        icon: UserRound,
       },
     ],
   }
