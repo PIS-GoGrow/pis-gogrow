@@ -26,9 +26,10 @@ RSpec.describe Menus::Update do
   end
 
   def order_for(schedule, status: :confirmed)
-    Order.reserve(consumer: consumers(:one), schedule:, delivery_method: :office, address: nil, benefits: []).tap do |order|
-      order.update!(status:)
-    end
+    Order.reserve(
+      consumer: consumers(:one), schedule:, delivery_method: :office, address: nil,
+      benefits: [], selected_options: selection_for(schedule.menu)
+    ).tap { |order| order.update!(status:) }
   end
 
   def update(agenda, **options)

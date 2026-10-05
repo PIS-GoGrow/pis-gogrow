@@ -69,12 +69,18 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     I18n.l(month, format: :month_year)
   end
 
+  def closed_month_card
+    find("[role=tabpanel] [data-slot=card]", text: I18n.l(closed_month, format: :month_name_year))
+  end
+
   let(:provider) { providers(:tuviandita) }
-  let(:previous_month) { Date.current.change(day: 15).months_ago(1) }
-  let(:current_month) { Date.current.beginning_of_month }
+  # El mes en curso no se puede pagar: el circuito corre sobre el mes anterior,
+  # y el historial previo que no se debe tocar es el de dos meses atrás.
+  let(:previous_month) { Date.current.change(day: 15).months_ago(2) }
+  let(:closed_month) { Date.current.prev_month.beginning_of_month }
 
   # El circuito del empleado: entra a /accounts, sube el comprobante de la cuenta
-  # del mes corriente y la ve quedar "Enviada".
+  # del mes cerrado y la ve quedar "Enviada".
   def employee_submits_receipt
     sign_in employee
 
@@ -97,7 +103,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
 
   it "shows an error notification and saves nothing when the receipt format is invalid" do
     confirmed_order(
-      consumer: consumers(:one), provider:, month: current_month,
+      consumer: consumers(:one), provider:, month: closed_month,
       quantity: 2, discounted_price: 300
     )
     sign_in employee
@@ -122,7 +128,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
       discounted_price: 500
     )
     confirmed_order(
-      consumer: consumers(:one), provider:, month: current_month,
+      consumer: consumers(:one), provider:, month: closed_month,
       quantity: 2, discounted_price: 300
     )
     employee_submits_receipt
@@ -133,7 +139,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
 
     # La cuenta del empleado vive dentro del grupo "Empleados", colapsado por
     # defecto: hay que desplegarlo para llegar a su fila.
-    click_on "Empleados"
+    within(closed_month_card) { click_on "Empleados" }
 
     # Consistencia entre vistas: el importe que el proveedor aprueba es el mismo
     # que el empleado tiene en su cuenta, no dos cálculos distintos.
@@ -157,7 +163,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
 
     find("[role=tab]", text: "Historial").click
     within(find("[role=tabpanel]")) do
-      expect(page).to have_content(month_label(current_month))
+      expect(page).to have_content(month_label(closed_month))
       expect(page).to have_content(month_label(previous_month))
       expect(page).to have_content("Aceptado", count: 2)
       # El mes anterior conserva su propio importe: el pago nuevo no lo pisa.
@@ -173,7 +179,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
       discounted_price: 500
     )
     confirmed_order(
-      consumer: consumers(:one), provider:, month: current_month,
+      consumer: consumers(:one), provider:, month: closed_month,
       quantity: 2, discounted_price: 300
     )
     employee_submits_receipt
@@ -184,7 +190,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
 
     # La cuenta del empleado vive dentro del grupo "Empleados", colapsado por
     # defecto: hay que desplegarlo para llegar a su fila.
-    click_on "Empleados"
+    within(closed_month_card) { click_on "Empleados" }
     click_on users(:one).name
 
     # Mismo motivo que en el caso de arriba: primero hay que abrir el
@@ -211,7 +217,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
       expect(page).to have_content("$500")
       expect(page).to have_content("Aceptado", count: 1)
       # Un pago rechazado no entra al historial: sigue siendo deuda pendiente.
-      expect(page).to have_no_content(month_label(current_month))
+      expect(page).to have_no_content(month_label(closed_month))
     end
   end
 end

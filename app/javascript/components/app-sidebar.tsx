@@ -28,6 +28,7 @@ import {
 import {
   adminBenefitConfigurations,
   adminInvoices,
+  adminPayments,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
@@ -82,6 +83,9 @@ export function AppSidebar() {
         icon: Percent,
       },
       {
+        title: t("nav.payments"),
+        href: adminPayments.index().url,
+        icon: CreditCard,
         title: t("nav.invoices"),
         href: adminInvoices.index().url,
         icon: FileText,
@@ -112,7 +116,9 @@ export function AppSidebar() {
     <Sidebar
       collapsible="icon"
       variant="inset"
-      hideOnMobile={role === "consumer" || role === "provider"}
+      hideOnMobile={
+        role === "consumer" || role === "provider" || role === "admin"
+      }
     >
       <SidebarHeader>
         <SidebarMenu>

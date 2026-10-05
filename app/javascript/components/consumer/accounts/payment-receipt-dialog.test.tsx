@@ -168,6 +168,70 @@ describe("PaymentReceiptDialog", () => {
     expect(deleteButtons).toHaveLength(2)
   })
 
+  it("asks for confirmation before deleting a receipt", async () => {
+    const user = userEvent.setup()
+    const destroyAction = vi.fn((paymentId: number) => ({
+      url: `/admin/payments/${paymentId}`,
+      method: "delete" as const,
+    }))
+
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        createAction={{ url: "/admin/payments", method: "post" }}
+        destroyAction={destroyAction}
+        payments={[submittedPayment, rejectedPayment, approvedPayment]}
+      />,
+    )
+
+    expect(
+      screen.queryByRole("dialog", { name: "¿Eliminar comprobante?" }),
+    ).not.toBeInTheDocument()
+
+    await user.click(
+      screen.getAllByRole("button", { name: "Eliminar comprobante" })[0],
+    )
+
+    expect(
+      screen.getByRole("dialog", { name: "¿Eliminar comprobante?" }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Esta acción no se puede deshacer. Podés volver a subir el comprobante mientras el pago no esté aprobado.",
+      ),
+    ).toBeInTheDocument()
+    expect(destroyAction).toHaveBeenCalledWith(submittedPayment.id)
+    expect(screen.getByRole("button", { name: "Cancelar" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Eliminar" })).toBeInTheDocument()
+  })
+
+  it("can hide deletion actions without hiding receipt states", () => {
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        allowDelete={false}
+        payments={[submittedPayment, rejectedPayment, approvedPayment]}
+      />,
+    )
+
+    expect(
+      screen.queryByRole("button", { name: "Eliminar comprobante" }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText("En revisión")).toBeInTheDocument()
+    expect(screen.getByText("Rechazado")).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+  })
+
+  it("keeps uploading available when a receipt is approved", () => {
+    render(<PaymentReceiptDialog accountId={42} payments={[approvedPayment]} />)
+
+    expect(screen.getByText("comprobante_banco_3.jpg")).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeInTheDocument()
+  })
+
   it("opens the upload dialog when clicking the main trigger button", async () => {
     const user = userEvent.setup()
     render(

@@ -173,6 +173,14 @@ past_schedule = Schedule.create!(
   amount: 7
 )
 
+# Un pedido de un plato con opciones necesita la elección del empleado, así que
+# los de ejemplo toman la primera de cada grupo.
+def default_selection_for(menu)
+  menu.option_groups.map do |group|
+    { group_id: group.id, name: group.name, values: [ group.options.first ] }
+  end
+end
+
 upcoming_schedules = Schedule.where("date >= ?", Date.current).order(:date)
 if (first_schedule = upcoming_schedules.first)
   order = Order.create!(
@@ -183,7 +191,8 @@ if (first_schedule = upcoming_schedules.first)
     discounted_price: first_schedule.menu.price / 2,
     amount: 1,
     address: company.address,
-    delivery_method: :office
+    delivery_method: :office,
+    selected_options: default_selection_for(first_schedule.menu)
   )
   order.apply_benefit! benefit, 1
 end
@@ -205,7 +214,8 @@ end
     discounted_price: schedule.menu.price / 2,
     amount: 1,
     address: company.address,
-    delivery_method: :office
+    delivery_method: :office,
+    selected_options: default_selection_for(schedule.menu)
   )
   order.apply_benefit! benefit, 1
 end
@@ -218,7 +228,8 @@ order = Order.create!(
   discounted_price: 150.25,
   amount: 1,
   address: company.address,
-  delivery_method: :office
+  delivery_method: :office,
+  selected_options: default_selection_for(past_schedule.menu)
 )
 order.apply_benefit! benefit, 1
 

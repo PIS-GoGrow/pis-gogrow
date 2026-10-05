@@ -4,11 +4,13 @@ import { describe, expect, it, vi } from "vitest"
 
 import { AdminMobileNav } from "./admin-mobile-nav"
 
+let currentUrl = "/admin/dashboard"
+
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
-    usePage: () => ({ url: "/admin/dashboard", props: {} }),
+    usePage: () => ({ url: currentUrl, props: {} }),
     Link: ({
       children,
       href,
@@ -47,16 +49,13 @@ describe("AdminMobileNav", () => {
     )
   })
 
-  it("keeps the sections still to come out of reach", () => {
+  it("shows Pagos as an accessible navigation link", () => {
     const menu = nav()
 
-    for (const name of ["Pagos"]) {
-      expect(menu.queryByRole("link", { name })).not.toBeInTheDocument()
-      expect(menu.getByRole("button", { name })).toHaveAttribute(
-        "aria-disabled",
-        "true",
-      )
-    }
+    expect(menu.getByRole("link", { name: "Pagos" })).toHaveAttribute(
+      "href",
+      "/admin/payments",
+    )
   })
 
   it("marks the home as the current page", () => {
@@ -67,6 +66,69 @@ describe("AdminMobileNav", () => {
       "page",
     )
     expect(menu.getByRole("link", { name: "Cuenta" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("mantiene Empleados activo al ver el detalle de un empleado", () => {
+    currentUrl = "/admin/consumers/42"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Empleados" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("mantiene Empleados activo cuando la URL contiene parámetros de búsqueda", () => {
+    currentUrl = "/admin/consumers?search=juan&page=2"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Empleados" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+  })
+
+  it("marca Cuenta como activo en /settings/profile", () => {
+    currentUrl = "/settings/profile"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("marca Cuenta como activo en Subsidios (/admin/benefit_configurations)", () => {
+    currentUrl = "/admin/benefit_configurations"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("mantiene Pagos inactivo en facturas (/admin/invoices)", () => {
+    currentUrl = "/admin/invoices"
+    const menu = nav()
+
+    const pagosLink = menu.getByRole("link", { name: "Pagos" })
+    expect(pagosLink).not.toHaveAttribute("aria-current")
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+    expect(menu.getByRole("link", { name: "Empleados" })).not.toHaveAttribute(
       "aria-current",
     )
   })

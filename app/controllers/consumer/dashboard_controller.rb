@@ -33,7 +33,7 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def schedule_data
-    schedules = Schedule.includes(:orders, menu: [ :reviews, { provider: :user } ])
+    schedules = Schedule.includes(:orders, menu: [ :reviews, :option_groups, { provider: :user } ])
                         .where(date: week_range)
                         .order(:date, :id)
 
@@ -51,8 +51,9 @@ class Consumer::DashboardController < Consumer::InertiaController
           name: menu.name,
           description: menu.description,
           price: menu.price.to_f,
-          fillings: [],
-          sauces: [],
+          option_groups: menu.option_groups.map do |group|
+            { id: group.id, name: group.name, options: group.options, limit: group.limit }
+          end,
           provider_name: menu.provider_name,
           home_delivery: menu.provider.home_delivery?,
           reviews: menu.reviews.first(4).map do |review|

@@ -50,6 +50,7 @@ RSpec.describe "Edición de menú publicado por el proveedor", type: :system do
 
     it "cancela automáticamente los pedidos si se retira un plato del menú publicado" do
       target_date = Date.current.next_week(:monday) + 2.days
+      Schedule.where(date: target_date).destroy_all
       schedule_to_remove = milanesa.schedules.create!(date: target_date, amount: 10)
 
       order = Order.create!(
