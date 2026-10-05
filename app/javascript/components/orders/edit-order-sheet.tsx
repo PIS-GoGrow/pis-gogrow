@@ -46,9 +46,8 @@ export default function EditOrderSheet({
     options: optionGroups.map((group) => ({
       group_id: group.id,
       values:
-        order.selected_options.find(
-          (option) => option.group_id === group.id,
-        )?.values ?? [],
+        order.selected_options.find((option) => option.group_id === group.id)
+          ?.values ?? [],
     })),
   })
 
@@ -109,11 +108,7 @@ export default function EditOrderSheet({
                 onChange={(quantity) => setData("quantity", quantity)}
               />
 
-              <input
-                type="hidden"
-                id="quantity"
-                value={data.quantity}
-              />
+              <input type="hidden" id="quantity" value={data.quantity} />
 
               <p className="text-muted-foreground text-xs">
                 {t("pages.orders.show.edit_dialog.remaining", {
@@ -139,14 +134,10 @@ export default function EditOrderSheet({
                   key={item.id}
                   className={cn(
                     "border-border bg-card flex min-h-16 gap-3 rounded-lg border p-3",
-                    data.address === item.address &&
-                      "border-primary bg-muted",
+                    data.address === item.address && "border-primary bg-muted",
                   )}
                 >
-                  <RadioGroupItem
-                    value={item.address}
-                    className="mt-0.5"
-                  />
+                  <RadioGroupItem value={item.address} className="mt-0.5" />
 
                   <span className="text-xs">
                     <b>{item.label}</b>
@@ -165,9 +156,8 @@ export default function EditOrderSheet({
               key={group.id}
               group={group}
               values={
-                data.options.find(
-                  (option) => option.group_id === group.id,
-                )?.values ?? []
+                data.options.find((option) => option.group_id === group.id)
+                  ?.values ?? []
               }
               setValues={(values) =>
                 setData(
@@ -191,12 +181,8 @@ export default function EditOrderSheet({
               id="notes"
               name="notes"
               value={data.notes}
-              placeholder={t(
-                "pages.orders.show.edit_dialog.notes_placeholder",
-              )}
-              onChange={(event) =>
-                setData("notes", event.target.value)
-              }
+              placeholder={t("pages.orders.show.edit_dialog.notes_placeholder")}
+              onChange={(event) => setData("notes", event.target.value)}
             />
           </Field>
 
