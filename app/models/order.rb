@@ -256,7 +256,11 @@ class Order < ApplicationRecord
           discount_percentage:
         )
 
-        update(
+        # El update tiene que ir antes del update_all y cortar si falla: si una
+        # validación rechaza el cambio, el beneficio no se toca y modify tiene
+        # que devolver false para que el controller reporte el error en vez de
+        # un "Pedido actualizado".
+        saved = update(
           amount: quantity,
           notes:,
           price:,
@@ -267,7 +271,10 @@ class Order < ApplicationRecord
           **delivery
         )
 
+        return false unless saved
+
         order_benefits.update_all benefit_used: subsidized_quantity
+        true
       end
     end
   end
