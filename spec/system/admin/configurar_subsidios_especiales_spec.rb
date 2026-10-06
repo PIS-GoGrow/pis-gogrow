@@ -39,7 +39,9 @@ RSpec.describe "Configuración de subsidios especiales por RRHH", type: :system 
 
       # Esperar a que el input esté disponible
       find('input[name="employee_search"]').set("Test")
-      click_button "Test User"
+      expect(page).to have_button("Test User", exact: true)
+      click_button "Test User", exact: true
+      expect(page).to have_no_button("Test User", exact: true)
       expect(page).to have_content("Test U.")
 
       choose_option "Condición", "Antigüedad"

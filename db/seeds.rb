@@ -257,7 +257,8 @@ order.apply_benefit! benefit, 1
       discounted_price: menu.price / 2,
       amount: 1,
       address: company.address,
-      delivery_method: :office
+      delivery_method: :office,
+      selected_options: default_selection_for(menu)
     )
   end
 end
