@@ -68,7 +68,7 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
     click_button "Reemplazar por este"
 
     expect(page).to have_no_button("Reemplazar por este")
-    expect(page).to have_button("Editar", wait: 30)
+    expect(page).to have_content("Hay un cambio programado para el " + date, wait: 30)
 
     replaced_config = BenefitConfiguration.joins(:benefit_rules)
                                           .where(benefit_rules: { effective_from: Date.current.next_month.beginning_of_month })

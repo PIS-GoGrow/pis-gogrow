@@ -174,6 +174,77 @@ RSpec.describe Benefit, type: :model do
       expect(described_class.monthly).not_to include(special)
     end
   end
+
+  describe "validations and business integrity" do
+    before { Benefit.delete_all }
+
+    it "permite tener un beneficio mensual 'current' y otro 'future' simultáneamente para el mismo consumidor" do
+      described_class.create!(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :current,
+        percentage: 50,
+        amount: 20,
+        due_date: Date.current.end_of_month
+      )
+
+      future_benefit = described_class.new(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :future,
+        percentage: 60,
+        amount: 15,
+        due_date: Date.current.next_month.end_of_month
+      )
+
+      expect(future_benefit).to be_valid
+      expect { future_benefit.save! }.not_to raise_error
+      expect(Benefit.where(consumer:).count).to eq(2)
+    end
+
+    it "rechaza crear un segundo beneficio mensual 'current' para el mismo consumidor" do
+      described_class.create!(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :current,
+        percentage: 50,
+        amount: 20,
+        due_date: Date.current.end_of_month
+      )
+
+      second_current = described_class.new(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :current,
+        percentage: 70,
+        amount: 10,
+        due_date: Date.current.next_month.end_of_month
+      )
+
+      expect(second_current).not_to be_valid
+      expect(second_current.errors[:base]).to include("el cliente ya tiene un beneficio mensual")
+    end
+
+    it "rechaza un porcentaje negativo o mayor a 100" do
+      invalid_low = described_class.new(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :current,
+        percentage: -5,
+        due_date: Date.current.end_of_month
+      )
+      invalid_high = described_class.new(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :current,
+        percentage: 105,
+        due_date: Date.current.end_of_month
+      )
+
+      expect(invalid_low).not_to be_valid
+      expect(invalid_high).not_to be_valid
+    end
+  end
 end
 
 # == Schema Information

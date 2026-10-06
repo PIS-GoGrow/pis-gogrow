@@ -64,7 +64,7 @@ describe("EditBenefitConfigurationForm", () => {
       />,
     )
 
-    expect(screen.getByText("12/12/2026")).toBeInTheDocument()
+    expect(screen.getByText(/12\/12\/2026/)).toBeInTheDocument()
     expect(screen.getByLabelText(/se descuenta/i)).toHaveValue(50)
     expect(
       screen.getByLabelText(/cuando el precio por vianda es/i),
@@ -128,7 +128,7 @@ describe("EditBenefitConfigurationForm", () => {
 
     expect(postMock).not.toHaveBeenCalled()
     expect(
-      screen.getByText(/ya hay un cambio programado para el próximo período/i),
+      screen.getByText(/ya hay un cambio programado para el 12\/12\/2026/i),
     ).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: /mantener el programado/i }),

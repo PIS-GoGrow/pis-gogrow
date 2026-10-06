@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe Consumer, type: :model do
-  fixtures :consumers, :companies, :providers, :benefit_configurations, :benefits
+  fixtures :consumers, :companies, :providers, :benefit_configurations, :benefits, :menus, :schedules
 
   let(:consumer) { consumers(:one) }
   let(:company_address) { companies(:gogrow).address }
@@ -209,6 +209,66 @@ RSpec.describe Consumer, type: :model do
       ).apply_benefit! benefits(:monthly), 4
 
       expect(consumer.monthly_benefit_used_this_week).to eq(3)
+    end
+  end
+
+  describe "#monthly_benefit_for" do
+    let(:current_month_schedule) { Schedule.new(date: Date.current) }
+    let(:next_month_schedule) { Schedule.new(date: Date.current.next_month.beginning_of_month + 2.days) }
+
+    before do
+      consumer.benefits.destroy_all
+    end
+
+    it "devuelve el beneficio current para un schedule del mes actual" do
+      current_benefit = Benefit.create!(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :current,
+        percentage: 50,
+        amount: 20,
+        due_date: Date.current.end_of_month
+      )
+
+      expect(consumer.monthly_benefit_for(current_month_schedule)).to eq(current_benefit)
+    end
+
+    it "devuelve el beneficio future más próximo para un schedule del mes siguiente" do
+      Benefit.create!(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :current,
+        percentage: 50,
+        amount: 20,
+        due_date: Date.current.end_of_month
+      )
+      future_benefit = Benefit.create!(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :future,
+        percentage: 60,
+        amount: 15,
+        due_date: Date.current.next_month.end_of_month
+      )
+
+      expect(consumer.monthly_benefit_for(next_month_schedule)).to eq(future_benefit)
+    end
+
+    it "ignora beneficios vencidos (expired) aunque su due_date coincida" do
+      Benefit.create!(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :expired,
+        percentage: 50,
+        amount: 20,
+        due_date: Date.current.end_of_month
+      )
+
+      expect(consumer.monthly_benefit_for(current_month_schedule)).to be_nil
+    end
+
+    it "devuelve nil si no existe ningún beneficio válido para la fecha del schedule" do
+      expect(consumer.monthly_benefit_for(next_month_schedule)).to be_nil
     end
   end
 end

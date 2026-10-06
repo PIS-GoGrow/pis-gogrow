@@ -856,6 +856,123 @@ RSpec.describe "Orders", type: :request do
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.office_address_required") })
     end
+
+    context "transición de fin de mes y reglas de calendario (PR #80)" do
+      before do
+        travel_back
+        travel_to Time.zone.local(2026, 10, 31, 14, 0)
+      end
+
+      after do
+        travel_back
+      end
+
+      it "asigna el pedido al beneficio futuro y a la cuenta del mes de entrega al pedir el último fin de semana" do
+        consumer, company = setup_consumer
+        current_benefit = Benefit.create!(
+          consumer:,
+          benefit_configuration: benefit_configurations(:monthly),
+          amount: 20,
+          percentage: 50,
+          due_date: Date.new(2026, 10, 31),
+          status: :current
+        )
+        future_benefit = Benefit.create!(
+          consumer:,
+          benefit_configuration: benefit_configurations(:monthly),
+          amount: 20,
+          percentage: 50,
+          due_date: Date.new(2026, 11, 30),
+          status: :future
+        )
+
+        schedule_next_month = Schedule.create!(
+          menu: menus(:milanesa),
+          date: Date.new(2026, 11, 2),
+          amount: 10,
+          available: true
+        )
+
+        post orders_path, params: {
+          order: {
+            address: company.address,
+            items: [ { schedule_id: schedule_next_month.id, quantity: 1 } ]
+          }
+        }
+
+        expect(response).to redirect_to(dashboard_confirmation_path(confirmed_order_ids: [ Order.last.id ]))
+        order = Order.last
+        expect(order.order_benefits.map(&:benefit)).to contain_exactly(future_benefit)
+        expect(order.accounts.pluck(:month).uniq).to contain_exactly(Date.new(2026, 11, 1))
+      end
+
+      it "rechaza pedidos para fechas fuera del rango permitido por Calendar#allowed_order_dates" do
+        _consumer, company = setup_consumer
+        schedule_outside = Schedule.create!(
+          menu: menus(:milanesa),
+          date: Date.new(2026, 11, 16),
+          amount: 10,
+          available: true
+        )
+
+        expect do
+          post orders_path, params: {
+            order: {
+              address: company.address,
+              items: [ { schedule_id: schedule_outside.id, quantity: 1 } ]
+            }
+          }
+        end.not_to change(Order, :count)
+
+        follow_redirect!
+        expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
+      end
+
+      it "rechaza cantidades no numéricas o cero en el payload por bypass de interfaz" do
+        _consumer, company = setup_consumer
+        schedule = Schedule.create!(
+          menu: menus(:milanesa),
+          date: Date.new(2026, 11, 2),
+          amount: 10,
+          available: true
+        )
+
+        [ "0", "-1", "abc", "1.5" ].each do |invalid_qty|
+          expect do
+            post orders_path, params: {
+              order: {
+                address: company.address,
+                items: [ { schedule_id: schedule.id, quantity: invalid_qty } ]
+              }
+            }
+          end.not_to change(Order, :count)
+
+          follow_redirect!
+          expect(inertia).to have_props(errors: { order_error: I18n.t("validations.invalid_quantity") })
+        end
+      end
+
+      it "rechaza intentos de creación de pedidos por usuarios con rol provider" do
+        sign_in users(:provider_user), role: :provider
+        schedule = Schedule.create!(
+          menu: menus(:milanesa),
+          date: Date.new(2026, 11, 2),
+          amount: 10,
+          available: true
+        )
+
+        expect do
+          post orders_path, params: {
+            order: {
+              address: "18 de Julio 1006",
+              items: [ { schedule_id: schedule.id, quantity: 1 } ]
+            }
+          }
+        end.not_to change(Order, :count)
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
   end
   describe "PATCH /orders/:id/cancel" do
     it "redirects visitors to the sign in page" do
