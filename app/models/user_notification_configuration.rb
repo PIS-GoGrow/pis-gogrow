@@ -1,16 +1,15 @@
 # frozen_string_literal: true
 
-class UserNotification < ApplicationRecord
+class UserNotificationConfiguration < ApplicationRecord
   belongs_to :notification_configuration
-  belongs_to :user, polymorphic: true
+  belongs_to :user
 end
 
 # == Schema Information
 #
-# Table name: user_notifications
+# Table name: user_notification_configurations
 #
 #  id                            :bigint           not null, primary key
-#  user_type                     :string           not null
 #  created_at                    :datetime         not null
 #  updated_at                    :datetime         not null
 #  notification_configuration_id :bigint           not null
@@ -18,10 +17,11 @@ end
 #
 # Indexes
 #
-#  index_user_notifications_on_notification_configuration_id  (notification_configuration_id)
-#  index_user_notifications_on_user                           (user_type,user_id)
+#  idx_on_notification_configuration_id_fc2b09c529    (notification_configuration_id)
+#  index_user_notification_configurations_on_user_id  (user_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (notification_configuration_id => notification_configurations.id)
+#  fk_rails_...  (user_id => users.id)
 #

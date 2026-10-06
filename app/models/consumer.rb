@@ -10,9 +10,7 @@ class Consumer < ApplicationRecord
   has_many :saved_addresses, class_name: "DeliveryAddress", dependent: :destroy
   has_many :benefits, dependent: :destroy
   has_many :accounts, as: :owner
-  has_many :user_notifications, as: :user
-  has_many :notification_configurations, through: :user_notifications, source: :notification_configuration
-
+  
   has_many :consumer_benefit_configurations
   has_many :benefit_configurations, through: :consumer_benefit_configurations
 

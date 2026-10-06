@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_01_210455) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_06_202523) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -109,6 +109,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_01_210455) do
     t.datetime "created_at", null: false
     t.string "description"
     t.date "due_date"
+    t.decimal "max_price", precision: 10, scale: 2
     t.integer "percentage"
     t.integer "status"
     t.datetime "updated_at", null: false
@@ -209,6 +210,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_01_210455) do
     t.datetime "created_at", null: false
     t.string "description"
     t.datetime "updated_at", null: false
+  end
+
+  create_table "notifications", force: :cascade do |t|
+    t.boolean "closed"
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.boolean "requires_action"
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
   create_table "order_accounts", force: :cascade do |t|
@@ -485,14 +497,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_01_210455) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
-  create_table "user_notifications", force: :cascade do |t|
+  create_table "user_notification_configurations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "notification_configuration_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.string "user_type", null: false
-    t.index ["notification_configuration_id"], name: "index_user_notifications_on_notification_configuration_id"
-    t.index ["user_type", "user_id"], name: "index_user_notifications_on_user"
+    t.index ["notification_configuration_id"], name: "idx_on_notification_configuration_id_fc2b09c529"
+    t.index ["user_id"], name: "index_user_notification_configurations_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -532,6 +543,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_01_210455) do
   add_foreign_key "menus", "menus", column: "base_menu_id"
   add_foreign_key "menus", "providers"
   add_foreign_key "menus", "users", column: "modified_by_id"
+  add_foreign_key "notifications", "users"
   add_foreign_key "order_accounts", "accounts"
   add_foreign_key "order_accounts", "orders"
   add_foreign_key "order_benefits", "benefits"
@@ -555,5 +567,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_01_210455) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
-  add_foreign_key "user_notifications", "notification_configurations"
+  add_foreign_key "user_notification_configurations", "notification_configurations"
+  add_foreign_key "user_notification_configurations", "users"
 end
