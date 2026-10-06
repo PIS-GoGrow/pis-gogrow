@@ -2,12 +2,12 @@ import { ChevronLeft, Star } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
+import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 
-import type { Schedule } from "./consumer-types"
+import type { Schedule, Selections } from "./consumer-types"
 import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
 
@@ -17,10 +17,8 @@ interface Props {
   setQuantity: (value: number) => void
   notes: string
   setNotes: (value: string) => void
-  filling: string
-  setFilling: (value: string) => void
-  sauce: string
-  setSauce: (value: string) => void
+  selections: Selections
+  setSelections: (value: Selections) => void
   percentage: number
   back: () => void
   add: () => void
@@ -33,10 +31,8 @@ export function DishDetail({
   setQuantity,
   notes,
   setNotes,
-  filling,
-  setFilling,
-  sauce,
-  setSauce,
+  selections,
+  setSelections,
   percentage,
   monthlyRemaining,
   back,
@@ -51,9 +47,10 @@ export function DishDetail({
 
   const total = subtotal - discount
   const reviews = item.menu.reviews
-  const choicesMissing =
-    (item.menu.fillings.length > 0 && !filling) ||
-    (item.menu.sauces.length > 0 && !sauce)
+  // Cada grupo que el plato ofrece tiene que quedar elegido antes de agregarlo.
+  const choicesMissing = item.menu.option_groups.some(
+    (group) => !selections[group.id]?.length,
+  )
   const addDisabled = item.sold_out || item.orders_closed || choicesMissing
 
   return (
@@ -79,22 +76,16 @@ export function DishDetail({
           {t("pages.consumer_dashboard.index.orders_closed")}
         </p>
       )}
-      {item.menu.fillings.length > 0 && (
-        <Choices
-          title="Elige tu relleno"
-          choices={item.menu.fillings}
-          value={filling}
-          setValue={setFilling}
+      {item.menu.option_groups.map((group) => (
+        <OptionChoices
+          key={group.id}
+          group={group}
+          values={selections[group.id] ?? []}
+          setValues={(values) =>
+            setSelections({ ...selections, [group.id]: values })
+          }
         />
-      )}
-      {item.menu.sauces.length > 0 && (
-        <Choices
-          title="Elige tu salsa"
-          choices={item.menu.sauces}
-          value={sauce}
-          setValue={setSauce}
-        />
-      )}
+      ))}
       <section className="border-border border-b py-5">
         <div className="flex justify-between text-sm font-medium">
           <h2>Opiniones del plato</h2>
@@ -174,35 +165,5 @@ export function DishDetail({
         </Button>
       </BottomAction>
     </MobileCard>
-  )
-}
-
-interface ChoicesProps {
-  title: string
-  choices: string[]
-  value: string
-  setValue: (value: string) => void
-}
-
-function Choices({ title, choices, value, setValue }: ChoicesProps) {
-  return (
-    <section className="border-border border-b py-5">
-      <h2 className="text-xs font-semibold">{title}</h2>
-      <RadioGroup
-        value={value}
-        onValueChange={setValue}
-        className="mt-3 space-y-2"
-      >
-        {choices.map((choice) => (
-          <label
-            key={choice}
-            className="flex cursor-pointer items-center gap-2 text-xs"
-          >
-            <RadioGroupItem value={choice} aria-label={choice} />
-            {choice}
-          </label>
-        ))}
-      </RadioGroup>
-    </section>
   )
 }

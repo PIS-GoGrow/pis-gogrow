@@ -12,6 +12,7 @@ RSpec.describe "Edición de plato programado en el menú (flujo complejo)", type
 
   before do
     sign_in provider_user, role: :provider
+    Schedule.where(date: target_date).destroy_all
   end
 
   it "modifica solo para un día y rechaza los pedidos confirmados afectados" do

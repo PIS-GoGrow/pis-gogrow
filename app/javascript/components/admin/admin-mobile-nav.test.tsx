@@ -49,16 +49,13 @@ describe("AdminMobileNav", () => {
     )
   })
 
-  it("keeps the sections still to come out of reach", () => {
+  it("shows Pagos as an accessible navigation link", () => {
     const menu = nav()
 
-    for (const name of ["Pagos"]) {
-      expect(menu.queryByRole("link", { name })).not.toBeInTheDocument()
-      expect(menu.getByRole("button", { name })).toHaveAttribute(
-        "aria-disabled",
-        "true",
-      )
-    }
+    expect(menu.getByRole("link", { name: "Pagos" })).toHaveAttribute(
+      "href",
+      "/admin/payments",
+    )
   })
 
   it("marks the home as the current page", () => {
@@ -122,15 +119,12 @@ describe("AdminMobileNav", () => {
     )
   })
 
-  it("mantiene Pagos inactivo y no clickeable en facturas (/admin/invoices)", () => {
+  it("mantiene Pagos inactivo en facturas (/admin/invoices)", () => {
     currentUrl = "/admin/invoices"
     const menu = nav()
 
-    expect(menu.queryByRole("link", { name: "Pagos" })).not.toBeInTheDocument()
-    const pagosButton = menu.getByRole("button", { name: "Pagos" })
-    expect(pagosButton).toHaveAttribute("aria-disabled", "true")
-    expect(pagosButton).toBeDisabled()
-    expect(pagosButton).not.toHaveAttribute("aria-current")
+    const pagosLink = menu.getByRole("link", { name: "Pagos" })
+    expect(pagosLink).not.toHaveAttribute("aria-current")
     expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
       "aria-current",
     )

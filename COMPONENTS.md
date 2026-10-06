@@ -97,6 +97,7 @@ Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla
 | `Textarea` | `@/components/ui/textarea` | Texto multilínea |
 | `Label` | `@/components/ui/label` | Etiqueta suelta fuera de un `Field` |
 | `Checkbox` | `@/components/ui/checkbox` | Selección múltiple o casilla sí/no |
+| `Switch` | `@/components/ui/switch` | Activar o desactivar una opción |
 | `RadioGroup`, `RadioGroupItem` | `@/components/ui/radio-group` | Selección única con título y descripción |
 | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `SelectGroup`, `SelectLabel`, `SelectSeparator` | `@/components/ui/select` | Elegir una opción de una lista |
 | `ToggleGroup`, `ToggleGroupItem`, `Toggle` | `@/components/ui/toggle-group`, `@/components/ui/toggle` | Filtros, días, control segmentado |
@@ -123,7 +124,6 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 
 | Componente | Comando | Usar para | API de shadcn (Radix) |
 |---|---|---|---|
-| `Switch` | `add switch` | Activar o desactivar una opción | `checked`, `onCheckedChange`, `name` |
 
 ### Componentes propios (`components/`)
 
@@ -143,6 +143,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
 | `Icon` | `@/components/icon` | Renderizar un ícono de lucide recibido como prop |
 | `GoogleMark` | `@/components/branding/google-mark` | Logo de Google en el acceso con Google |
+| `OptionChoices` | `@/components/menus/option-choices` | Elegir las opciones de un grupo de un plato: `RadioGroup` si el grupo admite una, casillas con tope si admite varias |
 | `QuantityInput` | `@/components/quantity-input` | Elegir una cantidad entre un mínimo y un máximo |
 
 `PlaceholderPattern` sólo rellena los dashboards que todavía no están hechos. No se usa en pantallas nuevas.

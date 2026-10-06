@@ -249,6 +249,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_01_210455) do
     t.string "rejection_details"
     t.integer "rejection_reason"
     t.bigint "schedule_id"
+    t.jsonb "selected_options", default: [], null: false
     t.integer "status", default: 0, null: false
     t.integer "status_before_cancellation"
     t.datetime "updated_at", null: false
