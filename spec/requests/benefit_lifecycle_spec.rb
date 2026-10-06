@@ -62,7 +62,7 @@ RSpec.describe "Ciclo de vida continuo de beneficios", type: :request do
     next_period_monday = Date.current.next_month.beginning_of_month.next_occurring(:monday).noon
     travel_to(next_period_monday)
 
-    BenefitExpirationJob.perform_now
+    BenefitUpdateJob.perform_now
     BenefitAssignationJob.perform_now
 
     expect(benefits(:monthly).reload.status).to eq("expired")

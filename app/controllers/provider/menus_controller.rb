@@ -43,7 +43,7 @@ class Provider::MenusController < Provider::InertiaController
     @scheduled_days = Schedule.where(menu_id: saved_menu.family_ids, date: Date.current..).includes(:orders).order(:date).map do |s|
       { date: s.date.iso8601, confirmed_orders: s.orders.count(&:confirmed?) }
     end
-    @maximum_publish_date = Schedule.maximum_publish_date.iso8601
+    @maximum_publish_date = Calendar.new.maximum_publish_date.iso8601
   end
 
   def update

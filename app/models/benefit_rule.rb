@@ -39,6 +39,19 @@ class BenefitRule < ApplicationRecord
     raise NotImplementedError, "#{self.class} debe implementar benefit_deadline"
   end
 
+  # Devuelve true si la regla indica que debería crearse un beneficio futuro en el
+  # día de hoy
+  # En principio solo es necesario para MonthlyBenefit, por lo que por defecto es false
+  def future_applicable_to?(consumer, date: Date.current)
+    false
+  end
+
+  # Igual a la anterior, indica cuándo debería caducar un beneficio futuro si se crea
+  # hoy.
+  def future_benefit_deadline(consumer, date: Date.current)
+    benefit_deadline consumer, date
+  end
+
   private
 
   def monthly_benefit_exclusivity

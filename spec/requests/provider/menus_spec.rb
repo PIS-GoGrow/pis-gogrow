@@ -195,7 +195,7 @@ RSpec.describe "Provider::Menus", type: :request do
           saved_menu_id: menu.id,
           schedule_date: nil,
           today: Date.current.iso8601,
-          maximum_publish_date: Schedule.maximum_publish_date.iso8601
+          maximum_publish_date: Calendar.new.maximum_publish_date.iso8601
         )
         agenda_prop = inertia.props[:agenda].deep_symbolize_keys
         expect(agenda_prop[:mode]).to eq("weekly")
@@ -233,6 +233,24 @@ RSpec.describe "Provider::Menus", type: :request do
             props[:agenda][:date] == schedule.date.iso8601 &&
             props[:scheduled_days].find { it[:date] == schedule.date.iso8601 }[:confirmed_orders] ==
               schedule.orders.confirmed.count
+        }
+      end
+
+      it "opens a day programmed by a range with that range's agenda" do
+        starts_on = Date.current.next_week(:monday)
+        ends_on = starts_on + 4.days
+        variant = menus(:milanesa).build_variant(valid_from: starts_on, valid_until: ends_on)
+        variant.agendas.build(weekdays: [ 2, 4 ], starts_on:, ends_on:, amount: 6)
+        variant.save!
+        schedule = variant.schedules.create!(date: starts_on + 1.day, amount: 6)
+
+        get edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id)
+
+        expect(inertia).to have_props { |props|
+          props.deep_symbolize_keys[:agenda] == {
+            mode: "range", weekdays: [ 2, 4 ], starts_on: starts_on.iso8601,
+            ends_on: ends_on.iso8601, date: nil, amount: 6
+          }
         }
       end
 
