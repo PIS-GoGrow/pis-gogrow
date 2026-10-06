@@ -18,7 +18,7 @@ class Menus::AgendaScheduler
 
   def initialize(saved_menu)
     @menu = saved_menu
-    @limit = Schedule.maximum_publish_date
+    @limit = Calendar.new.maximum_publish_date
   end
 
   def call

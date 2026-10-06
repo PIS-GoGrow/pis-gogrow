@@ -87,8 +87,9 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         benefit_configurations={[]}
         special_subsidies={[]}
         employees={[]}
-        pending_base_subsidy={null}
+        pending_base_subsidies={[]}
         base_subsidy={null}
+        configurable_month={""}
       />,
     )
 
@@ -103,8 +104,9 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         benefit_configurations={[]}
         special_subsidies={[]}
         employees={[]}
-        pending_base_subsidy={null}
+        pending_base_subsidies={[]}
         base_subsidy={currentConfig}
+        configurable_month={""}
       />,
     )
 
@@ -121,8 +123,9 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         benefit_configurations={[]}
         special_subsidies={[]}
         employees={[]}
-        pending_base_subsidy={null}
+        pending_base_subsidies={[]}
         base_subsidy={currentConfig}
+        configurable_month={"12/12/2026"}
       />,
     )
 
@@ -134,51 +137,45 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     expect(
       screen.getByRole("button", { name: /cancelar/i }),
     ).toBeInTheDocument()
+    expect(screen.getByText(/12\/12\/2026/)).toBeInTheDocument()
 
     // Clicking cancel toggles back to read-only view
     await user.click(screen.getByRole("button", { name: /cancelar/i }))
     expect(screen.getByRole("button", { name: /editar/i })).toBeInTheDocument()
   })
 
-  it("shows scheduled banner when flash.notice is present and allows dismissing it", async () => {
-    const user = userEvent.setup()
-    currentFlashNotice = "Subsidio programado para el próximo período."
-
+  it("renders scheduled changes when pending_base_subsidies are present", () => {
     render(
       <Index
         benefit_configurations={[]}
         special_subsidies={[]}
         employees={[]}
-        pending_base_subsidy={pendingConfig}
+        pending_base_subsidies={[pendingConfig]}
         base_subsidy={currentConfig}
+        configurable_month={"12/12/2026"}
       />,
     )
 
     expect(
-      screen.getByText(/tus cambios están programados/i),
+      screen.getByText(/hay un cambio programado para el 12\/12\/2026/i),
     ).toBeInTheDocument()
-
-    const dismissBtn = screen.getByRole("button", { name: /cerrar aviso/i })
-    await user.click(dismissBtn)
-
-    expect(
-      screen.queryByText(/tus cambios están programados/i),
-    ).not.toBeInTheDocument()
+    expect(screen.getByText(/se descuenta 60%/i)).toBeInTheDocument()
   })
 
-  it("does not show scheduled banner when there is no flash notice", () => {
+  it("does not render scheduled changes alert when there are no pending subsidies", () => {
     render(
       <Index
         benefit_configurations={[currentConfig]}
         special_subsidies={[]}
         employees={[]}
-        pending_base_subsidy={pendingConfig}
+        pending_base_subsidies={[]}
         base_subsidy={currentConfig}
+        configurable_month={"12/12/2026"}
       />,
     )
 
     expect(
-      screen.queryByText(/tus cambios están programados/i),
+      screen.queryByText(/hay un cambio programado/i),
     ).not.toBeInTheDocument()
   })
 })

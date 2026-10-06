@@ -195,7 +195,7 @@ RSpec.describe "Provider::Menus", type: :request do
           saved_menu_id: menu.id,
           schedule_date: nil,
           today: Date.current.iso8601,
-          maximum_publish_date: Schedule.maximum_publish_date.iso8601
+          maximum_publish_date: Calendar.new.maximum_publish_date.iso8601
         )
         agenda_prop = inertia.props[:agenda].deep_symbolize_keys
         expect(agenda_prop[:mode]).to eq("weekly")

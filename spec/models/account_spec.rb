@@ -126,7 +126,7 @@ RSpec.describe Account, type: :model do
         status: :confirmed
       )
 
-      account = company.accounts.find_by!(provider:, month: Date.current.beginning_of_month)
+      account = company.accounts.find_by!(provider:, month: schedule.date.beginning_of_month)
 
       expect(account.amount).to eq(150.to_d)
     end
