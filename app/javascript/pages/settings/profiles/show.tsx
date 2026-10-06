@@ -97,7 +97,7 @@ export default function Profile({ provider }: SettingsProfilesShow) {
                       </FieldLabel>
                       <Switch
                         id="home_delivery"
-                        defaultChecked={provider.home_delivery}
+                        checked={provider.home_delivery}
                         disabled={updatingHomeDelivery}
                         onCheckedChange={(homeDelivery) => {
                           setUpdatingHomeDelivery(true)
