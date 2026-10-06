@@ -93,13 +93,15 @@ Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla
 | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter` | `@/components/ui/card` | Superficies: ítems de lista, métricas, formularios, resúmenes |
 | `Alert`, `AlertTitle`, `AlertDescription` | `@/components/ui/alert` | Errores, avisos y confirmaciones dentro de la pantalla |
 | `Field`, `FieldLabel`, `FieldError`, `FieldDescription`, `FieldGroup`, `FieldSet`, `FieldLegend`, `FieldContent`, `FieldTitle`, `FieldSeparator` | `@/components/ui/field` | Estructura de formularios: etiqueta, ayuda, error, grupos, divisor con texto |
-| `Input` | `@/components/ui/input` | Texto, email, número, fecha, búsqueda, archivo |
+| `Input` | `@/components/ui/input` | Texto, email, número, búsqueda, archivo. Para fechas, `DatePicker` |
 | `Textarea` | `@/components/ui/textarea` | Texto multilínea |
 | `Label` | `@/components/ui/label` | Etiqueta suelta fuera de un `Field` |
 | `Checkbox` | `@/components/ui/checkbox` | Selección múltiple o casilla sí/no |
 | `Switch` | `@/components/ui/switch` | Activar o desactivar una opción |
 | `RadioGroup`, `RadioGroupItem` | `@/components/ui/radio-group` | Selección única con título y descripción |
 | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `SelectGroup`, `SelectLabel`, `SelectSeparator` | `@/components/ui/select` | Elegir una opción de una lista |
+| `Calendar` | `@/components/ui/calendar` | Calendario de `react-day-picker`. En formularios se usa a través de `DatePicker` |
+| `Popover`, `PopoverTrigger`, `PopoverContent` | `@/components/ui/popover` | Panel flotante anclado a un botón (selector de fechas) |
 | `ToggleGroup`, `ToggleGroupItem`, `Toggle` | `@/components/ui/toggle-group`, `@/components/ui/toggle` | Filtros, días, control segmentado |
 | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `@/components/ui/tabs` | Alternar entre paneles de contenido |
 | `Separator` | `@/components/ui/separator` | Divisores horizontales o verticales |
@@ -143,6 +145,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
 | `Icon` | `@/components/icon` | Renderizar un ícono de lucide recibido como prop |
 | `GoogleMark` | `@/components/branding/google-mark` | Logo de Google en el acceso con Google |
+| `DatePicker`, `DateRangePicker` | `@/components/date-picker` | Elegir una fecha o un rango en un formulario; reciben y devuelven fechas `YYYY-MM-DD` |
 | `OptionChoices` | `@/components/menus/option-choices` | Elegir las opciones de un grupo de un plato: `RadioGroup` si el grupo admite una, casillas con tope si admite varias |
 | `QuantityInput` | `@/components/quantity-input` | Elegir una cantidad entre un mínimo y un máximo |
 
@@ -376,6 +379,32 @@ Es el `Select` de Radix, **no** un `<select>` nativo: las opciones son `SelectIt
   </Select>
 </Field>
 ```
+
+### DatePicker y DateRangePicker
+
+```tsx
+import { DatePicker, DateRangePicker } from "@/components/date-picker"
+```
+
+Botón con la fecha elegida que abre un `Calendar` en un `Popover`, en español. Es el [date picker de shadcn](https://ui.shadcn.com/docs/components/radix/date-picker) armado una sola vez para que las pantallas no repitan la composición.
+
+| Prop | Uso |
+|---|---|
+| `value` / `from` y `to` | Fechas `YYYY-MM-DD`; `""` si no hay |
+| `onChange` | Recibe la fecha elegida (`DatePicker`) o el desde y el hasta (`DateRangePicker`) |
+| `min`, `max` | Primer y último día habilitado (`DateRangePicker` solo acepta `min`) |
+| `weekdaysOnly` | Deshabilita sábados y domingos (`DatePicker`) |
+| `id` | Para vincularlo con un `FieldLabel htmlFor` |
+
+```tsx
+<Field>
+  <FieldLabel htmlFor="agenda-date">{t("…date")}</FieldLabel>
+  <DatePicker id="agenda-date" value={date} min={today} weekdaysOnly onChange={setDate} />
+</Field>
+```
+
+- Para fechas en un formulario se usa este componente y no `Input type="date"`.
+- `Calendar` se puede usar suelto si la pantalla muestra un calendario siempre visible.
 
 ### ToggleGroup
 
