@@ -41,6 +41,7 @@
       }
     },
     "nav": {
+      "account": "Cuenta",
       "admin": {
         "account": "Cuenta",
         "employees": "Empleados",
@@ -143,12 +144,13 @@
               "max_voucher_price": "Cuando el precio por vianda es",
               "monthly_voucher_limit": "Hasta un límite por empleado de",
               "monthly_voucher_limit_unit": "viandas",
-              "notice": "Los cambios se aplicarán en el próximo período.",
+              "notice": "Los cambios se aplicarán el %{date}.",
               "pending_conflict": {
                 "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
                 "keep": "Mantener el programado",
                 "replace": "Reemplazar por este",
-                "title": "Ya hay un cambio programado para el próximo período",
+                "title": "Ya hay un cambio programado para el %{date}",
+                "title_alt": "Hay un cambio programado para el %{date}",
                 "unexpected": "Error inesperado. Por favor reintentá la operación."
               },
               "scheduled_banner": {
@@ -379,6 +381,21 @@
         "options": {
           "choose": "Elegí tu %{name}",
           "limit": "Podés elegir hasta %{count}"
+        }
+      },
+      "consumer_profiles": {
+        "show": {
+          "benefit": "Tu beneficio",
+          "due_date": "Vigente hasta",
+          "max_price": "Tope por vianda",
+          "meals_one": "%{count} vianda",
+          "meals_other": "%{count} viandas",
+          "monthly_limit": "Viandas subsidiadas por mes",
+          "monthly_remaining": "Te quedan este mes",
+          "no_benefit": "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa.",
+          "percentage": "Subsidio de la empresa",
+          "sign_out": "Salir",
+          "title": "Mi cuenta"
         }
       },
       "dashboard": {

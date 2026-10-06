@@ -157,6 +157,7 @@ es:
     platform: "Plataforma"
     dashboard: "Panel"
     orders: "Mis pedidos"
+    account: "Cuenta"
     menu: "Menú de navegación"
     benefit_configurations: "Beneficio general"
     invoices: "Facturas"
@@ -255,7 +256,7 @@ es:
             max_voucher_price: "Cuando el precio por vianda es"
             monthly_voucher_limit: "Hasta un límite por empleado de"
             monthly_voucher_limit_unit: "viandas"
-            notice: "Los cambios se aplicarán en el próximo período."
+            notice: "Los cambios se aplicarán el %{date}."
             cancel: "Cancelar"
             submit: "Programar Subsidio"
             scheduled_banner:
@@ -263,7 +264,8 @@ es:
               description: "La nueva configuración de subsidios se aplicará a partir del próximo período."
               dismiss: "Cerrar aviso"
             pending_conflict:
-              title: "Ya hay un cambio programado para el próximo período"
+              title: "Ya hay un cambio programado para el %{date}"
+              title_alt: "Hay un cambio programado para el %{date}"
               description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
@@ -831,6 +833,19 @@ es:
       title: "Panel"
       roles:
         provider: "Panel del proveedor"
+    consumer_profiles:
+      show:
+        title: "Mi cuenta"
+        sign_out: "Salir"
+        benefit: "Tu beneficio"
+        percentage: "Subsidio de la empresa"
+        monthly_limit: "Viandas subsidiadas por mes"
+        monthly_remaining: "Te quedan este mes"
+        max_price: "Tope por vianda"
+        due_date: "Vigente hasta"
+        meals_one: "%{count} vianda"
+        meals_other: "%{count} viandas"
+        no_benefit: "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa."
     provider_accounts:
       show:
         title: "Cuenta"
