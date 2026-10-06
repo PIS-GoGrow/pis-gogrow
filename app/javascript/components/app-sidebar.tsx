@@ -86,7 +86,7 @@ export function AppSidebar() {
         title: t("nav.payments"),
         href: adminPayments.index().url,
         icon: CreditCard,
-      }
+      },
     ],
     consumer: [
       {
