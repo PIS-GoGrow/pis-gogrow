@@ -454,6 +454,7 @@ es:
         price: "Monto"
         total: "Total"
         download_receipt: "Descargar comprobante de pago"
+        see_receipts: "Ver comprobantes"
         status_pending: "Pendiente"
         status_accepted: "Aceptado"
         status_rejected: "Rechazado"
