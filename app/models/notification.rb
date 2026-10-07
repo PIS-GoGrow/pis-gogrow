@@ -1,35 +1,63 @@
 # frozen_string_literal: true
 
 # Representa una notificación que se le va a enviar al usuario.
+#
 # Una notificación puede estar activa o cerrada y puede requerir o no acción.
-# Si requiere acción, el usuario no la puede cerrar
+# Si requiere acción, el usuario no la puede cerrar, sino que necesita hacer algo
+# para que se cierre.
+#
+# Si el usuario tiene varios roles, la notificación solo le aparecerá cuando se loguee
+# con el rol definido en la columna role de notificación.
+#
+# Todos los eventos posibles que pueden generar notificaciones están en EVENT_KEYS.
+# Cada notificación necesita tener un event que forme parte de EVENT_KEYS.
+#
+# Las notificaciones deberían ser creadas únicamente mediante el servicio Notifier
+# (más información ahí de cómo crearlas). Nunca habría que llamar a Notification.create
 class Notification < ApplicationRecord
-  EVENT_KEYS = %i[order_confirmation].freeze
+  EVENT_KEYS = %i[
+    order_confirmation
+  ].to_set.freeze
 
   belongs_to :user
   belongs_to :notification_configuration
 
   validates :title, presence: true
   validates :description, presence: true
-  validates :role_belongs_to_user
-  validates :event_exists
+  validate :role_belongs_to_user
+  validate :event_exists
 
   scope :closed, -> { where.not closed_at: nil }
   scope :active, -> { where closed_at: nil }
 
   after_create_commit :send_whatsapp
 
+  # Cierra la notificación para que ya no le aparezca más al usuario.
   def close!(time: Time.current)
     update! closed_at: time
   end
 
-  def self.close_by!(event_key, notifiable, user)
+  # Cierra una notificación según un usuario, el objeto que generó la notificación
+  # y un evento.
+  # Si ya se tiene la notificación, no es necesario pasar por este método, se puede
+  # llamar a close! directamente.
+  def self.close_by!(event:, notifiable:, user:)
     user
       .notifications
       .active
-      .where(event_key:, notifiable:)
+      .where(event:, notifiable:)
       .first!
       .close!
+  end
+
+  # Idéntico a close_by!, solo que no hace nada si la notificación no existe
+  def self.close_by(event:, notifiable:, user:)
+    user
+      .notifications
+      .active
+      .where(event:, notifiable:)
+      .first
+      &.close!
   end
 
   private
@@ -39,7 +67,7 @@ class Notification < ApplicationRecord
   end
 
   def role_belongs_to_user
-    user.roles.include? role
+    user.roles.include? role.to_s
   end
 
   def event_exists

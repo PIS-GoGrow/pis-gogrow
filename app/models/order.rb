@@ -346,28 +346,15 @@ class Order < ApplicationRecord
 
   def notify_confirmed
     Notifier.call(
-      configuration_key: :order_updates,
       event_key: :order_confirmed,
       user: consumer.user,
       role: :consumer,
-      requires_action: false,
+      notifiable: self,
       description_data: {
         date: I18n.l(schedule.date, format: :short),
         provider: provider.user.name
       }
     )
-    Notifier.call(
-      configuration_key: :pending_payment, # qué configuración se le asigna
-      user: consumer.user,
-      role: :consumer, # a cuál de los roles del usuario
-      requires_action: true,
-      source: account,
-      description_data: {
-        amount: account.amount,
-        provider: account.provider.user.name
-      }
-    )
-    Notification.close_by!(:pending_payment, account, user)
   end
 
   # El cupo del schedule ya descuenta esta orden, así que el máximo que el

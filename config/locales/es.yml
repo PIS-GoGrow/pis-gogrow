@@ -86,7 +86,7 @@ es:
     order_confirmed:
       title: "Tu pedido fue confirmado"
       description: "Tu pedido del %{date} fue confirmado por %{provider}."
-  notification_types:
+  notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
       description: "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado."

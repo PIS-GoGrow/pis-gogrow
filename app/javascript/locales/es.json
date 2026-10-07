@@ -78,7 +78,7 @@
         "sessions": "Sesiones"
       }
     },
-    "notification_types": {
+    "notification_configurations": {
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
