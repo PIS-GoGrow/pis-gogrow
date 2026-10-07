@@ -5,8 +5,7 @@ import { describe, expect, it, vi } from "vitest"
 import SalesDetailDialog from "./sales-detail-dialog"
 
 vi.mock("@inertiajs/react", async () => {
-  const actual =
-    await vi.importActual<typeof import("@inertiajs/react")>("@inertiajs/react")
+  const actual = await vi.importActual("@inertiajs/react")
 
   return {
     ...actual,

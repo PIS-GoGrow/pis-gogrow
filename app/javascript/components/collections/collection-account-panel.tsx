@@ -1,14 +1,17 @@
-import { TriangleAlert } from "lucide-react"
+import { Link } from "@inertiajs/react"
+import { Eye, TriangleAlert } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import CollectionAccountDetailDialog from "@/components/collections/collection-account-detail-dialog"
 import CollectionPaymentHistory from "@/components/collections/collection-payment-history"
 import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SheetTrigger } from "@/components/ui/sheet"
 import { useFormatters } from "@/hooks/use-formatters"
+import { cn } from "@/lib/utils"
+import { providerCollections } from "@/routes"
 import type { ProviderCollectionAccount } from "@/types"
 
 interface CollectionAccountPanelProps {
@@ -21,6 +24,7 @@ interface CollectionAccountPanelProps {
   children?: ReactNode
   showPaymentHistory?: boolean
   showDownloadAll?: boolean
+  detailMode?: "dialog" | "link"
 }
 
 export default function CollectionAccountPanel({
@@ -30,6 +34,7 @@ export default function CollectionAccountPanel({
   children,
   showPaymentHistory = false,
   showDownloadAll = false,
+  detailMode = "dialog",
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -72,7 +77,20 @@ export default function CollectionAccountPanel({
           </span>
         </p>
 
-        <CollectionAccountDetailDialog account={account} />
+        {detailMode === "dialog" ? (
+          <CollectionAccountDetailDialog account={account} />
+        ) : (
+          <Link
+            href={providerCollections.show(account.id)}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "-mr-2.5",
+            )}
+          >
+            <Eye aria-hidden="true" />
+            {t("pages.provider_collections.group.detail")}
+          </Link>
+        )}
       </div>
 
       {account.status === "submitted" && account.payment_id && (

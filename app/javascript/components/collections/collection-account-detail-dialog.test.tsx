@@ -7,8 +7,7 @@ import type { ProviderCollectionAccount } from "@/types"
 import CollectionAccountDetailDialog from "./collection-account-detail-dialog"
 
 vi.mock("@inertiajs/react", async () => {
-  const actual =
-    await vi.importActual<typeof import("@inertiajs/react")>("@inertiajs/react")
+  const actual = await vi.importActual("@inertiajs/react")
 
   return {
     ...actual,
