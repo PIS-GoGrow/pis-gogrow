@@ -146,6 +146,7 @@ RSpec.describe "Provider::Collections", type: :request do
 
       expect(employee[:payments].first).to include(
         status: "approved",
+        rejection_reason: nil,
         date: approved.created_at.strftime("%d/%m/%y"),
         receipt_url: receipt_provider_payment_path(approved),
         receipt_filename: "aprobado.png",
@@ -154,6 +155,7 @@ RSpec.describe "Provider::Collections", type: :request do
 
       expect(employee[:payments].second).to include(
         status: "rejected",
+        rejection_reason: "Comprobante inválido",
         date: rejected.created_at.strftime("%d/%m/%y"),
         receipt_url: receipt_provider_payment_path(rejected),
         receipt_filename: "rechazado.png",

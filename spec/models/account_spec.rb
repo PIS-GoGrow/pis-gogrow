@@ -186,6 +186,13 @@ RSpec.describe Account, type: :model do
       expect(account.collection_status).to eq("submitted")
     end
 
+    it "remains submitted when older payment was rejected as partial payment but a newer one is submitted" do
+      create_payment(status: :rejected, rejection_reason: "El pago es parcial", created_at: 2.days.ago)
+      create_payment(status: :submitted, created_at: 1.day.ago)
+
+      expect(account.collection_status).to eq("submitted")
+    end
+
     # Una cuenta de empresa no debe la deuda final sino el subsidio: lo que la
     # empresa subsidia es la diferencia entre el precio de lista y el de lista
     # menos el descuento.
@@ -245,6 +252,16 @@ RSpec.describe Account, type: :model do
       create_payment(status: :approved, created_at: 1.day.ago)
 
       expect(account.payment_pending_review).to eq(older)
+    end
+
+    it "advances to the next submitted payment once the older one is resolved" do
+      older = create_payment(status: :submitted, created_at: 2.days.ago)
+      newer = create_payment(status: :submitted, created_at: 1.day.ago)
+
+      expect(account.payment_pending_review).to eq(older)
+
+      older.update!(status: :rejected, rejection_reason: "El pago es parcial")
+      expect(account.reload.payment_pending_review).to eq(newer)
     end
   end
 
