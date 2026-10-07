@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-class UserNotificationConfiguration < ApplicationRecord
-  belongs_to :notification_configuration
+class Notification::ConfigurationUser < ApplicationRecord
+  belongs_to :notification_configuration, class_name: "Notification::Configuration"
   belongs_to :user
 end
 
 # == Schema Information
 #
-# Table name: user_notification_configurations
+# Table name: notification_configuration_users
 #
 #  id                            :bigint           not null, primary key
 #  created_at                    :datetime         not null
@@ -17,8 +17,8 @@ end
 #
 # Indexes
 #
-#  idx_on_notification_configuration_id_fc2b09c529    (notification_configuration_id)
-#  index_user_notification_configurations_on_user_id  (user_id)
+#  idx_on_notification_configuration_id_0b0ca12e05    (notification_configuration_id)
+#  index_notification_configuration_users_on_user_id  (user_id)
 #
 # Foreign Keys
 #

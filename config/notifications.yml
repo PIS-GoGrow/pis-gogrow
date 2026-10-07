@@ -1,0 +1,9 @@
+configurations:
+  order_updates:
+    roles: [consumer]
+  
+events:
+  order_confirmation:
+    configuration: order_updates
+    roles: [consumer]
+    requires_action: false

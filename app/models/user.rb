@@ -10,6 +10,8 @@
 class User < ApplicationRecord
   class DomainNotAllowed < StandardError; end
 
+  ROLES = %i[consumer provider admin].freeze
+
   has_secure_password
 
   generates_token_for :email_verification, expires_in: 2.days do
@@ -21,8 +23,8 @@ class User < ApplicationRecord
   end
 
   has_many :notifications
-  has_many :user_notification_configurations
-  has_many :notification_configurations, through: :user_notification_configurations, source: :notification_configuration
+  has_many :notification_configuration_users, class_name: "Notification::ConfigurationUser"
+  has_many :notification_configurations, through: :notification_configuration_users, source: :notification_configuration
 
   has_many :sessions, dependent: :destroy
 

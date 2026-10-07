@@ -43,33 +43,28 @@
 # haga la acción con el método Notification.close_by!, que acepta una clave de evento,
 # el objeto notifiable y el usuario.
 class Notifier
-  CONFIG_KEY_MAP = {
-    order_confirmation: :order_updates
-  }.freeze
-
-  REQUIRES_ACTION = [
-    # Deben ser símbolos, por ejemplo: :order_confirmation
-  ].to_set.freeze
+  class MissingConfiguration < StandardError; end
 
   def self.call(event_key:, user:, role:, notifiable:, title_data: {}, description_data: {})
-    event_key = event_key.to_sym
+    event = Notification::Registry.event!(event_key)
+    unless event.roles.include?(role.to_sym)
+      raise ArgumentError, "#{event.key} no aplica al rol #{role}" 
+    end
 
-    configuration_key = CONFIG_KEY_MAP[event_key] || event_key
-
-    # Lanzamos error si la configuration_key es incorrecta
-    configuration = NotificationConfiguration.find_by!(key: configuration_key)
-
+    # Buscamos la Notification::Configuration correspondiente a ese evento
+    configuration = find_configuration_for! event
+    
     # I18n.t! lanza I18n::MissingTranslationData si falta la traducción, en vez de
     # guardar un texto tipo "translation missing: ..." en la notificación.
     Notification.create!(
       notification_configuration: configuration,
       user:,
       role:,
-      event: event_key,
-      requires_action: REQUIRES_ACTION.include?(event_key),
+      event: event.key,
+      requires_action: event.requires_action,
       notifiable:,
-      title: I18n.t!("notifications.#{event_key}.title", **title_data),
-      description: I18n.t!("notifications.#{event_key}.description", **description_data)
+      title: I18n.t!("notifications.#{event.key}.title", **title_data),
+      description: I18n.t!("notifications.#{event.key}.description", **description_data)
     )
   rescue ActiveRecord::RecordInvalid => e
     # El único error que permitimos es si no se pudo crear la notificación.
@@ -77,5 +72,18 @@ class Notifier
     # no se pueden enviar las notificaciones.
     Rails.logger.error("[Notifier] #{e.class}: #{e.message}")
     nil
+  end
+
+  private
+
+  # Devuelve la Notification::Configuration para un evento. Si no está, devolvemos un
+  # error explicativo.
+  def self.find_configuration_for!(event)
+    Notification::Configuration.find_by(key: event.configuration_key.to_s + " sa") || raise(
+      MissingConfiguration,
+      "Se trató crear una notificación incorrectamente: " \
+      "No existe la configuración '#{event.configuration_key}' (evento '#{event.key}'). " \
+      "Probá corriendo 'rails notifications:sync' o corrigiendo config/notifications.yml."
+    )
   end
 end

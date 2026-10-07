@@ -10,6 +10,6 @@ class ModifyUserNotificationConfigurations < ActiveRecord::Migration[8.1]
     add_index :user_notifications, :user_id
     add_foreign_key :user_notifications, :users
 
-    rename_table :user_notifications, :user_notification_configurations
+    rename_table :user_notifications, :notification_configuration_users
   end
 end

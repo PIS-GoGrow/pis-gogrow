@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_07_161029) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_07_222726) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -206,9 +206,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_161029) do
     t.index ["provider_id"], name: "index_menus_on_provider_id"
   end
 
+  create_table "notification_configuration_users", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "notification_configuration_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["notification_configuration_id"], name: "idx_on_notification_configuration_id_0b0ca12e05"
+    t.index ["user_id"], name: "index_notification_configuration_users_on_user_id"
+  end
+
   create_table "notification_configurations", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "key", null: false
+    t.string "roles", default: [], array: true
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_notification_configurations_on_key", unique: true
   end
@@ -226,7 +236,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_161029) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.index ["notifiable_type", "notifiable_id", "event"], name: "index_notifications_one_active_per_event", unique: true, where: "((closed_at IS NULL) AND (requires_action = true))"
+    t.index ["notifiable_type", "notifiable_id", "event", "user_id"], name: "index_notifications_one_active_per_event", unique: true, where: "(closed_at IS NULL)"
     t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
     t.index ["notification_configuration_id"], name: "index_notifications_on_notification_configuration_id"
     t.index ["user_id"], name: "index_notifications_on_user_id"
@@ -506,15 +516,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_161029) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
-  create_table "user_notification_configurations", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "notification_configuration_id", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["notification_configuration_id"], name: "idx_on_notification_configuration_id_fc2b09c529"
-    t.index ["user_id"], name: "index_user_notification_configurations_on_user_id"
-  end
-
   create_table "users", force: :cascade do |t|
     t.string "avatar_url"
     t.datetime "created_at", null: false
@@ -552,6 +553,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_161029) do
   add_foreign_key "menus", "menus", column: "base_menu_id"
   add_foreign_key "menus", "providers"
   add_foreign_key "menus", "users", column: "modified_by_id"
+  add_foreign_key "notification_configuration_users", "notification_configurations"
+  add_foreign_key "notification_configuration_users", "users"
   add_foreign_key "notifications", "notification_configurations"
   add_foreign_key "notifications", "users"
   add_foreign_key "order_accounts", "accounts"
@@ -577,6 +580,4 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_161029) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
-  add_foreign_key "user_notification_configurations", "notification_configurations"
-  add_foreign_key "user_notification_configurations", "users"
 end

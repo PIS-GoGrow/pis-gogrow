@@ -20,7 +20,7 @@ class Notification < ApplicationRecord
   ].to_set.freeze
 
   belongs_to :user
-  belongs_to :notification_configuration
+  belongs_to :notification_configuration, class_name: "Notification::Configuration"
   belongs_to :notifiable, polymorphic: true
 
   validates :title, presence: true
@@ -74,7 +74,7 @@ class Notification < ApplicationRecord
   end
 
   def event_exists
-    errors.add(:event, :inclusion) unless EVENT_KEYS.include?(event&.to_sym)
+    errors.add(:event, :inclusion) unless Notification::Registry.event?(event)
   end
 end
 
@@ -101,7 +101,7 @@ end
 #  index_notifications_on_notifiable                     (notifiable_type,notifiable_id)
 #  index_notifications_on_notification_configuration_id  (notification_configuration_id)
 #  index_notifications_on_user_id                        (user_id)
-#  index_notifications_one_active_per_event              (notifiable_type,notifiable_id,event) UNIQUE WHERE ((closed_at IS NULL) AND (requires_action = true))
+#  index_notifications_one_active_per_event              (notifiable_type,notifiable_id,event,user_id) UNIQUE WHERE (closed_at IS NULL)
 #
 # Foreign Keys
 #

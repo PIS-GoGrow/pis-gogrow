@@ -8,8 +8,8 @@ class AddColsToNotification < ActiveRecord::Migration[8.1]
 
     change_column_null :notifications, :requires_action, false
 
-    add_index :notifications, [ :notifiable_type, :notifiable_id, :event ],
-          unique: true, where: "closed_at IS NULL AND requires_action = true",
+    add_index :notifications, [ :notifiable_type, :notifiable_id, :event, :user_id ],
+          unique: true, where: "closed_at IS NULL",
           name: "index_notifications_one_active_per_event"
   end
 end

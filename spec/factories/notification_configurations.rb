@@ -12,6 +12,7 @@ end
 #
 #  id         :bigint           not null, primary key
 #  key        :string           not null
+#  roles      :string           default([]), is an Array
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #

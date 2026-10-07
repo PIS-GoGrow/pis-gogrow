@@ -33,7 +33,7 @@ end
 #  index_notifications_on_notifiable                     (notifiable_type,notifiable_id)
 #  index_notifications_on_notification_configuration_id  (notification_configuration_id)
 #  index_notifications_on_user_id                        (user_id)
-#  index_notifications_one_active_per_event              (notifiable_type,notifiable_id,event) UNIQUE WHERE ((closed_at IS NULL) AND (requires_action = true))
+#  index_notifications_one_active_per_event              (notifiable_type,notifiable_id,event,user_id) UNIQUE WHERE (closed_at IS NULL)
 #
 # Foreign Keys
 #
