@@ -35,11 +35,11 @@ RSpec.describe "Configuración de subsidios especiales por RRHH", type: :system 
 
       fill_in "Nombre del subsidio", with: "2 años"
       fill_in "% de descuento", with: "25"
-      find("[role=radio]#applies_to_selection").click
-
-      # Esperar a que el input esté disponible
+      find("label", text: "Seleccionar empleados").click
       find('input[name="employee_search"]').set("Test")
-      click_button "Test User"
+      expect(page).to have_button("Test User", exact: true)
+      click_button "Test User", exact: true
+      expect(page).to have_no_button("Test User", exact: true)
       expect(page).to have_content("Test U.")
 
       choose_option "Condición", "Antigüedad"

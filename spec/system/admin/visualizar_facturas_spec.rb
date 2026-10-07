@@ -47,12 +47,11 @@ RSpec.describe "Visualizar facturas de proveedores", type: :system do
     sign_in admin_user, role: :admin
     visit admin_invoices_path
 
-    rows = all("tbody tr")
-    expect(rows.size).to eq(2)
-    expect(rows.first).to have_content(/#{I18n.l(current_month, format: "%B %Y")}/i)
-    expect(rows.last).to have_content(/#{I18n.l(previous_month, format: "%B %Y")}/i)
+    expect(page).to have_css("tbody tr", count: 2)
+    expect(first("tbody tr")).to have_content(/#{I18n.l(current_month, format: "%B %Y")}/i)
+    expect(all("tbody tr").last).to have_content(/#{I18n.l(previous_month, format: "%B %Y")}/i)
 
-    within(rows.first) do
+    within(first("tbody tr")) do
       expect(page).to have_content(users(:provider_user).name)
       expect(page).to have_content(I18n.l(Date.current, format: "%d/%m/%y"))
       expect(page).to have_content(/601/)

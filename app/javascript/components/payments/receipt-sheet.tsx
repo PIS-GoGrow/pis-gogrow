@@ -13,6 +13,8 @@ interface ReceiptSheetProps {
   contentType?: string | null
   filename?: string
   footer?: ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 export default function ReceiptSheet({
@@ -21,9 +23,11 @@ export default function ReceiptSheet({
   contentType,
   filename,
   footer,
+  open,
+  onOpenChange,
 }: ReceiptSheetProps) {
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={onOpenChange}>
       {children}
 
       <SheetContent side="right" className="gap-4 sm:max-w-lg">

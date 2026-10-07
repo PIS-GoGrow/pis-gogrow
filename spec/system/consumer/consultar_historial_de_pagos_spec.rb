@@ -254,4 +254,35 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
       )
     end
   end
+
+  it "displays all receipts individually when the settled account had multiple payments" do
+    account, approved_payment = paid_month(
+      consumer: consumers(:one), provider:, month: previous_month,
+      quantity: 2, discounted_price: 300
+    )
+    rejected_payment = payment_for(
+      account, status: :rejected, filename: "comprobante_parcial.png",
+      rejection_reason: "El pago es parcial"
+    )
+
+    sign_in employee
+    open_history
+
+    within(find("[role=tabpanel]")) do
+      expect(page).to have_content("$300")
+      expect(page).to have_no_link("Descargar comprobante de pago")
+
+      click_on "Ver comprobantes"
+
+      expect(page).to have_content("comprobante.png")
+      expect(page).to have_content("comprobante_parcial.png")
+      expect(page).to have_content("Pago parcial")
+      expect(page).to have_link(
+        "Descargar comprobante.png", href: receipt_payment_path(approved_payment)
+      )
+      expect(page).to have_link(
+        "Descargar comprobante_parcial.png", href: receipt_payment_path(rejected_payment)
+      )
+    end
+  end
 end
