@@ -119,6 +119,7 @@ class Menus::Update
     unless agenda == :keep
       close_agendas(from)
       agenda&.tap { it.menu = @saved }&.save!
+      @saved.skipped_dates = @saved.skipped_dates.reject { it >= from } if agenda
     end
 
     assign(@saved)
@@ -128,6 +129,7 @@ class Menus::Update
 
   def apply_range
     carve(starts_on, ends_on)
+    @saved.update!(skipped_dates: @saved.skipped_dates.reject { (starts_on..ends_on).cover?(it) })
     variant = build_edited_variant(starts_on, ends_on)
     variant.agendas.build(weekdays:, starts_on:, ends_on:, amount: @agenda[:amount])
     variant.save!
@@ -142,6 +144,7 @@ class Menus::Update
   end
 
   def ensure_schedule(date)
+    @saved.update!(skipped_dates: @saved.skipped_dates - [ date ])
     return if Schedule.exists?(menu_id: @saved.family_ids, date:)
 
     target = Menu.where(base_menu_id: @saved.id).find { it.valid_on?(date) } || @saved

@@ -54,8 +54,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :schedules, only: [ :index, :create ] do
-    patch :update_by_date, on: :collection
+  resources :schedules, only: [ :index, :create, :destroy ] do
     patch :availability, on: :member
   end
 

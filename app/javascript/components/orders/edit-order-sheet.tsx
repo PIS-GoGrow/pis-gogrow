@@ -21,6 +21,9 @@ import { cn } from "@/lib/utils"
 import { consumerOrders } from "@/routes"
 import type { ConsumerOrdersShow, Order } from "@/types"
 
+// Schedule::MAX_AMOUNT: así llega el cupo de un plato sin límite de stock.
+const UNLIMITED_STOCK = 2_147_483_647
+
 interface EditOrderSheetProps {
   order: Order
   addresses: ConsumerOrdersShow["delivery_addresses"]
@@ -110,11 +113,13 @@ export default function EditOrderSheet({
 
               <input type="hidden" id="quantity" value={data.quantity} />
 
-              <p className="text-muted-foreground text-xs">
-                {t("pages.orders.show.edit_dialog.remaining", {
-                  count: maxQuantity,
-                })}
-              </p>
+              {maxQuantity < UNLIMITED_STOCK && (
+                <p className="text-muted-foreground text-xs">
+                  {t("pages.orders.show.edit_dialog.remaining", {
+                    count: maxQuantity,
+                  })}
+                </p>
+              )}
             </div>
           </Field>
 

@@ -16,11 +16,15 @@ class Schedule < ApplicationRecord
               only_integer: true,
               greater_than_or_equal_to: 0,
               less_than_or_equal_to: MAX_AMOUNT
-            }
+            },
+            allow_nil: true
 
   validates :menu_id, uniqueness: { scope: :date }
 
   def remaining_amount
+    # Sin stock cargado el plato no tiene límite: queda siempre el cupo máximo.
+    return MAX_AMOUNT if amount.nil?
+
     # amount representa el cupo TOTAL de esta oferta; no lo descontamos al reservar.
     # Restamos las unidades de pedidos pendientes, confirmados y antiguos sin estado
     # (nil). Los cancelados y rechazados no ocupan cupo. El máximo con 0 evita devolver negativos.
@@ -52,7 +56,7 @@ end
 # Table name: schedules
 #
 #  id                         :bigint           not null, primary key
-#  amount                     :integer          not null
+#  amount                     :integer
 #  availability_changed_at    :datetime
 #  available                  :boolean          default(TRUE), not null
 #  date                       :date             not null

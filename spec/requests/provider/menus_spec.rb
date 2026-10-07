@@ -155,6 +155,16 @@ RSpec.describe "Provider::Menus", type: :request do
         expect(created.agendas).to be_empty
       end
 
+      it "programs a single day without stock" do
+        post provider_menus_path, params: {
+          menu: dish,
+          agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ], amount: "" }
+        }
+
+        created = provider.menus.order(:id).last
+        expect(created.schedules.pluck(:date, :amount)).to eq([ [ Date.new(2030, 1, 10), nil ] ])
+      end
+
       it "programs every week from the start date" do
         post provider_menus_path, params: {
           menu: dish,

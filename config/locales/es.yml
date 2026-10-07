@@ -78,7 +78,7 @@ es:
     menu_agenda:
       invalid_date: "Elegí un día hábil desde hoy y dentro del período de publicación."
       invalid_range: "La fecha de fin no puede ser anterior a la de inicio."
-      invalid_amount: "El stock por día debe ser un entero mayor a 0."
+      invalid_amount: "Si cargás un stock por día, tiene que ser un entero mayor a 0."
       invalid_weekdays: "Elegí al menos un día de lunes a viernes."
   notifications:
     order_confirmation:
@@ -748,6 +748,23 @@ es:
         availability:
           toggle_label: "En stock"
         edit_dish: "Editar %{name}"
+        add_dishes: "Agregar platos"
+        search_label: "Buscar plato"
+        search_placeholder: "Buscar plato..."
+        empty:
+          title: "No hay platos publicados para el %{day} todavía"
+          description: "Agregá platos a tu menú del %{day} y empezá a recibir pedidos."
+        empty_unpublishable:
+          title: "No se publicó menú para este día."
+        no_results:
+          title: "No se encontraron resultados"
+          description: "No encontramos platos que coincidan con tu búsqueda. Probá con otro nombre o revisá cómo lo escribiste."
+        remove:
+          button: "Quitar"
+          title: "¿Quitar «%{name}» del menú?"
+          description: "Se cancelarán los pedidos pendientes y confirmados de este plato."
+          cancel: "Cancelar"
+          confirm: "Quitar"
     provider_menus:
       new:
         title: "Agregar platos"
@@ -815,8 +832,8 @@ es:
           date: "Día específico"
           starts_on: "Desde"
           range: "Rango"
-          amount: "Stock por día"
-          incomplete: "Completá las fechas y el stock por día."
+          amount: "Stock por día (opcional)"
+          incomplete: "Completá las fechas. Si cargás un stock, tiene que ser mayor a 0."
         sheet:
           back: "Volver"
           apply: "Aplicar cambios"

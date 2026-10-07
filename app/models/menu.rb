@@ -31,6 +31,11 @@ class Menu < ApplicationRecord
     base_menu || self
   end
 
+  # Fechas que el proveedor quitó a mano: la agenda no las vuelve a programar.
+  def skip_date!(date)
+    update!(skipped_dates: (skipped_dates | [ date ]).select { it >= Date.current })
+  end
+
   def variant?
     base_menu_id.present?
   end
@@ -75,11 +80,13 @@ end
 # Table name: menus
 #
 #  id              :bigint           not null, primary key
+#  archived_at     :datetime
 #  description     :string
 #  modified_at     :datetime
 #  modified_values :jsonb
 #  name            :string
 #  price           :decimal(10, 2)
+#  skipped_dates   :date             default([]), not null, is an Array
 #  valid_from      :date
 #  valid_until     :date
 #  created_at      :datetime         not null

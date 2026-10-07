@@ -168,7 +168,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
   end
 
   create_table "menu_agendas", force: :cascade do |t|
-    t.integer "amount", null: false
+    t.integer "amount"
     t.datetime "created_at", null: false
     t.date "ends_on"
     t.bigint "menu_id", null: false
@@ -198,6 +198,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
     t.string "name"
     t.decimal "price", precision: 10, scale: 2
     t.bigint "provider_id", null: false
+    t.date "skipped_dates", default: [], null: false, array: true
     t.datetime "updated_at", null: false
     t.date "valid_from"
     t.date "valid_until"
@@ -322,7 +323,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
   end
 
   create_table "schedules", force: :cascade do |t|
-    t.integer "amount", null: false
+    t.integer "amount"
     t.datetime "availability_changed_at"
     t.bigint "availability_changed_by_id"
     t.boolean "available", default: true, null: false

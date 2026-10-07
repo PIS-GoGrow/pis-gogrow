@@ -9,7 +9,6 @@ import { schedules as schedulesRoutes } from "@/routes"
 interface Day {
   date: string
   publishable: boolean
-  published: boolean
 }
 
 interface WeekDayTabsProps {
@@ -49,6 +48,7 @@ export default function WeekDayTabs({
   function goToWeek(weekStart: string | null) {
     if (!weekStart) return
 
+    onSelectDate(weekStart)
     router.get(
       schedulesRoutes.index().url,
       { week_start: weekStart },

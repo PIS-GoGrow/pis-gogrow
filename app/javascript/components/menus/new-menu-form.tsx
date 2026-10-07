@@ -47,7 +47,7 @@ interface MenuFormProps {
 
 function agendaIsComplete(agenda: AgendaDraft) {
   if (agenda.weekdays.length === 0) return true
-  if (!(Number(agenda.amount) > 0)) return false
+  if (agenda.amount !== "" && !(Number(agenda.amount) > 0)) return false
   if (agenda.mode === "single") return agenda.date !== ""
   if (agenda.mode === "range")
     return agenda.starts_on !== "" && agenda.ends_on >= agenda.starts_on

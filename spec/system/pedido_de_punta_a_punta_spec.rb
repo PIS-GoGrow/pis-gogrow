@@ -54,11 +54,6 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     find("button", text: /\b#{date.day}\b/).click
   end
 
-  def pick_dish(dish, amount)
-    find("p", text: dish.name, exact_text: true).click
-    fill_in "amount-#{dish.id}", with: amount.to_s
-  end
-
   def open_menu(as:, day:)
     sign_in as, role: :consumer
     visit dashboard_path
@@ -121,25 +116,10 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
   describe "Pasos: P1 publica y edita, E1 pide y edita, P1 consulta" do
     it "deja el mismo pedido, importe, datos y estado en la confirmación, el historial y el proveedor" do
-      # P1 publica un menú para el martes y después lo edita.
-      sign_in p1_user, role: :provider
-      open_publication_day(tuesday)
-      pick_dish(p1_milanesa, 5)
-      click_button "Publicar menú"
-      expect(page).to have_content("Publicado")
-
-      click_button "Editar menú"
-      expect(page).to have_content("Editando menú publicado")
-      fill_in "amount-#{p1_milanesa.id}", with: "8"
-      pick_dish(p1_wok, 3)
-      click_button "Publicar menú"
-      expect(page).to have_content("Menú actualizado con éxito.")
-
+      # P1 tiene publicado un menú para el martes.
+      milanesa_tuesday = publish(p1_milanesa, tuesday, amount: 8)
+      publish(p1_wok, tuesday, amount: 3)
       p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ])
-      milanesa_tuesday = p1_milanesa.schedules.find_by!(date: tuesday)
-      expect(milanesa_tuesday.amount).to eq(8)
-      expect(p1_wok.schedules.find_by!(date: tuesday).amount).to eq(3)
-      sign_out
 
       # E1 elige fecha, plato, opción, nota, entrega y dirección, y confirma.
       open_menu(as: e1_user, day: tuesday)
@@ -318,13 +298,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     it "refleja para el empleado el stock que el proveedor sube en un menú publicado" do
       wok_tuesday = publish(p1_wok, tuesday, amount: 1)
       place_order(e2, wok_tuesday)
-      sign_in p1_user, role: :provider
-      open_publication_day(tuesday)
-      click_button "Editar menú"
-      fill_in "amount-#{p1_wok.id}", with: "4"
-      click_button "Publicar menú"
-      expect(page).to have_content("Menú actualizado con éxito.")
-      sign_out
+      wok_tuesday.update!(amount: 4)
 
       open_menu(as: e1_user, day: tuesday)
 
@@ -541,16 +515,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     let!(:wok_tuesday) { publish(p1_wok, tuesday, amount: 5) }
     let!(:e1_order) { place_order(e1, milanesa_tuesday, quantity: 2) }
 
-    before do
-      sign_in p1_user, role: :provider
-      open_publication_day(tuesday)
-      click_button "Editar menú"
-    end
-
     it "mantiene el pedido al bajar el stock del plato" do
-      fill_in "amount-#{p1_milanesa.id}", with: "3"
-      click_button "Publicar menú"
-      expect(page).to have_content("Menú actualizado con éxito.")
+      milanesa_tuesday.update!(amount: 3)
 
       expect(e1_order.reload).to have_attributes(status: "pending", amount: 2, schedule_id: milanesa_tuesday.id)
     end
