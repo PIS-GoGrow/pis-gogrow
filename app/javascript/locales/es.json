@@ -85,7 +85,7 @@
       }
     },
     "notifications": {
-      "order_confirmed": {
+      "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
         "title": "Tu pedido fue confirmado"
       }
