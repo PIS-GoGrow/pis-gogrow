@@ -2,7 +2,7 @@ class Notification::Registry
   PATH = Rails.root.join("config/notifications.yml")
 
   Configuration = Data.define(:key, :roles)
-  Event = Data.define(:key, :configuration_key, :roles, :requires_action)
+  Event = Data.define(:key, :configuration_key, :role, :requires_action)
 
   class InvalidRegistry < StandardError; end
   class UnknownEvent < StandardError; end
@@ -36,17 +36,19 @@ class Notification::Registry
       end
 
       events = data.fetch(:events).to_h do |key, attrs|
-        config_key = attrs.fetch(:configuration).to_sym
-        config = configurations.fetch(config_key) do
-          raise InvalidRegistry, "#{key}: la configuración #{config_key} no existe"
-        end
-        roles = parse_roles(key, attrs.fetch(:roles))
-        if (roles - config.roles).any?
-          raise InvalidRegistry, "#{key}: roles #{roles} no incluidos en #{config_key}"
+        configuration_key = attrs.fetch(:configuration).to_sym
+        config = configurations.fetch(configuration_key) do
+          raise InvalidRegistry, "#{key}: la configuración #{configuration_key} no existe"
         end
 
-        [key, Event.new(key:, configuration_key: config_key, roles:,
-                        requires_action: attrs.fetch(:requires_action))]
+        role = parse_roles(key, [attrs.fetch(:role)])[0]
+        unless config.roles.include? role
+          raise InvalidRegistry, "#{key}: rol #{role} no incluido en #{configuration_key}"
+        end
+
+        requires_action = attrs.fetch(:requires_action)
+
+        [key, Event.new(key:, configuration_key:, role:, requires_action:)]
       end
 
       [configurations.freeze, events.freeze]

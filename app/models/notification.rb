@@ -1,19 +1,41 @@
 # frozen_string_literal: true
 
 # Representa una notificación que se le va a enviar al usuario.
-#
 # Una notificación puede estar activa o cerrada y puede requerir o no acción.
-# Si requiere acción, el usuario no la puede cerrar, sino que necesita hacer algo
-# para que se cierre.
-#
+# 
 # Si el usuario tiene varios roles, la notificación solo le aparecerá cuando se loguee
 # con el rol definido en la columna role de notificación.
 #
-# Todos los eventos posibles que pueden generar notificaciones están en EVENT_KEYS.
-# Cada notificación necesita tener un event que forme parte de EVENT_KEYS.
+# Checklist para agregar notificaciones a un flujo:
 #
-# Las notificaciones deberían ser creadas únicamente mediante el servicio Notifier
-# (más información ahí de cómo crearlas). Nunca habría que llamar a Notification.create
+# 1. Revisar que exista la configuración: Todas las notificaciones deben tener un
+#    Notification::Configuration asociado, por lo que es necesario que ya exista
+#    la configuración que vamos a asociar a este flujo. Revisar el archivo
+#      app/models/notification/configuration.rb
+#    para ver más. Luego de esto, deberíamos obtener una clave de configuración.
+# 2. Registrar el evento: Los tipos de notificaciones están separados según el
+#    flujo o "evento" que los genera. En config/notifications.yml hay que agregar
+#    en events la información de nuestro flujo:
+#    2.1. Agregar bajo events una clave única para nuestro flujo. Por ejemplo, para
+#         el flujo «Notificar confirmación de pedidos» podría ser order_confirmation.
+#    2.2. Agregar la clave de configuración encontrada en el paso 1 bajo la clave del
+#         paso 2.1.
+#    2.3. Elegir el rol (consumer, admin, provider) para el cual este tipo de
+#         notificación aplica.
+#    2.4. Definir si la notificación requiere acción. Si requiere acción, el usuario
+#         no la puede cerrar, sino que necesita hacer algo para que se cierre. En el
+#         Figma, estas notificaciones aparecen en rojo.
+#    Los detalles del formato están en config/notifications.yml.
+# 3. Crearla en el flujo: En el punto del flujo que sea necesario notificar a un
+#    usuario, se crea una notificación llamando al servicio Notifier. Nunca habría
+#    que llamar a Notification.create directamente.
+#    Hay más información en app/services/notifier.rb de cómo crearlas. 
+# 4. Definir cómo cerrarlas: Si la notificación no requiere acción, este paso no es
+#    necesario. Hay que definir en qué punto una notificación puede ser cerrada.
+#    Cuando la condición se cumpla para que al usuario ya no le aparezca la
+#    notificación, hay que llamar a Notification.close_by! o Notification.close_by.
+#    Es necesario indicar la clave de evento, el objeto notifiable y el usuario
+#    que se eligieron en el paso 3.
 class Notification < ApplicationRecord
   EVENT_KEYS = %i[
     order_confirmation

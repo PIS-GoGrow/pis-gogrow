@@ -4,8 +4,7 @@
 # se le muestra al usuario o si se envía, esto se hace automáticamente.
 #
 # Para crearla, es necesario pasarle:
-# - qué evento originó la notificación (event_key, que tiene que estar en
-#   Notification::EVENT_KEYS);
+# - qué evento originó la notificación (event_key);
 # - a qué usuario enviarle la notificación (user);
 # - a qué rol del usuario mostrarle la notificación (role, que puede ser consumer,
 #   admin o provider);
@@ -45,11 +44,8 @@
 class Notifier
   class MissingConfiguration < StandardError; end
 
-  def self.call(event_key:, user:, role:, notifiable:, title_data: {}, description_data: {})
+  def self.call(event_key:, user:, notifiable:, title_data: {}, description_data: {})
     event = Notification::Registry.event!(event_key)
-    unless event.roles.include?(role.to_sym)
-      raise ArgumentError, "#{event.key} no aplica al rol #{role}" 
-    end
 
     # Buscamos la Notification::Configuration correspondiente a ese evento
     configuration = find_configuration_for! event
@@ -59,7 +55,7 @@ class Notifier
     Notification.create!(
       notification_configuration: configuration,
       user:,
-      role:,
+      role: event.role,
       event: event.key,
       requires_action: event.requires_action,
       notifiable:,
