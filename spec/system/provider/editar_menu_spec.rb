@@ -16,7 +16,7 @@ RSpec.describe "Edición de menú publicado por el proveedor", type: :system do
 
 
     it "permite editar el stock de un plato en una fecha publicada futura y persistir los cambios" do
-      target_date = Date.current.next_week(:monday) + 2.days
+      target_date = Date.current.next_week(:monday) + 1.day
       Schedule.where(date: target_date).destroy_all
       schedule = milanesa.schedules.create!(date: target_date, amount: 10)
 
