@@ -134,7 +134,10 @@ export default function CollectionGroupCard({
             </span>
           </p>
 
-          <Progress value={progress} className="h-2" />
+          <Progress
+            value={progress}
+            className="bg-muted-foreground/30 [&>[data-slot=progress-indicator]]:bg-foreground h-1.5"
+          />
         </div>
 
         <ul className="grid gap-1 text-sm">

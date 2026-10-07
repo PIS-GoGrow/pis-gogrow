@@ -550,6 +550,22 @@
           "company": "Empresa",
           "confirmed": "%{amount} en cobros confirmados",
           "detail": "Ver detalle",
+          "detail_dialog": {
+            "amount": "Monto",
+            "close": "Cerrar",
+            "collection_tab": "Cobro",
+            "date": "Fecha",
+            "description": "Detalle del consumo correspondiente a %{name}.",
+            "dish": "Plato",
+            "empty": "Todavía no hay viandas confirmadas en este período.",
+            "meals_tab": "Viandas",
+            "quantity": "Cant.",
+            "subtotal": "Subtotal sin IVA",
+            "title": "Historial de consumo: %{month}",
+            "total": "Total: %{amount}",
+            "total_label": "Total",
+            "vat": "IVA (22%)"
+          },
           "due": "Vence: %{date}",
           "employees": "Empleados",
           "rejected_one": "%{count} cobro rechazado",
@@ -559,8 +575,19 @@
         "index": {
           "all_clients": "Todos",
           "clients": "Clientes:",
+          "close_consumption_detail": "Cerrar",
           "confirmed_meals_one": "%{count} vianda confirmada",
           "confirmed_meals_other": "%{count} viandas confirmadas",
+          "consumption_amount": "Monto: %{amount}",
+          "consumption_amount_column": "Monto",
+          "consumption_company": "Empresa",
+          "consumption_day": "Día: %{date}",
+          "consumption_detail_description": "Pedidos confirmados del mes agrupados por día y cliente.",
+          "consumption_detail_title": "Detalle de consumo: %{month}",
+          "consumption_empty": "No hay consumos confirmados para este cliente.",
+          "consumption_meals": "Viandas: %{count}",
+          "consumption_name": "Nombre",
+          "consumption_quantity": "Cant.",
           "delivered_meals_one": "%{count} vianda entregada",
           "delivered_meals_other": "%{count} viandas entregadas",
           "empty_history_all": "Todavía no hay meses cobrados por completo.",
@@ -577,7 +604,8 @@
           "section": "Cobros",
           "this_month": "Este mes",
           "title": "Cobros",
-          "total_debt": "Deuda total"
+          "total_debt": "Deuda total",
+          "view_consumption_detail": "Ver detalle del consumo"
         },
         "invoice": {
           "dialog": {

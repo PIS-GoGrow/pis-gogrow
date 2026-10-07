@@ -136,7 +136,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
 | `AlertError` | `@/components/alert-error` | `Alert` destructivo con una lista de errores |
 | `StatusBadge` | `@/components/status-badge` | Estado de un pedido o de un pago: `Badge variant="outline"` con `data-status` y color por estado |
-| `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail` y `badge` opcionales |
+| `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail`, `badge` y `action` opcionales |
 | `MobileNav` | `@/components/mobile-nav` | Barra inferior móvil de RRHH; recibe ítems con ícono, ruta opcional y estado activo |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |
@@ -618,9 +618,9 @@ Cada mapa de estilos está tipado con su enum de Rails: agregar un estado rompe 
 import Stat from "@/components/stat"
 ```
 
-Tarjeta de métrica sobre fondo gris: la etiqueta en `CardDescription`, un `badge` opcional arriba a la derecha (el período, por ejemplo), y el valor en `text-2xl` con un `detail` opcional a su lado. Se usa para los totales que encabezan una pantalla.
+Tarjeta de métrica sobre fondo gris: la etiqueta en `CardDescription`, un `badge` opcional arriba a la derecha (el período, por ejemplo), el valor en `text-2xl` con un `detail` opcional a su lado y una `action` opcional en el pie. Se usa para los totales que encabezan una pantalla.
 
-- `value`, `detail` y `badge` son `ReactNode`: aceptan un importe ya formateado con `formatMoney` o un `Badge`.
+- `value`, `detail`, `badge` y `action` son `ReactNode`: aceptan un importe ya formateado con `formatMoney`, un `Badge` o un `Button`.
 - No define su ancho: las métricas se acomodan con el `grid` de la pantalla (`grid gap-4 md:grid-cols-2`).
 
 ```tsx

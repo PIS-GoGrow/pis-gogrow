@@ -53,6 +53,24 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(props[:outstanding]).to include(total: 1202.0, meals: 4)
     end
 
+    it "includes the confirmed sales detail grouped by delivery day" do
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      detail = props[:sales_detail]
+      detail_orders = detail[:days].flat_map { it[:orders] }
+
+      expect(detail[:month]).to eq(I18n.l(Date.current.beginning_of_month, format: :month_name_year))
+      expect(detail[:clients]).to eq([ { id: companies(:gogrow).id, name: "GoGrow" } ])
+      expect(detail_orders.pluck(:id)).to match_array(
+        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
+      )
+      expect(detail_orders.sum { it[:meals] }).to eq(4)
+      expect(detail_orders.sum { it[:amount] }).to eq(1202.0)
+      expect(detail[:days].pluck(:date)).to eq(detail[:days].pluck(:date).sort.reverse)
+    end
+
     it "groups what each client owes by month, with the company and its employees" do
       sign_in provider_user, role: :provider
 
@@ -64,6 +82,12 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(group[:company]).to include(owner_name: "GoGrow", amount: 601.0, status: "pending")
       expect(group[:employees].pluck(:owner_name, :status)).to eq(
         [ [ "Other Consumer User", "submitted" ], [ "Test User", "rejected" ] ]
+      )
+      expect(group[:company][:orders].pluck(:id)).to match_array(
+        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
+      )
+      expect(group[:employees].flat_map { it[:orders] }.pluck(:id)).to match_array(
+        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
       )
     end
 

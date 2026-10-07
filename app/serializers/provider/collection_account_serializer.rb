@@ -62,5 +62,6 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   # Solo la cuenta de la empresa lleva factura: es la que le cobra el subsidio a GoGrow.
   typelize invoice: [ nullable: true ]
   has_one :latest_invoice, key: :invoice, resource: Provider::InvoiceSerializer
+  has_many :orders, resource: Provider::CollectionOrderSerializer
   has_many :payments, resource: Provider::CollectionPaymentSerializer
 end

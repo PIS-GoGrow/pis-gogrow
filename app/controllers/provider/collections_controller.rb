@@ -5,6 +5,7 @@ class Provider::CollectionsController < Provider::InertiaController
     summary = ProviderCollectionSummary.new(provider: Current.user.provider)
 
     @sales = summary.sales
+    @sales_detail = summary.sales_detail
     @outstanding = summary.outstanding
     @clients = summary.clients
     @pending = summary.pending

@@ -18,6 +18,12 @@ class ProviderCollectionSummary
   AccountRow = Data.define(:account, :meals) do
     delegate :id, :amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
 
+    def orders
+      account.orders.select(&:confirmed?).sort_by do |order|
+        [ -(order.schedule&.date&.jd || 0), -order.id ]
+      end
+    end
+
     def payments
       account.payments.sort_by { |payment| [ payment.created_at, payment.id ] }.reverse
     end
@@ -88,6 +94,33 @@ class ProviderCollectionSummary
     { total: amount_of(current), meals: meals_of(current) }
   end
 
+  def sales_detail
+    orders = current_month_orders
+
+    {
+      month: I18n.l(Date.current.beginning_of_month, format: :month_name_year),
+      clients: orders.map(&:consumer).map(&:company).uniq
+                     .sort_by(&:name).map { { id: it.id, name: it.name } },
+      days: orders.group_by { it.schedule.date }
+                  .sort_by { |date, _| -date.jd }
+                  .map do |date, day_orders|
+        {
+          date: date.strftime("%d/%m"),
+          orders: day_orders.sort_by { it.consumer.user.name.downcase }.map do |order|
+            {
+              id: order.id,
+              consumer_name: order.consumer.user.name,
+              client_id: order.consumer.company.id,
+              client_name: order.consumer.company.name,
+              meals: order.amount,
+              amount: order.price.to_f
+            }
+          end
+        }
+      end
+    }
+  end
+
   def outstanding
     owed = rows.reject(&:approved?).map(&:account)
 
@@ -106,7 +139,12 @@ class ProviderCollectionSummary
 
   def accounts
     @accounts ||= begin
-      records = @provider.accounts.preload(:payments, :owner, invoices: { file_attachment: :blob }).to_a
+      records = @provider.accounts.preload(
+        :payments,
+        :owner,
+        invoices: { file_attachment: :blob },
+        orders: [ { consumer: :user }, { schedule: :menu } ]
+      ).to_a
 
       # owner es polimórfico y Company no responde a :user, así que los
       # empleados se completan aparte.
@@ -115,6 +153,14 @@ class ProviderCollectionSummary
 
       records
     end
+  end
+
+  def current_month_orders
+    @current_month_orders ||= Order.confirmed
+      .joins(schedule: :menu)
+      .where(menus: { provider_id: @provider.id }, schedules: { date: Date.current.all_month })
+      .preload(consumer: [ :user, :company ])
+      .to_a
   end
 
   # Unidades de cada pedido confirmado por cuenta, en una sola consulta. Los
