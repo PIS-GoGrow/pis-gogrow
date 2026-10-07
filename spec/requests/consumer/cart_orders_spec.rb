@@ -10,7 +10,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   let(:consumer_user) { users(:one) }
   let(:provider_user) { users(:provider_user) }
   let(:admin_user) { users(:admin) }
-  let(:schedule) { schedules(:future) }
+  let(:schedule) { schedules(:today) }
   let(:company_address) { companies(:gogrow).address }
 
   describe "Control de acceso por rol en /dashboard y POST /orders" do
