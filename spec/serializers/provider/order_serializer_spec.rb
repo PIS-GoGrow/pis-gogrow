@@ -5,32 +5,19 @@ require "rails_helper"
 RSpec.describe Provider::OrderSerializer do
   fixtures :users, :companies, :providers, :consumers, :menus, :schedules, :orders
 
-  describe "#delivery_date" do
-    it "returns 'hoy' for orders scheduled for today" do
-      order = orders(:upcoming_pending_today)
+  describe "#date" do
+    it "returns the delivery date as an ISO string" do
+      order = orders(:upcoming_confirmed_future)
+
       serialized = described_class.new(order).to_h
 
-      expect(serialized["delivery_date"]).to eq(I18n.t("pages.provider_orders.index.today"))
+      expect(serialized["date"]).to eq(order.schedule.date.iso8601)
     end
 
-    it "returns 'mañana' for orders scheduled for tomorrow" do
-      tomorrow_schedule = schedules(:office)
-      tomorrow_schedule.update!(date: Date.current + 1.day)
-      order = orders(:upcoming_confirmed_future)
-      order.update!(schedule: tomorrow_schedule)
+    it "returns nil when the order has no schedule" do
+      serialized = described_class.new(orders(:history_without_schedule)).to_h
 
-      serialized = described_class.new(order).to_h
-
-      expect(serialized["delivery_date"]).to eq(I18n.t("pages.provider_orders.index.tomorrow"))
-    end
-
-    it "returns formatted date for orders scheduled further in the future" do
-      order = orders(:upcoming_confirmed_future)
-      expected_date = order.schedule.date.strftime(I18n.t("pages.provider_orders.index.date"))
-
-      serialized = described_class.new(order).to_h
-
-      expect(serialized["delivery_date"]).to eq(expected_date)
+      expect(serialized["date"]).to be_nil
     end
   end
 
@@ -45,9 +32,11 @@ RSpec.describe Provider::OrderSerializer do
         "amount" => 1,
         "price" => 300.5,
         "consumer_name" => "Test User",
+        "consumer_company" => "GoGrow",
         "menu_name" => "Milanesa con papas fritas",
         "address" => "Julio Herrera y Reissig 565",
-        "delivery_date" => "hoy",
+        "delivery_method" => "home",
+        "date" => Date.current.iso8601,
         "time" => order.created_at.strftime("%H:%M")
       )
     end
