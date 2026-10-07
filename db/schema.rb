@@ -213,13 +213,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_202523) do
   end
 
   create_table "notifications", force: :cascade do |t|
-    t.boolean "closed"
+    t.datetime "closed_at"
     t.datetime "created_at", null: false
     t.string "description"
+    t.bigint "notification_configuration_id", null: false
     t.boolean "requires_action"
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["notification_configuration_id"], name: "index_notifications_on_notification_configuration_id"
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
@@ -543,6 +545,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_06_202523) do
   add_foreign_key "menus", "menus", column: "base_menu_id"
   add_foreign_key "menus", "providers"
   add_foreign_key "menus", "users", column: "modified_by_id"
+  add_foreign_key "notifications", "notification_configurations"
   add_foreign_key "notifications", "users"
   add_foreign_key "order_accounts", "accounts"
   add_foreign_key "order_accounts", "orders"

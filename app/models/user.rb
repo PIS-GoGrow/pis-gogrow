@@ -21,8 +21,8 @@ class User < ApplicationRecord
   end
 
   has_many :notifications
-  has_many :user_notifications
-  has_many :notification_configurations, through: :user_notifications, source: :notification_configuration
+  has_many :user_notification_configurations
+  has_many :notification_configurations, through: :user_notification_configurations, source: :notification_configuration
 
   has_many :sessions, dependent: :destroy
 

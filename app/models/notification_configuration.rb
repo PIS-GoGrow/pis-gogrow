@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 class NotificationConfiguration < ApplicationRecord
-  has_many :user_notifications, dependent: :destroy
-  has_many :users, through: :user_notifications, source: :user
+  has_many :user_notification_configurations, dependent: :destroy
+  has_many :users, through: :user_notification_configurations, source: :user
+  has_many :notifications, dependent: :destroy
 end
 
 # == Schema Information

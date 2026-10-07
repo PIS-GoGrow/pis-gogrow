@@ -85,6 +85,9 @@ class Order < ApplicationRecord
     if: -> { saved_change_to_status? || saved_change_to_price? || saved_change_to_discounted_price? }
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
 
+  # Notificaciones al consumidor cuando se confirma la orden
+  after_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
+
   # Solo las unidades subsidizadas llevan el descuento; el resto se cobra al
   # precio de lista. subsidized_quantity nil significa todas.
   def self.price_breakdown(unit_price:, quantity:, subsidized_quantity:, discount_percentage:)
@@ -339,6 +342,18 @@ class Order < ApplicationRecord
 
       account.sync_amount!
     end
+  end
+
+  def notify_confirmed
+    Notifier.call(
+      key: "order_confirmed",
+      configuration_key: "order_updates",
+      user: consumer.user,
+      description_data: {
+        date: I18n.l(schedule.date, format: :short),
+        provider: provider.name
+      }
+    )
   end
 
   # El cupo del schedule ya descuenta esta orden, así que el máximo que el

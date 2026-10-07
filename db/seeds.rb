@@ -257,7 +257,8 @@ order.apply_benefit! benefit, 1
       discounted_price: menu.price / 2,
       amount: 1,
       address: company.address,
-      delivery_method: :office
+      delivery_method: :office,
+      selected_options: default_selection_for(menu)
     )
   end
 end
@@ -267,7 +268,7 @@ end
 notification_configuration = NotificationConfiguration.create!(
   description: "Notificaciones de orden en camino"
 )
-notification_configuration.consumers << consumer
+notification_configuration.users << consumer.user
 
 # Cobros del proveedor en distintos estados, para que la pantalla no se vea
 # toda pendiente. Las cuentas ya las crearon los pedidos de más arriba.
