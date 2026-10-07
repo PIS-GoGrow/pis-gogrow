@@ -266,8 +266,6 @@ end
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 
 notification_configuration = NotificationConfiguration.create!(
-  title: "Actualizaciones de pedidos",
-  description: "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
   key: "order_updates"
 )
 notification_configuration.users << consumer.user

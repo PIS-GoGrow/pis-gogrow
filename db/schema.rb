@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_07_021311) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_07_161029) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -208,9 +208,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_021311) do
 
   create_table "notification_configurations", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "description"
     t.string "key", null: false
-    t.string "title"
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_notification_configurations_on_key", unique: true
   end
@@ -219,11 +217,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_07_021311) do
     t.datetime "closed_at"
     t.datetime "created_at", null: false
     t.string "description"
+    t.string "event", null: false
+    t.bigint "notifiable_id", null: false
+    t.string "notifiable_type", null: false
     t.bigint "notification_configuration_id", null: false
-    t.boolean "requires_action"
+    t.boolean "requires_action", null: false
+    t.string "role", null: false
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["notifiable_type", "notifiable_id", "event"], name: "index_notifications_one_active_per_event", unique: true, where: "((closed_at IS NULL) AND (requires_action = true))"
+    t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
     t.index ["notification_configuration_id"], name: "index_notifications_on_notification_configuration_id"
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end

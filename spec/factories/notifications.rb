@@ -17,17 +17,23 @@ end
 #  id                            :bigint           not null, primary key
 #  closed_at                     :datetime
 #  description                   :string
-#  requires_action               :boolean
+#  event                         :string           not null
+#  notifiable_type               :string           not null
+#  requires_action               :boolean          not null
+#  role                          :string           not null
 #  title                         :string
 #  created_at                    :datetime         not null
 #  updated_at                    :datetime         not null
+#  notifiable_id                 :bigint           not null
 #  notification_configuration_id :bigint           not null
 #  user_id                       :bigint           not null
 #
 # Indexes
 #
+#  index_notifications_on_notifiable                     (notifiable_type,notifiable_id)
 #  index_notifications_on_notification_configuration_id  (notification_configuration_id)
 #  index_notifications_on_user_id                        (user_id)
+#  index_notifications_one_active_per_event              (notifiable_type,notifiable_id,event) UNIQUE WHERE ((closed_at IS NULL) AND (requires_action = true))
 #
 # Foreign Keys
 #
