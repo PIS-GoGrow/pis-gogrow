@@ -611,6 +611,27 @@
         },
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
+        "reminder": {
+          "back": "Volver",
+          "confirm": {
+            "description": "Se enviará un recordatorio a %{employeeName} por su pago pendiente de %{month} de %{amount}.",
+            "title": "Recordar pago pendiente"
+          },
+          "done": "Listo",
+          "error": {
+            "description": "Intentá nuevamente.",
+            "title": "No pudimos enviar el recordatorio"
+          },
+          "retry": "Reintentar",
+          "send": "Enviar recordatorio",
+          "sending": "Enviando...",
+          "sent": "Recordatorio enviado",
+          "success": {
+            "description": "Se envió un recordatorio a %{employeeName} por su pago pendiente de %{month}.",
+            "title": "Recordatorio enviado"
+          },
+          "trigger": "Recordar pago pendiente"
+        },
         "show": {
           "amount": "Importe a cobrar",
           "back": "Volver a cobros",

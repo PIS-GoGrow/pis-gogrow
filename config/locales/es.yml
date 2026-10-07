@@ -570,6 +570,23 @@ es:
         company: "Empresa"
         due: "Vence: %{date}"
         detail: "Ver detalle"
+      reminder:
+        trigger: "Recordar pago pendiente"
+        sent: "Recordatorio enviado"
+        confirm:
+          title: "Recordar pago pendiente"
+          description: "Se enviará un recordatorio a %{employeeName} por su pago pendiente de %{month} de %{amount}."
+        success:
+          title: "Recordatorio enviado"
+          description: "Se envió un recordatorio a %{employeeName} por su pago pendiente de %{month}."
+        error:
+          title: "No pudimos enviar el recordatorio"
+          description: "Intentá nuevamente."
+        back: "Volver"
+        send: "Enviar recordatorio"
+        sending: "Enviando..."
+        retry: "Reintentar"
+        done: "Listo"
       invoice:
         statuses:
           pending: "Por revisar"

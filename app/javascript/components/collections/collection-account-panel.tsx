@@ -1,9 +1,10 @@
 import { Link } from "@inertiajs/react"
-import { Eye, TriangleAlert } from "lucide-react"
+import { CircleCheck, Eye, TriangleAlert } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import CollectionPaymentHistory from "@/components/collections/collection-payment-history"
+import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
 import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -29,6 +30,8 @@ interface CollectionAccountPanelProps {
   aside?: ReactNode
   children?: ReactNode
   showPaymentHistory?: boolean
+  reminderSent?: boolean
+  onReminderSent?: () => void
 }
 
 export default function CollectionAccountPanel({
@@ -37,9 +40,15 @@ export default function CollectionAccountPanel({
   aside,
   children,
   showPaymentHistory = false,
+  reminderSent = false,
+  onReminderSent,
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
+  const canRemind =
+    account.source === "consumer" &&
+    account.status === "pending" &&
+    account.overdue
 
   return (
     <div className="bg-muted/60 grid gap-3 rounded-lg p-3">
@@ -112,6 +121,20 @@ export default function CollectionAccountPanel({
           </SheetTrigger>
         </PaymentReviewSheet>
       )}
+      {canRemind &&
+        (reminderSent ? (
+          <p className="text-muted-foreground flex items-center gap-2 text-sm">
+            <CircleCheck className="size-4" aria-hidden="true" />
+            {t("pages.provider_collections.reminder.sent")}
+          </p>
+        ) : (
+          <DebtReminderDialog
+            employeeName={account.owner_name}
+            month={account.month}
+            amount={account.amount}
+            onSent={() => onReminderSent?.()}
+          />
+        ))}
       {showPaymentHistory && (
         <CollectionPaymentHistory payments={account.payments} />
       )}

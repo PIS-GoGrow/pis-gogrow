@@ -46,6 +46,13 @@ export default function Index({
   const { formatMoney } = useFormatters()
   // "all" o el id del cliente como string, que es lo que maneja el menú.
   const [client, setClient] = useState("all")
+  const [remindedAccountIds, setRemindedAccountIds] = useState<Set<number>>(
+    () => new Set(),
+  )
+
+  function markReminderSent(accountId: number) {
+    setRemindedAccountIds((current) => new Set(current).add(accountId))
+  }
 
   const selectedClient = clients.find((option) => String(option.id) === client)
 
@@ -92,6 +99,8 @@ export default function Index({
             key={group.key}
             group={group}
             settled={tab === "history"}
+            remindedAccountIds={remindedAccountIds}
+            onReminderSent={markReminderSent}
           />
         ))}
       </div>
