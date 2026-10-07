@@ -44,11 +44,11 @@
 # el objeto notifiable y el usuario.
 class Notifier
   CONFIG_KEY_MAP = {
-    order_confirmed: :order_updates
+    order_confirmation: :order_updates
   }.freeze
 
   REQUIRES_ACTION = [
-    # Deben ser símbolos, por ejemplo: :order_confirmed
+    # Deben ser símbolos, por ejemplo: :order_confirmation
   ].to_set.freeze
 
   def self.call(event_key:, user:, role:, notifiable:, title_data: {}, description_data: {})
@@ -66,7 +66,7 @@ class Notifier
       user:,
       role:,
       event: event_key,
-      requires_action: REQUIRES_ACTION.include? event_key,
+      requires_action: REQUIRES_ACTION.include?(event_key),
       notifiable:,
       title: I18n.t!("notifications.#{event_key}.title", **title_data),
       description: I18n.t!("notifications.#{event_key}.description", **description_data)

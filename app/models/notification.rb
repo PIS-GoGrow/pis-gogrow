@@ -21,6 +21,7 @@ class Notification < ApplicationRecord
 
   belongs_to :user
   belongs_to :notification_configuration
+  belongs_to :notifiable, polymorphic: true
 
   validates :title, presence: true
   validates :description, presence: true
@@ -34,6 +35,8 @@ class Notification < ApplicationRecord
 
   # Cierra la notificación para que ya no le aparezca más al usuario.
   def close!(time: Time.current)
+    return unless closed_at
+
     update! closed_at: time
   end
 
@@ -67,11 +70,11 @@ class Notification < ApplicationRecord
   end
 
   def role_belongs_to_user
-    user.roles.include? role.to_s
+    errors.add(:role, :invalid) unless user&.roles&.include?(role.to_s)
   end
 
   def event_exists
-    EVENT_KEYS.include? event.to_sym
+    errors.add(:event, :inclusion) unless EVENT_KEYS.include?(event&.to_sym)
   end
 end
 

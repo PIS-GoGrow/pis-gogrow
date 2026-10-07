@@ -10,7 +10,7 @@
 # se modifica uno de sus pedidos.
 #
 # El título y la descripción de una configuración no se guarda en la base de datos,
-# si no que se configura desde los locales, según la clave. Si creamos una
+# sino que se configura desde los locales, según la clave. Si creamos una
 # NotificationConfiguration con clave :order_updates, es necesario entonces tener
 # en es.yml las líneas:
 #

@@ -346,7 +346,7 @@ class Order < ApplicationRecord
 
   def notify_confirmed
     Notifier.call(
-      event_key: :order_confirmed,
+      event_key: :order_confirmation,
       user: consumer.user,
       role: :consumer,
       notifiable: self,
