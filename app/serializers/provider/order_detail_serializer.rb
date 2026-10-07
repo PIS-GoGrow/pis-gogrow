@@ -3,19 +3,6 @@
 # El detalle agrega lo que el proveedor necesita para decidir y preparar: con
 # quién es el pedido, qué lleva el plato y cuánto cupo queda del día.
 class Provider::OrderDetailSerializer < Provider::OrderSerializer
-  typelize :string, nullable: true
-  attribute :date do |order|
-    order.schedule&.date&.iso8601
-  end
-
-  typelize_from Order
-  attributes :delivery_method
-
-  typelize :string, nullable: true
-  attribute :consumer_company do |order|
-    order.consumer.company&.name
-  end
-
   typelize :string
   attribute :consumer_email do |order|
     order.consumer.user.email

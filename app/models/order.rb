@@ -198,12 +198,13 @@ class Order < ApplicationRecord
     cancellation_block_reason.nil?
   end
 
-  # La decisión del proveedor solo corre sobre pedidos pendientes: confirmar o
-  # rechazar uno ya resuelto pisaría la cancelación del empleado. El lock es por
-  # el doble envío, igual que en cancel.
+  # Confirmar solo corre sobre pedidos pendientes; rechazar también sobre los
+  # confirmados, porque el proveedor puede no poder cumplir lo que aceptó. Un
+  # pedido cancelado o ya rechazado no se toca: pisaría la cancelación del
+  # empleado. El lock es por el doble envío, igual que en cancel.
   def decide(status, reason: nil, details: nil)
     with_lock do
-      return false unless pending?
+      return false unless pending? || (confirmed? && status.to_s == "rejected")
 
       attrs = { status: status }
       if status.to_s == "rejected"
