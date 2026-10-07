@@ -13,13 +13,14 @@ import {
 } from "@/components/ui/dialog"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
 import { cn } from "@/lib/utils"
 import { providerPayments as paymentsRoutes } from "@/routes"
 
 const REJECTION_REASONS = [
   "La imagen está borrosa",
   "El archivo enviado no corresponde a un comprobante",
-  "Los montos de deuda y pago no coinciden",
+  PARTIAL_PAYMENT_REJECTION_REASON,
 ]
 
 const OTHER_OPTION = "other"
@@ -27,11 +28,13 @@ const OTHER_OPTION = "other"
 interface RejectPaymentDialogProps {
   children: ReactNode
   paymentId: number
+  onRejected?: (reason: string) => void
 }
 
 export default function RejectPaymentDialog({
   children,
   paymentId,
+  onRejected,
 }: RejectPaymentDialogProps) {
   const [open, setOpen] = useState(false)
   const [selectedReason, setSelectedReason] = useState<string>(
@@ -58,9 +61,11 @@ export default function RejectPaymentDialog({
       paymentsRoutes.update(paymentId).url,
       { status: "rejected", rejection_reason: finalReason },
       {
+        preserveState: true,
         onSuccess: () => {
           setOpen(false)
           resetForm()
+          onRejected?.(finalReason)
         },
         onFinish: () => setProcessing(false),
       },

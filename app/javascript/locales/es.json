@@ -100,6 +100,7 @@
           "lunch": "vianda",
           "lunches": "viandas",
           "menu": "Plato",
+          "partial_payment_warning": "Falta una parte del pago.",
           "price": "Monto",
           "receipt": "Subir comprobante de pago",
           "receipt_approved": "Pago aprobado",
@@ -125,6 +126,7 @@
           "receipt_uploading": "Subiendo comprobante...",
           "receipt_view_edit": "Ver o editar comprobante",
           "see_detail": "Ver detalle",
+          "see_receipts": "Ver comprobantes",
           "spending": "Consumo",
           "status_accepted": "Aceptado",
           "status_pending": "Pendiente",
@@ -639,6 +641,16 @@
         },
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
+        "partial_payment_badge": "Pago parcial",
+        "review": {
+          "approved_description": "El cobro fue confirmado correctamente. Se notificará al usuario.",
+          "approved_title": "Cobro confirmado",
+          "done": "Listo",
+          "partial_description": "El comprobante quedó registrado como pago parcial. Se notificará al usuario para que abone el monto restante.",
+          "partial_title": "Pago parcial registrado",
+          "rejected_description": "El comprobante fue rechazado. El cobro continúa pendiente y se notificará al usuario.",
+          "rejected_title": "Comprobante rechazado"
+        },
         "show": {
           "amount": "Importe a cobrar",
           "back": "Volver a cobros",

@@ -7,6 +7,11 @@ import CollectionGroupCard from "@/components/collections/collection-group-card"
 import SalesDetailDialog from "@/components/collections/sales-detail-dialog"
 import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
+import {
+  type PaymentReviewResult,
+  PaymentReviewResultProvider,
+} from "@/components/payments/payment-review-result-context"
+import PaymentReviewResultDialog from "@/components/payments/payment-review-result-dialog"
 import Stat from "@/components/stat"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -48,6 +53,10 @@ export default function Index({
   const { formatMoney } = useFormatters()
   // "all" o el id del cliente como string, que es lo que maneja el menú.
   const [client, setClient] = useState("all")
+  // Vive acá y no en PaymentReviewSheet: ver payment-review-result-context.
+  const [reviewResult, setReviewResult] = useState<PaymentReviewResult | null>(
+    null,
+  )
 
   const selectedClient = clients.find((option) => String(option.id) === client)
 
@@ -103,6 +112,11 @@ export default function Index({
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.provider_collections.index.title")} />
+
+      <PaymentReviewResultDialog
+        result={reviewResult}
+        onClose={() => setReviewResult(null)}
+      />
 
       <PageContainer title={t("pages.provider_collections.index.title")}>
         <Stat
@@ -171,22 +185,24 @@ export default function Index({
             </DropdownMenu>
           </div>
 
-          <TabsContent value="pending" className="grid gap-4">
-            <Stat
-              label={t("pages.provider_collections.index.outstanding")}
-              badge={
-                <Badge variant="secondary">
-                  {t("pages.provider_collections.index.total_debt")}
-                </Badge>
-              }
-              value={formatMoney(outstanding.total)}
-              detail={`| ${t("pages.provider_collections.index.delivered_meals", { count: outstanding.meals })}`}
-            />
-            {renderTab("pending", pending)}
-          </TabsContent>
-          <TabsContent value="history">
-            {renderTab("history", history)}
-          </TabsContent>
+          <PaymentReviewResultProvider value={setReviewResult}>
+            <TabsContent value="pending" className="grid gap-4">
+              <Stat
+                label={t("pages.provider_collections.index.outstanding")}
+                badge={
+                  <Badge variant="secondary">
+                    {t("pages.provider_collections.index.total_debt")}
+                  </Badge>
+                }
+                value={formatMoney(outstanding.total)}
+                detail={`| ${t("pages.provider_collections.index.delivered_meals", { count: outstanding.meals })}`}
+              />
+              {renderTab("pending", pending)}
+            </TabsContent>
+            <TabsContent value="history">
+              {renderTab("history", history)}
+            </TabsContent>
+          </PaymentReviewResultProvider>
         </Tabs>
       </PageContainer>
     </AppLayout>

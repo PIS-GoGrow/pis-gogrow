@@ -1,6 +1,7 @@
 import { Head, useForm, usePage } from "@inertiajs/react"
 import { useMemo, useState } from "react"
 
+import useSessionStorage from "@/hooks/use-session-storage"
 import AppLayout from "@/layouts/app-layout"
 import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
@@ -65,7 +66,10 @@ export default function Index({
   const [view, setView] = useState<View>("menu")
   const [date, setDate] = useState(week.days[0]?.date ?? "")
   const [selected, setSelected] = useState<Schedule | null>(null)
-  const [cart, setCart] = useState<CartItem[]>([])
+  // Guardamos el carrito en sessionStorage. Así, se persiste si el consumidor
+  // recarga la página o navega por la aplicación, pero se borra si cierra la
+  // tab del navegador.
+  const [cart, setCart] = useSessionStorage<CartItem[]>("cart", [])
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
   const [selections, setSelections] = useState<Selections>({})
