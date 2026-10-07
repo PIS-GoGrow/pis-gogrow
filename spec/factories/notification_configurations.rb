@@ -12,6 +12,12 @@ end
 #
 #  id          :bigint           not null, primary key
 #  description :string
+#  key         :string           not null
+#  title       :string
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
+#
+# Indexes
+#
+#  index_notification_configurations_on_key  (key) UNIQUE
 #

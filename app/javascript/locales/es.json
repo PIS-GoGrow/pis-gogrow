@@ -78,6 +78,12 @@
         "sessions": "Sesiones"
       }
     },
+    "notifications": {
+      "order_confirmed": {
+        "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
+        "title": "Tu pedido fue confirmado"
+      }
+    },
     "pages": {
       "accounts": {
         "index": {

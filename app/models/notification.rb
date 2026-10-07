@@ -7,7 +7,6 @@ class Notification < ApplicationRecord
 
   validates :title, presence: true
   validates :description, presence: true
-  validates :requires_action, presence: true
 
   scope :closed, -> { where.not closed_at: nil }
   scope :active, -> { where closed_at: nil }

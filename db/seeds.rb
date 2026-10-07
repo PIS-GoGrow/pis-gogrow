@@ -266,7 +266,9 @@ end
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 
 notification_configuration = NotificationConfiguration.create!(
-  description: "Notificaciones de orden en camino"
+  title: "Actualizaciones de pedidos",
+  description: "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
+  key: "order_updates"
 )
 notification_configuration.users << consumer.user
 
@@ -360,3 +362,19 @@ end
   )
   invoice.save!
 end
+
+session = tu_viandita_user.sessions.create! role: :provider
+request = ActionDispatch::TestRequest.create
+jar = request.cookie_jar
+
+session = tu_viandita_user.sessions.create! role: :provider
+jar.signed[:session_token] = session.id
+puts "Proveedor: " + jar[:session_token]
+
+session = consumer_user.sessions.create! role: :consumer
+jar.signed[:session_token] = session.id
+puts "Consumidor: " + jar[:session_token]
+
+session = admin_user.sessions.create! role: :admin
+jar.signed[:session_token] = session.id
+puts "Admin: " + jar[:session_token]

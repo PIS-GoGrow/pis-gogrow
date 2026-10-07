@@ -86,7 +86,7 @@ class Order < ApplicationRecord
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
 
   # Notificaciones al consumidor cuando se confirma la orden
-  after_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
+  after_update_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
 
   # Solo las unidades subsidizadas llevan el descuento; el resto se cobra al
   # precio de lista. subsidized_quantity nil significa todas.
@@ -349,9 +349,10 @@ class Order < ApplicationRecord
       key: "order_confirmed",
       configuration_key: "order_updates",
       user: consumer.user,
+      requires_action: false,
       description_data: {
         date: I18n.l(schedule.date, format: :short),
-        provider: provider.name
+        provider: provider.user.name
       }
     )
   end
