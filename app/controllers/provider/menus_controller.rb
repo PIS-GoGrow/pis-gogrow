@@ -78,18 +78,51 @@ class Provider::MenusController < Provider::InertiaController
   private
 
   def initial_agenda(saved_menu, schedule)
-    variant_agenda = schedule&.menu&.agendas&.first
-    current = saved_menu.current_agenda
+    today = Date.current
+    menu = schedule&.menu
+    variant_agenda = menu.agendas.first if menu&.variant?
+    upcoming_schedule = schedule if schedule && schedule.date >= today
 
-    if variant_agenda
-      { mode: "range", weekdays: variant_agenda.weekdays, starts_on: [ variant_agenda.starts_on, Date.current ].max.iso8601,
-        ends_on: variant_agenda.ends_on.iso8601, date: nil, amount: variant_agenda.amount }
-    elsif schedule
-      { mode: "single", weekdays: [ schedule.date.cwday ], starts_on: nil, ends_on: nil, date: schedule.date.iso8601,
-        amount: schedule.amount }
-    elsif current
-      { mode: "weekly", weekdays: current.weekdays, starts_on: [ current.starts_on, Date.current ].max.iso8601,
-        ends_on: nil, date: nil, amount: current.amount }
+    if variant_agenda&.ends_on && variant_agenda.ends_on >= today
+      # Variante de rango vigente
+      {
+        mode: "range",
+        weekdays: variant_agenda.weekdays,
+        starts_on: [ variant_agenda.starts_on, today ].max.iso8601,
+        ends_on: variant_agenda.ends_on.iso8601,
+        date: nil,
+        amount: variant_agenda.amount
+      }
+    elsif upcoming_schedule && menu.variant?
+      # Variante de día o congelada: se edita ese día, no el plato guardado
+      {
+        mode: "single",
+        weekdays: [ upcoming_schedule.date.cwday ],
+        starts_on: nil,
+        ends_on: nil,
+        date: upcoming_schedule.date.iso8601,
+        amount: upcoming_schedule.amount
+      }
+    elsif (current = saved_menu.agenda_on([ upcoming_schedule&.date, today ].compact.max))
+      # Plato guardado con agenda que cubre esa fecha
+      {
+        mode: "weekly",
+        weekdays: current.weekdays,
+        starts_on: [ current.starts_on, today ].max.iso8601,
+        ends_on: nil,
+        date: nil,
+        amount: current.amount
+      }
+    elsif upcoming_schedule
+      # Schedule manual, que ninguna agenda cubre
+      {
+        mode: "single",
+        weekdays: [ upcoming_schedule.date.cwday ],
+        starts_on: nil,
+        ends_on: nil,
+        date: upcoming_schedule.date.iso8601,
+        amount: upcoming_schedule.amount
+      }
     else
       { mode: "none", weekdays: [], starts_on: nil, ends_on: nil, date: nil, amount: nil }
     end

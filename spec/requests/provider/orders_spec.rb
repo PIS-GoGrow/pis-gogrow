@@ -53,8 +53,10 @@ RSpec.describe "Provider::Orders", type: :request do
 
       expect(inertia).to render_component("provider/orders/index")
 
-      listed = inertia.props.deep_symbolize_keys[:orders]
+      props = inertia.props.deep_symbolize_keys
+      listed = props[:upcoming_orders]
 
+      expect(props[:today]).to eq(Date.current.iso8601)
       expect(listed.pluck(:id)).to match_array(
         %i[
           upcoming_pending_today
@@ -65,16 +67,44 @@ RSpec.describe "Provider::Orders", type: :request do
           other_consumer_upcoming
         ].map { |name| orders(name).id }
       )
+      expect(listed.pluck(:status)).to include("cancelled", "rejected")
 
       today = listed.find { |o| o[:id] == orders(:upcoming_pending_today).id }
       expect(today).to include(
         status: "pending",
         amount: 1,
         consumer_name: "Test User",
+        consumer_company: "GoGrow",
         menu_name: "Milanesa con papas fritas",
         address: "Julio Herrera y Reissig 565",
-        delivery_date: "hoy"
+        delivery_method: "home",
+        date: Date.current.iso8601
       )
+    end
+
+    it "lists the past orders of the signed-in provider, most recent delivery first" do
+      other_provider_order
+      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10, amount: 5)
+      older = Order.create!(
+        consumer: consumers(:one),
+        schedule: older_schedule,
+        status: :confirmed,
+        delivery_method: :home,
+        amount: 1,
+        price: 300.50,
+        discounted_price: 150.25,
+        address: "Julio Herrera y Reissig 565"
+      )
+      sign_in users(:provider_user), role: :provider
+
+      get provider_orders_path
+
+      past = inertia.props.deep_symbolize_keys[:past_orders]
+
+      expect(past.pluck(:id)).to match_array(
+        [ orders(:history_confirmed_past).id, orders(:history_pending_past).id, older.id ]
+      )
+      expect(past.last[:id]).to eq(older.id)
     end
 
     it "orders orders by delivery date ascending and creation time descending" do
@@ -116,7 +146,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
       expect(inertia).to render_component("provider/orders/index")
 
-      listed = inertia.props.deep_symbolize_keys[:orders]
+      listed = inertia.props.deep_symbolize_keys[:upcoming_orders]
       ids = listed.pluck(:id)
 
       expect(ids.index(newer_today.id)).to be < ids.index(older_today.id)
@@ -124,18 +154,29 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(ids.index(order_tomorrow.id)).to be < ids.index(orders(:upcoming_pending_future).id)
     end
 
-    it "excludes past orders, orders without schedule, and orders of other providers" do
+    it "keeps past orders out of the upcoming list" do
+      sign_in users(:provider_user), role: :provider
+
+      get provider_orders_path
+
+      ids = inertia.props.deep_symbolize_keys[:upcoming_orders].pluck(:id)
+
+      expect(ids).not_to include(
+        orders(:history_confirmed_past).id,
+        orders(:history_pending_past).id
+      )
+    end
+
+    it "excludes orders without schedule and orders of other providers from both lists" do
       other_provider_order
       sign_in users(:provider_user), role: :provider
 
       get provider_orders_path
 
-      listed = inertia.props.deep_symbolize_keys[:orders]
-      ids = listed.pluck(:id)
+      props = inertia.props.deep_symbolize_keys
+      ids = props[:upcoming_orders].pluck(:id) + props[:past_orders].pluck(:id)
 
       expect(ids).not_to include(
-        orders(:history_confirmed_past).id,
-        orders(:history_pending_past).id,
         orders(:history_without_schedule).id,
         other_provider_order.id
       )
@@ -400,6 +441,16 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.reload).to be_rejected
       expect(order.rejection_reason).to eq("duplicate_order")
       expect(response).to redirect_to(provider_order_url(order))
+    end
+
+    it "rejects an order the provider had already confirmed" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_confirmed_future)
+
+      patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+
+      expect(order.reload).to be_rejected
+      expect(order.rejection_reason).to eq("out_of_stock")
     end
 
     it "leaves an order that is no longer pending as it was" do

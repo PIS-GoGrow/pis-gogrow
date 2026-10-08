@@ -152,7 +152,8 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     # desde la fila del empleado.
     click_on "Revisar pago"
     within(find("[role=dialog]")) { click_on "Aprobar" }
-    expect(page).to have_content(I18n.t("flash.payment_approved"))
+    expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
+    click_on I18n.t("pages.provider_collections.review.done")
 
     sign_out
     sign_in employee
@@ -200,7 +201,8 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     click_on "Revisar pago"
     within(find("[role=dialog]")) { click_on "Rechazar" }
     within(find("[role=dialog]", text: "Rechazar comprobante")) { click_on "Rechazar comprobante" }
-    expect(page).to have_content(I18n.t("flash.payment_rejected"))
+    expect(page).to have_content(I18n.t("pages.provider_collections.review.rejected_title"))
+    click_on I18n.t("pages.provider_collections.review.done")
 
     sign_out
     sign_in employee
