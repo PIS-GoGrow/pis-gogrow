@@ -49,7 +49,7 @@ class Notifier
 
     # Buscamos la Notification::Configuration correspondiente a ese evento
     configuration = find_configuration_for! event
-    
+
     # I18n.t! lanza I18n::MissingTranslationData si falta la traducción, en vez de
     # guardar un texto tipo "translation missing: ..." en la notificación.
     Notification.create!(

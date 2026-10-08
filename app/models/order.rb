@@ -348,7 +348,6 @@ class Order < ApplicationRecord
     Notifier.call(
       event_key: :order_confirmation,
       user: consumer.user,
-      role: :consumer,
       notifiable: self,
       description_data: {
         date: I18n.l(schedule.date, format: :short),

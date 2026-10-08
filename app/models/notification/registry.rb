@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Notification::Registry
   PATH = Rails.root.join("config/notifications.yml")
 
@@ -32,7 +34,7 @@ class Notification::Registry
 
     def build(data)
       configurations = data.fetch(:configurations).to_h do |key, attrs|
-        [key, Configuration.new(key:, roles: parse_roles(key, attrs.fetch(:roles)))]
+        [ key, Configuration.new(key:, roles: parse_roles(key, attrs.fetch(:roles))) ]
       end
 
       events = data.fetch(:events).to_h do |key, attrs|
@@ -41,17 +43,17 @@ class Notification::Registry
           raise InvalidRegistry, "#{key}: la configuración #{configuration_key} no existe"
         end
 
-        role = parse_roles(key, [attrs.fetch(:role)])[0]
+        role = parse_roles(key, [ attrs.fetch(:role) ])[0]
         unless config.roles.include? role
           raise InvalidRegistry, "#{key}: rol #{role} no incluido en #{configuration_key}"
         end
 
         requires_action = attrs.fetch(:requires_action)
 
-        [key, Event.new(key:, configuration_key:, role:, requires_action:)]
+        [ key, Event.new(key:, configuration_key:, role:, requires_action:) ]
       end
 
-      [configurations.freeze, events.freeze]
+      [ configurations.freeze, events.freeze ]
     end
 
     def parse_roles(key, roles)

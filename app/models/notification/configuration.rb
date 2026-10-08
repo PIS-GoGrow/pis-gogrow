@@ -6,6 +6,11 @@
 # configuraciones tienen una clave (key) que las identifica y además indican qué roles
 # (consumer, provider, admin) pueden configurarlas.
 #
+# Cada tipo de notificación debe pertenecer a una configuración, por lo que para poder
+# crear una notificación, es necesario saber a qué configuración va a pertenecer.
+# Las configuraciones en principio son las que aparecen en la pantalla de configurar
+# notificaciones en el Figma.
+#
 # Un ejemplo de configuración podría ser «Actualización de pedido» con clave
 # order_updates, para que el usuario pueda configurar si recibe notificaciones cuando
 # se modifica uno de sus pedidos.
@@ -19,11 +24,6 @@
 #     order_updates:
 #       title: "..."
 #       description: "..."
-#
-# Cada tipo de notificación debe pertenecer a una configuración, por lo que para poder
-# crear una notificación, es necesario saber a qué configuración va a pertenecer.
-# Entonces, es necesario además crear la configuración a la que va a pertenecer desde
-# las seeds.
 #
 # Cuando un usuario quiere recibir tipos de notificaciones asociadas a una determinada
 # configuración, se asocia a la configuración. Si el usuario no tiene un rol presente

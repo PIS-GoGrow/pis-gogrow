@@ -1,7 +1,16 @@
+# En este archivo se registran todas las configuraciones de notificaciones y
+# eventos que las generan en el sistema.
+
+# Para definir una configuración, hay que agregar una clave única en esta lista
+# e indicar para qué roles se puede configurar.
 configurations:
   order_updates:
     roles: [consumer]
 
+# En esta lista se definen los eventos que generan notificaciones. Para agregar
+# uno, hay que especificar una de las claves de configuración de arriba en el
+# atributo configuration, especificar un único rol de los que están disponibles
+# para la configuración en role e indicar si requiere acción.
 events:
   order_confirmation:
     configuration: order_updates

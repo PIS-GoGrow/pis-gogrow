@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 namespace :notifications do
   desc "Sincroniza Notification::Configuration con config/notifications.yml"
   task sync: :environment do

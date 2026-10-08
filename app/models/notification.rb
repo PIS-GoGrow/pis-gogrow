@@ -2,7 +2,7 @@
 
 # Representa una notificación que se le va a enviar al usuario.
 # Una notificación puede estar activa o cerrada y puede requerir o no acción.
-# 
+#
 # Si el usuario tiene varios roles, la notificación solo le aparecerá cuando se loguee
 # con el rol definido en la columna role de notificación.
 #
@@ -26,16 +26,31 @@
 #         no la puede cerrar, sino que necesita hacer algo para que se cierre. En el
 #         Figma, estas notificaciones aparecen en rojo.
 #    Los detalles del formato están en config/notifications.yml.
-# 3. Crearla en el flujo: En el punto del flujo que sea necesario notificar a un
+# 3. Crear los locales: Es necesario agregar título y descripción de la notificación a
+#    config/locales/es.yml. Si creamos una clave de evento 'event_key' en el paso 2,
+#    tenemos que agregar al archivo:
+#
+#      notifications:
+#        event_key:
+#          title: "..."
+#          description: "..."
+#
+#    si la notificación requiere datos extra del momento, los agregamos con %{dato}
+#    adentro del string.
+# 4. Crearla en el flujo: En el punto del flujo que sea necesario notificar a un
 #    usuario, se crea una notificación llamando al servicio Notifier. Nunca habría
 #    que llamar a Notification.create directamente.
-#    Hay más información en app/services/notifier.rb de cómo crearlas. 
-# 4. Definir cómo cerrarlas: Si la notificación no requiere acción, este paso no es
+#    Hay más información en app/services/notifier.rb de cómo crearlas.
+# 5. Definir cómo cerrarlas: Si la notificación no requiere acción, este paso no es
 #    necesario. Hay que definir en qué punto una notificación puede ser cerrada.
 #    Cuando la condición se cumpla para que al usuario ya no le aparezca la
 #    notificación, hay que llamar a Notification.close_by! o Notification.close_by.
 #    Es necesario indicar la clave de evento, el objeto notifiable y el usuario
 #    que se eligieron en el paso 3.
+#    Las notificaciones que requieren acción no se van nunca si no hacemos esto, por
+#    lo que hay que estar seguro de que eventualmente se va a llamar a close_by de
+#    alguna forma, y que no hay manera de evitarlo si es que se realiza la acción
+#    requerida.
 class Notification < ApplicationRecord
   EVENT_KEYS = %i[
     order_confirmation
@@ -57,7 +72,7 @@ class Notification < ApplicationRecord
 
   # Cierra la notificación para que ya no le aparezca más al usuario.
   def close!(time: Time.current)
-    return unless closed_at
+    return if closed_at
 
     update! closed_at: time
   end
