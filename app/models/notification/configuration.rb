@@ -3,8 +3,10 @@
 # Representa un conjunto de tipos de notificaciones que son configurables por el
 # usuario. La configuración solo se toma en cuenta cuando la notificación se envía
 # por WhatsApp, todas las notificaciones aparecen siempre en la app. Las
-# configuraciones tienen una clave (key) que las identifica y además indican qué roles
-# (consumer, provider, admin) pueden configurarlas.
+# configuraciones tienen una clave (key) que las identifica, indican qué roles
+# (consumer, provider, admin) pueden configurarlas. Además, mediante el atributo
+# configurable se puede indicar si la configuración puede ser modificable por un
+# usuario.
 #
 # Ver más documentación en docs/notificaciones.rb
 class Notification::Configuration < ApplicationRecord
