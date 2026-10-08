@@ -1,4 +1,9 @@
 # Vista general
+En la aplicación, los modelos `Notification::Configuration` y `Notification`
+son los que se encargan de manejar [configuraciones de notificación](#configuracion)
+y el almacenamiento de notificaciones.
+
+El servicio [`Notifier`](#notifier) se encarga de crearlas.
 
 # Checklist para agregar notificaciones a un flujo:
 
