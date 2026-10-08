@@ -356,18 +356,6 @@ end
   invoice.save!
 end
 
-session = tu_viandita_user.sessions.create! role: :provider
-request = ActionDispatch::TestRequest.create
-jar = request.cookie_jar
-
-session = tu_viandita_user.sessions.create! role: :provider
-jar.signed[:session_token] = session.id
-puts "Proveedor: " + jar[:session_token]
-
-session = consumer_user.sessions.create! role: :consumer
-jar.signed[:session_token] = session.id
-puts "Consumidor: " + jar[:session_token]
-
-session = admin_user.sessions.create! role: :admin
-jar.signed[:session_token] = session.id
-puts "Admin: " + jar[:session_token]
+# Cargar las configuraciones de notificación a la app
+Rails.application.load_tasks
+Rake::Task["notifications:sync"].invoke
