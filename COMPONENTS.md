@@ -136,6 +136,8 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
 | `AlertError` | `@/components/alert-error` | `Alert` destructivo con una lista de errores |
 | `StatusBadge` | `@/components/status-badge` | Estado de un pedido o de un pago: `Badge variant="outline"` con `data-status` y color por estado |
+| `DeliveryFilterSheet` | `@/components/orders/delivery-filter-sheet` | Filtro de tipo de entrega (Todas, Oficina, Domicilios) en un sheet inferior, con Cancelar y Aplicar |
+| `ProviderOrderDays` | `@/components/orders/provider-order-days` | Pedidos del proveedor agrupados por día: acordeón en celular, lista de días y panel del día elegido desde `lg` |
 | `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail` y `badge` opcionales |
 | `MobileNav` | `@/components/mobile-nav` | Barra inferior móvil de RRHH; recibe ítems con ícono, ruta opcional y estado activo |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
@@ -603,14 +605,24 @@ import StatusBadge from "@/components/status-badge"
 
 Envuelve `Badge variant="outline"` y resuelve el color a partir del estado, con un punto del mismo color antes del texto. El texto sale de las traducciones, así que la pantalla sólo pasa el estado.
 
-Sirve para los dos enums de estado que tiene la aplicación, y `kind` elige cuál: `"order"` (el valor por defecto, textos de `pages.orders.statuses.*`) o `"payment"` (textos de `pages.provider_collections.statuses.*`). El discriminador es obligatorio porque `pending` y `rejected` existen en ambos enums y el valor solo no alcanza para saber qué corresponde.
+Sirve para los enums de estado que tiene la aplicación, y `kind` elige cuál: `"order"` (el valor por defecto, textos de `pages.orders.statuses.*`), `"payment"` (textos de `pages.provider_collections.statuses.*`), `"invoice"` o `"provider_order"`. Este último usa los colores de `"order"` pero los textos del proveedor (`pages.provider_orders.statuses.*`: el pendiente se llama "Por revisar") y es el que usa la lista de pedidos del proveedor. El discriminador es obligatorio porque `pending` y `rejected` existen en más de un enum y el valor solo no alcanza para saber qué corresponde.
 
 Cada mapa de estilos está tipado con su enum de Rails: agregar un estado rompe la compilación hasta definir cómo se ve. También expone `data-status`, para poder apuntarle desde los tests o desde una clase del contenedor.
 
 ```tsx
 <StatusBadge status={order.status} />
 <StatusBadge status={account.status} kind="payment" />
+<StatusBadge status={order.status} kind="provider_order" />
 ```
+
+### Lista agrupada por día (pedidos del proveedor)
+
+La pantalla de pedidos del proveedor no usa la grilla de tarjetas de [Estructura de pantalla](#estructura-de-pantalla): agrupa los pedidos por día de entrega con `ProviderOrderDays`, que resuelve los dos tamaños con una sola estructura de `Collapsible`.
+
+- En celular es un acordeón con un día abierto a la vez.
+- Desde `lg` (1024 px) los `Collapsible` pasan a `lg:contents` dentro de un `grid`: los encabezados forman la lista de la izquierda y el contenido del día elegido ocupa la columna derecha. El corte es `lg` y no `md` porque a 768 px la barra lateral deja unos 512 px de contenido.
+- El filtro de entrega es `DeliveryFilterSheet`, hermano de `ProviderFilterSheet` del empleado: mismo `AdaptableDialog`, misma apariencia, pero de selección única. Su overlay atenuado depende de `data-delivery-filter-sheet` en [application.css](app/javascript/entrypoints/application.css).
+- Filtrar, buscar y agrupar son funciones puras en [provider-orders.ts](app/javascript/lib/provider-orders.ts). El monto de cada día se muestra con `formatMoneyShort` ("$2.400"), distinto de `formatMoney`, porque así lo define el diseño de esta pantalla.
 
 ### Stat
 

@@ -60,9 +60,11 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
+    expect(screen.getByText(/12\/12\/2026/)).toBeInTheDocument()
     expect(screen.getByLabelText(/se descuenta/i)).toHaveValue(50)
     expect(
       screen.getByLabelText(/cuando el precio por vianda es/i),
@@ -80,6 +82,7 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={vi.fn()}
         onSuccess={onSuccess}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
@@ -114,6 +117,7 @@ describe("EditBenefitConfigurationForm", () => {
         pendingBenefitConfiguration={pendingBenefitConfiguration}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
@@ -124,7 +128,7 @@ describe("EditBenefitConfigurationForm", () => {
 
     expect(postMock).not.toHaveBeenCalled()
     expect(
-      screen.getByText(/ya hay un cambio programado para el próximo período/i),
+      screen.getByText(/ya hay un cambio programado para el 12\/12\/2026/i),
     ).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: /mantener el programado/i }),
@@ -143,6 +147,7 @@ describe("EditBenefitConfigurationForm", () => {
         pendingBenefitConfiguration={pendingBenefitConfiguration}
         onCancel={onCancel}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
@@ -165,6 +170,7 @@ describe("EditBenefitConfigurationForm", () => {
         pendingBenefitConfiguration={pendingBenefitConfiguration}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
@@ -201,6 +207,7 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={onCancel}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
@@ -227,6 +234,7 @@ describe("EditBenefitConfigurationForm", () => {
         defaultValues={defaultValues}
         onCancel={vi.fn()}
         onSuccess={vi.fn()}
+        configurableMonth={"12/12/2026"}
       />,
     )
 
