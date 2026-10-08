@@ -518,11 +518,33 @@ RSpec.describe Order, type: :model do
         .to change { order.schedule.reload.remaining_amount }.by(order.amount)
     end
 
-    it "refuses to decide an already confirmed order and returns false" do
+    it "rejects a confirmed order with a valid reason and returns true" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(true)
+      expect(order.reload).to be_rejected
+      expect(order.rejection_reason).to eq("out_of_stock")
+    end
+
+    it "refuses to reject a confirmed order without a reason" do
       order = orders(:upcoming_confirmed_future)
 
       expect(order.decide(:rejected)).to be(false)
       expect(order.reload).to be_confirmed
+    end
+
+    it "refuses to confirm an already confirmed order and returns false" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "refuses to reject an already cancelled order and returns false" do
+      order = orders(:history_cancelled_future)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order.reload).to be_cancelled
     end
 
     it "refuses to decide an already cancelled order and returns false" do

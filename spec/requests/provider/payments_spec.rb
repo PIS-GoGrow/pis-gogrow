@@ -130,4 +130,54 @@ RSpec.describe "Provider payments", type: :request do
 
     expect(response).to have_http_status(:not_found)
   end
+
+  it "redirects a consumer trying to review a payment" do
+    _user, payment = setup_submitted_payment
+    consumer_user = User.create!(email: "unauth-consumer@gmail.com", name: "Consumer", password: "password123456")
+    Consumer.create!(user: consumer_user, company: Company.first, address: "Ellauri 123")
+    sign_in(consumer_user, role: :consumer)
+
+    patch provider_payment_path(payment), params: { status: "approved" }
+
+    expect(response).to redirect_to(root_path)
+    expect(payment.reload).to be_submitted
+  end
+
+  it "redirects an admin trying to review a payment" do
+    _user, payment = setup_submitted_payment
+    admin_user = User.create!(email: "unauth-admin@gmail.com", name: "Admin", password: "password123456")
+    Admin.create!(user: admin_user, company: Company.first)
+    sign_in(admin_user, role: :admin)
+
+    patch provider_payment_path(payment), params: { status: "approved" }
+
+    expect(response).to redirect_to(root_path)
+    expect(payment.reload).to be_submitted
+  end
+
+  it "handles partial payment rejection without notice and keeps account submitted if another payment is pending" do
+    user, first_payment = setup_submitted_payment
+    account = first_payment.account
+    second_payment = account.payments.build(provider: first_payment.provider, status: :submitted)
+    second_payment.receipt.attach(io: StringIO.new("receipt2"), filename: "receipt2.png", content_type: "image/png")
+    second_payment.save!
+
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(first_payment), params: { status: "rejected", rejection_reason: "El pago es parcial" }
+
+    expect(response).to redirect_to(provider_collections_path)
+    expect(response).to have_http_status(:see_other)
+    expect(flash[:notice]).to be_nil
+    expect(first_payment.reload.rejection_reason).to eq("El pago es parcial")
+    expect(account.reload.collection_status).to eq("submitted")
+    expect(account.payment_pending_review).to eq(second_payment)
+
+    patch provider_payment_path(second_payment), params: { status: "approved" }
+
+    expect(response).to redirect_to(provider_collections_path)
+    expect(second_payment.reload).to be_approved
+    expect(account.reload.payment_pending_review).to be_nil
+    expect(account.collection_status).to eq("approved")
+  end
 end
