@@ -1,8 +1,11 @@
 # En este archivo se registran todas las configuraciones de notificaciones y
-# eventos que las generan en el sistema.
+# eventos que las generan en el sistema. Se recarga automáticamente en la aplicación
+# cuando hay cambios.
 
 # Para definir una configuración, hay que agregar una clave única en esta lista
-# e indicar para qué roles se puede configurar.
+# e indicar para qué roles se puede configurar. Si se agrega o cambia una configuración
+# hay que correr el comando:
+#   bin/rails notifications:sync
 configurations:
   order_updates:
     roles: [consumer]

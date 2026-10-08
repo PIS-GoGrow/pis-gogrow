@@ -9,15 +9,20 @@
 # Cada tipo de notificación debe pertenecer a una configuración, por lo que para poder
 # crear una notificación, es necesario saber a qué configuración va a pertenecer.
 # Las configuraciones en principio son las que aparecen en la pantalla de configurar
-# notificaciones en el Figma.
+# notificaciones en el Figma para cada rol. Además, hay que saber desde qué roles
+# se puede acceder a una configuración. Desde config/notifications.yml se configuran
+# las configuraciones posibles, así como los roles que pueden acceder a ellos. 
 #
 # Un ejemplo de configuración podría ser «Actualización de pedido» con clave
 # order_updates, para que el usuario pueda configurar si recibe notificaciones cuando
-# se modifica uno de sus pedidos.
+# se modifica uno de sus pedidos. Además, dentro de esa configuración podría encontrarse
+# el evento «Confirmación de pedido» y «Cancelación de pedido». El usuario configura
+# ambos a la vez como «Actualización de pedido», pero en realidad son tipos separados.
+# Esta configuración solo aplica a consumidores, por lo que tiene roles [consumer].
 #
 # El título y la descripción de una configuración no se guarda en la base de datos,
 # sino que se configura desde los locales, según la clave. Si creamos una
-# NotificationConfiguration con clave :order_updates, es necesario entonces tener
+# Notification::Configuration con clave :order_updates, es necesario entonces tener
 # en es.yml las líneas:
 #
 #   notification_configurations:
@@ -36,6 +41,9 @@ class Notification::Configuration < ApplicationRecord
 
   has_many :notifications, dependent: :restrict_with_error
 
+  # Crea las configuraciones según lo que dice Notification::Registry.
+  # Nunca borra configuraciones, las reporta para elegir qué hacer, pero sí
+  # cambia los roles de la configuración según los cambios de Notification::Registry.
   def self.sync!
     keys = Notification::Registry.configurations.keys.map(&:to_s)
 

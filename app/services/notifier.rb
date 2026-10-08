@@ -10,23 +10,6 @@
 #   admin o provider);
 # - qué objeto ocasionó la notificación (notifiable).
 #
-# El título y descripción de la notificación se generan automáticamente a partir de los
-# locales:
-# - notifications.{event_key}.title
-# - notifications.{event_key}.description
-# que deben existir.
-#
-# Además, se tiene que definir en esta clase a qué configuración corresponde un
-# determinado evento, por ejemplo: el evento «Confirmación de pedido» corresponde
-# a la configuración «Actualización de pedido». Esto se hace en CONFIG_KEY_MAP.
-# Si el evento tiene la misma clave que la configuración, no es necesario definir nada.
-# Más información sobre las configuraciones en NotificationConfiguration.
-#
-# También se tiene que definir para cada evento si se requiere una acción con él
-# o no. Requerir una acción implica que la notificación es persistente (aparece como
-# rojo en el figma). Si un evento requiere acción, hay que agregar la clave de ese
-# evento al arreglo REQUIRES_ACTION.
-#
 # El objeto notifiable conceptualmente debería representar el objeto responsable de que
 # se le esté enviando una notificación al usuario. Además, si la notificación requiere
 # acción, entonces la acción tendría que hacerse sobre el objeto notifiable.
@@ -38,9 +21,8 @@
 # única notificación. Entonces, un notifiable no debe poder generar varias
 # notificaciones a un mismo usuario en el mismo evento.
 #
-# Una vez creada la notificación, si requiere acción la podemos cerrar cuando el usuario
-# haga la acción con el método Notification.close_by!, que acepta una clave de evento,
-# el objeto notifiable y el usuario.
+# Si los locales definidos para una notificación necesitan datos extra, se pueden pasar
+# en title_data y description_data
 class Notifier
   class MissingConfiguration < StandardError; end
 
@@ -75,7 +57,7 @@ class Notifier
   # Devuelve la Notification::Configuration para un evento. Si no está, devolvemos un
   # error explicativo.
   def self.find_configuration_for!(event)
-    Notification::Configuration.find_by(key: event.configuration_key.to_s + " sa") || raise(
+    Notification::Configuration.find_by(key: event.configuration_key.to_s) || raise(
       MissingConfiguration,
       "Se trató crear una notificación incorrectamente: " \
       "No existe la configuración '#{event.configuration_key}' (evento '#{event.key}'). " \
