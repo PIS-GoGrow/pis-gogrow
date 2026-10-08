@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 # spec/services/notifier_spec.rb
 require "rails_helper"
 
@@ -9,7 +11,7 @@ RSpec.describe Notifier do
   let(:event_key)  { :order_confirmation }
 
   let(:registry_configuration) do
-    Notification::Registry::Configuration.new(key: :order_updates, roles: [:consumer])
+    Notification::Registry::Configuration.new(key: :order_updates, roles: [ :consumer ])
   end
 
   let(:event_role)      { :consumer }
@@ -83,10 +85,10 @@ RSpec.describe Notifier do
         context "cuando el evento está definido para #{role}" do
           let(:event_role) { role }
           let(:registry_configuration) do
-            Notification::Registry::Configuration.new(key: :order_updates, roles: [role])
+            Notification::Registry::Configuration.new(key: :order_updates, roles: [ role ])
           end
           let!(:configuration) do
-            create(:notification_configuration, key: "order_updates", roles: [role.to_s])
+            create(:notification_configuration, key: "order_updates", roles: [ role.to_s ])
           end
 
           it "crea la notificación con el rol del evento" do
