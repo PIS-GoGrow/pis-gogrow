@@ -3,6 +3,7 @@ import { ChevronRight, Info } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import HeadingSmall from "@/components/heading-small"
+import NotificationBanners from "@/components/notification-banners"
 import PageContainer from "@/components/page-container"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
@@ -35,6 +36,8 @@ export default function AdminDashboard({
         titleVariant="prominent"
         compactHeading
       >
+        <NotificationBanners />
+
         <div className="grid gap-4 lg:grid-cols-2 lg:gap-8">
           <Alert role="status" className="lg:col-span-2">
             <Info aria-hidden="true" />
