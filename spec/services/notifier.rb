@@ -92,13 +92,13 @@ RSpec.describe Notifier do
           end
 
           it "crea la notificación con el rol del evento" do
-            user = if role == :admin 
-                     users(:admin)
-                   elsif role == :provider
-                     users(:provider_user)
-                   else
-                     users(:one)
-                   end
+            user = if role == :admin
+              users(:admin)
+            elsif role == :provider
+              users(:provider_user)
+            else
+              users(:one)
+            end
             notification = described_class.call(**params, user:)
 
             expect(notification.role.to_s).to eq(role.to_s)
