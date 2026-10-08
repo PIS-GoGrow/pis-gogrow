@@ -5,7 +5,10 @@ class SessionsController < InertiaController
   before_action :require_no_authentication, only: %i[new create]
   before_action :set_session, only: %i[edit update destroy]
 
+  # El formulario de correo y contraseña solo se pinta donde se está probando.
+  # No cambia nada del endpoint: create ya existía y sigue igual.
   def new
+    @dev_login_enabled = ENV.fetch("DEV_LOGIN_ENABLED", "false") == "true"
   end
 
   def create
