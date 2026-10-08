@@ -57,6 +57,12 @@ class Menu < ApplicationRecord
     end
   end
 
+  # en Menu
+  def agenda_on(date)
+    agendas.where("starts_on <= ? AND (ends_on IS NULL OR ends_on >= ?)", date, date)
+           .order(:starts_on).last
+  end
+
   def build_variant(valid_from:, valid_until:)
     saved_menu.variants.build(provider:, name:, description:, price:, valid_from:, valid_until:).tap do |variant|
       option_groups.each { |g| variant.option_groups.build(name: g.name, options: g.options, limit: g.limit) }

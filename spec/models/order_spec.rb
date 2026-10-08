@@ -518,11 +518,33 @@ RSpec.describe Order, type: :model do
         .to change { order.schedule.reload.remaining_amount }.by(order.amount)
     end
 
-    it "refuses to decide an already confirmed order and returns false" do
+    it "rejects a confirmed order with a valid reason and returns true" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(true)
+      expect(order.reload).to be_rejected
+      expect(order.rejection_reason).to eq("out_of_stock")
+    end
+
+    it "refuses to reject a confirmed order without a reason" do
       order = orders(:upcoming_confirmed_future)
 
       expect(order.decide(:rejected)).to be(false)
       expect(order.reload).to be_confirmed
+    end
+
+    it "refuses to confirm an already confirmed order and returns false" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "refuses to reject an already cancelled order and returns false" do
+      order = orders(:history_cancelled_future)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order.reload).to be_cancelled
     end
 
     it "refuses to decide an already cancelled order and returns false" do
@@ -607,11 +629,11 @@ RSpec.describe Order, type: :model do
       expect(order.reload.accounts.count).to eq(2)
     end
 
-    it "keeps an old order in the accounts of the month it was placed" do
+    it "keeps an old order in the accounts of the month it will be delivered" do
       order = create_order(status: :confirmed, created_at: 1.month.ago)
 
       expect { order.ensure_accounts! }.not_to change(Account, :count)
-      expect(order.reload.accounts.map(&:month).uniq).to eq([ 1.month.ago.to_date.beginning_of_month ])
+      expect(order.reload.accounts.map(&:month).uniq).to eq([ schedules(:future).date.beginning_of_month ])
     end
 
     it "completes the missing company account of an old order in its own month" do
@@ -621,9 +643,9 @@ RSpec.describe Order, type: :model do
 
       order.ensure_accounts!
 
-      last_month = 1.month.ago.to_date.beginning_of_month
+      month = schedules(:future).date.beginning_of_month
       expect(order.reload.accounts.map { [ it.owner_type, it.month ] }).to contain_exactly(
-        [ "Consumer", last_month ], [ "Company", last_month ]
+        [ "Consumer", month ], [ "Company", month ]
       )
     end
 

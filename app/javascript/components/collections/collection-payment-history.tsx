@@ -1,21 +1,27 @@
-import { Download, FileText } from "lucide-react"
+import { Download, Eye, FileText } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import StatusBadge from "@/components/status-badge"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
+import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
 import type { ProviderCollectionPayment } from "@/types"
 
 interface CollectionPaymentHistoryProps {
   payments: ProviderCollectionPayment[]
+  showDownloadAll?: boolean
 }
 
 export default function CollectionPaymentHistory({
   payments,
+  showDownloadAll = false,
 }: CollectionPaymentHistoryProps) {
+  const { t } = useTranslation()
   const receipts = payments.filter((payment) => payment.receipt_url)
 
   if (receipts.length === 0) return null
@@ -33,49 +39,65 @@ export default function CollectionPaymentHistory({
     )
   }
 
+  const list = (
+    <div className="grid gap-2">
+      {receipts.map((payment) => (
+        <div
+          key={payment.id}
+          className="bg-background grid gap-2 rounded-lg border p-3 text-sm"
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-muted-foreground text-xs">
+              {payment.date}
+            </span>
+            <div className="flex items-center gap-1.5">
+              {payment.rejection_reason ===
+                PARTIAL_PAYMENT_REJECTION_REASON && (
+                <Badge
+                  variant="outline"
+                  className="gap-1.5 border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500"
+                >
+                  <span className="size-1.5 rounded-full" />
+                  {t("pages.provider_collections.partial_payment_badge")}
+                </Badge>
+              )}
+              <StatusBadge status={payment.status} kind="payment" />
+            </div>
+          </div>
+          <div className="flex min-w-0 items-center gap-2">
+            <FileText aria-hidden="true" className="size-4 shrink-0" />
+            <span className="min-w-0 flex-1 truncate font-medium">
+              {payment.receipt_filename}
+            </span>
+            <Button asChild size="icon-sm" variant="ghost">
+              <a
+                href={payment.receipt_url ?? undefined}
+                download
+                aria-label={`Descargar ${payment.receipt_filename ?? "comprobante"}`}
+              >
+                <Download aria-hidden="true" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+
+  if (!showDownloadAll) {
+    return list
+  }
+
   return (
     <Collapsible className="grid gap-3">
       <CollapsibleTrigger asChild>
         <Button className="h-12 w-full rounded-[10px]">
-          <Download aria-hidden="true" />
-          Descargar comprobantes
+          <Eye aria-hidden="true" />
+          Ver comprobantes
         </Button>
       </CollapsibleTrigger>
 
-      <CollapsibleContent className="grid gap-2">
-        {receipts.map((payment) => (
-          <div
-            key={payment.id}
-            className="bg-background grid gap-2 rounded-lg border p-3 text-sm"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-muted-foreground text-xs">
-                {payment.date}
-              </span>
-
-              <StatusBadge status={payment.status} kind="payment" />
-            </div>
-
-            <div className="flex min-w-0 items-center gap-2">
-              <FileText aria-hidden="true" className="size-4 shrink-0" />
-
-              <span className="min-w-0 flex-1 truncate font-medium">
-                {payment.receipt_filename}
-              </span>
-
-              <Button asChild size="icon-sm" variant="ghost">
-                <a
-                  href={payment.receipt_url ?? undefined}
-                  download
-                  aria-label={`Descargar ${payment.receipt_filename ?? "comprobante"}`}
-                >
-                  <Download aria-hidden="true" />
-                </a>
-              </Button>
-            </div>
-          </div>
-        ))}
-      </CollapsibleContent>
+      <CollapsibleContent>{list}</CollapsibleContent>
     </Collapsible>
   )
 }

@@ -198,12 +198,13 @@ class Order < ApplicationRecord
     cancellation_block_reason.nil?
   end
 
-  # La decisión del proveedor solo corre sobre pedidos pendientes: confirmar o
-  # rechazar uno ya resuelto pisaría la cancelación del empleado. El lock es por
-  # el doble envío, igual que en cancel.
+  # Confirmar solo corre sobre pedidos pendientes; rechazar también sobre los
+  # confirmados, porque el proveedor puede no poder cumplir lo que aceptó. Un
+  # pedido cancelado o ya rechazado no se toca: pisaría la cancelación del
+  # empleado. El lock es por el doble envío, igual que en cancel.
   def decide(status, reason: nil, details: nil)
     with_lock do
-      return false unless pending?
+      return false unless pending? || (confirmed? && status.to_s == "rejected")
 
       attrs = { status: status }
       if status.to_s == "rejected"
@@ -323,12 +324,8 @@ class Order < ApplicationRecord
   # subsidio. Es idempotente, así que sirve también para completar las cuentas de
   # órdenes viejas: una orden cuelga siempre de una sola cuenta de cada dueño.
   def ensure_accounts!
-    # El mes es el de cuando se hizo el pedido, no el de hoy: si no, completar una
-    # orden vieja la colgaría también de una cuenta de este mes.
-    # Habría que validar si queremos que el pedido se descuente en el mes en el que
-    # será enviado. En ese caso, habría que cambiar la siguiente línea por:
-    #   month = schedule.date.beginning_of_month
-    month = created_at.to_date.beginning_of_month
+    # Descontamos el pedido de la cuenta del mes en el que va a ser enviado
+    month = schedule.date.beginning_of_month
     provider =
       self.provider or raise "La orden #{id} no tiene proveedor. Puede ser que no tenga un schedule asignado, que su schedule no tenga un menú o que ese menú no tenga un proveedor"
 

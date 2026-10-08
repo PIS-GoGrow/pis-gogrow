@@ -40,14 +40,17 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     row.paid_on&.strftime("%d/%m/%y")
   end
 
+  # El pago que hay que revisar: el más viejo en submitted si hay alguno sin
+  # resolver (ver Account#payment_pending_review), o el último si no hay nada
+  # pendiente (para mostrar, por ejemplo, el motivo de un rechazo).
   typelize :number, nullable: true
   attribute :payment_id do |row|
-    row.account.last_payment&.id
+    row.account.payment_pending_review&.id || row.account.last_payment&.id
   end
 
   typelize :string, nullable: true
   attribute :receipt_url do |row|
-    payment = row.account.last_payment
+    payment = row.account.payment_pending_review || row.account.last_payment
     next unless payment&.receipt&.attached?
 
     Rails.application.routes.url_helpers.receipt_provider_payment_path(payment)
@@ -55,7 +58,7 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
 
   typelize :string, nullable: true
   attribute :receipt_content_type do |row|
-    payment = row.account.last_payment
+    payment = row.account.payment_pending_review || row.account.last_payment
     payment.receipt.content_type if payment&.receipt&.attached?
   end
 

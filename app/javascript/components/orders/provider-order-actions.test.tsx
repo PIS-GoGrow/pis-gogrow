@@ -23,12 +23,11 @@ describe("ProviderOrderActions", () => {
     patchMock.mockClear()
   })
 
-  it("renders nothing when the order is not pending", () => {
-    const { container } = render(
-      <ProviderOrderActions order={{ id: 1, status: "confirmed" }} />,
-    )
+  it("lets a confirmed order be rejected but not confirmed again", () => {
+    render(<ProviderOrderActions order={{ id: 1, status: "confirmed" }} />)
 
-    expect(container).toBeEmptyDOMElement()
+    expect(screen.getByRole("button", { name: /rechazar/i })).toBeEnabled()
+    expect(screen.getByRole("button", { name: /confirmar/i })).toBeDisabled()
   })
 
   it("renders nothing when the order is cancelled or rejected", () => {
@@ -41,6 +40,35 @@ describe("ProviderOrderActions", () => {
       <ProviderOrderActions order={{ id: 3, status: "rejected" }} />,
     )
     expect(rejectedContainer).toBeEmptyDOMElement()
+  })
+
+  it("keeps both buttons visible but disabled on a cancelled order when keepVisible is set", async () => {
+    const user = userEvent.setup()
+    render(
+      <ProviderOrderActions
+        order={{ id: 7, status: "cancelled" }}
+        keepVisible
+      />,
+    )
+
+    const confirm = screen.getByRole("button", { name: /confirmar/i })
+    const reject = screen.getByRole("button", { name: /rechazar/i })
+
+    expect(confirm).toBeDisabled()
+    expect(reject).toBeDisabled()
+
+    await user.click(confirm)
+
+    expect(patchMock).not.toHaveBeenCalled()
+  })
+
+  it("keeps the buttons enabled on a pending order when keepVisible is set", () => {
+    render(
+      <ProviderOrderActions order={{ id: 8, status: "pending" }} keepVisible />,
+    )
+
+    expect(screen.getByRole("button", { name: /confirmar/i })).toBeEnabled()
+    expect(screen.getByRole("button", { name: /rechazar/i })).toBeEnabled()
   })
 
   it("renders confirm and reject buttons for pending orders", () => {

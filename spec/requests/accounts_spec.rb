@@ -18,7 +18,7 @@ RSpec.describe "Consumer Accounts", type: :request do
     Provider.create!(user:)
   end
 
-  def create_order(consumer:, provider:, price: 350, amount: 1, status: :confirmed, date: Date.current.beginning_of_week(:monday))
+  def create_order(consumer:, provider:, price: 350, amount: 1, status: :confirmed, date: Date.current)
     menu = Menu.create!(provider:, name: "Menú #{SecureRandom.hex(3)}", description: "Descripción", price:)
     schedule = Schedule.create!(menu:, date:, amount: 30)
 

@@ -8,7 +8,7 @@ RSpec.describe "Edición de plato programado en el menú (flujo complejo)", type
   let(:provider_user) { users(:provider_user) }
   let(:provider) { providers(:tuviandita) }
   let(:milanesa) { menus(:milanesa) }
-  let(:target_date) { Date.current.next_occurring(:wednesday) }
+  let(:target_date) { Date.current.next_occurring(:thursday) }
 
   before do
     sign_in provider_user, role: :provider

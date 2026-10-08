@@ -11,6 +11,18 @@ export const useFormatters = () => {
       currency: "UYU",
     }).format(amount)
 
+  // Con el locale "es" un número de cuatro cifras no lleva punto de miles por
+  // defecto, y el resumen por día tiene que verse "$2.400".
+  const formatMoneyShort = (amount: number) => {
+    const decimals = Number.isInteger(amount) ? 0 : 2
+
+    return `$${new Intl.NumberFormat(locale, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+      useGrouping: "always",
+    }).format(amount)}`
+  }
+
   const formatDeliveryDate = (date: string) => {
     const formatted = new Intl.DateTimeFormat(locale, {
       weekday: "long",
@@ -21,5 +33,5 @@ export const useFormatters = () => {
     return formatted.charAt(0).toLocaleUpperCase(locale) + formatted.slice(1)
   }
 
-  return { formatMoney, formatDeliveryDate }
+  return { formatMoney, formatMoneyShort, formatDeliveryDate }
 }

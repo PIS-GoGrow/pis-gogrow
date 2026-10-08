@@ -145,6 +145,7 @@
   }
 }
 
-body:has([data-provider-filter-sheet]) [data-slot="sheet-overlay"] {
+body:has([data-provider-filter-sheet], [data-delivery-filter-sheet])
+  [data-slot="sheet-overlay"] {
   background-color: rgb(0 0 0 / 20%);
 }

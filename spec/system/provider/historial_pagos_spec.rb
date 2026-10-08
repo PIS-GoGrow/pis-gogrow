@@ -103,7 +103,7 @@ RSpec.describe "Historial de pagos del proveedor" do
 
     if decision == :approve
       within(find("[role=dialog]")) { click_on "Aprobar" }
-      expect(page).to have_content(I18n.t("flash.payment_approved"))
+      expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     else
       within(find("[role=dialog]")) { click_on "Rechazar" }
       within(find("[role=dialog]", text: "Rechazar comprobante")) do
@@ -111,8 +111,10 @@ RSpec.describe "Historial de pagos del proveedor" do
         fill_in "Motivo", with: "El importe no coincide"
         click_on "Rechazar comprobante"
       end
-      expect(page).to have_content(I18n.t("flash.payment_rejected"))
+      expect(page).to have_content(I18n.t("pages.provider_collections.review.rejected_title"))
     end
+
+    click_on I18n.t("pages.provider_collections.review.done")
   end
 
   def employee_uploads_receipt
@@ -144,7 +146,7 @@ RSpec.describe "Historial de pagos del proveedor" do
       expect(page).to have_content(approved.created_at.strftime("%d/%m/%y"))
       expect(page).to have_content("300,00")
 
-      click_on "Descargar comprobantes"
+      click_on "Ver comprobantes"
       expect(page).to have_link("Descargar primer-intento.png", href: receipt_provider_payment_path(rejected))
       expect(page).to have_link("Descargar segundo-intento.png", href: receipt_provider_payment_path(approved))
       expect(page).to have_content(rejected.created_at.strftime("%d/%m/%y"))
@@ -239,7 +241,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     within(history_card("GoGrow")) do
       click_on "Empleados"
       click_on employee.name
-      click_on "Descargar comprobantes"
+      click_on "Ver comprobantes"
       payments.each do |payment|
         expect(page).to have_link(href: receipt_provider_payment_path(payment))
       end

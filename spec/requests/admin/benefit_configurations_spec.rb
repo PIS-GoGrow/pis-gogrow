@@ -63,6 +63,20 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(inertia.props[:benefit_configurations].first[:id]).to eq(own_config.id)
       expect(inertia.props[:benefit_configurations].first[:created_by_name]).to eq(admin_user.name)
     end
+
+    it "renders configurable_month as next month when accessed before cutoff date" do
+      travel_to Date.new(2026, 10, 15) do
+        get admin_benefit_configurations_path
+        expect(inertia.props[:configurable_month]).to eq("01/11/26")
+      end
+    end
+
+    it "renders configurable_month as two months ahead when accessed on or after cutoff date" do
+      travel_to Date.new(2026, 10, 31) do
+        get admin_benefit_configurations_path
+        expect(inertia.props[:configurable_month]).to eq("01/12/26")
+      end
+    end
   end
 
   describe "POST /admin/benefit_configurations" do
@@ -97,6 +111,18 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       }
 
       expect(BenefitConfiguration.last.benefit_rules.first.effective_from).to eq(Date.current.next_month.beginning_of_month)
+    end
+
+    it "sets effective_from to two months ahead when posted on or after configuration cutoff date" do
+      travel_to Date.new(2026, 10, 31) do
+        post admin_benefit_configurations_path, params: {
+          benefit_configuration: { subsidy_percentage: 60, max_voucher_price: 200, monthly_voucher_limit: 25 }
+        }
+
+        expect(response).to redirect_to(admin_benefit_configurations_path)
+        new_rule = BenefitConfiguration.last.benefit_rules.first
+        expect(new_rule.effective_from).to eq(Date.new(2026, 12, 1))
+      end
     end
 
     it "keeps a full history instead of overwriting the previous configuration" do
