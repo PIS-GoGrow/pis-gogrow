@@ -17,6 +17,12 @@ const orderStyles: Record<OrderStatus, string> = {
     "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300 [&>span]:bg-red-500",
 }
 
+const providerOrderStyles: Record<OrderStatus, string> = {
+  ...orderStyles,
+  pending:
+    "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300 [&>span]:bg-blue-500",
+}
+
 const paymentStyles: Record<PaymentStatus, string> = {
   pending:
     "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500",
@@ -41,7 +47,7 @@ interface StatusBadgeProps {
   status?: OrderStatus | PaymentStatus | InvoiceStatus | null
   // pending y rejected existen en los dos enums, así que el valor solo no
   // alcanza para saber qué color y qué texto corresponden.
-  kind?: "order" | "payment" | "invoice"
+  kind?: "order" | "payment" | "invoice" | "provider_order"
 }
 
 export default function StatusBadge({
@@ -56,6 +62,10 @@ export default function StatusBadge({
     order: {
       className: orderStyles[status as OrderStatus],
       label: t(`pages.orders.statuses.${status}`),
+    },
+    provider_order: {
+      className: providerOrderStyles[status as OrderStatus],
+      label: t(`pages.provider_orders.statuses.${status}`),
     },
     payment: {
       className: paymentStyles[status as PaymentStatus],

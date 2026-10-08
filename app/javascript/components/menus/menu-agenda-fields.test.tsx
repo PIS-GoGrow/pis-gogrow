@@ -74,6 +74,19 @@ describe("MenuAgendaFields helpers", () => {
 
     expect(agendaPayload(draft)).toEqual(draft)
   })
+
+  it("returns full weekly draft in agendaPayload when weekly mode is configured", () => {
+    const weeklyDraft: AgendaDraft = {
+      mode: "weekly",
+      weekdays: [1, 3, 5],
+      date: "",
+      starts_on: "2030-01-09",
+      ends_on: "",
+      amount: "12",
+    }
+
+    expect(agendaPayload(weeklyDraft)).toEqual(weeklyDraft)
+  })
 })
 
 describe("MenuAgendaFields component", () => {
@@ -122,5 +135,40 @@ describe("MenuAgendaFields component", () => {
     )
 
     expect(screen.getByText(errorMessage)).toBeInTheDocument()
+  })
+
+  it("renders weekly mode radio and allows switching mode", async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+
+    const weeklyDraft: AgendaDraft = {
+      mode: "weekly",
+      weekdays: [2, 4],
+      date: "",
+      starts_on: "2030-01-09",
+      ends_on: "",
+      amount: "10",
+    }
+
+    render(
+      <MenuAgendaFields
+        value={weeklyDraft}
+        onChange={onChange}
+        today="2030-01-09"
+        maximumPublishDate="2030-01-18"
+      />,
+    )
+
+    const weeklyRadio = screen.getByLabelText(/repetir todas las semanas/i)
+    expect(weeklyRadio).toBeChecked()
+
+    const singleRadio = screen.getByLabelText(/no repetir/i)
+    await user.click(singleRadio)
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        mode: "single",
+      }),
+    )
   })
 })

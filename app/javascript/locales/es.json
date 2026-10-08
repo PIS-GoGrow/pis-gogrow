@@ -41,6 +41,7 @@
       }
     },
     "nav": {
+      "account": "Cuenta",
       "admin": {
         "account": "Cuenta",
         "employees": "Empleados",
@@ -111,6 +112,7 @@
           "lunch": "vianda",
           "lunches": "viandas",
           "menu": "Plato",
+          "partial_payment_warning": "Falta una parte del pago.",
           "price": "Monto",
           "receipt": "Subir comprobante de pago",
           "receipt_approved": "Pago aprobado",
@@ -136,6 +138,7 @@
           "receipt_uploading": "Subiendo comprobante...",
           "receipt_view_edit": "Ver o editar comprobante",
           "see_detail": "Ver detalle",
+          "see_receipts": "Ver comprobantes",
           "spending": "Consumo",
           "status_accepted": "Aceptado",
           "status_pending": "Pendiente",
@@ -154,12 +157,13 @@
               "max_voucher_price": "Cuando el precio por vianda es",
               "monthly_voucher_limit": "Hasta un límite por empleado de",
               "monthly_voucher_limit_unit": "viandas",
-              "notice": "Los cambios se aplicarán en el próximo período.",
+              "notice": "Los cambios se aplicarán el %{date}.",
               "pending_conflict": {
                 "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
                 "keep": "Mantener el programado",
                 "replace": "Reemplazar por este",
-                "title": "Ya hay un cambio programado para el próximo período",
+                "title": "Ya hay un cambio programado para el %{date}",
+                "title_alt": "Hay un cambio programado para el %{date}",
                 "unexpected": "Error inesperado. Por favor reintentá la operación."
               },
               "scheduled_banner": {
@@ -392,6 +396,21 @@
           "limit": "Podés elegir hasta %{count}"
         }
       },
+      "consumer_profiles": {
+        "show": {
+          "benefit": "Tu beneficio",
+          "due_date": "Vigente hasta",
+          "max_price": "Tope por vianda",
+          "meals_one": "%{count} vianda",
+          "meals_other": "%{count} viandas",
+          "monthly_limit": "Viandas subsidiadas por mes",
+          "monthly_remaining": "Te quedan este mes",
+          "no_benefit": "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa.",
+          "percentage": "Subsidio de la empresa",
+          "sign_out": "Salir",
+          "title": "Mi cuenta"
+        }
+      },
       "dashboard": {
         "roles": {
           "provider": "Panel del proveedor"
@@ -606,6 +625,16 @@
         },
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
+        "partial_payment_badge": "Pago parcial",
+        "review": {
+          "approved_description": "El cobro fue confirmado correctamente. Se notificará al usuario.",
+          "approved_title": "Cobro confirmado",
+          "done": "Listo",
+          "partial_description": "El comprobante quedó registrado como pago parcial. Se notificará al usuario para que abone el monto restante.",
+          "partial_title": "Pago parcial registrado",
+          "rejected_description": "El comprobante fue rechazado. El cobro continúa pendiente y se notificará al usuario.",
+          "rejected_title": "Comprobante rechazado"
+        },
         "show": {
           "amount": "Importe a cobrar",
           "back": "Volver a cobros",
@@ -774,29 +803,44 @@
           }
         },
         "index": {
-          "cancel": "Cancelar",
           "code": "PED-%{id}",
-          "confirm": "Confirmar",
-          "date": "el %d/%m/%Y",
-          "deliver": "a entregar",
-          "detail": "Ver detalle",
-          "empty_description": "Todavía no recibiste pedidos para los próximos días.",
-          "empty_filtered_description": "No tenés pedidos próximos con este estado.",
-          "empty_title": "No hay pedidos",
-          "eyebrow": "Operación diaria",
-          "filter_label": "Filtrar pedidos por estado",
-          "filters": {
-            "all": "Todos",
-            "cancelled": "Cancelados",
-            "confirmed": "Confirmados",
-            "pending": "Pendientes",
-            "rejected": "Rechazados"
+          "day_summary": "Día: %{date} | Viandas: %{meals} | Monto: %{amount}",
+          "delivery_filters": {
+            "all": "Todas",
+            "home": "Domicilios",
+            "office": "Oficina GoGrow"
           },
+          "delivery_label": "Entregas:",
+          "delivery_methods": {
+            "home": "Casa",
+            "office": "Oficina"
+          },
+          "delivery_sheet": {
+            "apply": "Aplicar",
+            "cancel": "Cancelar",
+            "open": "Filtrar por tipo de entrega",
+            "title": "Filtrar por Tipo de entrega"
+          },
+          "empty_description": "Todavía no recibiste pedidos para los próximos días.",
+          "empty_filtered_description": "No tenés pedidos que coincidan con los filtros.",
+          "empty_history_description": "Todavía no tenés pedidos anteriores.",
+          "empty_title": "No hay pedidos",
           "no_address": "Sin dirección de entrega",
           "quantity": "x%{count}",
-          "title": "Pedidos",
-          "today": "hoy",
-          "tomorrow": "mañana"
+          "search_label": "Buscar pedidos",
+          "search_placeholder": "Buscar pedido, plato, consumidor...",
+          "ship_to": "Enviar a:",
+          "status_filter_label": "Filtrar pedidos por estado",
+          "status_filters": {
+            "all": "Todos",
+            "confirmed": "Confirmados",
+            "pending": "Por revisar"
+          },
+          "tabs": {
+            "history": "Historial",
+            "upcoming": "Próximos"
+          },
+          "title": "Pedidos"
         },
         "rejection_reasons": {
           "customer_request": "Solicitud del cliente",
@@ -840,6 +884,12 @@
           "subsidy": "Subsidio",
           "summary": "Resumen",
           "title": "Pedido %{code}"
+        },
+        "statuses": {
+          "cancelled": "Cancelado",
+          "confirmed": "Confirmado",
+          "pending": "Por revisar",
+          "rejected": "Rechazado"
         }
       },
       "schedules": {

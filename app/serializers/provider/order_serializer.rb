@@ -3,7 +3,7 @@
 class Provider::OrderSerializer < ApplicationSerializer
   typelize_from Order
 
-  attributes :id, :status, :amount, :notes
+  attributes :id, :status, :amount, :notes, :delivery_method
 
   typelize :number
   attribute :price do |order|
@@ -11,18 +11,8 @@ class Provider::OrderSerializer < ApplicationSerializer
   end
 
   typelize :string, nullable: true
-  attribute :delivery_date do |order|
-    date = order.schedule&.date
-
-    if date.nil?
-      nil
-    elsif date == Date.current
-      I18n.t("pages.provider_orders.index.today")
-    elsif date == Date.current + 1.day
-      I18n.t("pages.provider_orders.index.tomorrow")
-    else
-      date.strftime(I18n.t("pages.provider_orders.index.date"))
-    end
+  attribute :date do |order|
+    order.schedule&.date&.iso8601
   end
 
   typelize :string
@@ -33,6 +23,11 @@ class Provider::OrderSerializer < ApplicationSerializer
   typelize :string
   attribute :consumer_name do |order|
     order.consumer.user.name
+  end
+
+  typelize :string, nullable: true
+  attribute :consumer_company do |order|
+    order.consumer.company&.name
   end
 
   typelize :string

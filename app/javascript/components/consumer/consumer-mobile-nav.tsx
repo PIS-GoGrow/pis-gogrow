@@ -12,7 +12,7 @@ import {
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
-  settingsProfiles,
+  consumerProfiles,
 } from "@/routes"
 
 const links = [
@@ -37,8 +37,8 @@ const links = [
   {
     label: "Cuenta",
     icon: UserIcon,
-    href: settingsProfiles.show().url,
-    activePrefix: "/settings",
+    href: consumerProfiles.show().url,
+    activePrefix: consumerProfiles.show().url,
   },
 ]
 

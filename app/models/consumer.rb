@@ -69,6 +69,17 @@ class Consumer < ApplicationRecord
     [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
   end
 
+  # Devuelve el beneficio mensual que puede ser aplicado en un schedule.
+  # Esto es, el current_monthly_benefit si la fecha del schedule lo permite,
+  # o el siguiente si no.
+  def monthly_benefit_for(schedule)
+    benefits
+      .where.not(status: :expired)
+      .where(due_date: schedule.date..)
+      .order(due_date: :asc) # Debería haber a lo sumo 2: uno current y uno future
+      .first # Obtenemos el que debería ser el current
+  end
+
   # Se espera que no se incluyan direcciones blank acá
   def delivery_addresses
     [ address, company.address ].compact_blank

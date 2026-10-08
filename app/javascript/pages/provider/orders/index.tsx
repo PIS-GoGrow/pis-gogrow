@@ -1,40 +1,38 @@
 import { Head } from "@inertiajs/react"
-import { Package } from "lucide-react"
+import { Search } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import ProviderOrderCard from "@/components/orders/provider-order-card"
+import DeliveryFilterSheet from "@/components/orders/delivery-filter-sheet"
+import ProviderOrderDays from "@/components/orders/provider-order-days"
 import PageContainer from "@/components/page-container"
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { Input } from "@/components/ui/input"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
+import {
+  type DeliveryFilter,
+  type StatusFilter,
+  ordersColumns,
+} from "@/lib/provider-orders"
+import { cn } from "@/lib/utils"
 import { providerOrders } from "@/routes"
-import type { BreadcrumbItem, OrderStatus, ProviderOrdersIndex } from "@/types"
+import type { BreadcrumbItem, ProviderOrdersIndex } from "@/types"
 
-type StatusFilter = "all" | OrderStatus
+type Period = "upcoming" | "history"
 
-const filters: StatusFilter[] = [
-  "all",
-  "pending",
-  "confirmed",
-  "cancelled",
-  "rejected",
-]
+const periods: Period[] = ["upcoming", "history"]
+const statusFilters: StatusFilter[] = ["pending", "confirmed", "all"]
 
-export default function Index({ orders }: ProviderOrdersIndex) {
+export default function Index({
+  today,
+  upcoming_orders,
+  past_orders,
+}: ProviderOrdersIndex) {
   const { t } = useTranslation()
-  const [filter, setFilter] = useState<StatusFilter>("all")
-
-  const visibleOrders =
-    filter === "all"
-      ? orders
-      : orders.filter((order) => order.status === filter)
+  const [period, setPeriod] = useState<Period>("upcoming")
+  const [status, setStatus] = useState<StatusFilter>("all")
+  const [delivery, setDelivery] = useState<DeliveryFilter>("all")
+  const [search, setSearch] = useState("")
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -48,54 +46,81 @@ export default function Index({ orders }: ProviderOrdersIndex) {
       <Head title={t("pages.provider_orders.index.title")} />
 
       <PageContainer
-        eyebrow={t("pages.provider_orders.index.eyebrow")}
         title={t("pages.provider_orders.index.title")}
+        titleVariant="prominent"
       >
-        <div className="overflow-x-auto pb-1">
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            spacing={2}
-            value={filter}
-            onValueChange={(value) => value && setFilter(value as StatusFilter)}
-            aria-label={t("pages.provider_orders.index.filter_label")}
+        <div className={cn("grid gap-4", ordersColumns)}>
+          <Tabs
+            value={period}
+            onValueChange={(value) => setPeriod(value as Period)}
+            className="lg:col-start-1 lg:row-start-2"
           >
-            {filters.map((value) => (
-              <ToggleGroupItem
-                key={value}
-                value={value}
-                className="data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:hover:text-primary-foreground rounded-full px-4"
-              >
-                {t(`pages.provider_orders.index.filters.${value}`)}
-              </ToggleGroupItem>
-            ))}
-          </ToggleGroup>
+            <TabsList className="w-full">
+              {periods.map((value) => (
+                <TabsTrigger key={value} value={value}>
+                  {t(`pages.provider_orders.index.tabs.${value}`)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+
+          <Tabs
+            value={status}
+            onValueChange={(value) => setStatus(value as StatusFilter)}
+            className="lg:col-start-2 lg:row-start-2"
+          >
+            <TabsList
+              className="w-full"
+              aria-label={t("pages.provider_orders.index.status_filter_label")}
+            >
+              {statusFilters.map((value) => (
+                <TabsTrigger key={value} value={value}>
+                  {t(`pages.provider_orders.index.status_filters.${value}`)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+
+          <div className="grid gap-4 lg:col-span-2 lg:row-start-1 lg:flex lg:flex-row-reverse lg:items-center lg:gap-6">
+            <div className="flex items-center justify-between gap-2 lg:shrink-0 lg:gap-3">
+              <p className="text-sm">
+                {t("pages.provider_orders.index.delivery_label")}{" "}
+                <span className="text-muted-foreground">
+                  {t(
+                    `pages.provider_orders.index.delivery_filters.${delivery}`,
+                  )}
+                </span>
+              </p>
+              <DeliveryFilterSheet value={delivery} onApply={setDelivery} />
+            </div>
+
+            <div className="relative lg:flex-1">
+              <Input
+                type="text"
+                autoComplete="off"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder={t(
+                  "pages.provider_orders.index.search_placeholder",
+                )}
+                aria-label={t("pages.provider_orders.index.search_label")}
+                className="pr-9"
+              />
+              <Search
+                className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2"
+                aria-hidden="true"
+              />
+            </div>
+          </div>
         </div>
 
-        {visibleOrders.length === 0 ? (
-          <Empty className="border">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <Package aria-hidden="true" />
-              </EmptyMedia>
-              <EmptyTitle>
-                {t("pages.provider_orders.index.empty_title")}
-              </EmptyTitle>
-              <EmptyDescription>
-                {filter === "all"
-                  ? t("pages.provider_orders.index.empty_description")
-                  : t("pages.provider_orders.index.empty_filtered_description")}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {visibleOrders.map((order) => (
-              <ProviderOrderCard key={order.id} order={order} />
-            ))}
-          </div>
-        )}
+        <ProviderOrderDays
+          key={period}
+          orders={period === "upcoming" ? upcoming_orders : past_orders}
+          today={today}
+          period={period}
+          filters={{ status, delivery, search }}
+        />
       </PageContainer>
     </AppLayout>
   )

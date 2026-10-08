@@ -105,12 +105,7 @@ class Consumer::DashboardController < Consumer::InertiaController
     }
   end
 
-  # Si hoy es sábado o domingo, queremos mostrar los menús para la semana que viene.
-  # Si no, mostramos los de esta.
   def week_range
-    @week_range ||= begin
-      start = Date.current.on_weekend? ? Date.current.next_week(:monday) : Date.current.beginning_of_week(:monday)
-      start..(start + 4.days)
-    end
+    @week_range ||= Calendar.new.schedule_week_range
   end
 end

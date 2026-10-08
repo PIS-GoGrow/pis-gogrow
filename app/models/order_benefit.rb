@@ -3,6 +3,18 @@
 class OrderBenefit < ApplicationRecord
   belongs_to :benefit
   belongs_to :order
+
+  validate :benefit_corresponds_to_delivery_date
+
+  private
+
+  def benefit_corresponds_to_delivery_date
+    return false unless benefit && order && order.schedule
+
+    return true unless benefit.due_date
+
+    order.schedule.date <= benefit.due_date
+  end
 end
 
 # == Schema Information
