@@ -62,7 +62,12 @@ class Notification::Registry
       events = data.fetch(:events).to_h do |key, attrs|
         configuration_key = attrs.fetch(:configuration).to_sym
         config = configurations.fetch(configuration_key) do
-          raise InvalidRegistry, "#{key}: la configuración #{configuration_key} no existe"
+          raise(
+            InvalidRegistry,
+            "la configuración #{configuration_key} no existe, " \
+            "pero se uso en el evento #{key} en el archivo config/notifications.yml. " \
+            "Hay que agregar la configuración en el mismo archivo o cambiar el evento."
+          )
         end
 
         role = parse_roles(key, [ attrs.fetch(:role) ])[0]

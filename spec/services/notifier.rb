@@ -11,7 +11,7 @@ RSpec.describe Notifier do
   let(:event_key)  { :order_confirmation }
 
   let(:registry_configuration) do
-    Notification::Registry::Configuration.new(key: :order_updates, roles: [ :consumer ])
+    Notification::Registry::Configuration.new(key: :config_key, roles: [ :consumer ])
   end
 
   let(:event_role)      { :consumer }
@@ -20,19 +20,19 @@ RSpec.describe Notifier do
   let(:registry_event) do
     Notification::Registry::Event.new(
       key: :order_confirmation,
-      configuration_key: :order_updates,
+      configuration_key: :config_key,
       role: event_role,
       requires_action: requires_action
     )
   end
 
   let!(:configuration) do
-    create(:notification_configuration, key: "order_updates", roles: %w[consumer])
+    create(:notification_configuration, key: "config_key", roles: %w[consumer])
   end
 
   before do
     Notification::Registry.set_data([
-      { order_updates: registry_configuration },
+      { config_key: registry_configuration },
       { order_confirmation: registry_event }
     ])
   end
@@ -85,10 +85,10 @@ RSpec.describe Notifier do
         context "cuando el evento está definido para #{role}" do
           let(:event_role) { role }
           let(:registry_configuration) do
-            Notification::Registry::Configuration.new(key: :order_updates, roles: [ role ])
+            Notification::Registry::Configuration.new(key: :config_key, roles: [ role ])
           end
           let!(:configuration) do
-            create(:notification_configuration, key: "order_updates", roles: [ role.to_s ])
+            create(:notification_configuration, key: "config_key", roles: [ role.to_s ])
           end
 
           it "crea la notificación con el rol del evento" do

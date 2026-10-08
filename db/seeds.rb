@@ -357,5 +357,4 @@ end
 end
 
 # Cargar las configuraciones de notificación a la app
-Rails.application.load_tasks
 Rake::Task["notifications:sync"].invoke
