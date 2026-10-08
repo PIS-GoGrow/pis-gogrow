@@ -27,7 +27,10 @@ class Notification::Configuration < ApplicationRecord
     transaction do
       Notification::Registry.configurations.each_value do |config|
         find_or_initialize_by(key: config.key.to_s)
-          .update!(roles: config.roles.map(&:to_s))
+          .update!(
+            roles: config.roles.map(&:to_s),
+            configurable: config.configurable
+          )
       end
     end
 
@@ -44,11 +47,12 @@ end
 #
 # Table name: notification_configurations
 #
-#  id         :bigint           not null, primary key
-#  key        :string           not null
-#  roles      :string           default([]), is an Array
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
+#  id           :bigint           not null, primary key
+#  configurable :boolean
+#  key          :string           not null
+#  roles        :string           default([]), is an Array
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
 #
 # Indexes
 #
