@@ -10,10 +10,13 @@
 class Notification::Configuration < ApplicationRecord
   has_many :notification_configuration_users,
            dependent: :destroy,
+           foreign_key: :notification_configuration,
            class_name: "Notification::ConfigurationUser"
   has_many :users, through: :notification_configuration_users, source: :user
 
-  has_many :notifications, dependent: :restrict_with_error
+  has_many :notifications,
+           dependent: :restrict_with_error,
+           foreign_key: :notification_configuration
 
   # Crea las configuraciones según lo que dice Notification::Registry.
   # Nunca borra configuraciones, las reporta para elegir qué hacer, pero sí

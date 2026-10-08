@@ -13,6 +13,20 @@ class Notification::Registry
   class UnknownEvent < StandardError; end
 
   class << self
+    # data tiene que ser un arreglo con:
+    # - en el primer elemento un hash con claves de configuración que llevan
+    #   a elementos Configuration
+    # - en el segundo un hash con claves de evento que llevan a elementos Event.
+    # Usar esta función es un error fuera del ambiente de testing: solo se debería
+    # usar para probar comportamientos del Registry.
+    def set_data(data)
+      unless Rails.env.test?
+        raise NotImplementedError, "Notification::Registry.set_data solo se puede usar en testing"
+      end
+
+      @loaded = data
+    end
+
     def configurations
       loaded.first
     end

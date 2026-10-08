@@ -126,9 +126,10 @@ usuario o si se envía, esto se hace automáticamente.
 Para crearla, es necesario pasarle:
 - qué evento originó la notificación (`event_key`);
 - a qué usuario enviarle la notificación (`user`);
-- a qué rol del usuario mostrarle la notificación (`role`, que puede ser `consumer`,
-  `admin` o `provider`);
 - qué objeto ocasionó la notificación ([`notifiable`](#notifiable)).
+
+El resto de cosas necesarias para crear la notificación se infieren a partir de lo
+configurado para el evento
 
 ## Notifiable
 El objeto `notifiable` conceptualmente debería representar el objeto responsable de que

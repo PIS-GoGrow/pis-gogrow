@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 FactoryBot.define do
-  factory :notification_configuration do
-    description { "MyString" }
+  factory :notification_configuration, class: 'Notification::Configuration' do
+    key { "my_key" }
   end
 end
 
