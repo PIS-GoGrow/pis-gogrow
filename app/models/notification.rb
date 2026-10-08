@@ -5,6 +5,8 @@
 #
 # Si el usuario tiene varios roles, la notificación solo le aparecerá cuando se loguee
 # con el rol definido en la columna role de notificación.
+#
+# Ver más documentación en docs/notificaciones.rb
 class Notification < ApplicationRecord
   belongs_to :user
   belongs_to :notification_configuration, class_name: "Notification::Configuration"

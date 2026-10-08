@@ -1,6 +1,8 @@
 # En este archivo se registran todas las configuraciones de notificaciones y
 # eventos que las generan en el sistema. Se recarga automáticamente en la aplicación
 # cuando hay cambios.
+#
+# Ver más documentación en docs/notificaciones.rb
 
 # Para definir una configuración, hay que agregar una clave única en esta lista
 # e indicar para qué roles se puede configurar. Si se agrega o cambia una configuración

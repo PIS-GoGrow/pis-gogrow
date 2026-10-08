@@ -6,33 +6,7 @@
 # configuraciones tienen una clave (key) que las identifica y además indican qué roles
 # (consumer, provider, admin) pueden configurarlas.
 #
-# Cada tipo de notificación debe pertenecer a una configuración, por lo que para poder
-# crear una notificación, es necesario saber a qué configuración va a pertenecer.
-# Las configuraciones en principio son las que aparecen en la pantalla de configurar
-# notificaciones en el Figma para cada rol. Además, hay que saber desde qué roles
-# se puede acceder a una configuración. Desde config/notifications.yml se configuran
-# las configuraciones posibles, así como los roles que pueden acceder a ellos. 
-#
-# Un ejemplo de configuración podría ser «Actualización de pedido» con clave
-# order_updates, para que el usuario pueda configurar si recibe notificaciones cuando
-# se modifica uno de sus pedidos. Además, dentro de esa configuración podría encontrarse
-# el evento «Confirmación de pedido» y «Cancelación de pedido». El usuario configura
-# ambos a la vez como «Actualización de pedido», pero en realidad son tipos separados.
-# Esta configuración solo aplica a consumidores, por lo que tiene roles [consumer].
-#
-# El título y la descripción de una configuración no se guarda en la base de datos,
-# sino que se configura desde los locales, según la clave. Si creamos una
-# Notification::Configuration con clave :order_updates, es necesario entonces tener
-# en es.yml las líneas:
-#
-#   notification_configurations:
-#     order_updates:
-#       title: "..."
-#       description: "..."
-#
-# Cuando un usuario quiere recibir tipos de notificaciones asociadas a una determinada
-# configuración, se asocia a la configuración. Si el usuario no tiene un rol presente
-# en el atributo roles de la configuración, no puede asociarse.
+# Ver más documentación en docs/notificaciones.rb
 class Notification::Configuration < ApplicationRecord
   has_many :notification_configuration_users,
            dependent: :destroy,
