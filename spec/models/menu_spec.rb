@@ -91,24 +91,29 @@ end
 #
 # Table name: menus
 #
-#  id           :bigint           not null, primary key
-#  description  :string
-#  name         :string
-#  price        :decimal(10, 2)
-#  valid_from   :date
-#  valid_until  :date
-#  created_at   :datetime         not null
-#  updated_at   :datetime         not null
-#  base_menu_id :bigint
-#  provider_id  :bigint           not null
+#  id              :bigint           not null, primary key
+#  description     :string
+#  modified_at     :datetime
+#  modified_values :jsonb
+#  name            :string
+#  price           :decimal(10, 2)
+#  valid_from      :date
+#  valid_until     :date
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  base_menu_id    :bigint
+#  modified_by_id  :bigint
+#  provider_id     :bigint           not null
 #
 # Indexes
 #
-#  index_menus_on_base_menu_id  (base_menu_id)
-#  index_menus_on_provider_id   (provider_id)
+#  index_menus_on_base_menu_id    (base_menu_id)
+#  index_menus_on_modified_by_id  (modified_by_id)
+#  index_menus_on_provider_id     (provider_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (base_menu_id => menus.id)
+#  fk_rails_...  (modified_by_id => users.id)
 #  fk_rails_...  (provider_id => providers.id)
 #

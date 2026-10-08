@@ -12,6 +12,7 @@ function payment(
   return {
     id: 1,
     status: "approved",
+    rejection_reason: null,
     date: "02/10/26",
     receipt_url: "/provider/payments/1/receipt",
     receipt_filename: "aprobado.png",
@@ -61,19 +62,29 @@ describe("CollectionPaymentHistory", () => {
     expect(screen.getAllByRole("link")).toHaveLength(1)
   })
 
-  it("lists every receipt with its date, status and file when there are several", async () => {
-    const user = userEvent.setup()
+  it("lists every receipt directly when showDownloadAll is false", () => {
     render(
       <CollectionPaymentHistory
         payments={[approved, rejected, withoutReceipt]}
       />,
     )
 
+    expect(screen.getByText("aprobado.png")).toBeInTheDocument()
+    expect(screen.getByText("rechazado.pdf")).toBeInTheDocument()
+  })
+
+  it("lists every receipt with its date, status and file under 'Ver comprobantes' when showDownloadAll is true", async () => {
+    const user = userEvent.setup()
+    render(
+      <CollectionPaymentHistory
+        payments={[approved, rejected, withoutReceipt]}
+        showDownloadAll
+      />,
+    )
+
     expect(screen.queryByText("aprobado.png")).not.toBeInTheDocument()
 
-    await user.click(
-      screen.getByRole("button", { name: "Descargar comprobantes" }),
-    )
+    await user.click(screen.getByRole("button", { name: "Ver comprobantes" }))
 
     const approvedLink = screen.getByRole("link", {
       name: "Descargar aprobado.png",
@@ -94,5 +105,20 @@ describe("CollectionPaymentHistory", () => {
     const rejectedEntry = rejectedLink.closest<HTMLElement>("div.grid")!
     expect(within(rejectedEntry).getByText("30/09/26")).toBeInTheDocument()
     expect(within(rejectedEntry).getByText("Rechazado")).toBeInTheDocument()
+  })
+
+  it("shows partial payment badge when rejection reason is partial payment", () => {
+    const partialPayment = payment({
+      id: 4,
+      status: "rejected",
+      rejection_reason: "El pago es parcial",
+      date: "01/10/26",
+      receipt_url: "/provider/payments/4/receipt",
+      receipt_filename: "parcial.png",
+    })
+
+    render(<CollectionPaymentHistory payments={[partialPayment, approved]} />)
+
+    expect(screen.getByText("Pago parcial")).toBeInTheDocument()
   })
 })
