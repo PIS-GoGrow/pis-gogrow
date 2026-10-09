@@ -24,6 +24,7 @@ RSpec.describe "Configuración de subsidios especiales por RRHH", type: :system 
 
   it "permite agregar un subsidio especial para empleados seleccionados" do
     visit admin_benefit_configurations_path
+    without_animations
 
     expect(page).to have_content("No hay subsidios especiales")
 
