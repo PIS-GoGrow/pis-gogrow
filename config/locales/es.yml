@@ -97,6 +97,7 @@ es:
         order_error: "por un error en el pedido"
         other: "por el siguiente motivo: %{details}"
         dish_modified: "porque el plato fue modificado"
+        dish_deleted: "porque el plato fue eliminado"
     order_withdrawal:
       title: "Tu pedido fue cancelado"
       description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible."

@@ -97,6 +97,7 @@
         "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}.",
         "reasons": {
           "customer_request": "por solicitud del cliente",
+          "dish_deleted": "porque el plato fue eliminado",
           "dish_modified": "porque el plato fue modificado",
           "duplicate_order": "porque el pedido estaba duplicado",
           "order_error": "por un error en el pedido",
