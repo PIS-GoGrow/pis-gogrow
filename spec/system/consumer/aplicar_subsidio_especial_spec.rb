@@ -30,6 +30,7 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
   it "descuenta el subsidio general y el especial en el plato, el carrito, el pedido guardado, la Cuenta y la ficha de RRHH" do
     sign_in users(:admin), role: :admin
     visit admin_benefit_configurations_path
+    without_animations
     click_button "Agregar"
 
     within("[role=dialog]") do
