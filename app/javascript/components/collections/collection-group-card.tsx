@@ -201,9 +201,12 @@ export default function CollectionGroupCard({
                       <CollectionAccountPanel
                         account={employee}
                         heading={settled ? "none" : "month"}
-                        showPaymentHistory={settled}
                         reminderSent={remindedAccountIds.has(employee.id)}
                         onReminderSent={() => onReminderSent(employee.id)}
+                        showPaymentHistory={
+                          settled || employee.payments.length > 1
+                        }
+                        showDownloadAll={settled}
                       />
                     </CollapsibleContent>
                   </Collapsible>
@@ -225,7 +228,10 @@ export default function CollectionGroupCard({
                 <CollectionAccountPanel
                   account={group.company}
                   heading={settled ? "paid_on" : "month"}
-                  showPaymentHistory={settled}
+                  showPaymentHistory={
+                    settled || group.company.payments.length > 1
+                  }
+                  showDownloadAll={settled}
                   aside={
                     group.company.invoice && (
                       <StatusBadge

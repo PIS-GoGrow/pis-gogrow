@@ -52,8 +52,6 @@ es:
     order_deadline_updated: "La hora límite de pedidos fue actualizada."
     payment_receipt_submitted: "Comprobante enviado para su validacion."
     payment_receipt_removed: "Comprobante eliminado."
-    payment_approved: "Comprobante aprobado."
-    payment_rejected: "Comprobante rechazado."
     invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
     invoice_removed: "Factura eliminada."
   validations:
@@ -456,10 +454,12 @@ es:
         price: "Monto"
         total: "Total"
         download_receipt: "Descargar comprobante de pago"
+        see_receipts: "Ver comprobantes"
         status_pending: "Pendiente"
         status_accepted: "Aceptado"
         status_rejected: "Rechazado"
         status_submitted: "Enviado"
+        partial_payment_warning: "Falta una parte del pago."
     orders:
       index:
         title: "Mis pedidos"
@@ -535,6 +535,7 @@ es:
         submitted: "En revisión"
         approved: "Confirmado"
         rejected: "Rechazado"
+      partial_payment_badge: "Pago parcial"
       meals_one: "%{count} vianda"
       meals_other: "%{count} viandas"
       index:
@@ -586,6 +587,14 @@ es:
         send: "Enviar recordatorio"
         sending: "Enviando..."
         retry: "Reintentar"
+        done: "Listo"
+      review:
+        approved_title: "Cobro confirmado"
+        approved_description: "El cobro fue confirmado correctamente. Se notificará al usuario."
+        partial_title: "Pago parcial registrado"
+        partial_description: "El comprobante quedó registrado como pago parcial. Se notificará al usuario para que abone el monto restante."
+        rejected_title: "Comprobante rechazado"
+        rejected_description: "El comprobante fue rechazado. El cobro continúa pendiente y se notificará al usuario."
         done: "Listo"
       invoice:
         statuses:
@@ -647,29 +656,45 @@ es:
         order_error: "Error en el pedido"
         other: "Otro motivo"
         dish_modified: "Plato modificado"
+      statuses:
+        pending: "Por revisar"
+        confirmed: "Confirmado"
+        cancelled: "Cancelado"
+        rejected: "Rechazado"
       index:
         title: "Pedidos"
-        eyebrow: "Operación diaria"
-        filter_label: "Filtrar pedidos por estado"
-        filters:
-          all: "Todos"
-          pending: "Pendientes"
+        tabs:
+          upcoming: "Próximos"
+          history: "Historial"
+        status_filter_label: "Filtrar pedidos por estado"
+        status_filters:
+          pending: "Por revisar"
           confirmed: "Confirmados"
-          cancelled: "Cancelados"
-          rejected: "Rechazados"
+          all: "Todos"
+        delivery_label: "Entregas:"
+        delivery_filters:
+          all: "Todas"
+          office: "Oficina GoGrow"
+          home: "Domicilios"
+        delivery_sheet:
+          open: "Filtrar por tipo de entrega"
+          title: "Filtrar por Tipo de entrega"
+          cancel: "Cancelar"
+          apply: "Aplicar"
+        search_label: "Buscar pedidos"
+        search_placeholder: "Buscar pedido, plato, consumidor..."
+        day_summary: "Día: %{date} | Viandas: %{meals} | Monto: %{amount}"
+        ship_to: "Enviar a:"
+        delivery_methods:
+          office: "Oficina"
+          home: "Casa"
         empty_title: "No hay pedidos"
         empty_description: "Todavía no recibiste pedidos para los próximos días."
-        empty_filtered_description: "No tenés pedidos próximos con este estado."
+        empty_history_description: "Todavía no tenés pedidos anteriores."
+        empty_filtered_description: "No tenés pedidos que coincidan con los filtros."
         code: "PED-%{id}"
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"
-        cancel: "Cancelar"
-        confirm: "Confirmar"
-        detail: "Ver detalle"
-        deliver: "a entregar"
-        today: "hoy"
-        tomorrow: "mañana"
-        date: "el %d/%m/%Y"
       show:
         eyebrow: "Pedido"
         title: "Pedido %{code}"

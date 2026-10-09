@@ -22,16 +22,10 @@ interface CollectionAccountPanelProps {
   // Reemplaza al vencimiento en el encabezado del mes.
   aside?: ReactNode
   children?: ReactNode
-}
-
-interface CollectionAccountPanelProps {
-  account: ProviderCollectionAccount
-  heading?: "month" | "paid_on" | "none"
-  aside?: ReactNode
-  children?: ReactNode
   showPaymentHistory?: boolean
   reminderSent?: boolean
   onReminderSent?: () => void
+  showDownloadAll?: boolean
 }
 
 export default function CollectionAccountPanel({
@@ -42,6 +36,7 @@ export default function CollectionAccountPanel({
   showPaymentHistory = false,
   reminderSent = false,
   onReminderSent,
+  showDownloadAll = false,
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -136,7 +131,10 @@ export default function CollectionAccountPanel({
           />
         ))}
       {showPaymentHistory && (
-        <CollectionPaymentHistory payments={account.payments} />
+        <CollectionPaymentHistory
+          payments={account.payments}
+          showDownloadAll={showDownloadAll}
+        />
       )}
 
       {children && (

@@ -30,14 +30,19 @@ const REJECTION_REASONS: OrderRejectionReason[] = [
   "other",
 ]
 
+const disabledStyle =
+  "disabled:border-transparent disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none"
+
 interface ProviderOrderActionsProps {
   order: Pick<ProviderOrder, "id" | "status">
   className?: string
+  keepVisible?: boolean
 }
 
 export default function ProviderOrderActions({
   order,
   className,
+  keepVisible = false,
 }: ProviderOrderActionsProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -45,7 +50,10 @@ export default function ProviderOrderActions({
   const [reason, setReason] = useState<OrderRejectionReason | "">("")
   const [details, setDetails] = useState("")
 
-  if (order.status !== "pending") return null
+  const canConfirm = order.status === "pending"
+  const canDecideReject = canConfirm || order.status === "confirmed"
+
+  if (!canDecideReject && !keepVisible) return null
 
   const code = t("pages.provider_orders.index.code", { id: order.id })
 
@@ -106,7 +114,13 @@ export default function ProviderOrderActions({
     <div className={cn("grid grid-cols-2 gap-2", className)}>
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button type="button" variant="outline" size="lg">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={!canDecideReject}
+            className={disabledStyle}
+          >
             <X aria-hidden="true" />
             {t("pages.provider_orders.actions.reject")}
           </Button>
@@ -179,7 +193,8 @@ export default function ProviderOrderActions({
       <Button
         type="button"
         size="lg"
-        disabled={processing}
+        disabled={processing || !canConfirm}
+        className={disabledStyle}
         onClick={handleConfirm}
       >
         <Check aria-hidden="true" />
