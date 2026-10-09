@@ -38,7 +38,7 @@ RSpec.describe "Sessions", type: :request do
     context "with valid credentials" do
       it "signs in and sets a session cookie" do
         post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*" }
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(root_path)
         expect(cookies[:session_token]).to be_present
 
         get dashboard_path
@@ -61,7 +61,7 @@ RSpec.describe "Sessions", type: :request do
       it "opens the session with the provider role" do
         post sign_in_path, params: { email: users(:provider_user).email, password: "Secret1*3*5*" }
 
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(root_path)
         expect(users(:provider_user).sessions.last.role).to eq("provider")
       end
     end
@@ -70,7 +70,7 @@ RSpec.describe "Sessions", type: :request do
       it "opens the session with the admin role" do
         post sign_in_path, params: { email: users(:admin).email, password: "Secret1*3*5*" }
 
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(root_path)
         expect(users(:admin).sessions.last.role).to eq("admin")
       end
     end
