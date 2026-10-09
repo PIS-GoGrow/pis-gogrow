@@ -689,6 +689,11 @@ es:
         notes: "Notas"
         delivery_date: "Entrega"
         total: "Total"
+        subsidy: "Subsidio"
+        charged: "Paga el empleado"
+        no_price: "Importe no disponible"
+        rejection_reason: "Motivo de rechazo"
+        rejection_details: "Detalle del rechazo"
     provider_dashboard:
       index:
         title: "Inicio"

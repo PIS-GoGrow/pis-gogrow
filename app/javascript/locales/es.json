@@ -840,13 +840,18 @@
         },
         "show": {
           "back": "Volver a pedidos",
+          "charged": "Paga el empleado",
           "delivery_date": "Entrega",
           "employee": "Empleado",
           "employee_company": "Empleado %{company}",
           "heading": "Detalle de pedido",
+          "no_price": "Importe no disponible",
           "notes": "Notas",
           "order_detail": "Detalle del pedido",
           "phone_unavailable": "No disponible",
+          "rejection_details": "Detalle del rechazo",
+          "rejection_reason": "Motivo de rechazo",
+          "subsidy": "Subsidio",
           "title": "Pedido %{code}",
           "total": "Total"
         },

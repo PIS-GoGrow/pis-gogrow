@@ -211,7 +211,7 @@ RSpec.describe "Dirección de entrega personalizada" do
       sign_in users(:provider_user), role: :provider
       visit provider_order_path(order)
 
-      expect(page).to have_content("Dirección de entrega")
+      expect(page).to have_content("Casa · Colonia 1370, Apto 4")
       expect(page).to have_content("Colonia 1370, Apto 4")
     end
 

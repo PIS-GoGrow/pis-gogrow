@@ -56,7 +56,7 @@ function DetailLine({
   return (
     <div className="flex items-baseline justify-between gap-4 text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className="text-right">{children}</span>
+      <span className="min-w-0 flex-1 text-right break-words">{children}</span>
     </div>
   )
 }
@@ -105,11 +105,11 @@ export default function Show({ order }: ProviderOrdersShow) {
           </Button>
         }
       >
-        <Card className="bg-muted/30 shadow-none">
-          <CardContent className="grid gap-6">
+        <Card className="md:bg-muted/30 gap-4 border-0 bg-transparent py-0 shadow-none md:gap-6 md:border md:py-6">
+          <CardContent className="grid gap-4 px-0 md:gap-6 md:px-6">
             <div className="grid justify-items-center gap-2 text-center">
               <StatusBadge status={order.status} kind="provider_order" />
-              <h3 className="text-2xl font-bold tracking-tight">
+              <h3 className="text-xl font-bold tracking-tight md:text-2xl">
                 {t("pages.provider_orders.show.title", { code })}
               </h3>
               <p className="text-muted-foreground text-sm">
@@ -118,8 +118,8 @@ export default function Show({ order }: ProviderOrdersShow) {
             </div>
 
             <div className="grid gap-4 md:grid-cols-[3fr_2fr]">
-              <Card className="gap-4">
-                <CardHeader>
+              <Card className="min-w-0 gap-3 py-4 shadow-none md:gap-4 md:py-6 md:shadow-sm">
+                <CardHeader className="px-4 md:px-6">
                   <CardDescription>
                     {order.consumer_company
                       ? t("pages.provider_orders.show.employee_company", {
@@ -131,7 +131,7 @@ export default function Show({ order }: ProviderOrdersShow) {
                     {order.consumer_name}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="grid gap-4">
+                <CardContent className="grid gap-3 px-4 md:gap-4 md:px-6">
                   <Separator />
                   <InfoRow icon={Mail}>{order.consumer_email}</InfoRow>
                   {/* El teléfono todavía no se guarda: la fila queda hasta que llegue el dato. */}
@@ -144,16 +144,18 @@ export default function Show({ order }: ProviderOrdersShow) {
                 </CardContent>
               </Card>
 
-              <Card className="gap-4">
-                <CardHeader>
+              <Card className="min-w-0 gap-3 py-4 shadow-none md:gap-4 md:py-6 md:shadow-sm">
+                <CardHeader className="px-4 md:px-6">
                   <CardDescription>
                     {t("pages.provider_orders.show.order_detail")}
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-4">
+                <CardContent className="grid gap-3 px-4 md:gap-4 md:px-6">
                   <div className="grid gap-1">
                     <div className="flex items-baseline justify-between gap-4">
-                      <span>{order.menu_name}</span>
+                      <span className="min-w-0 break-words">
+                        {order.menu_name}
+                      </span>
                       <span>
                         {t("pages.provider_orders.index.quantity", {
                           count: order.amount ?? 0,
@@ -183,7 +185,33 @@ export default function Show({ order }: ProviderOrdersShow) {
                       {formatLongDate(order.date)}
                     </DetailLine>
                   )}
+                  {order.rejection_reason && (
+                    <DetailLine
+                      label={t("pages.provider_orders.show.rejection_reason")}
+                    >
+                      {t(
+                        `pages.provider_orders.rejection_reasons.${order.rejection_reason}`,
+                      )}
+                    </DetailLine>
+                  )}
+                  {order.rejection_details && (
+                    <DetailLine
+                      label={t("pages.provider_orders.show.rejection_details")}
+                    >
+                      {order.rejection_details}
+                    </DetailLine>
+                  )}
                   <Separator />
+                  {order.subsidy != null && (
+                    <DetailLine label={t("pages.provider_orders.show.subsidy")}>
+                      -{formatMoneyShort(order.subsidy)}
+                    </DetailLine>
+                  )}
+                  <DetailLine label={t("pages.provider_orders.show.charged")}>
+                    {order.discounted_price == null
+                      ? t("pages.provider_orders.show.no_price")
+                      : formatMoneyShort(order.discounted_price)}
+                  </DetailLine>
                   <div className="flex items-baseline justify-between gap-4">
                     <span className="text-muted-foreground text-sm">
                       {t("pages.provider_orders.show.total")}
@@ -201,7 +229,8 @@ export default function Show({ order }: ProviderOrdersShow) {
         <ProviderOrderActions
           order={order}
           keepVisible
-          className="mx-auto mt-6 w-full max-w-md"
+          stackOnMobile
+          className="mx-auto w-full pb-[env(safe-area-inset-bottom)] md:mt-6 md:max-w-md md:pb-0"
         />
       </PageContainer>
     </AppLayout>
