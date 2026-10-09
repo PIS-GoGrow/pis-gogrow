@@ -84,6 +84,89 @@ RSpec.describe "Consumer dashboard", type: :request do
     )
   end
 
+  describe "shared notifications" do
+    let!(:notification_configuration) do
+      Notification::Configuration.find_or_create_by!(key: "order_updates") do |configuration|
+        configuration.roles = %w[consumer]
+      end
+    end
+
+    def create_notification(user:, notifiable:, role: "consumer", title:)
+      Notification.create!(
+        notification_configuration:,
+        user:,
+        role:,
+        event: "order_confirmation",
+        requires_action: false,
+        notifiable:,
+        title:,
+        description: "#{title} description"
+      )
+    end
+
+    it "shares only active notifications for the current user and active role" do
+      user = consumer_user
+
+      # El mismo usuario también tiene rol provider para poder comprobar
+      # que las notificaciones de otro rol no aparecen en sesión consumer.
+      provider = Provider.create!(user:)
+      user.reload
+
+      visible = create_notification(
+        user:,
+        notifiable: user,
+        title: "Visible"
+      )
+
+      closed = create_notification(
+        user:,
+        notifiable: user.consumer,
+        title: "Closed"
+      )
+      closed.update_column(:closed_at, Time.current)
+
+      create_notification(
+        user:,
+        notifiable: provider,
+        role: "provider",
+        title: "Wrong role"
+      )
+
+      other_user = User.create!(
+        email: "other-dashboard-notifications@gmail.com",
+        name: "Martín",
+        password: "password123456"
+      )
+      other_company = Company.create!(
+        name: "Otra empresa",
+        address: "Colonia 1234"
+      )
+      other_consumer = Consumer.create!(
+        user: other_user,
+        company: other_company,
+        address: "Ejido 1234"
+      )
+      other_user.reload
+
+      create_notification(
+        user: other_user,
+        notifiable: other_consumer,
+        title: "Other user"
+      )
+
+      sign_in_as_consumer(user)
+
+      get dashboard_path
+
+      notifications = inertia.props[:notifications]
+
+      expect(notifications.pluck("id")).to eq([ visible.id ])
+      expect(notifications.first).to include(
+        "title" => "Visible",
+        "requires_action" => false
+      )
+    end
+  end
   # IBP-003 — "Como EMPLEADO, quiero consultar en un único lugar el menú
   # disponible para una fecha, incluyendo las opciones de todos los proveedores,
   # para elegir qué comida pedir."

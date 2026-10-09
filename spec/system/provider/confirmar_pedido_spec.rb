@@ -2,10 +2,8 @@
 
 # Historia "Como EMPLEADO, quiero recibir una notificación cuando mi pedido sea
 # confirmado para estar al tanto del estado de mi pedido."
-#
-# TODO(integración): falta implementar la pantalla de notificaciones antes de
-# poder testear que el empleado ve la notificación de confirmación (CA2, CA3).
-# Historia: notificación de pedido confirmado (rama feature/74).
+# Que el empleado ve la notificación se cubre en
+# spec/system/consumer/ver_notificacion_pedido_confirmado_spec.rb.
 #
 # TODO(integración): falta implementar el envío por WhatsApp
 # (Notification#send_whatsapp está vacío) antes de poder testear que la
