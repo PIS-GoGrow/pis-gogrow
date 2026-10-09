@@ -417,6 +417,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     before do
       sign_in p1_user, role: :provider
       visit edit_provider_menu_path(p1_wok)
+      without_animations
     end
 
     def save_with_simple_confirmation
@@ -446,6 +447,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     it "borra un grupo de opciones" do
       p1_wok.option_groups.create!(name: "Salsa", options: [ "Soja" ])
       visit edit_provider_menu_path(p1_wok)
+      without_animations
 
       click_button "Borrar Salsa"
       save_with_simple_confirmation

@@ -765,6 +765,98 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "notifications" do
+    let!(:notification_configuration) do
+      Notification::Configuration.find_or_create_by!(key: "order_updates") do |configuration|
+        configuration.roles = %w[consumer]
+      end
+    end
+
+    it "notifies the consumer when the provider rejects an order" do
+      order = orders(:upcoming_pending_today)
+
+      expect {
+        order.decide(:rejected, reason: :out_of_stock)
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification).to have_attributes(
+        user: order.consumer.user,
+        event: "order_rejection",
+        role: "consumer",
+        requires_action: false,
+        notifiable: order
+      )
+
+      expect(notification.title).to eq("Tu pedido fue cancelado")
+      expect(notification.description).to include("no había stock disponible")
+    end
+
+    it "uses the rejection details when the provider selects other" do
+      order = orders(:upcoming_pending_today)
+
+      order.decide(
+        :rejected,
+        reason: :other,
+        details: "Cocina cerrada"
+      )
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification.event).to eq("order_rejection")
+      expect(notification.description).to include(
+        "por el siguiente motivo: Cocina cerrada."
+      )
+    end
+
+    it "notifies the consumer when an order is rejected because the dish changed" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect {
+        order.reject_for_dish_change!
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification.event).to eq("order_rejection")
+      expect(notification.user).to eq(order.consumer.user)
+      expect(notification.notifiable).to eq(order)
+      expect(notification.description).to include("porque el plato fue modificado")
+    end
+
+    it "notifies the consumer when the provider withdraws the dish" do
+      order = orders(:upcoming_pending_future)
+      provider_user = users(:provider_user)
+
+      expect {
+        order.withdraw!(by: provider_user)
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification).to have_attributes(
+        user: order.consumer.user,
+        event: "order_withdrawal",
+        role: "consumer",
+        requires_action: false,
+        notifiable: order
+      )
+
+      expect(notification.description).to include(
+        "porque el plato dejó de estar disponible"
+      )
+    end
+
+    it "does not create these notifications when the consumer cancels their own order" do
+      order = orders(:upcoming_pending_future)
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.not_to change(Notification, :count)
+    end
+  end
+
   describe "confirmation notification" do
     def confirmation_notifications(order)
       Notification.where(event: "order_confirmation", notifiable: order)
