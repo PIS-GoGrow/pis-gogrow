@@ -65,6 +65,13 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(group[:employees].pluck(:owner_name, :status)).to eq(
         [ [ "Other Consumer User", "submitted" ], [ "Test User", "rejected" ] ]
       )
+      # El diálogo recibe los pedidos de cada cuenta desde el mismo resumen.
+      expect(group[:company][:orders].pluck(:id)).to match_array(
+        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
+      )
+      expect(group[:employees].flat_map { it[:orders] }.pluck(:id)).to match_array(
+        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
+      )
     end
 
     it "counts what is awaiting confirmation and what was rejected" do

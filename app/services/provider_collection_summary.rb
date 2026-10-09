@@ -18,6 +18,14 @@ class ProviderCollectionSummary
   AccountRow = Data.define(:account, :meals) do
     delegate :id, :amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
 
+    # Expone únicamente los pedidos confirmados que componen el cobro y los
+    # ordena del más reciente al más antiguo para el diálogo de detalle.
+    def orders
+      account.orders.select(&:confirmed?).sort_by do |order|
+        [ -(order.schedule&.date&.jd || 0), -order.id ]
+      end
+    end
+
     def payments
       account.payments.sort_by { |payment| [ payment.created_at, payment.id ] }.reverse
     end
@@ -106,7 +114,13 @@ class ProviderCollectionSummary
 
   def accounts
     @accounts ||= begin
-      records = @provider.accounts.preload(:payments, :owner, invoices: { file_attachment: :blob }).to_a
+      # Precarga los datos del detalle para evitar una consulta por cada cuenta.
+      records = @provider.accounts.preload(
+        :payments,
+        :owner,
+        invoices: { file_attachment: :blob },
+        orders: [ { consumer: :user }, { schedule: :menu } ]
+      ).to_a
 
       # owner es polimórfico y Company no responde a :user, así que los
       # empleados se completan aparte.

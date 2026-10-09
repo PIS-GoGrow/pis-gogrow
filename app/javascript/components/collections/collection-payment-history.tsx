@@ -1,14 +1,9 @@
-import { Download, Eye, FileText } from "lucide-react"
+import { Download, FileText } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import StatusBadge from "@/components/status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
 import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
 import type { ProviderCollectionPayment } from "@/types"
 
@@ -88,16 +83,31 @@ export default function CollectionPaymentHistory({
     return list
   }
 
-  return (
-    <Collapsible className="grid gap-3">
-      <CollapsibleTrigger asChild>
-        <Button className="h-12 w-full rounded-[10px]">
-          <Eye aria-hidden="true" />
-          Ver comprobantes
-        </Button>
-      </CollapsibleTrigger>
+  function downloadAllReceipts() {
+    // Conserva cada comprobante como archivo independiente y con su nombre
+    // original al iniciar todas las descargas desde una única acción.
+    receipts.forEach((payment) => {
+      const link = document.createElement("a")
+      link.href = payment.receipt_url ?? ""
+      link.download = payment.receipt_filename ?? "comprobante"
+      document.body.append(link)
+      link.click()
+      link.remove()
+    })
+  }
 
-      <CollapsibleContent>{list}</CollapsibleContent>
-    </Collapsible>
+  return (
+    <div className="grid gap-3">
+      <Button
+        className="h-12 w-full rounded-[10px]"
+        type="button"
+        onClick={downloadAllReceipts}
+      >
+        <Download aria-hidden="true" />
+        {t("pages.provider_collections.group.download_receipts")}
+      </Button>
+
+      {list}
+    </div>
   )
 }

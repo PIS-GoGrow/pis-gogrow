@@ -3,6 +3,7 @@ import { Eye, TriangleAlert } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import CollectionAccountDetailDialog from "@/components/collections/collection-account-detail-dialog"
 import CollectionPaymentHistory from "@/components/collections/collection-payment-history"
 import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -23,6 +24,8 @@ interface CollectionAccountPanelProps {
   children?: ReactNode
   showPaymentHistory?: boolean
   showDownloadAll?: boolean
+  // Historial abre el detalle en contexto; Pendientes conserva su enlace original.
+  detailMode?: "dialog" | "link"
 }
 
 export default function CollectionAccountPanel({
@@ -32,6 +35,7 @@ export default function CollectionAccountPanel({
   children,
   showPaymentHistory = false,
   showDownloadAll = false,
+  detailMode = "link",
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -83,16 +87,20 @@ export default function CollectionAccountPanel({
           </span>
         </p>
 
-        <Link
-          href={providerCollections.show(account.id)}
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "sm" }),
-            "-mr-2.5",
-          )}
-        >
-          <Eye aria-hidden="true" />
-          {t("pages.provider_collections.group.detail")}
-        </Link>
+        {detailMode === "dialog" ? (
+          <CollectionAccountDetailDialog account={account} />
+        ) : (
+          <Link
+            href={providerCollections.show(account.id)}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "-mr-2.5",
+            )}
+          >
+            <Eye aria-hidden="true" />
+            {t("pages.provider_collections.group.detail")}
+          </Link>
+        )}
       </div>
 
       {account.status === "submitted" && account.payment_id && (

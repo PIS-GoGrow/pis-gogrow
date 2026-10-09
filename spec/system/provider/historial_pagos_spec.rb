@@ -146,7 +146,7 @@ RSpec.describe "Historial de pagos del proveedor" do
       expect(page).to have_content(approved.created_at.strftime("%d/%m/%y"))
       expect(page).to have_content("300,00")
 
-      click_on "Ver comprobantes"
+      expect(page).to have_button("Descargar comprobantes", exact: true)
       expect(page).to have_link("Descargar primer-intento.png", href: receipt_provider_payment_path(rejected))
       expect(page).to have_link("Descargar segundo-intento.png", href: receipt_provider_payment_path(approved))
       expect(page).to have_content(rejected.created_at.strftime("%d/%m/%y"))
@@ -160,10 +160,10 @@ RSpec.describe "Historial de pagos del proveedor" do
     end
   end
 
-  # Criterio 3 -- los conceptos: desde el registro se llega al detalle de la cuenta,
-  # con los pedidos que forman el importe y cada pago que se informó.
-  it "leads from a settled payment to the orders and payments behind it" do
-    rejected, approved, = settled_previous_month
+  # Criterio 3 -- tanto empleados como empresa consultan el consumo del cobro
+  # confirmado desde Historial, sin abandonar el listado.
+  it "opens the consumption detail for employees and the company from history" do
+    settled_previous_month
     sign_in provider_user, role: :provider
 
     open_history
@@ -173,16 +173,23 @@ RSpec.describe "Historial de pagos del proveedor" do
       click_on "Ver detalle"
     end
 
-    expect(page).to have_current_path(provider_collection_path(employee_account(previous_month)))
-    within(find("section", text: "Pedidos")) do
+    within(find("[role=dialog]")) do
+      expect(page).to have_content("Historial de consumo: #{month_name(previous_month)}")
       expect(page).to have_content("Milanesa al pan")
-      expect(page).to have_content("300,00")
+      expect(page).to have_content("Total: 300,00")
+      click_on "Cerrar"
     end
-    within(find("section", text: "Pagos")) do
-      expect(page).to have_content(approved.created_at.strftime("%d/%m/%y"))
-      expect(page).to have_content(rejected.created_at.strftime("%d/%m/%y"))
-      expect(page).to have_content("Confirmado")
-      expect(page).to have_content("Rechazado")
+
+    within(history_card("GoGrow")) do
+      click_on "Empresa"
+      click_on "Ver detalle"
+    end
+
+    within(find("[role=dialog]")) do
+      expect(page).to have_content("Subtotal sin IVA")
+      expect(page).to have_content("700,00")
+      click_on "Viandas"
+      expect(page).to have_content("Milanesa al pan")
     end
   end
 
