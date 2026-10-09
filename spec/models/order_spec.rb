@@ -763,6 +763,72 @@ RSpec.describe Order, type: :model do
       expect(order.menu_option_groups).to eq(schedule.menu.option_groups_snapshot)
     end
   end
+
+  describe "confirmation notification" do
+    def confirmation_notifications(order)
+      Notification.where(event: "order_confirmation", notifiable: order)
+    end
+
+    it "notifies only the employee who placed the order, once" do
+      order = orders(:upcoming_pending_today)
+
+      order.decide(:confirmed)
+
+      notifications = confirmation_notifications(order)
+      expect(notifications.count).to eq(1)
+      expect(notifications.first.user).to eq(users(:one))
+      expect(notifications.first.role).to eq("consumer")
+      expect(users(:other_consumer_user).notifications).to be_empty
+    end
+
+    # Ver DEFECT-notificacion-confirmado-sin-plato-ni-pedido-08-10-2026.md:
+    # el criterio 3 pide también el plato y el identificador del pedido.
+    it "names the delivery date and the provider" do
+      order = orders(:upcoming_pending_today)
+
+      order.decide(:confirmed)
+
+      description = confirmation_notifications(order).first.description
+      expect(description).to include(I18n.l(order.schedule.date, format: :short))
+      expect(description).to include(users(:provider_user).name)
+    end
+
+    it "does not notify twice when the order is confirmed again" do
+      order = orders(:upcoming_pending_today)
+      order.decide(:confirmed)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(confirmation_notifications(order).count).to eq(1)
+    end
+
+    it "does not confirm nor notify an order the employee already cancelled" do
+      order = orders(:history_cancelled_future)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(order.reload).to be_cancelled
+      expect(confirmation_notifications(order)).to be_empty
+    end
+
+    it "does not notify a confirmation when the employee cancels" do
+      order = orders(:upcoming_pending_future)
+
+      order.cancel(by: users(:one))
+
+      expect(order.reload).to be_cancelled
+      expect(confirmation_notifications(order)).to be_empty
+    end
+
+    # Ver DEFECT-falla-de-notificacion-solo-queda-en-el-log-08-10-2026.md: el
+    # criterio 4 pide además que el fallo quede registrado para reintento.
+    it "keeps the order confirmed when the notification cannot be saved" do
+      order = orders(:upcoming_pending_today)
+      allow(Notification).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
+
+      expect(order.decide(:confirmed)).to be(true)
+      expect(order.reload).to be_confirmed
+      expect(confirmation_notifications(order)).to be_empty
+    end
+  end
 end
 
 # == Schema Information

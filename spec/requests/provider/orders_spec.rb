@@ -429,6 +429,30 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(response).to have_http_status(:not_found)
       expect(other_provider_order.reload).to be_pending
     end
+
+    it "notifies the employee who placed the order" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch confirm_provider_order_path(order)
+
+      notifications = Notification.where(event: "order_confirmation", notifiable: order)
+      expect(notifications.count).to eq(1)
+      expect(notifications.first.user).to eq(order.consumer.user)
+    end
+
+    it "still confirms the order when the notification cannot be saved" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+      allow(Notification).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
+
+      patch confirm_provider_order_path(order)
+
+      expect(order.reload).to be_confirmed
+      expect(response).to redirect_to(provider_orders_path)
+      follow_redirect!
+      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+    end
   end
 
   describe "PATCH /provider/orders/:id/reject" do

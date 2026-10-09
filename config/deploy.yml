@@ -23,6 +23,10 @@ env:
     - GOOGLE_CLIENT_SECRET
     - MISSION_CONTROL_JOBS_HTTP_BASIC_AUTH_USER
     - MISSION_CONTROL_JOBS_HTTP_BASIC_AUTH_PASSWORD
+    # Login de prueba sin Google (guia-scm.md, sección 5.1). Vacías fuera de
+    # los ambientes de prueba: sin DEV_LOGIN_ENABLED en "true" no se muestra.
+    - DEV_USERS_PASSWORD
+    - DEV_LOGIN_ENABLED
   clear:
     # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
     # When you start using multiple servers, you should split out job processing to a dedicated machine.

@@ -48,15 +48,6 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     Provider.update_all(order_deadline: nil)
   end
 
-  # Las hojas entran deslizándose: en CI el clic caía mientras se movían.
-  def without_animations
-    page.execute_script(<<~JS)
-      const style = document.createElement("style")
-      style.textContent = "*, *::before, *::after { animation: none !important; transition: none !important; }"
-      document.head.appendChild(style)
-    JS
-  end
-
   def open_publication_day(date)
     visit schedules_path(week_start: date.beginning_of_week(:monday).to_s)
     without_animations
