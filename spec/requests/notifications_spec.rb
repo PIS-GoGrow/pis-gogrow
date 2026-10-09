@@ -90,5 +90,17 @@ RSpec.describe "Notifications", type: :request do
       expect(response).to have_http_status(:not_found)
       expect(notification.reload.closed_at).to be_nil
     end
+
+    it "does not close an employee notification from a provider session of the same user" do
+      Provider.create!(user:)
+      notification = create_notification(user:)
+      session = user.sessions.create!(role: :provider)
+      cookies[:session_token] = AuthenticationHelpers.signed_cookie(:session_token, session.id)
+
+      patch close_notification_path(notification)
+
+      expect(response).to have_http_status(:not_found)
+      expect(notification.reload.closed_at).to be_nil
+    end
   end
 end
