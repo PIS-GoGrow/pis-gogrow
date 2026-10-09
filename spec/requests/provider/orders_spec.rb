@@ -203,6 +203,7 @@ RSpec.describe "Provider::Orders", type: :request do
           order[:status] == "pending" &&
           order[:amount] == 1 &&
           order[:date] == Date.current.iso8601 &&
+          order[:created_on] == orders(:upcoming_pending_today).created_at.to_date.iso8601 &&
           order[:consumer_name] == "Test User" &&
           order[:consumer_email] == "one@example.com" &&
           order[:consumer_company] == "GoGrow" &&
