@@ -10,7 +10,9 @@ Rails.application.routes.draw do
 
   resources :sessions, only: [ :destroy, :edit, :update ]
   resource :users, only: [ :destroy ]
-
+  resources :notifications, only: [] do
+    patch :close, on: :member
+  end
 
   # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the
   # OmniAuth middleware before it reaches the router â€” only the callback and

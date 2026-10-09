@@ -24,6 +24,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
     page.current_window.resize_to(1400, 1400)
     sign_in provider_user, role: :provider
     visit provider_orders_path
+    without_animations
   end
 
   # CA1: el día actual es el valor inicial.

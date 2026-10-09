@@ -9,16 +9,17 @@ class Provider::MenusController < Provider::InertiaController
   end
 
   def new
+    @today = Date.current.iso8601
+    @maximum_publish_date = Calendar.new.maximum_publish_date.iso8601
   end
 
   def create
-    provider = Current.user.provider
-    menu = provider.menus.new menu_params
+    create = Menus::Create.new(provider: Current.user.provider, attributes: menu_params, agenda: agenda_params.to_h)
 
-    if menu.save
-      redirect_to provider_menus_path
+    if create.call
+      redirect_to new_provider_menu_path
     else
-      redirect_to provider_menus_path, inertia: { errors: menu.errors }
+      redirect_to new_provider_menu_path, inertia: { errors: create.errors }
     end
   end
 

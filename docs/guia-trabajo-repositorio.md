@@ -43,6 +43,56 @@ Esto construye la imagen a partir de `Dockerfile.dev` (no el `Dockerfile` de pro
 
 Verificá que se levantó bien entrando a <http://localhost:3001/>. El detalle completo de verificación, puertos y troubleshooting está en la [Guía Docker](guia-docker.md).
 
+### 1.4 Entrar a la aplicación sin Google (usuarios de prueba)
+
+Las cuentas de Google que usábamos para probar están bloqueadas, así que la pantalla de ingreso puede mostrar un formulario de correo y contraseña además del botón de Google. El porqué de esta decisión, y hasta cuándo vive este mecanismo, están en la [Guía SCM, sección 5.1](guia-scm.md#51-acceso-de-prueba-sin-google).
+
+**1. Definir las dos variables en tu `.env`:**
+
+```
+DEV_USERS_PASSWORD=<pedila por Slack en mensaje directo>
+DEV_LOGIN_ENABLED=true
+```
+
+`DEV_USERS_PASSWORD` es la contraseña con la que se crean los usuarios del seed: tiene que tener al menos 12 caracteres y es la misma para las cuatro cuentas. **El seed no corre si no está definida**, así que este paso no es opcional. `DEV_LOGIN_ENABLED` es lo que hace que aparezca el formulario; si la dejás en `false`, la pantalla se ve como siempre, solo con el botón de Google.
+
+Si cambiás el `.env`, reiniciá el contenedor para que lo tome:
+
+```bash
+docker compose restart web
+```
+
+**2. Cargar los datos de prueba:**
+
+```bash
+docker compose exec web bin/rails db:seed:replant
+```
+
+Esto vacía las tablas y vuelve a crear los usuarios con esa contraseña, junto con los menús, pedidos y cuentas de prueba. Si ya tenías la base cargada de antes, este paso es necesario igual: los usuarios viejos quedaron con la contraseña anterior.
+
+**3. Entrar con cada perfil.** En <http://localhost:3001/sign_in>, debajo del botón de Google, completá el formulario con la contraseña que definiste y uno de estos correos:
+
+| Rol | Correo | Qué tiene cargado |
+|---|---|---|
+| Proveedor | `pis2026.tuviandita@gmail.com` | Menús, pedidos del día y cobros |
+| Proveedor | `endulzate.by.noe@gmail.com` | El segundo proveedor, para probar que no se mezclan |
+| Empleado | `usuariopruebapis@gmail.com` | Pedidos, cuenta y beneficio |
+| RR. HH. | `rrhh.gogrow@gmail.com` | Empleados, pagos y facturas |
+
+**Habilitarlo o deshabilitarlo en el ambiente de AWS** (Responsable de SCM). Las dos variables ya están declaradas en `config/deploy.yml` y se leen del entorno de quien despliega, igual que el resto de los secretos. Para habilitarlo:
+
+1. Agregar al archivo de secretos del deploy (`~/.config/pis-gogrow/staging.env`) las dos líneas, **con una contraseña distinta de la que usa el equipo en local**:
+
+   ```
+   export DEV_USERS_PASSWORD=...
+   export DEV_LOGIN_ENABLED=true
+   ```
+
+2. Volver a desplegar: `source ~/.config/pis-gogrow/staging.env && bin/kamal deploy -d staging`.
+3. Si la base del ambiente todavía no tiene los usuarios con esa contraseña, correr el seed en el servidor después del deploy.
+
+Para deshabilitarlo, poner `DEV_LOGIN_ENABLED=false` en ese mismo archivo y volver a desplegar. El formulario desaparece de la pantalla de ingreso.
+
 ## 2. Flujo día a día: trabajar en un ítem del backlog
 
 ### 2.1 Actualizar develop antes de arrancar

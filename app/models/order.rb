@@ -85,8 +85,9 @@ class Order < ApplicationRecord
     if: -> { saved_change_to_status? || saved_change_to_price? || saved_change_to_discounted_price? }
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
 
-  # Notificaciones al consumidor cuando se confirma la orden
+  # Notificaciones al consumidor cuando cambia el estado de la orden
   after_update_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
+  after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
 
   # Solo las unidades subsidizadas llevan el descuento; el resto se cobra al
   # precio de lista. subsidized_quantity nil significa todas.
@@ -298,11 +299,33 @@ class Order < ApplicationRecord
   # ventana de RN-12/13: esas reglas son sobre cuándo puede cancelar el
   # consumidor, y acá quien decide es el proveedor, por un motivo distinto.
   # Solo protegemos contra cancelar dos veces un pedido ya cerrado.
+  # Al retirar el plato también notificamos al consumidor porque su pedido
+  # deja de poder cumplirse.
   def withdraw!(by:)
     with_lock do
       return false if cancelled? || rejected?
 
-      update!(status_before_cancellation: status, status: :cancelled, cancelled_at: Time.current, cancelled_by: by)
+      notification_data = {
+        date: I18n.l(schedule.date, format: :short),
+        dish: menu_name,
+        provider: provider.user.name
+      }
+
+      update!(
+        status_before_cancellation: status,
+        status: :cancelled,
+        cancelled_at: Time.current,
+        cancelled_by: by
+      )
+
+      Notifier.call(
+        event_key: :order_withdrawal,
+        user: consumer.user,
+        notifiable: self,
+        description_data: notification_data
+      )
+
+      true
     end
   end
 
@@ -349,6 +372,25 @@ class Order < ApplicationRecord
       description_data: {
         date: I18n.l(schedule.date, format: :short),
         provider: provider.user.name
+      }
+    )
+  end
+
+  def notify_rejected
+    reason = I18n.t!(
+      "notifications.order_rejection.reasons.#{rejection_reason}",
+      details: rejection_details
+    )
+
+    Notifier.call(
+      event_key: :order_rejection,
+      user: consumer.user,
+      notifiable: self,
+      description_data: {
+        date: I18n.l(schedule.date, format: :short),
+        dish: menu_name,
+        provider: provider.user.name,
+        reason:
       }
     )
   end

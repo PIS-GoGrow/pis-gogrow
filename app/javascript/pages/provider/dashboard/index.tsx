@@ -3,6 +3,7 @@ import { ChevronRight, Clock3, Sparkles, Star } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import NotificationBanners from "@/components/notification-banners"
 import PageContainer from "@/components/page-container"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -61,6 +62,8 @@ export default function ProviderDashboard({
           name: auth.user.name,
         })}
       >
+        <NotificationBanners />
+
         <div className="grid gap-4 lg:grid-cols-2">
           <Card className="dark:border-border dark:bg-muted dark:hover:bg-accent gap-3 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] py-4 shadow-none transition-colors hover:bg-[#EEEEEE] lg:col-span-2">
             <CardContent className="px-4">

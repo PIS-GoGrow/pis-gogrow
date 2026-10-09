@@ -138,6 +138,11 @@ RSpec.describe Notifier do
         )
       end
 
+      after do
+        I18n.reload!
+        I18n.backend.eager_load!
+      end
+
       # SUPUESTO: Notification expone #title y #description ya interpolados.
       # Si guarda title_data/description_data, testear esos atributos.
       it "interpola title_data en el título" do

@@ -72,8 +72,9 @@ RSpec.describe "Ver la personalización del pedido", type: :system do
     sign_in users(:other_provider_user), role: :provider
     visit provider_order_path(order)
 
-    expect(page).to have_content("Salsa")
-    expect(page).to have_content("Sin datos")
+    expect(page).to have_content(menu.name)
+    expect(page).to have_no_content("Salsa")
+    expect(page).to have_no_content("Relleno")
     expect(order.reload.update(status: :confirmed)).to be(true)
   end
 
