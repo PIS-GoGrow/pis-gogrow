@@ -281,7 +281,6 @@ end
 
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 
-
 # Cobros del proveedor en distintos estados, para que la pantalla no se vea
 # toda pendiente. Las cuentas ya las crearon los pedidos de más arriba.
 def seed_payment(account, status)
@@ -372,3 +371,6 @@ end
   )
   invoice.save!
 end
+
+# Cargar las configuraciones de notificación a la app
+Rake::Task["notifications:sync"].invoke

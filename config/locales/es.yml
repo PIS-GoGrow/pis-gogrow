@@ -80,6 +80,14 @@ es:
       invalid_range: "La fecha de fin no puede ser anterior a la de inicio."
       invalid_amount: "El stock por día debe ser un entero mayor a 0."
       invalid_weekdays: "Elegí al menos un día de lunes a viernes."
+  notifications:
+    order_confirmation:
+      title: "Tu pedido fue confirmado"
+      description: "Tu pedido del %{date} fue confirmado por %{provider}."
+  notification_configurations:
+    order_updates:
+      title: "Actualizaciones de pedidos"
+      description: "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado."
   activerecord:
     errors:
       models:
