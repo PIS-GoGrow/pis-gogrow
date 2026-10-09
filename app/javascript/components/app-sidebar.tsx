@@ -9,7 +9,6 @@ import {
   Package,
   Percent,
   UserRound,
-  Utensils,
   Wallet,
 } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -35,7 +34,6 @@ import {
   consumerProfiles,
   providerCollections,
   providerDashboard,
-  providerMenus,
   providerOrders,
   schedules,
 } from "@/routes"
@@ -56,12 +54,7 @@ export function AppSidebar() {
         icon: LayoutGrid,
       },
       {
-        title: "Platos",
-        href: providerMenus.index().url,
-        icon: Utensils,
-      },
-      {
-        title: "Publicar menús",
+        title: "Menús",
         href: schedules.index().url,
         icon: CalendarPlus,
       },

@@ -17,6 +17,7 @@ interface WeekDayTabsProps {
   onSelectDate: (date: string) => void
   previousWeekStart: string | null
   nextWeekStart: string | null
+  today: string
 }
 
 // Rails manda fechas "YYYY-MM-DD". Sin la hora, `new Date(...)` las interpreta
@@ -38,17 +39,29 @@ function dayNumberLabel(isoDate: string) {
   )
 }
 
+// Qué día queda elegido al abrir una semana: hoy si la semana es la actual y
+// hoy es día hábil; en cualquier otro caso (semanas pasadas o futuras, o un fin
+// de semana) el lunes.
+export function defaultDayOfWeek(weekStart: string, today: string) {
+  const end = new Date(`${weekStart}T00:00:00Z`)
+  end.setUTCDate(end.getUTCDate() + 4)
+  const weekEnd = end.toISOString().slice(0, 10)
+
+  return today >= weekStart && today <= weekEnd ? today : weekStart
+}
+
 export default function WeekDayTabs({
   days,
   selectedDate,
   onSelectDate,
   previousWeekStart,
   nextWeekStart,
+  today,
 }: WeekDayTabsProps) {
   function goToWeek(weekStart: string | null) {
     if (!weekStart) return
 
-    onSelectDate(weekStart)
+    onSelectDate(defaultDayOfWeek(weekStart, today))
     router.get(
       schedulesRoutes.index().url,
       { week_start: weekStart },

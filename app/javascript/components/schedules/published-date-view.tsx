@@ -18,14 +18,17 @@ import type { Schedule } from "@/types"
 interface PublishedDayViewProps {
   schedules: Schedule[]
   publishable: boolean
+  returnTo: string
 }
 
 function PublishedScheduleRow({
   schedule,
   publishable,
+  returnTo,
 }: {
   schedule: Schedule
   publishable: boolean
+  returnTo: string
 }) {
   const { t } = useTranslation()
   const [processing, setProcessing] = useState(false)
@@ -57,7 +60,7 @@ function PublishedScheduleRow({
             <Link
               href={
                 providerMenus.edit(schedule.saved_menu_id, {
-                  query: { schedule_id: schedule.id },
+                  query: { schedule_id: schedule.id, return_to: returnTo },
                 }).url
               }
               aria-label={t("pages.schedules.index.edit_dish", {
@@ -97,6 +100,7 @@ function PublishedScheduleRow({
 export default function PublishedDayView({
   schedules,
   publishable,
+  returnTo,
 }: PublishedDayViewProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -105,6 +109,7 @@ export default function PublishedDayView({
           key={schedule.id}
           schedule={schedule}
           publishable={publishable}
+          returnTo={returnTo}
         />
       ))}
     </div>

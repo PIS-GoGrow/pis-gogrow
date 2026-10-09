@@ -11,35 +11,6 @@ RSpec.describe "Provider::Menus", type: :request do
   let(:other_provider_user) { users(:other_provider_user) }
   let(:other_provider) { providers(:endulzate) }
 
-  describe "GET /provider/menus" do
-    it "redirects visitors without a session to the sign in page" do
-      get provider_menus_path
-
-      expect(response).to redirect_to(sign_in_path)
-    end
-
-    it "redirects consumers to the root page" do
-      sign_in users(:one), role: :consumer
-
-      get provider_menus_path
-
-      expect(response).to redirect_to(root_path)
-    end
-
-    it "lists the menus of the signed-in provider in descending creation order" do
-      sign_in provider_user, role: :provider
-
-      get provider_menus_path
-
-      expect(response).to have_http_status(:success)
-      expect(inertia).to render_component("provider/menus/index")
-
-      listed_menus = inertia.props[:menus]
-      expect(listed_menus.map { |m| m["id"] }).to include(menus(:milanesa).id)
-      expect(listed_menus.map { |m| m["id"] }).not_to include(menus(:sorrentinos).id)
-    end
-  end
-
   describe "GET /provider/menus/new" do
     it "renders the new dish page with the publication dates" do
       travel_to Date.new(2030, 1, 9)
@@ -49,6 +20,27 @@ RSpec.describe "Provider::Menus", type: :request do
 
       expect(inertia).to render_component("provider/menus/new")
       expect(inertia).to have_props(today: "2030-01-09", maximum_publish_date: "2030-01-18")
+    end
+
+    it "preselects the day the provider came from when it can be published" do
+      travel_to Date.new(2030, 1, 9)
+      sign_in provider_user, role: :provider
+
+      get new_provider_menu_path(date: "2030-01-10")
+
+      expect(inertia).to have_props(default_date: "2030-01-10")
+    end
+
+    it "does not preselect a day that cannot be published" do
+      travel_to Date.new(2030, 1, 9)
+      sign_in provider_user, role: :provider
+
+      # pasado, sábado, fuera del rango de publicación y una fecha inválida
+      [ "2030-01-08", "2030-01-12", "2030-02-01", "nope" ].each do |date|
+        get new_provider_menu_path(date:)
+
+        expect(inertia.props[:default_date]).to be_nil
+      end
     end
   end
 
@@ -227,24 +219,6 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
-  describe "GET /provider/menus/:id" do
-    before { sign_in provider_user, role: :provider }
-
-    it "renders the dish detail for the provider's own dish" do
-      get provider_menu_path(menus(:milanesa))
-
-      expect(response).to have_http_status(:success)
-      expect(inertia).to render_component("provider/menus/show")
-      expect(inertia.props[:menu]["name"]).to eq("Milanesa con papas fritas")
-    end
-
-    it "returns not found when attempting to view another provider's dish" do
-      get provider_menu_path(menus(:sorrentinos))
-
-      expect(response).to have_http_status(:not_found)
-    end
-  end
-
   describe "GET /provider/menus/:id/edit" do
     it "redirects visitors without a session to the sign in page" do
       get edit_provider_menu_path(menus(:milanesa))
@@ -312,6 +286,26 @@ RSpec.describe "Provider::Menus", type: :request do
         expect(agenda_prop[:mode]).to eq("none")
         expect(agenda_prop[:weekdays]).to eq([])
         expect(agenda_prop[:amount]).to be_nil
+      end
+
+      it "goes back to the schedules page by default" do
+        get edit_provider_menu_path(menus(:milanesa))
+
+        expect(inertia.props[:return_to]).to eq(schedules_path)
+      end
+
+      it "goes back to the page the dish was opened from" do
+        get edit_provider_menu_path(menus(:milanesa), return_to: schedules_path(tab: "saved"))
+
+        expect(inertia.props[:return_to]).to eq("/schedules?tab=saved")
+      end
+
+      it "ignores a return_to that points outside the app" do
+        [ "//evil.example", "/\\evil.example", "https://evil.example" ].each do |target|
+          get edit_provider_menu_path(menus(:milanesa), return_to: target)
+
+          expect(inertia.props[:return_to]).to eq(schedules_path)
+        end
       end
 
       it "returns not found when attempting to edit another provider's dish" do
@@ -554,6 +548,14 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(menus(:milanesa).reload.name).to eq("Milanesa con papas fritas")
     end
 
+    it "keeps the page the dish was opened from after saving" do
+      patch provider_menu_path(menus(:milanesa)), params: params.merge(return_to: "/schedules?tab=saved")
+
+      expect(response).to redirect_to(
+        edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id, return_to: "/schedules?tab=saved")
+      )
+    end
+
     it "rejects the confirmed orders of that day when the provider asks to" do
       patch provider_menu_path(menus(:milanesa)), params: params.merge(confirmed_orders: "reject")
 
@@ -607,9 +609,9 @@ RSpec.describe "Provider::Menus", type: :request do
     it "keeps the variants out of the saved dishes list" do
       patch provider_menu_path(menus(:milanesa)), params: params
 
-      get provider_menus_path
+      get schedules_path
 
-      expect(inertia.props[:menus].pluck("name")).not_to include("Milanesa napolitana")
+      expect(inertia.props[:saved_menus].pluck("name")).not_to include("Milanesa napolitana")
     end
 
     it "successfully publishes dish with weekly recurrence and creates schedules" do
@@ -679,7 +681,7 @@ RSpec.describe "Provider::Menus", type: :request do
   describe "DELETE /provider/menus/:id" do
     before { sign_in provider_user, role: :provider }
 
-    it "deletes the dish and redirects to index" do
+    it "removes the dish from the saved dishes and redirects to that tab" do
       menu_to_delete = provider.menus.create!(
         name: "Pastel de carne",
         description: "Pastel de carne con puré",
@@ -688,9 +690,36 @@ RSpec.describe "Provider::Menus", type: :request do
 
       expect do
         delete provider_menu_path(menu_to_delete)
-      end.to change(provider.menus, :count).by(-1)
+      end.to change(provider.menus.saved, :count).by(-1)
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(schedules_path(tab: "saved"))
+      expect(menu_to_delete.reload).to be_archived
+    end
+
+    it "keeps the confirmed orders of upcoming days when asked to" do
+      delete provider_menu_path(menus(:milanesa)), params: { confirmed_orders: "keep" }
+
+      expect(orders(:upcoming_confirmed_future).reload).to be_confirmed
+      expect(orders(:upcoming_confirmed_future).schedule).to eq(schedules(:future))
+      expect(schedules(:future).reload.available).to be(false)
+      expect(orders(:upcoming_pending_future).reload).to be_cancelled
+    end
+
+    it "rejects the confirmed orders of upcoming days when asked to" do
+      future_schedule_id = schedules(:future).id
+
+      delete provider_menu_path(menus(:milanesa)), params: { confirmed_orders: "reject" }
+
+      expect(orders(:upcoming_confirmed_future).reload).to be_rejected
+      expect(orders(:upcoming_confirmed_future).rejection_reason).to eq("dish_deleted")
+      expect(Schedule.exists?(future_schedule_id)).to be(false)
+    end
+
+    it "leaves the past orders of the dish alone" do
+      delete provider_menu_path(menus(:milanesa)), params: { confirmed_orders: "reject" }
+
+      expect(orders(:history_confirmed_past).reload).to be_confirmed
+      expect(orders(:history_confirmed_past).schedule).to eq(schedules(:past))
     end
 
     it "returns not found when attempting to delete another provider's dish" do

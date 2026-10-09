@@ -21,6 +21,9 @@ class Schedule < ApplicationRecord
 
   validates :menu_id, uniqueness: { scope: :date }
 
+  # Las programaciones de platos eliminados (archivados) no se muestran.
+  scope :on_active_menus, -> { joins(:menu).where(menus: { archived_at: nil }) }
+
   def remaining_amount
     # Sin stock cargado el plato no tiene límite: queda siempre el cupo máximo.
     return MAX_AMOUNT if amount.nil?
@@ -35,7 +38,7 @@ class Schedule < ApplicationRecord
   end
 
   def available?(quantity: 1)
-    date.present? && date >= Date.current && !order_deadline_passed? && remaining_amount >= quantity && available
+    date.present? && date >= Date.current && !order_deadline_passed? && remaining_amount >= quantity && available && !menu.archived?
   end
 
   def order_deadline_passed?

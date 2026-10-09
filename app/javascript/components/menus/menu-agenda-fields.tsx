@@ -43,6 +43,28 @@ function nextDateFor(weekday: number, from: string) {
   return date.toISOString().slice(0, 10)
 }
 
+// El primer día en que queda publicado un plato con esta agenda, o null si no
+// se publica ningún día. Es adonde se vuelve al terminar de agregarlo.
+export function firstPublishedDate(
+  draft: AgendaDraft,
+  today: string,
+): string | null {
+  if (draft.weekdays.length === 0) return null
+  if (draft.mode === "single") return draft.date || null
+
+  const from = draft.starts_on > today ? draft.starts_on : today
+
+  for (let offset = 0; offset < 7; offset++) {
+    const date = new Date(`${from}T00:00:00Z`)
+    date.setUTCDate(date.getUTCDate() + offset)
+    const iso = date.toISOString().slice(0, 10)
+
+    if (draft.weekdays.includes(cwday(iso))) return iso
+  }
+
+  return null
+}
+
 export function initialAgenda(
   agenda: ProviderMenusEdit["agenda"],
 ): AgendaDraft {

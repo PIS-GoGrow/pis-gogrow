@@ -31,7 +31,7 @@ class SchedulesController < Provider::InertiaController
         Schedule
             .joins(:menu)
             .where(
-            menus: { provider_id: provider.id },
+            menus: { provider_id: provider.id, archived_at: nil },
             date: week_start..week_end
             )
             .order(:date, :id)
@@ -64,7 +64,11 @@ class SchedulesController < Provider::InertiaController
             previous_week_start: week_start - 1.week,
             next_week_start: next_week_start
         },
-        days: days
+        days: days,
+        saved_menus: menus.map { SavedMenuSerializer.new(it).to_inertia },
+        tab: params[:tab] == "saved" ? "saved" : "week",
+        selected_date: params[:date].presence,
+        today: Date.current.iso8601
     }
   end
 
@@ -174,12 +178,14 @@ class SchedulesController < Provider::InertiaController
     @maximum_publish_date ||= Calendar.new.maximum_publish_date
   end
 
+  # La semana se pide con week_start o, si no viene, con un día (date): así se
+  # vuelve a la semana de un día sin conocer su lunes.
   def requested_week_start
-    return Date.current.beginning_of_week(:monday) if params[:week_start].blank?
+    requested = params[:week_start].presence || params[:date].presence
+    return Date.current.beginning_of_week(:monday) if requested.blank?
 
-    Date.iso8601(params[:week_start]).beginning_of_week(:monday)
-
-rescue Date::Error
-  nil
+    Date.iso8601(requested).beginning_of_week(:monday)
+  rescue Date::Error
+    nil
   end
 end

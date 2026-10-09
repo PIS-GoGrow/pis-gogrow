@@ -64,6 +64,24 @@ RSpec.describe "Schedules", type: :request do
       expect(response.body).to include(week_end.to_s)
     end
 
+    it "opens the week of the day it is asked to show" do
+      user = users(:one)
+      Provider.create!(user: user)
+
+      sign_in_with_role(user, role: :provider)
+
+      next_monday = Date.current.beginning_of_week(:monday) + 1.week
+      date = next_monday + 2.days
+
+      get schedules_path(date: date.iso8601)
+
+      page = inertia_page
+
+      expect(page.dig("props", "week", "starts_on")).to eq(next_monday.to_s)
+      expect(page.dig("props", "selected_date")).to eq(date.iso8601)
+      expect(page.dig("props", "today")).to eq(Date.current.iso8601)
+    end
+
     it "returns the five weekdays of the requested week" do
       user = users(:one)
       Provider.create!(user: user)

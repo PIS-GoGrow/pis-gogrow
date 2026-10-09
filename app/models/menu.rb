@@ -21,7 +21,9 @@ class Menu < ApplicationRecord
   validates :description, presence: true
   validates :price, comparison: { greater_than: 0 }
 
-  scope :saved, -> { where(base_menu_id: nil) }
+  # Un plato eliminado queda archivado: no se muestra ni se programa, pero sigue
+  # en la base para que los pedidos que ya lo incluyen conserven su programación.
+  scope :saved, -> { where(base_menu_id: nil, archived_at: nil) }
 
   def provider_name
     provider.user&.name || "Proveedor"
@@ -34,6 +36,15 @@ class Menu < ApplicationRecord
   # Fechas que el proveedor quitó a mano: la agenda no las vuelve a programar.
   def skip_date!(date)
     update!(skipped_dates: (skipped_dates | [ date ]).select { it >= Date.current })
+  end
+
+  def archived?
+    archived_at.present?
+  end
+
+  # Pedidos con ese estado de hoy en adelante, de este plato y de sus variantes.
+  def upcoming_orders_count(status)
+    Order.where(status:).joins(:schedule).where(schedules: { menu_id: family_ids, date: Date.current.. }).count
   end
 
   def variant?
