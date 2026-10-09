@@ -27,6 +27,12 @@
         "system": "Sistema",
         "toggle_theme": "Cambiar tema"
       },
+      "benefit_summary": {
+        "active": "Activo",
+        "base": "Subsidio Base",
+        "discount": "de descuento en viandas",
+        "inactive": "Sin beneficio"
+      },
       "date_picker": {
         "placeholder": "Elegí una fecha",
         "range_placeholder": "Elegí un rango"
@@ -281,9 +287,6 @@
           "show": {
             "back": "Volver a empleados",
             "benefit": "Beneficio",
-            "benefit_active": "Activo",
-            "benefit_discount": "de descuento en viandas",
-            "benefit_inactive": "Sin beneficio",
             "benefit_none": "Este empleado no tiene un beneficio vigente.",
             "close": "Cerrar",
             "consumption": "Consumo",
@@ -382,6 +385,7 @@
       },
       "cart": {
         "add_address": "Agregar",
+        "benefit": "Beneficio GoGrow (%{percentage}%)",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
         "my_addresses": "Ver mis direcciones",
@@ -418,7 +422,7 @@
       },
       "consumer_profiles": {
         "show": {
-          "benefit": "Tu beneficio",
+          "benefit": "Mi beneficio",
           "due_date": "Vigente hasta",
           "max_price": "Tope por vianda",
           "meals_one": "%{count} vianda",
@@ -426,7 +430,6 @@
           "monthly_limit": "Viandas subsidiadas por mes",
           "monthly_remaining": "Te quedan este mes",
           "no_benefit": "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa.",
-          "percentage": "Subsidio de la empresa",
           "sign_out": "Salir",
           "title": "Mi cuenta"
         }
