@@ -211,6 +211,9 @@ es:
       caution: "Procede con precaución, esta acción no se puede deshacer."
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
+    date_picker:
+      placeholder: "Elegí una fecha"
+      range_placeholder: "Elegí un rango"
   pages:
     admin:
       dashboard:
@@ -746,6 +749,49 @@ es:
           toggle_label: "En stock"
         edit_dish: "Editar %{name}"
     provider_menus:
+      new:
+        title: "Agregar platos"
+        back: "Volver al menú"
+        tabs:
+          new: "Platos nuevos"
+          saved: "Platos guardados"
+        added:
+          title: "¡Plato agregado!"
+          description: "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando."
+          back: "Volver a Menú"
+          continue: "Seguir agregando"
+      form:
+        name: "Nombre del plato"
+        name_placeholder: "Ej: Milanesa con puré"
+        price: "Precio"
+        description: "Descripción"
+        description_placeholder: "Descripción del plato..."
+        required: "No puede estar vacío."
+        options:
+          title: "Opciones"
+          add: "Agregar"
+          empty: "¿Tiene sabores para elegir? ¡Agregalos!"
+          edit: "Editar %{name}"
+          remove: "Borrar %{name}"
+          limit: "Límite %{limit}"
+        group:
+          title: "Agregá opciones"
+          description: "Armá un grupo de opciones para que el empleado elija."
+          name: "Nombre del grupo"
+          name_placeholder: "Ej: Salsa"
+          options: "Opciones"
+          options_placeholder: "Ej: Boloñesa, Caruso, 4 quesos"
+          options_hint: "Ingresá las opciones separadas por coma."
+          duplicates: "No se permiten opciones repetidas."
+          limit: "¿Cuántas opciones pueden elegir a la vez?"
+          cancel: "Cancelar"
+          add: "Agregar"
+          modify: "Modificar"
+        cancel: "Cancelar"
+        create: "Agregar"
+        creating: "Agregando..."
+        update: "Modificar"
+        updating: "Guardando..."
       edit:
         agenda:
           title: "Agenda"
@@ -768,7 +814,7 @@ es:
             range: "Repetir en un rango personalizado"
           date: "Día específico"
           starts_on: "Desde"
-          ends_on: "Hasta"
+          range: "Rango"
           amount: "Stock por día"
           incomplete: "Completá las fechas y el stock por día."
         sheet:

@@ -410,7 +410,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       click_button "Editar Guarnición"
       within("[role=dialog]") do
         fill_in "group-options", with: "Ensalada, Boniato", fill_options: { clear: :backspace }
-        click_button "Guardar"
+        click_button "Modificar"
       end
       click_button "Modificar"
       click_button "Aplicar cambios"
