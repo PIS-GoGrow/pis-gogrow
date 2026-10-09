@@ -22,3 +22,13 @@ events:
     configuration: order_updates
     role: consumer
     requires_action: false
+
+  order_rejection:
+    configuration: order_updates
+    role: consumer
+    requires_action: false
+
+  order_withdrawal:
+    configuration: order_updates
+    role: consumer
+    requires_action: false

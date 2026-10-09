@@ -93,6 +93,22 @@
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
         "title": "Tu pedido fue confirmado"
+      },
+      "order_rejection": {
+        "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}.",
+        "reasons": {
+          "customer_request": "por solicitud del cliente",
+          "dish_modified": "porque el plato fue modificado",
+          "duplicate_order": "porque el pedido estaba duplicado",
+          "order_error": "por un error en el pedido",
+          "other": "por el siguiente motivo: %{details}",
+          "out_of_stock": "porque no había stock disponible"
+        },
+        "title": "Tu pedido fue cancelado"
+      },
+      "order_withdrawal": {
+        "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible.",
+        "title": "Tu pedido fue cancelado"
       }
     },
     "pages": {

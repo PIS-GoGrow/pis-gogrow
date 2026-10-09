@@ -84,6 +84,19 @@ es:
     order_confirmation:
       title: "Tu pedido fue confirmado"
       description: "Tu pedido del %{date} fue confirmado por %{provider}."
+    order_rejection:
+      title: "Tu pedido fue cancelado"
+      description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}."
+      reasons:
+        out_of_stock: "porque no había stock disponible"
+        duplicate_order: "porque el pedido estaba duplicado"
+        customer_request: "por solicitud del cliente"
+        order_error: "por un error en el pedido"
+        other: "por el siguiente motivo: %{details}"
+        dish_modified: "porque el plato fue modificado"
+    order_withdrawal:
+      title: "Tu pedido fue cancelado"
+      description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible."
   notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
