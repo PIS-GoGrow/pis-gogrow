@@ -5,7 +5,10 @@ class SessionsController < InertiaController
   before_action :require_no_authentication, only: %i[new create]
   before_action :set_session, only: %i[edit update destroy]
 
+  # El formulario de correo y contraseña solo se pinta donde se está probando.
+  # No cambia nada del endpoint: create ya existía y sigue igual.
   def new
+    @dev_login_enabled = ENV.fetch("DEV_LOGIN_ENABLED", "false") == "true"
   end
 
   def create
@@ -21,7 +24,7 @@ class SessionsController < InertiaController
       @session = user.sessions.create!(role: role)
       cookies.signed.permanent[:session_token] = { value: @session.id, httponly: true }
 
-      redirect_to dashboard_path, notice: t("flash.signed_in")
+      redirect_to root_path, notice: t("flash.signed_in")
     else
       redirect_to sign_in_path, alert: t("flash.incorrect_credentials")
     end

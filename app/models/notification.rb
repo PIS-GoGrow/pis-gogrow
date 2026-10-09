@@ -59,6 +59,7 @@ class Notification < ApplicationRecord
   end
 
   def role_belongs_to_user
+    user.sync_roles!
     errors.add(:role, :invalid) unless user&.roles&.include?(role.to_s)
   end
 

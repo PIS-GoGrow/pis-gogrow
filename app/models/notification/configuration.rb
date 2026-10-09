@@ -3,8 +3,10 @@
 # Representa un conjunto de tipos de notificaciones que son configurables por el
 # usuario. La configuración solo se toma en cuenta cuando la notificación se envía
 # por WhatsApp, todas las notificaciones aparecen siempre en la app. Las
-# configuraciones tienen una clave (key) que las identifica y además indican qué roles
-# (consumer, provider, admin) pueden configurarlas.
+# configuraciones tienen una clave (key) que las identifica, indican qué roles
+# (consumer, provider, admin) pueden configurarlas. Además, mediante el atributo
+# configurable se puede indicar si la configuración puede ser modificable por un
+# usuario.
 #
 # Ver más documentación en docs/notificaciones.rb
 class Notification::Configuration < ApplicationRecord
@@ -27,7 +29,10 @@ class Notification::Configuration < ApplicationRecord
     transaction do
       Notification::Registry.configurations.each_value do |config|
         find_or_initialize_by(key: config.key.to_s)
-          .update!(roles: config.roles.map(&:to_s))
+          .update!(
+            roles: config.roles.map(&:to_s),
+            configurable: config.configurable
+          )
       end
     end
 
@@ -44,11 +49,12 @@ end
 #
 # Table name: notification_configurations
 #
-#  id         :bigint           not null, primary key
-#  key        :string           not null
-#  roles      :string           default([]), is an Array
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
+#  id           :bigint           not null, primary key
+#  configurable :boolean
+#  key          :string           not null
+#  roles        :string           default([]), is an Array
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
 #
 # Indexes
 #

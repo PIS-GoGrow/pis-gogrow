@@ -913,6 +913,8 @@
           "forgot_password": "¿Olvidaste tu contraseña?",
           "heading": "Inicia sesión en tu cuenta",
           "no_account": "¿No tienes una cuenta?",
+          "or": "o",
+          "submit": "Ingresar",
           "title": "Iniciar sesión"
         }
       },

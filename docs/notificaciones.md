@@ -97,6 +97,11 @@ por WhatsApp, todas las notificaciones aparecen siempre en la app. Las
 configuraciones tienen una clave (`key`) que las identifica y además indican qué roles
 (`consumer`, `provider`, `admin`) pueden configurarlas.
 
+**Nota:** Si hubiera un evento que no tenga aparentemente ninguna configuración
+asociada en el Figma, habría que crear una configuración para ese evento y asignarle
+el atributo `configurable: false`. En ese caso, el usuario no tendría manera de
+desactivar esa configuración.
+
 # Eventos
 Cada flujo genera notificaciones con un determinado evento asociado. Los eventos
 se identifican con una clave, que se guarda en el modelo `Notification`. Un evento

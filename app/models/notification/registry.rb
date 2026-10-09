@@ -6,7 +6,7 @@
 class Notification::Registry
   PATH = Rails.root.join("config/notifications.yml")
 
-  Configuration = Data.define(:key, :roles)
+  Configuration = Data.define(:key, :roles, :configurable)
   Event = Data.define(:key, :configuration_key, :role, :requires_action)
 
   class InvalidRegistry < StandardError; end
@@ -56,13 +56,25 @@ class Notification::Registry
     # Construye la representación a partir del archivo
     def build(data)
       configurations = data.fetch(:configurations).to_h do |key, attrs|
-        [ key, Configuration.new(key:, roles: parse_roles(key, attrs.fetch(:roles))) ]
+        [
+          key,
+          Configuration.new(
+            roles: parse_roles(key, attrs.fetch(:roles)),
+            configurable: attrs.fetch(:configurable),
+            key:
+          )
+        ]
       end
 
       events = data.fetch(:events).to_h do |key, attrs|
         configuration_key = attrs.fetch(:configuration).to_sym
         config = configurations.fetch(configuration_key) do
-          raise InvalidRegistry, "#{key}: la configuración #{configuration_key} no existe"
+          raise(
+            InvalidRegistry,
+            "la configuración #{configuration_key} no existe, " \
+            "pero se uso en el evento #{key} en el archivo config/notifications.yml. " \
+            "Hay que agregar la configuración en el mismo archivo o cambiar el evento."
+          )
         end
 
         role = parse_roles(key, [ attrs.fetch(:role) ])[0]
