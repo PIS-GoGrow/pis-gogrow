@@ -158,4 +158,29 @@ RSpec.describe "Provider::Dashboard", type: :request do
       end
     end
   end
+
+  describe "notificaciones" do
+    it "no muestra en la sesión de proveedor las notificaciones de empleado del mismo usuario" do
+      user = users(:one)
+      Provider.create!(user:)
+      configuration = Notification::Configuration.find_or_create_by!(key: "order_updates") do |record|
+        record.roles = %w[consumer]
+      end
+      Notification.create!(
+        notification_configuration: configuration,
+        user:,
+        role: "consumer",
+        event: "order_confirmation",
+        requires_action: false,
+        notifiable: orders(:upcoming_pending_today),
+        title: "Tu pedido fue confirmado",
+        description: "Tu pedido fue confirmado."
+      )
+
+      sign_in user, role: :provider
+      get provider_dashboard_path
+
+      expect(inertia.props[:notifications]).to be_empty
+    end
+  end
 end

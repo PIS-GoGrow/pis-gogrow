@@ -5,12 +5,13 @@
 # Ver más documentación en docs/notificaciones.rb
 
 # Para definir una configuración, hay que agregar una clave única en esta lista
-# e indicar para qué roles se puede configurar. Si se agrega o cambia una configuración
-# hay que correr el comando:
+# e indicar para qué roles se puede configurar, y si es administrable por el
+# usuario. Si se agrega o cambia una configuración hay que correr el comando:
 #   bin/rails notifications:sync
 configurations:
   order_updates:
     roles: [consumer]
+    configurable: true
 
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el

@@ -33,5 +33,12 @@ export const useFormatters = () => {
     return formatted.charAt(0).toLocaleUpperCase(locale) + formatted.slice(1)
   }
 
-  return { formatMoney, formatMoneyShort, formatDeliveryDate }
+  const formatLongDate = (date: string) =>
+    new Intl.DateTimeFormat(locale, {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(new Date(`${date}T00:00:00`))
+
+  return { formatMoney, formatMoneyShort, formatDeliveryDate, formatLongDate }
 }

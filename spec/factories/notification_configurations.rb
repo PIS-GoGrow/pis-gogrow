@@ -10,11 +10,12 @@ end
 #
 # Table name: notification_configurations
 #
-#  id         :bigint           not null, primary key
-#  key        :string           not null
-#  roles      :string           default([]), is an Array
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
+#  id           :bigint           not null, primary key
+#  configurable :boolean
+#  key          :string           not null
+#  roles        :string           default([]), is an Array
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
 #
 # Indexes
 #

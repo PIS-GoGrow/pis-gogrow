@@ -48,15 +48,6 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     Provider.update_all(order_deadline: nil)
   end
 
-  # Las hojas entran deslizándose: en CI el clic caía mientras se movían.
-  def without_animations
-    page.execute_script(<<~JS)
-      const style = document.createElement("style")
-      style.textContent = "*, *::before, *::after { animation: none !important; transition: none !important; }"
-      document.head.appendChild(style)
-    JS
-  end
-
   def open_publication_day(date)
     visit schedules_path(week_start: date.beginning_of_week(:monday).to_s)
     without_animations
@@ -211,9 +202,9 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       expect(page).to have_content("Sin sal, con limón")
       expect_chosen_garnish("Papas", instead_of: "Puré")
       expect(page).to have_content("Colonia 1370")
-      expect(page).to have_content("Pendiente")
-      expect(page).to have_content(uyu(edited.price))
-      expect(page).to have_content(uyu(edited.discounted_price))
+      expect(page).to have_content("Por revisar")
+      expect(page).to have_content(confirmation_money(edited.price))
+      expect(page).to have_content(confirmation_money(edited.discounted_price))
       sign_out
 
       # Persistencia: E1 vuelve a entrar y ve el pedido igual.
@@ -267,7 +258,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       expect(e2_order.reload).to be_pending
       visit provider_order_path(e2_order)
-      expect(page).to have_content("Pendiente")
+      expect(page).to have_content("Por revisar")
       expect(page).to have_button("Confirmar")
       expect(page).to have_button("Rechazar")
     end
@@ -403,7 +394,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       visit provider_order_path(e1_order)
       expect(page).to have_content("Milanesa al pan")
-      expect(page).to have_content(uyu(300))
+      expect(page).to have_content(confirmation_money(300))
       sign_out
 
       sign_in e1_user, role: :consumer
@@ -419,7 +410,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       click_button "Editar Guarnición"
       within("[role=dialog]") do
         fill_in "group-options", with: "Ensalada, Boniato", fill_options: { clear: :backspace }
-        click_button "Guardar"
+        click_button "Modificar"
       end
       click_button "Modificar"
       click_button "Aplicar cambios"
