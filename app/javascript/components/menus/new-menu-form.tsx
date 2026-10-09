@@ -49,7 +49,6 @@ interface MenuFormProps {
 
 function agendaIsComplete(agenda: AgendaDraft) {
   if (agenda.weekdays.length === 0) return true
-  if (agenda.amount !== "" && !(Number(agenda.amount) > 0)) return false
   if (agenda.mode === "single") return agenda.date !== ""
   if (agenda.mode === "range")
     return agenda.starts_on !== "" && agenda.ends_on >= agenda.starts_on
@@ -447,14 +446,14 @@ export default function MenuForm({
         )}
 
         {menu ? (
-          <div className="mt-8 flex justify-end gap-3">
-            <Button type="button" variant="outline" asChild>
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            <Button type="button" variant="secondary" className="h-11" asChild>
               <Link href={edit?.return_to ?? schedules.index().url}>
                 {t(`${key}.cancel`)}
               </Link>
             </Button>
 
-            <Button type="submit" disabled={processing}>
+            <Button type="submit" className="h-11" disabled={processing}>
               {processing ? t(`${key}.updating`) : t(`${key}.update`)}
             </Button>
           </div>

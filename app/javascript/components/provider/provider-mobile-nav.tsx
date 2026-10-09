@@ -21,7 +21,7 @@ import {
 
 export function ProviderMobileNav() {
   const { t } = useTranslation()
-  const { url } = usePage()
+  const { url, component } = usePage()
 
   const links = [
     {
@@ -34,7 +34,9 @@ export function ProviderMobileNav() {
       label: t("nav.provider.menu"),
       icon: Dish02Icon,
       href: schedules.index().url,
-      active: url.startsWith(schedules.index().url),
+      active:
+        url.startsWith(schedules.index().url) ||
+        component.startsWith("provider/menus/"),
     },
     {
       label: t("nav.provider.orders"),

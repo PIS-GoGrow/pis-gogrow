@@ -215,7 +215,6 @@ es:
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
     date_picker:
       placeholder: "Elegí una fecha"
-      range_placeholder: "Elegí un rango"
   pages:
     admin:
       dashboard:
@@ -748,6 +747,10 @@ es:
           description: "Los cobros pendientes aparecerán acá próximamente."
     schedules:
       index:
+        title: "Gestión de Menú"
+        week_range: "%{from} - %{to}, %{month}"
+        previous_week: "Semana anterior"
+        next_week: "Semana siguiente"
         availability:
           toggle_label: "En stock"
         edit_dish: "Editar %{name}"
@@ -854,6 +857,8 @@ es:
         update: "Modificar"
         updating: "Guardando..."
       edit:
+        title: "Editar plato"
+        back: "Volver"
         agenda:
           title: "Agenda"
           weekdays_label: "Días de la semana"
@@ -875,9 +880,8 @@ es:
             range: "Repetir en un rango personalizado"
           date: "Día específico"
           starts_on: "Desde"
-          range: "Rango"
-          amount: "Stock por día (opcional)"
-          incomplete: "Completá las fechas. Si cargás un stock, tiene que ser mayor a 0."
+          ends_on: "Hasta"
+          incomplete: "Completá las fechas."
         sheet:
           back: "Volver"
           apply: "Aplicar cambios"
