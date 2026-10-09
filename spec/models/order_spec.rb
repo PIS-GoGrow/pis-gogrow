@@ -772,6 +772,16 @@ RSpec.describe Order, type: :model do
       end
     end
 
+    # notify_rejected arma el texto con I18n.t!: un motivo sin traducción hace
+    # fallar el rechazo del proveedor.
+    it "has a notification text for every rejection reason" do
+      missing = Order.rejection_reasons.keys.reject do |reason|
+        I18n.exists?("notifications.order_rejection.reasons.#{reason}")
+      end
+
+      expect(missing).to be_empty
+    end
+
     it "notifies the consumer when the provider rejects an order" do
       order = orders(:upcoming_pending_today)
 
