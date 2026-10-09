@@ -79,6 +79,18 @@
         "sessions": "Sesiones"
       }
     },
+    "notification_configurations": {
+      "order_updates": {
+        "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
+        "title": "Actualizaciones de pedidos"
+      }
+    },
+    "notifications": {
+      "order_confirmation": {
+        "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
+        "title": "Tu pedido fue confirmado"
+      }
+    },
     "pages": {
       "accounts": {
         "index": {
