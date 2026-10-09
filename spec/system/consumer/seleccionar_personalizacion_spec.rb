@@ -45,6 +45,8 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
     # de los fixtures y el de milanesa uno con límite 2, para poder probar las dos
     # formas de elegir (una sola opción o varias).
     milanesa.option_groups.create!(name: "Extras", options: [ "Papaya", "Arándanos", "Limón" ], limit: 2)
+    # Los viernes, la publicación future de schedules.yml (hoy + 3) cae en este lunes.
+    Schedule.where(date: monday).destroy_all
     sorrentinos_schedule
     milanesa_schedule
 
