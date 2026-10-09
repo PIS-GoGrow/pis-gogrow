@@ -58,6 +58,7 @@ Todas las pantallas con sesión iniciada comparten el mismo esqueleto. Las medid
 | Encabezado | `PageContainer` (por dentro usa `Heading`) | `eyebrow` opcional en mayúsculas, título en `text-xl font-semibold` y `description` opcional |
 | Botones del encabezado | Prop `actions` de `PageContainer` | A la derecha del título; debajo, si no entran |
 | Volver a la pantalla anterior | Prop `back` de `PageContainer` | Arriba del título y pegado a la izquierda. No va en `actions`: el volver no es una acción de la pantalla |
+| Pantalla de detalle centrada | Prop `centered` de `PageContainer` | Título centrado. Si lleva `back`, el volver queda a la izquierda en la misma fila del título (conviene que sea solo una flecha, para no pisarlo en celular) |
 | Separaciones | `PageContainer` | `mb-8` entre el encabezado y el contenido, y `gap-4` entre cada hijo directo |
 | Título de la pestaña del navegador | `<Head title>` | El mismo texto que `title` |
 | Breadcrumbs | `breadcrumbs` de `AppLayout` | Al menos la sección actual |
@@ -130,7 +131,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | Componente | Importar desde | Usar para |
 |---|---|---|
 | `AppLayout` | `@/layouts/app-layout` | Toda pantalla con sesión iniciada; recibe `breadcrumbs` |
-| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `actions` y `back` |
+| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `actions`, `back` y `centered` |
 | `ListItemCard` | `@/components/list-item-card` | Tarjeta compacta para cada ítem de una lista; acepta las mismas partes que `Card` |
 | `Heading` | `@/components/heading` | Encabezado con `eyebrow`, `description` y `actions` opcionales. En las pantallas se usa a través de `PageContainer` |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
