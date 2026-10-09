@@ -14,7 +14,7 @@ interface NotificationBannersProps {
 export default function NotificationBanners({
   className,
 }: NotificationBannersProps) {
-  const { notifications } = usePage().props
+  const notifications = usePage().props.notifications ?? []
   const [closingId, setClosingId] = useState<number | null>(null)
 
   function closeNotification(notification: Notification) {
