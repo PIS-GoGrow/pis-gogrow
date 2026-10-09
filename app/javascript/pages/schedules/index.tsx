@@ -1,5 +1,5 @@
 import { Head, Link } from "@inertiajs/react"
-import { Plus, Search, UtensilsCrossed } from "lucide-react"
+import { Plus, Search, Upload, UtensilsCrossed } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -97,7 +97,10 @@ export default function Index({
     ) ?? []
 
   const breadcrumbs: BreadcrumbItem[] = [
-    { title: "Publicar menú", href: schedulesRoutes.index().url },
+    {
+      title: t("pages.schedules.index.title"),
+      href: schedulesRoutes.index().url,
+    },
   ]
 
   const [tab, setTab] = useState<string>(initialTab)
@@ -110,12 +113,9 @@ export default function Index({
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Publicar menú" />
+      <Head title={t("pages.schedules.index.title")} />
 
-      <PageContainer
-        eyebrow="Publicación de menús"
-        title="Publicar menú del día"
-      >
+      <PageContainer title={t("pages.schedules.index.title")}>
         <Tabs value={tab} onValueChange={setTab} className="gap-4">
           <TabsList className="w-full">
             <TabsTrigger value="week">
@@ -216,24 +216,23 @@ export default function Index({
           onClose={() => setDeletingMenu(null)}
         />
 
-        <div aria-hidden="true" className="h-16" />
+        <div aria-hidden="true" className="h-20" />
 
         <div className="bg-background fixed inset-x-0 bottom-[72px] z-20 grid grid-cols-2 gap-3 px-5 py-3 md:inset-x-auto md:right-6 md:bottom-6 md:w-96 md:bg-transparent md:p-0">
-          {tab === "saved" && (
-            <Button variant="secondary" disabled>
-              {t("pages.schedules.index.import_dishes")}
-            </Button>
-          )}
+          <Button variant="secondary" className="h-11" disabled>
+            <Upload aria-hidden="true" />
+            {t("pages.schedules.index.import_dishes")}
+          </Button>
 
           {tab === "saved" || selectedDay?.publishable ? (
-            <Button asChild className="col-start-2">
+            <Button asChild className="h-11">
               <Link href={addDishesUrl}>
                 <Plus aria-hidden="true" />
                 {t("pages.schedules.index.add_dishes")}
               </Link>
             </Button>
           ) : (
-            <Button className="col-start-2" disabled>
+            <Button className="h-11" disabled>
               <Plus aria-hidden="true" />
               {t("pages.schedules.index.add_dishes")}
             </Button>

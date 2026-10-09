@@ -19,6 +19,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Input } from "@/components/ui/input"
+import { useFormatters } from "@/hooks/use-formatters"
 import { normalizeText } from "@/lib/normalize-text"
 import { providerMenus, schedules } from "@/routes"
 import type { SavedMenu } from "@/types"
@@ -33,6 +34,7 @@ export default function SavedMenusList({
   onDelete,
 }: SavedMenusListProps) {
   const { t } = useTranslation()
+  const { formatMoneyShort } = useFormatters()
   const [search, setSearch] = useState("")
   // Al editar un plato desde acá, se vuelve a esta pestaña.
   const returnTo = schedules.index({ query: { tab: "saved" } }).url
@@ -111,7 +113,10 @@ export default function SavedMenusList({
                     })}
                     className="after:absolute after:inset-0 after:rounded-xl"
                   >
-                    {menu.name} | {menu.price}$
+                    {menu.name}{" "}
+                    <span className="text-muted-foreground">
+                      | {formatMoneyShort(menu.price ?? 0)}
+                    </span>
                   </Link>
                 </CardTitle>
                 <CardDescription>{menu.description}</CardDescription>

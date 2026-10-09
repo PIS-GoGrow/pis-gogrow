@@ -28,8 +28,7 @@
         "toggle_theme": "Cambiar tema"
       },
       "date_picker": {
-        "placeholder": "Elegí una fecha",
-        "range_placeholder": "Elegí un rango"
+        "placeholder": "Elegí una fecha"
       },
       "delete_account": {
         "caution": "Procede con precaución, esta acción no se puede deshacer.",
@@ -709,15 +708,14 @@
       "provider_menus": {
         "edit": {
           "agenda": {
-            "amount": "Stock por día (opcional)",
             "date": "Día específico",
-            "incomplete": "Completá las fechas. Si cargás un stock, tiene que ser mayor a 0.",
+            "ends_on": "Hasta",
+            "incomplete": "Completá las fechas.",
             "modes": {
               "range": "Repetir en un rango personalizado",
               "single": "No repetir",
               "weekly": "Repetir todas las semanas"
             },
-            "range": "Rango",
             "starts_on": "Desde",
             "title": "Agenda",
             "weekday_names": {
@@ -736,6 +734,7 @@
             },
             "weekdays_label": "Días de la semana"
           },
+          "back": "Volver",
           "sheet": {
             "apply": "Aplicar cambios",
             "applying": "Aplicando...",
@@ -772,7 +771,8 @@
               "description": "Este plato se modificará en tus platos guardados.",
               "title": "¿Modificar el plato guardado?"
             }
-          }
+          },
+          "title": "Editar plato"
         },
         "form": {
           "cancel": "Cancelar",
@@ -962,10 +962,12 @@
             "title": "No se publicó menú para este día."
           },
           "import_dishes": "Importar platos",
+          "next_week": "Semana siguiente",
           "no_results": {
             "description": "No encontramos platos que coincidan con tu búsqueda. Probá con otro nombre o revisá cómo lo escribiste.",
             "title": "No se encontraron resultados"
           },
+          "previous_week": "Semana anterior",
           "remove": {
             "button": "Quitar",
             "cancel": "Cancelar",
@@ -1004,7 +1006,9 @@
           "tabs": {
             "saved": "Platos guardados",
             "week": "Menú de la semana"
-          }
+          },
+          "title": "Gestión de Menú",
+          "week_range": "%{from} - %{to}, %{month}"
         }
       },
       "sessions": {
