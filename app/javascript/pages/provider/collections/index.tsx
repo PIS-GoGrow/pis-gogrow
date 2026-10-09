@@ -51,13 +51,6 @@ export default function Index({
   const { formatMoney } = useFormatters()
   // "all" o el id del cliente como string, que es lo que maneja el menú.
   const [client, setClient] = useState("all")
-  const [remindedAccountIds, setRemindedAccountIds] = useState<Set<number>>(
-    () => new Set(),
-  )
-
-  function markReminderSent(accountId: number) {
-    setRemindedAccountIds((current) => new Set(current).add(accountId))
-  }
   // Vive acá y no en PaymentReviewSheet: ver payment-review-result-context.
   const [reviewResult, setReviewResult] = useState<PaymentReviewResult | null>(
     null,
@@ -108,8 +101,6 @@ export default function Index({
             key={group.key}
             group={group}
             settled={tab === "history"}
-            remindedAccountIds={remindedAccountIds}
-            onReminderSent={markReminderSent}
           />
         ))}
       </div>

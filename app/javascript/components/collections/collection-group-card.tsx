@@ -28,8 +28,6 @@ import type { PaymentStatus, ProviderCollectionGroup } from "@/types"
 
 interface CollectionGroupCardProps {
   group: ProviderCollectionGroup
-  remindedAccountIds: Set<number>
-  onReminderSent: (accountId: number) => void
   // En el historial todo está confirmado, así que cada empleado muestra la
   // fecha en que pagó en lugar de su estado.
   settled?: boolean
@@ -85,8 +83,6 @@ function OwnerGroup({
 export default function CollectionGroupCard({
   group,
   settled = false,
-  remindedAccountIds,
-  onReminderSent,
 }: CollectionGroupCardProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -201,8 +197,6 @@ export default function CollectionGroupCard({
                       <CollectionAccountPanel
                         account={employee}
                         heading={settled ? "none" : "month"}
-                        reminderSent={remindedAccountIds.has(employee.id)}
-                        onReminderSent={() => onReminderSent(employee.id)}
                         showPaymentHistory={
                           settled || employee.payments.length > 1
                         }

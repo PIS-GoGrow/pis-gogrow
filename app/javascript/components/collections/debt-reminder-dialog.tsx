@@ -1,3 +1,4 @@
+import { router } from "@inertiajs/react"
 import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -13,25 +14,24 @@ import {
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { useFormatters } from "@/hooks/use-formatters"
+import { providerDebtReminders } from "@/routes"
 
 type ReminderState = "confirm" | "processing" | "success" | "error"
 
 interface DebtReminderDialogProps {
+  accountId: number
+  eligible: boolean
   employeeName: string
   month: string
   amount: number
-  onSent: () => void
-}
-
-function simulateReminder() {
-  return new Promise<void>((resolve) => setTimeout(resolve, 1200))
 }
 
 export default function DebtReminderDialog({
+  accountId,
+  eligible,
   employeeName,
   month,
   amount,
-  onSent,
 }: DebtReminderDialogProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -45,36 +45,42 @@ export default function DebtReminderDialog({
     if (sending.current) return
 
     if (!nextOpen) {
-      if (state === "success") onSent()
       setState("confirm")
     }
 
     setOpen(nextOpen)
   }
 
-  async function handleSend() {
+  function handleSend() {
     if (sending.current) return
 
     sending.current = true
     setState("processing")
 
-    try {
-      await simulateReminder()
-      setState("success")
-    } catch {
-      setState("error")
-    } finally {
-      sending.current = false
-    }
+    router.post(
+      providerDebtReminders.create(accountId).url,
+      {},
+      {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => setState("success"),
+        onError: () => setState("error"),
+        onFinish: () => {
+          sending.current = false
+        },
+      },
+    )
   }
 
   return (
     <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
-      <AdaptableDialogTrigger asChild>
-        <Button className="w-full" size="lg">
-          {t(`${key}.trigger`)}
-        </Button>
-      </AdaptableDialogTrigger>
+      {eligible && (
+        <AdaptableDialogTrigger asChild>
+          <Button className="w-full" size="lg">
+            {t(`${key}.trigger`)}
+          </Button>
+        </AdaptableDialogTrigger>
+      )}
 
       <AdaptableDialogContent
         showCloseButton={false}
@@ -125,7 +131,7 @@ export default function DebtReminderDialog({
               <Button
                 className="h-11 flex-1"
                 disabled={state === "processing"}
-                onClick={() => void handleSend()}
+                onClick={handleSend}
               >
                 {state === "processing" && <Spinner />}
                 {t(

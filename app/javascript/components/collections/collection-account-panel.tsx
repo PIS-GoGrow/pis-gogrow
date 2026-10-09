@@ -23,8 +23,6 @@ interface CollectionAccountPanelProps {
   aside?: ReactNode
   children?: ReactNode
   showPaymentHistory?: boolean
-  reminderSent?: boolean
-  onReminderSent?: () => void
   showDownloadAll?: boolean
 }
 
@@ -34,16 +32,11 @@ export default function CollectionAccountPanel({
   aside,
   children,
   showPaymentHistory = false,
-  reminderSent = false,
-  onReminderSent,
   showDownloadAll = false,
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
-  const canRemind =
-    account.source === "consumer" &&
-    account.status === "pending" &&
-    account.overdue
+  const reminder = account.debt_reminder
 
   return (
     <div className="bg-muted/60 grid gap-3 rounded-lg p-3">
@@ -116,20 +109,30 @@ export default function CollectionAccountPanel({
           </SheetTrigger>
         </PaymentReviewSheet>
       )}
-      {canRemind &&
-        (reminderSent ? (
-          <p className="text-muted-foreground flex items-center gap-2 text-sm">
-            <CircleCheck className="size-4" aria-hidden="true" />
-            {t("pages.provider_collections.reminder.sent")}
-          </p>
-        ) : (
-          <DebtReminderDialog
-            employeeName={account.owner_name}
-            month={account.month}
-            amount={account.amount}
-            onSent={() => onReminderSent?.()}
-          />
-        ))}
+      {(reminder.eligible ||
+        reminder.blocked_reason === "cooldown" ||
+        reminder.blocked_reason === "limit_reached") && (
+        <DebtReminderDialog
+          accountId={account.id}
+          eligible={reminder.eligible}
+          employeeName={account.owner_name}
+          month={account.month}
+          amount={account.amount}
+        />
+      )}
+      {reminder.blocked_reason === "cooldown" && (
+        <p className="text-muted-foreground flex items-center gap-2 text-sm">
+          <CircleCheck className="size-4" aria-hidden="true" />
+          {t("pages.provider_collections.reminder.next_available", {
+            date: reminder.next_available_at,
+          })}
+        </p>
+      )}
+      {reminder.blocked_reason === "limit_reached" && (
+        <p className="text-muted-foreground text-sm">
+          {t("pages.provider_collections.reminder.limit_reached")}
+        </p>
+      )}
       {showPaymentHistory && (
         <CollectionPaymentHistory
           payments={account.payments}
