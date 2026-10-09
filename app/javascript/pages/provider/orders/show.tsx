@@ -1,42 +1,79 @@
 import { Head, Link } from "@inertiajs/react"
-import { ArrowLeft } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import { ArrowLeft, Building2, House, Mail, Phone } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
-import HeadingSmall from "@/components/heading-small"
 import ProviderOrderActions from "@/components/orders/provider-order-actions"
 import PageContainer from "@/components/page-container"
 import StatusBadge from "@/components/status-badge"
-import { buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
+import { cn } from "@/lib/utils"
 import { providerOrders } from "@/routes"
 import type { BreadcrumbItem, ProviderOrdersShow } from "@/types"
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function InfoRow({
+  icon: Icon,
+  muted = false,
+  children,
+}: {
+  icon: LucideIcon
+  muted?: boolean
+  children: ReactNode
+}) {
   return (
-    <section className="grid gap-3 border-b pb-4 last:border-b-0 last:pb-0">
-      <HeadingSmall title={title} />
-      <dl className="grid gap-2 text-sm">{children}</dl>
-    </section>
+    <div className="flex items-center gap-3 text-sm">
+      <Icon
+        className="text-muted-foreground size-4 shrink-0"
+        aria-hidden="true"
+      />
+      <span
+        className={cn("min-w-0 break-words", muted && "text-muted-foreground")}
+      >
+        {children}
+      </span>
+    </div>
   )
 }
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
+function DetailLine({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="text-right">{children}</dd>
+    <div className="flex items-baseline justify-between gap-4 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="min-w-0 flex-1 text-right break-words">{children}</span>
     </div>
   )
 }
 
 export default function Show({ order }: ProviderOrdersShow) {
   const { t } = useTranslation()
-  const { formatMoney, formatDeliveryDate } = useFormatters()
+  const { formatMoneyShort, formatLongDate } = useFormatters()
+
+  // Solo lo que el empleado eligió: los pedidos anteriores a la personalización
+  // no tienen elección.
+  const chosenOptions = order.selected_options.filter(
+    (option) => option.values.length > 0,
+  )
 
   const code = t("pages.provider_orders.index.code", { id: order.id })
-  const empty = t("pages.provider_orders.show.empty")
+  const heading = t("pages.provider_orders.show.heading")
+  const DeliveryIcon = order.delivery_method === "home" ? House : Building2
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -51,120 +88,150 @@ export default function Show({ order }: ProviderOrdersShow) {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={t("pages.provider_orders.show.title", { code })} />
+      <Head title={heading} />
 
       <PageContainer
-        eyebrow={t("pages.provider_orders.show.eyebrow")}
-        title={code}
-        actions={
-          <Link
-            href={providerOrders.index()}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            <ArrowLeft aria-hidden="true" />
-            {t("pages.provider_orders.show.back")}
-          </Link>
+        centered
+        compactHeading
+        title={heading}
+        back={
+          <Button asChild variant="ghost" size="icon" className="-ml-2.5">
+            <Link
+              href={providerOrders.index()}
+              aria-label={t("pages.provider_orders.show.back")}
+            >
+              <ArrowLeft aria-hidden="true" />
+            </Link>
+          </Button>
         }
       >
-        <Section title={t("pages.provider_orders.show.summary")}>
-          <Row label={t("pages.provider_orders.show.status")}>
-            <StatusBadge status={order.status} />
-          </Row>
-          {order.rejection_reason && (
-            <Row label={t("pages.provider_orders.show.rejection_reason")}>
-              {t(
-                `pages.provider_orders.rejection_reasons.${order.rejection_reason}`,
-              )}
-            </Row>
-          )}
-          {order.rejection_details && (
-            <Row label={t("pages.provider_orders.show.rejection_details")}>
-              {order.rejection_details}
-            </Row>
-          )}
-          <Row label={t("pages.provider_orders.show.delivery_date")}>
-            {order.date
-              ? formatDeliveryDate(order.date)
-              : t("pages.provider_orders.show.no_delivery_date")}
-          </Row>
-          <Row label={t("pages.provider_orders.show.ordered_at")}>
-            {order.time}
-          </Row>
-        </Section>
+        <Card className="md:bg-muted/30 gap-4 border-0 bg-transparent py-0 shadow-none md:gap-6 md:border md:py-6">
+          <CardContent className="grid gap-4 px-0 md:gap-6 md:px-6">
+            <div className="grid justify-items-center gap-2 text-center">
+              <StatusBadge status={order.status} kind="provider_order" />
+              <h3 className="text-xl font-bold tracking-tight md:text-2xl">
+                {t("pages.provider_orders.show.title", { code })}
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                {`${formatLongDate(order.created_on)} · ${order.time}`}
+              </p>
+            </div>
 
-        <Section title={t("pages.provider_orders.show.customer")}>
-          <Row label={t("pages.provider_orders.show.name")}>
-            {order.consumer_name}
-          </Row>
-          <Row label={t("pages.provider_orders.show.company")}>
-            {order.consumer_company ??
-              t("pages.provider_orders.show.no_company")}
-          </Row>
-          <Row label={t("pages.provider_orders.show.email")}>
-            {order.consumer_email}
-          </Row>
-          <Row label={t("pages.provider_orders.show.delivery_address")}>
-            {order.address ?? t("pages.provider_orders.show.no_address")}
-          </Row>
-          <Row label={t("pages.provider_orders.show.delivery_method")}>
-            {t(`pages.orders.delivery_methods.${order.delivery_method}`)}
-          </Row>
-        </Section>
+            <div className="grid gap-4 md:grid-cols-[3fr_2fr]">
+              <Card className="min-w-0 gap-3 py-4 shadow-none md:gap-4 md:py-6 md:shadow-sm">
+                <CardHeader className="px-4 md:px-6">
+                  <CardDescription>
+                    {order.consumer_company
+                      ? t("pages.provider_orders.show.employee_company", {
+                          company: order.consumer_company,
+                        })
+                      : t("pages.provider_orders.show.employee")}
+                  </CardDescription>
+                  <CardTitle className="text-xl">
+                    {order.consumer_name}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid gap-3 px-4 md:gap-4 md:px-6">
+                  <Separator />
+                  <InfoRow icon={Mail}>{order.consumer_email}</InfoRow>
+                  {/* El teléfono todavía no se guarda: la fila queda hasta que llegue el dato. */}
+                  <InfoRow icon={Phone} muted>
+                    {t("pages.provider_orders.show.phone_unavailable")}
+                  </InfoRow>
+                  <InfoRow icon={DeliveryIcon}>
+                    {`${t(`pages.provider_orders.index.delivery_methods.${order.delivery_method}`)} · ${order.address ?? t("pages.provider_orders.index.no_address")}`}
+                  </InfoRow>
+                </CardContent>
+              </Card>
 
-        <Section title={t("pages.provider_orders.show.preparation")}>
-          <Row label={t("pages.provider_orders.show.menu")}>
-            {order.menu_name}
-          </Row>
-          <Row label={t("pages.provider_orders.show.description")}>
-            {order.menu_description ?? empty}
-          </Row>
-          <Row label={t("pages.provider_orders.show.quantity")}>
-            {order.amount ?? empty}
-          </Row>
-          {order.menu_option_groups.map((group) => {
-            // Lo que el empleado eligió, no todo lo que el plato ofrece: los
-            // pedidos anteriores a la personalización no tienen elección.
-            const chosen = order.selected_options.find(
-              (option) => option.group_id === group.id,
-            )
+              <Card className="min-w-0 gap-3 py-4 shadow-none md:gap-4 md:py-6 md:shadow-sm">
+                <CardHeader className="px-4 md:px-6">
+                  <CardDescription>
+                    {t("pages.provider_orders.show.order_detail")}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-3 px-4 md:gap-4 md:px-6">
+                  <div className="grid gap-1">
+                    <div className="flex items-baseline justify-between gap-4">
+                      <span className="min-w-0 break-words">
+                        {order.menu_name}
+                      </span>
+                      <span>
+                        {t("pages.provider_orders.index.quantity", {
+                          count: order.amount ?? 0,
+                        })}
+                      </span>
+                    </div>
+                    {order.menu_description && (
+                      <p className="text-muted-foreground text-sm">
+                        {order.menu_description}
+                      </p>
+                    )}
+                  </div>
+                  {chosenOptions.map((option) => (
+                    <DetailLine key={option.group_id} label={option.name}>
+                      {option.values.join(" · ")}
+                    </DetailLine>
+                  ))}
+                  {order.notes && (
+                    <DetailLine label={t("pages.provider_orders.show.notes")}>
+                      {order.notes}
+                    </DetailLine>
+                  )}
+                  {order.date && (
+                    <DetailLine
+                      label={t("pages.provider_orders.show.delivery_date")}
+                    >
+                      {formatLongDate(order.date)}
+                    </DetailLine>
+                  )}
+                  {order.rejection_reason && (
+                    <DetailLine
+                      label={t("pages.provider_orders.show.rejection_reason")}
+                    >
+                      {t(
+                        `pages.provider_orders.rejection_reasons.${order.rejection_reason}`,
+                      )}
+                    </DetailLine>
+                  )}
+                  {order.rejection_details && (
+                    <DetailLine
+                      label={t("pages.provider_orders.show.rejection_details")}
+                    >
+                      {order.rejection_details}
+                    </DetailLine>
+                  )}
+                  <Separator />
+                  {order.subsidy != null && (
+                    <DetailLine label={t("pages.provider_orders.show.subsidy")}>
+                      -{formatMoneyShort(order.subsidy)}
+                    </DetailLine>
+                  )}
+                  <DetailLine label={t("pages.provider_orders.show.charged")}>
+                    {order.discounted_price == null
+                      ? t("pages.provider_orders.show.no_price")
+                      : formatMoneyShort(order.discounted_price)}
+                  </DetailLine>
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="text-muted-foreground text-sm">
+                      {t("pages.provider_orders.show.total")}
+                    </span>
+                    <span className="text-lg font-semibold">
+                      {formatMoneyShort(order.price)}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </CardContent>
+        </Card>
 
-            return (
-              <Row key={group.id} label={group.name}>
-                {chosen?.values.length ? chosen.values.join(" · ") : empty}
-              </Row>
-            )
-          })}
-          <Row label={t("pages.provider_orders.show.notes")}>
-            {order.notes ?? t("pages.provider_orders.show.no_notes")}
-          </Row>
-          <Row label={t("pages.provider_orders.show.stock")}>
-            {order.schedule_amount == null || order.remaining_amount == null
-              ? t("pages.provider_orders.show.no_stock")
-              : t("pages.provider_orders.show.stock_detail", {
-                  remaining: order.remaining_amount,
-                  total: order.schedule_amount,
-                })}
-          </Row>
-        </Section>
-
-        <Section title={t("pages.provider_orders.show.amounts")}>
-          <Row label={t("pages.provider_orders.show.base_price")}>
-            {formatMoney(order.price)}
-          </Row>
-          {order.subsidy != null && (
-            <Row label={t("pages.provider_orders.show.subsidy")}>
-              -{formatMoney(order.subsidy)}
-            </Row>
-          )}
-          <Row label={t("pages.provider_orders.show.charged")}>
-            <span className="text-lg font-semibold">
-              {order.discounted_price == null
-                ? t("pages.provider_orders.show.no_price")
-                : formatMoney(order.discounted_price)}
-            </span>
-          </Row>
-        </Section>
-        <ProviderOrderActions order={order} className="sm:ml-auto sm:w-80" />
+        <ProviderOrderActions
+          order={order}
+          keepVisible
+          stackOnMobile
+          className="mx-auto w-full pb-[env(safe-area-inset-bottom)] md:mt-6 md:max-w-md md:pb-0"
+        />
       </PageContainer>
     </AppLayout>
   )

@@ -1,12 +1,10 @@
-import { Head } from "@inertiajs/react"
+import { Head, Link } from "@inertiajs/react"
 import { useState } from "react"
 
-import CreateMenuDialog from "@/components/menus/create-menu-dialog"
 import DeleteMenuDialog from "@/components/menus/delete-menu-dialog"
 import MenuCard from "@/components/menus/menu-card"
 import PageContainer from "@/components/page-container"
 import { Button } from "@/components/ui/button"
-import { DialogTrigger } from "@/components/ui/dialog"
 import {
   Empty,
   EmptyContent,
@@ -49,40 +47,37 @@ export default function Index({ menus }: MenuProps) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Mis Platos" />
 
-      <CreateMenuDialog>
-        {/* Agregamos un diálogo al lado del título para mostrar el formulario de crear platos */}
-        <PageContainer
-          eyebrow="Vista de todos los platos"
-          title="Mis platos"
-          actions={
-            <DialogTrigger className="ml-auto" asChild>
-              <Button>Agregar plato</Button>
-            </DialogTrigger>
-          }
-        >
-          {/* Listamos los platos y creamos un diálogo para confirmar si eliminarlos. */}
-          {menus.length == 0 ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyTitle>No hay platos aún</EmptyTitle>
-                <EmptyDescription>
-                  No creaste ningún plato todavía. Creá el primero ahora para
-                  poder publicar tu menú.
-                </EmptyDescription>
-                <EmptyContent>
-                  <DialogTrigger asChild>
-                    <Button>Agregar plato</Button>
-                  </DialogTrigger>
-                </EmptyContent>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <DeleteMenuDialog name={deletingMenu.name} id={deletingMenu.id}>
-              <div className="grid grid-cols-2 gap-2">{menusJSX}</div>
-            </DeleteMenuDialog>
-          )}
-        </PageContainer>
-      </CreateMenuDialog>
+      <PageContainer
+        eyebrow="Vista de todos los platos"
+        title="Mis platos"
+        actions={
+          <Button className="ml-auto" asChild>
+            <Link href={menusRoutes.new().url}>Agregar plato</Link>
+          </Button>
+        }
+      >
+        {/* Listamos los platos y creamos un diálogo para confirmar si eliminarlos. */}
+        {menus.length == 0 ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>No hay platos aún</EmptyTitle>
+              <EmptyDescription>
+                No creaste ningún plato todavía. Creá el primero ahora para
+                poder publicar tu menú.
+              </EmptyDescription>
+              <EmptyContent>
+                <Button asChild>
+                  <Link href={menusRoutes.new().url}>Agregar plato</Link>
+                </Button>
+              </EmptyContent>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <DeleteMenuDialog name={deletingMenu.name} id={deletingMenu.id}>
+            <div className="grid grid-cols-2 gap-2">{menusJSX}</div>
+          </DeleteMenuDialog>
+        )}
+      </PageContainer>
     </AppLayout>
   )
 }

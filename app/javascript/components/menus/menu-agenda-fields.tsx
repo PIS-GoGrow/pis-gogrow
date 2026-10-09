@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next"
 
+import { DatePicker, DateRangePicker } from "@/components/date-picker"
 import {
   Field,
   FieldError,
@@ -160,49 +161,48 @@ export default function MenuAgendaFields({
 
       {hasDays && (
         <div className="flex flex-col gap-3">
-          {value.mode === "single" ? (
-            <Field className="max-w-48">
+          {value.mode === "single" && (
+            <Field>
               <FieldLabel htmlFor="agenda-date">
                 {t("pages.provider_menus.edit.agenda.date")}
               </FieldLabel>
-              <Input
+              <DatePicker
                 id="agenda-date"
-                type="date"
+                value={value.date}
                 min={today}
                 max={maximumPublishDate}
-                value={value.date}
-                onChange={(e) => changeDate(e.target.value)}
+                weekdaysOnly
+                onChange={changeDate}
               />
             </Field>
-          ) : (
-            <Field className="max-w-48">
+          )}
+
+          {value.mode === "weekly" && (
+            <Field>
               <FieldLabel htmlFor="agenda-starts-on">
                 {t("pages.provider_menus.edit.agenda.starts_on")}
               </FieldLabel>
-              <Input
+              <DatePicker
                 id="agenda-starts-on"
-                type="date"
-                min={today}
                 value={value.starts_on}
-                onChange={(e) =>
-                  onChange({ ...value, starts_on: e.target.value })
-                }
+                min={today}
+                onChange={(starts_on) => onChange({ ...value, starts_on })}
               />
             </Field>
           )}
 
           {value.mode === "range" && (
-            <Field className="max-w-48">
-              <FieldLabel htmlFor="agenda-ends-on">
-                {t("pages.provider_menus.edit.agenda.ends_on")}
+            <Field>
+              <FieldLabel htmlFor="agenda-range">
+                {t("pages.provider_menus.edit.agenda.range")}
               </FieldLabel>
-              <Input
-                id="agenda-ends-on"
-                type="date"
-                min={value.starts_on || today}
-                value={value.ends_on}
-                onChange={(e) =>
-                  onChange({ ...value, ends_on: e.target.value })
+              <DateRangePicker
+                id="agenda-range"
+                from={value.starts_on}
+                to={value.ends_on}
+                min={today}
+                onChange={(starts_on, ends_on) =>
+                  onChange({ ...value, starts_on, ends_on })
                 }
               />
             </Field>
