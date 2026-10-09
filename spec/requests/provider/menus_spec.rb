@@ -205,6 +205,42 @@ RSpec.describe "Provider::Menus", type: :request do
         )
       end
 
+      # IBP-054: los bordes del rango, de a un dato inválido por vez.
+      def program_single_day(date, amount: 6)
+        post provider_menus_path, params: {
+          menu: dish,
+          agenda: { mode: "single", date:, weekdays: [ Date.iso8601(date).cwday ], amount: }
+        }
+      end
+
+      it "programs a single day for today" do
+        expect { program_single_day("2030-01-09") }.to change(Schedule, :count).by(1)
+      end
+
+      it "programs a single day on the last allowed date" do
+        expect { program_single_day("2030-01-18") }.to change(Schedule, :count).by(1)
+      end
+
+      {
+        "a past date" => "2030-01-08",
+        "the first weekday after the last allowed date" => "2030-01-21",
+        "a Saturday" => "2030-01-12"
+      }.each do |label, date|
+        it "does not create the dish for #{label}" do
+          expect { program_single_day(date) }.not_to change(Menu, :count)
+
+          follow_redirect!
+          expect(inertia.props[:errors][:agenda]).to eq([ I18n.t("validations.menu_agenda.invalid_date") ])
+        end
+      end
+
+      it "does not create the dish with zero stock" do
+        expect { program_single_day("2030-01-10", amount: 0) }.not_to change(Menu, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors][:agenda]).to eq([ I18n.t("validations.menu_agenda.invalid_amount") ])
+      end
+
       it "returns the dish and agenda errors together" do
         expect do
           post provider_menus_path, params: {
