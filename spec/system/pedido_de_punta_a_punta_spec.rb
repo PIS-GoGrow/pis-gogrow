@@ -16,6 +16,11 @@ require "rails_helper"
 # menú publicado para IBP-051 CA5 ("queda registrada"). Historia: IBP-051 "editar
 # menús".
 #
+# TODO(integración): falta implementar cambiar el stock de un plato en un día ya
+# publicado antes de poder testear esa parte de IBP-051 CA2. Se hacía desde
+# "Editar menú" (update_by_date), que la #101 quitó; falta confirmar con el autor
+# si pasa a otra historia. Historia: IBP-051 "editar menús".
+#
 # TODO(integración): falta implementar el registro de qué campos cambiaron al
 # modificar un pedido (hoy solo se guardan modified_by y modified_at) antes de
 # poder testear esa parte de IBP-008 CA3. Historia: IBP-008 "modificar pedido".
@@ -507,6 +512,45 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
           expect(page).to have_button("Agregar", disabled: true)
         end
       end
+    end
+  end
+
+  describe "IBP-051 CA4: los empleados ven los cambios del menú publicado" do
+    let!(:wok_tuesday) { publish(p1_wok, tuesday) }
+
+    it "muestra el plato que el proveedor agrega a un día ya publicado" do
+      sign_in p1_user, role: :provider
+      visit new_provider_menu_path(date: tuesday.iso8601)
+      without_animations
+      click_on "Platos guardados"
+      click_button "Agregar #{p1_milanesa.name} a la selección"
+      click_button "Agregar", exact: true
+      expect(page).to have_button("Agregar #{p1_milanesa.name} a la selección", disabled: true)
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+
+      expect(page).to have_content(p1_milanesa.name)
+      expect(page).to have_content(p1_wok.name)
+    end
+
+    it "deja de mostrar el plato que el proveedor quita de un día" do
+      publish(p1_milanesa, tuesday)
+      open_menu(as: e1_user, day: tuesday)
+      expect(page).to have_content(p1_milanesa.name)
+      sign_out
+
+      sign_in p1_user, role: :provider
+      open_publication_day(tuesday)
+      within(find("[data-slot=card]", text: p1_milanesa.name)) { click_button "Quitar" }
+      within("[role=dialog]") { click_button "Quitar" }
+      expect(page).to have_content("Plato quitado del menú.")
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+
+      expect(page).to have_no_content(p1_milanesa.name)
+      expect(page).to have_content(p1_wok.name)
     end
   end
 

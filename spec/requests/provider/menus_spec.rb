@@ -730,4 +730,76 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(response).to have_http_status(:not_found)
     end
   end
+
+  # IBP-051 CA3: es el camino que usa "Agregar platos → Platos guardados".
+  describe "POST /provider/menus/publish" do
+    let(:milanesa) { menus(:milanesa) }
+
+    before do
+      travel_to Date.new(2030, 1, 9)
+      sign_in provider_user, role: :provider
+    end
+
+    def publish(date, menus = [ milanesa ])
+      post publish_provider_menus_path, params: { date:, menu_ids: menus.map(&:id) }
+    end
+
+    it "publica los platos elegidos en la fecha" do
+      wok = provider.menus.create!(name: "Wok", description: "De vegetales", price: 290)
+
+      expect { publish("2030-01-10", [ milanesa, wok ]) }.to change(Schedule, :count).by(2)
+
+      expect(response).to redirect_to(new_provider_menu_path)
+      expect(Schedule.where(date: Date.new(2030, 1, 10)).pluck(:menu_id)).to contain_exactly(milanesa.id, wok.id)
+    end
+
+    it "publica para hoy" do
+      expect { publish("2030-01-09") }.to change(Schedule, :count).by(1)
+    end
+
+    it "publica en el último día permitido" do
+      expect { publish("2030-01-18") }.to change(Schedule, :count).by(1)
+    end
+
+    {
+      "una fecha pasada" => "2030-01-08",
+      "el primer día hábil después del tope" => "2030-01-21",
+      "un sábado" => "2030-01-12",
+      "un domingo" => "2030-01-13",
+      "una fecha mal escrita" => "nope"
+    }.each do |label, date|
+      it "no publica en #{label}" do
+        expect { publish(date) }.not_to change(Schedule, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors]).to have_key(:date)
+      end
+    end
+
+    it "no publica platos de otro proveedor" do
+      sorrentinos = menus(:sorrentinos)
+
+      expect { publish("2030-01-10", [ sorrentinos ]) }.not_to change(Schedule, :count)
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to have_key(:menu_ids)
+    end
+
+    it "no publica nada si uno de los platos es de otro proveedor" do
+      expect { publish("2030-01-10", [ milanesa, menus(:sorrentinos) ]) }.not_to change(Schedule, :count)
+    end
+
+    it "no publica dos veces el mismo plato el mismo día" do
+      publish("2030-01-10")
+
+      expect { publish("2030-01-10") }.not_to change(Schedule, :count)
+    end
+
+    it "no deja publicar a un empleado" do
+      sign_in users(:one), role: :consumer
+
+      expect { publish("2030-01-10") }.not_to change(Schedule, :count)
+      expect(response).to redirect_to(root_path)
+    end
+  end
 end
