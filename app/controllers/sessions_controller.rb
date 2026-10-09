@@ -24,7 +24,7 @@ class SessionsController < InertiaController
       @session = user.sessions.create!(role: role)
       cookies.signed.permanent[:session_token] = { value: @session.id, httponly: true }
 
-      redirect_to dashboard_path, notice: t("flash.signed_in")
+      redirect_to root_path, notice: t("flash.signed_in")
     else
       redirect_to sign_in_path, alert: t("flash.incorrect_credentials")
     end

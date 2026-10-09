@@ -281,10 +281,6 @@ end
 
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 
-notification_configuration = NotificationConfiguration.create!(
-  description: "Notificaciones de orden en camino"
-)
-notification_configuration.consumers << consumer
 
 # Cobros del proveedor en distintos estados, para que la pantalla no se vea
 # toda pendiente. Las cuentas ya las crearon los pedidos de más arriba.
