@@ -16,13 +16,29 @@ RSpec.describe "Sessions", type: :request do
       get sign_in_path
       expect(response).to redirect_to(root_path)
     end
+
+    it "hides the password form unless the test login is enabled" do
+      get sign_in_path
+
+      expect(inertia).to render_component("sessions/new")
+      expect(inertia.props[:dev_login_enabled]).to be(false)
+    end
+
+    it "shows the password form when the test login is enabled" do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("DEV_LOGIN_ENABLED", "false").and_return("true")
+
+      get sign_in_path
+
+      expect(inertia.props[:dev_login_enabled]).to be(true)
+    end
   end
 
   describe "POST /sign_in" do
     context "with valid credentials" do
       it "signs in and sets a session cookie" do
         post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*" }
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(root_path)
         expect(cookies[:session_token]).to be_present
 
         get dashboard_path
@@ -38,6 +54,24 @@ RSpec.describe "Sessions", type: :request do
 
         get dashboard_path
         expect(response).to redirect_to(sign_in_path)
+      end
+    end
+
+    context "with a provider account" do
+      it "opens the session with the provider role" do
+        post sign_in_path, params: { email: users(:provider_user).email, password: "Secret1*3*5*" }
+
+        expect(response).to redirect_to(root_path)
+        expect(users(:provider_user).sessions.last.role).to eq("provider")
+      end
+    end
+
+    context "with an HR account" do
+      it "opens the session with the admin role" do
+        post sign_in_path, params: { email: users(:admin).email, password: "Secret1*3*5*" }
+
+        expect(response).to redirect_to(root_path)
+        expect(users(:admin).sessions.last.role).to eq("admin")
       end
     end
 

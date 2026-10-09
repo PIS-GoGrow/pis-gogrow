@@ -902,6 +902,8 @@ es:
         heading: "Inicia sesión en tu cuenta"
         description: "Ingresa con tu cuenta de Google para continuar"
         continue_with_google: "Continuar con Google"
+        or: "o"
+        submit: "Ingresar"
         auth_error_title: "No pudimos iniciar tu sesión"
         forgot_password: "¿Olvidaste tu contraseña?"
         no_account: "¿No tienes una cuenta?"
