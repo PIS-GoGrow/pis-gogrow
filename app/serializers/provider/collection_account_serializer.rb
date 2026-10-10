@@ -22,6 +22,11 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   attribute :status, &:collection_status
 
   typelize :boolean
+  attribute :can_approve_payment do |row|
+    row.collection_status == "submitted" && !row.account.current?
+  end
+
+  typelize :boolean
   attribute :overdue, &:overdue?
 
   # Formateadas en el servidor: el SSR corre en UTC y el cliente no.
@@ -65,5 +70,6 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   # Solo la cuenta de la empresa lleva factura: es la que le cobra el subsidio a GoGrow.
   typelize invoice: [ nullable: true ]
   has_one :latest_invoice, key: :invoice, resource: Provider::InvoiceSerializer
+  has_many :orders, resource: Provider::CollectionOrderSerializer
   has_many :payments, resource: Provider::CollectionPaymentSerializer
 end

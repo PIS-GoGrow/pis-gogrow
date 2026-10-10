@@ -1,16 +1,17 @@
 import { router } from "@inertiajs/react"
 import type { ReactNode } from "react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogFooter,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+} from "@/components/adaptable-dialog"
+import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
@@ -36,6 +37,8 @@ export default function RejectPaymentDialog({
   paymentId,
   onRejected,
 }: RejectPaymentDialogProps) {
+  const { t } = useTranslation()
+  const page = "pages.provider_collections.review"
   const [open, setOpen] = useState(false)
   const [selectedReason, setSelectedReason] = useState<string>(
     REJECTION_REASONS[0],
@@ -53,7 +56,7 @@ export default function RejectPaymentDialog({
   }
 
   function handleReject() {
-    if (!canSubmit) return
+    if (!canSubmit || processing) return
 
     setProcessing(true)
 
@@ -73,7 +76,7 @@ export default function RejectPaymentDialog({
   }
 
   return (
-    <Dialog
+    <AdaptableDialog
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen)
@@ -82,15 +85,17 @@ export default function RejectPaymentDialog({
     >
       {children}
 
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Rechazar comprobante</DialogTitle>
-          <DialogDescription>
-            Elegí el motivo del rechazo. El empleado va a ver este mensaje.
-          </DialogDescription>
-        </DialogHeader>
+      <AdaptableDialogContent>
+        <AdaptableDialogHeader>
+          <AdaptableDialogTitle>
+            {t(`${page}.issue_title`)}
+          </AdaptableDialogTitle>
+          <AdaptableDialogDescription>
+            {t(`${page}.issue_description`)}
+          </AdaptableDialogDescription>
+        </AdaptableDialogHeader>
 
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 px-4 sm:px-0">
           {REJECTION_REASONS.map((reason) => (
             <label
               key={reason}
@@ -131,7 +136,7 @@ export default function RejectPaymentDialog({
           </label>
 
           {isOther && (
-            <Field className="pl-9">
+            <Field>
               <FieldLabel htmlFor="custom-reason" className="sr-only">
                 Motivo
               </FieldLabel>
@@ -145,16 +150,29 @@ export default function RejectPaymentDialog({
           )}
         </div>
 
-        <DialogFooter className="sm:justify-start">
+        <AdaptableDialogFooter className="flex-row gap-3 px-4 pb-4 sm:justify-start sm:p-0">
           <Button
-            className="flex-1 bg-black text-white hover:bg-black/90"
+            variant="secondary"
+            className="h-12 min-w-0 flex-1 whitespace-normal"
+            disabled={processing}
+            onClick={() => {
+              setOpen(false)
+              resetForm()
+            }}
+          >
+            {t(`${page}.back`)}
+          </Button>
+          <Button
+            className="h-12 min-w-0 flex-1 whitespace-normal"
             size="sm"
+            disabled={!canSubmit || processing}
+            aria-busy={processing}
             onClick={handleReject}
           >
-            {processing ? "Rechazando..." : "Rechazar comprobante"}
+            {t(`${page}.${processing ? "rejecting" : "reject_receipt"}`)}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AdaptableDialogFooter>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }
