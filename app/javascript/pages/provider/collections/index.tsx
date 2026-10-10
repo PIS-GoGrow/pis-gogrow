@@ -97,7 +97,7 @@ export default function Index({
 
     // items-start: al desplegar una tarjeta, su vecina de fila no se estira.
     return (
-      <div className="grid items-start gap-4 lg:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
         {shown.map((group) => (
           <CollectionGroupCard
             key={group.key}
@@ -186,7 +186,10 @@ export default function Index({
           </div>
 
           <PaymentReviewResultProvider value={setReviewResult}>
-            <TabsContent value="pending" className="grid gap-4">
+            <TabsContent
+              value="pending"
+              className="grid min-w-0 grid-cols-1 gap-4"
+            >
               <Stat
                 label={t("pages.provider_collections.index.outstanding")}
                 badge={

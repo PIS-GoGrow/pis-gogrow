@@ -50,6 +50,10 @@ class ProviderCollectionSummary
     end
   end
 
+  IndexAccountRow = Data.define(:account_row, :orders) do
+    delegate_missing_to :account_row
+  end
+
   Group = Data.define(:client, :month, :company_row, :employee_rows, :meals) do
     def rows = [ company_row, *employee_rows ].compact
 
@@ -140,10 +144,9 @@ class ProviderCollectionSummary
   def accounts
     @accounts ||= begin
       records = @provider.accounts.preload(
-        :payments,
         :owner,
-        invoices: { file_attachment: :blob },
-        orders: [ { consumer: :user }, { schedule: :menu } ]
+        payments: { receipt_attachment: :blob },
+        invoices: { file_attachment: :blob }
       ).to_a
 
       # owner es polimórfico y Company no responde a :user, así que los
@@ -159,7 +162,7 @@ class ProviderCollectionSummary
     @current_month_orders ||= Order.confirmed
       .joins(schedule: :menu)
       .where(menus: { provider_id: @provider.id }, schedules: { date: Date.current.all_month })
-      .preload(consumer: [ :user, :company ])
+      .preload(:schedule, consumer: [ :user, :company ])
       .to_a
   end
 
@@ -189,10 +192,29 @@ class ProviderCollectionSummary
   end
 
   def groups
-    @groups ||=
-      rows.group_by { [ client_of(it.account), it.month ] }
+    @groups ||= begin
+      grouped = rows.group_by { [ client_of(it.account), it.month ] }
           .map { |(client, month), group_rows| build_group(client, month, group_rows) }
           .sort_by { [ -it.month.jd, it.client.name ] }
+
+      pending_accounts = grouped.reject(&:settled?).flat_map(&:rows).map(&:account)
+      if pending_accounts.any?
+        ActiveRecord::Associations::Preloader.new(records: pending_accounts, associations: :orders, scope: Order.confirmed).call
+        orders = pending_accounts.flat_map { it.orders.to_a }.uniq(&:id)
+        ActiveRecord::Associations::Preloader.new(records: orders, associations: [ { consumer: :user }, { schedule: :menu } ]).call if orders.any?
+      end
+
+      grouped.map do |group|
+        group.with(
+          company_row: group.company_row && index_row(group.company_row, settled: group.settled?),
+          employee_rows: group.employee_rows.map { index_row(it, settled: group.settled?) }
+        )
+      end
+    end
+  end
+
+  def index_row(row, settled:)
+    IndexAccountRow.new(account_row: row, orders: settled ? [] : row.orders)
   end
 
   def build_group(client, month, group_rows)

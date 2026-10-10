@@ -3,12 +3,12 @@ import { Eye, TriangleAlert } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import { AdaptableDialogTrigger } from "@/components/adaptable-dialog"
 import CollectionAccountDetailDialog from "@/components/collections/collection-account-detail-dialog"
 import CollectionPaymentHistory from "@/components/collections/collection-payment-history"
 import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { SheetTrigger } from "@/components/ui/sheet"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { providerCollections } from "@/routes"
@@ -56,8 +56,17 @@ export default function CollectionAccountPanel({
             <span className="text-muted-foreground">{account.month}</span>
             {aside ??
               (account.status !== "approved" && (
-                <span className="flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
-                  <TriangleAlert className="size-3.5" aria-hidden="true" />
+                <span
+                  className={cn(
+                    "flex items-center gap-1.5 text-xs",
+                    account.overdue
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {account.overdue && (
+                    <TriangleAlert className="size-3.5" aria-hidden="true" />
+                  )}
                   {t("pages.provider_collections.group.due", {
                     date: account.due_date,
                   })}
@@ -99,13 +108,15 @@ export default function CollectionAccountPanel({
           receiptUrl={account.receipt_url ?? ""}
           contentType={account.receipt_content_type}
           filename={account.owner_name}
+          expectedAmount={account.amount}
+          canApprove={account.can_approve_payment}
         >
-          <SheetTrigger asChild>
+          <AdaptableDialogTrigger asChild>
             <Button className="w-full">Revisar pago</Button>
-          </SheetTrigger>
+          </AdaptableDialogTrigger>
         </PaymentReviewSheet>
       )}
-      {showPaymentHistory && (
+      {(showPaymentHistory || account.status === "rejected") && (
         <CollectionPaymentHistory
           payments={account.payments}
           showDownloadAll={showDownloadAll}

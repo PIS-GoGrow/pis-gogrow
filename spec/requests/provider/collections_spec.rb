@@ -53,22 +53,35 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(props[:outstanding]).to include(total: 1202.0, meals: 4)
     end
 
-    it "includes the confirmed sales detail grouped by delivery day" do
-      sign_in provider_user, role: :provider
+    %i[beginning_of_month end_of_month].each do |boundary|
+      it "includes the confirmed sales detail grouped by delivery day at #{boundary}" do
+        month = Date.current.beginning_of_month
+        dates = month.all_month.reject { it == schedules(:today).date }
+        schedules(:past).update!(date: dates.first)
+        schedules(:future).update!(date: dates.last)
 
-      get provider_collections_path
+        travel_to Time.zone.local(month.year, month.month, month.public_send(boundary).day, 12) do
+          sign_in provider_user, role: :provider
 
-      detail = props[:sales_detail]
-      detail_orders = detail[:days].flat_map { it[:orders] }
+          get provider_collections_path
 
-      expect(detail[:month]).to eq(I18n.l(Date.current.beginning_of_month, format: :month_name_year))
-      expect(detail[:clients]).to eq([ { id: companies(:gogrow).id, name: "GoGrow" } ])
-      expect(detail_orders.pluck(:id)).to match_array(
-        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
-      )
-      expect(detail_orders.sum { it[:meals] }).to eq(4)
-      expect(detail_orders.sum { it[:amount] }).to eq(1202.0)
-      expect(detail[:days].pluck(:date)).to eq(detail[:days].pluck(:date).sort.reverse)
+          expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 })
+          expect(inertia).to have_props { |page|
+            detail = page[:sales_detail]
+            detail_orders = detail[:days].flat_map { it[:orders] }
+
+            expect(detail[:month]).to eq(I18n.l(month, format: :month_name_year))
+            expect(detail[:clients]).to eq([ { "id" => companies(:gogrow).id, "name" => "GoGrow" } ])
+            expect(detail_orders.pluck(:id)).to match_array(
+              [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
+            )
+            expect(detail_orders.sum { it[:meals] }).to eq(4)
+            expect(detail_orders.sum { it[:amount] }).to eq(1202.0)
+            expect(detail[:days].pluck(:date)).to eq([ dates.last, dates.first ].map { it.strftime("%d/%m") })
+            true
+          }
+        end
+      end
     end
 
     it "groups what each client owes by month, with the company and its employees" do
@@ -241,6 +254,31 @@ RSpec.describe "Provider::Collections", type: :request do
   end
 
   describe "GET /provider/collections/:id" do
+    it "keeps the individual orders available after the group is settled" do
+      current_accounts = providers(:tuviandita).accounts.current
+      current_accounts.each do |account|
+        account.payments.destroy_all
+        account.payments.create!(provider: account.provider, status: :approved)
+      end
+      account = accounts(:gogrow_tuviandita_current)
+      order_ids = account.orders.confirmed.ids
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      expect(inertia).to have_props { |page|
+        page[:history].any? { it[:company]&.slice(:id, :status, :orders) == { "id" => account.id, "status" => "approved", "orders" => [] } }
+      }
+
+      get provider_collection_path(account)
+
+      expect(inertia).to render_component("provider/collections/show")
+      expect(inertia).to have_props { |page|
+        page[:orders].pluck(:id).sort == order_ids.sort &&
+          page[:account][:status] == "approved" && page[:account][:orders].pluck(:id).sort == order_ids.sort
+      }
+    end
+
     it "shows the orders and the payments that make up the total" do
       sign_in provider_user, role: :provider
 

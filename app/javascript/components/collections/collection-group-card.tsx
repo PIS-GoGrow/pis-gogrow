@@ -59,18 +59,22 @@ function OwnerGroup({
 
   return (
     <Collapsible>
-      <CollapsibleTrigger className="group flex w-full items-center gap-3 py-2 text-left">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+      <CollapsibleTrigger className="group grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 py-2 text-left min-[375px]:flex min-[375px]:gap-3">
+        <span className="row-span-2 flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
           <Icon className="size-5" aria-hidden="true" />
         </span>
 
-        <span className="grid flex-1 justify-items-start gap-1">
+        <span className="grid min-w-0 flex-1 justify-items-start gap-1">
           <span className="text-sm font-semibold">{title}</span>
           <StatusBadge status={status} kind="payment" />
         </span>
 
-        <span className="font-semibold">{formatMoney(amount)}</span>
-        <Chevron />
+        <span className="col-start-2 row-start-2 min-w-0 font-semibold wrap-anywhere">
+          {formatMoney(amount)}
+        </span>
+        <span className="col-start-3 row-start-1 shrink-0">
+          <Chevron />
+        </span>
       </CollapsibleTrigger>
 
       <CollapsibleContent className="grid gap-2 pt-2">
@@ -100,7 +104,7 @@ export default function CollectionGroupCard({
     group.total > 0 ? (group.confirmed_total / group.total) * 100 : 0
 
   return (
-    <Card className="gap-4 py-4">
+    <Card className="min-w-0 gap-4 py-4">
       <CardHeader className="px-4">
         <div className="flex items-center gap-3">
           <Avatar size="lg">
@@ -109,13 +113,15 @@ export default function CollectionGroupCard({
             </AvatarFallback>
           </Avatar>
 
-          <CardTitle className="text-lg">{group.client_name}</CardTitle>
+          <CardTitle className="min-w-0 text-lg wrap-anywhere">
+            {group.client_name}
+          </CardTitle>
         </div>
       </CardHeader>
 
       <CardContent className="grid gap-4 px-4">
         <div className="grid gap-2">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-muted-foreground text-sm">
               {t("pages.provider_collections.group.total")}
             </span>
@@ -181,7 +187,7 @@ export default function CollectionGroupCard({
                 {group.employees.map((employee) => (
                   <Collapsible key={employee.id} className="rounded-lg border">
                     <CollapsibleTrigger className="group flex w-full items-center gap-3 px-3 py-2.5 text-left">
-                      <span className="flex-1 text-sm">
+                      <span className="min-w-0 flex-1 text-sm wrap-anywhere">
                         {employee.owner_name}
                       </span>
 

@@ -164,7 +164,7 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="pb-2">
                     <div className="overflow-hidden rounded-xl border">
-                      <Table className="table-fixed">
+                      <Table className="min-w-[35rem] table-fixed">
                         <TableHeader className="bg-muted/70">
                           <TableRow>
                             <TableHead className="w-[34%]">
@@ -184,10 +184,10 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
                         <TableBody>
                           {day.orders.map((order) => (
                             <TableRow key={order.id}>
-                              <TableCell className="truncate">
+                              <TableCell className="wrap-anywhere whitespace-normal">
                                 {order.consumer_name}
                               </TableCell>
-                              <TableCell className="truncate">
+                              <TableCell className="wrap-anywhere whitespace-normal">
                                 {order.client_name}
                               </TableCell>
                               <TableCell className="text-center">

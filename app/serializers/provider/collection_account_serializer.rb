@@ -22,6 +22,11 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   attribute :status, &:collection_status
 
   typelize :boolean
+  attribute :can_approve_payment do |row|
+    row.collection_status == "submitted" && !row.account.current?
+  end
+
+  typelize :boolean
   attribute :overdue, &:overdue?
 
   # Formateadas en el servidor: el SSR corre en UTC y el cliente no.

@@ -12,8 +12,8 @@ import {
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
 import StatusBadge from "@/components/status-badge"
+import TextLink from "@/components/text-link"
 import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
 import {
   Table,
   TableBody,
@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
+import { providerCollections } from "@/routes"
 import type {
   ProviderCollectionAccount,
   ProviderCollectionOrder,
@@ -34,7 +35,6 @@ interface CollectionAccountDetailDialogProps {
 }
 
 const page = "pages.provider_collections.group.detail_dialog"
-const VAT_RATE = 0.22
 
 function shortDate(date: string | null) {
   return date?.split("/").slice(0, 2).join("/") ?? "-"
@@ -63,7 +63,7 @@ function ConsumptionTable({
 
   return (
     <div className="overflow-hidden rounded-xl border">
-      <Table className="table-fixed">
+      <Table className="min-w-[33rem] table-fixed">
         <TableHeader className="bg-muted/70">
           <TableRow>
             <TableHead className="w-[17%]">{t(`${page}.date`)}</TableHead>
@@ -80,7 +80,9 @@ function ConsumptionTable({
           {account.orders.map((order) => (
             <TableRow key={order.id}>
               <TableCell>{shortDate(order.delivery_date)}</TableCell>
-              <TableCell className="truncate">{order.menu_name}</TableCell>
+              <TableCell className="wrap-anywhere whitespace-normal">
+                {order.menu_name}
+              </TableCell>
               <TableCell className="text-center">{order.amount}</TableCell>
               <TableCell className="text-right">
                 {formatMoney(amountOf(order))}
@@ -109,28 +111,16 @@ function CompanyCollection({
 }) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
-  const vat = account.amount * VAT_RATE
-  const total = account.amount + vat
 
   return (
     <div className="grid gap-4 rounded-lg border p-3">
       <dl className="grid gap-3 text-sm">
-        <div className="grid gap-1">
-          <dt className="text-muted-foreground">{t(`${page}.subtotal`)}</dt>
-          <dd className="font-semibold">{formatMoney(account.amount)}</dd>
-        </div>
-        <Separator />
-        <div className="grid gap-1">
-          <dt className="text-muted-foreground">{t(`${page}.vat`)}</dt>
-          <dd className="font-semibold">{formatMoney(vat)}</dd>
-        </div>
-        <Separator className="bg-foreground/50" />
         <div className="flex items-end justify-between gap-3">
           <div className="grid gap-1">
             <dt className="text-muted-foreground">
               {t(`${page}.total_label`)}
             </dt>
-            <dd className="font-semibold">{formatMoney(total)}</dd>
+            <dd className="font-semibold">{formatMoney(account.amount)}</dd>
           </div>
           <StatusBadge status={account.status} kind="payment" />
         </div>
@@ -189,7 +179,15 @@ export default function CollectionAccountDetailDialog({
           )}
         </div>
 
-        <AdaptableDialogFooter className="p-4">
+        <AdaptableDialogFooter className="p-4 sm:flex-col">
+          {account.payments.length > 0 && (
+            <TextLink
+              href={providerCollections.show(account.id)}
+              className="self-center text-sm"
+            >
+              {t(`${page}.payment_history`)}
+            </TextLink>
+          )}
           <AdaptableDialogClose asChild>
             <Button className="w-full">{t(`${page}.close`)}</Button>
           </AdaptableDialogClose>
