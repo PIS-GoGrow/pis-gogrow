@@ -63,13 +63,22 @@ export function priceItems(items: PricedItem[], benefit: Benefit): Pricing {
       const units =
         left === null ? item.quantity : Math.min(item.quantity, left)
       if (left !== null) specialLeft.set(special.id, left - units)
-      coverage.push({ name: special.name, percentage: special.percentage, units })
+      coverage.push({
+        name: special.name,
+        percentage: special.percentage,
+        units,
+      })
     })
 
     const tiers: DiscountTier[] = []
     for (let unit = 0; unit < item.quantity; unit++) {
-      const activeBenefits = coverage.filter((entry) => unit < entry.units && entry.percentage > 0)
-      const totalPercentage = activeBenefits.reduce((sum, entry) => sum + entry.percentage, 0)
+      const activeBenefits = coverage.filter(
+        (entry) => unit < entry.units && entry.percentage > 0,
+      )
+      const totalPercentage = activeBenefits.reduce(
+        (sum, entry) => sum + entry.percentage,
+        0,
+      )
 
       if (totalPercentage === 0) {
         fullPriceQuantity += 1
@@ -79,14 +88,18 @@ export function priceItems(items: PricedItem[], benefit: Benefit): Pricing {
       // Si la suma supera 100%, se respeta el tope de 100%
       let remainingAllowed = 100
       activeBenefits.forEach((entry) => {
-        const applicablePercentage = Math.min(entry.percentage, remainingAllowed)
+        const applicablePercentage = Math.min(
+          entry.percentage,
+          remainingAllowed,
+        )
         remainingAllowed -= applicablePercentage
 
         if (applicablePercentage <= 0) return
 
         const discount = (item.price * applicablePercentage) / 100
         const existing = tiers.find(
-          (t) => t.name === entry.name && t.percentage === applicablePercentage,
+          (t) =>
+            t.name === entry.name && t.percentage === applicablePercentage,
         )
         if (existing) {
           existing.quantity += 1
