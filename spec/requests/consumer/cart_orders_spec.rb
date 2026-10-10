@@ -173,16 +173,16 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   end
 
   describe "Integridad en la base de datos y rollback atómico del carrito" do
+    let(:schedule) { schedules(:today) }
+
     before do
+      schedule.update!(date: Calendar.new.allowed_order_dates.begin)
       sign_in consumer_user, role: :consumer
     end
 
     it "no persiste órdenes parciales si uno de los platos del carrito falla por falta de stock" do
-      sold_out_schedule = Schedule.create!(
-        menu: menus(:office_menu),
-        date: schedule.date,
-        amount: 0
-      )
+      sold_out_schedule = schedules(:office)
+      sold_out_schedule.update!(date: schedule.date, amount: 0)
 
       expect {
         post orders_path, params: {
