@@ -6,6 +6,7 @@ class Consumer::ProfilesController < Consumer::InertiaController
   def show
     consumer = Current.user.consumer
     benefit = consumer.current_monthly_benefit
+    @benefit_summary = OrderPricing.new(consumer).summary
 
     @benefit = benefit && {
       percentage: benefit.percentage.to_i,

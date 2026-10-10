@@ -2,6 +2,7 @@ import { Head, router, usePage } from "@inertiajs/react"
 import { LogOut } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import BenefitSummaryCard from "@/components/benefit-summary-card"
 import PageContainer from "@/components/page-container"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -20,7 +21,10 @@ function Row({ label, value }: { label: string; value: string }) {
   )
 }
 
-export default function Show({ benefit }: ConsumerProfilesShow) {
+export default function Show({
+  benefit,
+  benefit_summary,
+}: ConsumerProfilesShow) {
   const { t } = useTranslation()
   const { auth } = usePage().props
   const getInitials = useInitials()
@@ -77,21 +81,16 @@ export default function Show({ benefit }: ConsumerProfilesShow) {
           </div>
         </div>
 
-        <section aria-labelledby="benefit-title">
-          <h3 id="benefit-title" className="mb-3 text-xl font-bold">
-            {t(`${page}.benefit`)}
-          </h3>
+        <section aria-labelledby="benefit-title" className="grid gap-3">
+          <BenefitSummaryCard
+            title={t(`${page}.benefit`)}
+            titleId="benefit-title"
+            summary={benefit_summary}
+            empty={t(`${page}.no_benefit`)}
+          />
 
-          {benefit == null ? (
-            <p className="text-muted-foreground text-sm">
-              {t(`${page}.no_benefit`)}
-            </p>
-          ) : (
+          {benefit != null && (
             <dl className="border-t">
-              <Row
-                label={t(`${page}.percentage`)}
-                value={`${benefit.percentage} %`}
-              />
               <Row
                 label={t(`${page}.monthly_limit`)}
                 value={t(`${page}.meals`, { count: benefit.monthly_limit })}

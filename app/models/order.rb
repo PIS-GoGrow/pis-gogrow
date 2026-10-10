@@ -90,25 +90,9 @@ class Order < ApplicationRecord
   after_update_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
   after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
 
-  # Solo las unidades subsidizadas llevan el descuento; el resto se cobra al
-  # precio de lista. subsidized_quantity nil significa todas.
-  def self.price_breakdown(unit_price:, quantity:, subsidized_quantity:, discount_percentage:)
-    subsidized_quantity = quantity if subsidized_quantity.nil?
-    subsidized_quantity = subsidized_quantity.clamp(0, quantity)
-
-    discounted_unit_price = unit_price * (100 - discount_percentage.clamp(0, 100)) / 100
-
-    [
-      unit_price * quantity,
-      (discounted_unit_price * subsidized_quantity + unit_price * (quantity - subsidized_quantity)).round(2)
-    ]
-  end
-
-  # Inicializa una orden, donde a una cantidad (subsidized_quantity) de las viandas
-  # pedidas se le aplican determinados beneficios (benefits), acumulando entre todos
-  # discount_percentage en total.
-  # Se asume que cada uno de los beneficios se aplica por igual a todas las viandas
-  # subsidiadas.
+  # Inicializa una orden con el precio que calculó OrderPricing. benefits es
+  # { Benefit => viandas que cubre }; sin discounted_price se cobra el precio de
+  # lista.
   def self.reserve(
     consumer:,
     schedule:,
@@ -116,17 +100,11 @@ class Order < ApplicationRecord
     address:,
     quantity: 1,
     notes: nil,
-    discount_percentage: 0,
-    subsidized_quantity: nil,
+    discounted_price: nil,
     selected_options: [],
-    benefits:
+    benefits: {}
   )
-    gross_price, discounted_price = price_breakdown(
-      unit_price: schedule.menu.price,
-      quantity:,
-      subsidized_quantity:,
-      discount_percentage:
-    )
+    price = schedule.menu.price * quantity
 
     order = new(
       consumer:,
@@ -134,14 +112,14 @@ class Order < ApplicationRecord
       amount: quantity,
       notes:,
       address:,
-      price: gross_price,
-      discounted_price:,
+      price:,
+      discounted_price: discounted_price || price,
       delivery_method:,
       selected_options:
     )
 
-    benefits.each do |benefit|
-      order.apply_benefit benefit, subsidized_quantity
+    benefits.each do |benefit, benefit_used|
+      order.apply_benefit benefit, benefit_used
     end
 
     return order unless order.valid?
@@ -237,52 +215,59 @@ class Order < ApplicationRecord
     modification_block_reason.nil?
   end
 
-  # El cupo del schedule y el tope mensual de viandas subsidiadas ya cuentan las
-  # unidades de esta orden, así que hay que devolvérselas antes de validar y de
-  # repartir el subsidio sobre el total nuevo: sin eso, pasar de 2 a 3 se
-  # rechazaría contra su propio consumo.
-  def modify(by:, quantity:, notes:, delivery:, discount_percentage: 0, remaining_subsidized: 0, selected_options: nil)
-    with_lock do
-      return false unless modifiable?
+  # El cupo del schedule y los beneficios ya cuentan las unidades de esta orden,
+  # así que hay que devolvérselas antes de validar y de repartir el subsidio
+  # sobre el total nuevo: sin eso, pasar de 2 a 3 se rechazaría contra su propio
+  # consumo. El consumidor se bloquea primero, como al crear el carrito, para
+  # que dos pedidos simultáneos no gasten los mismos usos de un beneficio.
+  def modify(by:, quantity:, notes:, delivery:, selected_options: nil)
+    transaction do
+      consumer.lock!
 
-      schedule.with_lock do
-        # Bajar o mantener cantidad no cuenta como pedir "de más": solo se
-        # bloquea si la publicación está agotada y encima se pide aumentar.
-        if schedule.remaining_amount + amount.to_i < quantity ||
-           (!schedule.available && quantity > amount.to_i)
-          errors.add(:base, I18n.t("validations.schedule_unavailable"))
-          return false
+      with_lock do
+        return false unless modifiable?
+
+        schedule.with_lock do
+          # Bajar o mantener cantidad no cuenta como pedir "de más": solo se
+          # bloquea si la publicación está agotada y encima se pide aumentar.
+          if schedule.remaining_amount + amount.to_i < quantity ||
+             (!schedule.available && quantity > amount.to_i)
+            errors.add(:base, I18n.t("validations.schedule_unavailable"))
+            return false
+          end
+
+          line = OrderPricing.new(consumer, held_by: self).call([ { schedule:, quantity: } ]).first
+
+          # El update tiene que ir antes de tocar los beneficios y cortar si
+          # falla: si una validación rechaza el cambio, los beneficios no se
+          # tocan y modify tiene que devolver false para que el controller
+          # reporte el error en vez de un "Pedido actualizado".
+          saved = update(
+            amount: quantity,
+            notes:,
+            price: line.price,
+            discounted_price: line.discounted_price,
+            selected_options: selected_options || self.selected_options,
+            modified_at: Time.current,
+            modified_by: by,
+            **delivery
+          )
+
+          return false unless saved
+
+          replace_benefits! line.benefits
+          true
         end
-
-        subsidized_quantity = [ quantity, remaining_subsidized + subsidized_units_held ].min
-        price, discounted_price = self.class.price_breakdown(
-          unit_price: schedule.menu.price,
-          quantity:,
-          subsidized_quantity:,
-          discount_percentage:
-        )
-
-        # El update tiene que ir antes del update_all y cortar si falla: si una
-        # validación rechaza el cambio, el beneficio no se toca y modify tiene
-        # que devolver false para que el controller reporte el error en vez de
-        # un "Pedido actualizado".
-        saved = update(
-          amount: quantity,
-          notes:,
-          price:,
-          discounted_price:,
-          selected_options: selected_options || self.selected_options,
-          modified_at: Time.current,
-          modified_by: by,
-          **delivery
-        )
-
-        return false unless saved
-
-        order_benefits.update_all benefit_used: subsidized_quantity
-        true
       end
     end
+  end
+
+  # El tope mensual solo mira las entregas del mes en curso, así que una orden
+  # para el mes que viene no tiene unidades que devolver.
+  def subsidized_units_held
+    return 0 unless schedule&.date&.then { Date.current.all_month.cover?(it) }
+
+    amount.to_i
   end
 
   # El lock no es por dinero: evita que un doble envío cancele dos veces y pise
@@ -454,12 +439,11 @@ class Order < ApplicationRecord
     owner.accounts.find_by(month:, provider:) || owner.accounts.create_or_find_by!(month:, provider:)
   end
 
-  # El tope mensual solo mira las entregas del mes en curso, así que una orden
-  # para el mes que viene no tiene unidades que devolver.
-  def subsidized_units_held
-    return 0 unless schedule&.date&.then { Date.current.all_month.cover?(it) }
-
-    amount.to_i
+  def replace_benefits!(benefits)
+    order_benefits.where.not(benefit_id: benefits.keys.map(&:id)).destroy_all
+    benefits.each do |benefit, benefit_used|
+      order_benefits.find_or_initialize_by(benefit:).update!(benefit_used:)
+    end
   end
 
   def sync_accounts

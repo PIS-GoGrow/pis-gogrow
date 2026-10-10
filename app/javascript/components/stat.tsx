@@ -5,6 +5,7 @@ import {
   CardAction,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
 } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -14,6 +15,7 @@ interface StatProps {
   value: ReactNode
   detail?: ReactNode
   badge?: ReactNode
+  action?: ReactNode
   className?: string
 }
 
@@ -22,6 +24,7 @@ export default function Stat({
   value,
   detail,
   badge,
+  action,
   className,
 }: StatProps) {
   return (
@@ -36,6 +39,7 @@ export default function Stat({
           <span className="text-muted-foreground text-sm">{detail}</span>
         )}
       </CardContent>
+      {action && <CardFooter className="px-4">{action}</CardFooter>}
     </Card>
   )
 }
