@@ -7,9 +7,10 @@ import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
-import type { Schedule, Selections } from "./consumer-types"
+import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
+import { type Benefit, cartPricedItem, priceItems } from "./pricing"
 
 interface Props {
   item: Schedule
@@ -19,10 +20,10 @@ interface Props {
   setNotes: (value: string) => void
   selections: Selections
   setSelections: (value: Selections) => void
-  percentage: number
+  benefit: Benefit
+  cart: CartItem[]
   back: () => void
   add: () => void
-  monthlyRemaining: number
 }
 
 export function DishDetail({
@@ -33,19 +34,22 @@ export function DishDetail({
   setNotes,
   selections,
   setSelections,
-  percentage,
-  monthlyRemaining,
+  benefit,
+  cart,
   back,
   add,
 }: Props) {
   const { t } = useTranslation()
-  const subtotal = item.menu.price * quantity
-
-  const subsidizedQuantity = Math.min(quantity, Math.max(monthlyRemaining, 0))
-
-  const discount = (item.menu.price * subsidizedQuantity * percentage) / 100
-
-  const total = subtotal - discount
+  // El plato se agrega al final del carrito, así que lo que ya está ahí gasta
+  // primero el cupo y los usos de los beneficios.
+  const pricing = priceItems(
+    [
+      ...cart.map(cartPricedItem),
+      { key: "", date: item.date, price: item.menu.price, quantity },
+    ],
+    benefit,
+  )
+  const line = pricing.lines[""]
   const reviews = item.menu.reviews
   // Cada grupo que el plato ofrece tiene que quedar elegido antes de agregarlo.
   const choicesMissing = item.menu.option_groups.some(
@@ -145,10 +149,9 @@ export function DishDetail({
         </p>
       </section>
       <OrderSummary
-        subtotal={subtotal}
-        discount={discount}
-        total={total}
-        percentage={percentage}
+        subtotal={line.subtotal}
+        total={line.total}
+        tiers={line.tiers}
       />
       <BottomAction className="flex">
         <QuantityInput
