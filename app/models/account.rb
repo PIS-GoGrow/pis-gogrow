@@ -90,6 +90,8 @@ class Account < ApplicationRecord
         update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
       end
     end
+
+    owner.check_debt_alert! if owner.is_a?(Consumer)
   end
 
   # Acepta un arreglo de ids de cuentas.

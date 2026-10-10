@@ -12,6 +12,9 @@ configurations:
   order_updates:
     roles: [consumer]
     configurable: true
+  debt_alerts:
+    roles: [consumer]
+    configurable: true
 
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
@@ -32,3 +35,8 @@ events:
     configuration: order_updates
     role: consumer
     requires_action: false
+
+  debt_threshold_exceeded:
+    configuration: debt_alerts
+    role: consumer
+    requires_action: true

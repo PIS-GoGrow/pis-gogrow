@@ -18,6 +18,27 @@ class Consumer < ApplicationRecord
     accounts.pending.sum :amount
   end
 
+  # La alerta requiere acción, así que solo se cierra acá, cuando la deuda vuelve
+  # al monto que fijó RRHH; mientras siga abierta no se crea otra en cada pedido.
+  def check_debt_alert!
+    debt = total_debt
+    threshold = company.debt_alert_threshold
+
+    if debt <= threshold
+      Notification.close_by(event: "debt_threshold_exceeded", notifiable: self, user:)
+    elsif !user.notifications.active.exists?(event: "debt_threshold_exceeded", notifiable: self)
+      Notifier.call(
+        event_key: :debt_threshold_exceeded,
+        user:,
+        notifiable: self,
+        description_data: {
+          debt: format_amount(debt),
+          threshold: format_amount(threshold)
+        }
+      )
+    end
+  end
+
   def current_month_spending
     accounts.current.sum :amount
   end
@@ -113,6 +134,14 @@ class Consumer < ApplicationRecord
       { id: "office", label: I18n.t("pages.orders.addresses.office"), address: company.address },
       *custom.partition { it[:address] == last_used }.flatten
     ].select { it[:address].present? }.uniq { it[:address] }
+  end
+
+  private
+
+  def format_amount(amount)
+    ActiveSupport::NumberHelper.number_to_rounded(
+      amount, precision: 2, strip_insignificant_zeros: true, delimiter: ".", separator: ","
+    )
   end
 end
 

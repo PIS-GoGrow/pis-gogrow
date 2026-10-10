@@ -12,4 +12,7 @@ class Admin::BenefitConfigurationsIndexSerializer < ApplicationSerializer
 
   has_many :special_subsidies, resource: SpecialSubsidySerializer
   has_many :employees, resource: EmployeeSerializer
+
+  typelize debt_alert_threshold: "number"
+  attributes :debt_alert_threshold
 end

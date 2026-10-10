@@ -11,6 +11,7 @@ class Admin::BenefitConfigurationsController < Admin::InertiaController
 
     @special_subsidies = company.benefit_configurations.active.special.includes(:benefit_rules, :consumers).order(:created_at)
     @employees = company.consumers.includes(:user).order("users.name").references(:user)
+    @debt_alert_threshold = company.debt_alert_threshold
   end
 
   def create

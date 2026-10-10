@@ -9,6 +9,7 @@ class Payment < ApplicationRecord
   has_one_attached :receipt
 
   before_validation :clear_rejection_reason, if: :submitted?
+  after_commit :check_debt_alert, if: -> { account.owner.is_a?(Consumer) && (destroyed? || saved_change_to_status?) }
 
   validates :rejection_reason, presence: true, if: :rejected?
 
@@ -25,6 +26,10 @@ class Payment < ApplicationRecord
   end
 
   private
+
+  def check_debt_alert
+    account.owner.check_debt_alert!
+  end
 
   def clear_rejection_reason
     self.rejection_reason = nil
