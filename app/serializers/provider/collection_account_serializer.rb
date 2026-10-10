@@ -40,7 +40,7 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     {
       eligible: eligibility.eligible?,
       remaining: eligibility.remaining,
-      next_available_at: eligibility.next_available_at&.in_time_zone&.strftime("%d/%m/%Y a las %H:%M"),
+      next_available_at: eligibility.next_available_at&.in_time_zone(Time.zone)&.strftime("%d/%m/%Y a las %H:%M"),
       blocked_reason: eligibility.reason&.to_s
     }
   end

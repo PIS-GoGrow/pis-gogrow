@@ -77,5 +77,19 @@ RSpec.describe DebtReminders::Request do
         }.to raise_error(DebtReminders::Request::CreationFailed)
       end
     end
+
+    it "evita crear notificaciones duplicadas ante llamadas consecutivas en cooldown" do
+      travel_to consumer_account.due_date + 1.day do
+        expect {
+          described_class.call(account: consumer_account, requested_by: provider_user)
+        }.to change(Notification, :count).by(1)
+
+        expect {
+          described_class.call(account: consumer_account, requested_by: provider_user)
+        }.to raise_error(DebtReminders::Request::Ineligible) do |error|
+          expect(error.reason).to eq(:cooldown)
+        end
+      end
+    end
   end
 end
