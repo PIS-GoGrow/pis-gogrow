@@ -43,22 +43,35 @@ export default function NotificationBanners({
           <Alert
             key={notification.id}
             variant={requiresAction ? "destructive" : "default"}
-            className={requiresAction ? undefined : "text-foreground"}
+            className={
+              requiresAction
+                ? "rounded-[10px] border-[#E5E5E5] bg-white px-4 py-3 text-[#B91C1C]"
+                : "text-foreground"
+            }
           >
             {requiresAction ? (
-              <CircleAlert aria-hidden="true" />
+              <CircleAlert
+                aria-hidden="true"
+                className="size-4 text-[#EF4444]"
+              />
             ) : (
               <Info aria-hidden="true" />
             )}
 
-            <AlertTitle className="text-sm leading-5 font-semibold">
+            <AlertTitle
+              className={
+                requiresAction
+                  ? "text-sm leading-5 font-semibold text-[#B91C1C]"
+                  : "text-sm leading-5 font-semibold"
+              }
+            >
               {notification.title}
             </AlertTitle>
 
             <AlertDescription
               className={
                 requiresAction
-                  ? "text-sm leading-5"
+                  ? "text-sm leading-5 font-normal text-[#B91C1C]"
                   : "text-foreground text-sm leading-5"
               }
             >

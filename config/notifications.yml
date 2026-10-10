@@ -39,4 +39,4 @@ events:
   debt_payment_reminder:
     configuration: provider_payment_reminders
     role: consumer
-    requires_action: false
+    requires_action: true
