@@ -77,10 +77,19 @@ describe("DebtReminderDialog", () => {
 
   it("dispara router.post al confirmar y muestra estado de éxito en onSuccess", async () => {
     const user = userEvent.setup()
-    postMock.mockImplementation((_url: string, _data: unknown, options?: { onSuccess?: (page: unknown) => void; onFinish?: () => void }) => {
-      options?.onSuccess?.({})
-      options?.onFinish?.()
-    })
+    postMock.mockImplementation(
+      (
+        _url: string,
+        _data: unknown,
+        options?: {
+          onSuccess?: (page: unknown) => void
+          onFinish?: () => void
+        },
+      ) => {
+        options?.onSuccess?.({})
+        options?.onFinish?.()
+      },
+    )
 
     render(<DebtReminderDialog {...defaultProps} />)
 
@@ -108,10 +117,19 @@ describe("DebtReminderDialog", () => {
 
   it("muestra estado de error y botón de reintento en onError", async () => {
     const user = userEvent.setup()
-    postMock.mockImplementation((_url: string, _data: unknown, options?: { onError?: (errors: unknown) => void; onFinish?: () => void }) => {
-      options?.onError?.({})
-      options?.onFinish?.()
-    })
+    postMock.mockImplementation(
+      (
+        _url: string,
+        _data: unknown,
+        options?: {
+          onError?: (errors: unknown) => void
+          onFinish?: () => void
+        },
+      ) => {
+        options?.onError?.({})
+        options?.onFinish?.()
+      },
+    )
 
     render(<DebtReminderDialog {...defaultProps} />)
 
