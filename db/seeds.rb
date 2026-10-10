@@ -8,12 +8,28 @@ include ActiveSupport::Testing::TimeHelpers
 
 week_start = Date.current.beginning_of_week(:monday)
 
+# Las cuentas del seed son las que se usan para probar la app sin pasar por
+# Google (ver docs/guia-trabajo-repositorio.md). La contraseña nunca se
+# commitea: sale del entorno, y sin ella el seed no corre.
+dev_password = ENV["DEV_USERS_PASSWORD"].presence
+
+if dev_password.nil? || dev_password.length < 12
+  abort <<~MESSAGE
+    Falta DEV_USERS_PASSWORD, o la que definiste tiene menos de 12 caracteres.
+
+    Es la contraseña con la que se crean los usuarios de prueba del seed, y
+    User la valida con un mínimo de 12. Copiá la variable de .env.example a tu
+    .env y pedile el valor a quien administra el entorno. El detalle está en
+    docs/guia-trabajo-repositorio.md.
+  MESSAGE
+end
+
 company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
 
 tu_viandita_user = User.create!(
   email: "pis2026.tuviandita@gmail.com",
   name: "TuViandita",
-  password_digest: "$2a$12$bJmXACYR/Ob7pRPwQQ90BeTxYrZ8zRuUkJc8rBM/zaWcKY0wsxmku",
+  password: dev_password,
   verified: true,
   google_uid: "108316160859916934526"
 )
@@ -26,7 +42,7 @@ tu_viandita = Provider.create!(
 endulzate_user = User.create!(
   email: "endulzate.by.noe@gmail.com",
   name: "Endulzate by Noe",
-  password_digest: "$2a$12$bJmXACYR/Ob7pRPwQQ90BeTxYrZ8zRuUkJc8rBM/zaWcKY0wsxmku",
+  password: dev_password,
   verified: true,
   google_uid: "109316160859916934526"
 )
@@ -129,7 +145,7 @@ Review.create!(
 consumer_user = User.create!(
   email: "usuariopruebapis@gmail.com",
   name: "Juan Pérez",
-  password_digest: "$2a$12$w4gRBetBMUY0nAyf0T3aU.Vzpk/.Wu75sHOcs3aGX4k.gF7qsG3/q",
+  password: dev_password,
   verified: true,
   google_uid: "111721831687592318354"
 )
@@ -144,7 +160,7 @@ consumer = Consumer.create!(
 admin_user = User.create!(
   email: "rrhh.gogrow@gmail.com",
   name: "Juan Admin",
-  password_digest: "$2a$12$kDAZOZpncJzrsfYTgpE.Xu47ZCiUJWL/a4TI5WcI0Q1LeecxlSsMe",
+  password: dev_password,
   verified: true,
   google_uid: "101425658623552684238"
 )
@@ -265,11 +281,6 @@ end
 
 # Order.new(consumer:, status: :confirmed, price: 300.50, discounted_price: 150.25, amount: 1).save!(validate: false)
 
-notification_configuration = NotificationConfiguration.create!(
-  description: "Notificaciones de orden en camino"
-)
-notification_configuration.consumers << consumer
-
 # Cobros del proveedor en distintos estados, para que la pantalla no se vea
 # toda pendiente. Las cuentas ya las crearon los pedidos de más arriba.
 def seed_payment(account, status)
@@ -360,3 +371,6 @@ end
   )
   invoice.save!
 end
+
+# Cargar las configuraciones de notificación a la app
+Rake::Task["notifications:sync"].invoke

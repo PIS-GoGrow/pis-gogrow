@@ -10,7 +10,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   let(:consumer_user) { users(:one) }
   let(:provider_user) { users(:provider_user) }
   let(:admin_user) { users(:admin) }
-  let(:schedule) { schedules(:future) }
+  let(:schedule) { schedules(:today) }
   let(:company_address) { companies(:gogrow).address }
 
   describe "Control de acceso por rol en /dashboard y POST /orders" do
@@ -220,6 +220,81 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(response).to have_http_status(:ok)
       expect(inertia).to render_component("consumer/dashboard/confirmation")
       expect(inertia.props[:orders].pluck(:id)).to include(created_order.id)
+    end
+  end
+
+  # IBP-037: el subsidio especial se suma al base al confirmar el carrito.
+  describe "POST /orders con subsidios especiales" do
+    around do |example|
+      travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
+    end
+
+    let(:consumer) { consumers(:one) }
+    let(:menu) { Menu.create!(provider: providers(:tuviandita), name: "Milanesa", description: "Con puré", price: 300) }
+    let(:wednesday) { Schedule.create!(menu:, date: Date.new(2026, 9, 16), amount: 10) }
+    let(:thursday) { Schedule.create!(menu:, date: Date.new(2026, 9, 17), amount: 10) }
+    let!(:base) do
+      consumer.benefits.destroy_all
+      consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly), percentage: 50, amount: 1, due_date: Date.new(2026, 9, 30)
+      )
+    end
+    let!(:special) do
+      consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
+    end
+
+    before { sign_in consumer_user, role: :consumer }
+
+    def order_cart(*items)
+      post orders_path, params: {
+        order: {
+          address: company_address,
+          items: items.map { |schedule, quantity| { schedule_id: schedule.id, quantity:, notes: "", options: [] } }
+        }
+      }
+    end
+
+    it "descuenta el base y el especial y registra cuántas viandas cubrió cada uno" do
+      order_cart([ wednesday, 3 ])
+
+      order = Order.last
+      # 1ª con 80% (60), 2ª solo con el premio (210), 3ª a precio completo.
+      expect(order).to have_attributes(price: 900, discounted_price: 570)
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 2 ])
+      follow_redirect!
+      expect(inertia).to have_props(total: 570.0)
+    end
+
+    it "reparte los usos del especial sobre los primeros platos del carrito" do
+      order_cart([ wednesday, 1 ], [ thursday, 2 ])
+
+      first, second = consumer.orders.where(schedule: [ wednesday, thursday ]).order(:id)
+      expect(first.discounted_price).to eq(60)
+      expect(second.discounted_price).to eq(510)
+      expect(second.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ special.id, 1 ])
+    end
+
+    it "no bloquea el pedido cuando supera los usos del especial" do
+      special.update!(amount: 1)
+      OrderBenefit.create!(order: orders(:upcoming_pending_future), benefit: special, benefit_used: 1)
+
+      expect { order_cart([ wednesday, 2 ]) }.to change(Order, :count).by(1)
+      expect(Order.last.discounted_price).to eq(450)
+    end
+
+    it "ignora un discounted_price o benefits manipulados en el payload y calcula el precio en el servidor" do
+      post orders_path, params: {
+        order: {
+          address: company_address,
+          discounted_price: 1.0,
+          benefits: { special.id => 10 },
+          items: [ { schedule_id: wednesday.id, quantity: 1, notes: "", options: [] } ]
+        }
+      }
+
+      order = Order.last
+      expect(order.discounted_price).to eq(60)
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
     end
   end
 end

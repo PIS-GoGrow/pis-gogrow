@@ -30,14 +30,21 @@ const REJECTION_REASONS: OrderRejectionReason[] = [
   "other",
 ]
 
+const disabledStyle =
+  "disabled:border-transparent disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none"
+
 interface ProviderOrderActionsProps {
   order: Pick<ProviderOrder, "id" | "status">
   className?: string
+  keepVisible?: boolean
+  stackOnMobile?: boolean
 }
 
 export default function ProviderOrderActions({
   order,
   className,
+  keepVisible = false,
+  stackOnMobile = false,
 }: ProviderOrderActionsProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -45,7 +52,10 @@ export default function ProviderOrderActions({
   const [reason, setReason] = useState<OrderRejectionReason | "">("")
   const [details, setDetails] = useState("")
 
-  if (order.status !== "pending") return null
+  const canConfirm = order.status === "pending"
+  const canDecideReject = canConfirm || order.status === "confirmed"
+
+  if (!canDecideReject && !keepVisible) return null
 
   const code = t("pages.provider_orders.index.code", { id: order.id })
 
@@ -102,11 +112,37 @@ export default function ProviderOrderActions({
     }
   }
 
+  const confirmButton = (
+    <Button
+      type="button"
+      size="lg"
+      disabled={processing || !canConfirm}
+      className={disabledStyle}
+      onClick={handleConfirm}
+    >
+      <Check aria-hidden="true" />
+      {t("pages.provider_orders.actions.confirm")}
+    </Button>
+  )
+
   return (
-    <div className={cn("grid grid-cols-2 gap-2", className)}>
+    <div
+      className={cn(
+        "grid gap-2",
+        stackOnMobile ? "grid-cols-1 md:grid-cols-2" : "grid-cols-2",
+        className,
+      )}
+    >
+      {stackOnMobile && confirmButton}
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
-          <Button type="button" variant="outline" size="lg">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={!canDecideReject}
+            className={cn(disabledStyle, stackOnMobile && "md:order-first")}
+          >
             <X aria-hidden="true" />
             {t("pages.provider_orders.actions.reject")}
           </Button>
@@ -176,15 +212,7 @@ export default function ProviderOrderActions({
         </DialogContent>
       </Dialog>
 
-      <Button
-        type="button"
-        size="lg"
-        disabled={processing}
-        onClick={handleConfirm}
-      >
-        <Check aria-hidden="true" />
-        {t("pages.provider_orders.actions.confirm")}
-      </Button>
+      {!stackOnMobile && confirmButton}
     </div>
   )
 }

@@ -60,7 +60,7 @@ RSpec.describe "Admin::Consumers", type: :request do
         expect(inertia).to render_component("admin/consumers/show")
         expect(inertia.props[:consumer]).to include(name: "Test User", email: "one@example.com", company_name: "GoGrow")
         expect(inertia.props[:summary]).to include(amount: 950.75, status: "pending", meals_limit: 20)
-        expect(inertia.props[:benefit_percentage]).to eq(50)
+        expect(inertia).to have_props(benefit_summary: { total: 50, base: 50, specials: [] })
       end
 
       it "groups the consumption history by month with its providers and confirmed orders" do
@@ -79,7 +79,29 @@ RSpec.describe "Admin::Consumers", type: :request do
       it "shows the active benefit percentage" do
         get admin_consumer_path(consumers(:one))
 
-        expect(inertia.props[:benefit_percentage]).to eq(50)
+        expect(inertia).to have_props(benefit_summary: { total: 50, base: 50, specials: [] })
+      end
+
+      # IBP-037: la ficha suma los subsidios especiales vigentes al base y los
+      # desglosa con el nombre que les puso RRHH.
+      it "adds the special subsidies in force to the base benefit" do
+        consumers(:one).benefits.create!(
+          benefit_configuration: benefit_configurations(:seniority), description: "Antigüedad (5 años)", percentage: 25
+        )
+
+        get admin_consumer_path(consumers(:one))
+
+        expect(inertia).to have_props(
+          benefit_summary: { total: 75, base: 50, specials: [ { name: "Antigüedad (5 años)", percentage: 25 } ] }
+        )
+      end
+
+      it "sends no benefit summary for an employee without benefits" do
+        consumers(:one).benefits.destroy_all
+
+        get admin_consumer_path(consumers(:one))
+
+        expect(inertia).to have_props(benefit_summary: nil)
       end
 
       it "does not show an employee of another company" do
