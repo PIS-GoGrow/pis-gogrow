@@ -85,21 +85,19 @@ export function priceItems(items: PricedItem[], benefit: Benefit): Pricing {
         continue
       }
 
-      // Si la suma supera 100%, se respeta el tope de 100%
       let remainingAllowed = 100
-      activeBenefits.forEach((entry) => {
+      for (const entry of activeBenefits) {
         const applicablePercentage = Math.min(
           entry.percentage,
           remainingAllowed,
         )
         remainingAllowed -= applicablePercentage
 
-        if (applicablePercentage <= 0) return
+        if (applicablePercentage <= 0) continue
 
         const discount = (item.price * applicablePercentage) / 100
         const existing = tiers.find(
-          (t) =>
-            t.name === entry.name && t.percentage === applicablePercentage,
+          (t) => t.name === entry.name && t.percentage === applicablePercentage,
         )
         if (existing) {
           existing.quantity += 1
@@ -112,7 +110,7 @@ export function priceItems(items: PricedItem[], benefit: Benefit): Pricing {
             discount,
           })
         }
-      })
+      }
     }
 
     const subtotal = item.price * item.quantity
