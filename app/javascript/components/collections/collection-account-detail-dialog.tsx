@@ -137,7 +137,11 @@ export default function CollectionAccountDetailDialog({
   return (
     <AdaptableDialog>
       <AdaptableDialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="-mr-2.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="-mr-2.5 text-sm font-semibold"
+        >
           <Eye aria-hidden="true" />
           {t("pages.provider_collections.group.detail")}
         </Button>

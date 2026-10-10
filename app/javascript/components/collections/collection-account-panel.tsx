@@ -60,14 +60,14 @@ export default function CollectionAccountPanel({
               (account.status !== "approved" && (
                 <span
                   className={cn(
-                    "flex items-center gap-1.5 text-xs",
+                    "flex items-center gap-1.5 text-sm font-medium",
                     account.overdue
-                      ? "text-red-600 dark:text-red-400"
+                      ? "text-red-700 dark:text-red-400"
                       : "text-muted-foreground",
                   )}
                 >
                   {account.overdue && (
-                    <TriangleAlert className="size-3.5" aria-hidden="true" />
+                    <TriangleAlert className="size-4" aria-hidden="true" />
                   )}
                   {t("pages.provider_collections.group.due", {
                     date: account.due_date,
@@ -80,9 +80,9 @@ export default function CollectionAccountPanel({
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p>
-          <strong className="text-lg">{formatMoney(account.amount)}</strong>
-          <span className="text-muted-foreground">
+        <p className="text-foreground text-base font-semibold">
+          {formatMoney(account.amount)}
+          <span className="text-muted-foreground font-normal">
             {" | "}
             {t("pages.provider_collections.meals", { count: account.meals })}
           </span>
@@ -95,7 +95,7 @@ export default function CollectionAccountPanel({
             href={providerCollections.show(account.id)}
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
-              "-mr-2.5",
+              "-mr-2.5 text-sm font-semibold",
             )}
           >
             <Eye aria-hidden="true" />
@@ -114,7 +114,7 @@ export default function CollectionAccountPanel({
           canApprove={account.can_approve_payment}
         >
           <AdaptableDialogTrigger asChild>
-            <Button className="w-full">Revisar pago</Button>
+            <Button className="h-10 w-full rounded-[10px]">Revisar pago</Button>
           </AdaptableDialogTrigger>
         </PaymentReviewSheet>
       )}

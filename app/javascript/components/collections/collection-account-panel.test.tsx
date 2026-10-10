@@ -118,7 +118,7 @@ describe("CollectionAccountPanel", () => {
     render(<CollectionAccountPanel account={{ ...account, overdue: true }} />)
 
     const due = screen.getByText("Vence: 05/11/26")
-    expect(due).toHaveClass("text-red-600", "dark:text-red-400")
+    expect(due).toHaveClass("text-red-700", "dark:text-red-400")
     expect(due.querySelector("svg")).toBeInTheDocument()
   })
 

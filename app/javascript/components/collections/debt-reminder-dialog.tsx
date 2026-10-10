@@ -76,7 +76,7 @@ export default function DebtReminderDialog({
     <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
       {eligible && (
         <AdaptableDialogTrigger asChild>
-          <Button className="w-full" size="lg">
+          <Button className="h-10 w-full rounded-[10px]">
             {t(`${key}.trigger`)}
           </Button>
         </AdaptableDialogTrigger>
