@@ -31,6 +31,8 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
     sign_in users(:admin), role: :admin
     visit admin_benefit_configurations_path
     without_animations
+
+    expect(page).to have_content("No hay subsidios especiales")
     click_button "Agregar"
 
     within("[role=dialog]") do
@@ -41,6 +43,7 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
       fill_in "% de descuento", with: "25"
       find("label", text: "Seleccionar empleados").click
       find('input[name="employee_search"]').set("Test")
+      expect(page).to have_button("Test User", exact: true)
       click_button "Test User", exact: true
       choose_option "Condición", "Antigüedad"
       fill_in "Es mayor a", with: "2"
@@ -52,7 +55,10 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
 
     sign_in users(:one), role: :consumer
     visit dashboard_path
+    without_animations
+
     click_button "Agregar Milanesa al pan"
+    click_button "Agregar Milanesa al pan" unless page.has_button?("Volver", wait: 2)
 
     # 300 con 50% + 25%, en una sola línea como en Figma: paga 75.
     expect(find("span", text: "Beneficio GoGrow (75%)", exact_text: true).sibling("span")).to have_text("- $225")

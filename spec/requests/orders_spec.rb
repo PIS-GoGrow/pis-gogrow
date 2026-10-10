@@ -1092,6 +1092,15 @@ RSpec.describe "Orders", type: :request do
       expect(order.reload.amount).to eq(1)
     end
 
+    it "rejects a session with admin role" do
+      sign_in users(:admin), role: :admin
+
+      patch order_path(order), params: update_params
+
+      expect(response).to redirect_to(root_path)
+      expect(order.reload.amount).to eq(1)
+    end
+
     context "when signed in as an employee" do
       before do
         sign_in users(:one)

@@ -281,5 +281,20 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect { order_cart([ wednesday, 2 ]) }.to change(Order, :count).by(1)
       expect(Order.last.discounted_price).to eq(450)
     end
+
+    it "ignora un discounted_price o benefits manipulados en el payload y calcula el precio en el servidor" do
+      post orders_path, params: {
+        order: {
+          address: company_address,
+          discounted_price: 1.0,
+          benefits: { special.id => 10 },
+          items: [ { schedule_id: wednesday.id, quantity: 1, notes: "", options: [] } ]
+        }
+      }
+
+      order = Order.last
+      expect(order.discounted_price).to eq(60)
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
+    end
   end
 end

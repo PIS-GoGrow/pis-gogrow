@@ -184,5 +184,24 @@ RSpec.describe OrderPricing do
     it "is nil for an employee without any benefit" do
       expect(described_class.new(consumer).summary).to be_nil
     end
+
+    it "evaluates expiration against the provided date parameter" do
+      base!
+      special!(due_date: Date.new(2026, 9, 20))
+
+      expect(described_class.new(consumer).summary(date: Date.new(2026, 9, 19)).specials).to be_present
+      expect(described_class.new(consumer).summary(date: Date.new(2026, 9, 21)).specials).to be_empty
+    end
+  end
+
+  describe "unlimited uses on special subsidy" do
+    it "covers every unit in the order when amount is nil" do
+      special = special!(amount: nil)
+
+      line = price(10)
+
+      expect(line.discounted_price).to eq(2100)
+      expect(line.benefits).to eq(special => 10)
+    end
   end
 end

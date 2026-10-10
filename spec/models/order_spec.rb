@@ -1055,6 +1055,40 @@ RSpec.describe Order, type: :model do
       expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(1)
     end
   end
+
+  describe "database integrity and associations for order benefits" do
+    let(:consumer) { consumers(:one) }
+    let(:schedule) { Schedule.create!(menu: menus(:milanesa), date: Date.current, amount: 20) }
+    let(:special) do
+      consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
+    end
+    let(:order) do
+      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ]).first
+      Order.reserve(
+        consumer:, schedule:, delivery_method: :office, address: nil,
+        discounted_price: line.discounted_price, benefits: line.benefits
+      )
+    end
+
+    before do
+      consumer.benefits.destroy_all
+      special
+    end
+
+    it "destroys associated order_benefits in cascade when order is destroyed" do
+      expect(order.order_benefits.count).to eq(1)
+      expect { order.destroy }.to change(OrderBenefit, :count).by(-1)
+    end
+
+    it "does not persist order_benefits if order reservation fails validation" do
+      expect {
+        Order.reserve(
+          consumer:, schedule:, delivery_method: :office, address: nil,
+          quantity: 0, discounted_price: 100, benefits: { special => 1 }
+        )
+      }.not_to change(OrderBenefit, :count)
+    end
+  end
 end
 
 # == Schema Information

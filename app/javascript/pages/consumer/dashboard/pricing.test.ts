@@ -151,4 +151,20 @@ describe("priceItems", () => {
       { percentage: 50, quantity: 0, discount: 0 },
     ])
   })
+
+  it("covers all items when a special subsidy has unlimited uses (remaining is null)", () => {
+    const pricing = priceItems(
+      [item(5)],
+      benefit({
+        percentage: 0,
+        specials: [special({ remaining: null, percentage: 20 })],
+      }),
+    )
+
+    expect(pricing.total).toBe(1200)
+    expect(pricing.fullPriceQuantity).toBe(0)
+    expect(pricing.lines.a.tiers).toEqual([
+      { percentage: 20, quantity: 5, discount: 300 },
+    ])
+  })
 })
