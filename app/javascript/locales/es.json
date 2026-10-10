@@ -409,7 +409,9 @@
           "description": "Elegí a qué dirección querés recibir el pedido.",
           "submit": "Seleccionar",
           "title": "Mis direcciones"
-        }
+        },
+        "subtotal": "Precio vianda",
+        "total": "Monto a pagar"
       },
       "consumer_dashboard": {
         "index": {

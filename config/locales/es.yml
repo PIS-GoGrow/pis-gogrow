@@ -872,6 +872,8 @@ es:
       remove: "Quitar %{name}"
       delivery: "Entrega: %{date}"
       benefit: "Beneficio GoGrow (%{percentage}%)"
+      subtotal: "Precio vianda"
+      total: "Monto a pagar"
       new_address:
         title: "Agregar una dirección"
         description: "Ingresá dónde querés recibir el pedido."

@@ -18,12 +18,16 @@ export function OrderSummary({
   tiers = [],
   compact = false,
 }: Props) {
+  const { t } = useTranslation()
+
   return (
     <div className={cn("pt-4 text-sm", !compact && "space-y-3")}>
       {!compact && (
         <>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Precio vianda</span>
+            <span className="text-muted-foreground">
+              {t("pages.cart.subtotal")}
+            </span>
             <span>{money(subtotal)}</span>
           </div>
           {tiers.map((tier) => (
@@ -37,7 +41,7 @@ export function OrderSummary({
           !compact && "border-border border-t pt-3",
         )}
       >
-        <span>Monto a pagar</span>
+        <span>{t("pages.cart.total")}</span>
         <span>{money(total)}</span>
       </div>
     </div>

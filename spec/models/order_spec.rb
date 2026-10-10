@@ -1058,7 +1058,8 @@ RSpec.describe Order, type: :model do
 
   describe "database integrity and associations for order benefits" do
     let(:consumer) { consumers(:one) }
-    let(:schedule) { Schedule.create!(menu: menus(:milanesa), date: Date.current, amount: 20) }
+    let(:menu) { Menu.create!(provider: providers(:tuviandita), name: "Plato de prueba", description: "Con papas", price: 300) }
+    let(:schedule) { Schedule.create!(menu:, date: Date.current, amount: 20) }
     let(:special) do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
     end
