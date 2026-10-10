@@ -177,7 +177,7 @@ export default function PaymentReceiptDialog({
       <AdaptableDialog open={canUpload && open} onOpenChange={handleOpenChange}>
         {canUpload && (
           <AdaptableDialogTrigger asChild>
-            <Button className="w-full">
+            <Button className="h-12 w-full rounded-[10px] text-base font-medium">
               {t("pages.accounts.show.receipt")}
             </Button>
           </AdaptableDialogTrigger>
@@ -255,7 +255,11 @@ export default function PaymentReceiptDialog({
 
                 {progress && <Progress value={progress.percentage} />}
 
-                <Button className="w-full" disabled={processing} type="submit">
+                <Button
+                  className="h-12 w-full rounded-[10px] text-base font-medium"
+                  disabled={processing}
+                  type="submit"
+                >
                   {processing && <Spinner />}
                   {processing
                     ? t("pages.accounts.show.receipt_uploading")
@@ -287,7 +291,7 @@ export default function PaymentReceiptDialog({
             </AdaptableDialogDescription>
             <Button
               type="button"
-              className="h-12 w-full rounded-lg text-base font-medium"
+              className="h-12 w-full rounded-[10px] text-base font-medium"
               onClick={() => setUploadResult(null)}
             >
               {uploadResult === "success"

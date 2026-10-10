@@ -72,7 +72,7 @@ export function WeeklyMenu({
       <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-10">
         <header className="mb-4">
           <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
-          <p className="text-muted-foreground text-sm capitalize">
+          <p className="text-muted-foreground text-base capitalize">
             {new Date(`${currentDate}T00:00:00`).toLocaleDateString("es-UY", {
               weekday: "long",
               day: "numeric",
@@ -89,7 +89,7 @@ export function WeeklyMenu({
           <section className="min-w-0">
             <BenefitCard benefit={benefit} mobile />
 
-            <h2 className="mt-6 mb-3 text-base font-bold">Menú semanal</h2>
+            <h2 className="mt-6 mb-3 text-xl font-bold">Menú semanal</h2>
             <WeekNav date={date} onChange={setDate} showArrows={false} />
 
             <div className="mt-6 mb-3 flex items-center">
@@ -173,7 +173,7 @@ export function WeeklyMenu({
         <Button
           type="button"
           onClick={openCart}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed inset-x-5 bottom-24 z-20 h-12 rounded-lg text-sm shadow-lg md:hidden"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed inset-x-5 bottom-24 z-20 h-12 rounded-[10px] text-base font-medium shadow-lg md:hidden"
         >
           Ver carrito
         </Button>

@@ -24,15 +24,15 @@ export default function AuthSimpleLayout({
               href={home.index()}
               className="flex flex-col items-center gap-2 font-medium"
             >
-              <div className="mb-1 flex size-14 items-center justify-center rounded-xl bg-black text-white dark:bg-white dark:text-black">
-                <AppLogoIcon size={32} />
+              <div className="mb-1 flex size-20 items-center justify-center rounded-[22px] bg-black text-white dark:bg-white dark:text-black">
+                <AppLogoIcon size={44} />
               </div>
               <span className="sr-only">{title}</span>
             </Link>
 
             <div className="space-y-2 text-center">
-              <h1 className="text-xl font-medium">{title}</h1>
-              <p className="text-muted-foreground text-center text-sm">
+              <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
+              <p className="text-muted-foreground text-center text-base">
                 {description}
               </p>
             </div>
