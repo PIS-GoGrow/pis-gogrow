@@ -32,6 +32,12 @@ const account = {
   receipt_url: null,
   receipt_content_type: null,
   invoice: null,
+  debt_reminder: {
+    eligible: false,
+    remaining: 10,
+    next_available_at: null,
+    blocked_reason: null,
+  },
   payments: [],
   orders: [],
 } satisfies ProviderCollectionAccount
