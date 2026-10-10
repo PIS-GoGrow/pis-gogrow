@@ -621,6 +621,7 @@ es:
         rejected_other: "%{count} cobros rechazados"
         employees: "Empleados"
         company: "Empresa"
+        due: "Vence: %{date}"
         detail: "Ver detalle"
         detail_dialog:
           title: "Historial de consumo: %{month}"
