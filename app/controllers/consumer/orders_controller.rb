@@ -192,17 +192,6 @@ class Consumer::OrdersController < Consumer::InertiaController
     consumer.delivery_address_options.pluck(:address).include?(address) || DeliveryAddress.valid_full_address?(address)
   end
 
-  # La dirección actual del pedido se mantiene como opción aunque no esté
-  # guardada, para que modificar la cantidad no obligue a cambiarla.
-  def delivery_address_options(consumer, order)
-    options = consumer.delivery_address_options
-    return options if order.address.blank? || options.pluck(:address).include?(order.address)
-
-    options + [ { id: "current", label: t("pages.orders.addresses.current"), address: order.address } ]
-  end
-
-  # El cupo del schedule ya descuenta esta orden, así que el máximo que el
-  # empleado puede elegir es lo que queda más lo que ya tiene reservado.
   # Del parámetro solo se confía el id del grupo y los valores: el nombre se toma
   # del plato, así la copia guardada no depende de lo que mande el cliente.
   def selected_options_for(menu, options)
@@ -214,12 +203,6 @@ class Consumer::OrdersController < Consumer::InertiaController
 
       { group_id: group.id, name: group.name, values: Array(option[:values]).map(&:to_s) }
     end
-  end
-
-  def max_quantity(order)
-    return order.amount.to_i if order.schedule.nil?
-
-    order.schedule.remaining_amount + order.amount.to_i
   end
 
   def update_params

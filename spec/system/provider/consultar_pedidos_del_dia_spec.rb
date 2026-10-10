@@ -188,6 +188,10 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
       visit provider_orders_path
     end
 
+    after do
+      page.current_window.resize_to(1400, 1400)
+    end
+
     it "muestra los días como un acordeón con la barra de navegación inferior" do
       expect(page).to have_css("nav[aria-label='Navegación del proveedor']")
       expect(open_day?(today)).to be(true)

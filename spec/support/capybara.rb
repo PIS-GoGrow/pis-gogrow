@@ -19,6 +19,12 @@ RSpec.configure do |config|
     # sin esto, un spec que achica la ventana deja al siguiente en modo celular.
     page.current_window.resize_to(1400, 1400)
   end
+
+  config.after(:each, type: :system) do
+    page.current_window.resize_to(1400, 1400)
+  rescue StandardError
+    nil
+  end
 end
 
 # Los botones de acción de la app no tienen texto visible, solo un ícono y un
