@@ -3,12 +3,13 @@ import { CircleCheck, Eye, TriangleAlert } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import { AdaptableDialogTrigger } from "@/components/adaptable-dialog"
+import CollectionAccountDetailDialog from "@/components/collections/collection-account-detail-dialog"
 import CollectionPaymentHistory from "@/components/collections/collection-payment-history"
 import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
 import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { SheetTrigger } from "@/components/ui/sheet"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { providerCollections } from "@/routes"
@@ -24,6 +25,7 @@ interface CollectionAccountPanelProps {
   children?: ReactNode
   showPaymentHistory?: boolean
   showDownloadAll?: boolean
+  detailMode?: "dialog" | "link"
 }
 
 export default function CollectionAccountPanel({
@@ -33,6 +35,7 @@ export default function CollectionAccountPanel({
   children,
   showPaymentHistory = false,
   showDownloadAll = false,
+  detailMode = "dialog",
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -85,16 +88,20 @@ export default function CollectionAccountPanel({
           </span>
         </p>
 
-        <Link
-          href={providerCollections.show(account.id)}
-          className={cn(
-            buttonVariants({ variant: "ghost", size: "sm" }),
-            "-mr-2.5",
-          )}
-        >
-          <Eye aria-hidden="true" />
-          {t("pages.provider_collections.group.detail")}
-        </Link>
+        {detailMode === "dialog" ? (
+          <CollectionAccountDetailDialog account={account} />
+        ) : (
+          <Link
+            href={providerCollections.show(account.id)}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "sm" }),
+              "-mr-2.5",
+            )}
+          >
+            <Eye aria-hidden="true" />
+            {t("pages.provider_collections.group.detail")}
+          </Link>
+        )}
       </div>
 
       {account.status === "submitted" && account.payment_id && (
@@ -103,10 +110,12 @@ export default function CollectionAccountPanel({
           receiptUrl={account.receipt_url ?? ""}
           contentType={account.receipt_content_type}
           filename={account.owner_name}
+          expectedAmount={account.amount}
+          canApprove={account.can_approve_payment}
         >
-          <SheetTrigger asChild>
+          <AdaptableDialogTrigger asChild>
             <Button className="w-full">Revisar pago</Button>
-          </SheetTrigger>
+          </AdaptableDialogTrigger>
         </PaymentReviewSheet>
       )}
       {(reminder.eligible ||
@@ -133,7 +142,7 @@ export default function CollectionAccountPanel({
           {t("pages.provider_collections.reminder.limit_reached")}
         </p>
       )}
-      {showPaymentHistory && (
+      {(showPaymentHistory || account.status === "rejected") && (
         <CollectionPaymentHistory
           payments={account.payments}
           showDownloadAll={showDownloadAll}

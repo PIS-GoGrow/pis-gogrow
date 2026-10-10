@@ -51,7 +51,7 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
     visit profile_path
 
     within(find("section[aria-labelledby=benefit-title]")) do
-      expect(page).to have_content("#{benefit.percentage} %")
+      expect(page).to have_css("strong", text: "#{benefit.percentage}%")
       expect(page).to have_content("#{consumer.monthly_benefit_available} viandas")
       expect(page).to have_content(due_date_label)
     end
