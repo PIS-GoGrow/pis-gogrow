@@ -743,12 +743,30 @@ RSpec.describe "Provider::Menus", type: :request do
 
     it "rejects the confirmed orders of upcoming days when asked to" do
       future_schedule_id = schedules(:future).id
+      order = orders(:upcoming_confirmed_future)
 
-      delete provider_menu_path(menus(:milanesa)), params: { confirmed_orders: "reject" }
+      expect do
+        delete provider_menu_path(menus(:milanesa)),
+          params: { confirmed_orders: "reject" }
+      end.to change {
+        order.consumer.user.notifications
+            .where(event: "order_rejection")
+            .count
+      }.by(1)
 
-      expect(orders(:upcoming_confirmed_future).reload).to be_rejected
-      expect(orders(:upcoming_confirmed_future).rejection_reason).to eq("dish_deleted")
+      order.reload
+
+      expect(order).to be_rejected
+      expect(order.rejection_reason).to eq("dish_deleted")
       expect(Schedule.exists?(future_schedule_id)).to be(false)
+
+      notification =
+        order.consumer.user.notifications
+            .where(event: "order_rejection")
+            .order(:created_at)
+            .last
+
+      expect(notification.description).to include("porque el plato fue eliminado")
     end
 
     it "leaves the past orders of the dish alone" do
