@@ -27,6 +27,7 @@ es:
     order_updated: "Pedido actualizado."
     already_signed_in: "Ya has iniciado sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
+    debt_alert_updated: "Monto de alerta de deuda actualizado"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
     email_verification_sent: "Enviamos un correo de verificación a tu dirección"
@@ -97,10 +98,16 @@ es:
     order_withdrawal:
       title: "Tu pedido fue cancelado"
       description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible."
+    debt_threshold_exceeded:
+      title: "Tu deuda superó el monto límite"
+      description: "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca."
   notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
       description: "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado."
+    debt_alerts:
+      title: "Alertas de deuda"
+      description: "Recibí una notificación cuando tu deuda supere el monto definido por RRHH."
   activerecord:
     errors:
       models:
@@ -299,6 +306,13 @@ es:
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
               unexpected: "Error inesperado. Por favor reintentá la operación."
+          debt_alert:
+            title: "Alerta de deuda"
+            description: "Avisamos a cada empleado cuando su deuda supera este monto."
+            threshold: "Monto límite"
+            edit: "Editar monto"
+            cancel: "Cancelar"
+            submit: "Guardar"
           special:
             title: "Subsidios especiales"
             description: "Los subsidios especiales se suman al Base."

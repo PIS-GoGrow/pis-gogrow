@@ -174,6 +174,60 @@ RSpec.describe Consumer, type: :model do
     end
   end
 
+  describe "#check_debt_alert!" do
+    let(:provider) { providers(:tuviandita) }
+    let(:alerts) { consumer.user.notifications.where(event: "debt_threshold_exceeded", notifiable: consumer) }
+
+    before { consumer.accounts.destroy_all }
+
+    it "notifies the consumer when the debt exceeds the company threshold" do
+      Account.create!(owner: consumer, provider:, amount: 2500)
+
+      consumer.check_debt_alert!
+
+      expect(alerts.active.sole).to have_attributes(
+        requires_action: true,
+        description: "Tu deuda es de $2.500 y superó el límite de $2.000 definido por RRHH. Regularizá tus pagos para que este aviso desaparezca."
+      )
+    end
+
+    it "does not notify when the debt equals the threshold" do
+      Account.create!(owner: consumer, provider:, amount: 2000)
+
+      consumer.check_debt_alert!
+
+      expect(alerts).to be_empty
+    end
+
+    it "uses the threshold set by the company" do
+      consumer.company.update!(debt_alert_threshold: 3000)
+      Account.create!(owner: consumer, provider:, amount: 2500)
+
+      consumer.check_debt_alert!
+
+      expect(alerts).to be_empty
+    end
+
+    it "keeps a single active alert while the debt stays above the threshold" do
+      Account.create!(owner: consumer, provider:, amount: 2500)
+
+      consumer.check_debt_alert!
+      consumer.check_debt_alert!
+
+      expect(alerts.count).to eq(1)
+    end
+
+    it "closes the alert when an approved payment brings the debt back under the threshold" do
+      account = Account.create!(owner: consumer, provider:, amount: 2500)
+      consumer.check_debt_alert!
+
+      Payment.create!(account:, status: :approved)
+
+      expect(alerts.active).to be_empty
+      expect(alerts.closed.count).to eq(1)
+    end
+  end
+
   describe "#delivery_addresses" do
     it "returns both consumer and company addresses when both are present" do
       expect(consumer.delivery_addresses).to contain_exactly(consumer.address, consumer.company.address)

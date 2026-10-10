@@ -90,12 +90,20 @@
       }
     },
     "notification_configurations": {
+      "debt_alerts": {
+        "description": "Recibí una notificación cuando tu deuda supere el monto definido por RRHH.",
+        "title": "Alertas de deuda"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
       }
     },
     "notifications": {
+      "debt_threshold_exceeded": {
+        "description": "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca.",
+        "title": "Tu deuda superó el monto límite"
+      },
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
         "title": "Tu pedido fue confirmado"
@@ -200,6 +208,14 @@
               "submit": "Programar Subsidio",
               "subsidy_percentage": "Se descuenta",
               "title": "Subsidio Base"
+            },
+            "debt_alert": {
+              "cancel": "Cancelar",
+              "description": "Avisamos a cada empleado cuando su deuda supera este monto.",
+              "edit": "Editar monto",
+              "submit": "Guardar",
+              "threshold": "Monto límite",
+              "title": "Alerta de deuda"
             },
             "description": "Gestioná los subsidios de tu compañía",
             "special": {
