@@ -31,8 +31,10 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
     visit provider_collections_path
 
     # En la pantalla de cobros, seleccionar clientes/empleados
-    click_on "Empleados"
-    click_on employee_user.name
+    within(find("[data-slot=card]", text: "GoGrow")) do
+      click_on "Empleados"
+      click_on employee_user.name
+    end
 
     # Verificar que aparece la opción de recordar pago
     expect(page).to have_button(I18n.t("pages.provider_collections.reminder.trigger"))
