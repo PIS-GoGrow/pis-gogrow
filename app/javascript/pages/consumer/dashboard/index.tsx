@@ -16,7 +16,7 @@ import type {
 import { DishDetail } from "./dish-detail"
 import { OrderError } from "./order-error"
 import { cartPricedItem, priceItems } from "./pricing"
-import { today, WeeklyMenu } from "./weekly-menu"
+import { WeeklyMenu, today } from "./weekly-menu"
 
 type View = "menu" | "detail" | "cart" | "confirmation" | "error"
 
