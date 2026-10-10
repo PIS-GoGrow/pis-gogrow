@@ -24,12 +24,12 @@ export default function OptionChoices({
   const { t } = useTranslation()
 
   return (
-    <section className="border-border border-b py-5">
-      <h2 className="text-xs font-semibold">
+    <section className="border-border border-b py-6">
+      <h2 className="text-base font-semibold">
         {t("pages.consumer_dashboard.options.choose", { name: group.name })}
       </h2>
       {group.limit > 1 && (
-        <p className="text-muted-foreground mt-1 text-[10px]">
+        <p className="text-muted-foreground mt-1 text-sm">
           {t("pages.consumer_dashboard.options.limit", { count: group.limit })}
         </p>
       )}
@@ -38,12 +38,12 @@ export default function OptionChoices({
         <RadioGroup
           value={values[0] ?? ""}
           onValueChange={(value) => setValues([value])}
-          className="mt-3 space-y-2"
+          className="mt-3 space-y-3"
         >
           {group.options.map((option) => (
             <label
               key={option}
-              className="flex cursor-pointer items-center gap-2 text-xs"
+              className="flex cursor-pointer items-center gap-3 text-sm"
             >
               <RadioGroupItem value={option} aria-label={option} />
               {option}
@@ -51,14 +51,14 @@ export default function OptionChoices({
           ))}
         </RadioGroup>
       ) : (
-        <div className="mt-3 space-y-2">
+        <div className="mt-3 space-y-3">
           {group.options.map((option) => {
             const checked = values.includes(option)
 
             return (
               <label
                 key={option}
-                className="flex cursor-pointer items-center gap-2 text-xs"
+                className="flex cursor-pointer items-center gap-3 text-sm"
               >
                 <Checkbox
                   checked={checked}

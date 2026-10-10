@@ -25,7 +25,7 @@ export function OrderSummary({
             <span>Precio vianda</span>
             <span>{money(subtotal)}</span>
           </div>
-          <div className="flex justify-between text-[#29944c]">
+          <div className="flex justify-between text-green-700 dark:text-green-500">
             <span>Beneficio GoGrow ({percentage}%)</span>
             <span>- {money(discount)}</span>
           </div>
