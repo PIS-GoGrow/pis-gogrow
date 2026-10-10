@@ -72,6 +72,7 @@ RSpec.describe "Configuración de subsidios especiales por RRHH", type: :system 
 
     it "permite modificarlo" do
       visit admin_benefit_configurations_path
+      without_animations
 
       click_button "Editar «Cumpleaños»"
 
