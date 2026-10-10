@@ -69,7 +69,7 @@ export function WeeklyMenu({
 
   return (
     <>
-      <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-10">
+      <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-24 lg:pb-10">
         <header className="mb-4">
           <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
           <p className="text-muted-foreground text-sm capitalize">
@@ -169,11 +169,26 @@ export function WeeklyMenu({
         </div>
       </div>
 
+      <style>{`
+        @media (min-width: 768px) and (max-width: 1023px) {
+          [data-slot="sidebar"][data-state="expanded"] ~ [data-slot="sidebar-inset"] [data-slot="floating-cart-button"] {
+            left: calc(var(--sidebar-width) + 2rem);
+            right: 2.5rem;
+          }
+
+          [data-slot="sidebar"][data-state="collapsed"] ~ [data-slot="sidebar-inset"] [data-slot="floating-cart-button"] {
+            left: calc(var(--sidebar-width-icon) + 3.5rem);
+            right: 2.5rem;
+          }
+        }
+      `}</style>
+
       {count > 0 && (
         <Button
           type="button"
           onClick={openCart}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed inset-x-5 bottom-24 z-20 h-12 rounded-lg text-sm shadow-lg md:hidden"
+          data-slot="floating-cart-button"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed right-5 bottom-24 left-5 z-20 h-12 rounded-lg text-sm shadow-lg md:bottom-6 lg:hidden"
         >
           Ver carrito
         </Button>
