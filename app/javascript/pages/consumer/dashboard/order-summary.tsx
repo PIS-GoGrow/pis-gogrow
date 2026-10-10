@@ -30,8 +30,11 @@ export function OrderSummary({
             </span>
             <span>{money(subtotal)}</span>
           </div>
-          {tiers.map((tier) => (
-            <BenefitLine key={tier.percentage} tier={tier} />
+          {tiers.map((tier, index) => (
+            <BenefitLine
+              key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
+              tier={tier}
+            />
           ))}
         </>
       )}
@@ -57,11 +60,13 @@ export function BenefitLine({
 }) {
   const { t } = useTranslation()
 
+  const label = tier.name
+    ? `${tier.name} (${tier.percentage}%)`
+    : t("pages.cart.benefit", { percentage: tier.percentage })
+
   return (
     <div className={cn("flex justify-between", className)}>
-      <span className="text-muted-foreground">
-        {t("pages.cart.benefit", { percentage: tier.percentage })}
-      </span>
+      <span className="text-muted-foreground">{label}</span>
       <span className="text-[#29944c]">- {money(tier.discount)}</span>
     </div>
   )

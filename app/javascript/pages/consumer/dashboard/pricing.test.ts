@@ -35,12 +35,13 @@ const item = (quantity: number, overrides: Partial<PricedItem> = {}) => ({
 })
 
 describe("priceItems", () => {
-  it("adds the special subsidy to the base one in a single combined line", () => {
+  it("shows separate discount lines for base and special subsidies", () => {
     const pricing = priceItems([item(1)], benefit({ specials: [special()] }))
 
     expect(pricing.total).toBe(60)
     expect(pricing.lines.a.tiers).toEqual([
-      { percentage: 80, quantity: 1, discount: 240 },
+      { percentage: 50, quantity: 1, discount: 150 },
+      { name: "Premio", percentage: 30, quantity: 1, discount: 90 },
     ])
   })
 
@@ -52,29 +53,31 @@ describe("priceItems", () => {
 
     expect(pricing.total).toBe(0)
     expect(pricing.lines.a.tiers).toEqual([
-      { percentage: 100, quantity: 1, discount: 300 },
+      { percentage: 50, quantity: 1, discount: 150 },
+      { name: "Premio", percentage: 50, quantity: 1, discount: 150 },
     ])
   })
 
-  it("adds up two specials at the same time", () => {
+  it("adds up two specials at the same time in separate lines", () => {
     const pricing = priceItems(
       [item(1)],
       benefit({
         specials: [
-          special({ id: 1, percentage: 25 }),
-          special({ id: 2, percentage: 10 }),
+          special({ id: 1, name: "Premio 1", percentage: 25 }),
+          special({ id: 2, name: "Premio 2", percentage: 10 }),
         ],
       }),
     )
 
     expect(pricing.total).toBe(45)
     expect(pricing.lines.a.tiers).toEqual([
-      expect.objectContaining({ percentage: 85 }),
+      { percentage: 50, quantity: 1, discount: 150 },
+      { name: "Premio 1", percentage: 25, quantity: 1, discount: 75 },
+      { name: "Premio 2", percentage: 10, quantity: 1, discount: 30 },
     ])
   })
 
-  // Figma no cubre este caso: una línea por cada porcentaje distinto.
-  it("splits a dish into one line per combined percentage", () => {
+  it("splits a dish into lines according to remaining uses of each benefit", () => {
     const pricing = priceItems(
       [item(3)],
       benefit({ specials: [special({ remaining: 1 })] }),
@@ -82,8 +85,8 @@ describe("priceItems", () => {
 
     expect(pricing.total).toBe(360)
     expect(pricing.lines.a.tiers).toEqual([
-      { percentage: 80, quantity: 1, discount: 240 },
-      { percentage: 50, quantity: 2, discount: 300 },
+      { percentage: 50, quantity: 3, discount: 450 },
+      { name: "Premio", percentage: 30, quantity: 1, discount: 90 },
     ])
   })
 
@@ -96,12 +99,13 @@ describe("priceItems", () => {
       }),
     )
 
-    // 1ª con 80%, 2ª y 3ª a precio completo.
+    // 1ª con base 50% + especial 30%, 2ª y 3ª a precio completo.
     expect(pricing.total).toBe(660)
     expect(pricing.subsidizedQuantity).toBe(1)
     expect(pricing.fullPriceQuantity).toBe(2)
     expect(pricing.lines.a.tiers).toEqual([
-      { percentage: 80, quantity: 1, discount: 240 },
+      { percentage: 50, quantity: 1, discount: 150 },
+      { name: "Premio", percentage: 30, quantity: 1, discount: 90 },
     ])
   })
 
@@ -164,7 +168,7 @@ describe("priceItems", () => {
     expect(pricing.total).toBe(1200)
     expect(pricing.fullPriceQuantity).toBe(0)
     expect(pricing.lines.a.tiers).toEqual([
-      { percentage: 20, quantity: 5, discount: 300 },
+      { name: "Premio", percentage: 20, quantity: 5, discount: 300 },
     ])
   })
 })

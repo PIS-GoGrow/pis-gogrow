@@ -16,7 +16,7 @@ import type {
 import { DishDetail } from "./dish-detail"
 import { OrderError } from "./order-error"
 import { cartPricedItem, priceItems } from "./pricing"
-import { WeeklyMenu } from "./weekly-menu"
+import { today, WeeklyMenu } from "./weekly-menu"
 
 type View = "menu" | "detail" | "cart" | "confirmation" | "error"
 
@@ -28,7 +28,12 @@ export default function Index({
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")
-  const [date, setDate] = useState(week.days[0]?.date ?? "")
+  const todayDate = today()
+  const initialDate =
+    week.days.find((d) => d.date === todayDate)?.date ??
+    week.days[0]?.date ??
+    ""
+  const [date, setDate] = useState(initialDate)
   const [selected, setSelected] = useState<Schedule | null>(null)
   // Guardamos el carrito en sessionStorage. Así, se persiste si el consumidor
   // recarga la página o navega por la aplicación, pero se borra si cierra la

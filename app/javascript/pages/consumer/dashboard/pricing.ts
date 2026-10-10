@@ -13,6 +13,7 @@ export interface PricedItem {
 
 // Las viandas de un plato que comparten el mismo porcentaje combinado.
 export interface DiscountTier {
+  name?: string
   percentage: number
   quantity: number
   discount: number
@@ -52,7 +53,9 @@ export function priceItems(items: PricedItem[], benefit: Benefit): Pricing {
     baseLeft -= baseUnits
     subsidizedQuantity += baseUnits
 
-    const coverage = [{ percentage: benefit.percentage, units: baseUnits }]
+    const coverage: { name?: string; percentage: number; units: number }[] = [
+      { percentage: benefit.percentage, units: baseUnits },
+    ]
     benefit.specials.forEach((special) => {
       if (special.due_date !== null && special.due_date < item.date) return
 
@@ -60,31 +63,43 @@ export function priceItems(items: PricedItem[], benefit: Benefit): Pricing {
       const units =
         left === null ? item.quantity : Math.min(item.quantity, left)
       if (left !== null) specialLeft.set(special.id, left - units)
-      coverage.push({ percentage: special.percentage, units })
+      coverage.push({ name: special.name, percentage: special.percentage, units })
     })
 
     const tiers: DiscountTier[] = []
     for (let unit = 0; unit < item.quantity; unit++) {
-      const percentage = Math.min(
-        coverage.reduce(
-          (sum, entry) => sum + (unit < entry.units ? entry.percentage : 0),
-          0,
-        ),
-        100,
-      )
-      if (percentage === 0) {
+      const activeBenefits = coverage.filter((entry) => unit < entry.units && entry.percentage > 0)
+      const totalPercentage = activeBenefits.reduce((sum, entry) => sum + entry.percentage, 0)
+
+      if (totalPercentage === 0) {
         fullPriceQuantity += 1
         continue
       }
 
-      const tier = tiers.find((entry) => entry.percentage === percentage)
-      const discount = (item.price * percentage) / 100
-      if (tier) {
-        tier.quantity += 1
-        tier.discount += discount
-      } else {
-        tiers.push({ percentage, quantity: 1, discount })
-      }
+      // Si la suma supera 100%, se respeta el tope de 100%
+      let remainingAllowed = 100
+      activeBenefits.forEach((entry) => {
+        const applicablePercentage = Math.min(entry.percentage, remainingAllowed)
+        remainingAllowed -= applicablePercentage
+
+        if (applicablePercentage <= 0) return
+
+        const discount = (item.price * applicablePercentage) / 100
+        const existing = tiers.find(
+          (t) => t.name === entry.name && t.percentage === applicablePercentage,
+        )
+        if (existing) {
+          existing.quantity += 1
+          existing.discount += discount
+        } else {
+          tiers.push({
+            name: entry.name,
+            percentage: applicablePercentage,
+            quantity: 1,
+            discount,
+          })
+        }
+      })
     }
 
     const subtotal = item.price * item.quantity
@@ -93,8 +108,6 @@ export function priceItems(items: PricedItem[], benefit: Benefit): Pricing {
       subtotal,
       discount,
       total: subtotal - discount,
-      // Sin viandas subsidiadas el resumen igual muestra la línea del
-      // beneficio, en cero.
       tiers: tiers.length
         ? tiers
         : [{ percentage: benefit.percentage, quantity: 0, discount: 0 }],

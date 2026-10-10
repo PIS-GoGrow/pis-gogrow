@@ -60,15 +60,16 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
     click_button "Agregar Milanesa al pan"
     click_button "Agregar Milanesa al pan" unless page.has_button?("Volver", wait: 2)
 
-    # 300 con 50% + 25%, en una sola línea como en Figma: paga 75.
-    expect(find("span", text: "Beneficio GoGrow (75%)", exact_text: true).sibling("span")).to have_text("- $225")
-    expect(page).to have_no_content("Antigüedad (25%)")
+    # 300 con 50% base (- $150) y 25% de antigüedad (- $75): paga 75.
+    expect(find("span", text: "Beneficio GoGrow (50%)", exact_text: true).sibling("span")).to have_text("- $150")
+    expect(find("span", text: "Antigüedad (25%)", exact_text: true).sibling("span")).to have_text("- $75")
     expect(find("span", text: "Monto a pagar", exact_text: true).sibling("span")).to have_text("$75")
     click_button "Agregar"
 
     first(:button, "Ver carrito").click
     expect(page).to have_content("Tu carrito")
-    expect(find("span", text: "Beneficio GoGrow (75%)", exact_text: true).sibling("span")).to have_text("- $225")
+    expect(find("span", text: "Beneficio GoGrow (50%)", exact_text: true).sibling("span")).to have_text("- $150")
+    expect(find("span", text: "Antigüedad (25%)", exact_text: true).sibling("span")).to have_text("- $75")
     expect(find("span", text: "Monto a pagar", exact_text: true).sibling("span")).to have_text("$75")
 
     click_button "Confirmar pedido"

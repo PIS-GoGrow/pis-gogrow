@@ -183,9 +183,9 @@ export function ConsumerCart({
               </div>
               {pricing.lines[item.cartId]?.tiers
                 .filter((tier) => tier.discount > 0)
-                .map((tier) => (
+                .map((tier, index) => (
                   <BenefitLine
-                    key={tier.percentage}
+                    key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
                     tier={tier}
                     className="mt-3"
                   />
