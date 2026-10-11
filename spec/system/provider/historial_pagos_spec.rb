@@ -64,13 +64,33 @@ RSpec.describe "Historial de pagos del proveedor" do
     payment
   end
 
+  def invoice_on(account)
+    invoice = account.invoices.build(
+      issued_on: account.month.end_of_month,
+      total_amount: account.amount,
+      status: :approved
+    )
+    invoice.file.attach(io: File.open(receipt_file), filename: "factura.png", content_type: "image/png")
+    invoice.save!
+    invoice
+  end
+
   def month_name(month)
     I18n.l(month, format: :month_name_year)
   end
 
   def open_history
     visit provider_collections_path
-    find("[role=tab]", text: "Historial").click
+    history_tab = find("[role=tab]", text: "Historial")
+
+    # La primera interacción puede ocurrir antes de que React hidrate el HTML
+    # servido; confirmamos el estado activo y reintentamos en ese caso.
+    3.times do
+      history_tab.click
+      break if page.has_css?("[role=tab][data-state=active]", text: "Historial", wait: 1)
+    end
+
+    expect(page).to have_css("[role=tab][data-state=active]", text: "Historial")
   end
 
   def history_card(client_name)
@@ -120,9 +140,16 @@ RSpec.describe "Historial de pagos del proveedor" do
   def employee_uploads_receipt
     visit accounts_path
     # El empleado puede deberle a otros proveedores: se sube en la tarjeta de este.
-    within(find("[role=tabpanel] [data-slot=card]", text: /\A#{provider_user.name}/)) do
-      click_on "Subir comprobante de pago"
+    upload_button = within(find("[role=tabpanel] [data-slot=card]", text: /\A#{provider_user.name}/)) do
+      find_button("Subir comprobante de pago")
     end
+
+    3.times do
+      upload_button.click
+      break if page.has_css?("[role=dialog]", wait: 1)
+    end
+
+    expect(page).to have_css("[role=dialog]")
     within(find("[role=dialog]")) do
       attach_file("Seleccionar archivo", receipt_file)
       click_on "Subir comprobante de pago"
@@ -134,6 +161,7 @@ RSpec.describe "Historial de pagos del proveedor" do
   # con su fecha, importe, origen y estado, y da acceso a su comprobante.
   it "shows each settled payment of the employees and the company with its date, amount, origin, status and receipt" do
     rejected, approved, company = settled_previous_month
+    invoice = invoice_on(company_account(previous_month))
     sign_in provider_user, role: :provider
 
     open_history
@@ -157,6 +185,7 @@ RSpec.describe "Historial de pagos del proveedor" do
       expect(page).to have_content(company.created_at.strftime("%d/%m/%y"))
       expect(page).to have_content("700,00")
       expect(page).to have_link("Descargar comprobante", exact: true, href: receipt_provider_payment_path(company))
+      expect(page).to have_link("Descargar factura", exact: true, href: file_provider_invoice_path(invoice, download: 1))
     end
   end
 
@@ -181,6 +210,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     end
 
     within(history_card("GoGrow")) do
+      click_on "Empleados"
       click_on "Empresa"
       click_on "Ver detalle"
     end
@@ -248,7 +278,6 @@ RSpec.describe "Historial de pagos del proveedor" do
     within(history_card("GoGrow")) do
       click_on "Empleados"
       click_on employee.name
-      click_on "Ver comprobantes"
       payments.each do |payment|
         expect(page).to have_link(href: receipt_provider_payment_path(payment))
       end
@@ -287,6 +316,7 @@ RSpec.describe "Historial de pagos del proveedor" do
   # llega a sus comprobantes o al detalle por id.
   it "does not show these payments to another provider" do
     rejected, approved, company = settled_previous_month
+    invoice = invoice_on(company_account(previous_month))
     sign_in users(:other_provider_user), role: :provider
 
     open_history
@@ -296,6 +326,7 @@ RSpec.describe "Historial de pagos del proveedor" do
       expect(status_of(receipt_provider_payment_path(payment))).to eq(404)
     end
     expect(status_of(provider_collection_path(employee_account(previous_month)))).to eq(404)
+    expect(status_of(file_provider_invoice_path(invoice))).to eq(404)
   end
 
   def status_of(path)

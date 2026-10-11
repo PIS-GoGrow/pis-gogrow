@@ -12,6 +12,7 @@ import {
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
 import StatusBadge from "@/components/status-badge"
+import TextLink from "@/components/text-link"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
+import { providerCollections } from "@/routes"
 import type {
   ProviderCollectionAccount,
   ProviderCollectionOrder,
@@ -31,6 +33,7 @@ import type {
 
 interface CollectionAccountDetailDialogProps {
   account: ProviderCollectionAccount
+  settled?: boolean
 }
 
 const page = "pages.provider_collections.group.detail_dialog"
@@ -43,9 +46,11 @@ function shortDate(date: string | null) {
 function ConsumptionTable({
   account,
   footer = false,
+  settled = false,
 }: {
   account: ProviderCollectionAccount
   footer?: boolean
+  settled?: boolean
 }) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -63,7 +68,7 @@ function ConsumptionTable({
 
   return (
     <div className="overflow-hidden rounded-xl border">
-      <Table className="table-fixed">
+      <Table className={settled ? "table-fixed" : "min-w-[33rem] table-fixed"}>
         <TableHeader className="bg-muted/70">
           <TableRow>
             <TableHead className="w-[17%]">{t(`${page}.date`)}</TableHead>
@@ -80,7 +85,13 @@ function ConsumptionTable({
           {account.orders.map((order) => (
             <TableRow key={order.id}>
               <TableCell>{shortDate(order.delivery_date)}</TableCell>
-              <TableCell className="truncate">{order.menu_name}</TableCell>
+              <TableCell
+                className={
+                  settled ? "truncate" : "wrap-anywhere whitespace-normal"
+                }
+              >
+                {order.menu_name}
+              </TableCell>
               <TableCell className="text-center">{order.amount}</TableCell>
               <TableCell className="text-right">
                 {formatMoney(amountOf(order))}
@@ -104,8 +115,10 @@ function ConsumptionTable({
 
 function CompanyCollection({
   account,
+  settled,
 }: {
   account: ProviderCollectionAccount
+  settled: boolean
 }) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -115,22 +128,28 @@ function CompanyCollection({
   return (
     <div className="grid gap-4 rounded-lg border p-3">
       <dl className="grid gap-3 text-sm">
-        <div className="grid gap-1">
-          <dt className="text-muted-foreground">{t(`${page}.subtotal`)}</dt>
-          <dd className="font-semibold">{formatMoney(account.amount)}</dd>
-        </div>
-        <Separator />
-        <div className="grid gap-1">
-          <dt className="text-muted-foreground">{t(`${page}.vat`)}</dt>
-          <dd className="font-semibold">{formatMoney(vat)}</dd>
-        </div>
-        <Separator className="bg-foreground/50" />
+        {settled && (
+          <>
+            <div className="grid gap-1">
+              <dt className="text-muted-foreground">{t(`${page}.subtotal`)}</dt>
+              <dd className="font-semibold">{formatMoney(account.amount)}</dd>
+            </div>
+            <Separator />
+            <div className="grid gap-1">
+              <dt className="text-muted-foreground">{t(`${page}.vat`)}</dt>
+              <dd className="font-semibold">{formatMoney(vat)}</dd>
+            </div>
+            <Separator className="bg-foreground/50" />
+          </>
+        )}
         <div className="flex items-end justify-between gap-3">
           <div className="grid gap-1">
             <dt className="text-muted-foreground">
               {t(`${page}.total_label`)}
             </dt>
-            <dd className="font-semibold">{formatMoney(total)}</dd>
+            <dd className="font-semibold">
+              {formatMoney(settled ? total : account.amount)}
+            </dd>
           </div>
           <StatusBadge status={account.status} kind="payment" />
         </div>
@@ -141,13 +160,18 @@ function CompanyCollection({
 
 export default function CollectionAccountDetailDialog({
   account,
+  settled = false,
 }: CollectionAccountDetailDialogProps) {
   const { t } = useTranslation()
 
   return (
     <AdaptableDialog>
       <AdaptableDialogTrigger asChild>
-        <Button variant="ghost" size="sm" className="-mr-2.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className={settled ? "-mr-2.5" : "-mr-2.5 text-sm font-semibold"}
+        >
           <Eye aria-hidden="true" />
           {t("pages.provider_collections.group.detail")}
         </Button>
@@ -178,18 +202,26 @@ export default function CollectionAccountDetailDialog({
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="collection">
-                <CompanyCollection account={account} />
+                <CompanyCollection account={account} settled={settled} />
               </TabsContent>
               <TabsContent value="meals">
-                <ConsumptionTable account={account} />
+                <ConsumptionTable account={account} settled={settled} />
               </TabsContent>
             </Tabs>
           ) : (
-            <ConsumptionTable account={account} footer />
+            <ConsumptionTable account={account} footer settled={settled} />
           )}
         </div>
 
-        <AdaptableDialogFooter className="p-4">
+        <AdaptableDialogFooter className={settled ? "p-4" : "p-4 sm:flex-col"}>
+          {!settled && account.payments.length > 0 && (
+            <TextLink
+              href={providerCollections.show(account.id)}
+              className="self-center text-sm"
+            >
+              {t(`${page}.payment_history`)}
+            </TextLink>
+          )}
           <AdaptableDialogClose asChild>
             <Button className="w-full">{t(`${page}.close`)}</Button>
           </AdaptableDialogClose>

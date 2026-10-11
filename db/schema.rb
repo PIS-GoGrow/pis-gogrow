@@ -109,6 +109,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
     t.datetime "created_at", null: false
     t.string "description"
     t.date "due_date"
+    t.decimal "max_price", precision: 10, scale: 2
     t.integer "percentage"
     t.integer "status"
     t.datetime "updated_at", null: false

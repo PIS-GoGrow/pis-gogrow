@@ -207,6 +207,7 @@ export default function CollectionGroupCard({
                         account={employee}
                         heading={settled ? "none" : "month"}
                         detailMode="dialog"
+                        settled={settled}
                         showPaymentHistory={
                           settled || employee.payments.length > 1
                         }
@@ -233,6 +234,7 @@ export default function CollectionGroupCard({
                   account={group.company}
                   heading={settled ? "paid_on" : "month"}
                   detailMode="dialog"
+                  settled={settled}
                   showPaymentHistory={
                     settled || group.company.payments.length > 1
                   }
