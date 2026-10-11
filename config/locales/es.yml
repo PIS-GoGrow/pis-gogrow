@@ -75,6 +75,14 @@ es:
     payment_not_removable: "Solo podés eliminar comprobantes en revisión o rechazados."
     payment_not_reviewable: "Este comprobante ya fue revisado."
     invoice_not_removable: "Esta factura ya fue revisada y no se puede eliminar."
+    debt_reminder_not_consumer: "Solo podés recordar pagos de empleados."
+    debt_reminder_no_debt: "Esta cuenta ya no tiene una deuda pendiente."
+    debt_reminder_not_overdue: "Esta cuenta todavía no está vencida."
+    debt_reminder_payment_under_review: "Hay un comprobante pendiente de revisión."
+    debt_reminder_paid: "Esta cuenta ya fue pagada."
+    debt_reminder_cooldown: "Todavía no podés enviar otro recordatorio."
+    debt_reminder_limit_reached: "Se alcanzó el límite de recordatorios."
+    debt_reminder_failed: "No pudimos enviar el recordatorio. Intentá nuevamente."
     menu_agenda:
       invalid_date: "Elegí un día hábil desde hoy y dentro del período de publicación."
       invalid_range: "La fecha de fin no puede ser anterior a la de inicio."
@@ -101,10 +109,16 @@ es:
     order_withdrawal:
       title: "Tu pedido fue cancelado"
       description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible."
+    debt_payment_reminder:
+      title: "Recordatorio de pago pendiente"
+      description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
   notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
       description: "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado."
+    provider_payment_reminders:
+      title: "Recordatorios de pago del proveedor"
+      description: "Recordatorios de pagos vencidos enviados por el proveedor."
   activerecord:
     errors:
       models:
@@ -626,6 +640,25 @@ es:
           total: "Total: %{amount}"
           empty: "Todavía no hay viandas confirmadas en este período."
           close: "Cerrar"
+      reminder:
+        trigger: "Recordar pago pendiente"
+        sent: "Recordatorio enviado"
+        next_available: "Podés enviar otro recordatorio el %{date}."
+        limit_reached: "Alcanzaste el límite de recordatorios para este pago."
+        confirm:
+          title: "Recordar pago pendiente"
+          description: "Se enviará un recordatorio a %{employeeName} por su pago pendiente de %{month} de %{amount}."
+        success:
+          title: "Recordatorio enviado"
+          description: "Se envió un recordatorio a %{employeeName} por su pago pendiente de %{month}."
+        error:
+          title: "No pudimos enviar el recordatorio"
+          description: "Intentá nuevamente."
+        back: "Volver"
+        send: "Enviar recordatorio"
+        sending: "Enviando..."
+        retry: "Reintentar"
+        done: "Listo"
       review:
         receipt_title: "Comprobante"
         expected_amount: "Importe esperado:"

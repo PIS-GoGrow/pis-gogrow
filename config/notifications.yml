@@ -12,6 +12,9 @@ configurations:
   order_updates:
     roles: [consumer]
     configurable: true
+  provider_payment_reminders:
+    roles: [consumer]
+    configurable: false
 
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
@@ -32,3 +35,8 @@ events:
     configuration: order_updates
     role: consumer
     requires_action: false
+
+  debt_payment_reminder:
+    configuration: provider_payment_reminders
+    role: consumer
+    requires_action: true
