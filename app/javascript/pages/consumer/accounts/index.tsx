@@ -205,9 +205,11 @@ export default function Index({
               />
             )}
 
-            <AdaptableDialogFooter>
+            <AdaptableDialogFooter className="mt-4">
               <AdaptableDialogClose asChild>
-                <Button>{t("common.close")}</Button>
+                <Button className="h-11 w-full rounded-[10px] text-base font-medium">
+                  {t("common.close")}
+                </Button>
               </AdaptableDialogClose>
             </AdaptableDialogFooter>
           </AdaptableDialogContent>

@@ -188,7 +188,7 @@ export function AddAddressSheet({ disabled = false, onAdd }: Props) {
             <Button
               type="button"
               variant="secondary"
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 rounded-lg text-base font-medium shadow-none"
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 rounded-[10px] text-base font-medium shadow-none"
               onClick={() => handleOpenChange(false)}
             >
               {t("pages.cart.new_address.cancel")}
@@ -196,7 +196,7 @@ export function AddAddressSheet({ disabled = false, onAdd }: Props) {
             <Button
               type="submit"
               disabled={processing}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-lg text-base font-medium shadow-none"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-[10px] text-base font-medium shadow-none"
             >
               {processing && <Spinner />}
               {t("pages.cart.new_address.submit")}

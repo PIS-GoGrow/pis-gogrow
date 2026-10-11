@@ -155,7 +155,7 @@ export function DishDetail({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Escribe las notas que necesites..."
-          className="placeholder:text-muted-foreground mt-3 h-[87px] resize-none rounded-lg p-3 text-base"
+          className="placeholder:text-muted-foreground mt-3 h-[87px] resize-none rounded-[10px] p-3 text-base"
         />
         <p className="text-muted-foreground mt-2 text-right text-sm">
           {notes.length}/140

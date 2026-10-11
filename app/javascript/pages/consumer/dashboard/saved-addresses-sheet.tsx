@@ -76,7 +76,7 @@ export function SavedAddressesSheet({
             <Button
               type="button"
               variant="secondary"
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 rounded-lg text-base font-medium shadow-none"
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 rounded-[10px] text-base font-medium shadow-none"
               onClick={() => setOpen(false)}
             >
               {t("pages.cart.saved_addresses.cancel")}
@@ -84,7 +84,7 @@ export function SavedAddressesSheet({
             <Button
               type="button"
               disabled={!draft}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-lg text-base font-medium shadow-none"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-[10px] text-base font-medium shadow-none"
               onClick={() => {
                 onSelect(draft)
                 setOpen(false)

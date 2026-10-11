@@ -71,7 +71,7 @@ export default function AdminDashboard({
               </div>
               <Button
                 type="button"
-                className="w-full cursor-pointer bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+                className="h-11 w-full cursor-pointer rounded-[10px] bg-neutral-900 text-base font-medium text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
               >
                 {t("pages.admin.dashboard.consumption.view_detail")}
               </Button>
