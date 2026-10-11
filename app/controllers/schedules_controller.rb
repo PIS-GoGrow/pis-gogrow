@@ -8,10 +8,6 @@ class SchedulesController < Provider::InertiaController
     # que no corre (desarrollo) y lo que haya cambiado desde la última pasada.
     menus.each { Menus::AgendaScheduler.call(it) }
 
-    serialized_menus = menus.map do |menu|
-      MenuSerializer.new(menu).to_inertia
-    end
-
     week_start = requested_week_start
 
     unless week_start
@@ -35,34 +31,23 @@ class SchedulesController < Provider::InertiaController
         Schedule
             .joins(:menu)
             .where(
-            menus: { provider_id: provider.id },
+            menus: { provider_id: provider.id, archived_at: nil },
             date: week_start..week_end
             )
             .order(:date, :id)
 
     schedules_by_date = schedules.group_by(&:date)
 
-    published_dates =
-        provider.menus
-                .joins(:schedules)
-                .where(schedules: { date: week_start..week_end })
-                .distinct
-                .pluck("schedules.date")
-
     days = (week_start..week_end).map do |date|
       day_schedules = schedules_by_date.fetch(date, [])
-      published = published_dates.include?(date)
 
       {
           date: date,
-          published: published,
           publishable: (
             date.on_weekday? &&
             date >= Date.current &&
-            date <= maximum_publish_date &&
-            !published
+            date <= maximum_publish_date
           ),
-          editable: published && date >= Date.current,
           schedules: day_schedules.map do |schedule|
             ScheduleSerializer.new(schedule).to_inertia
           end
@@ -80,7 +65,10 @@ class SchedulesController < Provider::InertiaController
             next_week_start: next_week_start
         },
         days: days,
-        menus: serialized_menus
+        saved_menus: menus.map { SavedMenuSerializer.new(it).to_inertia },
+        tab: params[:tab] == "saved" ? "saved" : "week",
+        selected_date: params[:date].presence,
+        today: Date.current.iso8601
     }
   end
 
@@ -143,64 +131,28 @@ class SchedulesController < Provider::InertiaController
     redirect_to schedules_path(week_start: date.beginning_of_week(:monday).to_s)
   end
 
-  def update_by_date
-    provider = Current.user.provider
-    date = Date.iso8601(params.require(:date))
-    items = params.require(:items)
+  def destroy
+    schedule = Current.user.provider.schedules.find(params[:id])
+    week_start = schedule.date.beginning_of_week(:monday).to_s
 
-    if date < Date.current
-      redirect_to schedules_path,
-                  inertia: { errors: { date: [ "No se puede editar un menú de una fecha pasada" ] } }
-      return
-    end
-
-    unless valid_initial_stock?(items)
-      redirect_to schedules_path,
-                  inertia: { errors: { amount: [ "El stock inicial debe ser mayor a 0" ] } }
+    if schedule.date < Date.current
+      redirect_to schedules_path(week_start:),
+                  inertia: { errors: { date: [ "No se puede quitar un plato de una fecha pasada" ] } }
       return
     end
 
     Schedule.transaction do
-      new_menu_ids = items.map { |item| item.require(:menu_id).to_i }
-
-      existing_schedules = Schedule.joins(:menu)
-                                    .where(menus: { provider_id: provider.id }, date: date)
-                                    .includes(:menu)
-                                    .to_a
-
-      # Una programación puede apuntar a una variante del plato: se compara por
-      # el plato guardado, que es el que elige el proveedor.
-      removed_schedules = existing_schedules.reject { new_menu_ids.include?(it.menu.saved_menu.id) }
-
-      # Si el proveedor saca un plato que ya tenía pedidos, esos pedidos se
-      # cancelan automáticamente antes de borrar la publicación del plato.
-      removed_schedules.each do |schedule|
-        schedule.orders.where(status: [ :pending, :confirmed ]).each do |order|
-          order.withdraw!(by: Current.user)
-        end
+      schedule.orders.where(status: [ :pending, :confirmed ]).each do |order|
+        order.withdraw!(by: Current.user)
       end
 
-      Schedule.where(id: removed_schedules.map(&:id)).destroy_all
-
-      items.each do |item|
-        menu_id = item.require(:menu_id).to_i
-        amount = item.require(:amount)
-
-        schedule = existing_schedules.find { it.menu.saved_menu.id == menu_id }
-
-        if schedule
-          # Si el plato ya estaba publicado, SOLO actualizamos el stock.
-          # Esto preserva el mismo ID del Schedule y evita romper los pedidos existentes.
-          schedule.update!(amount: amount)
-        else
-          menu = provider.menus.saved.find(menu_id)
-          menu.schedules.create!(date: date, amount: amount)
-        end
-      end
+      saved_menu = schedule.menu.saved_menu
+      schedule.destroy!
+      saved_menu.skip_date!(schedule.date)
     end
 
-    redirect_to schedules_path(week_start: date.beginning_of_week(:monday).to_s),
-                notice: "Menú actualizado con éxito.",
+    redirect_to schedules_path(week_start:),
+                notice: "Plato quitado del menú.",
                 status: :see_other
   end
 
@@ -226,12 +178,14 @@ class SchedulesController < Provider::InertiaController
     @maximum_publish_date ||= Calendar.new.maximum_publish_date
   end
 
+  # La semana se pide con week_start o, si no viene, con un día (date): así se
+  # vuelve a la semana de un día sin conocer su lunes.
   def requested_week_start
-    return Date.current.beginning_of_week(:monday) if params[:week_start].blank?
+    requested = params[:week_start].presence || params[:date].presence
+    return Date.current.beginning_of_week(:monday) if requested.blank?
 
-    Date.iso8601(params[:week_start]).beginning_of_week(:monday)
-
-rescue Date::Error
-  nil
+    Date.iso8601(requested).beginning_of_week(:monday)
+  rescue Date::Error
+    nil
   end
 end

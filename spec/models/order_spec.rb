@@ -9,7 +9,8 @@ RSpec.describe Order, type: :model do
   it { is_expected.to define_enum_for(:delivery_method).with_values(office: 0, home: 1) }
   it do
     expect(subject).to define_enum_for(:rejection_reason)
-      .with_values(out_of_stock: 0, duplicate_order: 1, customer_request: 2, order_error: 3, other: 4, dish_modified: 5)
+      .with_values(out_of_stock: 0, duplicate_order: 1, customer_request: 2, order_error: 3, other: 4, dish_modified: 5,
+                    dish_deleted: 6)
       .with_prefix(:rejection_reason)
   end
 
@@ -769,6 +770,16 @@ RSpec.describe Order, type: :model do
       Notification::Configuration.find_or_create_by!(key: "order_updates") do |configuration|
         configuration.roles = %w[consumer]
       end
+    end
+
+    # notify_rejected arma el texto con I18n.t!: un motivo sin traducción hace
+    # fallar el rechazo del proveedor.
+    it "has a notification text for every rejection reason" do
+      missing = Order.rejection_reasons.keys.reject do |reason|
+        I18n.exists?("notifications.order_rejection.reasons.#{reason}")
+      end
+
+      expect(missing).to be_empty
     end
 
     it "notifies the consumer when the provider rejects an order" do

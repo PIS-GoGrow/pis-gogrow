@@ -73,10 +73,9 @@
       "platform": "Plataforma",
       "provider": {
         "account": "Cuenta",
-        "dishes": "Platos",
         "home": "Inicio",
         "menu": "Menú",
-        "menus": "Publicar menús",
+        "menus": "Menús",
         "mobile_navigation": "Navegación del proveedor",
         "orders": "Pedidos",
         "payments": "Cobros"
@@ -112,6 +111,7 @@
         "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}.",
         "reasons": {
           "customer_request": "por solicitud del cliente",
+          "dish_deleted": "porque el plato fue eliminado",
           "dish_modified": "porque el plato fue modificado",
           "duplicate_order": "porque el pedido estaba duplicado",
           "order_error": "por un error en el pedido",
@@ -803,9 +803,9 @@
       "provider_menus": {
         "edit": {
           "agenda": {
-            "amount": "Stock por día",
+            "amount": "Stock por día (opcional)",
             "date": "Día específico",
-            "incomplete": "Completá las fechas y el stock por día.",
+            "incomplete": "Completá las fechas. Si cargás un stock, tiene que ser mayor a 0.",
             "modes": {
               "range": "Repetir en un rango personalizado",
               "single": "No repetir",
@@ -908,9 +908,29 @@
             "back": "Volver a Menú",
             "continue": "Seguir agregando",
             "description": "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando.",
+            "description_date": "Tu plato fue agregado al menú del %{date} correctamente.",
             "title": "¡Plato agregado!"
           },
           "back": "Volver al menú",
+          "saved": {
+            "already_added": "Los platos listados a continuación ya están agregados a la fecha seleccionada:",
+            "date_hint": "Elegí una fecha para ver qué platos podés agregar.",
+            "date_label": "¿Para qué fecha vas a agregar platos?",
+            "filter_label": "Filtrar platos",
+            "filters": {
+              "added": "Agregados",
+              "all": "Todos",
+              "available": "Disponibles"
+            },
+            "no_saved": {
+              "description": "Creá un plato desde la pestaña Platos nuevos y lo vas a ver acá.",
+              "title": "Todavía no tenés platos guardados"
+            },
+            "select": "Agregar %{name} a la selección",
+            "submit": "Agregar",
+            "submitting": "Agregando...",
+            "unselect": "Quitar %{name} de la selección"
+          },
           "tabs": {
             "new": "Platos nuevos",
             "saved": "Platos guardados"
@@ -990,6 +1010,7 @@
         },
         "rejection_reasons": {
           "customer_request": "Solicitud del cliente",
+          "dish_deleted": "Plato eliminado",
           "dish_modified": "Plato modificado",
           "duplicate_order": "Pedido duplicado",
           "order_error": "Error en el pedido",
@@ -1022,10 +1043,62 @@
       },
       "schedules": {
         "index": {
+          "add_dishes": "Agregar platos",
           "availability": {
             "toggle_label": "En stock"
           },
-          "edit_dish": "Editar %{name}"
+          "edit_dish": "Editar %{name}",
+          "empty": {
+            "description": "Agregá platos a tu menú del %{day} y empezá a recibir pedidos.",
+            "title": "No hay platos publicados para el %{day} todavía"
+          },
+          "empty_unpublishable": {
+            "title": "No se publicó menú para este día."
+          },
+          "import_dishes": "Importar platos",
+          "no_results": {
+            "description": "No encontramos platos que coincidan con tu búsqueda. Probá con otro nombre o revisá cómo lo escribiste.",
+            "title": "No se encontraron resultados"
+          },
+          "remove": {
+            "button": "Quitar",
+            "cancel": "Cancelar",
+            "confirm": "Quitar",
+            "description": "Se cancelarán los pedidos pendientes y confirmados de este plato.",
+            "title": "¿Quitar «%{name}» del menú?"
+          },
+          "saved": {
+            "delete": "Eliminar",
+            "delete_sheet": {
+              "back": "Volver",
+              "confirm": "Eliminar",
+              "deleting": "Eliminando...",
+              "description": "Este plato se eliminará de tus platos guardados.",
+              "description_orders": "Este plato se eliminará de tus platos guardados. Elegí qué hacer con los pedidos que ya incluyen este plato.",
+              "orders": {
+                "keep": {
+                  "description": "Los pedidos afectados que están confirmados no se modificarán.",
+                  "title": "Mantener los pedidos confirmados"
+                },
+                "reject": {
+                  "description": "Los pedidos afectados que están confirmados se cancelarán.",
+                  "title": "Rechazar los pedidos confirmados"
+                }
+              },
+              "pending": "Los pedidos pendientes se cancelarán.",
+              "title": "¿Eliminar plato guardado?"
+            },
+            "empty": {
+              "description": "Cuando crees un plato lo vas a ver acá para editarlo o publicarlo.",
+              "title": "Todavía no tenés platos guardados"
+            }
+          },
+          "search_label": "Buscar plato",
+          "search_placeholder": "Buscar plato...",
+          "tabs": {
+            "saved": "Platos guardados",
+            "week": "Menú de la semana"
+          }
         }
       },
       "sessions": {

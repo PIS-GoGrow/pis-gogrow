@@ -36,7 +36,9 @@ Rails.application.routes.draw do
   namespace :provider do
     get "account", to: "accounts#show", as: :account
     get "operational_settings", to: "operational_settings#show", as: :operational_settings
-    resources :menus
+    resources :menus, except: [ :index, :show ] do
+      post :publish, on: :collection
+    end
     resources :orders, only: [ :index, :show ] do
       member do
         patch :confirm
@@ -56,8 +58,7 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :schedules, only: [ :index, :create ] do
-    patch :update_by_date, on: :collection
+  resources :schedules, only: [ :index, :create, :destroy ] do
     patch :availability, on: :member
   end
 

@@ -137,11 +137,13 @@ end
 # Table name: menus
 #
 #  id              :bigint           not null, primary key
+#  archived_at     :datetime
 #  description     :string
 #  modified_at     :datetime
 #  modified_values :jsonb
 #  name            :string
 #  price           :decimal(10, 2)
+#  skipped_dates   :date             default([]), not null, is an Array
 #  valid_from      :date
 #  valid_until     :date
 #  created_at      :datetime         not null

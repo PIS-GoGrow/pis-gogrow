@@ -17,7 +17,7 @@ end
 # Table name: schedules
 #
 #  id                         :bigint           not null, primary key
-#  amount                     :integer          not null
+#  amount                     :integer
 #  availability_changed_at    :datetime
 #  available                  :boolean          default(TRUE), not null
 #  date                       :date             not null

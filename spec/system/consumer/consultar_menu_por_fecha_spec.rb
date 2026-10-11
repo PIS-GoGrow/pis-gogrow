@@ -80,6 +80,26 @@ RSpec.describe "Consultar el menú disponible por fecha" do
     expect(page).to have_content(users(:other_provider_user).name)
   end
 
+  # IBP-054 CA2: el plato existe desde antes, pero aparece recién al publicarlo
+  # y solo en su fecha.
+  it "shows a dish only after it is published, and only on its date" do
+    publish(menus(:sorrentinos), monday)
+    sign_in users(:one)
+
+    visit dashboard_path
+    (monday..monday + 4).each do |day|
+      pick_day(day)
+      expect(page).to have_no_content("Milanesa con papas fritas")
+    end
+
+    publish(menus(:milanesa), wednesday)
+    visit dashboard_path
+
+    expect(page).to have_no_content("Milanesa con papas fritas")
+    pick_day(wednesday)
+    expect(page).to have_content("Milanesa con papas fritas")
+  end
+
   # Criterio 2 — lo que un request spec no puede ver: el día se elige en el
   # browser y la lista se recorta contra esa selección, sin volver al server.
   it "shows only the dishes of the day picked in the selector" do

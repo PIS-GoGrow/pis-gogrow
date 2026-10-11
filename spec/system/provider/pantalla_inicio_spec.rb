@@ -43,8 +43,7 @@ RSpec.describe "Pantalla de inicio del proveedor", type: :system do
     it "permite navegar a pedidos y regresar al inicio mediante la barra lateral" do
       within(sidebar) do
         expect(page).to have_link("Inicio")
-        expect(page).to have_link("Platos")
-        expect(page).to have_link("Publicar menús")
+        expect(page).to have_link("Menús")
         expect(page).to have_link("Pedidos")
         expect(page).to have_link("Cobros")
 

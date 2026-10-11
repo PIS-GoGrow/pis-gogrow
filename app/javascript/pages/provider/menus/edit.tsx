@@ -7,16 +7,12 @@ import { providerMenus as menusRoutes } from "@/routes"
 import type { BreadcrumbItem, ProviderMenusEdit } from "@/types"
 
 export default function Edit(props: ProviderMenusEdit) {
-  const { menu, saved_menu_id: savedMenuId } = props
+  const { menu, saved_menu_id: savedMenuId, return_to: returnTo } = props
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      title: "Platos",
-      href: menusRoutes.index().url,
-    },
-    {
-      title: menu.name ?? "Plato",
-      href: menusRoutes.show(savedMenuId).url,
+      title: "Publicar menú",
+      href: returnTo,
     },
     {
       title: "Editar",
