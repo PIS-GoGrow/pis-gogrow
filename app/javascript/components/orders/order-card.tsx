@@ -32,7 +32,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
   const charged = order.discounted_price ?? order.price
 
   return (
-    <Card className="hover:bg-accent/40 focus-within:ring-ring/50 relative gap-2 py-4 transition-colors focus-within:ring-[3px]">
+    <Card className="hover:bg-accent/40 focus-within:ring-ring/50 relative gap-2 rounded-lg py-4 transition-colors focus-within:ring-[3px]">
       <CardHeader className="gap-1 px-4">
         <CardDescription>
           {order.provider_name ?? t("pages.orders.index.no_provider")}
@@ -87,11 +87,10 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                className="w-full"
+                className="h-10 w-full gap-1.5 rounded-[10px] text-sm font-medium"
                 disabled
               >
-                <X aria-hidden="true" />
+                <X aria-hidden="true" className="size-4" />
                 {t("pages.orders.index.cancel")}
               </Button>
               {order.status !== "confirmed" && (
@@ -107,14 +106,13 @@ export default function OrderCard({ order, section }: OrderCardProps) {
             <Button
               type="button"
               variant="outline"
-              size="sm"
-              className="w-full"
+              className="h-10 w-full gap-1.5 rounded-[10px] text-sm font-medium"
               asChild
             >
               <Link
                 href={consumerOrders.show(order.id, { query: { edit: 1 } })}
               >
-                <Pencil aria-hidden="true" />
+                <Pencil aria-hidden="true" className="size-4" />
                 {t("pages.orders.show.edit")}
               </Link>
             </Button>
@@ -123,11 +121,10 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
-                className="w-full"
+                className="h-10 w-full gap-1.5 rounded-[10px] text-sm font-medium"
                 disabled
               >
-                <Pencil aria-hidden="true" />
+                <Pencil aria-hidden="true" className="size-4" />
                 {t("pages.orders.show.edit")}
               </Button>
               {order.status !== "confirmed" && (

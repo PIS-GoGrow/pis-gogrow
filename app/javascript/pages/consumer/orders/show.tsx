@@ -158,11 +158,10 @@ export default function Show({
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
-                  className="w-full"
+                  className="h-10 w-full gap-1.5 rounded-[10px] text-sm font-medium"
                   disabled
                 >
-                  <X aria-hidden="true" />
+                  <X aria-hidden="true" className="size-4" />
                   {t("pages.orders.index.cancel")}
                 </Button>
                 {order.status !== "confirmed" && (
@@ -187,11 +186,10 @@ export default function Show({
                 <Button
                   type="button"
                   variant="outline"
-                  size="sm"
-                  className="w-full"
+                  className="h-10 w-full gap-1.5 rounded-[10px] text-sm font-medium"
                   disabled
                 >
-                  <Pencil aria-hidden="true" />
+                  <Pencil aria-hidden="true" className="size-4" />
                   {t("pages.orders.show.edit")}
                 </Button>
                 {order.status !== "confirmed" && (

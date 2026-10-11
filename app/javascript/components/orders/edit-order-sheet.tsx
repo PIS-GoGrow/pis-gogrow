@@ -80,8 +80,12 @@ export default function EditOrderSheet({
       }}
     >
       <AdaptableDialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className="w-full">
-          <Pencil aria-hidden="true" />
+        <Button
+          type="button"
+          variant="outline"
+          className="h-10 w-full gap-1.5 rounded-[10px] text-sm font-medium"
+        >
+          <Pencil aria-hidden="true" className="size-4" />
           {t("pages.orders.show.edit")}
         </Button>
       </AdaptableDialogTrigger>
@@ -190,7 +194,7 @@ export default function EditOrderSheet({
             <Button
               type="button"
               variant="outline"
-              className="h-12 rounded-lg text-base font-medium"
+              className="h-12 rounded-[10px] text-base font-medium"
               onClick={() => setOpen(false)}
             >
               {t("pages.orders.show.edit_dialog.back")}
@@ -198,7 +202,7 @@ export default function EditOrderSheet({
 
             <Button
               type="submit"
-              className="h-12 rounded-lg text-base font-medium"
+              className="h-12 rounded-[10px] text-base font-medium"
               disabled={processing || missingChoice}
             >
               {processing && <Spinner />}

@@ -44,8 +44,13 @@ export default function Login({ errors, dev_login_enabled }: Props) {
           name="authenticity_token"
           value={readAuthenticityToken()}
         />
-        <Button type="submit" variant="outline" className="w-full">
-          <GoogleMark />
+        <Button
+          type="submit"
+          className="h-12 w-full gap-2 rounded-[10px] text-base font-medium"
+        >
+          <span className="size-4">
+            <GoogleMark />
+          </span>
           {t("pages.sessions.new.continue_with_google")}
         </Button>
       </form>
@@ -99,7 +104,10 @@ export default function Login({ errors, dev_login_enabled }: Props) {
                   />
                 </Field>
 
-                <Button type="submit" className="w-full">
+                <Button
+                  type="submit"
+                  className="h-12 w-full rounded-[10px] text-base font-medium"
+                >
                   {processing && <Spinner />}
                   {t("pages.sessions.new.submit")}
                 </Button>

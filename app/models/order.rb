@@ -76,7 +76,7 @@ class Order < ApplicationRecord
   # particionen las órdenes: sin esto, una orden sin schedule (schedule_id es
   # nullable por el dependent: :nullify) se caería de ambas listas.
   scope :history, -> {
-    where.not(id: upcoming)
+    where.not(id: upcoming.reorder(nil).select(:id))
       .left_joins(:schedule)
       .order(Arel.sql("schedules.date DESC NULLS LAST"))
   }
@@ -227,6 +227,11 @@ class Order < ApplicationRecord
         return false unless modifiable?
 
         schedule.with_lock do
+          if schedule.order_deadline_passed?
+            errors.add(:base, I18n.t("validations.order_deadline_passed"))
+            return false
+          end
+
           # Bajar o mantener cantidad no cuenta como pedir "de más": solo se
           # bloquea si la publicación está agotada y encima se pide aumentar.
           if schedule.remaining_amount + amount.to_i < quantity ||
@@ -435,6 +440,14 @@ class Order < ApplicationRecord
   # otro sin abortar la transacción del pedido.
   def account_of(owner, month:, provider:)
     owner.accounts.find_by(month:, provider:) || owner.accounts.create_or_find_by!(month:, provider:)
+  end
+
+  # El tope mensual solo mira las entregas del mes en curso, así que una orden
+  # para el mes que viene no tiene unidades que devolver.
+  def subsidized_units_held
+    return 0 unless schedule&.date&.then { Date.current.all_month.cover?(it) }
+
+    order_benefits.sum(:benefit_used)
   end
 
   def replace_benefits!(benefits)

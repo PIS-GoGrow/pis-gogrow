@@ -31,7 +31,7 @@ export function OrderError({ retry, homeUrl, error }: Props) {
         <Button
           type="button"
           onClick={retry}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground h-12 w-full"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground h-12 w-full text-base font-medium"
         >
           Reintentar
         </Button>
@@ -40,7 +40,7 @@ export function OrderError({ retry, homeUrl, error }: Props) {
           asChild
           type="button"
           variant="secondary"
-          className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 w-full"
+          className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 w-full text-base font-medium"
         >
           <Link href={homeUrl} preserveState={false}>
             Volver a Menú

@@ -666,6 +666,27 @@ RSpec.describe Order, type: :model do
     expect(described_class.upcoming.count + described_class.history.count).to eq(described_class.count)
   end
 
+  describe "#modify" do
+    let(:order) { orders(:upcoming_pending_future) }
+    let(:user) { users(:one) }
+    let(:delivery) { { delivery_method: :office, address: companies(:gogrow).address } }
+
+    it "refuses to modify an order once today's deadline has passed" do
+      today_order = orders(:upcoming_pending_today)
+      today_order.schedule.menu.provider.update!(order_deadline: "00:00")
+
+      expect(today_order.modify(by: user, quantity: 2, notes: nil, delivery:)).to be(false)
+      expect(today_order.errors[:base]).to include(I18n.t("validations.order_deadline_passed"))
+    end
+
+    it "only returns actual benefit units held when recalculating quota" do
+      # When order has no order_benefits (unsubsidized), subsidized_units_held is 0
+      travel_to(order.schedule.date) do
+        expect(order.subsidized_units_held).to eq(0)
+      end
+    end
+  end
+
   describe "#max_quantity" do
     it "returns the order amount when schedule is nil" do
       order = orders(:history_without_schedule)

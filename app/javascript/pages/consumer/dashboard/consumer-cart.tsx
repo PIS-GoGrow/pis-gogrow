@@ -82,13 +82,13 @@ export function ConsumerCart({
         onClick={back}
         disabled={processing}
         aria-label="Volver"
-        className="mb-3"
+        className="mb-3 size-9 rounded-[10px]"
       >
-        <ChevronLeft aria-hidden="true" className="size-5" />
+        <ChevronLeft aria-hidden="true" className="size-4" />
       </Button>
-      <h1 className="text-xl font-bold">Tu carrito</h1>
+      <h1 className="text-2xl font-bold">Tu carrito</h1>
       <section className="border-border mt-8 border-b pb-4">
-        <div className="mb-3 flex items-center justify-between text-sm font-semibold">
+        <div className="mb-3 flex items-center justify-between text-base font-semibold">
           <h2>{t("pages.cart.delivery_address")}</h2>
           <AddAddressSheet disabled={customDisabled} onAdd={onAddAddress} />
         </div>
@@ -233,7 +233,7 @@ export function ConsumerCart({
           }
           onClick={confirm}
           className={cn(
-            "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
+            "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full rounded-[10px] text-base font-medium disabled:opacity-50",
             processing && "bg-muted hover:bg-muted",
           )}
         >

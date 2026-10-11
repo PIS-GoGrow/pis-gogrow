@@ -66,7 +66,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
           type="button"
           variant="ghost"
           size="icon"
-          className="ml-auto"
+          className="ml-auto size-9 rounded-[10px]"
         >
           <Link
             href={consumerDashboard.index()}
@@ -74,7 +74,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
             aria-label="Cerrar"
             prefetch
           >
-            <X aria-hidden="true" className="size-5" />
+            <X aria-hidden="true" className="size-4" />
           </Link>
         </Button>
 
@@ -139,7 +139,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
         </div>
 
         <BottomAction>
-          <Button className="h-12 w-full" asChild>
+          <Button className="h-12 w-full text-base font-medium" asChild>
             <Link href={consumerOrders.index()} prefetch>
               Ver mis pedidos
             </Link>

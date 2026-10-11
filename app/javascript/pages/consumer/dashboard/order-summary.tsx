@@ -67,7 +67,9 @@ export function BenefitLine({
   return (
     <div className={cn("flex justify-between", className)}>
       <span className="text-muted-foreground">{label}</span>
-      <span className="text-[#29944c]">- {money(tier.discount)}</span>
+      <span className="font-normal text-green-700 dark:text-green-500">
+        - {money(tier.discount)}
+      </span>
     </div>
   )
 }

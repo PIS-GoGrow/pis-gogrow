@@ -31,13 +31,15 @@ export default function MenuItem({
   return (
     <div
       className={cn(
-        "border-border bg-card mb-3 flex items-center gap-4 rounded-xl border p-4",
+        "border-border bg-card mb-3 flex items-center gap-4 rounded-lg border p-4",
         disabled && "opacity-50",
       )}
     >
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-1.5">
-          <span className="text-muted-foreground text-sm">{providerName}</span>
+          <span className="text-muted-foreground text-sm font-medium">
+            {providerName}
+          </span>
           {addedQuantity && (
             <span className="text-foreground text-xs">• Agregado</span>
           )}
@@ -54,11 +56,11 @@ export default function MenuItem({
             </span>
           )}
         </div>
-        <p className="font-semibold">
+        <p className="text-base font-semibold">
           {name} <span className="font-normal">| ${price}</span>
         </p>
         {description && (
-          <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+          <p className="text-muted-foreground mt-1 line-clamp-2 text-sm leading-5">
             {description}
           </p>
         )}
@@ -70,7 +72,7 @@ export default function MenuItem({
         onClick={onSelect}
         aria-label={`Agregar ${name}`}
         className={cn(
-          "size-8 shrink-0 rounded-full",
+          "size-9 shrink-0 rounded-full",
           !addedQuantity &&
             "border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground",
           addedQuantity &&

@@ -11,7 +11,7 @@ interface Props {
 
 export function QuantityInput({ value, min = 1, max, onChange }: Props) {
   return (
-    <div className="bg-secondary text-secondary-foreground flex h-12 w-fit items-center rounded-lg">
+    <div className="bg-secondary text-secondary-foreground flex h-12 w-fit items-center rounded-[10px]">
       <Button
         type="button"
         variant="ghost"
@@ -19,11 +19,11 @@ export function QuantityInput({ value, min = 1, max, onChange }: Props) {
         aria-label="Quitar uno"
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="hover:bg-primary hover:text-primary-foreground dark:hover:!bg-primary dark:hover:!text-primary-foreground h-full rounded-r-none"
+        className="hover:bg-primary hover:text-primary-foreground dark:hover:!bg-primary dark:hover:!text-primary-foreground h-full rounded-l-[10px] rounded-r-none"
       >
-        <Minus aria-hidden="true" className="size-3" />
+        <Minus aria-hidden="true" className="size-4" />
       </Button>
-      <span className="min-w-6 text-center">{value}</span>
+      <span className="min-w-6 text-center text-base font-medium">{value}</span>
       <Button
         type="button"
         variant="ghost"
@@ -31,9 +31,9 @@ export function QuantityInput({ value, min = 1, max, onChange }: Props) {
         aria-label="Agregar uno"
         disabled={value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
-        className="hover:bg-primary hover:text-primary-foreground dark:hover:!bg-primary dark:hover:!text-primary-foreground h-full rounded-l-none"
+        className="hover:bg-primary hover:text-primary-foreground dark:hover:!bg-primary dark:hover:!text-primary-foreground h-full rounded-l-none rounded-r-[10px]"
       >
-        <Plus aria-hidden="true" className="size-3" />
+        <Plus aria-hidden="true" className="size-4" />
       </Button>
     </div>
   )
