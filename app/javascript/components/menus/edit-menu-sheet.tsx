@@ -20,7 +20,6 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
-import { providerMenus as menusRoutes } from "@/routes"
 import type { ProviderMenusEdit } from "@/types"
 
 export type EditScope = "day" | "saved"
@@ -36,6 +35,7 @@ interface EditMenuSheetProps {
   agenda: AgendaPayload
   today: string
   scheduledDays: ProviderMenusEdit["scheduled_days"]
+  returnTo: string
   onApply: (scope: EditScope, confirmedOrders: ConfirmedOrders) => void
 }
 
@@ -84,6 +84,7 @@ export default function EditMenuSheet({
   agenda,
   today,
   scheduledDays,
+  returnTo,
   onApply,
 }: EditMenuSheetProps) {
   const { t } = useTranslation()
@@ -299,7 +300,7 @@ export default function EditMenuSheet({
         >
           {stage === "saved" ? (
             <Button type="button" className="h-11 w-full" asChild>
-              <Link href={menusRoutes.index().url}>{t(`${key}.done`)}</Link>
+              <Link href={returnTo}>{t(`${key}.done`)}</Link>
             </Button>
           ) : stage === "scope" && confirmedCount > 0 ? (
             <>

@@ -2,7 +2,7 @@
 
 # Crea las programaciones que piden las agendas de un plato hasta la fecha
 # máxima de publicación. Es idempotente: una fecha en la que el plato o alguna de
-# sus variantes ya está programado no se toca.
+# sus variantes ya está programado, o que el proveedor quitó, no se toca.
 #
 # Durante el rango de una variante con agenda manda esa agenda y no la del plato
 # guardado. Fuera de esos rangos, la agenda del plato guardado programa la
@@ -23,6 +23,7 @@ class Menus::AgendaScheduler
 
   def call
     taken = Schedule.where(menu_id: @menu.family_ids, date: Date.current..).pluck(:date).to_set
+    taken.merge(@menu.skipped_dates)
     ranged, plain = @menu.variants.includes(:agendas).order(id: :desc).partition { it.agendas.any? }
 
     ranged.each do |variant|

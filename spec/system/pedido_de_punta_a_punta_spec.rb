@@ -16,6 +16,11 @@ require "rails_helper"
 # menú publicado para IBP-051 CA5 ("queda registrada"). Historia: IBP-051 "editar
 # menús".
 #
+# TODO(integración): falta implementar cambiar el stock de un plato en un día ya
+# publicado antes de poder testear esa parte de IBP-051 CA2. Se hacía desde
+# "Editar menú" (update_by_date), que la #101 quitó; falta confirmar con el autor
+# si pasa a otra historia. Historia: IBP-051 "editar menús".
+#
 # TODO(integración): falta implementar el registro de qué campos cambiaron al
 # modificar un pedido (hoy solo se guardan modified_by y modified_at) antes de
 # poder testear esa parte de IBP-008 CA3. Historia: IBP-008 "modificar pedido".
@@ -52,11 +57,6 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     visit schedules_path(week_start: date.beginning_of_week(:monday).to_s)
     without_animations
     find("button", text: /\b#{date.day}\b/).click
-  end
-
-  def pick_dish(dish, amount)
-    find("p", text: dish.name, exact_text: true).click
-    fill_in "amount-#{dish.id}", with: amount.to_s
   end
 
   def open_menu(as:, day:)
@@ -121,25 +121,10 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
   describe "Pasos: P1 publica y edita, E1 pide y edita, P1 consulta" do
     it "deja el mismo pedido, importe, datos y estado en la confirmación, el historial y el proveedor" do
-      # P1 publica un menú para el martes y después lo edita.
-      sign_in p1_user, role: :provider
-      open_publication_day(tuesday)
-      pick_dish(p1_milanesa, 5)
-      click_button "Publicar menú"
-      expect(page).to have_content("Publicado")
-
-      click_button "Editar menú"
-      expect(page).to have_content("Editando menú publicado")
-      fill_in "amount-#{p1_milanesa.id}", with: "8"
-      pick_dish(p1_wok, 3)
-      click_button "Publicar menú"
-      expect(page).to have_content("Menú actualizado con éxito.")
-
+      # P1 tiene publicado un menú para el martes.
+      milanesa_tuesday = publish(p1_milanesa, tuesday, amount: 8)
+      publish(p1_wok, tuesday, amount: 3)
       p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ])
-      milanesa_tuesday = p1_milanesa.schedules.find_by!(date: tuesday)
-      expect(milanesa_tuesday.amount).to eq(8)
-      expect(p1_wok.schedules.find_by!(date: tuesday).amount).to eq(3)
-      sign_out
 
       # E1 elige fecha, plato, opción, nota, entrega y dirección, y confirma.
       open_menu(as: e1_user, day: tuesday)
@@ -318,13 +303,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     it "refleja para el empleado el stock que el proveedor sube en un menú publicado" do
       wok_tuesday = publish(p1_wok, tuesday, amount: 1)
       place_order(e2, wok_tuesday)
-      sign_in p1_user, role: :provider
-      open_publication_day(tuesday)
-      click_button "Editar menú"
-      fill_in "amount-#{p1_wok.id}", with: "4"
-      click_button "Publicar menú"
-      expect(page).to have_content("Menú actualizado con éxito.")
-      sign_out
+      wok_tuesday.update!(amount: 4)
 
       open_menu(as: e1_user, day: tuesday)
 
@@ -538,21 +517,52 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     end
   end
 
+  describe "IBP-051 CA4: los empleados ven los cambios del menú publicado" do
+    let!(:wok_tuesday) { publish(p1_wok, tuesday) }
+
+    it "muestra el plato que el proveedor agrega a un día ya publicado" do
+      sign_in p1_user, role: :provider
+      visit new_provider_menu_path(date: tuesday.iso8601)
+      without_animations
+      click_on "Platos guardados"
+      click_button "Agregar #{p1_milanesa.name} a la selección"
+      click_button "Agregar", exact: true
+      expect(page).to have_button("Agregar #{p1_milanesa.name} a la selección", disabled: true)
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+
+      expect(page).to have_content(p1_milanesa.name)
+      expect(page).to have_content(p1_wok.name)
+    end
+
+    it "deja de mostrar el plato que el proveedor quita de un día" do
+      publish(p1_milanesa, tuesday)
+      open_menu(as: e1_user, day: tuesday)
+      expect(page).to have_content(p1_milanesa.name)
+      sign_out
+
+      sign_in p1_user, role: :provider
+      open_publication_day(tuesday)
+      within(find("[data-slot=card]", text: p1_milanesa.name)) { click_button "Quitar" }
+      within("[role=dialog]") { click_button "Quitar" }
+      expect(page).to have_content("Plato quitado del menú.")
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+
+      expect(page).to have_no_content(p1_milanesa.name)
+      expect(page).to have_content(p1_wok.name)
+    end
+  end
+
   describe "IBP-051 CA5: editar un menú publicado no cambia los pedidos ya creados" do
     let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday, amount: 5) }
     let!(:wok_tuesday) { publish(p1_wok, tuesday, amount: 5) }
     let!(:e1_order) { place_order(e1, milanesa_tuesday, quantity: 2) }
 
-    before do
-      sign_in p1_user, role: :provider
-      open_publication_day(tuesday)
-      click_button "Editar menú"
-    end
-
     it "mantiene el pedido al bajar el stock del plato" do
-      fill_in "amount-#{p1_milanesa.id}", with: "3"
-      click_button "Publicar menú"
-      expect(page).to have_content("Menú actualizado con éxito.")
+      milanesa_tuesday.update!(amount: 3)
 
       expect(e1_order.reload).to have_attributes(status: "pending", amount: 2, schedule_id: milanesa_tuesday.id)
     end
