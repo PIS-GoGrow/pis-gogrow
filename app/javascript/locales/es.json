@@ -33,6 +33,9 @@
         "discount": "de descuento en viandas",
         "inactive": "Sin beneficio"
       },
+      "completed_sheet": {
+        "done": "Listo"
+      },
       "date_picker": {
         "placeholder": "Elegí una fecha",
         "range_placeholder": "Elegí un rango"
@@ -44,6 +47,16 @@
         "description": "Elimina tu cuenta y todos sus datos",
         "title": "Eliminar cuenta",
         "warning": "Advertencia"
+      },
+      "password_fields": {
+        "confirm_label": "Confirmar contraseña",
+        "create_label": "Crear contraseña",
+        "min_length": "Al menos 16 caracteres",
+        "mismatch": "La contraseña no coincide.",
+        "number": "Al menos un número",
+        "requirements_title": "Debe contener:",
+        "special": "Al menos un carácter especial",
+        "uppercase": "Al menos una mayúscula"
       },
       "settings_layout": {
         "description": "Administra tu perfil y la configuración de tu cuenta",
@@ -560,21 +573,6 @@
           "rejected": "Rechazado"
         }
       },
-      "password_resets": {
-        "edit": {
-          "description": "Ingresa tu nueva contraseña",
-          "email": "Correo electrónico",
-          "submit": "Restablecer contraseña",
-          "title": "Restablecer contraseña"
-        },
-        "new": {
-          "description": "Ingresa tu correo para recibir un enlace de restablecimiento",
-          "log_in": "iniciar sesión",
-          "return_to": "O vuelve a",
-          "submit": "Enviar enlace de restablecimiento",
-          "title": "Olvidé mi contraseña"
-        }
-      },
       "provider_accounts": {
         "show": {
           "deliveries": "Entregas",
@@ -800,6 +798,16 @@
           "title": "Inicio"
         }
       },
+      "provider_invitations": {
+        "show": {
+          "completed_description": "Ya podés ingresar a Viandas GoGrow con tu email y contraseña.",
+          "completed_title": "¡Registro completado!",
+          "description": "Configurá tu contraseña para completar el registro.",
+          "heading": "Registrate con Email",
+          "submit": "Registrarse",
+          "title": "Registro de proveedor"
+        }
+      },
       "provider_menus": {
         "edit": {
           "agenda": {
@@ -1018,6 +1026,41 @@
           "confirmed": "Confirmado",
           "pending": "Por revisar",
           "rejected": "Rechazado"
+        }
+      },
+      "provider_password_reset_codes": {
+        "show": {
+          "back": "Volver",
+          "description": "¡Gracias! Si hay una cuenta asociada con %{email} vas a recibir un código de verificación de 6 dígitos. Si no recibiste un email después de unos minutos, revisá tu carpeta de spam.",
+          "resend": "Volver a mandar código",
+          "resend_in": "Volver a mandar código en %{time}",
+          "submit": "Verificar",
+          "title": "Revisá tu email"
+        }
+      },
+      "provider_password_resets": {
+        "edit": {
+          "completed_description": "Tu contraseña fue cambiada con éxito. Ya podés volver a iniciar sesión.",
+          "completed_title": "¡Contraseña actualizada!",
+          "description": "Creá una nueva contraseña para tu cuenta.",
+          "heading": "Nueva Contraseña",
+          "submit": "Confirmar nueva contraseña",
+          "title": "Nueva contraseña"
+        }
+      },
+      "provider_sessions": {
+        "new": {
+          "description": "Ingresá a tu cuenta para continuar gestionando tus viandas.",
+          "email_placeholder": "ejemplo@empresa.com",
+          "forgot": {
+            "description": "Ingresá tu email y te enviaremos un código para restablecer tu contraseña.",
+            "submit": "Enviar código",
+            "title": "¿Olvidaste tu contraseña?"
+          },
+          "forgot_password": "¿Olvidaste tu contraseña?",
+          "heading": "¡Bienvenido de nuevo!",
+          "submit": "Iniciar sesión",
+          "title": "Iniciar sesión"
         }
       },
       "schedules": {

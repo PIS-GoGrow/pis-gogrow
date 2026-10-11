@@ -35,14 +35,13 @@ es:
     google_domain_not_allowed: "Esta cuenta de Google no tiene permitido iniciar sesión aquí."
     incorrect_credentials: "El correo electrónico o la contraseña son incorrectos"
     password_changed: "Tu contraseña fue modificada"
-    password_reset_instructions: "Revisa tu correo para ver las instrucciones de restablecimiento"
-    password_reset_invalid: "El enlace para restablecer la contraseña no es válido"
-    password_reset_success: "Tu contraseña se restableció correctamente. Inicia sesión"
+    password_reset_expired: "Tu solicitud venció. Pedí un código nuevo para continuar."
+    invitation_invalid: "La invitación no es válida o ya fue usada. Pedile a RR. HH. que te la envíe de nuevo."
+    too_many_attempts: "Hiciste demasiados intentos. Esperá unos minutos y volvé a probar."
     profile_updated: "Tu perfil fue actualizado"
     session_logged_out: "Esa sesión fue cerrada"
     signed_in: "Has iniciado sesión correctamente"
     signed_up: "¡Te damos la bienvenida! Tu registro se completó correctamente"
-    unverified_email: "No puedes restablecer tu contraseña hasta que verifiques tu correo electrónico"
     user_deleted: "Tu cuenta fue eliminada"
     user_not_found: "La cuenta de Google con la que ingresaste no está registrada. Por favor probá con otra."
     role_not_available: "No tenés acceso a este rol. Probá entrar con uno al que tengas acceso."
@@ -67,6 +66,9 @@ es:
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
+    invalid_code: "Código incorrecto."
+    invalid_email: "Ingresá un correo válido."
+    password_required: "Ingresá una contraseña."
     order_not_modifiable: "Este pedido ya no se puede modificar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
@@ -118,6 +120,10 @@ es:
   activerecord:
     errors:
       models:
+        user:
+          attributes:
+            password:
+              provider_policy: "debe tener al menos 16 caracteres, una mayúscula, un número y un carácter especial"
         benefit_configuration:
           attributes:
             effective_from:
@@ -178,16 +184,25 @@ es:
   user_mailer:
     greeting: "Hola,"
     support: "¿Tienes dudas o necesitas ayuda? Responde este correo y nuestro equipo de soporte te ayudará a resolverlo."
+    invitation:
+      subject: "Fuiste invitado a Viandas GoGrow"
+      title: "Fuiste invitado a Viandas GoGrow"
+      greeting: "Hola %{name},"
+      intro: "%{company} te invitó a unirte como proveedor de viandas a través de la plataforma Viandas GoGrow."
+      cta: "Unirme ahora"
+      after: "Una vez que te unas, podés acceder a tu cuenta desde %{url}"
+    password_reset_code:
+      subject: "Restablecimiento de contraseña"
+      title: "Restablecimiento de contraseña"
+      greeting: "Hola %{name},"
+      intro: "Recibimos una solicitud para restablecer la contraseña de tu cuenta en Viandas GoGrow. Si fuiste vos, ingresá el siguiente código para crear una nueva contraseña:"
+      validity: "Este código es válido por los próximos %{minutes} minutos."
+      ignore: "Si no solicitaste un restablecimiento de contraseña, contactá a nuestro equipo de soporte."
     email_verification:
       subject: "Verifica tu correo electrónico"
-      confirm: "Esto confirma que %{email} es el correo que quieres usar en tu cuenta. Si alguna vez pierdes tu contraseña, allí te enviaremos el enlace para restablecerla."
+      confirm: "Esto confirma que %{email} es el correo que quieres usar en tu cuenta."
       must_click: "Debes hacer clic en el enlace de abajo para confirmar que recibiste este correo."
       cta: "Sí, usar este correo en mi cuenta"
-    password_reset:
-      subject: "Restablece tu contraseña"
-      intro_html: "¿No recuerdas la contraseña de <strong>%{email}</strong>? No hay problema, suele pasar. Haz clic en el enlace de abajo para definir una nueva."
-      cta: "Restablecer mi contraseña"
-      ignore: "Si no solicitaste restablecer tu contraseña, puedes ignorar este correo; vence en 20 minutos. Solo quien tenga acceso a esta cuenta de correo puede restablecer tu contraseña."
   nav:
     platform: "Plataforma"
     dashboard: "Panel"
@@ -223,6 +238,17 @@ es:
     consumer:
       menu: "Menú del día"
   components:
+    password_fields:
+      create_label: "Crear contraseña"
+      confirm_label: "Confirmar contraseña"
+      requirements_title: "Debe contener:"
+      min_length: "Al menos 16 caracteres"
+      uppercase: "Al menos una mayúscula"
+      number: "Al menos un número"
+      special: "Al menos un carácter especial"
+      mismatch: "La contraseña no coincide."
+    completed_sheet:
+      done: "Listo"
     appearance:
       toggle_theme: "Cambiar tema"
       light: "Claro"
@@ -1044,18 +1070,42 @@ es:
         description: "Ingresa tus datos para crear tu cuenta"
         submit: "Crear cuenta"
         have_account: "¿Ya tienes una cuenta?"
-    password_resets:
+    provider_sessions:
       new:
-        title: "Olvidé mi contraseña"
-        description: "Ingresa tu correo para recibir un enlace de restablecimiento"
-        submit: "Enviar enlace de restablecimiento"
-        return_to: "O vuelve a"
-        log_in: "iniciar sesión"
+        title: "Iniciar sesión"
+        heading: "¡Bienvenido de nuevo!"
+        description: "Ingresá a tu cuenta para continuar gestionando tus viandas."
+        email_placeholder: "ejemplo@empresa.com"
+        submit: "Iniciar sesión"
+        forgot_password: "¿Olvidaste tu contraseña?"
+        forgot:
+          title: "¿Olvidaste tu contraseña?"
+          description: "Ingresá tu email y te enviaremos un código para restablecer tu contraseña."
+          submit: "Enviar código"
+    provider_invitations:
+      show:
+        title: "Registro de proveedor"
+        heading: "Registrate con Email"
+        description: "Configurá tu contraseña para completar el registro."
+        submit: "Registrarse"
+        completed_title: "¡Registro completado!"
+        completed_description: "Ya podés ingresar a Viandas GoGrow con tu email y contraseña."
+    provider_password_reset_codes:
+      show:
+        title: "Revisá tu email"
+        description: "¡Gracias! Si hay una cuenta asociada con %{email} vas a recibir un código de verificación de 6 dígitos. Si no recibiste un email después de unos minutos, revisá tu carpeta de spam."
+        submit: "Verificar"
+        resend: "Volver a mandar código"
+        resend_in: "Volver a mandar código en %{time}"
+        back: "Volver"
+    provider_password_resets:
       edit:
-        title: "Restablecer contraseña"
-        description: "Ingresa tu nueva contraseña"
-        email: "Correo electrónico"
-        submit: "Restablecer contraseña"
+        title: "Nueva contraseña"
+        heading: "Nueva Contraseña"
+        description: "Creá una nueva contraseña para tu cuenta."
+        submit: "Confirmar nueva contraseña"
+        completed_title: "¡Contraseña actualizada!"
+        completed_description: "Tu contraseña fue cambiada con éxito. Ya podés volver a iniciar sesión."
     settings:
       appearance:
         title: "Configuración de apariencia"

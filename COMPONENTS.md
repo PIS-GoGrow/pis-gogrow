@@ -96,6 +96,7 @@ Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla
 | `Field`, `FieldLabel`, `FieldError`, `FieldDescription`, `FieldGroup`, `FieldSet`, `FieldLegend`, `FieldContent`, `FieldTitle`, `FieldSeparator` | `@/components/ui/field` | Estructura de formularios: etiqueta, ayuda, error, grupos, divisor con texto |
 | `Input` | `@/components/ui/input` | Texto, email, número, búsqueda, archivo. Para fechas, `DatePicker` |
 | `Textarea` | `@/components/ui/textarea` | Texto multilínea |
+| `InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator` | `@/components/ui/input-otp` | Código de verificación en casillas separadas (6 dígitos del reseteo de contraseña) |
 | `Label` | `@/components/ui/label` | Etiqueta suelta fuera de un `Field` |
 | `Checkbox` | `@/components/ui/checkbox` | Selección múltiple o casilla sí/no |
 | `Switch` | `@/components/ui/switch` | Activar o desactivar una opción |
@@ -151,6 +152,8 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `DatePicker`, `DateRangePicker` | `@/components/date-picker` | Elegir una fecha o un rango en un formulario; reciben y devuelven fechas `YYYY-MM-DD` |
 | `OptionChoices` | `@/components/menus/option-choices` | Elegir las opciones de un grupo de un plato: `RadioGroup` si el grupo admite una, casillas con tope si admite varias |
 | `QuantityInput` | `@/components/quantity-input` | Elegir una cantidad entre un mínimo y un máximo |
+| `PasswordSetupForm` | `@/components/password-setup-form` | Formulario de contraseña nueva con checklist de requisitos y confirmación; el botón queda deshabilitado hasta que se cumplen. Recibe `action`, `submitLabel` y, opcional, `email` de solo lectura. Lo usan el alta del proveedor y el reseteo |
+| `CompletedSheet` | `@/components/completed-sheet` | Sheet inferior de confirmación («¡Registro completado!») con un botón «Listo» que navega a `href` |
 
 `PlaceholderPattern` sólo rellena los dashboards que todavía no están hechos. No se usa en pantallas nuevas.
 
@@ -322,6 +325,26 @@ Cada control de formulario va dentro de un `Field`:
 ```
 
 Para un divisor con texto (por ejemplo, «o» entre dos formas de ingresar) se usa `<FieldSeparator>o</FieldSeparator>`.
+
+### InputOTP
+
+```tsx
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
+```
+
+- Va dentro de un `Field` y se conecta a `<Form>` con `name`, como cualquier input.
+- Se usa con `maxLength`, `pattern={REGEXP_ONLY_DIGITS}` (de `input-otp`) y `pushPasswordManagerStrategy="none"`: el valor es un código, no una credencial, y sin esa prop el componente pide `document.elementFromPoint`, que jsdom no tiene.
+- Con error, `aria-invalid` en el `InputOTP` y en cada `InputOTPSlot` pinta el borde.
+
+```tsx
+<InputOTP name="code" maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={code} onChange={setCode}>
+  <InputOTPGroup>
+    {Array.from({ length: 6 }, (_, index) => (
+      <InputOTPSlot key={index} index={index} />
+    ))}
+  </InputOTPGroup>
+</InputOTP>
+```
 
 ### Textarea
 

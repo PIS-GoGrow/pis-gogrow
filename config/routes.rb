@@ -8,6 +8,12 @@ Rails.application.routes.draw do
   get  "sign_up", to: "users#new", as: :sign_up
   post "sign_up", to: "users#create"
 
+  get  "proveedores", to: "provider_sessions#new", as: :provider_sign_in
+  post "proveedores", to: "provider_sessions#create"
+  resource :provider_invitation, path: "proveedores/invitacion", only: [ :show, :update ]
+  resource :provider_password_reset, path: "proveedores/contrasena", only: [ :create, :edit, :update ], path_names: { edit: "nueva" }
+  resource :provider_password_reset_code, path: "proveedores/contrasena/codigo", only: [ :show, :create ]
+
   resources :sessions, only: [ :destroy, :edit, :update ]
   resource :users, only: [ :destroy ]
   resources :notifications, only: [] do
@@ -22,7 +28,6 @@ Rails.application.routes.draw do
 
   namespace :identity do
     resource :email_verification, only: [ :show, :create ]
-    resource :password_reset,     only: [ :new, :edit, :create, :update ]
   end
 
   namespace :settings do
