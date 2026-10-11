@@ -5,6 +5,7 @@ import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
 import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
+import NotificationBanners from "@/components/notification-banners"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -33,7 +34,7 @@ interface Props {
   openCart: () => void
 }
 
-const today = () => {
+export const today = () => {
   const date = new Date()
   const offset = date.getTimezoneOffset()
 
@@ -69,7 +70,7 @@ export function WeeklyMenu({
   return (
     <>
       <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-10">
-        <header className="mb-6">
+        <header className="mb-4">
           <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
           <p className="text-muted-foreground text-sm capitalize">
             {new Date(`${currentDate}T00:00:00`).toLocaleDateString("es-UY", {
@@ -79,6 +80,10 @@ export function WeeklyMenu({
             })}
           </p>
         </header>
+
+        <div className="mb-6">
+          <NotificationBanners />
+        </div>
 
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_330px] lg:gap-8">
           <section className="min-w-0">

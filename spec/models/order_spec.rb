@@ -763,6 +763,333 @@ RSpec.describe Order, type: :model do
       expect(order.menu_option_groups).to eq(schedule.menu.option_groups_snapshot)
     end
   end
+
+  describe "notifications" do
+    let!(:notification_configuration) do
+      Notification::Configuration.find_or_create_by!(key: "order_updates") do |configuration|
+        configuration.roles = %w[consumer]
+      end
+    end
+
+    it "notifies the consumer when the provider rejects an order" do
+      order = orders(:upcoming_pending_today)
+
+      expect {
+        order.decide(:rejected, reason: :out_of_stock)
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification).to have_attributes(
+        user: order.consumer.user,
+        event: "order_rejection",
+        role: "consumer",
+        requires_action: false,
+        notifiable: order
+      )
+
+      expect(notification.title).to eq("Tu pedido fue cancelado")
+      expect(notification.description).to include("no había stock disponible")
+    end
+
+    it "uses the rejection details when the provider selects other" do
+      order = orders(:upcoming_pending_today)
+
+      order.decide(
+        :rejected,
+        reason: :other,
+        details: "Cocina cerrada"
+      )
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification.event).to eq("order_rejection")
+      expect(notification.description).to include(
+        "por el siguiente motivo: Cocina cerrada."
+      )
+    end
+
+    it "notifies the consumer when an order is rejected because the dish changed" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect {
+        order.reject_for_dish_change!
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification.event).to eq("order_rejection")
+      expect(notification.user).to eq(order.consumer.user)
+      expect(notification.notifiable).to eq(order)
+      expect(notification.description).to include("porque el plato fue modificado")
+    end
+
+    it "notifies the consumer when the provider withdraws the dish" do
+      order = orders(:upcoming_pending_future)
+      provider_user = users(:provider_user)
+
+      expect {
+        order.withdraw!(by: provider_user)
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification).to have_attributes(
+        user: order.consumer.user,
+        event: "order_withdrawal",
+        role: "consumer",
+        requires_action: false,
+        notifiable: order
+      )
+
+      expect(notification.description).to include(
+        "porque el plato dejó de estar disponible"
+      )
+    end
+
+    it "does not create these notifications when the consumer cancels their own order" do
+      order = orders(:upcoming_pending_future)
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.not_to change(Notification, :count)
+    end
+  end
+
+  describe "confirmation notification" do
+    def confirmation_notifications(order)
+      Notification.where(event: "order_confirmation", notifiable: order)
+    end
+
+    it "notifies only the employee who placed the order, once" do
+      order = orders(:upcoming_pending_today)
+
+      order.decide(:confirmed)
+
+      notifications = confirmation_notifications(order)
+      expect(notifications.count).to eq(1)
+      expect(notifications.first.user).to eq(users(:one))
+      expect(notifications.first.role).to eq("consumer")
+      expect(users(:other_consumer_user).notifications).to be_empty
+    end
+
+    # Ver DEFECT-notificacion-confirmado-sin-plato-ni-pedido-08-10-2026.md:
+    # el criterio 3 pide también el plato y el identificador del pedido.
+    it "names the delivery date and the provider" do
+      order = orders(:upcoming_pending_today)
+
+      order.decide(:confirmed)
+
+      description = confirmation_notifications(order).first.description
+      expect(description).to include(I18n.l(order.schedule.date, format: :short))
+      expect(description).to include(users(:provider_user).name)
+    end
+
+    it "does not notify twice when the order is confirmed again" do
+      order = orders(:upcoming_pending_today)
+      order.decide(:confirmed)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(confirmation_notifications(order).count).to eq(1)
+    end
+
+    it "does not confirm nor notify an order the employee already cancelled" do
+      order = orders(:history_cancelled_future)
+
+      expect(order.decide(:confirmed)).to be(false)
+      expect(order.reload).to be_cancelled
+      expect(confirmation_notifications(order)).to be_empty
+    end
+
+    it "does not notify a confirmation when the employee cancels" do
+      order = orders(:upcoming_pending_future)
+
+      order.cancel(by: users(:one))
+
+      expect(order.reload).to be_cancelled
+      expect(confirmation_notifications(order)).to be_empty
+    end
+
+    # Ver DEFECT-falla-de-notificacion-solo-queda-en-el-log-08-10-2026.md: el
+    # criterio 4 pide además que el fallo quede registrado para reintento.
+    it "keeps the order confirmed when the notification cannot be saved" do
+      order = orders(:upcoming_pending_today)
+      allow(Notification).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
+
+      expect(order.decide(:confirmed)).to be(true)
+      expect(order.reload).to be_confirmed
+      expect(confirmation_notifications(order)).to be_empty
+    end
+  end
+
+  # IBP-037: cada beneficio registra cuántas viandas de la orden cubrió, y al
+  # modificarla se recalcula con los usos que la propia orden ya tenía.
+  describe "#modify with special subsidies" do
+    around do |example|
+      travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
+    end
+
+    let(:consumer) { consumers(:one) }
+    let(:menu) { Menu.create!(provider: providers(:tuviandita), name: "Milanesa", description: "Con puré", price: 300) }
+    let(:schedule) { Schedule.create!(menu:, date: Date.new(2026, 9, 16), amount: 20) }
+    let(:delivery) { { delivery_method: "office", address: companies(:gogrow).address } }
+    let!(:base) do
+      consumer.benefits.destroy_all
+      consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly), percentage: 50, amount: 1, due_date: Date.new(2026, 9, 30)
+      )
+    end
+    let!(:special) do
+      consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
+    end
+
+    def place(quantity)
+      line = OrderPricing.new(consumer).call([ { schedule:, quantity: } ]).first
+      Order.reserve(
+        consumer:, schedule:, quantity:, delivery_method: :office, address: nil,
+        discounted_price: line.discounted_price, benefits: line.benefits
+      )
+    end
+
+    def modify(order, quantity)
+      order.modify(by: users(:one), quantity:, notes: nil, delivery:)
+    end
+
+    it "records how many meals each benefit covered" do
+      order = place(3)
+
+      # 1ª base + premio (60), 2ª solo premio (210), 3ª a precio completo.
+      expect(order.discounted_price).to eq(570)
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 2 ])
+    end
+
+    it "charges the company the base and the special subsidy once confirmed" do
+      order = place(3)
+      order.decide(:confirmed)
+
+      expect(order.accounts.find { it.owner == consumer }.reload.amount).to eq(570)
+      expect(order.accounts.find { it.owner == consumer.company }.reload.amount).to eq(330)
+    end
+
+    it "raises the quantity without spending its own uses twice" do
+      order = place(1)
+
+      expect(modify(order, 3)).to be(true)
+
+      expect(order.reload.discounted_price).to eq(570)
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 2 ])
+    end
+
+    it "lowers the quantity and gives the uses back" do
+      order = place(3)
+
+      expect(modify(order, 1)).to be(true)
+
+      expect(order.reload.discounted_price).to eq(60)
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
+      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(1)
+    end
+
+    it "adds a special assigned after the order was placed" do
+      special.destroy
+      order = place(1)
+      seniority = consumer.benefits.create!(benefit_configuration: benefit_configurations(:seniority), description: "Antigüedad", percentage: 10)
+
+      modify(order, 1)
+
+      expect(order.reload.discounted_price).to eq(120)
+      expect(order.order_benefits.pluck(:benefit_id)).to contain_exactly(base.id, seniority.id)
+    end
+
+    it "drops a special that no longer applies" do
+      order = place(1)
+      benefit_configurations(:gift).deactivate!(by: users(:admin))
+
+      modify(order, 1)
+
+      expect(order.reload.discounted_price).to eq(150)
+      expect(order.order_benefits.pluck(:benefit_id)).to contain_exactly(base.id)
+    end
+  end
+
+  describe "cancelling or rejecting an order with a special subsidy" do
+    around do |example|
+      travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
+    end
+
+    let(:consumer) { consumers(:one) }
+    let(:schedule) { Schedule.create!(menu: menus(:milanesa), date: Date.new(2026, 9, 16), amount: 20) }
+    let(:special) do
+      consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 1)
+    end
+    let(:order) do
+      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ]).first
+      Order.reserve(
+        consumer:, schedule:, delivery_method: :office, address: nil,
+        discounted_price: line.discounted_price, benefits: line.benefits
+      )
+    end
+
+    before do
+      consumer.benefits.destroy_all
+      special
+    end
+
+    it "spends the use while the order is pending or confirmed" do
+      order
+      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(0)
+
+      order.decide(:confirmed)
+      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(0)
+    end
+
+    it "frees the use when the employee cancels" do
+      order.cancel(by: users(:one))
+
+      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(1)
+    end
+
+    it "frees the use when the provider rejects" do
+      order.decide(:rejected, reason: :out_of_stock)
+
+      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(1)
+    end
+  end
+
+  describe "database integrity and associations for order benefits" do
+    let(:consumer) { consumers(:one) }
+    let(:menu) { Menu.create!(provider: providers(:tuviandita), name: "Plato de prueba", description: "Con papas", price: 300) }
+    let(:schedule) { Schedule.create!(menu:, date: Date.current, amount: 20) }
+    let(:special) do
+      consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
+    end
+    let(:order) do
+      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ]).first
+      Order.reserve(
+        consumer:, schedule:, delivery_method: :office, address: nil,
+        discounted_price: line.discounted_price, benefits: line.benefits
+      )
+    end
+
+    before do
+      consumer.benefits.destroy_all
+      special
+    end
+
+    it "destroys associated order_benefits in cascade when order is destroyed" do
+      expect(order.order_benefits.count).to eq(1)
+      expect { order.destroy }.to change(OrderBenefit, :count).by(-1)
+    end
+
+    it "does not persist order_benefits if order reservation fails validation" do
+      expect {
+        Order.reserve(
+          consumer:, schedule:, delivery_method: :office, address: nil,
+          quantity: 0, discounted_price: 100, benefits: { special => 1 }
+        )
+      }.not_to change(OrderBenefit, :count)
+    end
+  end
 end
 
 # == Schema Information

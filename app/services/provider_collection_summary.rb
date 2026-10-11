@@ -15,11 +15,13 @@ class ProviderCollectionSummary
   # Estado que muestra el grupo de empleados: el que más atención pide.
   EMPLOYEES_STATUS_PRIORITY = %w[rejected pending submitted approved].freeze
 
-  AccountRow = Data.define(:account, :meals) do
+  AccountRow = Data.define(:account, :meals, :reminder_notifications) do
+    def initialize(account:, meals:, reminder_notifications: [])
+      super
+    end
+
     delegate :id, :amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
 
-    # Expone únicamente los pedidos confirmados que componen el cobro y los
-    # ordena del más reciente al más antiguo para el diálogo de detalle.
     def orders
       account.orders.select(&:confirmed?).sort_by do |order|
         [ -(order.schedule&.date&.jd || 0), -order.id ]
@@ -50,6 +52,10 @@ class ProviderCollectionSummary
     def paid_on
       account.last_payment.created_at.to_date if approved?
     end
+  end
+
+  IndexAccountRow = Data.define(:account_row, :orders) do
+    delegate_missing_to :account_row
   end
 
   Group = Data.define(:client, :month, :company_row, :employee_rows, :meals) do
@@ -83,7 +89,7 @@ class ProviderCollectionSummary
   def self.row_for(account)
     meals = Account.amount_and_price_sum([ account.id ]).dig(account.id, :amount) || 0
 
-    AccountRow.new(account:, meals:)
+    AccountRow.new(account:, meals:, reminder_notifications: reminder_notifications_for([ account ]).fetch(account.id, []))
   end
 
   def initialize(provider:)
@@ -94,6 +100,33 @@ class ProviderCollectionSummary
     current = accounts.select { it.month == Date.current.beginning_of_month }
 
     { total: amount_of(current), meals: meals_of(current) }
+  end
+
+  def sales_detail
+    orders = current_month_orders
+
+    {
+      month: I18n.l(Date.current.beginning_of_month, format: :month_name_year),
+      clients: orders.map(&:consumer).map(&:company).uniq
+                     .sort_by(&:name).map { { id: it.id, name: it.name } },
+      days: orders.group_by { it.schedule.date }
+                  .sort_by { |date, _| -date.jd }
+                  .map do |date, day_orders|
+        {
+          date: date.strftime("%d/%m"),
+          orders: day_orders.sort_by { it.consumer.user.name.downcase }.map do |order|
+            {
+              id: order.id,
+              consumer_name: order.consumer.user.name,
+              client_id: order.consumer.company.id,
+              client_name: order.consumer.company.name,
+              meals: order.amount,
+              amount: order.price.to_f
+            }
+          end
+        }
+      end
+    }
   end
 
   def outstanding
@@ -114,12 +147,10 @@ class ProviderCollectionSummary
 
   def accounts
     @accounts ||= begin
-      # Precarga los datos del detalle para evitar una consulta por cada cuenta.
       records = @provider.accounts.preload(
-        :payments,
         :owner,
-        invoices: { file_attachment: :blob },
-        orders: [ { consumer: :user }, { schedule: :menu } ]
+        payments: { receipt_attachment: :blob },
+        invoices: { file_attachment: :blob }
       ).to_a
 
       # owner es polimórfico y Company no responde a :user, así que los
@@ -129,6 +160,14 @@ class ProviderCollectionSummary
 
       records
     end
+  end
+
+  def current_month_orders
+    @current_month_orders ||= Order.confirmed
+      .joins(schedule: :menu)
+      .where(menus: { provider_id: @provider.id }, schedules: { date: Date.current.all_month })
+      .preload(:schedule, consumer: [ :user, :company ])
+      .to_a
   end
 
   # Unidades de cada pedido confirmado por cuenta, en una sola consulta. Los
@@ -153,14 +192,50 @@ class ProviderCollectionSummary
 
   # Las cuentas en cero no tienen nada que cobrar (solo pedidos sin confirmar).
   def rows
-    @rows ||= accounts.select { it.amount.to_d.positive? }.map { AccountRow.new(account: it, meals: meals_of([ it ])) }
+    @rows ||= begin
+      visible = accounts.select { it.amount.to_d.positive? }
+      reminders = reminder_notifications_for(visible)
+      visible.map do |account|
+        AccountRow.new(account:, meals: meals_of([ account ]), reminder_notifications: reminders.fetch(account.id, []))
+      end
+    end
   end
 
+  def self.reminder_notifications_for(accounts)
+    return {} if accounts.empty?
+
+    Notification.where(event: DebtReminders::Eligibility::EVENT, notifiable: accounts)
+                .to_a.group_by(&:notifiable_id)
+  end
+
+  def reminder_notifications_for(accounts) = self.class.reminder_notifications_for(accounts)
+
   def groups
-    @groups ||=
-      rows.group_by { [ client_of(it.account), it.month ] }
+    @groups ||= begin
+      grouped = rows.group_by { [ client_of(it.account), it.month ] }
           .map { |(client, month), group_rows| build_group(client, month, group_rows) }
           .sort_by { [ -it.month.jd, it.client.name ] }
+
+      # El diálogo de Historial muestra las mismas viandas confirmadas que Pendientes.
+      # Se precargan todas las cuentas para no disparar consultas al abrirlo.
+      collection_accounts = grouped.flat_map(&:rows).map(&:account)
+      if collection_accounts.any?
+        ActiveRecord::Associations::Preloader.new(records: collection_accounts, associations: :orders, scope: Order.confirmed).call
+        orders = collection_accounts.flat_map { it.orders.to_a }.uniq(&:id)
+        ActiveRecord::Associations::Preloader.new(records: orders, associations: [ { consumer: :user }, { schedule: :menu } ]).call if orders.any?
+      end
+
+      grouped.map do |group|
+        group.with(
+          company_row: group.company_row && index_row(group.company_row),
+          employee_rows: group.employee_rows.map { index_row(it) }
+        )
+      end
+    end
+  end
+
+  def index_row(row)
+    IndexAccountRow.new(account_row: row, orders: row.orders)
   end
 
   def build_group(client, month, group_rows)

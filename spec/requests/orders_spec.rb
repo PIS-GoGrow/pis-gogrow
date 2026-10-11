@@ -373,7 +373,8 @@ RSpec.describe "Orders", type: :request do
           percentage: 50,
           monthly_limit: 16,
           monthly_used: 2,
-          monthly_remaining: 14
+          monthly_remaining: 14,
+          specials: []
         }
       )
     end
@@ -1091,6 +1092,15 @@ RSpec.describe "Orders", type: :request do
       expect(order.reload.amount).to eq(1)
     end
 
+    it "rejects a session with admin role" do
+      sign_in users(:admin), role: :admin
+
+      patch order_path(order), params: update_params
+
+      expect(response).to redirect_to(root_path)
+      expect(order.reload.amount).to eq(1)
+    end
+
     context "when signed in as an employee" do
       before do
         sign_in users(:one)
@@ -1207,6 +1217,23 @@ RSpec.describe "Orders", type: :request do
         patch order_path(order), params: update_params(quantity: 2)
 
         expect(order.reload).to have_attributes(price: 601.to_d, discounted_price: 300.50.to_d)
+      end
+
+      # IBP-037: al modificar se recalcula con base + especial, y la orden
+      # recupera el uso del especial que ya tenía.
+      it "applies the special subsidy on top of the base one to the new quantity" do
+        travel_to(Time.zone.local(2026, 9, 14, 10)) do
+          order.schedule.update!(date: Date.new(2026, 9, 16))
+          base = Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: Date.new(2026, 9, 30), benefit_configuration: benefit_configurations(:monthly))
+          special = Benefit.create!(consumer: consumers(:one), amount: 2, percentage: 30, description: "Premio", benefit_configuration: benefit_configurations(:gift))
+          order.apply_benefit! special, 1
+
+          patch order_path(order), params: update_params(quantity: 3)
+
+          # 300.50 por vianda: 2 con 80% (60.10 c/u) y 1 solo con el base (150.25).
+          expect(order.reload).to have_attributes(price: 901.50.to_d, discounted_price: 270.45.to_d)
+          expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 3 ], [ special.id, 2 ])
+        end
       end
 
       it "switches to home delivery when the employee picks their own address" do

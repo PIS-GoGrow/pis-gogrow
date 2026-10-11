@@ -51,6 +51,29 @@ RSpec.describe "Consumer::Profiles", type: :request do
         )
       end
 
+      # IBP-037: la tarjeta suma al base los subsidios especiales vigentes que
+      # todavía tienen usos, con tope en 100%.
+      it "adds the special subsidies in force to the base benefit" do
+        consumer = consumers(:one)
+        consumer.benefits.create!(benefit_configuration: benefit_configurations(:seniority), description: "Antigüedad (5 años)", percentage: 25)
+        used_up = consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 1)
+        OrderBenefit.create!(order: orders(:upcoming_pending_future), benefit: used_up, benefit_used: 1)
+
+        get profile_path
+
+        expect(inertia).to have_props(
+          benefit_summary: { total: 75, base: 50, specials: [ { name: "Antigüedad (5 años)", percentage: 25 } ] }
+        )
+      end
+
+      it "caps the combined benefit at 100%" do
+        consumers(:one).benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 80)
+
+        get profile_path
+
+        expect(inertia.props[:benefit_summary]).to include("total" => 100, "base" => 50)
+      end
+
       it "reports how many subsidized meals are left this month" do
         get profile_path
 
@@ -63,6 +86,7 @@ RSpec.describe "Consumer::Profiles", type: :request do
         get profile_path
 
         expect(inertia).to have_props(benefit: nil)
+        expect(inertia).to have_props(benefit_summary: nil)
       end
     end
   end

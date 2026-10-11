@@ -5,6 +5,14 @@ require "rails_helper"
 RSpec.describe "Provider::Orders", type: :request do
   fixtures :users, :companies, :providers, :consumers, :menus, :menu_option_groups, :schedules, :orders
 
+  before do
+    travel_to schedules(:today).date.noon
+  end
+
+  after do
+    travel_back
+  end
+
   # El pedido del otro proveedor se crea acá y no en los fixtures: los specs de
   # "Mis pedidos" cuentan órdenes y una fila más les cambiaría las listas.
   let(:other_provider_order) do
@@ -190,6 +198,61 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(response).to redirect_to(sign_in_path)
     end
 
+    %i[consumer admin].each do |role|
+      it "denies the order detail to an active #{role} session" do
+        sign_in(users(role == :consumer ? :one : :admin), role:)
+
+        get provider_order_path(orders(:upcoming_pending_today))
+
+        expect(response).to redirect_to(root_path)
+      end
+    end
+
+    it "uses the active role even when the user also has a provider profile" do
+      user = users(:provider_user)
+      Consumer.create!(user:, company: companies(:gogrow))
+      sign_in user, role: :consumer
+
+      get provider_order_path(orders(:upcoming_pending_today))
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "preserves the ordered home address after profile and delivery settings change" do
+      order = orders(:upcoming_pending_today)
+      order.update!(address: "Colonia 1370, Apto 4")
+      order.consumer.update!(address: "Otra dirección 999")
+      order.provider.update!(home_delivery: false)
+      sign_in users(:provider_user), role: :provider
+
+      get provider_order_path(order)
+
+      expect(inertia).to have_props { |props|
+        props["order"].slice("address", "delivery_method") == {
+          "address" => "Colonia 1370, Apto 4", "delivery_method" => "home"
+        }
+      }
+    end
+
+    it "sends historical dish details and totals rather than the edited menu values" do
+      order = Order.create!(
+        consumer: consumers(:one), schedule: schedules(:today), amount: 2,
+        delivery_method: :office, price: 601, discounted_price: 300.50
+      )
+      original_name = order.menu_name
+      original_description = order.menu_description
+      order.menu.update!(name: "Plato nuevo", description: "Descripción nueva", price: 999)
+      sign_in users(:provider_user), role: :provider
+
+      get provider_order_path(order)
+
+      expect(inertia).to have_props { |props|
+        props["order"].slice("menu_name", "menu_description", "amount", "price", "discounted_price", "subsidy") == {
+          "menu_name" => original_name, "menu_description" => original_description,
+          "amount" => 2, "price" => 601.0, "discounted_price" => 300.50, "subsidy" => 300.50
+        }
+      }
+    end
     it "shows what the provider needs to prepare the order" do
       sign_in users(:provider_user), role: :provider
 
@@ -203,6 +266,7 @@ RSpec.describe "Provider::Orders", type: :request do
           order[:status] == "pending" &&
           order[:amount] == 1 &&
           order[:date] == Date.current.iso8601 &&
+          order[:created_on] == orders(:upcoming_pending_today).created_at.to_date.iso8601 &&
           order[:consumer_name] == "Test User" &&
           order[:consumer_email] == "one@example.com" &&
           order[:consumer_company] == "GoGrow" &&
@@ -257,6 +321,33 @@ RSpec.describe "Provider::Orders", type: :request do
       get provider_order_path(other_provider_order)
 
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "preserves rejection information in the order detail" do
+      order = orders(:upcoming_pending_today)
+      order.update!(status: :rejected, rejection_reason: :other, rejection_details: "Cerrado por reformas")
+      sign_in users(:provider_user), role: :provider
+
+      get provider_order_path(order)
+
+      expect(inertia).to have_props { |props|
+        props.deep_symbolize_keys[:order].slice(:status, :rejection_reason, :rejection_details) == {
+          status: "rejected", rejection_reason: "other", rejection_details: "Cerrado por reformas"
+        }
+      }
+    end
+
+    it "preserves the selected options after the menu group is deleted" do
+      order = other_provider_order
+      selection = order.selected_options
+      order.schedule.menu.option_groups.destroy_all
+      sign_in users(:other_provider_user), role: :provider
+
+      get provider_order_path(order)
+
+      expect(inertia).to have_props { |props|
+        props["order"]["selected_options"] == selection
+      }
     end
 
     it "shows order details for a cancelled order" do
@@ -320,6 +411,10 @@ RSpec.describe "Provider::Orders", type: :request do
 
       expect(order.reload).to be_confirmed
       expect(response).to redirect_to(provider_order_url(order))
+
+      follow_redirect!
+      expect(inertia).to render_component("provider/orders/show")
+      expect(inertia).to have_props { |props| props["order"]["status"] == order.reload.status }
     end
 
     it "leaves an order that is no longer pending as it was" do
@@ -341,6 +436,30 @@ RSpec.describe "Provider::Orders", type: :request do
 
       expect(response).to have_http_status(:not_found)
       expect(other_provider_order.reload).to be_pending
+    end
+
+    it "notifies the employee who placed the order" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+
+      patch confirm_provider_order_path(order)
+
+      notifications = Notification.where(event: "order_confirmation", notifiable: order)
+      expect(notifications.count).to eq(1)
+      expect(notifications.first.user).to eq(order.consumer.user)
+    end
+
+    it "still confirms the order when the notification cannot be saved" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:upcoming_pending_today)
+      allow(Notification).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
+
+      patch confirm_provider_order_path(order)
+
+      expect(order.reload).to be_confirmed
+      expect(response).to redirect_to(provider_orders_path)
+      follow_redirect!
+      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
     end
   end
 
@@ -441,6 +560,10 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.reload).to be_rejected
       expect(order.rejection_reason).to eq("duplicate_order")
       expect(response).to redirect_to(provider_order_url(order))
+
+      follow_redirect!
+      expect(inertia).to render_component("provider/orders/show")
+      expect(inertia).to have_props { |props| props["order"]["status"] == order.reload.status }
     end
 
     it "rejects an order the provider had already confirmed" do
