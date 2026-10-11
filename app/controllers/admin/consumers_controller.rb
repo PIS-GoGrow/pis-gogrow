@@ -12,7 +12,7 @@ class Admin::ConsumersController < Admin::InertiaController
 
     summary = AdminConsumerSummary.new(@consumer)
     @summary = summary.current_month
-    @benefit_percentage = @consumer.current_monthly_benefit&.percentage
+    @benefit_summary = OrderPricing.new(@consumer).summary
     @months = summary.months
   end
 

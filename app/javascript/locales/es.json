@@ -27,6 +27,12 @@
         "system": "Sistema",
         "toggle_theme": "Cambiar tema"
       },
+      "benefit_summary": {
+        "active": "Activo",
+        "base": "Subsidio Base",
+        "discount": "de descuento en viandas",
+        "inactive": "Sin beneficio"
+      },
       "date_picker": {
         "placeholder": "Elegí una fecha",
         "range_placeholder": "Elegí un rango"
@@ -87,9 +93,17 @@
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
+      },
+      "provider_payment_reminders": {
+        "description": "Recordatorios de pagos vencidos enviados por el proveedor.",
+        "title": "Recordatorios de pago del proveedor"
       }
     },
     "notifications": {
+      "debt_payment_reminder": {
+        "description": "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}.",
+        "title": "Recordatorio de pago pendiente"
+      },
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
         "title": "Tu pedido fue confirmado"
@@ -281,9 +295,6 @@
           "show": {
             "back": "Volver a empleados",
             "benefit": "Beneficio",
-            "benefit_active": "Activo",
-            "benefit_discount": "de descuento en viandas",
-            "benefit_inactive": "Sin beneficio",
             "benefit_none": "Este empleado no tiene un beneficio vigente.",
             "close": "Cerrar",
             "consumption": "Consumo",
@@ -382,6 +393,7 @@
       },
       "cart": {
         "add_address": "Agregar",
+        "benefit": "Beneficio GoGrow (%{percentage}%)",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
         "my_addresses": "Ver mis direcciones",
@@ -405,7 +417,9 @@
           "description": "Elegí a qué dirección querés recibir el pedido.",
           "submit": "Seleccionar",
           "title": "Mis direcciones"
-        }
+        },
+        "subtotal": "Precio vianda",
+        "total": "Monto a pagar"
       },
       "consumer_dashboard": {
         "index": {
@@ -418,7 +432,7 @@
       },
       "consumer_profiles": {
         "show": {
-          "benefit": "Tu beneficio",
+          "benefit": "Mi beneficio",
           "due_date": "Vigente hasta",
           "max_price": "Tope por vianda",
           "meals_one": "%{count} vianda",
@@ -426,7 +440,6 @@
           "monthly_limit": "Viandas subsidiadas por mes",
           "monthly_remaining": "Te quedan este mes",
           "no_benefit": "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa.",
-          "percentage": "Subsidio de la empresa",
           "sign_out": "Salir",
           "title": "Mi cuenta"
         }
@@ -584,6 +597,21 @@
           "company": "Empresa",
           "confirmed": "%{amount} en cobros confirmados",
           "detail": "Ver detalle",
+          "detail_dialog": {
+            "amount": "Monto",
+            "close": "Cerrar",
+            "collection_tab": "Cobro",
+            "date": "Fecha",
+            "description": "Detalle del consumo correspondiente a %{name}.",
+            "dish": "Plato",
+            "empty": "Todavía no hay viandas confirmadas en este período.",
+            "meals_tab": "Viandas",
+            "payment_history": "Ver historial de pagos",
+            "quantity": "Cant.",
+            "title": "Historial de consumo: %{month}",
+            "total": "Total: %{amount}",
+            "total_label": "Total"
+          },
           "due": "Vence: %{date}",
           "employees": "Empleados",
           "rejected_one": "%{count} cobro rechazado",
@@ -593,8 +621,19 @@
         "index": {
           "all_clients": "Todos",
           "clients": "Clientes:",
+          "close_consumption_detail": "Cerrar",
           "confirmed_meals_one": "%{count} vianda confirmada",
           "confirmed_meals_other": "%{count} viandas confirmadas",
+          "consumption_amount": "Monto: %{amount}",
+          "consumption_amount_column": "Monto",
+          "consumption_company": "Empresa",
+          "consumption_day": "Día: %{date}",
+          "consumption_detail_description": "Pedidos confirmados del mes agrupados por día y cliente.",
+          "consumption_detail_title": "Detalle de consumo: %{month}",
+          "consumption_empty": "No hay consumos confirmados para este cliente.",
+          "consumption_meals": "Viandas: %{count}",
+          "consumption_name": "Nombre",
+          "consumption_quantity": "Cant.",
           "delivered_meals_one": "%{count} vianda entregada",
           "delivered_meals_other": "%{count} viandas entregadas",
           "empty_history_all": "Todavía no hay meses cobrados por completo.",
@@ -611,7 +650,8 @@
           "section": "Cobros",
           "this_month": "Este mes",
           "title": "Cobros",
-          "total_debt": "Deuda total"
+          "total_debt": "Deuda total",
+          "view_consumption_detail": "Ver detalle del consumo"
         },
         "invoice": {
           "dialog": {
@@ -646,14 +686,51 @@
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
         "partial_payment_badge": "Pago parcial",
+        "reminder": {
+          "back": "Volver",
+          "confirm": {
+            "description": "Se enviará un recordatorio a %{employeeName} por su pago pendiente de %{month} de %{amount}.",
+            "title": "Recordar pago pendiente"
+          },
+          "done": "Listo",
+          "error": {
+            "description": "Intentá nuevamente.",
+            "title": "No pudimos enviar el recordatorio"
+          },
+          "limit_reached": "Alcanzaste el límite de recordatorios para este pago.",
+          "next_available": "Podés enviar otro recordatorio el %{date}.",
+          "retry": "Reintentar",
+          "send": "Enviar recordatorio",
+          "sending": "Enviando...",
+          "sent": "Recordatorio enviado",
+          "success": {
+            "description": "Se envió un recordatorio a %{employeeName} por su pago pendiente de %{month}.",
+            "title": "Recordatorio enviado"
+          },
+          "trigger": "Recordar pago pendiente"
+        },
         "review": {
+          "approve": "Aprobar",
           "approved_description": "El cobro fue confirmado correctamente. Se notificará al usuario.",
           "approved_title": "Cobro confirmado",
+          "approving": "Aprobando…",
+          "back": "Volver",
+          "check_receipt": "Comprobá el importe, la cuenta y el concepto del comprobante antes de confirmar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo.",
+          "current_month_restriction": "Todavía no podés aprobar este comprobante porque la cuenta corresponde al mes en curso. Podrás aprobarlo cuando termine el mes. Si el comprobante es incorrecto, podés rechazarlo.",
           "done": "Listo",
+          "download": "Descargar comprobante",
+          "expected_amount": "Importe esperado:",
+          "issue_description": "Seleccioná qué ocurrió con este comprobante.",
+          "issue_title": "Reportar un problema",
+          "open_receipt": "Abrir comprobante completo",
           "partial_description": "El comprobante quedó registrado como pago parcial. Se notificará al usuario para que abone el monto restante.",
           "partial_title": "Pago parcial registrado",
+          "receipt_title": "Comprobante",
+          "reject": "Rechazar",
+          "reject_receipt": "Rechazar comprobante",
           "rejected_description": "El comprobante fue rechazado. El cobro continúa pendiente y se notificará al usuario.",
-          "rejected_title": "Comprobante rechazado"
+          "rejected_title": "Comprobante rechazado",
+          "rejecting": "Rechazando…"
         },
         "show": {
           "amount": "Importe a cobrar",

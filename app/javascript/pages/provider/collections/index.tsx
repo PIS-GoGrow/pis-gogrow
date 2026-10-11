@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import CollectionGroupCard from "@/components/collections/collection-group-card"
+import SalesDetailDialog from "@/components/collections/sales-detail-dialog"
 import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
 import {
@@ -42,6 +43,7 @@ type Tab = "pending" | "history"
 
 export default function Index({
   sales,
+  sales_detail: salesDetail,
   outstanding,
   clients,
   pending,
@@ -95,7 +97,7 @@ export default function Index({
 
     // items-start: al desplegar una tarjeta, su vecina de fila no se estira.
     return (
-      <div className="grid items-start gap-4 lg:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-4 lg:grid-cols-2">
         {shown.map((group) => (
           <CollectionGroupCard
             key={group.key}
@@ -117,28 +119,17 @@ export default function Index({
       />
 
       <PageContainer title={t("pages.provider_collections.index.title")}>
-        <div className="grid gap-4 md:grid-cols-2">
-          <Stat
-            label={t("pages.provider_collections.index.sales")}
-            badge={
-              <Badge variant="secondary">
-                {t("pages.provider_collections.index.this_month")}
-              </Badge>
-            }
-            value={formatMoney(sales.total)}
-            detail={`| ${t("pages.provider_collections.index.confirmed_meals", { count: sales.meals })}`}
-          />
-          <Stat
-            label={t("pages.provider_collections.index.outstanding")}
-            badge={
-              <Badge variant="secondary">
-                {t("pages.provider_collections.index.total_debt")}
-              </Badge>
-            }
-            value={formatMoney(outstanding.total)}
-            detail={`| ${t("pages.provider_collections.index.delivered_meals", { count: outstanding.meals })}`}
-          />
-        </div>
+        <Stat
+          label={t("pages.provider_collections.index.sales")}
+          badge={
+            <Badge variant="secondary">
+              {t("pages.provider_collections.index.this_month")}
+            </Badge>
+          }
+          value={formatMoney(sales.total)}
+          detail={`| ${t("pages.provider_collections.index.confirmed_meals", { count: sales.meals })}`}
+          action={<SalesDetailDialog detail={salesDetail} />}
+        />
 
         <HeadingSmall title={t("pages.provider_collections.index.section")} />
 
@@ -195,7 +186,20 @@ export default function Index({
           </div>
 
           <PaymentReviewResultProvider value={setReviewResult}>
-            <TabsContent value="pending">
+            <TabsContent
+              value="pending"
+              className="grid min-w-0 grid-cols-1 gap-4"
+            >
+              <Stat
+                label={t("pages.provider_collections.index.outstanding")}
+                badge={
+                  <Badge variant="secondary">
+                    {t("pages.provider_collections.index.total_debt")}
+                  </Badge>
+                }
+                value={formatMoney(outstanding.total)}
+                detail={`| ${t("pages.provider_collections.index.delivered_meals", { count: outstanding.meals })}`}
+              />
               {renderTab("pending", pending)}
             </TabsContent>
             <TabsContent value="history">

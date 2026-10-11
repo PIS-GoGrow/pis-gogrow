@@ -43,7 +43,9 @@ Rails.application.routes.draw do
         patch :reject
       end
     end
-    resources :collections, only: [ :index, :show ]
+    resources :collections, only: [ :index, :show ] do
+      resources :debt_reminders, only: [ :create ]
+    end
     resources :invoices, only: [ :create, :destroy ] do
       get :file, on: :member
     end
