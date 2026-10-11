@@ -14,17 +14,17 @@ export function AddressOption({ option, selected, disabled = false }: Props) {
     <label
       className={cn(
         "border-border bg-card flex min-h-[66px] cursor-pointer items-center gap-3 rounded-[10px] border p-3",
-        selected && "border-foreground bg-muted",
+        selected && "border-primary bg-muted",
         disabled && "cursor-not-allowed opacity-50",
       )}
     >
       <RadioGroupItem
         value={option.address}
         disabled={disabled}
-        className="border-input bg-background text-primary data-[state=checked]:border-foreground data-[state=checked]:bg-background shadow-none"
+        className="border-input bg-background text-primary data-[state=checked]:border-primary data-[state=checked]:bg-background shadow-none"
       />
       <div className="flex flex-col gap-1 text-sm">
-        <span className="font-medium text-foreground">{option.label}</span>
+        <span className="text-foreground font-medium">{option.label}</span>
         <span className="text-muted-foreground text-xs leading-4">
           {option.address}
         </span>

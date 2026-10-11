@@ -37,7 +37,9 @@ export default function MenuItem({
     >
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-1.5">
-          <span className="text-muted-foreground text-sm font-medium">{providerName}</span>
+          <span className="text-muted-foreground text-sm font-medium">
+            {providerName}
+          </span>
           {addedQuantity && (
             <span className="text-foreground text-xs">• Agregado</span>
           )}

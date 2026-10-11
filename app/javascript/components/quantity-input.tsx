@@ -19,7 +19,7 @@ export function QuantityInput({ value, min = 1, max, onChange }: Props) {
         aria-label="Quitar uno"
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="hover:bg-primary hover:text-primary-foreground dark:hover:!bg-primary dark:hover:!text-primary-foreground h-full rounded-r-none rounded-l-[10px]"
+        className="hover:bg-primary hover:text-primary-foreground dark:hover:!bg-primary dark:hover:!text-primary-foreground h-full rounded-l-[10px] rounded-r-none"
       >
         <Minus aria-hidden="true" className="size-4" />
       </Button>

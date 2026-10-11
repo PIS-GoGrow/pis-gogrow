@@ -70,7 +70,9 @@ export function DishDetail({
       >
         <ChevronLeft aria-hidden="true" className="size-4" />
       </Button>
-      <p className="text-muted-foreground text-base font-medium">{item.menu.provider_name}</p>
+      <p className="text-muted-foreground text-base font-medium">
+        {item.menu.provider_name}
+      </p>
       <h1 className="mt-1 text-2xl font-bold">{item.menu.name}</h1>
       <p className="text-muted-foreground mt-2 text-base leading-6">
         {item.menu.description}
@@ -153,7 +155,7 @@ export function DishDetail({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Escribe las notas que necesites..."
-          className="mt-3 h-[87px] resize-none rounded-lg p-3 text-base placeholder:text-muted-foreground"
+          className="placeholder:text-muted-foreground mt-3 h-[87px] resize-none rounded-lg p-3 text-base"
         />
         <p className="text-muted-foreground mt-2 text-right text-sm">
           {notes.length}/140
