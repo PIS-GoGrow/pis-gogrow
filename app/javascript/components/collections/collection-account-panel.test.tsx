@@ -21,6 +21,8 @@ const account = {
   owner_name: "Juan Pérez",
   meals: 2,
   amount: 800,
+  vat_amount: 0,
+  payable_amount: 800,
   source: "consumer",
   status: "pending",
   can_approve_payment: false,
@@ -86,6 +88,8 @@ describe("CollectionAccountPanel", () => {
             account={{
               ...account,
               source,
+              vat_amount: source === "company" ? 176 : 0,
+              payable_amount: source === "company" ? 976 : 800,
               status: "submitted",
               payment_id: 17,
               receipt_url: "/provider/payments/17/receipt",
@@ -96,7 +100,11 @@ describe("CollectionAccountPanel", () => {
       )
       await user.click(screen.getByRole("button", { name: "Revisar pago" }))
       const dialog = screen.getByRole("dialog", { name: "Comprobante" })
-      expect(within(dialog).getByText("800,00 UYU")).toBeInTheDocument()
+      expect(
+        within(dialog).getByText(
+          source === "company" ? "976,00 UYU" : "800,00 UYU",
+        ),
+      ).toBeInTheDocument()
       expect(
         within(dialog).getByRole("button", { name: "Aprobar" }),
       ).toBeDisabled()

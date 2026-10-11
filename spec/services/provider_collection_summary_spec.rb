@@ -48,7 +48,7 @@ RSpec.describe ProviderCollectionSummary do
 
       expect(group.company_row).to be_approved
       expect(group.rows.map { it.orders.map(&:id) }).to eq([ [ order.id ], [ order.id ] ])
-      expect(group.total).to eq(200)
+      expect(group.total).to eq(222)
       expect(group.meals).to eq(2)
       expect(summary.history).to be_empty
       expect(select_queries { Provider::CollectionGroupSerializer.new(group).to_h }).to be_empty
@@ -76,7 +76,7 @@ RSpec.describe ProviderCollectionSummary do
     serialized = nil
     expect(select_queries { serialized = Provider::CollectionGroupSerializer.new(group).to_h }).to be_empty
 
-    expect(serialized).to include("total" => 200.0, "confirmed_total" => 200.0, "meals" => 2)
+    expect(serialized).to include("total" => 222.0, "confirmed_total" => 222.0, "meals" => 2)
     expect(serialized["company"]["invoice"]).to include("id" => invoice.id, "total_amount" => 100.0)
     [ serialized["company"], *serialized["employees"] ].each do |row|
       expect(row).to include("amount" => 100.0, "status" => "approved", "meals" => 2)
@@ -134,7 +134,7 @@ RSpec.describe ProviderCollectionSummary do
     expect(small_rows.map { it["orders"].size }).to eq([ 2, 2 ])
     expect(large_rows.map { it["orders"].size }).to eq([ 12, 12 ])
     expect(large_rows.flat_map { it["orders"].pluck("id") }.uniq.size).to eq(12)
-    expect(large_response["history"].sole).to include("total" => 2400.0, "meals" => 24)
+    expect(large_response["history"].sole).to include("total" => 2664.0, "meals" => 24)
   end
 
   it "keeps the sales detail query count constant as orders with different schedules increase" do
@@ -165,6 +165,6 @@ RSpec.describe ProviderCollectionSummary do
     expect(detail[:days].map { it[:orders].pluck(:id) }).to eq(orders.reverse.map { [ it.id ] })
     expect(detail_orders.sum { it[:amount] }).to eq(400.0)
     expect(detail_orders.sum { it[:meals] }).to eq(4)
-    expect(summary.sales).to eq(total: 400.0, meals: 4)
+    expect(summary.sales).to eq(total: 444.0, meals: 4)
   end
 end

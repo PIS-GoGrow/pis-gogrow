@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
 import type { ProviderCollectionAccount } from "@/types"
@@ -19,6 +20,8 @@ const historicalCompanyAccount = {
   owner_name: "GoGrow",
   meals: 10,
   amount: 30_000,
+  vat_amount: 6_600,
+  payable_amount: 36_600,
   source: "company",
   status: "approved",
   can_approve_payment: false,
@@ -49,6 +52,26 @@ const historicalCompanyAccount = {
 } satisfies ProviderCollectionAccount
 
 describe("InvoiceSection", () => {
+  it("uses the company payable amount as the suggested invoice total", async () => {
+    const user = userEvent.setup()
+    const account = {
+      ...historicalCompanyAccount,
+      status: "pending",
+      invoice: null,
+    } satisfies ProviderCollectionAccount
+
+    render(<InvoiceSection account={account} />)
+
+    await user.upload(
+      screen.getByLabelText("Archivo de la factura"),
+      new File(["invoice"], "factura.pdf", { type: "application/pdf" }),
+    )
+    await user.click(screen.getByRole("button", { name: "Subir factura" }))
+
+    expect(screen.getByLabelText("Monto total")).toHaveValue(36_600)
+    expect(screen.getByText(/36\.600,00 UYU/)).toBeInTheDocument()
+  })
+
   it("shows the invoice download in collection history", () => {
     render(<InvoiceSection account={historicalCompanyAccount} settled />)
 

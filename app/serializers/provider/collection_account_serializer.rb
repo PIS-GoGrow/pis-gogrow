@@ -11,6 +11,16 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     row.amount.to_f
   end
 
+  typelize :number
+  attribute :vat_amount do |row|
+    row.vat_amount.to_f
+  end
+
+  typelize :number
+  attribute :payable_amount do |row|
+    row.payable_amount.to_f
+  end
+
   typelize "'consumer' | 'company'"
   attribute :source do |row|
     row.company? ? "company" : "consumer"

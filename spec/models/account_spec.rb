@@ -54,6 +54,20 @@ RSpec.describe Account, type: :model do
       expect(past_account.current?).to be(false)
     end
 
+    it "keeps employee accounts free of VAT" do
+      account = Account.new(owner: consumer, provider:, amount: 150.25)
+
+      expect(account.vat_amount).to eq(0.to_d)
+      expect(account.payable_amount).to eq(150.25.to_d)
+    end
+
+    it "adds 22 percent VAT to the payable company amount" do
+      account = Account.new(owner: company, provider:, amount: 150.25)
+
+      expect(account.vat_amount).to eq(33.06.to_d)
+      expect(account.payable_amount).to eq(183.31.to_d)
+    end
+
     it "calculates the due date as the 5th day after the following month" do
       account = Account.create!(
         owner: consumer,

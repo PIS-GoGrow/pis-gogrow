@@ -20,7 +20,7 @@ class ProviderCollectionSummary
       super
     end
 
-    delegate :id, :amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
+    delegate :id, :amount, :vat_amount, :payable_amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
 
     def orders
       account.orders.select(&:confirmed?).sort_by do |order|
@@ -63,9 +63,9 @@ class ProviderCollectionSummary
 
     def key = "#{client.id}-#{month.strftime('%Y-%m')}"
 
-    def total = rows.sum(&:amount)
+    def total = rows.sum(&:payable_amount)
 
-    def confirmed_total = rows.select(&:approved?).sum(&:amount)
+    def confirmed_total = rows.select(&:approved?).sum(&:payable_amount)
 
     def awaiting_count = rows.count { it.collection_status.in?(%w[pending submitted]) }
 
@@ -187,7 +187,9 @@ class ProviderCollectionSummary
   end
 
   def amount_of(records)
-    records.sum { it.amount || 0 }.to_f
+    # Los resúmenes usan el importe cobrable: subtotal para empleados y
+    # subtotal más IVA para las cuentas de empresa.
+    records.sum(&:payable_amount).to_f
   end
 
   # Las cuentas en cero no tienen nada que cobrar (solo pedidos sin confirmar).

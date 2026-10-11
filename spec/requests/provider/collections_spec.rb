@@ -49,8 +49,8 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(inertia).to render_component("provider/collections/index")
       # Cuatro viandas confirmadas: cada pedido se cuenta una vez aunque cuelgue
       # de la cuenta del empleado y de la de la empresa.
-      expect(props[:sales]).to include(total: 1202.0, meals: 4)
-      expect(props[:outstanding]).to include(total: 1202.0, meals: 4)
+      expect(props[:sales]).to include(total: 1334.22, meals: 4)
+      expect(props[:outstanding]).to include(total: 1334.22, meals: 4)
     end
 
     %i[beginning_of_month end_of_month].each do |boundary|
@@ -65,7 +65,7 @@ RSpec.describe "Provider::Collections", type: :request do
 
           get provider_collections_path
 
-          expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 })
+          expect(inertia).to have_props(sales: { total: 1334.22, meals: 4 })
           expect(inertia).to have_props { |page|
             detail = page[:sales_detail]
             detail_orders = detail[:days].flat_map { it[:orders] }
@@ -91,7 +91,7 @@ RSpec.describe "Provider::Collections", type: :request do
 
       group = group_for(:pending, Date.current)
 
-      expect(group).to include(client_name: "GoGrow", total: 1202.0, confirmed_total: 0.0, meals: 4)
+      expect(group).to include(client_name: "GoGrow", total: 1334.22, confirmed_total: 0.0, meals: 4)
       expect(group[:company]).to include(owner_name: "GoGrow", amount: 601.0, status: "pending")
       expect(group[:employees].pluck(:owner_name, :status)).to eq(
         [ [ "Other Consumer User", "submitted" ], [ "Test User", "rejected" ] ]
@@ -122,7 +122,7 @@ RSpec.describe "Provider::Collections", type: :request do
       get provider_collections_path
 
       expect(props[:pending].pluck(:month)).to eq([ I18n.l(Date.current, format: :month_name_year) ])
-      expect(group_for(:history, 1.month.ago.to_date)).to include(total: 900.0, confirmed_total: 900.0)
+      expect(group_for(:history, 1.month.ago.to_date)).to include(total: 1098.0, confirmed_total: 1098.0)
       expect(group_for(:history, 1.month.ago.to_date)[:company][:paid_on]).to be_present
     end
 
@@ -239,7 +239,7 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(props[:clients]).to eq([ { id: companies(:gogrow).id, name: "GoGrow" } ])
     end
 
-    it "keeps each total equal to the sum of its accounts" do
+    it "keeps each total equal to the sum of its payable account amounts" do
       sign_in provider_user, role: :provider
 
       get provider_collections_path
@@ -247,7 +247,7 @@ RSpec.describe "Provider::Collections", type: :request do
       (props[:pending] + props[:history]).each do |group|
         accounts = [ group[:company], *group[:employees] ].compact
 
-        expect(group[:total]).to eq(accounts.sum { it[:amount] })
+        expect(group[:total]).to eq(accounts.sum { it[:payable_amount] })
         expect(group[:employees_total]).to eq(group[:employees].sum { it[:amount] })
       end
     end

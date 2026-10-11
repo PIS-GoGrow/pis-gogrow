@@ -6,6 +6,7 @@
 # El atributo month dice para qué mes es válida la cuenta. Este atributo
 # siempre es igual al primer día de un mes, esto se hace automáticamente.
 class Account < ApplicationRecord
+  VAT_RATE = BigDecimal("0.22")
   belongs_to :owner, polymorphic: true
 
   belongs_to :provider
@@ -37,6 +38,16 @@ class Account < ApplicationRecord
 
   def current?
     month == Date.current.beginning_of_month
+  end
+
+  # La cuenta conserva el subtotal que surge de las órdenes. Solo la empresa
+  # agrega IVA al importe que efectivamente debe cobrar el proveedor.
+  def vat_amount
+    company? ? (amount.to_d * VAT_RATE).round(2) : 0.to_d
+  end
+
+  def payable_amount
+    amount.to_d + vat_amount
   end
 
   def due_date

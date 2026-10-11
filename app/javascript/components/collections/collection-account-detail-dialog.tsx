@@ -12,7 +12,6 @@ import {
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
 import StatusBadge from "@/components/status-badge"
-import TextLink from "@/components/text-link"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -25,7 +24,6 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
-import { providerCollections } from "@/routes"
 import type {
   ProviderCollectionAccount,
   ProviderCollectionOrder,
@@ -37,7 +35,6 @@ interface CollectionAccountDetailDialogProps {
 }
 
 const page = "pages.provider_collections.group.detail_dialog"
-const VAT_RATE = 0.22
 
 function shortDate(date: string | null) {
   return date?.split("/").slice(0, 2).join("/") ?? "-"
@@ -115,41 +112,35 @@ function ConsumptionTable({
 
 function CompanyCollection({
   account,
-  settled,
 }: {
   account: ProviderCollectionAccount
-  settled: boolean
 }) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
-  const vat = account.amount * VAT_RATE
-  const total = account.amount + vat
+  // Los importes llegan calculados por el servidor para que el detalle y los
+  // resúmenes apliquen exactamente la misma regla de IVA.
+  const vat = account.vat_amount
+  const total = account.payable_amount
 
   return (
     <div className="grid gap-4 rounded-lg border p-3">
       <dl className="grid gap-3 text-sm">
-        {settled && (
-          <>
-            <div className="grid gap-1">
-              <dt className="text-muted-foreground">{t(`${page}.subtotal`)}</dt>
-              <dd className="font-semibold">{formatMoney(account.amount)}</dd>
-            </div>
-            <Separator />
-            <div className="grid gap-1">
-              <dt className="text-muted-foreground">{t(`${page}.vat`)}</dt>
-              <dd className="font-semibold">{formatMoney(vat)}</dd>
-            </div>
-            <Separator className="bg-foreground/50" />
-          </>
-        )}
+        <div className="grid gap-1">
+          <dt className="text-muted-foreground">{t(`${page}.subtotal`)}</dt>
+          <dd className="font-semibold">{formatMoney(account.amount)}</dd>
+        </div>
+        <Separator />
+        <div className="grid gap-1">
+          <dt className="text-muted-foreground">{t(`${page}.vat`)}</dt>
+          <dd className="font-semibold">{formatMoney(vat)}</dd>
+        </div>
+        <Separator className="bg-foreground/50" />
         <div className="flex items-end justify-between gap-3">
           <div className="grid gap-1">
             <dt className="text-muted-foreground">
               {t(`${page}.total_label`)}
             </dt>
-            <dd className="font-semibold">
-              {formatMoney(settled ? total : account.amount)}
-            </dd>
+            <dd className="font-semibold">{formatMoney(total)}</dd>
           </div>
           <StatusBadge status={account.status} kind="payment" />
         </div>
@@ -202,7 +193,7 @@ export default function CollectionAccountDetailDialog({
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="collection">
-                <CompanyCollection account={account} settled={settled} />
+                <CompanyCollection account={account} />
               </TabsContent>
               <TabsContent value="meals">
                 <ConsumptionTable account={account} settled={settled} />
@@ -213,15 +204,7 @@ export default function CollectionAccountDetailDialog({
           )}
         </div>
 
-        <AdaptableDialogFooter className={settled ? "p-4" : "p-4 sm:flex-col"}>
-          {!settled && account.payments.length > 0 && (
-            <TextLink
-              href={providerCollections.show(account.id)}
-              className="self-center text-sm"
-            >
-              {t(`${page}.payment_history`)}
-            </TextLink>
-          )}
+        <AdaptableDialogFooter className="p-4">
           <AdaptableDialogClose asChild>
             <Button className="w-full">{t(`${page}.close`)}</Button>
           </AdaptableDialogClose>

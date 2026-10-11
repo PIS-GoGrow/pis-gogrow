@@ -1,4 +1,3 @@
-import { router } from "@inertiajs/react"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
@@ -27,6 +26,8 @@ const baseAccount = {
   owner_name: "Juan Pérez",
   meals: 2,
   amount: 800,
+  vat_amount: 0,
+  payable_amount: 800,
   source: "consumer",
   status: "submitted",
   can_approve_payment: false,
@@ -76,23 +77,26 @@ describe("CollectionAccountDetailDialog", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("shows collection totals and meals for a company", async () => {
+  it("shows the VAT breakdown and meals for a pending company", async () => {
     const user = userEvent.setup()
     const company = {
       ...baseAccount,
       id: 2,
       owner_name: "GoGrow",
       source: "company",
+      vat_amount: 176,
+      payable_amount: 976,
       status: "pending",
     } satisfies ProviderCollectionAccount
 
     render(<CollectionAccountDetailDialog account={company} />)
     await user.click(screen.getByRole("button", { name: "Ver detalle" }))
 
-    expect(screen.getByText("Total")).toBeInTheDocument()
+    expect(screen.getByText("Subtotal sin IVA")).toBeInTheDocument()
+    expect(screen.getByText("IVA (22%)")).toBeInTheDocument()
     expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
-    expect(screen.queryByText(/IVA/)).not.toBeInTheDocument()
-    expect(screen.queryByText("976,00 UYU")).not.toBeInTheDocument()
+    expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
     expect(screen.getByText("Pendiente")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
@@ -103,13 +107,15 @@ describe("CollectionAccountDetailDialog", () => {
     expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
   })
 
-  it("shows the VAT breakdown only for company payment history", async () => {
+  it("shows the VAT breakdown for company payment history", async () => {
     const user = userEvent.setup()
     const company = {
       ...baseAccount,
       id: 2,
       owner_name: "GoGrow",
       source: "company",
+      vat_amount: 176,
+      payable_amount: 976,
       status: "approved",
       payments: [
         {
@@ -138,13 +144,15 @@ describe("CollectionAccountDetailDialog", () => {
   })
 
   it.each(["consumer", "company"] as const)(
-    "links a %s account with one rejected partial payment to its history",
+    "does not link a %s account with one rejected partial payment to its history",
     async (source) => {
       const user = userEvent.setup()
       const account = {
         ...baseAccount,
         id: source === "consumer" ? 11 : 22,
         source,
+        vat_amount: source === "company" ? 176 : 0,
+        payable_amount: source === "company" ? 976 : 800,
         status: "rejected",
         payments: [
           {
@@ -168,25 +176,15 @@ describe("CollectionAccountDetailDialog", () => {
       }
       expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
 
-      const link = screen.getByRole("link", { name: "Ver historial de pagos" })
-      expect(link).toHaveAttribute(
-        "href",
-        `/provider/collections/${account.id}`,
-      )
-
-      const visit = vi
-        .spyOn(router, "visit")
-        .mockImplementation(() => undefined)
-      await user.click(link)
-      expect(visit).toHaveBeenCalledWith(
-        `/provider/collections/${account.id}`,
-        expect.any(Object),
-      )
-      visit.mockRestore()
+      expect(
+        screen.queryByRole("link", { name: "Ver historial de pagos" }),
+      ).not.toBeInTheDocument()
 
       if (source === "company") {
         await user.click(screen.getByRole("tab", { name: "Cobro" }))
         expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+        expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
+        expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
         expect(screen.getByText("Rechazado")).toBeInTheDocument()
       }
     },
@@ -209,6 +207,8 @@ describe("Collections payment history destination", () => {
       const account = {
         ...baseAccount,
         source,
+        vat_amount: source === "company" ? 176 : 0,
+        payable_amount: source === "company" ? 976 : 800,
         status: "rejected",
         payments: [payment],
       } satisfies ProviderCollectionAccount
