@@ -608,10 +608,13 @@
             "meals_tab": "Viandas",
             "payment_history": "Ver historial de pagos",
             "quantity": "Cant.",
+            "subtotal": "Subtotal sin IVA",
             "title": "Historial de consumo: %{month}",
             "total": "Total: %{amount}",
-            "total_label": "Total"
+            "total_label": "Total",
+            "vat": "IVA (22%)"
           },
+          "download_receipts": "Descargar comprobantes",
           "due": "Vence: %{date}",
           "employees": "Empleados",
           "rejected_one": "%{count} cobro rechazado",

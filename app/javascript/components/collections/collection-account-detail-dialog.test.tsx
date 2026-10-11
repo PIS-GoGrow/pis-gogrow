@@ -103,6 +103,40 @@ describe("CollectionAccountDetailDialog", () => {
     expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
   })
 
+  it("shows the VAT breakdown only for company payment history", async () => {
+    const user = userEvent.setup()
+    const company = {
+      ...baseAccount,
+      id: 2,
+      owner_name: "GoGrow",
+      source: "company",
+      status: "approved",
+      payments: [
+        {
+          id: 1,
+          status: "approved",
+          rejection_reason: null,
+          date: "02/10/26",
+          receipt_url: "/receipt.pdf",
+          receipt_filename: "comprobante.pdf",
+          receipt_content_type: "application/pdf",
+        },
+      ],
+    } satisfies ProviderCollectionAccount
+
+    render(<CollectionAccountDetailDialog account={company} settled />)
+    await user.click(screen.getByRole("button", { name: "Ver detalle" }))
+
+    expect(screen.getByText("Subtotal sin IVA")).toBeInTheDocument()
+    expect(screen.getByText("IVA (22%)")).toBeInTheDocument()
+    expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(
+      screen.queryByRole("link", { name: "Ver historial de pagos" }),
+    ).not.toBeInTheDocument()
+  })
+
   it.each(["consumer", "company"] as const)(
     "links a %s account with one rejected partial payment to its history",
     async (source) => {

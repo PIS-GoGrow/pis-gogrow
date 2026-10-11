@@ -25,6 +25,7 @@ interface CollectionAccountPanelProps {
   children?: ReactNode
   showPaymentHistory?: boolean
   showDownloadAll?: boolean
+  settled?: boolean
   detailMode?: "dialog" | "link"
 }
 
@@ -35,6 +36,7 @@ export default function CollectionAccountPanel({
   children,
   showPaymentHistory = false,
   showDownloadAll = false,
+  settled = false,
   detailMode = "dialog",
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
@@ -89,7 +91,7 @@ export default function CollectionAccountPanel({
         </p>
 
         {detailMode === "dialog" ? (
-          <CollectionAccountDetailDialog account={account} />
+          <CollectionAccountDetailDialog account={account} settled={settled} />
         ) : (
           <Link
             href={providerCollections.show(account.id)}

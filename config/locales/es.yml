@@ -623,6 +623,7 @@ es:
         company: "Empresa"
         due: "Vence: %{date}"
         detail: "Ver detalle"
+        download_receipts: "Descargar comprobantes"
         detail_dialog:
           title: "Historial de consumo: %{month}"
           description: "Detalle del consumo correspondiente a %{name}."
@@ -632,6 +633,8 @@ es:
           dish: "Plato"
           quantity: "Cant."
           amount: "Monto"
+          subtotal: "Subtotal sin IVA"
+          vat: "IVA (22%)"
           total_label: "Total"
           payment_history: "Ver historial de pagos"
           total: "Total: %{amount}"
