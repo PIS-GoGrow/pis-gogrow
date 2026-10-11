@@ -55,7 +55,10 @@ class Notification < ApplicationRecord
   private
 
   def send_whatsapp
-    # TODO: a definir
+    content = title + "\n\n" + description
+    phone = "59898163754"
+
+    WhatsappSenderJob.peform_later(content, phone)
   end
 
   def role_belongs_to_user
