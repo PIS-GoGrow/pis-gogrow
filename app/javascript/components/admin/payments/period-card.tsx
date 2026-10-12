@@ -62,7 +62,7 @@ export default function PeriodCard({
         <p className="flex flex-wrap items-baseline gap-x-2">
           {/* El monto es un decimal de Rails, así que viaja como texto. */}
           <strong className="text-2xl">
-            {formatMoney(Number(account.amount ?? 0))}
+            {formatMoney(account.payable_amount)}
           </strong>
           <span className="text-muted-foreground text-sm">
             {"| "}

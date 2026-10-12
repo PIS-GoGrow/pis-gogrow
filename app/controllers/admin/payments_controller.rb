@@ -14,7 +14,7 @@ class Admin::PaymentsController < Admin::InertiaController
     @accounts = serialize(unpaid, sums)
     @history = serialize(settled, sums)
     @providers = Provider.eager_load(:user).order("LOWER(users.name)")
-    @total_debt = unpaid.sum { it.amount || 0 }.to_f
+    @total_debt = unpaid.sum(&:payable_amount).to_f
     @current_month = current_month_summary
   end
 
@@ -27,7 +27,7 @@ class Admin::PaymentsController < Admin::InertiaController
     render json: {
       orders: SimplifiedOrderSerializer.new(account.orders.confirmed.order(:created_at)).serializable_hash,
       month: I18n.l(account.month, format: :month_year),
-      amount: account.amount.to_f
+      amount: account.payable_amount.to_f
     }
   end
 
@@ -102,6 +102,6 @@ class Admin::PaymentsController < Admin::InertiaController
     base_subsidy = BenefitConfiguration.base_subsidy_for(company)
     limit = base_subsidy&.benefit_rules&.find_by(type: MonthlyBenefit.name)&.limit
 
-    { amount: current.sum(:amount).to_f, meals:, limit: limit && limit * company.consumers.count }
+    { amount: current.sum(&:payable_amount).to_f, meals:, limit: limit && limit * company.consumers.count }
   end
 end
