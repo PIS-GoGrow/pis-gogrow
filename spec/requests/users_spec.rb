@@ -5,43 +5,22 @@ require "rails_helper"
 RSpec.describe "Users", type: :request do
   fixtures :users
 
-  describe "GET /sign_up" do
-    it "renders the sign up page" do
-      get sign_up_path
-      expect(response).to have_http_status(:success)
+  describe "/sign_up" do
+    it "does not exist" do
+      get "/sign_up"
+      expect(response).to have_http_status(:not_found)
     end
 
-    it "redirects authenticated users" do
-      sign_in users(:one)
-      get sign_up_path
-      expect(response).to redirect_to(root_path)
-    end
-  end
-
-  describe "POST /sign_up" do
-    it "creates a new user" do
+    it "does not create users" do
       expect {
-        post sign_up_path, params: {
+        post "/sign_up", params: {
           name: "New User",
           email: "new@example.com",
           password: "Secret1*3*5*",
           password_confirmation: "Secret1*3*5*"
         }
-      }.to change(User, :count).by(1)
-      expect(response).to redirect_to(sign_in_path)
-      expect(cookies[:session_token]).to be_blank
-    end
-
-    it "rejects invalid user" do
-      expect {
-        post sign_up_path, params: {
-          name: "",
-          email: "invalid",
-          password: "short",
-          password_confirmation: "short"
-        }
       }.not_to change(User, :count)
-      expect(response).to redirect_to(sign_up_path)
+      expect(response).to have_http_status(:not_found)
     end
   end
 
