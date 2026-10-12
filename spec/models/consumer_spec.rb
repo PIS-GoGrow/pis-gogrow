@@ -267,6 +267,27 @@ RSpec.describe Consumer, type: :model do
       expect(consumer.monthly_benefit_for(current_month_schedule)).to be_nil
     end
 
+    it "no confunde un subsidio especial que vence antes con el beneficio mensual" do
+      monthly = Benefit.create!(
+        consumer:,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :current,
+        percentage: 50,
+        amount: 20,
+        due_date: Date.current.end_of_month + 1.day
+      )
+      Benefit.create!(
+        consumer:,
+        benefit_configuration: benefit_configurations(:gift),
+        status: :current,
+        percentage: 30,
+        amount: 2,
+        due_date: Date.current
+      )
+
+      expect(consumer.monthly_benefit_for(current_month_schedule)).to eq(monthly)
+    end
+
     it "devuelve nil si no existe ningún beneficio válido para la fecha del schedule" do
       expect(consumer.monthly_benefit_for(next_month_schedule)).to be_nil
     end

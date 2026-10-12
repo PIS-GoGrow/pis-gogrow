@@ -5,6 +5,14 @@ require "rails_helper"
 RSpec.describe "Provider::Orders", type: :request do
   fixtures :users, :companies, :providers, :consumers, :menus, :menu_option_groups, :schedules, :orders
 
+  before do
+    travel_to schedules(:today).date.noon
+  end
+
+  after do
+    travel_back
+  end
+
   # El pedido del otro proveedor se crea acá y no en los fixtures: los specs de
   # "Mis pedidos" cuentan órdenes y una fila más les cambiaría las listas.
   let(:other_provider_order) do

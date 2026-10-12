@@ -15,46 +15,10 @@ import type {
 } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
 import { OrderError } from "./order-error"
-import { WeeklyMenu } from "./weekly-menu"
+import { cartPricedItem, priceItems } from "./pricing"
+import { WeeklyMenu, today } from "./weekly-menu"
 
 type View = "menu" | "detail" | "cart" | "confirmation" | "error"
-
-const pricingFor = (
-  items: CartItem[],
-  percentage: number,
-  monthlyRemaining: number,
-) => {
-  let remaining = percentage > 0 ? Math.max(monthlyRemaining, 0) : 0
-  let subtotal = 0
-  let discount = 0
-  let subsidizedQuantity = 0
-  let fullPriceQuantity = 0
-
-  const lineDiscounts: Record<string, number> = {}
-
-  items.forEach((item) => {
-    const lineSubtotal = item.menu.price * item.quantity
-    const subsidized = Math.min(item.quantity, remaining)
-    const lineDiscount = (item.menu.price * subsidized * percentage) / 100
-
-    subtotal += lineSubtotal
-    discount += lineDiscount
-    subsidizedQuantity += subsidized
-    fullPriceQuantity += item.quantity - subsidized
-    remaining -= subsidized
-
-    lineDiscounts[item.cartId] = lineDiscount
-  })
-
-  return {
-    subtotal,
-    discount,
-    total: subtotal - discount,
-    subsidizedQuantity,
-    fullPriceQuantity,
-    lineDiscounts,
-  }
-}
 
 export default function Index({
   week,
@@ -64,7 +28,12 @@ export default function Index({
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")
-  const [date, setDate] = useState(week.days[0]?.date ?? "")
+  const todayDate = today()
+  const initialDate =
+    week.days.find((d) => d.date === todayDate)?.date ??
+    week.days[0]?.date ??
+    ""
+  const [date, setDate] = useState(initialDate)
   const [selected, setSelected] = useState<Schedule | null>(null)
   // Guardamos el carrito en sessionStorage. Así, se persiste si el consumidor
   // recarga la página o navega por la aplicación, pero se borra si cierra la
@@ -96,20 +65,7 @@ export default function Index({
 
   const visibleSchedules = schedules.filter((item) => item.date === date)
 
-  const pricing = pricingFor(
-    cart,
-    benefit.percentage,
-    benefit.monthly_remaining,
-  )
-
-  const {
-    subtotal,
-    discount,
-    total,
-    subsidizedQuantity,
-    fullPriceQuantity,
-    lineDiscounts,
-  } = pricing
+  const pricing = priceItems(cart.map(cartPricedItem), benefit)
 
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
   const addressOptions = [
@@ -215,7 +171,7 @@ export default function Index({
             schedules={visibleSchedules}
             cart={cart}
             count={count}
-            total={total}
+            total={pricing.total}
             openDetail={openDetail}
             openCart={() => setView("cart")}
           />
@@ -229,28 +185,22 @@ export default function Index({
             selections={selections}
             setSelections={setSelections}
             setNotes={setNotes}
-            percentage={benefit.percentage}
+            benefit={benefit}
+            cart={cart}
             back={() => setView("menu")}
             add={addToCart}
-            monthlyRemaining={benefit.monthly_remaining}
           />
         )}
         {view === "cart" && (
           <ConsumerCart
             monthlyLimit={benefit.monthly_limit}
             monthlyRemaining={benefit.monthly_remaining}
-            subsidizedQuantity={subsidizedQuantity}
-            fullPriceQuantity={fullPriceQuantity}
-            lineDiscounts={lineDiscounts}
+            pricing={pricing}
             cart={cart}
             addresses={addressOptions}
             address={address}
             setAddress={setAddress}
             onAddAddress={addAddress}
-            percentage={benefit.percentage}
-            subtotal={subtotal}
-            discount={discount}
-            total={total}
             processing={form.processing}
             error={form.errors.order_error}
             back={() => setView("menu")}

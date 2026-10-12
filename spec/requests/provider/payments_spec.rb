@@ -131,6 +131,25 @@ RSpec.describe "Provider payments", type: :request do
     expect(response).to have_http_status(:not_found)
   end
 
+  it "keeps a rejected partial payment receipt accessible only to its provider" do
+    user, payment = setup_submitted_payment
+    payment.update!(status: :rejected, rejection_reason: "El pago es parcial")
+    sign_in(user, role: :provider)
+
+    get receipt_provider_payment_path(payment)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.media_type).to eq("image/png")
+    expect(payment.reload).to be_rejected
+
+    other = create_provider("other-receipt-provider@gmail.com")
+    sign_in(other.user, role: :provider)
+    get receipt_provider_payment_path(payment)
+
+    expect(response).to have_http_status(:not_found)
+    expect(payment.reload).to be_rejected
+  end
+
   it "redirects a consumer trying to review a payment" do
     _user, payment = setup_submitted_payment
     consumer_user = User.create!(email: "unauth-consumer@gmail.com", name: "Consumer", password: "password123456")

@@ -73,7 +73,7 @@ class Consumer < ApplicationRecord
   # Esto es, el current_monthly_benefit si la fecha del schedule lo permite,
   # o el siguiente si no.
   def monthly_benefit_for(schedule)
-    benefits
+    monthly_benefits
       .where.not(status: :expired)
       .where(due_date: schedule.date..)
       .order(due_date: :asc) # Debería haber a lo sumo 2: uno current y uno future

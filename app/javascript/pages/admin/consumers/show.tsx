@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 
 import ConsumerMonthSheet from "@/components/admin/consumer-month-sheet"
 import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
+import BenefitSummaryCard from "@/components/benefit-summary-card"
 import HeadingSmall from "@/components/heading-small"
 import ListItemCard from "@/components/list-item-card"
 import PageContainer from "@/components/page-container"
@@ -46,7 +47,7 @@ const page = "pages.admin.consumers.show"
 export default function Show({
   consumer,
   summary,
-  benefit_percentage,
+  benefit_summary,
   months,
 }: AdminConsumersShow) {
   const { t } = useTranslation()
@@ -163,32 +164,11 @@ export default function Show({
             </CardContent>
           </Card>
 
-          <Card className="bg-muted/50 gap-3 py-4">
-            <CardHeader className="px-4">
-              <CardDescription>{t(`${page}.benefit`)}</CardDescription>
-              <CardAction>
-                <Badge variant="secondary">
-                  {benefit_percentage != null
-                    ? t(`${page}.benefit_active`)
-                    : t(`${page}.benefit_inactive`)}
-                </Badge>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="px-4">
-              {benefit_percentage != null ? (
-                <p className="flex flex-wrap items-baseline gap-x-2">
-                  <strong className="text-2xl">{benefit_percentage}%</strong>
-                  <span className="font-medium">
-                    {t(`${page}.benefit_discount`)}
-                  </span>
-                </p>
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  {t(`${page}.benefit_none`)}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <BenefitSummaryCard
+            title={t(`${page}.benefit`)}
+            summary={benefit_summary}
+            empty={t(`${page}.benefit_none`)}
+          />
         </div>
 
         <div className="flex items-center justify-between gap-4">

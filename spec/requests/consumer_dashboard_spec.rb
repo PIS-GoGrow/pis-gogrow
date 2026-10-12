@@ -79,7 +79,8 @@ RSpec.describe "Consumer dashboard", type: :request do
         percentage: 50,
         monthly_limit: 20,
         monthly_used: 5,
-        monthly_remaining: 15
+        monthly_remaining: 15,
+        specials: []
       }
     )
   end
@@ -635,6 +636,54 @@ RSpec.describe "Consumer dashboard", type: :request do
       expect {
         get dashboard_confirmation_path(confirmed_order_ids: [ other_order.id ])
       }.to raise_error(NoMethodError)
+    end
+  end
+
+  # IBP-037: el carrito necesita los subsidios especiales vigentes para mostrar
+  # el precio con base + especial antes de confirmar.
+  describe "GET /dashboard — subsidios especiales" do
+    around do |example|
+      travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
+    end
+
+    let(:consumer) { consumers(:one) }
+
+    before do
+      consumer.benefits.destroy_all
+      consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly), percentage: 50, amount: 20, due_date: Date.new(2026, 9, 30)
+      )
+      sign_in users(:one)
+    end
+
+    it "exposes the special subsidies in force with their uses left" do
+      gift = consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2, due_date: Date.new(2026, 9, 19)
+      )
+      seniority = consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:seniority), description: "Antigüedad", percentage: 10
+      )
+      OrderBenefit.create!(order: orders(:upcoming_pending_future), benefit: gift, benefit_used: 1)
+
+      get dashboard_path
+
+      expect(inertia.props[:benefit]).to include(
+        percentage: 50,
+        specials: [
+          { id: gift.id, name: "Premio", percentage: 30, remaining: 1, due_date: "2026-09-19" },
+          { id: seniority.id, name: "Antigüedad", percentage: 10, remaining: nil, due_date: nil }
+        ]
+      )
+    end
+
+    it "leaves out expired and deactivated special subsidies" do
+      consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), percentage: 30, status: :expired)
+      consumer.benefits.create!(benefit_configuration: benefit_configurations(:seniority), percentage: 10)
+      benefit_configurations(:seniority).update!(deactivated_at: Time.current)
+
+      get dashboard_path
+
+      expect(inertia.props[:benefit][:specials]).to eq([])
     end
   end
 end

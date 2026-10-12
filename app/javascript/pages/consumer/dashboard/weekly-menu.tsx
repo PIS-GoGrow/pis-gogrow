@@ -34,7 +34,7 @@ interface Props {
   openCart: () => void
 }
 
-const today = () => {
+export const today = () => {
   const date = new Date()
   const offset = date.getTimezoneOffset()
 
