@@ -74,12 +74,14 @@ class AdminMonthlySummary
                         .first(limit)
   end
 
-  # Del primer mes con cuentas al actual, el más nuevo primero.
+  # Del primer mes con cuentas al actual, el más nuevo primero. El mes elegido
+  # entra aunque sea anterior, sin rellenar los meses del medio.
   def months
-    first = [ @company.accounts.minimum(:month), @month ].compact.min
     current = Date.current.beginning_of_month
+    first = @company.accounts.minimum(:month) || current
+    span = (current.year * 12 + current.month) - (first.year * 12 + first.month)
 
-    (0..((current.year * 12 + current.month) - (first.year * 12 + first.month))).map { current << it }
+    ((0..span).map { current << it } | [ @month ]).sort.reverse
   end
 
   private
