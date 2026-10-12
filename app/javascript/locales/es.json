@@ -341,29 +341,31 @@
           }
         },
         "dashboard": {
-          "alert": {
-            "pending": "Los avisos por WhatsApp estarán disponibles próximamente.",
-            "title": "Avisos de pagos pendientes"
-          },
-          "coming_soon": "Próximamente",
-          "consumption": {
+          "benefit": {
+            "meals_of_limit": "%{meals} de %{limit}",
+            "meals_ordered_one": "vianda pedida",
+            "meals_ordered_other": "viandas pedidas",
+            "paid": "Pagado %{amount}",
             "participation": "Participación",
+            "pending": "Pendiente %{amount}",
+            "projected": "Proyectado %{amount}",
             "spending": "Gasto",
-            "title": "Tu consumo",
+            "title": "Tu beneficio",
             "view_detail": "Ver detalle del consumo"
           },
+          "coming_soon": "Próximamente",
           "debts": {
-            "pending": "Acá verás hasta tres empleados con saldos pendientes.",
+            "empty": "Ningún empleado tiene saldos pendientes en este mes.",
             "title": "Ranking deuda de empleados",
             "view": "Ver empleados con saldos pendientes"
           },
           "greeting": "Hola, %{name} 👋",
+          "month_label": "Mes del resumen",
           "payments": {
-            "pending": "El estado de los pagos a proveedores estará disponible próximamente.",
+            "empty": "No hay pagos a proveedores de %{month}.",
             "title": "Tus pagos de %{month}",
             "view": "Ver pagos a proveedores"
           },
-          "pending_value": "—",
           "this_month": "Este mes",
           "title": "Inicio"
         },

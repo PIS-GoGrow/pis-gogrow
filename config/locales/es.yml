@@ -270,23 +270,26 @@ es:
         greeting: "Hola, %{name} 👋"
         this_month: "Este mes"
         coming_soon: "Próximamente"
-        pending_value: "—"
-        alert:
-          title: "Avisos de pagos pendientes"
-          pending: "Los avisos por WhatsApp estarán disponibles próximamente."
-        consumption:
-          title: "Tu consumo"
+        month_label: "Mes del resumen"
+        benefit:
+          title: "Tu beneficio"
+          meals_of_limit: "%{meals} de %{limit}"
+          meals_ordered_one: "vianda pedida"
+          meals_ordered_other: "viandas pedidas"
           participation: "Participación"
           spending: "Gasto"
+          paid: "Pagado %{amount}"
+          pending: "Pendiente %{amount}"
+          projected: "Proyectado %{amount}"
           view_detail: "Ver detalle del consumo"
         payments:
           title: "Tus pagos de %{month}"
-          pending: "El estado de los pagos a proveedores estará disponible próximamente."
           view: "Ver pagos a proveedores"
+          empty: "No hay pagos a proveedores de %{month}."
         debts:
           title: "Ranking deuda de empleados"
-          pending: "Acá verás hasta tres empleados con saldos pendientes."
           view: "Ver empleados con saldos pendientes"
+          empty: "Ningún empleado tiene saldos pendientes en este mes."
       invoices:
         index:
           title: "Facturas de proveedores"
