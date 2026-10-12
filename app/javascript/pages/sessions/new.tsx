@@ -46,7 +46,8 @@ export default function Login({ errors, dev_login_enabled }: Props) {
         />
         <Button
           type="submit"
-          className="h-12 w-full gap-2 rounded-[10px] text-base font-medium"
+          variant="outline"
+          className="h-12 w-full gap-2 text-base font-medium"
         >
           <span className="size-4">
             <GoogleMark />
@@ -106,7 +107,7 @@ export default function Login({ errors, dev_login_enabled }: Props) {
 
                 <Button
                   type="submit"
-                  className="h-12 w-full rounded-[10px] text-base font-medium"
+                  className="h-12 w-full text-base font-medium"
                 >
                   {processing && <Spinner />}
                   {t("pages.sessions.new.submit")}

@@ -48,7 +48,7 @@ export default function CancelOrderSheet({ order }: CancelOrderSheetProps) {
         <Button
           type="button"
           variant="outline"
-          className="h-10 w-full gap-1.5 rounded-[10px] text-sm font-medium"
+          className="h-10 w-full gap-1.5 text-sm font-medium"
         >
           <X aria-hidden="true" className="size-4" />
           {t("pages.orders.index.cancel")}
@@ -67,14 +67,14 @@ export default function CancelOrderSheet({ order }: CancelOrderSheetProps) {
           <Button
             type="button"
             variant="outline"
-            className="h-12 rounded-[10px] text-base font-medium"
+            className="h-12 text-base font-medium"
             onClick={() => setOpen(false)}
           >
             {t("pages.orders.index.cancel_dialog.back")}
           </Button>
           <Button
             type="button"
-            className="h-12 rounded-[10px] text-base font-medium"
+            className="h-12 text-base font-medium"
             disabled={processing}
             onClick={handleCancel}
           >

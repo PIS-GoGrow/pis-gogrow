@@ -87,7 +87,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 w-full gap-1.5 rounded-[10px] text-sm font-medium"
+                className="h-10 w-full gap-1.5 text-sm font-medium"
                 disabled
               >
                 <X aria-hidden="true" className="size-4" />
@@ -106,7 +106,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
             <Button
               type="button"
               variant="outline"
-              className="h-10 w-full gap-1.5 rounded-[10px] text-sm font-medium"
+              className="h-10 w-full gap-1.5 text-sm font-medium"
               asChild
             >
               <Link
@@ -121,7 +121,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               <Button
                 type="button"
                 variant="outline"
-                className="h-10 w-full gap-1.5 rounded-[10px] text-sm font-medium"
+                className="h-10 w-full gap-1.5 text-sm font-medium"
                 disabled
               >
                 <Pencil aria-hidden="true" className="size-4" />
