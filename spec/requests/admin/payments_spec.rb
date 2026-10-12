@@ -50,6 +50,20 @@ RSpec.describe "Admin::Payments", type: :request do
     context "when signed in as HR" do
       before { sign_in users(:admin), role: :admin }
 
+      it "muestra el mismo total con IVA que el proveedor y conserva el subtotal" do
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+        account = Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: Date.current, amount: "800")
+
+        get admin_payments_path
+
+        expect(inertia).to have_props(total_debt: 1577.0, current_month: { amount: 1577.0, meals: 4, limit: 40 })
+        expect(inertia).to have_props { |page|
+          page[:accounts].any? { it[:id] == account.id && it[:amount] == 800.0 && it[:vat_amount] == 176.0 && it[:payable_amount] == 976.0 }
+        }
+        expect(account.reload.amount).to eq(800.to_d)
+      end
+
       it "lists only what the company still owes, and not what its employees owe" do
         other_company_account
 

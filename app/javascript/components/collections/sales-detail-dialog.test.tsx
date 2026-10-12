@@ -15,7 +15,15 @@ vi.mock("@inertiajs/react", async () => {
 
 const detail = {
   month: "Octubre 2026",
-  clients: [{ id: 1, name: "GoGrow" }],
+  clients: [
+    {
+      id: 1,
+      name: "GoGrow",
+      subtotal: 600,
+      vat_amount: 66,
+      payable_amount: 666,
+    },
+  ],
   days: [
     {
       date: "09/10",
@@ -34,6 +42,57 @@ const detail = {
 }
 
 describe("SalesDetailDialog", () => {
+  it("filtra el desglose del IVA usando los totales recibidos de Rails", async () => {
+    const user = userEvent.setup()
+    render(
+      <SalesDetailDialog
+        detail={{
+          ...detail,
+          clients: [
+            ...detail.clients,
+            {
+              id: 2,
+              name: "Otra empresa",
+              subtotal: 100,
+              vat_amount: 11,
+              payable_amount: 111,
+            },
+          ],
+          days: [
+            {
+              ...detail.days[0],
+              orders: [
+                ...detail.days[0].orders,
+                {
+                  ...detail.days[0].orders[0],
+                  id: 2,
+                  client_id: 2,
+                  client_name: "Otra empresa",
+                  amount: 100,
+                },
+              ],
+            },
+          ],
+        }}
+      />,
+    )
+    await user.click(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    )
+    expect(screen.getByText("777,00 UYU")).toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por cliente" }),
+    )
+    await user.click(
+      screen.getByRole("menuitemradio", { name: "Otra empresa" }),
+    )
+
+    expect(screen.getByText("11,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("111,00 UYU")).toBeInTheDocument()
+    expect(screen.queryByText("777,00 UYU")).not.toBeInTheDocument()
+  })
+
   it("opens the monthly detail and shows confirmed orders by day", async () => {
     const user = userEvent.setup()
     render(<SalesDetailDialog detail={detail} />)
@@ -49,6 +108,10 @@ describe("SalesDetailDialog", () => {
     expect(screen.getByText("Juan Pérez")).toBeInTheDocument()
     expect(screen.getByText(/Día: 09\/10/)).toHaveTextContent("Viandas: 2")
     expect(screen.getByText(/Día: 09\/10/)).toHaveTextContent("600,00 UYU")
+    expect(screen.getByText("Subtotal")).toBeInTheDocument()
+    expect(screen.getByText("IVA sobre subsidios (22 %)")).toBeInTheDocument()
+    expect(screen.getByText("66,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("666,00 UYU")).toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: "Cerrar" }))
 
