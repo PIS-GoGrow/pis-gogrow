@@ -32,7 +32,7 @@ const baseAccount = {
   can_approve_payment: false,
   overdue: false,
   month: "Octubre 2026",
-  due_date: "05/11/26",
+  due_date: "10/11/26",
   paid_on: null,
   payment_id: 1,
   receipt_url: "/receipt.pdf",

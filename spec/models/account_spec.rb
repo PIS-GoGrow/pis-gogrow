@@ -54,7 +54,7 @@ RSpec.describe Account, type: :model do
       expect(past_account.current?).to be(false)
     end
 
-    it "calculates the due date as the 5th day after the following month" do
+    it "calculates the due date as the 10th day of the following month" do
       account = Account.create!(
         owner: consumer,
         provider: provider,
@@ -62,7 +62,7 @@ RSpec.describe Account, type: :model do
         amount: 400
       )
 
-      expect(account.due_date).to eq(Date.new(2026, 10, 5))
+      expect(account.due_date).to eq(Date.new(2026, 10, 10))
     end
   end
 
