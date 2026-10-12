@@ -27,15 +27,18 @@ import type {
   BreadcrumbItem,
 } from "@/types"
 
-type Filter = "all" | "pending" | "completed"
+type Filter = AdminConsumersIndex["filter"]
 
 const page = "pages.admin.consumers.index"
 
-export default function Index({ consumers }: AdminConsumersIndex) {
+export default function Index({
+  consumers,
+  filter: initialFilter,
+}: AdminConsumersIndex) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
   const getInitials = useInitials()
-  const [filter, setFilter] = useState<Filter>("all")
+  const [filter, setFilter] = useState<Filter>(initialFilter)
   const [search, setSearch] = useState("")
 
   const term = search.trim().toLowerCase()

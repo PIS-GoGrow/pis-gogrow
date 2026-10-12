@@ -3,6 +3,7 @@
 class Admin::ConsumersController < Admin::InertiaController
   def index
     @consumers = AdminConsumerSummary.rows_for(company)
+    @filter = params[:filter].presence_in(%w[all completed pending]) || "all"
   end
 
   # El find va sobre los empleados de la empresa del admin y no sobre Consumer:

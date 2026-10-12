@@ -47,6 +47,20 @@ RSpec.describe "Admin::Consumers", type: :request do
           hash_including(id: consumers(:other).id, amount: 150.25, status: "submitted")
         )
       end
+
+      it "opens on the filter the URL asks for, so the home can link to the pending ones" do
+        get admin_consumers_path, params: { filter: "pending" }
+
+        expect(inertia).to have_props(filter: "pending")
+      end
+
+      it "opens on every employee without a filter or with an unknown one" do
+        get admin_consumers_path
+        expect(inertia).to have_props(filter: "all")
+
+        get admin_consumers_path, params: { filter: "everyone" }
+        expect(inertia).to have_props(filter: "all")
+      end
     end
   end
 
