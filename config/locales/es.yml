@@ -86,8 +86,11 @@ es:
     menu_agenda:
       invalid_date: "Elegí un día hábil desde hoy y dentro del período de publicación."
       invalid_range: "La fecha de fin no puede ser anterior a la de inicio."
-      invalid_amount: "El stock por día debe ser un entero mayor a 0."
+      invalid_amount: "Si cargás un stock por día, tiene que ser un entero mayor a 0."
       invalid_weekdays: "Elegí al menos un día de lunes a viernes."
+    menu_publish:
+      invalid_date: "Elegí un día de semana entre hoy y la fecha máxima de publicación."
+      invalid_menus: "Algún plato elegido no existe."
   notifications:
     order_confirmation:
       title: "Tu pedido fue confirmado"
@@ -102,6 +105,7 @@ es:
         order_error: "por un error en el pedido"
         other: "por el siguiente motivo: %{details}"
         dish_modified: "porque el plato fue modificado"
+        dish_deleted: "porque el plato fue eliminado"
     order_withdrawal:
       title: "Tu pedido fue cancelado"
       description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible."
@@ -199,8 +203,7 @@ es:
     change_to: "Cambiar a"
     provider:
       home: "Inicio"
-      dishes: "Platos"
-      menus: "Publicar menús"
+      menus: "Menús"
       menu: "Menú"
       orders: "Pedidos"
       payments: "Cobros"
@@ -738,6 +741,7 @@ es:
         order_error: "Error en el pedido"
         other: "Otro motivo"
         dish_modified: "Plato modificado"
+        dish_deleted: "Plato eliminado"
       statuses:
         pending: "Por revisar"
         confirmed: "Confirmado"
@@ -836,6 +840,47 @@ es:
         availability:
           toggle_label: "En stock"
         edit_dish: "Editar %{name}"
+        add_dishes: "Agregar platos"
+        search_label: "Buscar plato"
+        search_placeholder: "Buscar plato..."
+        empty:
+          title: "No hay platos publicados para el %{day} todavía"
+          description: "Agregá platos a tu menú del %{day} y empezá a recibir pedidos."
+        empty_unpublishable:
+          title: "No se publicó menú para este día."
+        no_results:
+          title: "No se encontraron resultados"
+          description: "No encontramos platos que coincidan con tu búsqueda. Probá con otro nombre o revisá cómo lo escribiste."
+        remove:
+          button: "Quitar"
+          title: "¿Quitar «%{name}» del menú?"
+          description: "Se cancelarán los pedidos pendientes y confirmados de este plato."
+          cancel: "Cancelar"
+          confirm: "Quitar"
+        import_dishes: "Importar platos"
+        tabs:
+          week: "Menú de la semana"
+          saved: "Platos guardados"
+        saved:
+          delete: "Eliminar"
+          delete_sheet:
+            title: "¿Eliminar plato guardado?"
+            description: "Este plato se eliminará de tus platos guardados."
+            description_orders: "Este plato se eliminará de tus platos guardados. Elegí qué hacer con los pedidos que ya incluyen este plato."
+            pending: "Los pedidos pendientes se cancelarán."
+            orders:
+              keep:
+                title: "Mantener los pedidos confirmados"
+                description: "Los pedidos afectados que están confirmados no se modificarán."
+              reject:
+                title: "Rechazar los pedidos confirmados"
+                description: "Los pedidos afectados que están confirmados se cancelarán."
+            back: "Volver"
+            confirm: "Eliminar"
+            deleting: "Eliminando..."
+          empty:
+            title: "Todavía no tenés platos guardados"
+            description: "Cuando crees un plato lo vas a ver acá para editarlo o publicarlo."
     provider_menus:
       new:
         title: "Agregar platos"
@@ -848,6 +893,23 @@ es:
           description: "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando."
           back: "Volver a Menú"
           continue: "Seguir agregando"
+          description_date: "Tu plato fue agregado al menú del %{date} correctamente."
+        saved:
+          date_label: "¿Para qué fecha vas a agregar platos?"
+          date_hint: "Elegí una fecha para ver qué platos podés agregar."
+          filter_label: "Filtrar platos"
+          filters:
+            all: "Todos"
+            available: "Disponibles"
+            added: "Agregados"
+          already_added: "Los platos listados a continuación ya están agregados a la fecha seleccionada:"
+          select: "Agregar %{name} a la selección"
+          unselect: "Quitar %{name} de la selección"
+          submit: "Agregar"
+          submitting: "Agregando..."
+          no_saved:
+            title: "Todavía no tenés platos guardados"
+            description: "Creá un plato desde la pestaña Platos nuevos y lo vas a ver acá."
       form:
         name: "Nombre del plato"
         name_placeholder: "Ej: Milanesa con puré"
@@ -903,8 +965,8 @@ es:
           date: "Día específico"
           starts_on: "Desde"
           range: "Rango"
-          amount: "Stock por día"
-          incomplete: "Completá las fechas y el stock por día."
+          amount: "Stock por día (opcional)"
+          incomplete: "Completá las fechas. Si cargás un stock, tiene que ser mayor a 0."
         sheet:
           back: "Volver"
           apply: "Aplicar cambios"
