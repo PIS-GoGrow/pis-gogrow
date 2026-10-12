@@ -1203,6 +1203,8 @@ RSpec.describe "Orders", type: :request do
         # día para que el resultado no dependa de cuándo se corra el spec.
         travel_to(Time.zone.local(2026, 9, 14, 10)) do
           order.schedule.update!(date: Date.new(2026, 9, 16))
+          monthly_b = consumers(:one).monthly_benefits.first
+          order.apply_benefit!(monthly_b, 1) if monthly_b
 
           patch order_path(order), params: update_params(quantity: 3)
 
