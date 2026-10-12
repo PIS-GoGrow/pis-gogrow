@@ -89,6 +89,10 @@
       }
     },
     "notification_configurations": {
+      "company_payments": {
+        "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
+        "title": "Pagos a proveedores"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
@@ -99,6 +103,22 @@
       }
     },
     "notifications": {
+      "company_payment_approved": {
+        "description": "%{provider} confirmó el pago de %{company} por %{period} (%{amount}).",
+        "title": "Pago confirmado"
+      },
+      "company_payment_overdue": {
+        "description": "El pago de %{company} a %{provider} por %{period} (%{amount}) venció el %{due_date}. Revisá el detalle en Pagos.",
+        "title": "Tenés un pago pendiente"
+      },
+      "company_payment_rejected": {
+        "description": "El comprobante que subiste fue rechazado por %{provider}. Volvé a cargarlo para confirmar tu pago.",
+        "title": "Tu comprobante fue rechazado"
+      },
+      "company_payment_upcoming": {
+        "description": "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos.",
+        "title": "Se acerca el vencimiento de un pago"
+      },
       "debt_payment_reminder": {
         "description": "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}.",
         "title": "Recordatorio de pago pendiente"

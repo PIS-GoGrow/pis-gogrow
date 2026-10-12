@@ -112,6 +112,18 @@ es:
     debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
+    company_payment_upcoming:
+      title: "Se acerca el vencimiento de un pago"
+      description: "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos."
+    company_payment_overdue:
+      title: "Tenés un pago pendiente"
+      description: "El pago de %{company} a %{provider} por %{period} (%{amount}) venció el %{due_date}. Revisá el detalle en Pagos."
+    company_payment_rejected:
+      title: "Tu comprobante fue rechazado"
+      description: "El comprobante que subiste fue rechazado por %{provider}. Volvé a cargarlo para confirmar tu pago."
+    company_payment_approved:
+      title: "Pago confirmado"
+      description: "%{provider} confirmó el pago de %{company} por %{period} (%{amount})."
   notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
@@ -119,6 +131,9 @@ es:
     provider_payment_reminders:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
+    company_payments:
+      title: "Pagos a proveedores"
+      description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
   activerecord:
     errors:
       models:
