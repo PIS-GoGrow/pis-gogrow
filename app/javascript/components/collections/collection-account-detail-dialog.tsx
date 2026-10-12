@@ -14,6 +14,7 @@ import {
 import StatusBadge from "@/components/status-badge"
 import TextLink from "@/components/text-link"
 import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
 import {
   Table,
   TableBody,
@@ -115,12 +116,30 @@ function CompanyCollection({
   return (
     <div className="grid gap-4 rounded-lg border p-3">
       <dl className="grid gap-3 text-sm">
+        {account.vat_rate > 0 && (
+          <>
+            <div className="grid gap-1">
+              <dt className="text-muted-foreground">{t(`${page}.subtotal`)}</dt>
+              <dd className="font-semibold">{formatMoney(account.amount)}</dd>
+            </div>
+            <Separator />
+            <div className="grid gap-1">
+              <dt className="text-muted-foreground">{t(`${page}.vat`)}</dt>
+              <dd className="font-semibold">
+                {formatMoney(account.vat_amount)}
+              </dd>
+            </div>
+            <Separator className="bg-foreground/50" />
+          </>
+        )}
         <div className="flex items-end justify-between gap-3">
           <div className="grid gap-1">
             <dt className="text-muted-foreground">
               {t(`${page}.total_label`)}
             </dt>
-            <dd className="font-semibold">{formatMoney(account.amount)}</dd>
+            <dd className="font-semibold">
+              {formatMoney(account.payable_amount)}
+            </dd>
           </div>
           <StatusBadge status={account.status} kind="payment" />
         </div>
