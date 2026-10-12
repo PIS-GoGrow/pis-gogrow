@@ -77,6 +77,15 @@ RSpec.describe Menus::Update do
       .to eq([ friday, next_monday, Date.new(2030, 1, 18) ])
   end
 
+  it "programs again the dates the provider had removed when a new agenda starts" do
+    menu.update!(skipped_dates: [ friday ])
+
+    update({ mode: "weekly", weekdays: [ "1", "5" ], starts_on: wednesday.iso8601, amount: 6 })
+
+    expect(menu.reload.skipped_dates).to be_empty
+    expect(Schedule.where(menu_id: menu.family_ids, date: friday)).to exist
+  end
+
   it "applies the changes only during a range and goes back to the saved dish after it" do
     menu.agendas.create!(weekdays: [ 1, 2, 3, 4, 5 ], starts_on: wednesday, amount: 5)
     Menus::AgendaScheduler.call(menu)

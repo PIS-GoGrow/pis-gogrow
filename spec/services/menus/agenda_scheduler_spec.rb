@@ -35,6 +35,15 @@ RSpec.describe Menus::AgendaScheduler do
     expect(menu.schedules.find_by(date: Date.current).amount).to eq(2)
   end
 
+  it "does not program a date the provider removed" do
+    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 8)
+    menu.update!(skipped_dates: [ Date.new(2030, 1, 14) ])
+
+    described_class.call(menu)
+
+    expect(scheduled_dates(menu)).to eq([ Date.new(2030, 1, 9), Date.new(2030, 1, 16) ])
+  end
+
   it "uses the agenda of a ranged variant during its range and the saved dish after it" do
     menu.agendas.create!(weekdays: [ 1, 2, 3, 4, 5 ], starts_on: Date.current, amount: 5)
     variant = menu.build_variant(valid_from: Date.new(2030, 1, 14), valid_until: Date.new(2030, 1, 15))
