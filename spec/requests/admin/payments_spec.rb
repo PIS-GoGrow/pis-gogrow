@@ -150,6 +150,22 @@ RSpec.describe "Admin::Payments", type: :request do
         .to eq([ "comprobante_1.png", "comprobante_2.png" ])
     end
 
+    it "resolves the pending payment alert of the account" do
+      sign_in users(:admin), role: :admin
+      reminder = Notifier.call(
+        event_key: :company_payment_overdue,
+        user: users(:admin),
+        notifiable: account,
+        description_data: { company: "GoGrow", provider: "TuViandita", period: "agosto 2026", amount: "$601", due_date: "5/9/2026" }
+      )
+
+      post admin_payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: { "HTTP_REFERER" => admin_payments_url }
+
+      expect(reminder.reload.closed_at).to be_present
+    end
+
     it "does not create a payment for another company's account" do
       sign_in users(:admin), role: :admin
 
