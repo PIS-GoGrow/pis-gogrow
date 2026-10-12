@@ -614,7 +614,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       )
     end
 
-    it "fails with NoMethodError when order IDs do not belong to the signed-in consumer (bypass bug)" do
+    it "redirects to the dashboard when order IDs do not belong to the signed-in consumer" do
       other_user = User.create!(email: "other-conf@gmail.com", name: "Otro", password: "password123456")
       other_consumer = Consumer.create!(user: other_user, company: consumer.company, address: "Dir 123")
       provider_user = User.create!(email: "prov-conf-3@gmail.com", name: "La Cocina", password: "password123456")
@@ -633,9 +633,18 @@ RSpec.describe "Consumer dashboard", type: :request do
       )
 
       sign_in_as_consumer(user)
-      expect {
-        get dashboard_confirmation_path(confirmed_order_ids: [ other_order.id ])
-      }.to raise_error(NoMethodError)
+      get dashboard_confirmation_path(confirmed_order_ids: [ other_order.id ])
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(response.body).not_to include(other_order.address)
+    end
+
+    it "redirects to the dashboard without confirmed order IDs" do
+      sign_in_as_consumer(user)
+
+      get dashboard_confirmation_path
+
+      expect(response).to redirect_to(dashboard_path)
     end
   end
 
