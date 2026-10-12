@@ -105,4 +105,12 @@ describe("Consumer account page", () => {
 
     expect(screen.getByRole("button", { name: /Salir/ })).toBeInTheDocument()
   })
+
+  it("renders the consumer mobile navigation bar", () => {
+    render(<Show benefit={benefit} benefit_summary={summary} />)
+
+    expect(screen.getByRole("navigation")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Menú" })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Cuenta" })).toBeInTheDocument()
+  })
 })

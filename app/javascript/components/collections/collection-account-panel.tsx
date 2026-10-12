@@ -1,11 +1,12 @@
 import { Link } from "@inertiajs/react"
-import { Eye, TriangleAlert } from "lucide-react"
+import { CircleCheck, Eye, TriangleAlert } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { AdaptableDialogTrigger } from "@/components/adaptable-dialog"
 import CollectionAccountDetailDialog from "@/components/collections/collection-account-detail-dialog"
 import CollectionPaymentHistory from "@/components/collections/collection-payment-history"
+import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
 import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -38,6 +39,7 @@ export default function CollectionAccountPanel({
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
+  const reminder = account.debt_reminder
 
   return (
     <div className="bg-muted/60 grid gap-3 rounded-lg p-3">
@@ -58,14 +60,14 @@ export default function CollectionAccountPanel({
               (account.status !== "approved" && (
                 <span
                   className={cn(
-                    "flex items-center gap-1.5 text-xs",
+                    "flex items-center gap-1.5 text-sm font-medium",
                     account.overdue
-                      ? "text-red-600 dark:text-red-400"
+                      ? "text-red-700 dark:text-red-400"
                       : "text-muted-foreground",
                   )}
                 >
                   {account.overdue && (
-                    <TriangleAlert className="size-3.5" aria-hidden="true" />
+                    <TriangleAlert className="size-4" aria-hidden="true" />
                   )}
                   {t("pages.provider_collections.group.due", {
                     date: account.due_date,
@@ -78,9 +80,9 @@ export default function CollectionAccountPanel({
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p>
-          <strong className="text-lg">{formatMoney(account.amount)}</strong>
-          <span className="text-muted-foreground">
+        <p className="text-foreground text-base font-semibold">
+          {formatMoney(account.amount)}
+          <span className="text-muted-foreground font-normal">
             {" | "}
             {t("pages.provider_collections.meals", { count: account.meals })}
           </span>
@@ -93,7 +95,7 @@ export default function CollectionAccountPanel({
             href={providerCollections.show(account.id)}
             className={cn(
               buttonVariants({ variant: "ghost", size: "sm" }),
-              "-mr-2.5",
+              "-mr-2.5 text-sm font-semibold",
             )}
           >
             <Eye aria-hidden="true" />
@@ -112,9 +114,33 @@ export default function CollectionAccountPanel({
           canApprove={account.can_approve_payment}
         >
           <AdaptableDialogTrigger asChild>
-            <Button className="w-full">Revisar pago</Button>
+            <Button className="h-10 w-full rounded-[10px]">Revisar pago</Button>
           </AdaptableDialogTrigger>
         </PaymentReviewSheet>
+      )}
+      {(reminder.eligible ||
+        reminder.blocked_reason === "cooldown" ||
+        reminder.blocked_reason === "limit_reached") && (
+        <DebtReminderDialog
+          accountId={account.id}
+          eligible={reminder.eligible}
+          employeeName={account.owner_name}
+          month={account.month}
+          amount={account.amount}
+        />
+      )}
+      {reminder.blocked_reason === "cooldown" && (
+        <p className="text-muted-foreground flex items-center gap-2 text-sm">
+          <CircleCheck className="size-4" aria-hidden="true" />
+          {t("pages.provider_collections.reminder.next_available", {
+            date: reminder.next_available_at,
+          })}
+        </p>
+      )}
+      {reminder.blocked_reason === "limit_reached" && (
+        <p className="text-muted-foreground text-sm">
+          {t("pages.provider_collections.reminder.limit_reached")}
+        </p>
       )}
       {(showPaymentHistory || account.status === "rejected") && (
         <CollectionPaymentHistory

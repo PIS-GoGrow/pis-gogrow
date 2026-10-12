@@ -38,6 +38,12 @@ const baseAccount = {
   receipt_url: "/receipt.pdf",
   receipt_content_type: "application/pdf",
   invoice: null,
+  debt_reminder: {
+    eligible: false,
+    remaining: 10,
+    next_available_at: null,
+    blocked_reason: null,
+  },
   payments: [],
   orders: [
     {

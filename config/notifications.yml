@@ -15,6 +15,9 @@ configurations:
   debt_alerts:
     roles: [consumer]
     configurable: true
+  provider_payment_reminders:
+    roles: [consumer]
+    configurable: false
 
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
@@ -38,5 +41,10 @@ events:
 
   debt_threshold_exceeded:
     configuration: debt_alerts
+    role: consumer
+    requires_action: true
+
+  debt_payment_reminder:
+    configuration: provider_payment_reminders
     role: consumer
     requires_action: true

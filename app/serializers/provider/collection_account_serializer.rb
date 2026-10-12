@@ -29,6 +29,22 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   typelize :boolean
   attribute :overdue, &:overdue?
 
+  typelize "{ eligible: boolean; remaining: number; next_available_at: string | null; blocked_reason: string | null }"
+  attribute :debt_reminder do |row|
+    notifications = row.reminder_notifications
+    if row.account.owner_type == "Consumer"
+      notifications = notifications.select { it.user_id == row.account.owner.user_id }
+    end
+    eligibility = DebtReminders::Eligibility.new(account: row.account, notifications:)
+
+    {
+      eligible: eligibility.eligible?,
+      remaining: eligibility.remaining,
+      next_available_at: eligibility.next_available_at&.in_time_zone(Time.zone)&.strftime("%d/%m/%Y a las %H:%M"),
+      blocked_reason: eligibility.reason&.to_s
+    }
+  end
+
   # Formateadas en el servidor: el SSR corre en UTC y el cliente no.
   typelize :string
   attribute :month do |row|

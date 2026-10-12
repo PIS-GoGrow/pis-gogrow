@@ -76,11 +76,22 @@ es:
     payment_not_removable: "Solo podés eliminar comprobantes en revisión o rechazados."
     payment_not_reviewable: "Este comprobante ya fue revisado."
     invoice_not_removable: "Esta factura ya fue revisada y no se puede eliminar."
+    debt_reminder_not_consumer: "Solo podés recordar pagos de empleados."
+    debt_reminder_no_debt: "Esta cuenta ya no tiene una deuda pendiente."
+    debt_reminder_not_overdue: "Esta cuenta todavía no está vencida."
+    debt_reminder_payment_under_review: "Hay un comprobante pendiente de revisión."
+    debt_reminder_paid: "Esta cuenta ya fue pagada."
+    debt_reminder_cooldown: "Todavía no podés enviar otro recordatorio."
+    debt_reminder_limit_reached: "Se alcanzó el límite de recordatorios."
+    debt_reminder_failed: "No pudimos enviar el recordatorio. Intentá nuevamente."
     menu_agenda:
       invalid_date: "Elegí un día hábil desde hoy y dentro del período de publicación."
       invalid_range: "La fecha de fin no puede ser anterior a la de inicio."
-      invalid_amount: "El stock por día debe ser un entero mayor a 0."
+      invalid_amount: "Si cargás un stock por día, tiene que ser un entero mayor a 0."
       invalid_weekdays: "Elegí al menos un día de lunes a viernes."
+    menu_publish:
+      invalid_date: "Elegí un día de semana entre hoy y la fecha máxima de publicación."
+      invalid_menus: "Algún plato elegido no existe."
   notifications:
     order_confirmation:
       title: "Tu pedido fue confirmado"
@@ -95,12 +106,16 @@ es:
         order_error: "por un error en el pedido"
         other: "por el siguiente motivo: %{details}"
         dish_modified: "porque el plato fue modificado"
+        dish_deleted: "porque el plato fue eliminado"
     order_withdrawal:
       title: "Tu pedido fue cancelado"
       description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible."
     debt_threshold_exceeded:
       title: "Tu deuda superó el monto límite"
       description: "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca."
+    debt_payment_reminder:
+      title: "Recordatorio de pago pendiente"
+      description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
   notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
@@ -108,6 +123,9 @@ es:
     debt_alerts:
       title: "Alertas de deuda"
       description: "Recibí una notificación cuando tu deuda supere el monto definido por RRHH."
+    provider_payment_reminders:
+      title: "Recordatorios de pago del proveedor"
+      description: "Recordatorios de pagos vencidos enviados por el proveedor."
   activerecord:
     errors:
       models:
@@ -192,8 +210,7 @@ es:
     change_to: "Cambiar a"
     provider:
       home: "Inicio"
-      dishes: "Platos"
-      menus: "Publicar menús"
+      menus: "Menús"
       menu: "Menú"
       orders: "Pedidos"
       payments: "Cobros"
@@ -637,6 +654,25 @@ es:
           total: "Total: %{amount}"
           empty: "Todavía no hay viandas confirmadas en este período."
           close: "Cerrar"
+      reminder:
+        trigger: "Recordar pago pendiente"
+        sent: "Recordatorio enviado"
+        next_available: "Podés enviar otro recordatorio el %{date}."
+        limit_reached: "Alcanzaste el límite de recordatorios para este pago."
+        confirm:
+          title: "Recordar pago pendiente"
+          description: "Se enviará un recordatorio a %{employeeName} por su pago pendiente de %{month} de %{amount}."
+        success:
+          title: "Recordatorio enviado"
+          description: "Se envió un recordatorio a %{employeeName} por su pago pendiente de %{month}."
+        error:
+          title: "No pudimos enviar el recordatorio"
+          description: "Intentá nuevamente."
+        back: "Volver"
+        send: "Enviar recordatorio"
+        sending: "Enviando..."
+        retry: "Reintentar"
+        done: "Listo"
       review:
         receipt_title: "Comprobante"
         expected_amount: "Importe esperado:"
@@ -719,6 +755,7 @@ es:
         order_error: "Error en el pedido"
         other: "Otro motivo"
         dish_modified: "Plato modificado"
+        dish_deleted: "Plato eliminado"
       statuses:
         pending: "Por revisar"
         confirmed: "Confirmado"
@@ -817,6 +854,47 @@ es:
         availability:
           toggle_label: "En stock"
         edit_dish: "Editar %{name}"
+        add_dishes: "Agregar platos"
+        search_label: "Buscar plato"
+        search_placeholder: "Buscar plato..."
+        empty:
+          title: "No hay platos publicados para el %{day} todavía"
+          description: "Agregá platos a tu menú del %{day} y empezá a recibir pedidos."
+        empty_unpublishable:
+          title: "No se publicó menú para este día."
+        no_results:
+          title: "No se encontraron resultados"
+          description: "No encontramos platos que coincidan con tu búsqueda. Probá con otro nombre o revisá cómo lo escribiste."
+        remove:
+          button: "Quitar"
+          title: "¿Quitar «%{name}» del menú?"
+          description: "Se cancelarán los pedidos pendientes y confirmados de este plato."
+          cancel: "Cancelar"
+          confirm: "Quitar"
+        import_dishes: "Importar platos"
+        tabs:
+          week: "Menú de la semana"
+          saved: "Platos guardados"
+        saved:
+          delete: "Eliminar"
+          delete_sheet:
+            title: "¿Eliminar plato guardado?"
+            description: "Este plato se eliminará de tus platos guardados."
+            description_orders: "Este plato se eliminará de tus platos guardados. Elegí qué hacer con los pedidos que ya incluyen este plato."
+            pending: "Los pedidos pendientes se cancelarán."
+            orders:
+              keep:
+                title: "Mantener los pedidos confirmados"
+                description: "Los pedidos afectados que están confirmados no se modificarán."
+              reject:
+                title: "Rechazar los pedidos confirmados"
+                description: "Los pedidos afectados que están confirmados se cancelarán."
+            back: "Volver"
+            confirm: "Eliminar"
+            deleting: "Eliminando..."
+          empty:
+            title: "Todavía no tenés platos guardados"
+            description: "Cuando crees un plato lo vas a ver acá para editarlo o publicarlo."
     provider_menus:
       new:
         title: "Agregar platos"
@@ -829,6 +907,23 @@ es:
           description: "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando."
           back: "Volver a Menú"
           continue: "Seguir agregando"
+          description_date: "Tu plato fue agregado al menú del %{date} correctamente."
+        saved:
+          date_label: "¿Para qué fecha vas a agregar platos?"
+          date_hint: "Elegí una fecha para ver qué platos podés agregar."
+          filter_label: "Filtrar platos"
+          filters:
+            all: "Todos"
+            available: "Disponibles"
+            added: "Agregados"
+          already_added: "Los platos listados a continuación ya están agregados a la fecha seleccionada:"
+          select: "Agregar %{name} a la selección"
+          unselect: "Quitar %{name} de la selección"
+          submit: "Agregar"
+          submitting: "Agregando..."
+          no_saved:
+            title: "Todavía no tenés platos guardados"
+            description: "Creá un plato desde la pestaña Platos nuevos y lo vas a ver acá."
       form:
         name: "Nombre del plato"
         name_placeholder: "Ej: Milanesa con puré"
@@ -884,8 +979,8 @@ es:
           date: "Día específico"
           starts_on: "Desde"
           range: "Rango"
-          amount: "Stock por día"
-          incomplete: "Completá las fechas y el stock por día."
+          amount: "Stock por día (opcional)"
+          incomplete: "Completá las fechas. Si cargás un stock, tiene que ser mayor a 0."
         sheet:
           back: "Volver"
           apply: "Aplicar cambios"
