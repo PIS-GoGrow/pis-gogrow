@@ -18,6 +18,33 @@ RSpec.describe AdminMonthlySummary do
     Consumer.create!(user:, company:)
   end
 
+  describe "IVA de las cuentas de empresa (IBP-059)" do
+    before do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+    end
+
+    let!(:taxed) do
+      Account.create!(owner: company, provider: providers(:endulzate), month: Date.current, amount: "800")
+    end
+
+    it "adds up the totals with VAT, like Pagos" do
+      expect(current.to_h).to include(spending: 1577.0, pending: 1577.0)
+    end
+
+    it "shows the total with VAT in the payments of the month" do
+      next_month = described_class.new(company, 1.month.from_now)
+
+      expect(next_month.payments.find { it.name == "Other Provider User" }.amount).to eq(976.0)
+    end
+
+    it "projects the pending orders with the VAT of their account" do
+      OrderAccount.create!(order: orders(:upcoming_pending_today), account: taxed)
+
+      expect(current.projected).to eq(183.31)
+    end
+  end
+
   describe "#meals" do
     it "counts the confirmed meals of the month" do
       expect(current.meals).to eq(4)
