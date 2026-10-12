@@ -3,12 +3,33 @@
 class HomeController < InertiaController
   skip_before_action :authenticate
   before_action :perform_authentication
+  before_action :redirect_to_dashboard, if: -> { Current.session }
 
   def index
-    if Current.session&.consumer?
-      redirect_to dashboard_path
-    elsif Current.session&.admin?
-      redirect_to admin_dashboard_path
+    render_welcome("consumer")
+  end
+
+  def provider
+    render_welcome("provider")
+  end
+
+  def admin
+    render_welcome("admin")
+  end
+
+  private
+
+  def render_welcome(variant)
+    @variant = variant
+    @dev_login_enabled = ENV.fetch("DEV_LOGIN_ENABLED", "false") == "true"
+    render_inertia "home/index", serializer: HomeIndexSerializer
+  end
+
+  def redirect_to_dashboard
+    case Current.session.role
+    when "consumer" then redirect_to dashboard_path
+    when "provider" then redirect_to provider_dashboard_path
+    when "admin" then redirect_to admin_dashboard_path
     end
   end
 end

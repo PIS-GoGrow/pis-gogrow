@@ -148,6 +148,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
 | `Icon` | `@/components/icon` | Renderizar un ícono de lucide recibido como prop |
 | `GoogleMark` | `@/components/branding/google-mark` | Logo de Google en el acceso con Google |
+| `DevLoginForm` | `@/components/dev-login-form` | Acceso con correo y contraseña a las cuentas de prueba; sólo se muestra con `DEV_LOGIN_ENABLED` |
 | `DatePicker` | `@/components/date-picker` | Elegir una fecha en un formulario; recibe y devuelve fechas `YYYY-MM-DD` |
 | `OptionChoices` | `@/components/menus/option-choices` | Elegir las opciones de un grupo de un plato: `RadioGroup` si el grupo admite una, casillas con tope si admite varias |
 | `QuantityInput` | `@/components/quantity-input` | Elegir una cantidad entre un mínimo y un máximo |
