@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
@@ -27,6 +27,7 @@ const props: AdminPaymentsIndex = {
   total_debt: 0,
   current_month: { amount: 0, meals: 0, limit: null },
   period: null,
+  current_period: null,
   providers: [],
 }
 
@@ -50,6 +51,35 @@ describe("Admin Payments Page", () => {
       // El panel es modal: Radix esconde lo de atrás del árbol accesible.
       screen.getByRole("tab", { name: "Historial", hidden: true }),
     ).toHaveAttribute("aria-selected", "true")
+  })
+
+  it("shows the consumption of the month as in the design", () => {
+    render(
+      <Index
+        {...props}
+        current_month={{ amount: 2100, meals: 14, limit: 300 }}
+      />,
+    )
+
+    expect(screen.getByText("Tu consumo")).toBeInTheDocument()
+    expect(screen.getByText("$2.100")).toBeInTheDocument()
+    expect(
+      screen.getByText("| 14 de 300 viandas consumidas"),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("progressbar")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    ).toBeDisabled()
+  })
+
+  it("opens the detail of the current month from the consumption card", () => {
+    render(<Index {...props} current_period={{ ...period, tab: "pending" }} />)
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    )
+
+    expect(screen.getByRole("dialog")).toHaveTextContent("agosto de 2026")
   })
 
   it("starts closed on the pending tab without a period", () => {

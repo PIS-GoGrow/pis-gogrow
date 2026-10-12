@@ -405,10 +405,11 @@
             "pending_tab": "Pendientes",
             "section": "Pagos",
             "see_detail": "Ver detalle",
-            "spending": "Consumo de la empresa",
+            "spending": "Tu consumo",
             "this_month": "Este mes",
             "title": "Pagos",
-            "total_debt": "Deuda total"
+            "total_debt": "Deuda total",
+            "view_detail": "Ver detalle del consumo"
           }
         }
       },

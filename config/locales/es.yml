@@ -436,8 +436,9 @@ es:
         index:
           title: "Pagos"
           section: "Pagos"
-          spending: "Consumo de la empresa"
+          spending: "Tu consumo"
           this_month: "Este mes"
+          view_detail: "Ver detalle del consumo"
           meals_used_one: "%{count} vianda consumida"
           meals_used_other: "%{count} viandas consumidas"
           meals_used_with_limit: "%{meals} de %{limit} viandas consumidas"

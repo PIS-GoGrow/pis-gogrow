@@ -114,6 +114,14 @@ RSpec.describe "Admin::Payments", type: :request do
         expect(inertia.props[:period]).to include("amount" => 900.0, "tab" => "history", "orders" => [])
       end
 
+      it "sends the detail of the current month for the consumption card" do
+        get admin_payments_path
+
+        expect(inertia.props[:current_period]).to include(
+          "month" => I18n.l(Date.current.beginning_of_month, format: :month_year), "amount" => 601.0
+        )
+      end
+
       it "opens nothing without a month, with an invalid one or with one without payments" do
         [ nil, "agosto", "2020-01" ].each do |month|
           get admin_payments_path, params: { month: }.compact
