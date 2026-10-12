@@ -243,7 +243,6 @@ es:
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
     date_picker:
       placeholder: "Elegí una fecha"
-      range_placeholder: "Elegí un rango"
     benefit_summary:
       active: "Activo"
       inactive: "Sin beneficio"
