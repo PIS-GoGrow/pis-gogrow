@@ -46,9 +46,9 @@ class AdminConsumerSummary
     STATUS_PRIORITY.find { it.in?(statuses) }
   end
 
-  def self.rows_for(company)
+  def self.rows_for(company, month: Date.current)
     consumers = company.consumers.joins(:user).preload(:user).order("users.name").to_a
-    accounts = Account.current.where(owner_type: "Consumer", owner_id: consumers.map(&:id))
+    accounts = Account.where(month: month.beginning_of_month, owner_type: "Consumer", owner_id: consumers.map(&:id))
                       .preload(:payments).group_by(&:owner_id)
 
     consumers.map do |consumer|

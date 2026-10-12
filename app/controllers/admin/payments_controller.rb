@@ -15,7 +15,7 @@ class Admin::PaymentsController < Admin::InertiaController
     @history = serialize(settled, sums)
     @providers = Provider.eager_load(:user).order("LOWER(users.name)")
     @total_debt = unpaid.sum(&:payable_amount).to_f
-    @current_month = current_month_summary
+    @current_month = AdminMonthlySummary.new(company).then { { amount: it.spending, meals: it.meals, limit: it.meals_limit } }
   end
 
   # El find va sobre las cuentas de la empresa y no sobre Account: pedir la de
@@ -92,16 +92,5 @@ class Admin::PaymentsController < Admin::InertiaController
   # params, que no llegan al serializer de la página: por eso se arma acá.
   def serialize(accounts, sums)
     AccountSerializer.new(accounts, params: { orders_sum: sums }).serializable_hash
-  end
-
-  # El tope mensual de la configuración es por empleado, así que el de la
-  # empresa es ese número por la cantidad de empleados.
-  def current_month_summary
-    current = company.accounts.current
-    meals = Account.amount_and_price_sum(current.pluck(:id)).values.sum { it[:amount].to_i }
-    base_subsidy = BenefitConfiguration.base_subsidy_for(company)
-    limit = base_subsidy&.benefit_rules&.find_by(type: MonthlyBenefit.name)&.limit
-
-    { amount: current.sum(&:payable_amount).to_f, meals:, limit: limit && limit * company.consumers.count }
   end
 end
