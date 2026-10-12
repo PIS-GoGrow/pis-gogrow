@@ -8,5 +8,8 @@ class Admin::PaymentsIndexSerializer < ApplicationSerializer
   typelize current_month: "{ amount: number; meals: number; limit: number | null }"
   attributes :accounts, :history, :total_debt, :current_month
 
+  typelize period: "{ orders: SimplifiedOrder[]; month: string; amount: number; tab: 'pending' | 'history' } | null"
+  attributes :period
+
   has_many :providers, resource: ProviderSerializer
 end

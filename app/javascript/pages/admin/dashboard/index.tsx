@@ -156,7 +156,7 @@ export default function AdminDashboard({
                 asChild
                 className="w-full bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
               >
-                <Link href={adminPayments.index().url}>
+                <Link href={adminPayments.index({ query: { month } }).url}>
                   {t(`${page}.benefit.view_detail`)}
                 </Link>
               </Button>

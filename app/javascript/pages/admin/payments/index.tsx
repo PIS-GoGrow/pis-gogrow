@@ -51,12 +51,13 @@ export default function Index({
   providers,
   total_debt,
   current_month,
+  period,
 }: AdminPaymentsIndex) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
   const isMobile = useIsMobile()
 
-  const [detail, setDetail] = useState<PeriodDetail | null>(null)
+  const [detail, setDetail] = useState<PeriodDetail | null>(period)
   const [loading, setLoading] = useState(false)
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -115,8 +116,8 @@ export default function Index({
 
         <HeadingSmall title={t("pages.admin.payments.index.section")} />
 
-        <Sheet>
-          <Tabs defaultValue="pending" className="gap-4">
+        <Sheet defaultOpen={period !== null}>
+          <Tabs defaultValue={period?.tab ?? "pending"} className="gap-4">
             <TabsList className="w-full">
               <TabsTrigger value="pending">
                 {t("pages.admin.payments.index.pending_tab")}

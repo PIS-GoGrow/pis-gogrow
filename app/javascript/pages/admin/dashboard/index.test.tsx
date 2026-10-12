@@ -88,7 +88,7 @@ describe("Admin Dashboard Page", () => {
     ).toHaveTextContent("Este mes")
     expect(
       screen.getByRole("link", { name: "Ver detalle del consumo" }),
-    ).toHaveAttribute("href", "/admin/payments")
+    ).toHaveAttribute("href", "/admin/payments?month=2026-10")
   })
 
   it("shows the meals alone when the month had no benefit configured", () => {

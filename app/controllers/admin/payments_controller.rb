@@ -16,6 +16,7 @@ class Admin::PaymentsController < Admin::InertiaController
     @providers = Provider.eager_load(:user).order("LOWER(users.name)")
     @total_debt = unpaid.sum(&:payable_amount).to_f
     @current_month = AdminMonthlySummary.new(company).then { { amount: it.spending, meals: it.meals, limit: it.meals_limit } }
+    @period = selected_period(accounts)
   end
 
   # El find va sobre las cuentas de la empresa y no sobre Account: pedir la de
@@ -78,6 +79,27 @@ class Admin::PaymentsController < Admin::InertiaController
 
   def set_payment
     @payment = Payment.where(account: company.accounts).find(params[:id])
+  end
+
+  # Con ?month=AAAA-MM, que manda el inicio de RR. HH., la pantalla abre el
+  # detalle de ese mes en la pestaña donde está. Un mes puede tener cuentas con
+  # varios proveedores, así que el detalle las junta.
+  def selected_period(accounts)
+    month = Date.strptime(params[:month].to_s, "%Y-%m")
+    period = accounts.select { it.month == month }
+    return if period.empty?
+
+    orders = Order.confirmed.joins(:order_accounts)
+                  .where(order_accounts: { account_id: period.map(&:id) }).order(:created_at)
+
+    {
+      orders: SimplifiedOrderSerializer.new(orders).serializable_hash,
+      month: I18n.l(month, format: :month_year),
+      amount: period.sum { it.amount || 0 }.to_f,
+      tab: period.all? { it.collection_status == "approved" } ? "history" : "pending"
+    }
+  rescue Date::Error
+    nil
   end
 
   def payment_params
