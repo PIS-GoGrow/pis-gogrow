@@ -142,6 +142,48 @@ RSpec.describe "Editar un plato que ya está publicado" do
     expect(milanesa.agendas).to be_empty
   end
 
+  # Criterio 1: editar no es solo el nombre; el precio y la descripción también se
+  # guardan y el día programado sigue sirviendo el plato guardado.
+  it "guarda el precio y la descripción nuevos del plato guardado" do
+    schedule = publish(milanesa, friday)
+
+    visit_hydrated edit_provider_menu_path(milanesa, schedule_id: schedule.id)
+
+    fill_in "price", with: "410.50", fill_options: { clear: :backspace }
+    fill_in "description", with: "Con papas rústicas", fill_options: { clear: :backspace }
+    apply_to_saved_dish
+
+    expect(page).to have_content("¡Plato modificado!")
+
+    expect(milanesa.reload.price).to eq(410.50)
+    expect(milanesa.description).to eq("Con papas rústicas")
+    expect(schedule.reload.menu).to eq(milanesa)
+  end
+
+  # Criterio 1: los tres datos del plato son obligatorios y el formulario los valida
+  # en el cliente. Lo observable es que avisa y no manda el PATCH: el plato y su
+  # programación quedan intactos.
+  context "cuando falta un dato obligatorio del plato" do
+    let(:schedule) { publish(milanesa, friday) }
+
+    before { visit_hydrated edit_provider_menu_path(milanesa, schedule_id: schedule.id) }
+
+    {
+      "el nombre" => "name",
+      "el precio" => "price",
+      "la descripción" => "description"
+    }.each do |label, field|
+      it "no guarda si falta #{label}" do
+        fill_in field, with: "", fill_options: { clear: :backspace }
+        click_button "Modificar"
+
+        expect(page).to have_content("No puede estar vacío.")
+        expect(milanesa.reload.name).to eq("Milanesa con papas fritas")
+        expect(schedule.reload.menu).to eq(milanesa)
+      end
+    end
+  end
+
   # Control de acceso: la pantalla es del namespace del proveedor y el plato es de
   # un proveedor concreto. Ninguno de los dos se esquiva por URL.
   context "control de acceso" do
