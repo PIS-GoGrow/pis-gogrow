@@ -145,8 +145,8 @@ RSpec.describe "Admin::Payments", type: :request do
         }, headers: { "HTTP_REFERER" => admin_payments_url }
       end
 
-      expect(account.payments.reload.last(2).map(&:status)).to eq([ "submitted", "submitted" ])
-      expect(account.payments.last(2).map { it.receipt.filename.to_s })
+      expect(account.payments.reload.order(:id).last(2).map(&:status)).to eq([ "submitted", "submitted" ])
+      expect(account.payments.order(:id).last(2).map { it.receipt.filename.to_s })
         .to eq([ "comprobante_1.png", "comprobante_2.png" ])
     end
 
