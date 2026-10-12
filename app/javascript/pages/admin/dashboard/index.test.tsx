@@ -81,6 +81,8 @@ describe("Admin Dashboard Page", () => {
     expect(screen.getByText("45 de 300")).toBeInTheDocument()
     expect(screen.getByText("viandas pedidas")).toBeInTheDocument()
     expect(screen.getByText("72%")).toBeInTheDocument()
+    expect(screen.getByText("$5.425")).toBeInTheDocument()
+    expect(screen.getByRole("progressbar")).toBeInTheDocument()
     expect(screen.getByText(/Pagado/)).toBeInTheDocument()
     expect(screen.queryByText(/Proyectado/)).not.toBeInTheDocument()
     expect(
@@ -101,6 +103,7 @@ describe("Admin Dashboard Page", () => {
 
     expect(screen.getByText("1")).toBeInTheDocument()
     expect(screen.getByText("vianda pedida")).toBeInTheDocument()
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
   })
 
   it("lists the payments to each provider with their status", () => {

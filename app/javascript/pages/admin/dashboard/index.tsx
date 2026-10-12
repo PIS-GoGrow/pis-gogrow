@@ -44,7 +44,7 @@ export default function AdminDashboard({
   debtors,
 }: AdminDashboardIndex) {
   const { t } = useTranslation()
-  const { formatMoney } = useFormatters()
+  const { formatMoneyShort } = useFormatters()
   const getInitials = useInitials()
   const { auth } = usePage().props
   const firstName = auth.user.name.split(" ")[0]
@@ -116,10 +116,12 @@ export default function AdminDashboard({
                 </span>
               </p>
 
-              <Progress
-                value={progress}
-                aria-label={t(`${page}.benefit.title`)}
-              />
+              {summary.meals_limit !== null && (
+                <Progress
+                  value={progress}
+                  aria-label={t(`${page}.benefit.title`)}
+                />
+              )}
 
               <div className="grid grid-cols-2 gap-2">
                 <Metric
@@ -128,25 +130,25 @@ export default function AdminDashboard({
                 />
                 <Metric
                   label={t(`${page}.benefit.spending`)}
-                  value={formatMoney(summary.spending)}
+                  value={formatMoneyShort(summary.spending)}
                 />
               </div>
 
               <p className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-sm">
                 <span>
                   {t(`${page}.benefit.paid`, {
-                    amount: formatMoney(summary.paid),
+                    amount: formatMoneyShort(summary.paid),
                   })}
                 </span>
                 <span>
                   {t(`${page}.benefit.pending`, {
-                    amount: formatMoney(summary.pending),
+                    amount: formatMoneyShort(summary.pending),
                   })}
                 </span>
                 {summary.projected > 0 && (
                   <span>
                     {t(`${page}.benefit.projected`, {
-                      amount: formatMoney(summary.projected),
+                      amount: formatMoneyShort(summary.projected),
                     })}
                   </span>
                 )}
@@ -181,7 +183,7 @@ export default function AdminDashboard({
                       {payment.name}
                     </span>
                     <span className="font-semibold">
-                      {formatMoney(payment.amount)}
+                      {formatMoneyShort(payment.amount)}
                     </span>
                     <StatusBadge status={payment.status} kind="payment" />
                   </Row>
@@ -215,7 +217,7 @@ export default function AdminDashboard({
                       {debtor.name}
                     </Link>
                     <span className="font-semibold">
-                      {formatMoney(debtor.amount)}
+                      {formatMoneyShort(debtor.amount)}
                     </span>
                     <ConsumptionStatusBadge status={debtor.status} />
                   </Row>
