@@ -837,6 +837,12 @@ es:
           toggle_label: "En stock"
         edit_dish: "Editar %{name}"
     provider_menus:
+      index:
+        title: "Mis platos"
+        eyebrow: "Vista de todos los platos"
+        add_dish: "Agregar plato"
+        empty_title: "No hay platos aún"
+        empty_description: "No creaste ningún plato todavía. Creá el primero ahora para poder publicar tu menú."
       new:
         title: "Agregar platos"
         back: "Volver al menú"

@@ -1,5 +1,6 @@
 import { Head, Link } from "@inertiajs/react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import DeleteMenuDialog from "@/components/menus/delete-menu-dialog"
 import MenuCard from "@/components/menus/menu-card"
@@ -22,6 +23,7 @@ interface MenuProps {
 }
 
 export default function Index({ menus }: MenuProps) {
+  const { t } = useTranslation()
   const [deletingMenu, setDeletingMenu] = useState<{
     id: number | null
     name: string
@@ -38,21 +40,23 @@ export default function Index({ menus }: MenuProps) {
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      title: "Platos",
+      title: t("pages.provider_menus.index.title"),
       href: menusRoutes.index().url,
     },
   ]
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title="Mis Platos" />
+      <Head title={t("pages.provider_menus.index.title")} />
 
       <PageContainer
-        eyebrow="Vista de todos los platos"
-        title="Mis platos"
+        eyebrow={t("pages.provider_menus.index.eyebrow")}
+        title={t("pages.provider_menus.index.title")}
         actions={
           <Button className="ml-auto" asChild>
-            <Link href={menusRoutes.new().url}>Agregar plato</Link>
+            <Link href={menusRoutes.new().url}>
+              {t("pages.provider_menus.index.add_dish")}
+            </Link>
           </Button>
         }
       >
@@ -60,14 +64,17 @@ export default function Index({ menus }: MenuProps) {
         {menus.length == 0 ? (
           <Empty>
             <EmptyHeader>
-              <EmptyTitle>No hay platos aún</EmptyTitle>
+              <EmptyTitle>
+                {t("pages.provider_menus.index.empty_title")}
+              </EmptyTitle>
               <EmptyDescription>
-                No creaste ningún plato todavía. Creá el primero ahora para
-                poder publicar tu menú.
+                {t("pages.provider_menus.index.empty_description")}
               </EmptyDescription>
               <EmptyContent>
                 <Button asChild>
-                  <Link href={menusRoutes.new().url}>Agregar plato</Link>
+                  <Link href={menusRoutes.new().url}>
+                    {t("pages.provider_menus.index.add_dish")}
+                  </Link>
                 </Button>
               </EmptyContent>
             </EmptyHeader>

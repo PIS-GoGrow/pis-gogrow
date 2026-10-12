@@ -939,6 +939,13 @@
           "update": "Modificar",
           "updating": "Guardando..."
         },
+        "index": {
+          "add_dish": "Agregar plato",
+          "empty_description": "No creaste ningún plato todavía. Creá el primero ahora para poder publicar tu menú.",
+          "empty_title": "No hay platos aún",
+          "eyebrow": "Vista de todos los platos",
+          "title": "Mis platos"
+        },
         "new": {
           "added": {
             "back": "Volver a Menú",
