@@ -422,12 +422,48 @@
         "total": "Monto a pagar"
       },
       "consumer_dashboard": {
+        "confirmation": {
+          "close": "Cerrar",
+          "delivery": "Entrega",
+          "menu": "Menú",
+          "subtitle": "Te notificaremos cuando el proveedor confirme tu pedido.",
+          "title": "¡Pedido recibido!",
+          "total_paid": "Total pagado",
+          "view_orders": "Ir a Mis Pedidos"
+        },
+        "dish_detail": {
+          "add": "Agregar",
+          "back": "Volver",
+          "notes_label": "Notas para este plato",
+          "notes_placeholder": "Escribe las notas que necesites...",
+          "reviews_title": "Opiniones del plato"
+        },
         "index": {
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
         },
         "options": {
           "choose": "Elegí tu %{name}",
           "limit": "Podés elegir hasta %{count}"
+        },
+        "order_error": {
+          "back_to_menu": "Volver a Menú",
+          "description": "Hubo un problema al procesar tu pedido. Intentá de nuevo.",
+          "retry": "Reintentar",
+          "title": "¡Ups! Algo salió mal"
+        },
+        "weekly_menu": {
+          "all_providers": "Todos",
+          "cart_hint": "Agregá platos de distintos días y proveedores.",
+          "cart_summary_one": "%{count} plato · %{total}",
+          "cart_summary_other": "%{count} platos · %{total}",
+          "cart_title": "Tu carrito",
+          "empty_filtered": "No hay platos de los proveedores seleccionados para esta fecha. Probá cambiando el filtro.",
+          "empty_no_schedules": "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde.",
+          "empty_title": "Menú no disponible",
+          "greeting": "Hola, %{name} 👋",
+          "providers": "Proveedores:",
+          "title": "Menú semanal",
+          "view_cart": "Ver carrito"
         }
       },
       "consumer_profiles": {

@@ -53,7 +53,12 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
   const primaryDelivery = deliveries[0]
   return (
     <AppLayout
-      breadcrumbs={[{ title: "Menú", href: consumerDashboard.index().url }]}
+      breadcrumbs={[
+        {
+          title: t("pages.consumer_dashboard.confirmation.menu"),
+          href: consumerDashboard.index().url,
+        },
+      ]}
     >
       <style>
         {
@@ -71,7 +76,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
           <Link
             href={consumerDashboard.index()}
             preserveState={false}
-            aria-label="Cerrar"
+            aria-label={t("pages.consumer_dashboard.confirmation.close")}
             prefetch
           >
             <X aria-hidden="true" className="size-4" />
@@ -83,14 +88,16 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
         </div>
 
         <h1 className="mt-3 text-center text-2xl font-bold">
-          ¡Pedido recibido!
+          {t("pages.consumer_dashboard.confirmation.title")}
         </h1>
         <p className="text-muted-foreground text-center text-base leading-6">
-          Te notificaremos cuando el proveedor confirme tu pedido.
+          {t("pages.consumer_dashboard.confirmation.subtitle")}
         </p>
 
         <div className="border-border bg-muted mt-5 rounded-lg border p-4 text-sm">
-          <p className="text-muted-foreground">Entrega</p>
+          <p className="text-muted-foreground">
+            {t("pages.consumer_dashboard.confirmation.delivery")}
+          </p>
           <p className="mt-1 font-semibold capitalize">{deliveryDates[0]}</p>
           {primaryDelivery && (
             <p className="mt-1 font-medium">
@@ -133,7 +140,9 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
           </div>
 
           <div className="border-border mt-4 border-t pt-4">
-            <p className="text-muted-foreground">Monto a pagar</p>
+            <p className="text-muted-foreground">
+              {t("pages.consumer_dashboard.confirmation.total_paid")}
+            </p>
             <p className="mt-1 text-lg font-bold">{money(total)}</p>
           </div>
         </div>
@@ -141,7 +150,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
         <BottomAction>
           <Button className="h-12 w-full text-base font-medium" asChild>
             <Link href={consumerOrders.index()} prefetch>
-              Ver mis pedidos
+              {t("pages.consumer_dashboard.confirmation.view_orders")}
             </Link>
           </Button>
         </BottomAction>

@@ -65,7 +65,7 @@ export function DishDetail({
         variant="ghost"
         size="icon"
         onClick={back}
-        aria-label="Volver"
+        aria-label={t("pages.consumer_dashboard.dish_detail.back")}
         className="mb-3 size-9 rounded-[10px]"
       >
         <ChevronLeft aria-hidden="true" className="size-4" />
@@ -95,7 +95,9 @@ export function DishDetail({
       ))}
       <section className="border-border border-b py-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">Opiniones del plato</h2>
+          <h2 className="text-base font-semibold">
+            {t("pages.consumer_dashboard.dish_detail.reviews_title")}
+          </h2>
           <span className="flex items-center gap-1 text-sm font-semibold">
             <Star className="fill-foreground inline size-4" />
             {reviews[0]?.rating ?? "4.8"}
@@ -147,14 +149,16 @@ export function DishDetail({
       </section>
       <section className="border-border border-b py-6">
         <label htmlFor="notes" className="text-base font-semibold">
-          Notas para este plato
+          {t("pages.consumer_dashboard.dish_detail.notes_label")}
         </label>
         <Textarea
           id="notes"
           maxLength={140}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
-          placeholder="Escribe las notas que necesites..."
+          placeholder={t(
+            "pages.consumer_dashboard.dish_detail.notes_placeholder",
+          )}
           className="placeholder:text-muted-foreground mt-3 h-[87px] resize-none rounded-[10px] p-3 text-base"
         />
         <p className="text-muted-foreground mt-2 text-right text-sm">
@@ -177,7 +181,7 @@ export function DishDetail({
           onClick={add}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-[10px] text-base font-medium disabled:opacity-50"
         >
-          Agregar
+          {t("pages.consumer_dashboard.dish_detail.add")}
         </Button>
       </BottomAction>
     </MobileCard>

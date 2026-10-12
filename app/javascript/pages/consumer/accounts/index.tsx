@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
 import { consumerAccounts } from "@/routes"
 import type {
@@ -62,6 +63,7 @@ export default function Index({
   benefit_available,
 }: AccountProps) {
   const { t } = useTranslation()
+  const { formatMoney } = useFormatters()
 
   const [loading, setLoading] = useState(false)
   const [detail, setDetail] = useState<AccountDetail | null>(null)
@@ -129,7 +131,7 @@ export default function Index({
               </Badge>
             </CardDescription>
             <CardTitle>
-              ${current_month_debt}
+              {formatMoney(current_month_debt)}
               <span className="text-zinc-500 dark:text-zinc-400">
                 {" | "}
                 {current_month_ordered}
@@ -142,11 +144,6 @@ export default function Index({
             </CardTitle>
           </CardHeader>
         </Card>
-
-        <h1 className="text-xl font-bold">
-          {" "}
-          {t("pages.accounts.index.payments")}{" "}
-        </h1>
 
         <AdaptableDialog desktopVariant="sheet">
           <Tabs
@@ -170,7 +167,7 @@ export default function Index({
                       {t("pages.accounts.index.total_debt")}
                     </Badge>
                   </CardDescription>
-                  <CardTitle>${total_debt}</CardTitle>
+                  <CardTitle>{formatMoney(total_debt)}</CardTitle>
                 </CardHeader>
               </Card>
 

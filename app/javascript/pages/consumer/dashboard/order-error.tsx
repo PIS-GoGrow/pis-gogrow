@@ -1,5 +1,6 @@
 import { Link } from "@inertiajs/react"
 import { X } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Button } from "@/components/ui/button"
@@ -11,6 +12,8 @@ interface Props {
 }
 
 export function OrderError({ retry, homeUrl, error }: Props) {
+  const { t } = useTranslation()
+
   return (
     <MobileCard>
       <div className="flex flex-1 flex-col items-center justify-center pb-16">
@@ -19,11 +22,11 @@ export function OrderError({ retry, homeUrl, error }: Props) {
         </div>
 
         <h1 className="mt-7 text-center text-2xl font-bold">
-          No se pudo procesar el pedido
+          {t("pages.consumer_dashboard.order_error.title")}
         </h1>
 
         <p className="text-muted-foreground mt-2 max-w-sm text-center text-base leading-6">
-          {error ?? "Hubo un problema al procesar tu pedido. Intentá de nuevo."}
+          {error ?? t("pages.consumer_dashboard.order_error.description")}
         </p>
       </div>
 
@@ -33,7 +36,7 @@ export function OrderError({ retry, homeUrl, error }: Props) {
           onClick={retry}
           className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground h-12 w-full text-base font-medium"
         >
-          Reintentar
+          {t("pages.consumer_dashboard.order_error.retry")}
         </Button>
 
         <Button
@@ -43,7 +46,7 @@ export function OrderError({ retry, homeUrl, error }: Props) {
           className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 w-full text-base font-medium"
         >
           <Link href={homeUrl} preserveState={false}>
-            Volver a Menú
+            {t("pages.consumer_dashboard.order_error.back_to_menu")}
           </Link>
         </Button>
       </BottomAction>

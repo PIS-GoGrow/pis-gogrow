@@ -88,7 +88,7 @@ describe("OrderConfirmation Page", () => {
   it("contains a link to view consumer orders", () => {
     render(<OrderConfirmation total={450} orders={sampleOrders} />)
 
-    const ordersLink = screen.getByRole("link", { name: "Ver mis pedidos" })
+    const ordersLink = screen.getByRole("link", { name: "Ir a Mis Pedidos" })
     expect(ordersLink).toBeInTheDocument()
     expect(ordersLink).toHaveAttribute("href", "/orders")
   })

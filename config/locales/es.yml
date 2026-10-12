@@ -1019,6 +1019,38 @@ es:
     consumer_dashboard:
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
+      weekly_menu:
+        all_providers: "Todos"
+        greeting: "Hola, %{name} 👋"
+        title: "Menú semanal"
+        providers: "Proveedores:"
+        empty_title: "Menú no disponible"
+        empty_no_schedules: "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde."
+        empty_filtered: "No hay platos de los proveedores seleccionados para esta fecha. Probá cambiando el filtro."
+        cart_title: "Tu carrito"
+        cart_summary_one: "%{count} plato · %{total}"
+        cart_summary_other: "%{count} platos · %{total}"
+        cart_hint: "Agregá platos de distintos días y proveedores."
+        view_cart: "Ver carrito"
+      dish_detail:
+        back: "Volver"
+        reviews_title: "Opiniones del plato"
+        notes_label: "Notas para este plato"
+        notes_placeholder: "Escribe las notas que necesites..."
+        add: "Agregar"
+      confirmation:
+        menu: "Menú"
+        close: "Cerrar"
+        title: "¡Pedido recibido!"
+        subtitle: "Te notificaremos cuando el proveedor confirme tu pedido."
+        delivery: "Entrega"
+        total_paid: "Total pagado"
+        view_orders: "Ir a Mis Pedidos"
+      order_error:
+        title: "¡Ups! Algo salió mal"
+        description: "Hubo un problema al procesar tu pedido. Intentá de nuevo."
+        retry: "Reintentar"
+        back_to_menu: "Volver a Menú"
       options:
         choose: "Elegí tu %{name}"
         limit: "Podés elegir hasta %{count}"

@@ -1,5 +1,6 @@
 import { UtensilsCrossed } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import MenuItem from "@/components/consumer/menus/menu-item"
@@ -54,6 +55,7 @@ export function WeeklyMenu({
   openDetail,
   openCart,
 }: Props) {
+  const { t } = useTranslation()
   const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set())
   const currentDate = today()
   const filteredSchedules =
@@ -64,14 +66,16 @@ export function WeeklyMenu({
         )
   const filterLabel =
     activeProviders.size === 0
-      ? "Todos"
+      ? t("pages.consumer_dashboard.weekly_menu.all_providers")
       : providers.filter((provider) => activeProviders.has(provider)).join(", ")
 
   return (
     <>
       <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-10">
         <header className="mb-4">
-          <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
+          <h1 className="text-2xl font-bold">
+            {t("pages.consumer_dashboard.weekly_menu.greeting", { name })}
+          </h1>
           <p className="text-muted-foreground text-base capitalize">
             {new Date(`${currentDate}T00:00:00`).toLocaleDateString("es-UY", {
               weekday: "long",
@@ -89,12 +93,14 @@ export function WeeklyMenu({
           <section className="min-w-0">
             <BenefitCard benefit={benefit} mobile />
 
-            <h2 className="mt-6 mb-3 text-xl font-bold">Menú semanal</h2>
+            <h2 className="mt-6 mb-3 text-xl font-bold">
+              {t("pages.consumer_dashboard.weekly_menu.title")}
+            </h2>
             <WeekNav date={date} onChange={setDate} showArrows={false} />
 
             <div className="mt-6 mb-3 flex items-center">
               <span className="text-muted-foreground min-w-0 truncate text-sm">
-                Proveedores:{" "}
+                {t("pages.consumer_dashboard.weekly_menu.providers")}{" "}
                 <span className="text-foreground font-medium">
                   {filterLabel}
                 </span>
@@ -112,11 +118,17 @@ export function WeeklyMenu({
                   <EmptyMedia variant="icon">
                     <UtensilsCrossed aria-hidden="true" />
                   </EmptyMedia>
-                  <EmptyTitle>Menú no disponible</EmptyTitle>
+                  <EmptyTitle>
+                    {t("pages.consumer_dashboard.weekly_menu.empty_title")}
+                  </EmptyTitle>
                   <EmptyDescription>
                     {schedules.length === 0
-                      ? "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde."
-                      : "No hay platos de los proveedores seleccionados para esta fecha. Probá cambiando el filtro."}
+                      ? t(
+                          "pages.consumer_dashboard.weekly_menu.empty_no_schedules",
+                        )
+                      : t(
+                          "pages.consumer_dashboard.weekly_menu.empty_filtered",
+                        )}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -149,12 +161,17 @@ export function WeeklyMenu({
           <aside className="hidden space-y-4 lg:block">
             <BenefitCard benefit={benefit} />
             <div className="border-border bg-card rounded-xl border p-5">
-              <p className="text-muted-foreground text-sm">Tu carrito</p>
+              <p className="text-muted-foreground text-sm">
+                {t("pages.consumer_dashboard.weekly_menu.cart_title")}
+              </p>
               <h3 className="mt-8 text-lg">
-                {count} platos · {money(total)}
+                {t("pages.consumer_dashboard.weekly_menu.cart_summary", {
+                  count,
+                  total: money(total),
+                })}
               </h3>
               <p className="text-muted-foreground mt-4 text-sm">
-                Agregá platos de distintos días y proveedores.
+                {t("pages.consumer_dashboard.weekly_menu.cart_hint")}
               </p>
               <Button
                 type="button"
@@ -162,7 +179,7 @@ export function WeeklyMenu({
                 disabled={count === 0}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-8 w-full"
               >
-                Ver carrito
+                {t("pages.consumer_dashboard.weekly_menu.view_cart")}
               </Button>
             </div>
           </aside>
@@ -175,7 +192,7 @@ export function WeeklyMenu({
           onClick={openCart}
           className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed inset-x-5 bottom-24 z-20 h-12 rounded-[10px] text-base font-medium shadow-lg md:hidden"
         >
-          Ver carrito
+          {t("pages.consumer_dashboard.weekly_menu.view_cart")}
         </Button>
       )}
 

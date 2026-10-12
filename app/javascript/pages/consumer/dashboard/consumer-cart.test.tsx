@@ -223,9 +223,11 @@ describe("ConsumerCart benefits", () => {
     )
 
     expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
-    ).toHaveTextContent("- $448")
-    expect(screen.queryByText("Premio (30%)")).not.toBeInTheDocument()
+      screen.getByText("Beneficio GoGrow (50%)").nextSibling,
+    ).toHaveTextContent("- $280")
+    expect(screen.getByText("Premio (30%)").nextSibling).toHaveTextContent(
+      "- $168",
+    )
     expect(screen.getAllByText(/^Beneficio GoGrow/)).toHaveLength(1)
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$112",
@@ -238,14 +240,14 @@ describe("ConsumerCart benefits", () => {
       { monthly_remaining: 1, specials: [premio] },
     )
 
-    // 3 x 280: la primera con 80%, la segunda solo con el premio y la tercera
-    // a precio completo. 56 + 196 + 280 = 532.
+    // 3 x 280: la primera con 50% base + 30% premio, la segunda solo con el premio y la tercera
+    // a precio completo.
     expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
-    ).toHaveTextContent("- $224")
-    expect(
-      screen.getByText("Beneficio GoGrow (30%)").nextSibling,
-    ).toHaveTextContent("- $84")
+      screen.getByText("Beneficio GoGrow (50%)").nextSibling,
+    ).toHaveTextContent("- $140")
+    expect(screen.getByText("Premio (30%)").nextSibling).toHaveTextContent(
+      "- $168",
+    )
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$532",
     )
