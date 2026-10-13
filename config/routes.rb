@@ -5,8 +5,6 @@ Rails.application.routes.draw do
 
   get  "sign_in", to: "sessions#new", as: :sign_in
   post "sign_in", to: "sessions#create"
-  get  "sign_up", to: "users#new", as: :sign_up
-  post "sign_up", to: "users#create"
 
   get  "provider", to: "provider_sessions#new", as: :provider_sign_in
   post "provider", to: "provider_sessions#create"
@@ -104,6 +102,8 @@ Rails.application.routes.draw do
   end
 
   root "home#index"
+  get "proveedor", to: redirect("/provider"), as: :provider_welcome
+  get "rrhh", to: "home#admin", as: :admin_welcome
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   get "up" => "rails/health#show", as: :rails_health_check

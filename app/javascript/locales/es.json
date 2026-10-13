@@ -504,17 +504,38 @@
         }
       },
       "home": {
-        "dashboard": "Panel",
-        "learn_more": "Más información",
-        "resources": {
-          "inertia_rails": "Documentación de Inertia Rails",
-          "rails": "Guías de Rails",
-          "react": "Documentación de React",
-          "shadcn": "Componentes de shadcn/ui"
+        "admin": {
+          "description": "Simplificá las viandas de tu equipo",
+          "heading": "Viandas GoGrow",
+          "sign_in": "Continuar con Google"
         },
-        "resources_intro": "Estos son algunos recursos para empezar:",
-        "tagline": "Rails + Inertia.js + React + shadcn/ui",
-        "title": "Te damos la bienvenida"
+        "consumer": {
+          "description": "Tu almuerzo, sin complicaciones",
+          "heading": "Viandas GoGrow",
+          "sign_in": "Iniciar sesión con Google"
+        },
+        "features": {
+          "collections": {
+            "description": "Revisá pagos, comprobantes y tu historial de cobros sin perder ningún detalle.",
+            "title": "Cobros claros y ordenados"
+          },
+          "go_to": "Ver la tarjeta %{number}",
+          "label": "Qué podés hacer en Viandas GoGrow",
+          "menu": {
+            "description": "Cargá tus platos, precios y disponibilidad de cada día de forma sencilla.",
+            "title": "Tu menú, siempre actualizado"
+          },
+          "orders": {
+            "description": "Recibí, confirmá y seguí cada uno de tus pedidos en tiempo real.",
+            "title": "Todos tus pedidos bajo control"
+          }
+        },
+        "provider": {
+          "description": "¡Hola {{username}}! {{company_name}} te invitó a unirte como proveedor de viandas.",
+          "heading": "Bienvenido a Viandas GoGrow",
+          "sign_in": "Unirse ahora"
+        },
+        "title": "Viandas GoGrow"
       },
       "orders": {
         "addresses": {
@@ -1224,15 +1245,6 @@
           "ip": "IP: %{address}",
           "log_out": "Cerrar sesión",
           "title": "Sesiones"
-        }
-      },
-      "users": {
-        "new": {
-          "description": "Ingresa tus datos para crear tu cuenta",
-          "have_account": "¿Ya tienes una cuenta?",
-          "heading": "Crea una cuenta",
-          "submit": "Crear cuenta",
-          "title": "Registro"
         }
       }
     }
