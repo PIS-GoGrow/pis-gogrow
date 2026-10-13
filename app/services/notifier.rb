@@ -27,7 +27,7 @@ class Notifier
     )
 
     if configuration.users.pluck(:id).include? user.id
-      WhatsappSenderJob.perform_now(:order_update, title_data, description_data, user.phone)
+      WhatsappSenderJob.perform_now(event_key, title_data, description_data, user.phone)
     end
   rescue ActiveRecord::RecordInvalid => e
     # El único error que permitimos es si no se pudo crear la notificación.
