@@ -32,7 +32,7 @@ end
 # Table name: menu_agendas
 #
 #  id         :bigint           not null, primary key
-#  amount     :integer          not null
+#  amount     :integer
 #  ends_on    :date
 #  starts_on  :date             not null
 #  weekdays   :integer          default([]), not null, is an Array
