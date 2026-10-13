@@ -8,7 +8,7 @@ class Settings::NotificationsController < InertiaController
     @subscribed_keys =
       @notification_configurations
         .joins(:notification_configuration_users)
-        .where(notification_configuration_users: {user_id: @user.id})
+        .where(notification_configuration_users: { user_id: @user.id })
         .pluck :key
   end
 
