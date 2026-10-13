@@ -15,7 +15,9 @@ class Admin::PaymentsController < Admin::InertiaController
     @history = serialize(settled, sums)
     @providers = Provider.eager_load(:user).order("LOWER(users.name)")
     @total_debt = unpaid.sum(&:payable_amount).to_f
-    @current_month = current_month_summary
+    @current_month = AdminMonthlySummary.new(company).then { { amount: it.spending, meals: it.meals, limit: it.meals_limit } }
+    @period = requested_month&.then { period_detail(accounts, it) }
+    @current_period = period_detail(accounts, Date.current.beginning_of_month)
   end
 
   # El find va sobre las cuentas de la empresa y no sobre Account: pedir la de
@@ -80,6 +82,30 @@ class Admin::PaymentsController < Admin::InertiaController
     @payment = Payment.where(account: company.accounts).find(params[:id])
   end
 
+  # El inicio de RR. HH. manda ?month=AAAA-MM para abrir el detalle de ese mes.
+  def requested_month
+    Date.strptime(params[:month].to_s, "%Y-%m")
+  rescue Date::Error
+    nil
+  end
+
+  # El detalle de un mes, en la pestaña donde está. Un mes puede tener cuentas
+  # con varios proveedores, así que el detalle las junta.
+  def period_detail(accounts, month)
+    period = accounts.select { it.month == month }
+    return if period.empty?
+
+    orders = Order.confirmed.joins(:order_accounts)
+                  .where(order_accounts: { account_id: period.map(&:id) }).order(:created_at)
+
+    {
+      orders: SimplifiedOrderSerializer.new(orders).serializable_hash,
+      month: I18n.l(month, format: :month_year),
+      amount: period.sum(&:payable_amount).to_f,
+      tab: period.all? { it.collection_status == "approved" } ? "history" : "pending"
+    }
+  end
+
   def payment_params
     params.require(:payment).permit(:receipt)
   end
@@ -92,16 +118,5 @@ class Admin::PaymentsController < Admin::InertiaController
   # params, que no llegan al serializer de la página: por eso se arma acá.
   def serialize(accounts, sums)
     AccountSerializer.new(accounts, params: { orders_sum: sums }).serializable_hash
-  end
-
-  # El tope mensual de la configuración es por empleado, así que el de la
-  # empresa es ese número por la cantidad de empleados.
-  def current_month_summary
-    current = company.accounts.current
-    meals = Account.amount_and_price_sum(current.pluck(:id)).values.sum { it[:amount].to_i }
-    base_subsidy = BenefitConfiguration.base_subsidy_for(company)
-    limit = base_subsidy&.benefit_rules&.find_by(type: MonthlyBenefit.name)&.limit
-
-    { amount: current.sum(&:payable_amount).to_f, meals:, limit: limit && limit * company.consumers.count }
   end
 end
