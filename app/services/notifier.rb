@@ -15,7 +15,7 @@ class Notifier
 
     # I18n.t! lanza I18n::MissingTranslationData si falta la traducción, en vez de
     # guardar un texto tipo "translation missing: ..." en la notificación.
-    Notification.create!(
+    notification = Notification.create!(
       notification_configuration: configuration,
       user:,
       role: event.role,
@@ -27,8 +27,10 @@ class Notifier
     )
 
     if configuration.users.pluck(:id).include? user.id
-      WhatsappSenderJob.perform_now(event_key, title_data, description_data, user.phone)
+      WhatsappSenderJob.perform_later(event_key, title_data, description_data, user.phone)
     end
+
+    notification
   rescue ActiveRecord::RecordInvalid => e
     # El único error que permitimos es si no se pudo crear la notificación.
     # En ese caso, no queremos que el usuario no pueda completar su acción porque
