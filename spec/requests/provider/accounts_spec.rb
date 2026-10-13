@@ -10,7 +10,7 @@ RSpec.describe "Provider::Accounts", type: :request do
     it "redirects visitors without a session to the sign in page" do
       get provider_account_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects consumers to the root page" do

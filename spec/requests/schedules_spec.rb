@@ -895,7 +895,6 @@ RSpec.describe "Schedules", type: :request do
       expect(response).to have_http_status(:redirect)
     end
   end
-
   describe "PATCH /schedules/:id/availability" do
     it "marks the publication as sold out and records who and when" do
       user = users(:one)
@@ -996,7 +995,7 @@ RSpec.describe "Schedules", type: :request do
 
         delete schedule_path(schedule)
 
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(provider_sign_in_path)
         expect(Schedule.exists?(schedule.id)).to be(true)
       end
 
