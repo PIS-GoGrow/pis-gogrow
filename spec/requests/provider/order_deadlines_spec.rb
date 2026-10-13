@@ -18,7 +18,7 @@ RSpec.describe "Provider::OrderDeadlines", type: :request do
     it "redirects to sign in without a session" do
       patch provider_order_deadline_path, params: { order_deadline: "18:30" }
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
       expect(deadline_of(provider)).to eq(previous_deadline)
     end
 

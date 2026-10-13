@@ -24,6 +24,8 @@ if dev_password.nil? || dev_password.length < 12
   MESSAGE
 end
 
+Rake::Task["notifications:sync"].invoke
+
 company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
 
 tu_viandita_user = User.create!(
@@ -371,6 +373,3 @@ end
   )
   invoice.save!
 end
-
-# Cargar las configuraciones de notificación a la app
-Rake::Task["notifications:sync"].invoke

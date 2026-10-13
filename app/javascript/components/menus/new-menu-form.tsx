@@ -10,6 +10,8 @@ import EditMenuSheet, {
 import MenuAgendaFields, {
   type AgendaDraft,
   agendaPayload,
+  cwday,
+  firstPublishedDate,
   initialAgenda,
 } from "@/components/menus/menu-agenda-fields"
 import { QuantityInput } from "@/components/quantity-input"
@@ -42,12 +44,11 @@ interface MenuFormProps {
   menu?: Menu
   edit?: ProviderMenusEdit
   create?: ProviderMenusNew
-  onCreated?: () => void
+  onCreated?: (publishedDate: string | null) => void
 }
 
 function agendaIsComplete(agenda: AgendaDraft) {
   if (agenda.weekdays.length === 0) return true
-  if (!(Number(agenda.amount) > 0)) return false
   if (agenda.mode === "single") return agenda.date !== ""
   if (agenda.mode === "range")
     return agenda.starts_on !== "" && agenda.ends_on >= agenda.starts_on
@@ -86,14 +87,25 @@ export default function MenuForm({
     edit
       ? initialAgenda(edit.agenda)
       : create
-        ? initialAgenda({
-            mode: "none",
-            weekdays: [],
-            date: null,
-            starts_on: null,
-            ends_on: null,
-            amount: null,
-          })
+        ? initialAgenda(
+            create.default_date
+              ? {
+                  mode: "single",
+                  weekdays: [cwday(create.default_date)],
+                  date: create.default_date,
+                  starts_on: null,
+                  ends_on: null,
+                  amount: null,
+                }
+              : {
+                  mode: "none",
+                  weekdays: [],
+                  date: null,
+                  starts_on: null,
+                  ends_on: null,
+                  amount: null,
+                },
+          )
         : null,
   )
   const [agendaError, setAgendaError] = useState<string | null>(null)
@@ -200,7 +212,12 @@ export default function MenuForm({
     post(menusRoutes.create().url, {
       preserveState: true,
       preserveScroll: true,
-      onSuccess: () => onCreated?.(),
+      onSuccess: () =>
+        onCreated?.(
+          agenda && calendar
+            ? firstPublishedDate(agenda, calendar.today)
+            : null,
+        ),
     })
   }
 
@@ -236,6 +253,7 @@ export default function MenuForm({
       schedule_id: new URLSearchParams(window.location.search).get(
         "schedule_id",
       ),
+      return_to: new URLSearchParams(window.location.search).get("return_to"),
     }))
 
     patch(menusRoutes.update(edit.saved_menu_id).url, {
@@ -428,12 +446,14 @@ export default function MenuForm({
         )}
 
         {menu ? (
-          <div className="mt-8 flex justify-end gap-3">
-            <Button type="button" variant="outline" asChild>
-              <Link href={menusRoutes.index().url}>{t(`${key}.cancel`)}</Link>
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            <Button type="button" variant="secondary" className="h-11" asChild>
+              <Link href={edit?.return_to ?? schedules.index().url}>
+                {t(`${key}.cancel`)}
+              </Link>
             </Button>
 
-            <Button type="submit" disabled={processing}>
+            <Button type="submit" className="h-11" disabled={processing}>
               {processing ? t(`${key}.updating`) : t(`${key}.update`)}
             </Button>
           </div>
@@ -562,6 +582,7 @@ export default function MenuForm({
           agenda={agendaPayload(agenda)}
           today={edit.today}
           scheduledDays={edit.scheduled_days}
+          returnTo={edit.return_to}
           onApply={applyChanges}
         />
       )}
