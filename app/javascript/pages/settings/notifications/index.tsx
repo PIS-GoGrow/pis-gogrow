@@ -1,6 +1,7 @@
 import { Head, router } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import HeadingSmall from "@/components/heading-small"
 
 import { Switch } from "@/components/ui/switch"
 import AppLayout from "@/layouts/app-layout"
@@ -18,7 +19,7 @@ export default function Notifications({
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      title: t("pages.settings.password.title"),
+      title: t("pages.settings.notifications.title"),
       href: settingsNotifications.index().url,
     },
   ]
@@ -42,11 +43,12 @@ export default function Notifications({
 
       <SettingsLayout>
         <div>
-          <h1 className="text-lg">Notificaciones</h1>
-          <p className="text-muted-foreground">
-            Configurá qué alertas querés recibir
-          </p>
-          <div className="mt-3 grid gap-2">
+          <HeadingSmall
+            title={t("pages.settings.notifications.heading")}
+            description={t("pages.settings.notifications.description")}
+          />
+
+          <div className="mt-5 grid gap-2">
             {notification_configurations.map(
               ({ id, key, title, description }) => {
                 const subscribed = subscribed_keys.includes(key)

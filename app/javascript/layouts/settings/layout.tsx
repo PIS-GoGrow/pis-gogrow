@@ -13,6 +13,7 @@ import {
   settingsPasswords,
   settingsProfiles,
   settingsSessions,
+  settingsNotifications,
 } from "@/routes"
 import type { NavItem } from "@/types"
 
@@ -46,6 +47,11 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     {
       title: t("nav.settings.appearance"),
       href: settingsAppearance().url,
+      icon: null,
+    },
+    {
+      title: t("nav.settings.notifications"),
+      href: settingsNotifications.index().url,
       icon: null,
     },
   ]
