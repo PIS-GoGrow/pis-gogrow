@@ -646,6 +646,80 @@ RSpec.describe "Consumer dashboard", type: :request do
 
       expect(response).to redirect_to(dashboard_path)
     end
+
+    it "redirects to the dashboard when confirmed_order_ids is empty or an empty string" do
+      sign_in_as_consumer(user)
+
+      get dashboard_confirmation_path(confirmed_order_ids: [])
+      expect(response).to redirect_to(dashboard_path)
+
+      get dashboard_confirmation_path(confirmed_order_ids: "")
+      expect(response).to redirect_to(dashboard_path)
+    end
+
+    it "redirects to the dashboard when confirmed_order_ids contains non-numeric strings or negative numbers" do
+      sign_in_as_consumer(user)
+
+      get dashboard_confirmation_path(confirmed_order_ids: [ "invalido", "null", "<script>" ])
+      expect(response).to redirect_to(dashboard_path)
+
+      get dashboard_confirmation_path(confirmed_order_ids: [ -1, 0 ])
+      expect(response).to redirect_to(dashboard_path)
+    end
+
+    it "redirects to the dashboard when mixing a valid own order ID with an unauthorized order ID" do
+      provider_user = User.create!(email: "prov-mix@gmail.com", name: "La Cocina", password: "password123456")
+      provider = Provider.create!(user: provider_user)
+      menu = Menu.create!(provider:, name: "Tarta Mixta", description: "Plato de prueba", price: 250)
+      schedule = Schedule.create!(menu:, date: Date.current, amount: 10)
+      own_order = Order.create!(
+        consumer:,
+        schedule:,
+        amount: 1,
+        price: 250,
+        discounted_price: 250,
+        address: consumer.company.address,
+        delivery_method: :office,
+        status: :pending
+      )
+
+      other_user = User.create!(email: "other-mix@gmail.com", name: "Otro Mix", password: "password123456")
+      other_consumer = Consumer.create!(user: other_user, company: consumer.company, address: "Dir 456")
+      other_order = Order.create!(
+        consumer: other_consumer,
+        schedule:,
+        amount: 1,
+        price: 250,
+        discounted_price: 250,
+        address: other_consumer.address,
+        delivery_method: :home,
+        status: :pending
+      )
+
+      sign_in_as_consumer(user)
+      get dashboard_confirmation_path(confirmed_order_ids: [ own_order.id, other_order.id ])
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(response.body).not_to include(own_order.address)
+      expect(response.body).not_to include(other_order.address)
+    end
+
+    it "redirects admin users to root_path" do
+      sign_in users(:admin), role: :admin
+
+      get dashboard_confirmation_path
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "preserves database integrity and does not create or alter orders on GET request" do
+      sign_in_as_consumer(user)
+
+      expect {
+        get dashboard_confirmation_path(confirmed_order_ids: [ 999_999 ])
+      }.not_to change(Order, :count)
+
+      expect(response).to redirect_to(dashboard_path)
+    end
   end
 
   # IBP-037: el carrito necesita los subsidios especiales vigentes para mostrar
