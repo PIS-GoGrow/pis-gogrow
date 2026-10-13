@@ -20,7 +20,7 @@ class Notification::Configuration < ApplicationRecord
            dependent: :restrict_with_error,
            foreign_key: :notification_configuration_id
 
-  scope :for_role, ->(role) { where("'#{role}' = ANY (roles)") }
+  scope :for_role, ->(role) { where("? = ANY (roles)", role) }
 
   # Crea las configuraciones según lo que dice Notification::Registry.
   # Nunca borra configuraciones, las reporta para elegir qué hacer, pero sí
