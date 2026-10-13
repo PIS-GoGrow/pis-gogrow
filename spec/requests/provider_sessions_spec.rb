@@ -6,7 +6,7 @@ RSpec.describe "ProviderSessions", type: :request do
   let(:provider) { users(:provider_user) }
   let(:password) { "Secret1*3*5*" }
 
-  describe "GET /proveedores" do
+  describe "GET /provider" do
     it "renders the provider sign in page" do
       get provider_sign_in_path
 
@@ -23,7 +23,7 @@ RSpec.describe "ProviderSessions", type: :request do
     end
   end
 
-  describe "POST /proveedores" do
+  describe "POST /provider" do
     it "opens a provider session and goes to the provider dashboard" do
       post provider_sign_in_path, params: { email: provider.email, password: password }
 

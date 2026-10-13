@@ -969,7 +969,7 @@ RSpec.describe "Schedules", type: :request do
           items: [ { menu_id: menu.id, amount: 10 } ]
         }
 
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(provider_sign_in_path)
       end
 
       it "bloquea a usuarios con rol consumer" do

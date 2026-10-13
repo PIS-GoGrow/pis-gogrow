@@ -16,14 +16,14 @@ RSpec.describe "Provider invitations", type: :request do
     patch provider_invitation_path, params: { password: password, password_confirmation: confirmation }
   end
 
-  describe "GET /proveedores/invitacion?token=" do
+  describe "GET /provider/invitation?token=" do
     it "accepts the link and moves to a clean URL with the registration form" do
       open_invitation
 
       expect(response).to redirect_to(provider_invitation_path)
       follow_redirect!
       expect(inertia).to render_component("provider_invitations/show")
-      expect(inertia).to have_props(email: "ana@proveedor.com", completed: false)
+      expect(inertia).to have_props(email: "ana@proveedor.com")
     end
 
     it "keeps the link valid until the registration is finished" do
@@ -83,7 +83,7 @@ RSpec.describe "Provider invitations", type: :request do
     end
   end
 
-  describe "GET /proveedores/invitacion" do
+  describe "GET /provider/invitation" do
     it "is closed without an accepted link" do
       get provider_invitation_path
 
@@ -100,34 +100,26 @@ RSpec.describe "Provider invitations", type: :request do
     end
   end
 
-  describe "PATCH /proveedores/invitacion" do
+  describe "PATCH /provider/invitation" do
     before { open_invitation }
 
     it "sets the password, verifies the account and consumes the invitation" do
       register
 
-      expect(response).to redirect_to(provider_invitation_path)
+      expect(response).to redirect_to(provider_dashboard_path)
       expect(user.reload.authenticate(strong_password)).to be_truthy
       expect(user).to be_verified
       expect(OtpCode.pending?(user, :invitation)).to be(false)
     end
 
-    it "shows the confirmation once and closes the screen afterwards" do
+    it "signs the provider in and sends them to the dashboard" do
       register
-      follow_redirect!
-
-      expect(inertia).to have_props(completed: true)
-
-      get provider_invitation_path
-      expect(response).to redirect_to(provider_sign_in_path)
-    end
-
-    it "lets the provider sign in right after" do
-      register
-      post provider_sign_in_path, params: { email: "ana@proveedor.com", password: strong_password }
 
       expect(response).to redirect_to(provider_dashboard_path)
       expect(user.sessions.last.role).to eq("provider")
+
+      follow_redirect!
+      expect(response).to have_http_status(:ok)
     end
 
     it "does not let the same link register again" do

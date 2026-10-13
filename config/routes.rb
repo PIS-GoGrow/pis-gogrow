@@ -8,11 +8,15 @@ Rails.application.routes.draw do
   get  "sign_up", to: "users#new", as: :sign_up
   post "sign_up", to: "users#create"
 
-  get  "proveedores", to: "provider_sessions#new", as: :provider_sign_in
-  post "proveedores", to: "provider_sessions#create"
-  resource :provider_invitation, path: "proveedores/invitacion", only: [ :show, :update ]
-  resource :provider_password_reset, path: "proveedores/contrasena", only: [ :create, :edit, :update ], path_names: { edit: "nueva" }
-  resource :provider_password_reset_code, path: "proveedores/contrasena/codigo", only: [ :show, :create ]
+  get  "provider", to: "provider_sessions#new", as: :provider_sign_in
+  post "provider", to: "provider_sessions#create"
+  resource :provider_invitation, path: "provider/invitation", only: [ :show, :update ]
+  resource :provider_password_reset, path: "provider/password", only: [ :create, :edit, :update ], path_names: { edit: "new" }
+  resource :provider_password_reset_code, path: "provider/password/code", only: [ :show, :create ]
+
+  namespace :internal do
+    resources :provider_invitations, only: [ :create ]
+  end
 
   resources :sessions, only: [ :destroy, :edit, :update ]
   resource :users, only: [ :destroy ]

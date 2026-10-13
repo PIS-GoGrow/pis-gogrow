@@ -14,7 +14,7 @@ vi.mock("@inertiajs/react", () => ({
   }) => <form>{children({ processing: false, errors: {} })}</form>,
 }))
 
-const action = { url: "/proveedores/invitacion", method: "patch" as const }
+const action = { url: "/provider/invitation", method: "patch" as const }
 const strong = "Nueva-Clave-2026-ok!"
 
 function setup(props: { email?: string } = {}) {

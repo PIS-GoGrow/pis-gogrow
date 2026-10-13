@@ -3,6 +3,7 @@
 class ProviderInvitationsController < InertiaController
   include Throttling
   include PasswordGrant
+  include ProviderSignIn
 
   skip_before_action :authenticate
   before_action :require_no_authentication
@@ -11,10 +12,6 @@ class ProviderInvitationsController < InertiaController
 
   def show
     return accept_token if params[:token].present?
-
-    @email = nil
-    @completed = session.delete(:registered).present?
-    return if @completed
 
     user = granted_user(:invitation)
     return redirect_to provider_sign_in_path, alert: t("flash.invitation_invalid") unless user
@@ -28,9 +25,8 @@ class ProviderInvitationsController < InertiaController
 
     if set_password(user)
       OtpCode.consume(user, :invitation)
-      clear_password_grant
-      session[:registered] = true
-      redirect_to provider_invitation_path
+      start_provider_session(user)
+      redirect_to provider_dashboard_path, notice: t("flash.signed_in")
     else
       redirect_to provider_invitation_path, inertia: { errors: user.errors }
     end

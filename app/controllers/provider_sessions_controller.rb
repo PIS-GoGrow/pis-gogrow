@@ -2,6 +2,7 @@
 
 class ProviderSessionsController < InertiaController
   include Throttling
+  include ProviderSignIn
 
   skip_before_action :authenticate
   before_action :require_no_authentication
@@ -16,10 +17,7 @@ class ProviderSessionsController < InertiaController
     user = User.authenticate_by(email: params[:email], password: params[:password])
 
     if user&.provider? && user.verified?
-      reset_session
-      session = user.sessions.create!(role: :provider)
-      cookies.signed.permanent[:session_token] = { value: session.id, httponly: true }
-
+      start_provider_session(user)
       redirect_to provider_dashboard_path, notice: t("flash.signed_in")
     else
       redirect_to provider_sign_in_path, alert: t("flash.incorrect_credentials")

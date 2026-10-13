@@ -3,6 +3,7 @@
 class ProviderPasswordResetsController < InertiaController
   include Throttling
   include PasswordGrant
+  include ProviderSignIn
 
   skip_before_action :authenticate
   before_action :require_no_authentication
@@ -24,10 +25,6 @@ class ProviderPasswordResetsController < InertiaController
   end
 
   def edit
-    @email = nil
-    @completed = session.delete(:password_updated).present?
-    return if @completed
-
     user = granted_user(:password_reset)
     return redirect_to provider_sign_in_path, alert: t("flash.password_reset_expired") unless user
 
@@ -41,9 +38,8 @@ class ProviderPasswordResetsController < InertiaController
     user.assign_attributes(params.permit(:password, :password_confirmation).merge(verified: true))
 
     if user.save(context: :provider_password)
-      clear_password_grant
-      session[:password_updated] = true
-      redirect_to edit_provider_password_reset_path
+      start_provider_session(user)
+      redirect_to provider_dashboard_path, notice: t("flash.signed_in")
     else
       redirect_to edit_provider_password_reset_path, inertia: { errors: user.errors }
     end

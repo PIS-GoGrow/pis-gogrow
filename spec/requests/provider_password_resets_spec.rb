@@ -22,7 +22,7 @@ RSpec.describe "Provider password reset", type: :request do
     patch provider_password_reset_path, params: { password: password, password_confirmation: confirmation }
   end
 
-  describe "POST /proveedores/contrasena" do
+  describe "POST /provider/password" do
     it "sends a code to a provider and moves to the code screen" do
       expect { request_code }.to have_enqueued_email(UserMailer, :password_reset_code)
 
@@ -66,7 +66,7 @@ RSpec.describe "Provider password reset", type: :request do
     end
   end
 
-  describe "GET /proveedores/contrasena/codigo" do
+  describe "GET /provider/password/code" do
     it "sends the visitor back to sign in when no code was requested" do
       get provider_password_reset_code_path
 
@@ -100,7 +100,7 @@ RSpec.describe "Provider password reset", type: :request do
     end
   end
 
-  describe "POST /proveedores/contrasena/codigo" do
+  describe "POST /provider/password/code" do
     before { request_code }
 
     it "accepts the right code and opens the new password screen" do
@@ -109,7 +109,7 @@ RSpec.describe "Provider password reset", type: :request do
       expect(response).to redirect_to(edit_provider_password_reset_path)
       follow_redirect!
       expect(inertia).to render_component("provider_password_resets/edit")
-      expect(inertia).to have_props(email: provider.email, completed: false)
+      expect(inertia).to have_props(email: provider.email)
     end
 
     it "rejects a wrong code and keeps the user on the code screen" do
@@ -192,38 +192,30 @@ RSpec.describe "Provider password reset", type: :request do
     end
   end
 
-  describe "PATCH /proveedores/contrasena" do
+  describe "PATCH /provider/password" do
     before do
       request_code
       verify_code(current_code)
     end
 
-    it "sets the new password, signs out every session and consumes the code" do
-      provider.sessions.create!(role: :provider)
+    it "sets the new password, signs out every other session and consumes the code" do
+      old_session = provider.sessions.create!(role: :provider)
 
       change_password
 
-      expect(response).to redirect_to(edit_provider_password_reset_path)
       expect(provider.reload.authenticate(strong_password)).to be_truthy
-      expect(provider.sessions.count).to eq(0)
+      expect(Session.exists?(old_session.id)).to be(false)
       expect(OtpCode.pending?(provider, :password_reset)).to be(false)
     end
 
-    it "shows the confirmation once and then closes the screen" do
+    it "signs the provider in and sends them to the dashboard" do
       change_password
-      follow_redirect!
-
-      expect(inertia).to have_props(completed: true)
-
-      get edit_provider_password_reset_path
-      expect(response).to redirect_to(provider_sign_in_path)
-    end
-
-    it "lets the provider sign in with the new password" do
-      change_password
-      post provider_sign_in_path, params: { email: provider.email, password: strong_password }
 
       expect(response).to redirect_to(provider_dashboard_path)
+      expect(provider.sessions.pluck(:role)).to eq([ "provider" ])
+
+      follow_redirect!
+      expect(response).to have_http_status(:ok)
     end
 
     it "does not work twice with the same authorization" do

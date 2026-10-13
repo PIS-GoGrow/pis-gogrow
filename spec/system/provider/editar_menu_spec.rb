@@ -100,7 +100,7 @@ RSpec.describe "Edición de menú publicado por el proveedor", type: :system do
     it "redirige al inicio de sesión a un usuario sin autenticar" do
       visit schedules_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(provider_sign_in_path)
     end
   end
 end

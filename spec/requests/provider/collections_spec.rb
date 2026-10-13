@@ -20,7 +20,7 @@ RSpec.describe "Provider::Collections", type: :request do
     it "redirects to sign in without a session" do
       get provider_collections_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects a consumer to the home page" do

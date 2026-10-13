@@ -96,7 +96,7 @@ RSpec.describe "Pantalla de inicio del proveedor", type: :system do
     it "redirige al visitante no autenticado a iniciar sesión" do
       visit provider_dashboard_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(provider_sign_in_path)
     end
 
     it "no permite el acceso a usuarios con rol consumidor" do
