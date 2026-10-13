@@ -995,7 +995,7 @@ RSpec.describe "Schedules", type: :request do
 
         delete schedule_path(schedule)
 
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(provider_sign_in_path)
         expect(Schedule.exists?(schedule.id)).to be(true)
       end
 
