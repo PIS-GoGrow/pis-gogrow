@@ -10,10 +10,10 @@ import { cn } from "@/lib/utils"
 import {
   settingsAppearance,
   settingsEmails,
+  settingsNotifications,
   settingsPasswords,
   settingsProfiles,
   settingsSessions,
-  settingsNotifications,
 } from "@/routes"
 import type { NavItem } from "@/types"
 

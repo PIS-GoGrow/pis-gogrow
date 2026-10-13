@@ -1,8 +1,8 @@
 import { Head, router } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
-import HeadingSmall from "@/components/heading-small"
 
+import HeadingSmall from "@/components/heading-small"
 import { Switch } from "@/components/ui/switch"
 import AppLayout from "@/layouts/app-layout"
 import SettingsLayout from "@/layouts/settings/layout"

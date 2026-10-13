@@ -8,15 +8,15 @@ class WhatsappSenderJob < ApplicationJob
 
   # En progreso
   def perform(event_key, title_data, description_data, phone, *args)
-    #conn = Faraday.new(
+    # conn = Faraday.new(
     #  url: 'https://graph.facebook.com/',
     #  headers: {
     #    'Authorization': 'Bearer ' + ACCESS_TOKEN,
     #    'Content-Type' => 'application/json'
     #  }
-    #)
+    # )
 
-    #p conn.post("/v25.0/#{PHONE_ID}/messages", request_body(event_key, title_data, description_data, phone || "+59898163754"))
+    # p conn.post("/v25.0/#{PHONE_ID}/messages", request_body(event_key, title_data, description_data, phone || "+59898163754"))
   end
 
   private

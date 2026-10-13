@@ -21,7 +21,7 @@ class Settings::NotificationsController < InertiaController
     else
       config.users.destroy Current.user
     end
-    
+
     redirect_to settings_notifications_path, notice: I18n.t("flash.config_update")
   end
 
