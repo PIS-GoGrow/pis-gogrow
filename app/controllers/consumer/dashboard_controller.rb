@@ -12,6 +12,8 @@ class Consumer::DashboardController < Consumer::InertiaController
   def confirmation
     @consumer = Current.user.consumer
     order_confirmation = order_confirmation_data
+    return redirect_to dashboard_path unless order_confirmation
+
     @total = order_confirmation[:total]
     @orders = order_confirmation[:orders]
   end
