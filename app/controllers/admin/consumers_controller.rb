@@ -14,9 +14,24 @@ class Admin::ConsumersController < Admin::InertiaController
     @summary = summary.current_month
     @benefit_summary = OrderPricing.new(@consumer).summary
     @months = summary.months
+    @debt_reminder = debt_reminder_for(@consumer)
   end
 
   private
+
+  # Estado del botón de recordar el pago: la pantalla necesita saber si se puede
+  # mandar y, si no, por qué.
+  def debt_reminder_for(consumer)
+    eligibility = DebtReminders::EmployeeEligibility.new(consumer:)
+
+    {
+      eligible: eligibility.eligible?,
+      amount: eligibility.amount.to_f,
+      remaining: eligibility.remaining,
+      next_available_at: eligibility.next_available_at&.in_time_zone(Time.zone)&.strftime("%d/%m/%Y a las %H:%M"),
+      blocked_reason: eligibility.reason&.to_s
+    }
+  end
 
   def company
     Current.user.admin.company

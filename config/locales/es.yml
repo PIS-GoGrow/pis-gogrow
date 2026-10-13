@@ -108,6 +108,9 @@ es:
     debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
+    hr_debt_payment_reminder:
+      title: "Recordatorio de pago pendiente"
+      description: "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos."
   notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
@@ -115,6 +118,9 @@ es:
     provider_payment_reminders:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
+    company_payment_reminders:
+      title: "Recordatorios de pago de Recursos Humanos"
+      description: "Recordatorios de pagos vencidos enviados por Recursos Humanos."
   activerecord:
     errors:
       models:
@@ -400,6 +406,24 @@ es:
           history: "Historial de consumo"
           year_label: "Año"
           view_month: "Ver el detalle de %{month}"
+          reminder:
+            trigger: "Recordar pago pendiente"
+            next_available: "Recordatorio enviado. Vas a poder enviar otro el %{date}."
+            limit_reached: "Alcanzaste el límite de recordatorios para este empleado."
+            confirm:
+              title: "Recordar pago pendiente"
+              description: "Se le va a enviar un recordatorio a %{employeeName} por sus pagos vencidos, que suman %{amount}."
+            success:
+              title: "Recordatorio enviado"
+              description: "Le enviamos un recordatorio a %{employeeName} por sus pagos vencidos."
+            error:
+              title: "No pudimos enviar el recordatorio"
+              description: "Intentá nuevamente."
+            back: "Volver"
+            send: "Enviar recordatorio"
+            sending: "Enviando..."
+            retry: "Reintentar"
+            done: "Listo"
           history_empty_title: "Sin consumos"
           history_empty_description: "Este empleado todavía no realizó ningún pedido de viandas."
           month_detail: "Historial de consumo: %{month}"

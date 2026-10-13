@@ -28,14 +28,7 @@ module DebtReminders
           user: recipient,
           notifiable: account,
           description_data: {
-            amount: ActionController::Base.helpers.number_to_currency(
-              account.amount,
-              unit: "$",
-              format: "%u%n",
-              precision: account.amount.frac.zero? ? 0 : 2,
-              delimiter: ".",
-              separator: ","
-            ),
+            amount: DebtReminders.format_amount(account.amount),
             provider: account.provider.user.name,
             period: I18n.l(account.month, format: :month_name_year).downcase
           }

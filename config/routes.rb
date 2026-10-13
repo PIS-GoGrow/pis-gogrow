@@ -84,7 +84,9 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
     resources :special_subsidies, only: [ :create, :update, :destroy ]
-    resources :consumers, only: [ :index, :show ]
+    resources :consumers, only: [ :index, :show ] do
+      resources :debt_reminders, only: [ :create ]
+    end
     resources :invoices, only: [ :index ] do
       get :file, on: :member
     end

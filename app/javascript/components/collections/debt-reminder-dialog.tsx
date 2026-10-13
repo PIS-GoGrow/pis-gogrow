@@ -14,32 +14,38 @@ import {
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { useFormatters } from "@/hooks/use-formatters"
-import { providerDebtReminders } from "@/routes"
 
 type ReminderState = "confirm" | "processing" | "success" | "error"
 
 interface DebtReminderDialogProps {
-  accountId: number
+  // A dónde se postea el recordatorio: el del proveedor reclama una cuenta y el
+  // de Recursos Humanos, toda la deuda vencida de un empleado.
+  action: string
   eligible: boolean
   employeeName: string
-  month: string
   amount: number
+  // Solo el recordatorio del proveedor habla de un mes puntual.
+  month?: string
+  translationKey?: string
 }
 
 export default function DebtReminderDialog({
-  accountId,
+  action,
   eligible,
   employeeName,
-  month,
   amount,
+  month,
+  translationKey = "pages.provider_collections.reminder",
 }: DebtReminderDialogProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<ReminderState>("confirm")
   const sending = useRef(false)
-  const key = "pages.provider_collections.reminder"
-  const period = month.replace(" ", " de ").toLocaleLowerCase("es-UY")
+  const key = translationKey
+  const period = month
+    ? month.replace(" ", " de ").toLocaleLowerCase("es-UY")
+    : ""
 
   function handleOpenChange(nextOpen: boolean) {
     if (sending.current) return
@@ -58,7 +64,7 @@ export default function DebtReminderDialog({
     setState("processing")
 
     router.post(
-      providerDebtReminders.create(accountId).url,
+      action,
       {},
       {
         preserveScroll: true,
