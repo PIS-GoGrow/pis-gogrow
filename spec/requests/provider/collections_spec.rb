@@ -17,10 +17,40 @@ RSpec.describe "Provider::Collections", type: :request do
   end
 
   describe "GET /provider/collections" do
+    it "mantiene el subtotal y aplica IVA una sola vez en detalle, deuda e historial" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+      company = Account.create!(owner: companies(:gogrow), provider: providers(:tuviandita), month: Date.current.next_month, amount: "800")
+      sign_in provider_user, role: :provider
+
+      2.times do
+        get provider_collection_path(company)
+        expect(inertia).to have_props { |page|
+          expect(page[:account]).to include(amount: 800.0, vat_amount: 176.0, payable_amount: 976.0)
+          true
+        }
+      end
+
+      get provider_collections_path
+      expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 }, outstanding: { total: 2178.0, meals: 4 })
+
+      company.payments.create!(provider: company.provider, status: :approved)
+      get provider_collections_path
+      expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 }, outstanding: { total: 1202.0, meals: 4 })
+      expect(inertia).to have_props { |page|
+        group = page[:history].find { it[:company][:id] == company.id }
+        expect(group[:confirmed_total]).to eq(976.0)
+        expect(group[:company]).to include(amount: 800.0, vat_amount: 176.0, payable_amount: 976.0)
+        expect(group[:employees]).to all(include(vat_amount: 0.0))
+        true
+      }
+      expect(company.reload.amount).to eq(800.to_d)
+    end
+
     it "redirects to sign in without a session" do
       get provider_collections_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects a consumer to the home page" do
@@ -71,7 +101,7 @@ RSpec.describe "Provider::Collections", type: :request do
             detail_orders = detail[:days].flat_map { it[:orders] }
 
             expect(detail[:month]).to eq(I18n.l(month, format: :month_name_year))
-            expect(detail[:clients]).to eq([ { "id" => companies(:gogrow).id, "name" => "GoGrow" } ])
+            expect(detail[:clients]).to eq([ { "id" => companies(:gogrow).id, "name" => "GoGrow", "subtotal" => 1202.0, "vat_amount" => 0.0, "payable_amount" => 1202.0 } ])
             expect(detail_orders.pluck(:id)).to match_array(
               [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
             )
@@ -247,7 +277,7 @@ RSpec.describe "Provider::Collections", type: :request do
       (props[:pending] + props[:history]).each do |group|
         accounts = [ group[:company], *group[:employees] ].compact
 
-        expect(group[:total]).to eq(accounts.sum { it[:amount] })
+        expect(group[:total]).to eq(accounts.sum { it[:payable_amount] })
         expect(group[:employees_total]).to eq(group[:employees].sum { it[:amount] })
       end
     end

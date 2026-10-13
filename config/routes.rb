@@ -5,8 +5,16 @@ Rails.application.routes.draw do
 
   get  "sign_in", to: "sessions#new", as: :sign_in
   post "sign_in", to: "sessions#create"
-  get  "sign_up", to: "users#new", as: :sign_up
-  post "sign_up", to: "users#create"
+
+  get  "provider", to: "provider_sessions#new", as: :provider_sign_in
+  post "provider", to: "provider_sessions#create"
+  resource :provider_invitation, path: "provider/invitation", only: [ :show, :update ]
+  resource :provider_password_reset, path: "provider/password", only: [ :create, :edit, :update ], path_names: { edit: "new" }
+  resource :provider_password_reset_code, path: "provider/password/code", only: [ :show, :create ]
+
+  namespace :internal do
+    resources :provider_invitations, only: [ :create ]
+  end
 
   resources :sessions, only: [ :destroy, :edit, :update ]
   resource :users, only: [ :destroy ]
@@ -22,7 +30,6 @@ Rails.application.routes.draw do
 
   namespace :identity do
     resource :email_verification, only: [ :show, :create ]
-    resource :password_reset,     only: [ :new, :edit, :create, :update ]
   end
 
   namespace :settings do
@@ -96,6 +103,8 @@ Rails.application.routes.draw do
   end
 
   root "home#index"
+  get "proveedor", to: redirect("/provider"), as: :provider_welcome
+  get "rrhh", to: "home#admin", as: :admin_welcome
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   get "up" => "rails/health#show", as: :rails_health_check

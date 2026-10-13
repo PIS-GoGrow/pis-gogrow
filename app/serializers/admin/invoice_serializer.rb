@@ -30,7 +30,7 @@ class Admin::InvoiceSerializer < ApplicationSerializer
   # El consumo del período, para que RR. HH. pueda contrastarlo con lo facturado.
   typelize :number?
   attribute :period_amount do |invoice|
-    invoice.account.amount&.to_f
+    invoice.account.payable_amount.to_f
   end
 
   typelize :string

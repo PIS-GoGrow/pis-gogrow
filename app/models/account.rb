@@ -6,6 +6,10 @@
 # El atributo month dice para qué mes es válida la cuenta. Este atributo
 # siempre es igual al primer día de un mes, esto se hace automáticamente.
 class Account < ApplicationRecord
+  VAT_RATE = BigDecimal("0.22")
+
+  attr_readonly :vat_rate
+
   belongs_to :owner, polymorphic: true
 
   belongs_to :provider
@@ -16,6 +20,7 @@ class Account < ApplicationRecord
   has_many :orders, through: :order_accounts
 
   before_create :correct_month
+  before_create :assign_vat_rate
 
   scope :current, -> { where(month: Date.current.beginning_of_month) }
   scope :companies, -> { where(owner_type: "Company") }
@@ -39,8 +44,28 @@ class Account < ApplicationRecord
     month == Date.current.beginning_of_month
   end
 
+  def vat_amount
+    (amount.to_d * vat_rate.to_d).round(2, BigDecimal::ROUND_HALF_UP)
+  end
+
+  def payable_amount
+    amount.to_d + vat_amount
+  end
+
   def due_date
     month + 1.month + 4.days
+  end
+
+  # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
+  def formatted_amount
+    ActionController::Base.helpers.number_to_currency(
+      amount,
+      unit: "$",
+      format: "%u%n",
+      precision: amount.frac.zero? ? 0 : 2,
+      delimiter: ".",
+      separator: ","
+    )
   end
 
   # Se busca en memoria para que un preload(:payments) evite una consulta por
@@ -122,6 +147,14 @@ class Account < ApplicationRecord
   end
 
   private
+
+  def assign_vat_rate
+    self.vat_rate = if company? && ENV["COMPANY_ACCOUNT_VAT_ENABLED"] == "true" && month >= Date.new(2026, 10, 1)
+      VAT_RATE
+    else
+      0
+    end
+  end
 
   # Mantener el mes de las cuentas como la fecha correspondiente al primer
   # día del mes en el que son válidas

@@ -9,8 +9,7 @@
 # migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
-
-ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,6 +21,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
     t.string "owner_type", null: false
     t.bigint "provider_id", null: false
     t.datetime "updated_at", null: false
+    t.decimal "vat_rate", precision: 3, scale: 2, default: "0.0", null: false
     t.index ["owner_type", "owner_id", "provider_id", "month"], name: "idx_on_owner_type_owner_id_provider_id_month_49d9020441", unique: true
     t.index ["owner_type", "owner_id"], name: "index_accounts_on_owner"
     t.index ["provider_id"], name: "index_accounts_on_provider_id"
@@ -109,7 +109,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
     t.datetime "created_at", null: false
     t.string "description"
     t.date "due_date"
-    t.decimal "max_price", precision: 10, scale: 2
     t.integer "percentage"
     t.integer "status"
     t.datetime "updated_at", null: false
@@ -121,7 +120,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
   create_table "companies", force: :cascade do |t|
     t.string "address"
     t.datetime "created_at", null: false
-    t.integer "debt_alert_threshold", default: 2000, null: false
     t.string "name"
     t.datetime "updated_at", null: false
   end
@@ -293,6 +291,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
     t.index ["modified_by_id"], name: "index_orders_on_modified_by_id"
     t.index ["schedule_id"], name: "index_orders_on_schedule_id"
     t.check_constraint "delivery_method <> 1 OR address IS NOT NULL AND btrim(address::text) <> ''::text", name: "orders_home_delivery_requires_address"
+  end
+
+  create_table "otp_codes", force: :cascade do |t|
+    t.integer "attempts", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "nonce", null: false
+    t.integer "purpose", null: false
+    t.datetime "sent_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "purpose"], name: "index_otp_codes_on_user_id_and_purpose", unique: true
   end
 
   create_table "payments", force: :cascade do |t|
@@ -569,6 +579,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_120000) do
   add_foreign_key "orders", "schedules"
   add_foreign_key "orders", "users", column: "cancelled_by_id"
   add_foreign_key "orders", "users", column: "modified_by_id"
+  add_foreign_key "otp_codes", "users"
   add_foreign_key "payments", "accounts"
   add_foreign_key "payments", "providers"
   add_foreign_key "providers", "users", on_delete: :nullify
