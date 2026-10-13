@@ -28,7 +28,7 @@ module DebtReminders
           user: recipient,
           notifiable: account,
           description_data: {
-            amount: DebtReminders.format_amount(account.amount),
+            amount: account.formatted_amount,
             provider: account.provider.user.name,
             period: I18n.l(account.month, format: :month_name_year).downcase
           }

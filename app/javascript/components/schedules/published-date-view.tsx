@@ -2,31 +2,37 @@ import { Link, router } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import RemoveScheduleDialog from "@/components/schedules/remove-schedule-dialog"
 import {
   Card,
-  CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
+import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { providerMenus, schedules as schedulesRoutes } from "@/routes"
 import type { Schedule } from "@/types"
 
 interface PublishedDayViewProps {
   schedules: Schedule[]
-  editable: boolean
+  publishable: boolean
+  returnTo: string
 }
 
 function PublishedScheduleRow({
   schedule,
-  editable,
+  publishable,
+  returnTo,
 }: {
   schedule: Schedule
-  editable: boolean
+  publishable: boolean
+  returnTo: string
 }) {
   const { t } = useTranslation()
+  const { formatMoneyShort } = useFormatters()
   const [processing, setProcessing] = useState(false)
 
   function handleAvailabilityChange(available: boolean) {
@@ -47,16 +53,16 @@ function PublishedScheduleRow({
     <Card
       className={cn(
         "relative w-full",
-        editable && "hover:bg-muted/40 transition-colors",
+        publishable && "hover:bg-muted/40 transition-colors",
       )}
     >
       <CardHeader>
         <CardTitle>
-          {editable ? (
+          {publishable ? (
             <Link
               href={
                 providerMenus.edit(schedule.saved_menu_id, {
-                  query: { schedule_id: schedule.id },
+                  query: { schedule_id: schedule.id, return_to: returnTo },
                 }).url
               }
               aria-label={t("pages.schedules.index.edit_dish", {
@@ -64,38 +70,45 @@ function PublishedScheduleRow({
               })}
               className="after:absolute after:inset-0 after:rounded-xl"
             >
-              {schedule.menu.name} | {schedule.menu.price}$
+              {schedule.menu.name}{" "}
+              <span className="text-muted-foreground">
+                | {formatMoneyShort(schedule.menu.price ?? 0)}
+              </span>
             </Link>
           ) : (
             <>
-              {schedule.menu.name} | {schedule.menu.price}$
+              {schedule.menu.name}{" "}
+              <span className="text-muted-foreground">
+                | {formatMoneyShort(schedule.menu.price ?? 0)}
+              </span>
             </>
           )}
         </CardTitle>
         <CardDescription>{schedule.menu.description}</CardDescription>
       </CardHeader>
 
-      <CardContent className="flex items-center justify-between">
-        <p className="text-muted-foreground text-sm font-medium">
-          Stock: {schedule.amount}
-        </p>
-        <label className="relative z-10 flex items-center gap-2 text-sm">
-          {t("pages.schedules.index.availability.toggle_label")}
-          <Switch
-            checked={schedule.available}
-            disabled={processing}
-            onCheckedChange={handleAvailabilityChange}
-            className="data-[state=checked]:bg-green-600 dark:data-[state=checked]:bg-green-600"
-          />
-        </label>
-      </CardContent>
+      {publishable && (
+        <CardFooter className="justify-between border-t">
+          <RemoveScheduleDialog schedule={schedule} />
+          <label className="relative z-10 flex items-center gap-2 text-sm">
+            {t("pages.schedules.index.availability.toggle_label")}
+            <Switch
+              checked={schedule.available}
+              disabled={processing}
+              onCheckedChange={handleAvailabilityChange}
+              className="data-[state=checked]:bg-green-600 dark:data-[state=checked]:bg-green-600"
+            />
+          </label>
+        </CardFooter>
+      )}
     </Card>
   )
 }
 
 export default function PublishedDayView({
   schedules,
-  editable,
+  publishable,
+  returnTo,
 }: PublishedDayViewProps) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -103,7 +116,8 @@ export default function PublishedDayView({
         <PublishedScheduleRow
           key={schedule.id}
           schedule={schedule}
-          editable={editable}
+          publishable={publishable}
+          returnTo={returnTo}
         />
       ))}
     </div>

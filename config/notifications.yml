@@ -15,7 +15,10 @@ configurations:
   provider_payment_reminders:
     roles: [consumer]
     configurable: false
-  company_payment_reminders:
+  company_payments:
+    roles: [admin]
+    configurable: true
+  hr_payment_reminders:
     roles: [consumer]
     configurable: false
 
@@ -44,7 +47,28 @@ events:
     role: consumer
     requires_action: true
 
+  company_payment_upcoming:
+    configuration: company_payments
+    role: admin
+    requires_action: true
+
+  company_payment_overdue:
+    configuration: company_payments
+    role: admin
+    requires_action: true
+
+  company_payment_rejected:
+    configuration: company_payments
+    role: admin
+    requires_action: true
+
+  company_payment_approved:
+    configuration: company_payments
+    role: admin
+    requires_action: false
+
   hr_debt_payment_reminder:
-    configuration: company_payment_reminders
+    configuration: hr_payment_reminders
     role: consumer
+    requires_action: false
     requires_action: false

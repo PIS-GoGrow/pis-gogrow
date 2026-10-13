@@ -19,7 +19,7 @@ module DebtReminders
           event_key: EmployeeEligibility::EVENT,
           user: recipient,
           notifiable: consumer,
-          description_data: { amount: DebtReminders.format_amount(eligibility.amount) }
+          description_data: { amount: Account.format_amount(eligibility.amount) }
         )
         raise Request::CreationFailed unless notification
 

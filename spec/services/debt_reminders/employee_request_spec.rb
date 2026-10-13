@@ -10,7 +10,7 @@ RSpec.describe DebtReminders::EmployeeRequest do
   let(:overdue_day) { accounts(:one_tuviandita_current).due_date + 1.day }
 
   before do
-    Notification::Configuration.find_or_create_by!(key: "company_payment_reminders") do |config|
+    Notification::Configuration.find_or_create_by!(key: "hr_payment_reminders") do |config|
       config.roles = [ "consumer" ]
     end
   end

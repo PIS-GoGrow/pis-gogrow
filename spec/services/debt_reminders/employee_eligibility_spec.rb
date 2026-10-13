@@ -98,7 +98,7 @@ RSpec.describe DebtReminders::EmployeeEligibility do
   end
 
   def configuration
-    @configuration ||= Notification::Configuration.find_or_create_by!(key: "company_payment_reminders") do |config|
+    @configuration ||= Notification::Configuration.find_or_create_by!(key: "hr_payment_reminders") do |config|
       config.roles = [ "consumer" ]
     end
   end
