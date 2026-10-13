@@ -55,6 +55,19 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
     expect(page).to have_current_path(admin_consumer_path(consumer))
   end
 
+  it "keeps the month chosen on the home when it opens the pending employees" do
+    previous = 1.month.ago.to_date.beginning_of_month
+    consumer = Consumer.create!(user: User.create!(name: "Martín Bonnet", email: "martin@example.com", password: "secret-password-123"), company: companies(:gogrow))
+    Account.create!(owner: consumer, provider: providers(:tuviandita), month: previous, amount: 2_425)
+
+    sign_in admin_user, role: :admin
+    visit admin_dashboard_path(month: previous.strftime("%Y-%m"))
+
+    click_on "Ver empleados con saldos pendientes"
+    expect(page).to have_current_path(admin_consumers_path(filter: "pending", month: previous.strftime("%Y-%m")))
+    expect(page).to have_content("Martín Bonnet")
+  end
+
   it "shows in the navigation what HR can use now and what is still to come" do
     sign_in admin_user, role: :admin
     visit admin_dashboard_path

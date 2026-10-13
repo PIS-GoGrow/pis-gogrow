@@ -1,6 +1,6 @@
-import { render, screen, within } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import type React from "react"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { AdminDashboardIndex } from "@/types/serializers"
 
@@ -55,6 +55,7 @@ const props: AdminDashboardIndex = {
       id: 7,
       name: "Martín Bonnet",
       email: "martin@gogrow.com",
+      avatar_url: null,
       amount: 2425,
       status: "pending",
     },
@@ -134,6 +135,57 @@ describe("Admin Dashboard Page", () => {
         name: "Ver empleados con saldos pendientes",
       }),
     ).toHaveAttribute("href", "/admin/consumers?filter=pending")
+  })
+
+  it("keeps the selected month when it opens the pending employees", () => {
+    render(<AdminDashboard {...props} month="2026-09" />)
+
+    expect(
+      screen.getByRole("link", {
+        name: "Ver empleados con saldos pendientes",
+      }),
+    ).toHaveAttribute("href", "/admin/consumers?filter=pending&month=2026-09")
+  })
+
+  describe("photos in the debt ranking", () => {
+    afterEach(() => vi.unstubAllGlobals())
+
+    // jsdom nunca carga imágenes, y Radix solo muestra la foto cuando cargó.
+    function stubLoadedImages() {
+      vi.stubGlobal(
+        "Image",
+        class extends EventTarget {
+          complete = true
+          naturalWidth = 1
+          src = ""
+        },
+      )
+    }
+
+    it("shows the photo of an employee who has one", async () => {
+      stubLoadedImages()
+      const debtor = {
+        ...props.debtors[0],
+        avatar_url: "https://foto/martin.jpg",
+      }
+      const { container } = render(
+        <AdminDashboard {...props} debtors={[debtor]} />,
+      )
+
+      await waitFor(() =>
+        expect(container.querySelector("img")).toHaveAttribute(
+          "src",
+          "https://foto/martin.jpg",
+        ),
+      )
+    })
+
+    it("shows the initials of an employee without a photo", () => {
+      const { container } = render(<AdminDashboard {...props} />)
+
+      expect(container.querySelector("img")).toBeNull()
+      expect(screen.getByText("MB")).toBeInTheDocument()
+    })
   })
 
   it("shows an empty state instead of figures from another month", () => {

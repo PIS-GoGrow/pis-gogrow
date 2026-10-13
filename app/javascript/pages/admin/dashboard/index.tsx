@@ -8,7 +8,7 @@ import HeadingSmall from "@/components/heading-small"
 import NotificationBanners from "@/components/notification-banners"
 import PageContainer from "@/components/page-container"
 import StatusBadge from "@/components/status-badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -195,7 +195,14 @@ export default function AdminDashboard({
               id="admin-debts-title"
               title={t(`${page}.debts.title`)}
               actionLabel={t(`${page}.debts.view`)}
-              href={adminConsumers.index({ query: { filter: "pending" } }).url}
+              href={
+                adminConsumers.index({
+                  query:
+                    month === current_month
+                      ? { filter: "pending" }
+                      : { filter: "pending", month },
+                }).url
+              }
             >
               {debtors.length === 0 ? (
                 <EmptyRow>{t(`${page}.debts.empty`)}</EmptyRow>
@@ -206,6 +213,9 @@ export default function AdminDashboard({
                     className="hover:bg-accent/40 relative transition-colors"
                   >
                     <Avatar size="lg">
+                      {debtor.avatar_url && (
+                        <AvatarImage src={debtor.avatar_url} alt="" />
+                      )}
                       <AvatarFallback className="text-foreground text-xs font-semibold">
                         {getInitials(debtor.name)}
                       </AvatarFallback>

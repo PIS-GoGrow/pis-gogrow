@@ -10,6 +10,8 @@ class AdminConsumerSummary
     def name = consumer.user.name
 
     def email = consumer.user.email
+
+    def avatar_url = consumer.user.avatar_url
   end
 
   ProviderRow = Data.define(:name, :amount, :status)

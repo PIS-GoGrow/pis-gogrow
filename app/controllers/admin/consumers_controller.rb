@@ -2,7 +2,7 @@
 
 class Admin::ConsumersController < Admin::InertiaController
   def index
-    @consumers = AdminConsumerSummary.rows_for(company)
+    @consumers = AdminConsumerSummary.rows_for(company, month: selected_month)
     @filter = params[:filter].presence_in(%w[all completed pending]) || "all"
   end
 
