@@ -25,6 +25,11 @@ RSpec.describe "Users", type: :request do
   end
 
   describe "DELETE /users" do
+    it "requires authentication" do
+      delete users_path, params: { password_challenge: "Secret1*3*5*" }
+      expect(response).to redirect_to(sign_in_path)
+    end
+
     it "destroys current user with valid password" do
       sign_in users(:one)
       expect {
@@ -37,6 +42,22 @@ RSpec.describe "Users", type: :request do
       sign_in users(:one)
       expect {
         delete users_path, params: { password_challenge: "wrongpassword" }
+      }.not_to change(User, :count)
+      expect(response).to redirect_to(settings_profile_path)
+    end
+
+    it "rejects account deletion when password_challenge is empty or nil" do
+      sign_in users(:one)
+      expect {
+        delete users_path, params: {}
+      }.not_to change(User, :count)
+      expect(response).to redirect_to(settings_profile_path)
+    end
+
+    it "handles unexpected parameter types gracefully" do
+      sign_in users(:one)
+      expect {
+        delete users_path, params: { password_challenge: [ 12345 ] }
       }.not_to change(User, :count)
       expect(response).to redirect_to(settings_profile_path)
     end

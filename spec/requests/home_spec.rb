@@ -42,14 +42,22 @@ RSpec.describe "Home", type: :request do
       get root_path
       expect(response).to redirect_to(admin_dashboard_path)
     end
+
+    it "sends an unknown role to the sign in page" do
+      session = users(:one).sessions.create!(role: :consumer)
+      session.update_column(:role, 999) # invalid/unknown role
+      cookies[:session_token] = AuthenticationHelpers.signed_cookie(:session_token, session.id)
+
+      get root_path
+      expect(response).to redirect_to(sign_in_path)
+    end
   end
 
   describe "GET /proveedor" do
-    it "shows the provider welcome" do
+    it "redirects to /provider to maintain route consistency" do
       get provider_welcome_path
 
-      expect(inertia).to render_component("home/index")
-      expect(inertia).to have_props(variant: "provider")
+      expect(response).to redirect_to("/provider")
     end
   end
 
@@ -59,6 +67,12 @@ RSpec.describe "Home", type: :request do
 
       expect(inertia).to render_component("home/index")
       expect(inertia).to have_props(variant: "admin")
+    end
+
+    it "redirects an already authenticated admin to admin dashboard" do
+      sign_in users(:admin), role: :admin
+      get admin_welcome_path
+      expect(response).to redirect_to(admin_dashboard_path)
     end
   end
 end

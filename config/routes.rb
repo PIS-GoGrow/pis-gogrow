@@ -102,7 +102,7 @@ Rails.application.routes.draw do
   end
 
   root "home#index"
-  get "proveedor", to: "home#provider", as: :provider_welcome
+  get "proveedor", to: redirect("/provider"), as: :provider_welcome
   get "rrhh", to: "home#admin", as: :admin_welcome
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

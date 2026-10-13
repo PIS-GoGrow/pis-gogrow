@@ -42,22 +42,28 @@ export default function Home({ variant, dev_login_enabled }: HomeIndex) {
         </main>
 
         <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
-          {/*
-            Full-page navigation (not an Inertia visit): OmniAuth needs to
-            redirect the whole browser to accounts.google.com, and
-            omniauth-rails_csrf_protection requires the request to be a POST.
-          */}
-          <form action="/auth/google_oauth2" method="post">
-            <input
-              type="hidden"
-              name="authenticity_token"
-              value={readAuthenticityToken()}
-            />
-            <Button type="submit" size="lg" className="h-12 w-full text-base">
-              {variant !== "provider" && <GoogleMark />}
-              {t(`pages.home.${variant}.sign_in`)}
+          {variant === "provider" ? (
+            <Button asChild size="lg" className="h-12 w-full text-base">
+              <a href="/provider">{t(`pages.home.${variant}.sign_in`)}</a>
             </Button>
-          </form>
+          ) : (
+            /*
+              Full-page navigation (not an Inertia visit): OmniAuth needs to
+              redirect the whole browser to accounts.google.com, and
+              omniauth-rails_csrf_protection requires the request to be a POST.
+            */
+            <form action="/auth/google_oauth2" method="post">
+              <input
+                type="hidden"
+                name="authenticity_token"
+                value={readAuthenticityToken()}
+              />
+              <Button type="submit" size="lg" className="h-12 w-full text-base">
+                <GoogleMark />
+                {t(`pages.home.${variant}.sign_in`)}
+              </Button>
+            </form>
+          )}
 
           {dev_login_enabled && <DevLoginForm />}
         </div>

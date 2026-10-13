@@ -30,6 +30,7 @@ class HomeController < InertiaController
     when "consumer" then redirect_to dashboard_path
     when "provider" then redirect_to provider_dashboard_path
     when "admin" then redirect_to admin_dashboard_path
+    else redirect_to sign_in_path
     end
   end
 end
