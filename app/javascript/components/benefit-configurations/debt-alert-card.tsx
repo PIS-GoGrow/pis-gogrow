@@ -80,6 +80,7 @@ export default function DebtAlertCard({ threshold }: DebtAlertCardProps) {
                         name="company[debt_alert_threshold]"
                         type="number"
                         min="1"
+                        max="1000000"
                         step="1"
                         className="w-32 text-base"
                         defaultValue={threshold}

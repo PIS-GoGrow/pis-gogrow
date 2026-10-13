@@ -7,7 +7,7 @@ class Company < ApplicationRecord
   has_many :invoices, through: :accounts
   has_many :benefit_configurations
 
-  validates :debt_alert_threshold, numericality: { only_integer: true, greater_than: 0 }
+  validates :debt_alert_threshold, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: 1_000_000 }
 
   def check_debt_alerts!
     consumers.includes(:user).find_each(&:check_debt_alert!)

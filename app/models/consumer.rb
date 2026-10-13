@@ -19,23 +19,20 @@ class Consumer < ApplicationRecord
   end
 
   # La alerta requiere acción, así que solo se cierra acá, cuando la deuda vuelve
-  # al monto que fijó RRHH; mientras siga abierta no se crea otra en cada pedido.
+  # al monto que fijó RRHH; mientras siga abierta se actualiza su texto en vez de
+  # crear otra en cada pedido.
   def check_debt_alert!
     debt = total_debt
     threshold = company.debt_alert_threshold
+    alert = user.notifications.active.find_by(event: "debt_threshold_exceeded", notifiable: self)
+    data = { debt: format_amount(debt), threshold: format_amount(threshold) }
 
     if debt <= threshold
-      Notification.close_by(event: "debt_threshold_exceeded", notifiable: self, user:)
-    elsif !user.notifications.active.exists?(event: "debt_threshold_exceeded", notifiable: self)
-      Notifier.call(
-        event_key: :debt_threshold_exceeded,
-        user:,
-        notifiable: self,
-        description_data: {
-          debt: format_amount(debt),
-          threshold: format_amount(threshold)
-        }
-      )
+      alert&.close!
+    elsif alert
+      alert.update!(description: I18n.t!("notifications.debt_threshold_exceeded.description", **data))
+    else
+      Notifier.call(event_key: :debt_threshold_exceeded, user:, notifiable: self, description_data: data)
     end
   end
 

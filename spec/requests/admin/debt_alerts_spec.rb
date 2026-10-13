@@ -47,11 +47,57 @@ RSpec.describe "Admin::DebtAlerts", type: :request do
       expect(inertia.props[:errors]).to include("debt_alert_threshold" => [ "debe ser mayor que 0" ])
     end
 
+    it "rechaza un monto mayor al tope sin dar error de servidor" do
+      patch admin_debt_alert_path, params: { company: { debt_alert_threshold: 3_000_000_000 } }
+
+      expect(response).to have_http_status(:redirect)
+      expect(company.reload.debt_alert_threshold).to eq(2000)
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("debt_alert_threshold" => [ "debe ser menor que o igual a 1000000" ])
+    end
+
+    it "rechaza un monto con decimales" do
+      patch admin_debt_alert_path, params: { company: { debt_alert_threshold: "2500.5" } }
+
+      expect(company.reload.debt_alert_threshold).to eq(2000)
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("debt_alert_threshold" => [ "debe ser un entero" ])
+    end
+
+    it "rechaza un monto que no es un número" do
+      patch admin_debt_alert_path, params: { company: { debt_alert_threshold: "abc" } }
+
+      expect(company.reload.debt_alert_threshold).to eq(2000)
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("debt_alert_threshold" => [ "no es un número" ])
+    end
+
     it "no deja entrar a un empleado" do
       sign_in users(:one), role: :consumer
 
       patch admin_debt_alert_path, params: { company: { debt_alert_threshold: 1000 } }
 
+      expect(response).to redirect_to(root_path)
+      expect(company.reload.debt_alert_threshold).to eq(2000)
+    end
+
+    it "no deja entrar a un proveedor" do
+      sign_in users(:provider_user), role: :provider
+
+      patch admin_debt_alert_path, params: { company: { debt_alert_threshold: 1000 } }
+
+      expect(response).to redirect_to(root_path)
+      expect(company.reload.debt_alert_threshold).to eq(2000)
+    end
+
+    it "pide iniciar sesión sin una sesión activa" do
+      sign_out
+      patch admin_debt_alert_path, params: { company: { debt_alert_threshold: 1000 } }
+
+      expect(response).to redirect_to(sign_in_path)
       expect(company.reload.debt_alert_threshold).to eq(2000)
     end
   end

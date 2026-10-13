@@ -217,6 +217,16 @@ RSpec.describe Consumer, type: :model do
       expect(alerts.count).to eq(1)
     end
 
+    it "updates the active alert text when the threshold changes" do
+      Account.create!(owner: consumer, provider:, amount: 2500)
+      consumer.check_debt_alert!
+
+      consumer.company.update!(debt_alert_threshold: 2200)
+      consumer.check_debt_alert!
+
+      expect(alerts.active.sole.description).to start_with("Tu deuda es de $2.500 y superó el límite de $2.200")
+    end
+
     it "closes the alert when an approved payment brings the debt back under the threshold" do
       account = Account.create!(owner: consumer, provider:, amount: 2500)
       consumer.check_debt_alert!
