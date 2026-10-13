@@ -75,6 +75,63 @@ RSpec.describe PaymentReminders::Generate do
       )
       expect(notification.description).to include("3 días")
       expect(notification.description).to include("10/11/2026")
+      expect(notification.description).to include("$1.500")
+      expect(notification.description).to include(account.provider.user.name)
+      expect(notification.description).to include("Revisá el detalle de tu pago")
+    end
+
+    [ Date.new(2026, 11, 6), Date.new(2026, 11, 8) ].each do |date|
+      it "does not notify the due date on #{date}, one day off the reminder day" do
+        expect {
+          described_class.call(date:)
+        }.not_to change {
+          Notification.where(notifiable: account, event: "payment_due_soon").count
+        }
+      end
+    end
+
+    it "does not duplicate the due date reminder when it runs twice on the same day" do
+      date = Date.new(2026, 11, 7)
+
+      described_class.call(date:)
+
+      expect {
+        described_class.call(date:)
+      }.not_to change {
+        Notification.where(user:, notifiable: account, event: "payment_due_soon").count
+      }
+    end
+
+    it "notifies each employee about their own payment, once per provider" do
+      other_account = accounts(:other_tuviandita_current)
+      other_provider_account = accounts(:one_endulzate_current)
+      [ other_account, other_provider_account ].each do |a|
+        a.payments.destroy_all
+        a.update!(month: Date.new(2026, 10, 1), amount: 800)
+      end
+
+      described_class.call(date: Date.new(2026, 11, 7))
+
+      reminders = Notification.where(event: "payment_due_soon")
+      expect(reminders.where(notifiable: account).pluck(:user_id)).to eq([ user.id ])
+      expect(reminders.where(notifiable: other_account).pluck(:user_id)).to eq([ other_account.owner.user.id ])
+      expect(reminders.where(notifiable: other_provider_account).pluck(:user_id)).to eq([ user.id ])
+      expect(reminders.find_by!(notifiable: other_provider_account).description)
+        .to include(other_provider_account.provider.user.name)
+    end
+
+    it "still notifies when the last payment was rejected, since it is pending again" do
+      account.payments.create!(
+        provider: account.provider,
+        status: :rejected,
+        rejection_reason: "El comprobante no se lee"
+      )
+
+      expect {
+        described_class.call(date: Date.new(2026, 11, 7))
+      }.to change {
+        Notification.where(user:, notifiable: account, event: "payment_due_soon").count
+      }.by(1)
     end
 
     it "does not notify on another day" do
