@@ -12,12 +12,18 @@ configurations:
   order_updates:
     roles: [consumer]
     configurable: true
+
   provider_payment_reminders:
     roles: [consumer]
     configurable: false
+
   automatic_payment_reminders:
     roles: [consumer]
     configurable: false
+
+  company_payments:
+    roles: [admin]
+    configurable: true
 
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
@@ -52,4 +58,24 @@ events:
   payment_due_soon:
     configuration: automatic_payment_reminders
     role: consumer
+    requires_action: false
+
+  company_payment_upcoming:
+    configuration: company_payments
+    role: admin
+    requires_action: true
+
+  company_payment_overdue:
+    configuration: company_payments
+    role: admin
+    requires_action: true
+
+  company_payment_rejected:
+    configuration: company_payments
+    role: admin
+    requires_action: true
+
+  company_payment_approved:
+    configuration: company_payments
+    role: admin
     requires_action: false

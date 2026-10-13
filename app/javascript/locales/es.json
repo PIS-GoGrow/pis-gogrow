@@ -34,8 +34,7 @@
         "inactive": "Sin beneficio"
       },
       "date_picker": {
-        "placeholder": "Elegí una fecha",
-        "range_placeholder": "Elegí un rango"
+        "placeholder": "Elegí una fecha"
       },
       "delete_account": {
         "caution": "Procede con precaución, esta acción no se puede deshacer.",
@@ -93,6 +92,10 @@
         "description": "Avisos sobre la apertura y el vencimiento próximo de pagos.",
         "title": "Recordatorios automáticos de pago"
       },
+      "company_payments": {
+        "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
+        "title": "Pagos a proveedores"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
@@ -103,6 +106,22 @@
       }
     },
     "notifications": {
+      "company_payment_approved": {
+        "description": "%{provider} confirmó el pago de %{company} por %{period} (%{amount}).",
+        "title": "Pago confirmado"
+      },
+      "company_payment_overdue": {
+        "description": "El pago de %{company} a %{provider} por %{period} (%{amount}) venció el %{due_date}. Revisá el detalle en Pagos.",
+        "title": "Tenés un pago pendiente"
+      },
+      "company_payment_rejected": {
+        "description": "El comprobante que subiste fue rechazado por %{provider}. Volvé a cargarlo para confirmar tu pago.",
+        "title": "Tu comprobante fue rechazado"
+      },
+      "company_payment_upcoming": {
+        "description": "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos.",
+        "title": "Se acerca el vencimiento de un pago"
+      },
       "debt_payment_reminder": {
         "description": "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}.",
         "title": "Recordatorio de pago pendiente"
@@ -371,7 +390,7 @@
             "no_period_amount": "Sin consumo registrado",
             "no_provider": "Proveedor no disponible",
             "period": "Período",
-            "period_amount": "Consumo del período",
+            "period_amount": "Total calculado del período",
             "provider": "Proveedor",
             "status": "Estado",
             "title": "Facturas de proveedores",
@@ -620,9 +639,11 @@
             "meals_tab": "Viandas",
             "payment_history": "Ver historial de pagos",
             "quantity": "Cant.",
+            "subtotal": "Subtotal sin IVA",
             "title": "Historial de consumo: %{month}",
             "total": "Total: %{amount}",
-            "total_label": "Total"
+            "total_label": "Total",
+            "vat": "IVA (22 %)"
           },
           "due": "Vence: %{date}",
           "employees": "Empleados",
@@ -660,6 +681,8 @@
           "pending_tab": "Pendientes",
           "sales": "Ventas",
           "section": "Cobros",
+          "subsidy_vat": "IVA sobre subsidios (22 %)",
+          "subtotal": "Subtotal",
           "this_month": "Este mes",
           "title": "Cobros",
           "total_debt": "Deuda total",
@@ -815,15 +838,14 @@
       "provider_menus": {
         "edit": {
           "agenda": {
-            "amount": "Stock por día (opcional)",
             "date": "Día específico",
-            "incomplete": "Completá las fechas. Si cargás un stock, tiene que ser mayor a 0.",
+            "ends_on": "Hasta",
+            "incomplete": "Completá las fechas.",
             "modes": {
               "range": "Repetir en un rango personalizado",
               "single": "No repetir",
               "weekly": "Repetir todas las semanas"
             },
-            "range": "Rango",
             "starts_on": "Desde",
             "title": "Agenda",
             "weekday_names": {
@@ -842,6 +864,7 @@
             },
             "weekdays_label": "Días de la semana"
           },
+          "back": "Volver",
           "sheet": {
             "apply": "Aplicar cambios",
             "applying": "Aplicando...",
@@ -878,7 +901,8 @@
               "description": "Este plato se modificará en tus platos guardados.",
               "title": "¿Modificar el plato guardado?"
             }
-          }
+          },
+          "title": "Editar plato"
         },
         "form": {
           "cancel": "Cancelar",
@@ -1068,10 +1092,12 @@
             "title": "No se publicó menú para este día."
           },
           "import_dishes": "Importar platos",
+          "next_week": "Semana siguiente",
           "no_results": {
             "description": "No encontramos platos que coincidan con tu búsqueda. Probá con otro nombre o revisá cómo lo escribiste.",
             "title": "No se encontraron resultados"
           },
+          "previous_week": "Semana anterior",
           "remove": {
             "button": "Quitar",
             "cancel": "Cancelar",
@@ -1110,7 +1136,9 @@
           "tabs": {
             "saved": "Platos guardados",
             "week": "Menú de la semana"
-          }
+          },
+          "title": "Gestión de Menú",
+          "week_range": "%{from} - %{to}, %{month}"
         }
       },
       "sessions": {

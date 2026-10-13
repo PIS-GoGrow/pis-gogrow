@@ -118,6 +118,18 @@ es:
     payment_due_soon:
       title: "Tu pago vence pronto..."
       description: "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!"
+    company_payment_upcoming:
+      title: "Se acerca el vencimiento de un pago"
+      description: "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos."
+    company_payment_overdue:
+      title: "Tenés un pago pendiente"
+      description: "El pago de %{company} a %{provider} por %{period} (%{amount}) venció el %{due_date}. Revisá el detalle en Pagos."
+    company_payment_rejected:
+      title: "Tu comprobante fue rechazado"
+      description: "El comprobante que subiste fue rechazado por %{provider}. Volvé a cargarlo para confirmar tu pago."
+    company_payment_approved:
+      title: "Pago confirmado"
+      description: "%{provider} confirmó el pago de %{company} por %{period} (%{amount})."
   notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
@@ -128,6 +140,9 @@ es:
     automatic_payment_reminders:
       title: "Recordatorios automáticos de pago"
       description: "Avisos sobre la apertura y el vencimiento próximo de pagos."
+    company_payments:
+      title: "Pagos a proveedores"
+      description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
   activerecord:
     errors:
       models:
@@ -252,7 +267,6 @@ es:
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
     date_picker:
       placeholder: "Elegí una fecha"
-      range_placeholder: "Elegí un rango"
     benefit_summary:
       active: "Activo"
       inactive: "Sin beneficio"
@@ -290,7 +304,7 @@ es:
           provider: "Proveedor"
           issued_on: "Emisión"
           total_amount: "Facturado"
-          period_amount: "Consumo del período"
+          period_amount: "Total calculado del período"
           no_period_amount: "Sin consumo registrado"
           status: "Estado"
           file: "Archivo"
@@ -604,6 +618,8 @@ es:
         consumption_company: "Empresa"
         consumption_quantity: "Cant."
         consumption_amount_column: "Monto"
+        subsidy_vat: "IVA sobre subsidios (22 %)"
+        subtotal: "Subtotal"
         consumption_empty: "No hay consumos confirmados para este cliente."
         close_consumption_detail: "Cerrar"
         confirmed_meals_one: "%{count} vianda confirmada"
@@ -644,6 +660,8 @@ es:
           dish: "Plato"
           quantity: "Cant."
           amount: "Monto"
+          subtotal: "Subtotal sin IVA"
+          vat: "IVA (22 %)"
           total_label: "Total"
           payment_history: "Ver historial de pagos"
           total: "Total: %{amount}"
@@ -846,6 +864,10 @@ es:
           description: "Los cobros pendientes aparecerán acá próximamente."
     schedules:
       index:
+        title: "Gestión de Menú"
+        week_range: "%{from} - %{to}, %{month}"
+        previous_week: "Semana anterior"
+        next_week: "Semana siguiente"
         availability:
           toggle_label: "En stock"
         edit_dish: "Editar %{name}"
@@ -952,6 +974,8 @@ es:
         update: "Modificar"
         updating: "Guardando..."
       edit:
+        title: "Editar plato"
+        back: "Volver"
         agenda:
           title: "Agenda"
           weekdays_label: "Días de la semana"
@@ -973,9 +997,8 @@ es:
             range: "Repetir en un rango personalizado"
           date: "Día específico"
           starts_on: "Desde"
-          range: "Rango"
-          amount: "Stock por día (opcional)"
-          incomplete: "Completá las fechas. Si cargás un stock, tiene que ser mayor a 0."
+          ends_on: "Hasta"
+          incomplete: "Completá las fechas."
         sheet:
           back: "Volver"
           apply: "Aplicar cambios"

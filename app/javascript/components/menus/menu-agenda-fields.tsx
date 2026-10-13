@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
 
-import { DatePicker, DateRangePicker } from "@/components/date-picker"
+import { DatePicker } from "@/components/date-picker"
 import {
   Field,
   FieldError,
@@ -8,7 +8,6 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
 import type { ProviderMenusEdit } from "@/types"
@@ -21,7 +20,6 @@ export interface AgendaDraft {
   date: string
   starts_on: string
   ends_on: string
-  amount: string
 }
 
 export type AgendaPayload =
@@ -74,7 +72,6 @@ export function initialAgenda(
     date: agenda.date ?? "",
     starts_on: agenda.starts_on ?? "",
     ends_on: agenda.ends_on ?? "",
-    amount: agenda.amount?.toString() ?? "",
   }
 }
 
@@ -140,7 +137,7 @@ export default function MenuAgendaFields({
 
   return (
     <FieldSet className="gap-3">
-      <FieldLegend variant="label" className="text-base font-semibold">
+      <FieldLegend variant="label">
         {t("pages.provider_menus.edit.agenda.title")}
       </FieldLegend>
 
@@ -159,7 +156,7 @@ export default function MenuAgendaFields({
             aria-label={t(
               `pages.provider_menus.edit.agenda.weekday_names.${day}`,
             )}
-            className="data-[state=on]:border-primary data-[state=on]:bg-primary/10 size-10"
+            className="size-10 data-[state=on]:border-[#1D4ED8] data-[state=on]:bg-[#EFF6FF] data-[state=on]:text-[#1D4ED8]"
           >
             {t(`pages.provider_menus.edit.agenda.weekdays.${day}`)}
           </ToggleGroupItem>
@@ -214,35 +211,33 @@ export default function MenuAgendaFields({
           )}
 
           {value.mode === "range" && (
-            <Field>
-              <FieldLabel htmlFor="agenda-range">
-                {t("pages.provider_menus.edit.agenda.range")}
-              </FieldLabel>
-              <DateRangePicker
-                id="agenda-range"
-                from={value.starts_on}
-                to={value.ends_on}
-                min={today}
-                onChange={(starts_on, ends_on) =>
-                  onChange({ ...value, starts_on, ends_on })
-                }
-              />
-            </Field>
-          )}
+            <>
+              <Field>
+                <FieldLabel htmlFor="agenda-starts-on">
+                  {t("pages.provider_menus.edit.agenda.starts_on")}
+                </FieldLabel>
+                <DatePicker
+                  id="agenda-starts-on"
+                  value={value.starts_on}
+                  min={today}
+                  max={value.ends_on || undefined}
+                  onChange={(starts_on) => onChange({ ...value, starts_on })}
+                />
+              </Field>
 
-          <Field className="max-w-48">
-            <FieldLabel htmlFor="agenda-amount">
-              {t("pages.provider_menus.edit.agenda.amount")}
-            </FieldLabel>
-            <Input
-              id="agenda-amount"
-              type="number"
-              min={1}
-              step={1}
-              value={value.amount}
-              onChange={(e) => onChange({ ...value, amount: e.target.value })}
-            />
-          </Field>
+              <Field>
+                <FieldLabel htmlFor="agenda-ends-on">
+                  {t("pages.provider_menus.edit.agenda.ends_on")}
+                </FieldLabel>
+                <DatePicker
+                  id="agenda-ends-on"
+                  value={value.ends_on}
+                  min={value.starts_on || today}
+                  onChange={(ends_on) => onChange({ ...value, ends_on })}
+                />
+              </Field>
+            </>
+          )}
         </div>
       )}
 
