@@ -142,7 +142,7 @@ export function DishDetail({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Escribe las notas que necesites..."
-          className="mt-3 h-20 resize-none rounded-lg p-3 text-xs"
+          className="mt-3 field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-xs"
         />
         <p className="text-muted-foreground text-right text-[10px]">
           {notes.length}/140
