@@ -56,6 +56,18 @@ class Account < ApplicationRecord
     month + 1.month + 4.days
   end
 
+  # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
+  def formatted_amount
+    ActionController::Base.helpers.number_to_currency(
+      amount,
+      unit: "$",
+      format: "%u%n",
+      precision: amount.frac.zero? ? 0 : 2,
+      delimiter: ".",
+      separator: ","
+    )
+  end
+
   # Se busca en memoria para que un preload(:payments) evite una consulta por
   # cuenta. El id desempata dos pagos del mismo instante.
   def last_payment
