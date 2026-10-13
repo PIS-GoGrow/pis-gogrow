@@ -50,6 +50,20 @@ RSpec.describe "Admin::Payments", type: :request do
     context "when signed in as HR" do
       before { sign_in users(:admin), role: :admin }
 
+      it "muestra el mismo total con IVA que el proveedor y conserva el subtotal" do
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+        account = Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: Date.current, amount: "800")
+
+        get admin_payments_path
+
+        expect(inertia).to have_props(total_debt: 1577.0, current_month: { amount: 1577.0, meals: 4, limit: 40 })
+        expect(inertia).to have_props { |page|
+          page[:accounts].any? { it[:id] == account.id && it[:amount] == 800.0 && it[:vat_amount] == 176.0 && it[:payable_amount] == 976.0 }
+        }
+        expect(account.reload.amount).to eq(800.to_d)
+      end
+
       it "lists only what the company still owes, and not what its employees owe" do
         other_company_account
 
@@ -77,6 +91,51 @@ RSpec.describe "Admin::Payments", type: :request do
 
         expect(inertia.props[:providers].pluck(:name))
           .to eq([ "Office Provider User", "Other Provider User", "Provider User" ])
+      end
+
+      # El inicio de RR. HH. llega con ?month= desde "Ver detalle del consumo".
+      it "opens the detail of the month the URL asks for on the pending tab" do
+        get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
+
+        period = inertia.props[:period]
+        expect(period).to include(
+          "month" => I18n.l(Date.current.beginning_of_month, format: :month_year),
+          "amount" => 601.0,
+          "tab" => "pending"
+        )
+        expect(period["orders"].pluck("id")).to contain_exactly(
+          orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id, orders(:other_consumer_upcoming).id
+        )
+      end
+
+      it "opens an already paid month on the history tab" do
+        get admin_payments_path, params: { month: 1.month.ago.strftime("%Y-%m") }
+
+        expect(inertia.props[:period]).to include("amount" => 900.0, "tab" => "history", "orders" => [])
+      end
+
+      it "sends the detail of the current month for the consumption card" do
+        get admin_payments_path
+
+        expect(inertia.props[:current_period]).to include(
+          "month" => I18n.l(Date.current.beginning_of_month, format: :month_year), "amount" => 601.0
+        )
+      end
+
+      it "opens nothing without a month, with an invalid one or with one without payments" do
+        [ nil, "agosto", "2020-01" ].each do |month|
+          get admin_payments_path, params: { month: }.compact
+
+          expect(inertia.props[:period]).to be_nil
+        end
+      end
+
+      it "does not open the period of another company" do
+        other_company_account
+
+        get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
+
+        expect(inertia.props[:period]["amount"]).to eq(601.0)
       end
     end
   end
@@ -148,6 +207,22 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(account.payments.reload.order(:id).last(2).map(&:status)).to eq([ "submitted", "submitted" ])
       expect(account.payments.order(:id).last(2).map { it.receipt.filename.to_s })
         .to eq([ "comprobante_1.png", "comprobante_2.png" ])
+    end
+
+    it "resolves the pending payment alert of the account" do
+      sign_in users(:admin), role: :admin
+      reminder = Notifier.call(
+        event_key: :company_payment_overdue,
+        user: users(:admin),
+        notifiable: account,
+        description_data: { company: "GoGrow", provider: "TuViandita", period: "agosto 2026", amount: "$601", due_date: "5/9/2026" }
+      )
+
+      post admin_payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: { "HTTP_REFERER" => admin_payments_url }
+
+      expect(reminder.reload.closed_at).to be_present
     end
 
     it "does not create a payment for another company's account" do

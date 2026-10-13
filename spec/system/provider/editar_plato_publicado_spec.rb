@@ -218,7 +218,7 @@ RSpec.describe "Editar un plato que ya está publicado" do
 
       visit_hydrated edit_provider_menu_path(milanesa)
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(provider_sign_in_path)
     end
   end
 

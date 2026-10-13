@@ -227,7 +227,7 @@ export default function CollectionGroupCard({
                 icon={Building2}
                 title={t("pages.provider_collections.group.company")}
                 status={group.company.status}
-                amount={group.company.amount}
+                amount={group.company.payable_amount}
               >
                 <CollectionAccountPanel
                   account={group.company}

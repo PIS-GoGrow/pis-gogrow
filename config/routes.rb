@@ -6,6 +6,16 @@ Rails.application.routes.draw do
   get  "sign_in", to: "sessions#new", as: :sign_in
   post "sign_in", to: "sessions#create"
 
+  get  "provider", to: "provider_sessions#new", as: :provider_sign_in
+  post "provider", to: "provider_sessions#create"
+  resource :provider_invitation, path: "provider/invitation", only: [ :show, :update ]
+  resource :provider_password_reset, path: "provider/password", only: [ :create, :edit, :update ], path_names: { edit: "new" }
+  resource :provider_password_reset_code, path: "provider/password/code", only: [ :show, :create ]
+
+  namespace :internal do
+    resources :provider_invitations, only: [ :create ]
+  end
+
   resources :sessions, only: [ :destroy, :edit, :update ]
   resource :users, only: [ :destroy ]
   resources :notifications, only: [] do
@@ -20,7 +30,6 @@ Rails.application.routes.draw do
 
   namespace :identity do
     resource :email_verification, only: [ :show, :create ]
-    resource :password_reset,     only: [ :new, :edit, :create, :update ]
   end
 
   namespace :settings do
