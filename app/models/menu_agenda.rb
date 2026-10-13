@@ -9,7 +9,7 @@ class MenuAgenda < ApplicationRecord
 
   validates :starts_on, presence: true
   validates :ends_on, comparison: { greater_than_or_equal_to: :starts_on }, allow_nil: true
-  validates :amount, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: Schedule::MAX_AMOUNT }
+  validates :amount, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: Schedule::MAX_AMOUNT }, allow_nil: true
   validate :weekdays_are_working_days
 
   def dates_until(limit)
@@ -32,7 +32,7 @@ end
 # Table name: menu_agendas
 #
 #  id         :bigint           not null, primary key
-#  amount     :integer          not null
+#  amount     :integer
 #  ends_on    :date
 #  starts_on  :date             not null
 #  weekdays   :integer          default([]), not null, is an Array
