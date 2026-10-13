@@ -50,6 +50,98 @@ RSpec.describe PaymentReminders::Generate do
       expect(notification.description).to include("10/11/2026")
     end
 
+    describe "payment period opening notice" do
+      let(:opening_day) { Date.new(2026, 11, 1) }
+      let(:other_provider_account) { accounts(:one_endulzate_current) }
+
+      def opening_notices
+        Notification.where(event: "payment_available")
+      end
+
+      before do
+        other_provider_account.payments.destroy_all
+        other_provider_account.update!(month: Date.new(2026, 10, 1), amount: 800)
+      end
+
+      [ Date.new(2026, 10, 31), Date.new(2026, 11, 2) ].each do |date|
+        it "is not created on #{date}, one day off the first of the month" do
+          expect {
+            described_class.call(date:)
+          }.not_to change { opening_notices.count }
+        end
+      end
+
+      it "tells the employee they can review the payment detail" do
+        described_class.call(date: opening_day)
+
+        expect(opening_notices.find_by!(notifiable: account).description)
+          .to include("Revisá el detalle de tu pago")
+      end
+
+      it "is created once per provider the employee owes" do
+        described_class.call(date: opening_day)
+
+        expect(opening_notices.where(user:).pluck(:notifiable_id))
+          .to contain_exactly(account.id, other_provider_account.id)
+        expect(opening_notices.find_by!(notifiable: other_provider_account).description)
+          .to include(other_provider_account.provider.user.name)
+      end
+
+      it "is not created for a provider the employee owes nothing to" do
+        other_provider_account.update!(amount: 0)
+
+        described_class.call(date: opening_day)
+
+        expect(opening_notices.where(notifiable: other_provider_account)).to be_empty
+      end
+
+      it "is not created for the month still in progress" do
+        other_provider_account.update!(month: Date.new(2026, 11, 1))
+
+        described_class.call(date: opening_day)
+
+        expect(opening_notices.where(notifiable: other_provider_account)).to be_empty
+      end
+
+      it "is only created for the provider whose payment is still pending" do
+        other_provider_account.payments.create!(provider: other_provider_account.provider, status: :approved)
+
+        described_class.call(date: opening_day)
+
+        expect(opening_notices.where(user:).pluck(:notifiable_id)).to eq([ account.id ])
+      end
+
+      it "is not created while a receipt is under review" do
+        payment = account.payments.create!(provider: account.provider, status: :pending)
+        payment.update_column(:status, Payment.statuses[:submitted])
+
+        described_class.call(date: opening_day)
+
+        expect(opening_notices.where(notifiable: account)).to be_empty
+      end
+
+      it "is created when the last payment was rejected" do
+        account.payments.create!(
+          provider: account.provider,
+          status: :rejected,
+          rejection_reason: "El comprobante no se lee"
+        )
+
+        described_class.call(date: opening_day)
+
+        expect(opening_notices.where(notifiable: account).count).to eq(1)
+      end
+
+      it "is not created again after the employee dismisses it" do
+        described_class.call(date: opening_day)
+        opening_notices.find_by!(notifiable: account).close!
+
+        expect {
+          described_class.call(date: opening_day)
+        }.not_to change { opening_notices.where(notifiable: account).count }
+      end
+    end
+
     it "notifies three days before the due date" do
       expect {
         described_class.call(date: Date.new(2026, 11, 7))
