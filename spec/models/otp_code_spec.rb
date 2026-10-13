@@ -147,4 +147,35 @@ RSpec.describe OtpCode, type: :model do
       expect(described_class.pending?(user, :password_reset)).to be(true)
     end
   end
+
+  describe "validations and database constraints" do
+    it "requires nonce, expires_at and sent_at" do
+      otp = described_class.new(user: user, purpose: :invitation)
+
+      expect(otp).not_to be_valid
+      expect(otp.errors[:nonce]).to be_present
+      expect(otp.errors[:expires_at]).to be_present
+      expect(otp.errors[:sent_at]).to be_present
+    end
+
+    it "enforces uniqueness of purpose per user at the database level" do
+      described_class.create!(
+        user: user,
+        purpose: :invitation,
+        nonce: "unique_nonce_1",
+        expires_at: 1.day.from_now,
+        sent_at: Time.current
+      )
+
+      duplicate = described_class.new(
+        user: user,
+        purpose: :invitation,
+        nonce: "unique_nonce_2",
+        expires_at: 1.day.from_now,
+        sent_at: Time.current
+      )
+
+      expect { duplicate.save!(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+  end
 end

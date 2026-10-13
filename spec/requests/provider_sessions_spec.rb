@@ -87,5 +87,37 @@ RSpec.describe "ProviderSessions", type: :request do
 
       expect(flash[:alert]).to eq(I18n.t("flash.too_many_attempts"))
     end
+
+    it "rejects an admin trying to sign in through provider sign in" do
+      post provider_sign_in_path, params: { email: users(:admin).email, password: password }
+
+      expect(response).to redirect_to(provider_sign_in_path)
+      expect(flash[:alert]).to eq(I18n.t("flash.incorrect_credentials"))
+    end
+  end
+
+  describe "DELETE /sessions/:id" do
+    it "redirects a provider back to /provider upon logout" do
+      sign_in provider, role: :provider
+      session = provider.sessions.last
+
+      delete session_path(session)
+
+      expect(response).to redirect_to(provider_sign_in_path)
+      follow_redirect!
+      expect(flash[:notice]).to eq(I18n.t("flash.session_logged_out"))
+    end
+
+    it "redirects a consumer back to the root path upon logout" do
+      consumer = users(:one)
+      sign_in consumer, role: :consumer
+      session = consumer.sessions.last
+
+      delete session_path(session)
+
+      expect(response).to redirect_to(root_path)
+      follow_redirect!
+      expect(flash[:notice]).to eq(I18n.t("flash.session_logged_out"))
+    end
   end
 end

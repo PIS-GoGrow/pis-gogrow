@@ -75,11 +75,13 @@ RSpec.describe "Provider invitations", type: :request do
     end
 
     it "limits the attempts per IP" do
-      20.times { open_invitation(token: "basura") }
+      freeze_time do
+        20.times { open_invitation(token: "basura") }
 
-      open_invitation
+        open_invitation
 
-      expect(flash[:alert]).to eq(I18n.t("flash.too_many_attempts"))
+        expect(flash[:alert]).to eq(I18n.t("flash.too_many_attempts"))
+      end
     end
   end
 
@@ -97,6 +99,33 @@ RSpec.describe "Provider invitations", type: :request do
       get provider_invitation_path
 
       expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects an authenticated consumer visiting the invitation link to the root path" do
+      sign_in users(:one), role: :consumer
+
+      open_invitation
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects an authenticated admin visiting the invitation link to the root path" do
+      sign_in users(:admin), role: :admin
+
+      open_invitation
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "only exposes the email in Inertia props and does not leak sensitive attributes" do
+      open_invitation
+      follow_redirect!
+
+      expect(inertia.props).to have_key(:email)
+      expect(inertia.props[:email]).to eq("ana@proveedor.com")
+      expect(inertia.props).not_to have_key(:nonce)
+      expect(inertia.props).not_to have_key(:code)
+      expect(inertia.props).not_to have_key(:password_digest)
     end
   end
 
@@ -159,6 +188,28 @@ RSpec.describe "Provider invitations", type: :request do
 
       follow_redirect!
       expect(inertia.props[:errors][:password_confirmation]).to be_present
+      expect(user.reload).not_to be_verified
+    end
+
+    it "ignores parameters attempting to change the email or inject admin roles" do
+      patch provider_invitation_path, params: {
+        password: strong_password,
+        password_confirmation: strong_password,
+        email: "hacker@evil.com",
+        roles: [ "admin" ]
+      }
+
+      expect(response).to redirect_to(provider_dashboard_path)
+      expect(user.reload.email).to eq("ana@proveedor.com")
+      expect(user.roles).to eq([ "provider" ])
+    end
+
+    it "rejects a blank password returning errors and leaving user unverified" do
+      patch provider_invitation_path, params: { password: "", password_confirmation: "" }
+
+      expect(response).to redirect_to(provider_invitation_path)
+      follow_redirect!
+      expect(inertia.props[:errors][:password]).to be_present
       expect(user.reload).not_to be_verified
     end
   end
