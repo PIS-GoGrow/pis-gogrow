@@ -127,6 +127,39 @@ RSpec.describe Order, type: :model do
     it "keeps the message when there is content" do
       expect(order_with_notes("Sin sal, por favor").notes).to eq("Sin sal, por favor")
     end
+
+    it "rejects messages longer than 140 characters" do
+      order = Order.new(
+        consumer: consumers(:one),
+        schedule: schedules(:future),
+        amount: 1,
+        price: 100,
+        discounted_price: 100,
+        delivery_method: :office,
+        notes: "a" * 141
+      )
+
+      expect(order).not_to be_valid
+      expect(order.errors[:notes]).to be_present
+    end
+
+    it "accepts messages with 140 characters" do
+      expect(order_with_notes("a" * 140).notes.length).to eq(140)
+    end
+
+    it "accepts nil notes" do
+      order = Order.new(
+        consumer: consumers(:one),
+        schedule: schedules(:future),
+        amount: 1,
+        price: 100,
+        discounted_price: 100,
+        delivery_method: :office,
+        notes: nil
+      )
+
+      expect(order.errors[:notes]).to be_blank
+    end
   end
 
   # IBP-022 — Como EMPLEADO, quiero seleccionar las opciones de personalización que el

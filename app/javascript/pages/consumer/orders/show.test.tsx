@@ -178,4 +178,26 @@ describe("Consumer::Orders Show Page", () => {
     expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()
     expect(screen.getByRole("button", { name: /Editar/i })).toBeDisabled()
   })
+
+  it("renders long notes without spaces with text wrapping styling to prevent overflow", () => {
+    const longNote = "a".repeat(140)
+    const orderWithLongNote: Order = {
+      ...baseOrder,
+      notes: longNote,
+    }
+
+    render(
+      <Show
+        order={orderWithLongNote}
+        delivery_addresses={deliveryAddresses}
+        max_quantity={5}
+        option_groups={[]}
+        editing={false}
+      />,
+    )
+
+    const notesElement = screen.getByText(longNote)
+    expect(notesElement).toBeInTheDocument()
+    expect(notesElement).toHaveClass("[overflow-wrap:anywhere]")
+  })
 })

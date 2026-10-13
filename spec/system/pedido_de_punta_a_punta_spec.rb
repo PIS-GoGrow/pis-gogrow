@@ -611,6 +611,24 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       expect(find_field("notes").value.length).to eq(140)
     end
+
+    it "no deja escribir más de 140 caracteres al editar un pedido" do
+      place_order(e1, milanesa_tuesday, notes: "Sin sal")
+
+      sign_in e1_user, role: :consumer
+      visit orders_path
+
+      within(find("[data-slot=card]", text: "Milanesa al pan")) do
+        click_link "Editar"
+      end
+
+      within("[role=dialog]") do
+        fill_in "notes", with: "a" * 141
+
+        expect(find_field("notes").value.length).to eq(140)
+        expect(page).to have_content("140/140")
+      end
+    end
   end
 
   describe "IBP-068: P1 cambia las modalidades y E1 solo elige las habilitadas" do
