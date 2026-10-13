@@ -89,6 +89,10 @@
       }
     },
     "notification_configurations": {
+      "automatic_payment_reminders": {
+        "description": "Avisos sobre la apertura y el vencimiento próximo de pagos.",
+        "title": "Recordatorios automáticos de pago"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
@@ -123,6 +127,14 @@
       "order_withdrawal": {
         "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible.",
         "title": "Tu pedido fue cancelado"
+      },
+      "payment_available": {
+        "description": "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!",
+        "title": "¡Ya podés realizar tu pago!"
+      },
+      "payment_due_soon": {
+        "description": "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!",
+        "title": "Tu pago vence pronto..."
       }
     },
     "pages": {

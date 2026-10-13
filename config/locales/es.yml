@@ -112,6 +112,12 @@ es:
     debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
+    payment_available:
+      title: "¡Ya podés realizar tu pago!"
+      description: "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!"
+    payment_due_soon:
+      title: "Tu pago vence pronto..."
+      description: "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!"
   notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
@@ -119,6 +125,9 @@ es:
     provider_payment_reminders:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
+    automatic_payment_reminders:
+      title: "Recordatorios automáticos de pago"
+      description: "Avisos sobre la apertura y el vencimiento próximo de pagos."
   activerecord:
     errors:
       models:

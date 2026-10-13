@@ -15,6 +15,9 @@ configurations:
   provider_payment_reminders:
     roles: [consumer]
     configurable: false
+  automatic_payment_reminders:
+    roles: [consumer]
+    configurable: false
 
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
@@ -40,3 +43,13 @@ events:
     configuration: provider_payment_reminders
     role: consumer
     requires_action: true
+
+  payment_available:
+    configuration: automatic_payment_reminders
+    role: consumer
+    requires_action: false
+
+  payment_due_soon:
+    configuration: automatic_payment_reminders
+    role: consumer
+    requires_action: false
