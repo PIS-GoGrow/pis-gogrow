@@ -173,4 +173,25 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
       click_button "Volver"
     end
   end
+
+  it "oculta dinámicamente el botón flotante en tablet cuando el carrito queda vacío tras quitar los platos" do
+    resize_to(820)
+    expect(page).to have_no_css("button.fixed", text: "Ver carrito", visible: true)
+
+    add_milanesa
+    expect(page).to have_css("button.fixed", text: "Ver carrito", visible: true)
+
+    find("button.fixed", text: "Ver carrito").click
+    expect(page).to have_content("Tu carrito")
+    expect(page).to have_content("Milanesa con papas fritas x1")
+
+    click_button "Quitar Milanesa con papas fritas"
+    expect(page).to have_content("Todavía no agregaste platos.")
+
+    find_button("Volver").click
+    expect(page).to have_no_css("button.fixed", text: "Ver carrito", visible: true)
+
+    add_milanesa
+    expect(page).to have_css("button.fixed", text: "Ver carrito", visible: true)
+  end
 end
