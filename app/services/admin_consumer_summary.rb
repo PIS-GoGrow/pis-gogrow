@@ -10,6 +10,8 @@ class AdminConsumerSummary
     def name = consumer.user.name
 
     def email = consumer.user.email
+
+    def avatar_url = consumer.user.avatar_url
   end
 
   ProviderRow = Data.define(:name, :amount, :status)
@@ -46,9 +48,9 @@ class AdminConsumerSummary
     STATUS_PRIORITY.find { it.in?(statuses) }
   end
 
-  def self.rows_for(company)
+  def self.rows_for(company, month: Date.current)
     consumers = company.consumers.joins(:user).preload(:user).order("users.name").to_a
-    accounts = Account.current.where(owner_type: "Consumer", owner_id: consumers.map(&:id))
+    accounts = Account.where(month: month.beginning_of_month, owner_type: "Consumer", owner_id: consumers.map(&:id))
                       .preload(:payments).group_by(&:owner_id)
 
     consumers.map do |consumer|

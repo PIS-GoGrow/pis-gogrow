@@ -6,6 +6,7 @@ import { PaymentReviewResultProvider } from "@/components/payments/payment-revie
 import type { ProviderCollectionAccount } from "@/types"
 
 import CollectionAccountPanel from "./collection-account-panel"
+import InvoiceSection from "./invoice-section"
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -21,6 +22,9 @@ const account = {
   owner_name: "Juan Pérez",
   meals: 2,
   amount: 800,
+  vat_rate: 0,
+  vat_amount: 0,
+  payable_amount: 800,
   source: "consumer",
   status: "pending",
   can_approve_payment: false,
@@ -32,11 +36,45 @@ const account = {
   receipt_url: null,
   receipt_content_type: null,
   invoice: null,
+  debt_reminder: {
+    eligible: false,
+    remaining: 10,
+    next_available_at: null,
+    blocked_reason: null,
+  },
   payments: [],
   orders: [],
 } satisfies ProviderCollectionAccount
 
 describe("CollectionAccountPanel", () => {
+  it("sugiere el total con IVA para una factura sin duplicar el impuesto", async () => {
+    const user = userEvent.setup()
+    const company = {
+      ...account,
+      source: "company",
+      vat_rate: 0.22,
+      vat_amount: 176,
+      payable_amount: 976,
+    } satisfies ProviderCollectionAccount
+    render(
+      <CollectionAccountPanel account={company}>
+        <InvoiceSection account={company} />
+      </CollectionAccountPanel>,
+    )
+
+    await user.upload(
+      screen.getByLabelText("Archivo de la factura"),
+      new File(["factura"], "factura.pdf", { type: "application/pdf" }),
+    )
+    await user.click(screen.getByRole("button", { name: "Subir factura" }))
+
+    const dialog = screen.getByRole("dialog")
+    expect(within(dialog).getByLabelText("Monto total")).toHaveValue(976)
+    expect(
+      within(dialog).getByText("Importe calculado del período: 976,00 UYU"),
+    ).toBeInTheDocument()
+  })
+
   it("keeps the download available for a single rejected partial payment without allowing another review", () => {
     render(
       <CollectionAccountPanel
@@ -80,6 +118,9 @@ describe("CollectionAccountPanel", () => {
             account={{
               ...account,
               source,
+              vat_rate: source === "company" ? 0.22 : 0,
+              vat_amount: source === "company" ? 176 : 0,
+              payable_amount: source === "company" ? 976 : 800,
               status: "submitted",
               payment_id: 17,
               receipt_url: "/provider/payments/17/receipt",
@@ -90,7 +131,11 @@ describe("CollectionAccountPanel", () => {
       )
       await user.click(screen.getByRole("button", { name: "Revisar pago" }))
       const dialog = screen.getByRole("dialog", { name: "Comprobante" })
-      expect(within(dialog).getByText("800,00 UYU")).toBeInTheDocument()
+      expect(
+        within(dialog).getByText(
+          source === "company" ? "976,00 UYU" : "800,00 UYU",
+        ),
+      ).toBeInTheDocument()
       expect(
         within(dialog).getByRole("button", { name: "Aprobar" }),
       ).toBeDisabled()
@@ -112,7 +157,7 @@ describe("CollectionAccountPanel", () => {
     render(<CollectionAccountPanel account={{ ...account, overdue: true }} />)
 
     const due = screen.getByText("Vence: 05/11/26")
-    expect(due).toHaveClass("text-red-600", "dark:text-red-400")
+    expect(due).toHaveClass("text-red-700", "dark:text-red-400")
     expect(due.querySelector("svg")).toBeInTheDocument()
   })
 

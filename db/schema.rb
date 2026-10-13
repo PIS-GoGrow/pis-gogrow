@@ -9,8 +9,7 @@
 # migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
-
-ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -22,6 +21,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
     t.string "owner_type", null: false
     t.bigint "provider_id", null: false
     t.datetime "updated_at", null: false
+    t.decimal "vat_rate", precision: 3, scale: 2, default: "0.0", null: false
     t.index ["owner_type", "owner_id", "provider_id", "month"], name: "idx_on_owner_type_owner_id_provider_id_month_49d9020441", unique: true
     t.index ["owner_type", "owner_id"], name: "index_accounts_on_owner"
     t.index ["provider_id"], name: "index_accounts_on_provider_id"
@@ -109,7 +109,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
     t.datetime "created_at", null: false
     t.string "description"
     t.date "due_date"
-    t.decimal "max_price", precision: 10, scale: 2
     t.integer "percentage"
     t.integer "status"
     t.datetime "updated_at", null: false
@@ -168,7 +167,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
   end
 
   create_table "menu_agendas", force: :cascade do |t|
-    t.integer "amount", null: false
+    t.integer "amount"
     t.datetime "created_at", null: false
     t.date "ends_on"
     t.bigint "menu_id", null: false
@@ -189,6 +188,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
   end
 
   create_table "menus", force: :cascade do |t|
+    t.datetime "archived_at"
     t.bigint "base_menu_id"
     t.datetime "created_at", null: false
     t.string "description"
@@ -198,6 +198,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
     t.string "name"
     t.decimal "price", precision: 10, scale: 2
     t.bigint "provider_id", null: false
+    t.date "skipped_dates", default: [], null: false, array: true
     t.datetime "updated_at", null: false
     t.date "valid_from"
     t.date "valid_until"
@@ -292,6 +293,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
     t.check_constraint "delivery_method <> 1 OR address IS NOT NULL AND btrim(address::text) <> ''::text", name: "orders_home_delivery_requires_address"
   end
 
+  create_table "otp_codes", force: :cascade do |t|
+    t.integer "attempts", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "nonce", null: false
+    t.integer "purpose", null: false
+    t.datetime "sent_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "purpose"], name: "index_otp_codes_on_user_id_and_purpose", unique: true
+  end
+
   create_table "payments", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -322,7 +335,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
   end
 
   create_table "schedules", force: :cascade do |t|
-    t.integer "amount", null: false
+    t.integer "amount"
     t.datetime "availability_changed_at"
     t.bigint "availability_changed_by_id"
     t.boolean "available", default: true, null: false
@@ -566,6 +579,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_195504) do
   add_foreign_key "orders", "schedules"
   add_foreign_key "orders", "users", column: "cancelled_by_id"
   add_foreign_key "orders", "users", column: "modified_by_id"
+  add_foreign_key "otp_codes", "users"
   add_foreign_key "payments", "accounts"
   add_foreign_key "payments", "providers"
   add_foreign_key "providers", "users", on_delete: :nullify

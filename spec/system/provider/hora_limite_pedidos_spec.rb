@@ -137,6 +137,6 @@ RSpec.describe "Hora límite de pedidos del proveedor" do
 
     visit provider_operational_settings_path
 
-    expect(page).to have_current_path(sign_in_path)
+    expect(page).to have_current_path(provider_sign_in_path)
   end
 end

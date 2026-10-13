@@ -33,9 +33,11 @@
         "discount": "de descuento en viandas",
         "inactive": "Sin beneficio"
       },
+      "completed_sheet": {
+        "done": "Listo"
+      },
       "date_picker": {
-        "placeholder": "Elegí una fecha",
-        "range_placeholder": "Elegí un rango"
+        "placeholder": "Elegí una fecha"
       },
       "delete_account": {
         "caution": "Procede con precaución, esta acción no se puede deshacer.",
@@ -44,6 +46,16 @@
         "description": "Elimina tu cuenta y todos sus datos",
         "title": "Eliminar cuenta",
         "warning": "Advertencia"
+      },
+      "password_fields": {
+        "confirm_label": "Confirmar contraseña",
+        "create_label": "Crear contraseña",
+        "min_length": "Al menos 16 caracteres",
+        "mismatch": "La contraseña no coincide.",
+        "number": "Al menos un número",
+        "requirements_title": "Debe contener:",
+        "special": "Al menos un carácter especial",
+        "uppercase": "Al menos una mayúscula"
       },
       "settings_layout": {
         "description": "Administra tu perfil y la configuración de tu cuenta",
@@ -73,10 +85,9 @@
       "platform": "Plataforma",
       "provider": {
         "account": "Cuenta",
-        "dishes": "Platos",
         "home": "Inicio",
         "menu": "Menú",
-        "menus": "Publicar menús",
+        "menus": "Menús",
         "mobile_navigation": "Navegación del proveedor",
         "orders": "Pedidos",
         "payments": "Cobros"
@@ -90,12 +101,40 @@
       }
     },
     "notification_configurations": {
+      "company_payments": {
+        "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
+        "title": "Pagos a proveedores"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
+      },
+      "provider_payment_reminders": {
+        "description": "Recordatorios de pagos vencidos enviados por el proveedor.",
+        "title": "Recordatorios de pago del proveedor"
       }
     },
     "notifications": {
+      "company_payment_approved": {
+        "description": "%{provider} confirmó el pago de %{company} por %{period} (%{amount}).",
+        "title": "Pago confirmado"
+      },
+      "company_payment_overdue": {
+        "description": "El pago de %{company} a %{provider} por %{period} (%{amount}) venció el %{due_date}. Revisá el detalle en Pagos.",
+        "title": "Tenés un pago pendiente"
+      },
+      "company_payment_rejected": {
+        "description": "El comprobante que subiste fue rechazado por %{provider}. Volvé a cargarlo para confirmar tu pago.",
+        "title": "Tu comprobante fue rechazado"
+      },
+      "company_payment_upcoming": {
+        "description": "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos.",
+        "title": "Se acerca el vencimiento de un pago"
+      },
+      "debt_payment_reminder": {
+        "description": "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}.",
+        "title": "Recordatorio de pago pendiente"
+      },
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
         "title": "Tu pedido fue confirmado"
@@ -104,6 +143,7 @@
         "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}.",
         "reasons": {
           "customer_request": "por solicitud del cliente",
+          "dish_deleted": "porque el plato fue eliminado",
           "dish_modified": "porque el plato fue modificado",
           "duplicate_order": "porque el pedido estaba duplicado",
           "order_error": "por un error en el pedido",
@@ -314,29 +354,31 @@
           }
         },
         "dashboard": {
-          "alert": {
-            "pending": "Los avisos por WhatsApp estarán disponibles próximamente.",
-            "title": "Avisos de pagos pendientes"
-          },
-          "coming_soon": "Próximamente",
-          "consumption": {
+          "benefit": {
+            "meals_of_limit": "%{meals} de %{limit}",
+            "meals_ordered_one": "vianda pedida",
+            "meals_ordered_other": "viandas pedidas",
+            "paid": "Pagado %{amount}",
             "participation": "Participación",
+            "pending": "Pendiente %{amount}",
+            "projected": "Proyectado %{amount}",
             "spending": "Gasto",
-            "title": "Tu consumo",
+            "title": "Tu beneficio",
             "view_detail": "Ver detalle del consumo"
           },
+          "coming_soon": "Próximamente",
           "debts": {
-            "pending": "Acá verás hasta tres empleados con saldos pendientes.",
+            "empty": "Ningún empleado tiene saldos pendientes en este mes.",
             "title": "Ranking deuda de empleados",
             "view": "Ver empleados con saldos pendientes"
           },
           "greeting": "Hola, %{name} 👋",
+          "month_label": "Mes del resumen",
           "payments": {
-            "pending": "El estado de los pagos a proveedores estará disponible próximamente.",
+            "empty": "No hay pagos a proveedores de %{month}.",
             "title": "Tus pagos de %{month}",
             "view": "Ver pagos a proveedores"
           },
-          "pending_value": "—",
           "this_month": "Este mes",
           "title": "Inicio"
         },
@@ -351,7 +393,7 @@
             "no_period_amount": "Sin consumo registrado",
             "no_provider": "Proveedor no disponible",
             "period": "Período",
-            "period_amount": "Consumo del período",
+            "period_amount": "Total calculado del período",
             "provider": "Proveedor",
             "status": "Estado",
             "title": "Facturas de proveedores",
@@ -376,10 +418,11 @@
             "pending_tab": "Pendientes",
             "section": "Pagos",
             "see_detail": "Ver detalle",
-            "spending": "Consumo de la empresa",
+            "spending": "Tu consumo",
             "this_month": "Este mes",
             "title": "Pagos",
-            "total_debt": "Deuda total"
+            "total_debt": "Deuda total",
+            "view_detail": "Ver detalle del consumo"
           }
         }
       },
@@ -461,17 +504,38 @@
         }
       },
       "home": {
-        "dashboard": "Panel",
-        "learn_more": "Más información",
-        "resources": {
-          "inertia_rails": "Documentación de Inertia Rails",
-          "rails": "Guías de Rails",
-          "react": "Documentación de React",
-          "shadcn": "Componentes de shadcn/ui"
+        "admin": {
+          "description": "Simplificá las viandas de tu equipo",
+          "heading": "Viandas GoGrow",
+          "sign_in": "Continuar con Google"
         },
-        "resources_intro": "Estos son algunos recursos para empezar:",
-        "tagline": "Rails + Inertia.js + React + shadcn/ui",
-        "title": "Te damos la bienvenida"
+        "consumer": {
+          "description": "Tu almuerzo, sin complicaciones",
+          "heading": "Viandas GoGrow",
+          "sign_in": "Iniciar sesión con Google"
+        },
+        "features": {
+          "collections": {
+            "description": "Revisá pagos, comprobantes y tu historial de cobros sin perder ningún detalle.",
+            "title": "Cobros claros y ordenados"
+          },
+          "go_to": "Ver la tarjeta %{number}",
+          "label": "Qué podés hacer en Viandas GoGrow",
+          "menu": {
+            "description": "Cargá tus platos, precios y disponibilidad de cada día de forma sencilla.",
+            "title": "Tu menú, siempre actualizado"
+          },
+          "orders": {
+            "description": "Recibí, confirmá y seguí cada uno de tus pedidos en tiempo real.",
+            "title": "Todos tus pedidos bajo control"
+          }
+        },
+        "provider": {
+          "description": "¡Hola {{username}}! {{company_name}} te invitó a unirte como proveedor de viandas.",
+          "heading": "Bienvenido a Viandas GoGrow",
+          "sign_in": "Unirse ahora"
+        },
+        "title": "Viandas GoGrow"
       },
       "orders": {
         "addresses": {
@@ -552,21 +616,6 @@
           "rejected": "Rechazado"
         }
       },
-      "password_resets": {
-        "edit": {
-          "description": "Ingresa tu nueva contraseña",
-          "email": "Correo electrónico",
-          "submit": "Restablecer contraseña",
-          "title": "Restablecer contraseña"
-        },
-        "new": {
-          "description": "Ingresa tu correo para recibir un enlace de restablecimiento",
-          "log_in": "iniciar sesión",
-          "return_to": "O vuelve a",
-          "submit": "Enviar enlace de restablecimiento",
-          "title": "Olvidé mi contraseña"
-        }
-      },
       "provider_accounts": {
         "show": {
           "deliveries": "Entregas",
@@ -600,9 +649,11 @@
             "meals_tab": "Viandas",
             "payment_history": "Ver historial de pagos",
             "quantity": "Cant.",
+            "subtotal": "Subtotal sin IVA",
             "title": "Historial de consumo: %{month}",
             "total": "Total: %{amount}",
-            "total_label": "Total"
+            "total_label": "Total",
+            "vat": "IVA (22 %)"
           },
           "due": "Vence: %{date}",
           "employees": "Empleados",
@@ -640,6 +691,8 @@
           "pending_tab": "Pendientes",
           "sales": "Ventas",
           "section": "Cobros",
+          "subsidy_vat": "IVA sobre subsidios (22 %)",
+          "subtotal": "Subtotal",
           "this_month": "Este mes",
           "title": "Cobros",
           "total_debt": "Deuda total",
@@ -678,6 +731,29 @@
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
         "partial_payment_badge": "Pago parcial",
+        "reminder": {
+          "back": "Volver",
+          "confirm": {
+            "description": "Se enviará un recordatorio a %{employeeName} por su pago pendiente de %{month} de %{amount}.",
+            "title": "Recordar pago pendiente"
+          },
+          "done": "Listo",
+          "error": {
+            "description": "Intentá nuevamente.",
+            "title": "No pudimos enviar el recordatorio"
+          },
+          "limit_reached": "Alcanzaste el límite de recordatorios para este pago.",
+          "next_available": "Podés enviar otro recordatorio el %{date}.",
+          "retry": "Reintentar",
+          "send": "Enviar recordatorio",
+          "sending": "Enviando...",
+          "sent": "Recordatorio enviado",
+          "success": {
+            "description": "Se envió un recordatorio a %{employeeName} por su pago pendiente de %{month}.",
+            "title": "Recordatorio enviado"
+          },
+          "trigger": "Recordar pago pendiente"
+        },
         "review": {
           "approve": "Aprobar",
           "approved_description": "El cobro fue confirmado correctamente. Se notificará al usuario.",
@@ -769,18 +845,25 @@
           "title": "Inicio"
         }
       },
+      "provider_invitations": {
+        "show": {
+          "description": "Configure su contraseña para completar el registro.",
+          "heading": "Regístrese con Email",
+          "submit": "Registrarse",
+          "title": "Registro de proveedor"
+        }
+      },
       "provider_menus": {
         "edit": {
           "agenda": {
-            "amount": "Stock por día",
             "date": "Día específico",
-            "incomplete": "Completá las fechas y el stock por día.",
+            "ends_on": "Hasta",
+            "incomplete": "Completá las fechas.",
             "modes": {
               "range": "Repetir en un rango personalizado",
               "single": "No repetir",
               "weekly": "Repetir todas las semanas"
             },
-            "range": "Rango",
             "starts_on": "Desde",
             "title": "Agenda",
             "weekday_names": {
@@ -799,6 +882,7 @@
             },
             "weekdays_label": "Días de la semana"
           },
+          "back": "Volver",
           "sheet": {
             "apply": "Aplicar cambios",
             "applying": "Aplicando...",
@@ -835,7 +919,8 @@
               "description": "Este plato se modificará en tus platos guardados.",
               "title": "¿Modificar el plato guardado?"
             }
-          }
+          },
+          "title": "Editar plato"
         },
         "form": {
           "cancel": "Cancelar",
@@ -877,9 +962,29 @@
             "back": "Volver a Menú",
             "continue": "Seguir agregando",
             "description": "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando.",
+            "description_date": "Tu plato fue agregado al menú del %{date} correctamente.",
             "title": "¡Plato agregado!"
           },
           "back": "Volver al menú",
+          "saved": {
+            "already_added": "Los platos listados a continuación ya están agregados a la fecha seleccionada:",
+            "date_hint": "Elegí una fecha para ver qué platos podés agregar.",
+            "date_label": "¿Para qué fecha vas a agregar platos?",
+            "filter_label": "Filtrar platos",
+            "filters": {
+              "added": "Agregados",
+              "all": "Todos",
+              "available": "Disponibles"
+            },
+            "no_saved": {
+              "description": "Creá un plato desde la pestaña Platos nuevos y lo vas a ver acá.",
+              "title": "Todavía no tenés platos guardados"
+            },
+            "select": "Agregar %{name} a la selección",
+            "submit": "Agregar",
+            "submitting": "Agregando...",
+            "unselect": "Quitar %{name} de la selección"
+          },
           "tabs": {
             "new": "Platos nuevos",
             "saved": "Platos guardados"
@@ -959,6 +1064,7 @@
         },
         "rejection_reasons": {
           "customer_request": "Solicitud del cliente",
+          "dish_deleted": "Plato eliminado",
           "dish_modified": "Plato modificado",
           "duplicate_order": "Pedido duplicado",
           "order_error": "Error en el pedido",
@@ -989,12 +1095,101 @@
           "rejected": "Rechazado"
         }
       },
+      "provider_password_reset_codes": {
+        "show": {
+          "back": "Volver",
+          "description": "¡Gracias! Si hay una cuenta asociada con %{email}, recibirá un código de verificación de 6 dígitos. Si no recibió un email después de unos minutos, revise su carpeta de spam.",
+          "resend": "Volver a mandar código",
+          "resend_in": "Volver a mandar código en %{time}",
+          "submit": "Verificar",
+          "title": "Revise su email"
+        }
+      },
+      "provider_password_resets": {
+        "edit": {
+          "description": "Cree una nueva contraseña para su cuenta.",
+          "heading": "Nueva Contraseña",
+          "submit": "Confirmar nueva contraseña",
+          "title": "Nueva contraseña"
+        }
+      },
+      "provider_sessions": {
+        "new": {
+          "description": "Ingrese a su cuenta para continuar gestionando sus viandas.",
+          "email_placeholder": "ejemplo@empresa.com",
+          "forgot": {
+            "description": "Ingrese su email y le enviaremos un código para restablecer su contraseña.",
+            "submit": "Enviar código",
+            "title": "¿Olvidó su contraseña?"
+          },
+          "forgot_password": "¿Olvidó su contraseña?",
+          "heading": "¡Bienvenido de nuevo!",
+          "submit": "Iniciar sesión",
+          "title": "Iniciar sesión"
+        }
+      },
       "schedules": {
         "index": {
+          "add_dishes": "Agregar platos",
           "availability": {
             "toggle_label": "En stock"
           },
-          "edit_dish": "Editar %{name}"
+          "edit_dish": "Editar %{name}",
+          "empty": {
+            "description": "Agregá platos a tu menú del %{day} y empezá a recibir pedidos.",
+            "title": "No hay platos publicados para el %{day} todavía"
+          },
+          "empty_unpublishable": {
+            "title": "No se publicó menú para este día."
+          },
+          "import_dishes": "Importar platos",
+          "next_week": "Semana siguiente",
+          "no_results": {
+            "description": "No encontramos platos que coincidan con tu búsqueda. Probá con otro nombre o revisá cómo lo escribiste.",
+            "title": "No se encontraron resultados"
+          },
+          "previous_week": "Semana anterior",
+          "remove": {
+            "button": "Quitar",
+            "cancel": "Cancelar",
+            "confirm": "Quitar",
+            "description": "Se cancelarán los pedidos pendientes y confirmados de este plato.",
+            "title": "¿Quitar «%{name}» del menú?"
+          },
+          "saved": {
+            "delete": "Eliminar",
+            "delete_sheet": {
+              "back": "Volver",
+              "confirm": "Eliminar",
+              "deleting": "Eliminando...",
+              "description": "Este plato se eliminará de tus platos guardados.",
+              "description_orders": "Este plato se eliminará de tus platos guardados. Elegí qué hacer con los pedidos que ya incluyen este plato.",
+              "orders": {
+                "keep": {
+                  "description": "Los pedidos afectados que están confirmados no se modificarán.",
+                  "title": "Mantener los pedidos confirmados"
+                },
+                "reject": {
+                  "description": "Los pedidos afectados que están confirmados se cancelarán.",
+                  "title": "Rechazar los pedidos confirmados"
+                }
+              },
+              "pending": "Los pedidos pendientes se cancelarán.",
+              "title": "¿Eliminar plato guardado?"
+            },
+            "empty": {
+              "description": "Cuando crees un plato lo vas a ver acá para editarlo o publicarlo.",
+              "title": "Todavía no tenés platos guardados"
+            }
+          },
+          "search_label": "Buscar plato",
+          "search_placeholder": "Buscar plato...",
+          "tabs": {
+            "saved": "Platos guardados",
+            "week": "Menú de la semana"
+          },
+          "title": "Gestión de Menú",
+          "week_range": "%{from} - %{to}, %{month}"
         }
       },
       "sessions": {
@@ -1007,7 +1202,7 @@
           "auth_error_title": "No pudimos iniciar tu sesión",
           "continue_with_google": "Continuar con Google",
           "description": "Ingresa con tu cuenta de Google para continuar",
-          "forgot_password": "¿Olvidaste tu contraseña?",
+          "forgot_password": "¿Olvidó su contraseña?",
           "heading": "Inicia sesión en tu cuenta",
           "no_account": "¿No tienes una cuenta?",
           "or": "o",
@@ -1050,15 +1245,6 @@
           "ip": "IP: %{address}",
           "log_out": "Cerrar sesión",
           "title": "Sesiones"
-        }
-      },
-      "users": {
-        "new": {
-          "description": "Ingresa tus datos para crear tu cuenta",
-          "have_account": "¿Ya tienes una cuenta?",
-          "heading": "Crea una cuenta",
-          "submit": "Crear cuenta",
-          "title": "Registro"
         }
       }
     }

@@ -20,7 +20,8 @@ class Order < ApplicationRecord
     customer_request: 2,
     order_error: 3,
     other: 4,
-    dish_modified: 5
+    dish_modified: 5,
+    dish_deleted: 6
   }, prefix: :rejection_reason
 
   # Esta línea tiene que estar antes de has_many :order_accounts.
@@ -86,6 +87,8 @@ class Order < ApplicationRecord
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
 
   # Notificaciones al consumidor cuando cambia el estado de la orden
+  before_update :capture_rejection_notification_data, if: -> { will_save_change_to_status? && rejected? }
+
   after_update_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
   after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
 
@@ -320,13 +323,14 @@ class Order < ApplicationRecord
   def menu_description = super || schedule&.menu&.description
   def menu_option_groups = super || schedule&.menu&.option_groups_snapshot || []
 
-  # El proveedor modificó el plato de esta programación y eligió no mantener los
-  # pedidos ya confirmados. Igual que #withdraw!, no respeta la ventana de RN-12/13.
-  def reject_for_dish_change!
+  # El proveedor modificó o eliminó el plato de esta programación y eligió no
+  # mantener los pedidos ya confirmados. Igual que #withdraw!, no respeta la
+  # ventana de RN-12/13.
+  def reject_for_dish_change!(reason: :dish_modified)
     with_lock do
       return false unless confirmed?
 
-      update!(status: :rejected, rejection_reason: :dish_modified)
+      update!(status: :rejected, rejection_reason: reason)
     end
   end
 
@@ -361,6 +365,7 @@ class Order < ApplicationRecord
     )
   end
 
+  # Notifica al consumidor usando los datos capturados antes de que el schedule pueda eliminarse.
   def notify_rejected
     reason = I18n.t!(
       "notifications.order_rejection.reasons.#{rejection_reason}",
@@ -371,13 +376,19 @@ class Order < ApplicationRecord
       event_key: :order_rejection,
       user: consumer.user,
       notifiable: self,
-      description_data: {
-        date: I18n.l(schedule.date, format: :short),
-        dish: menu_name,
-        provider: provider.user.name,
-        reason:
-      }
+      description_data: @rejection_notification_data.merge(reason:)
     )
+  ensure
+    @rejection_notification_data = nil
+  end
+
+  # Guarda los datos necesarios para notificar un rechazo aunque luego se elimine el schedule.
+  def capture_rejection_notification_data
+    @rejection_notification_data = {
+      date: I18n.l(schedule.date, format: :short),
+      dish: menu_name,
+      provider: provider.user.name
+    }
   end
 
   # El cupo del schedule ya descuenta esta orden, así que el máximo que el
