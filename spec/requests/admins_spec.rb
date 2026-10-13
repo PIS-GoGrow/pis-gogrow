@@ -53,7 +53,7 @@ RSpec.describe "Admins", type: :request do
 
         get admin_dashboard_path
 
-        expect(inertia).to have_props(today: "Jueves 1 de octubre", payment_month: "octubre")
+        expect(inertia).to have_props(today: "Jueves 1 de octubre", payment_month: "septiembre")
       end
     end
   end

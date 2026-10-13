@@ -95,9 +95,27 @@ export default function Show({
             <Row label={t("pages.provider_collections.show.due_date")}>
               {account.due_date}
             </Row>
+            {account.source === "company" && account.vat_rate > 0 && (
+              <>
+                <Row
+                  label={t(
+                    "pages.provider_collections.group.detail_dialog.subtotal",
+                  )}
+                >
+                  {formatMoney(account.amount)}
+                </Row>
+                <Row
+                  label={t(
+                    "pages.provider_collections.group.detail_dialog.vat",
+                  )}
+                >
+                  {formatMoney(account.vat_amount)}
+                </Row>
+              </>
+            )}
             <Row label={t("pages.provider_collections.show.amount")}>
               <span className="text-lg font-semibold">
-                {formatMoney(account.amount)}
+                {formatMoney(account.payable_amount)}
               </span>
             </Row>
           </dl>

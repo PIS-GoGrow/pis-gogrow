@@ -25,15 +25,47 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
     expect(page).to have_content("Hola, #{admin_user.name.split.first}")
   end
 
-  it "greets HR and shows what is coming to the home" do
+  it "greets HR and shows the summary of the month" do
     sign_in admin_user, role: :admin
     visit admin_dashboard_path
 
     expect(page).to have_content("Hola, #{admin_user.name.split.first}")
     expect(page).to have_content(I18n.l(Date.current, format: "%A %-d de %B").capitalize)
-    expect(page).to have_content("Tu consumo")
-    expect(page).to have_content("Tus pagos de #{I18n.l(Date.current, format: "%B").downcase}")
+    expect(page).to have_content("Tu beneficio")
+    expect(page).to have_content("Tus pagos de #{I18n.l(Date.current.prev_month, format: "%B").downcase}")
     expect(page).to have_content("Ranking deuda de empleados")
+  end
+
+  # Historia IBP-032: el chevron del ranking abre Empleados en Pendientes y
+  # cada empleado, su detalle.
+  it "goes from the debt ranking to the pending employees and to an employee" do
+    company = companies(:gogrow)
+    consumer = Consumer.create!(user: User.create!(name: "Martín Bonnet", email: "martin@example.com", password: "secret-password-123"), company:)
+    Account.create!(owner: consumer, provider: providers(:tuviandita), month: Date.current, amount: 2_425)
+
+    sign_in admin_user, role: :admin
+    visit admin_dashboard_path
+
+    click_on "Ver empleados con saldos pendientes"
+    expect(page).to have_current_path(admin_consumers_path(filter: "pending"))
+    expect(page).to have_css("[role='radio'][aria-checked='true']", text: "Pendientes")
+
+    visit admin_dashboard_path
+    click_on "Martín Bonnet"
+    expect(page).to have_current_path(admin_consumer_path(consumer))
+  end
+
+  it "keeps the month chosen on the home when it opens the pending employees" do
+    previous = 1.month.ago.to_date.beginning_of_month
+    consumer = Consumer.create!(user: User.create!(name: "Martín Bonnet", email: "martin@example.com", password: "secret-password-123"), company: companies(:gogrow))
+    Account.create!(owner: consumer, provider: providers(:tuviandita), month: previous, amount: 2_425)
+
+    sign_in admin_user, role: :admin
+    visit admin_dashboard_path(month: previous.strftime("%Y-%m"))
+
+    click_on "Ver empleados con saldos pendientes"
+    expect(page).to have_current_path(admin_consumers_path(filter: "pending", month: previous.strftime("%Y-%m")))
+    expect(page).to have_content("Martín Bonnet")
   end
 
   it "shows in the navigation what HR can use now and what is still to come" do

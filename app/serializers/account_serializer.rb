@@ -12,6 +12,16 @@ class AccountSerializer < ApplicationSerializer
     account.amount&.to_f
   end
 
+  typelize :number
+  attribute :vat_amount do |account|
+    account.vat_amount.to_f
+  end
+
+  typelize :number
+  attribute :payable_amount do |account|
+    account.payable_amount.to_f
+  end
+
   typelize :boolean
   attribute :current do |account|
     account.current?

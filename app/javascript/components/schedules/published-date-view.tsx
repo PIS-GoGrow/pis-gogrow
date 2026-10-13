@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
+import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { providerMenus, schedules as schedulesRoutes } from "@/routes"
 import type { Schedule } from "@/types"
@@ -31,6 +32,7 @@ function PublishedScheduleRow({
   returnTo: string
 }) {
   const { t } = useTranslation()
+  const { formatMoneyShort } = useFormatters()
   const [processing, setProcessing] = useState(false)
 
   function handleAvailabilityChange(available: boolean) {
@@ -68,11 +70,17 @@ function PublishedScheduleRow({
               })}
               className="after:absolute after:inset-0 after:rounded-xl"
             >
-              {schedule.menu.name} | {schedule.menu.price}$
+              {schedule.menu.name}{" "}
+              <span className="text-muted-foreground">
+                | {formatMoneyShort(schedule.menu.price ?? 0)}
+              </span>
             </Link>
           ) : (
             <>
-              {schedule.menu.name} | {schedule.menu.price}$
+              {schedule.menu.name}{" "}
+              <span className="text-muted-foreground">
+                | {formatMoneyShort(schedule.menu.price ?? 0)}
+              </span>
             </>
           )}
         </CardTitle>

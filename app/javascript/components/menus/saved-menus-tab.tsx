@@ -30,6 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import { useFormatters } from "@/hooks/use-formatters"
 import { normalizeText } from "@/lib/normalize-text"
 import { cn } from "@/lib/utils"
 import { providerMenus } from "@/routes"
@@ -62,12 +63,16 @@ function SavedMenuCard({
   onToggle?: () => void
 }) {
   const { t } = useTranslation()
+  const { formatMoneyShort } = useFormatters()
 
   return (
     <Card className={cn("w-full", disabled && "opacity-50")}>
       <CardHeader>
         <CardTitle>
-          {menu.name} | {menu.price}$
+          {menu.name}{" "}
+          <span className="text-muted-foreground">
+            | {formatMoneyShort(menu.price ?? 0)}
+          </span>
         </CardTitle>
         <CardDescription>{menu.description}</CardDescription>
         <CardAction>
