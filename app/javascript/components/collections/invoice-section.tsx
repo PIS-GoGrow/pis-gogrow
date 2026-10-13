@@ -144,7 +144,7 @@ function UploadInvoice({ account }: { account: ProviderCollectionAccount }) {
     account_id: account.id,
     file: null as File | null,
     issued_on: "",
-    total_amount: String(account.amount),
+    total_amount: String(account.payable_amount),
   })
 
   const fieldErrors = ["file", "issued_on", "total_amount"]
@@ -257,7 +257,7 @@ function UploadInvoice({ account }: { account: ProviderCollectionAccount }) {
               />
               <FieldDescription>
                 {t("pages.provider_collections.invoice.dialog.expected", {
-                  amount: formatMoney(account.amount),
+                  amount: formatMoney(account.payable_amount),
                 })}
               </FieldDescription>
               <FieldError

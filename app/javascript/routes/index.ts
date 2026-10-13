@@ -17,18 +17,23 @@ export { default as consumerPayments } from './Consumer/PaymentsController'
 export { default as consumerProfiles } from './Consumer/ProfilesController'
 export { default as home } from './HomeController'
 export { default as identityEmailVerifications } from './Identity/EmailVerificationsController'
-export { default as identityPasswordResets } from './Identity/PasswordResetsController'
+export { default as internalProviderInvitations } from './Internal/ProviderInvitationsController'
 export { default as notifications } from './NotificationsController'
 export { default as omniauthCallbacks } from './OmniauthCallbacksController'
 export { default as providerAccounts } from './Provider/AccountsController'
 export { default as providerCollections } from './Provider/CollectionsController'
 export { default as providerDashboard } from './Provider/DashboardController'
+export { default as providerDebtReminders } from './Provider/DebtRemindersController'
+export { default as providerInvitations } from './ProviderInvitationsController'
 export { default as providerInvoices } from './Provider/InvoicesController'
 export { default as providerMenus } from './Provider/MenusController'
 export { default as providerOperationalSettings } from './Provider/OperationalSettingsController'
 export { default as providerOrderDeadlines } from './Provider/OrderDeadlinesController'
 export { default as providerOrders } from './Provider/OrdersController'
+export { default as providerPasswordResetCodes } from './ProviderPasswordResetCodesController'
+export { default as providerPasswordResets } from './ProviderPasswordResetsController'
 export { default as providerPayments } from './Provider/PaymentsController'
+export { default as providerSessions } from './ProviderSessionsController'
 export { default as schedules } from './SchedulesController'
 export { default as sessions } from './SessionsController'
 export { default as settingsEmails } from './Settings/EmailsController'
@@ -50,8 +55,8 @@ import _notifications from './NotificationsController'
 import _providerOrders from './Provider/OrdersController'
 import _consumerDashboard from './Consumer/DashboardController'
 import _consumerDeliveryAddresses from './Consumer/DeliveryAddressesController'
-import _identityPasswordResets from './Identity/PasswordResetsController'
 import _providerMenus from './Provider/MenusController'
+import _providerPasswordResets from './ProviderPasswordResetsController'
 import _sessions from './SessionsController'
 import _adminInvoices from './Admin/InvoicesController'
 import _providerInvoices from './Provider/InvoicesController'
@@ -59,9 +64,13 @@ import _identityEmailVerifications from './Identity/EmailVerificationsController
 import _consumerMenus from './Consumer/MenusController'
 import _consumerPayments from './Consumer/PaymentsController'
 import _consumerProfiles from './Consumer/ProfilesController'
+import _providerSessions from './ProviderSessionsController'
 import _providerAccounts from './Provider/AccountsController'
 import _providerCollections from './Provider/CollectionsController'
+import _providerDebtReminders from './Provider/DebtRemindersController'
+import _providerInvitations from './ProviderInvitationsController'
 import _providerOrderDeadlines from './Provider/OrderDeadlinesController'
+import _providerPasswordResetCodes from './ProviderPasswordResetCodesController'
 import _providerPayments from './Provider/PaymentsController'
 import _home from './HomeController'
 import _Routes from './RoutesController'
@@ -86,33 +95,39 @@ export const confirmProviderOrder = _providerOrders.confirm
 export const dashboard = _consumerDashboard.index
 export const dashboardConfirmation = _consumerDashboard.confirmation
 export const deliveryAddresses = _consumerDeliveryAddresses.create
-export const editIdentityPasswordReset = _identityPasswordResets.edit
 export const editProviderMenu = _providerMenus.edit
+export const editProviderPasswordReset = _providerPasswordResets.edit
 export const editSession = _sessions.edit
 export const fileAdminInvoice = _adminInvoices.file
 export const fileProviderInvoice = _providerInvoices.file
 export const identityEmailVerification = _identityEmailVerifications.show
-export const identityPasswordReset = _identityPasswordResets.update
 export const menus = _consumerMenus.index
-export const newIdentityPasswordReset = _identityPasswordResets.new
 export const newProviderMenu = _providerMenus.new
 export const order = _consumerOrders.show
 export const orders = _consumerOrders.index
 export const payment = _consumerPayments.update
 export const payments = _consumerPayments.create
 export const profile = _consumerProfiles.show
+export const provider = _providerSessions.create
 export const providerAccount = _providerAccounts.show
 export const providerCollection = _providerCollections.show
+export const providerCollectionDebtReminders = _providerDebtReminders.create
+export const providerInvitation = _providerInvitations.show
 export const providerInvoice = _providerInvoices.destroy
-export const providerMenu = _providerMenus.show
+export const providerMenu = _providerMenus.update
 export const providerOrder = _providerOrders.show
 export const providerOrderDeadline = _providerOrderDeadlines.update
+export const providerPasswordReset = _providerPasswordResets.update
+export const providerPasswordResetCode = _providerPasswordResetCodes.show
 export const providerPayment = _providerPayments.update
+export const providerSignIn = _providerSessions.new
+export const publishProviderMenus = _providerMenus.publish
 export const receiptAdminPayment = _adminPayments.receipt
 export const receiptPayment = _consumerPayments.receipt
 export const receiptProviderPayment = _providerPayments.receipt
 export const rejectProviderOrder = _providerOrders.reject
 export const root = _home.index
+export const schedule = _schedules.destroy
 export const session = _sessions.update
 export const settingsAppearance = _Routes.settingsAppearance
 export const settingsEmail = _settingsEmails.show
@@ -124,4 +139,3 @@ export const signUp = _users.new
 export const turboRecedeHistoricalLocation = _turboNativeNavigation.recede
 export const turboRefreshHistoricalLocation = _turboNativeNavigation.refresh
 export const turboResumeHistoricalLocation = _turboNativeNavigation.resume
-export const updateByDateSchedules = _schedules.updateByDate

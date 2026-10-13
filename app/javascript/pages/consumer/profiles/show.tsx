@@ -3,6 +3,7 @@ import { LogOut } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import BenefitSummaryCard from "@/components/benefit-summary-card"
+import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import PageContainer from "@/components/page-container"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -112,6 +113,8 @@ export default function Show({
           )}
         </section>
       </PageContainer>
+
+      <ConsumerMobileNav />
     </AppLayout>
   )
 }

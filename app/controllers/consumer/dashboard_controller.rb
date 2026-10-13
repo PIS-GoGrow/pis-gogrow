@@ -33,7 +33,7 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def schedule_data
-    schedules = Schedule.includes(:orders, menu: [ :reviews, :option_groups, { provider: :user } ])
+    schedules = Schedule.on_active_menus.includes(:orders, menu: [ :reviews, :option_groups, { provider: :user } ])
                         .where(date: week_range)
                         .order(:date, :id)
 

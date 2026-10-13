@@ -16,7 +16,11 @@ RSpec.describe MenuAgenda, type: :model do
     expect(menu.agendas.build(weekdays: [], starts_on: Date.current, amount: 3)).not_to be_valid
   end
 
-  it "requires a positive stock" do
+  it "is valid without a stock" do
+    expect(menu.agendas.build(weekdays: [ 1 ], starts_on: Date.current, amount: nil)).to be_valid
+  end
+
+  it "requires a positive stock when one is given" do
     expect(menu.agendas.build(weekdays: [ 1 ], starts_on: Date.current, amount: 0)).not_to be_valid
   end
 

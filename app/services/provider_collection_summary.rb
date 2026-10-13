@@ -15,8 +15,12 @@ class ProviderCollectionSummary
   # Estado que muestra el grupo de empleados: el que más atención pide.
   EMPLOYEES_STATUS_PRIORITY = %w[rejected pending submitted approved].freeze
 
-  AccountRow = Data.define(:account, :meals) do
-    delegate :id, :amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
+  AccountRow = Data.define(:account, :meals, :reminder_notifications) do
+    def initialize(account:, meals:, reminder_notifications: [])
+      super
+    end
+
+    delegate :id, :amount, :vat_amount, :payable_amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
 
     def orders
       account.orders.select(&:confirmed?).sort_by do |order|
@@ -59,9 +63,9 @@ class ProviderCollectionSummary
 
     def key = "#{client.id}-#{month.strftime('%Y-%m')}"
 
-    def total = rows.sum(&:amount)
+    def total = rows.sum(&:payable_amount)
 
-    def confirmed_total = rows.select(&:approved?).sum(&:amount)
+    def confirmed_total = rows.select(&:approved?).sum(&:payable_amount)
 
     def awaiting_count = rows.count { it.collection_status.in?(%w[pending submitted]) }
 
@@ -85,7 +89,7 @@ class ProviderCollectionSummary
   def self.row_for(account)
     meals = Account.amount_and_price_sum([ account.id ]).dig(account.id, :amount) || 0
 
-    AccountRow.new(account:, meals:)
+    AccountRow.new(account:, meals:, reminder_notifications: reminder_notifications_for([ account ]).fetch(account.id, []))
   end
 
   def initialize(provider:)
@@ -100,11 +104,20 @@ class ProviderCollectionSummary
 
   def sales_detail
     orders = current_month_orders
+    current_accounts = accounts.select { it.month == Date.current.beginning_of_month }.group_by { client_of(it).id }
 
     {
       month: I18n.l(Date.current.beginning_of_month, format: :month_name_year),
       clients: orders.map(&:consumer).map(&:company).uniq
-                     .sort_by(&:name).map { { id: it.id, name: it.name } },
+                     .sort_by(&:name).map do |client|
+        client_accounts = current_accounts.fetch(client.id, [])
+        {
+          id: client.id, name: client.name,
+          subtotal: client_accounts.sum { it.amount.to_d }.to_f,
+          vat_amount: client_accounts.sum(&:vat_amount).to_f,
+          payable_amount: client_accounts.sum(&:payable_amount).to_f
+        }
+      end,
       days: orders.group_by { it.schedule.date }
                   .sort_by { |date, _| -date.jd }
                   .map do |date, day_orders|
@@ -183,13 +196,28 @@ class ProviderCollectionSummary
   end
 
   def amount_of(records)
-    records.sum { it.amount || 0 }.to_f
+    records.sum(&:payable_amount).to_f
   end
 
   # Las cuentas en cero no tienen nada que cobrar (solo pedidos sin confirmar).
   def rows
-    @rows ||= accounts.select { it.amount.to_d.positive? }.map { AccountRow.new(account: it, meals: meals_of([ it ])) }
+    @rows ||= begin
+      visible = accounts.select { it.amount.to_d.positive? }
+      reminders = reminder_notifications_for(visible)
+      visible.map do |account|
+        AccountRow.new(account:, meals: meals_of([ account ]), reminder_notifications: reminders.fetch(account.id, []))
+      end
+    end
   end
+
+  def self.reminder_notifications_for(accounts)
+    return {} if accounts.empty?
+
+    Notification.where(event: DebtReminders::Eligibility::EVENT, notifiable: accounts)
+                .to_a.group_by(&:notifiable_id)
+  end
+
+  def reminder_notifications_for(accounts) = self.class.reminder_notifications_for(accounts)
 
   def groups
     @groups ||= begin

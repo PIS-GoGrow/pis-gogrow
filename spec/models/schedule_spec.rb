@@ -56,6 +56,17 @@ RSpec.describe Schedule, type: :model do
     expect(schedule).to be_valid
   end
 
+  it "allows no amount and never runs out of quota" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: nil,
+      menu: menu
+    )
+
+    expect(schedule).to be_valid
+    expect(schedule.remaining_amount).to eq(described_class::MAX_AMOUNT)
+  end
+
   it "allows an amount equal to the maximum limit" do
     schedule = described_class.new(
       date: Date.current,
