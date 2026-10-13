@@ -34,7 +34,9 @@ export function ProviderMobileNav() {
       label: t("nav.provider.menu"),
       icon: Dish02Icon,
       href: schedules.index().url,
-      active: url.startsWith(schedules.index().url),
+      active:
+        url.startsWith(schedules.index().url) ||
+        url.startsWith("/provider/menus"),
     },
     {
       label: t("nav.provider.orders"),

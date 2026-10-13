@@ -101,7 +101,13 @@ export default function Index({
   ]
 
   const [tab, setTab] = useState<string>(initialTab)
+  const [prevInitialTab, setPrevInitialTab] = useState<string>(initialTab)
   const [deletingMenu, setDeletingMenu] = useState<SavedMenu | null>(null)
+
+  if (initialTab !== prevInitialTab) {
+    setPrevInitialTab(initialTab)
+    setTab(initialTab)
+  }
 
   function handleSelectDate(date: string) {
     setSearch("")

@@ -198,6 +198,7 @@ es:
     orders: "Mis pedidos"
     account: "Cuenta"
     menu: "Menú de navegación"
+    schedules: "Publicar menú"
     benefit_configurations: "Beneficio general"
     invoices: "Facturas"
     change_to: "Cambiar a"

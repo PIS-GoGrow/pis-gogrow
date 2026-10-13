@@ -4,11 +4,13 @@ import { describe, expect, it, vi } from "vitest"
 
 import { ProviderMobileNav } from "./provider-mobile-nav"
 
+let currentUrl = "/provider/dashboard"
+
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
-    usePage: () => ({ url: "/provider/dashboard", props: {} }),
+    usePage: () => ({ url: currentUrl, props: {} }),
     Link: ({
       children,
       href,
@@ -26,7 +28,8 @@ vi.mock("@inertiajs/react", async () => {
 })
 
 describe("ProviderMobileNav", () => {
-  function nav() {
+  function nav(url = "/provider/dashboard") {
+    currentUrl = url
     render(<ProviderMobileNav />)
     return within(
       screen.getByRole("navigation", { name: "Navegación del proveedor" }),
@@ -67,6 +70,15 @@ describe("ProviderMobileNav", () => {
     )
     expect(menu.getByRole("link", { name: "Pedidos" })).not.toHaveAttribute(
       "aria-current",
+    )
+  })
+
+  it("mantiene Menú activo al navegar a agregar o editar platos (/provider/menus)", () => {
+    const menu = nav("/provider/menus/new")
+
+    expect(menu.getByRole("link", { name: "Menú" })).toHaveAttribute(
+      "aria-current",
+      "page",
     )
   })
 })

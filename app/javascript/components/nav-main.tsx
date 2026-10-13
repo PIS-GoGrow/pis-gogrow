@@ -27,7 +27,10 @@ export function NavMain({ items = [] }: { items: NavItem[] }) {
                 item.disabled &&
                   "aria-disabled:pointer-events-auto aria-disabled:opacity-100",
               )}
-              isActive={!item.disabled && page.url.startsWith(item.href)}
+              isActive={
+                !item.disabled &&
+                (item.isActive ?? page.url.startsWith(item.href))
+              }
               tooltip={{ children: item.title }}
               title={
                 item.disabled

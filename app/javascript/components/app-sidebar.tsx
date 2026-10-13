@@ -43,7 +43,10 @@ import AppLogo from "./app-logo"
 
 export function AppSidebar() {
   const { t } = useTranslation()
-  const { auth } = usePage().props
+  const {
+    props: { auth },
+    url: pageUrl,
+  } = usePage()
   const adminPrimaryNavItems = useAdminPrimaryNavItems()
 
   const navItems: Record<string, NavItem[]> = {
@@ -54,9 +57,12 @@ export function AppSidebar() {
         icon: LayoutGrid,
       },
       {
-        title: "Menús",
+        title: t("nav.schedules"),
         href: schedules.index().url,
         icon: CalendarPlus,
+        isActive:
+          pageUrl.startsWith(schedules.index().url) ||
+          pageUrl.startsWith("/provider/menus"),
       },
       {
         title: "Pedidos",
