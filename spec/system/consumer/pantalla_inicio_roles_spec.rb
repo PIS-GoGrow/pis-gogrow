@@ -32,10 +32,11 @@ RSpec.describe "Flujo de navegación y pantalla de inicio para roles", type: :sy
       expect(page).to have_button("Continuar con Google")
     end
 
-    it "responde no encontrado (404) al intentar ingresar a /sign_up" do
+    it "muestra la página de no encontrado (404) al intentar ingresar a /sign_up" do
       visit "/sign_up"
 
-      expect(page).to have_content("No encontramos esta página").or have_content("Página no encontrada").or have_http_status(:not_found)
+      expect(page).to have_content("¡Ups! Esta página no existe")
+      expect(page).to have_content("La dirección que buscás no está disponible o fue movida.")
     end
   end
 
