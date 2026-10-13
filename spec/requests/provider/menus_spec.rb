@@ -259,7 +259,7 @@ RSpec.describe "Provider::Menus", type: :request do
     it "redirects visitors without a session to the sign in page" do
       get edit_provider_menu_path(menus(:milanesa))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects consumers to the root page" do
@@ -444,7 +444,7 @@ RSpec.describe "Provider::Menus", type: :request do
     it "redirects visitors without a session to the sign in page" do
       patch provider_menu_path(menus(:milanesa)), params: { menu: { name: "Nuevo" } }
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects consumers to the root page" do
