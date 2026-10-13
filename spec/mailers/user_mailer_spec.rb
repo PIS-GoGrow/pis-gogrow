@@ -24,16 +24,16 @@ RSpec.describe UserMailer, type: :mailer do
 
     it "is sent to the invited provider with the right subject" do
       expect(mail.to).to eq([ "ana@proveedor.com" ])
-      expect(mail.subject).to eq("Fuiste invitado a Viandas GoGrow")
+      expect(mail.subject).to eq("Invitación a Viandas GoGrow")
     end
 
     it "greets by name, names the company and links to the registration" do
       body = mail.body.encoded
 
       expect(body).to include("Hola Ana Proveedora,")
-      expect(body).to include("GoGrow te invitó a unirte como proveedor de viandas")
-      expect(body).to include("/proveedores/invitacion?token=#{user.id}.#{otp_code.code}")
-      expect(body).to include("/proveedores")
+      expect(body).to include("Recibió una invitación de GoGrow para unirse como proveedor de viandas")
+      expect(body).to include("/provider/invitation?token=#{user.id}.#{otp_code.code}")
+      expect(body).to include("/provider")
     end
   end
 
