@@ -51,7 +51,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
     milanesa_schedule
 
     sign_in users(:one), role: :consumer
-    visit dashboard_path
+    visit_hydrated dashboard_path
     calm_animations
   end
 
@@ -222,7 +222,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
 
     it "no deja guardar los cambios de un pedido con un grupo obligatorio sin responder" do
       order = milanesa_order([ "Papaya" ])
-      visit order_path(order)
+      visit_hydrated order_path(order)
       calm_animations
 
       click_button "Editar"
@@ -243,7 +243,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
     it "exige elegir la personalización de un pedido hecho antes de la funcionalidad" do
       order = order_with_selections
       order.update_column(:selected_options, [])
-      visit order_path(order)
+      visit_hydrated order_path(order)
       calm_animations
 
       click_button "Editar"
@@ -263,7 +263,11 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
     end
 
     context "cuando el proveedor deja un grupo como opcional" do
-      before { salsa.update!(required: false) }
+      before do
+        salsa.update!(required: false)
+        visit_hydrated dashboard_path
+        calm_animations
+      end
 
       it "deja pedir el plato sin elegir nada de ese grupo" do
         open_dish(sorrentinos)
@@ -293,7 +297,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
 
       it "deja quitar la opción elegida al modificar el pedido" do
         order = order_with_selections
-        visit order_path(order)
+        visit_hydrated order_path(order)
         calm_animations
 
         click_button "Editar"
@@ -310,7 +314,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
 
     it "guarda la personalización cambiada del pedido y la muestra en su detalle" do
       order = order_with_selections
-      visit order_path(order)
+      visit_hydrated order_path(order)
       calm_animations
 
       click_button "Editar"
@@ -360,7 +364,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       order = Order.last
       expect(order.notes).to be_nil
 
-      visit order_path(order)
+      visit_hydrated order_path(order)
       expect(page).to have_content("Sin notas")
     end
 
@@ -377,7 +381,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       confirm_order
       expect(Order.last.notes).to eq("Sin sal, por favor")
 
-      visit order_path(Order.last)
+      visit_hydrated order_path(Order.last)
       expect(page).to have_content("Sin sal, por favor")
     end
 
@@ -400,7 +404,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       sign_out
 
       sign_in users(:one), role: :consumer
-      visit order_path(order)
+      visit_hydrated order_path(order)
 
       expect(page).to have_content("Bolognesa")
       expect(page).to have_content("Ricota y nuez")

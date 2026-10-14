@@ -258,6 +258,31 @@ RSpec.describe Order, type: :model do
       expect(order_for(schedules(:future), chosen(salsa))).not_to be_valid
     end
 
+    it "rejects an option group with non-array values (direct bypass)" do
+      selection = [ { "group_id" => salsa.id, "name" => salsa.name, "values" => "Filetto" } ]
+      order = order_for(schedules(:sorrentinos_today), selection)
+
+      expect(order).not_to be_valid
+      expect(order.errors[:base]).to include(I18n.t("validations.invalid_options"))
+    end
+
+    it "rejects a selection with an unknown group_id" do
+      selection = chosen(salsa, relleno) + [ { "group_id" => 999_999, "name" => "Fake", "values" => [ "Algo" ] } ]
+      order = order_for(schedules(:sorrentinos_today), selection)
+
+      expect(order).not_to be_valid
+      expect(order.errors[:base]).to include(I18n.t("validations.invalid_options"))
+    end
+
+    it "rejects an optional group when an option is not offered by the group" do
+      salsa.update!(required: false)
+      selection = chosen(relleno) + [ { "group_id" => salsa.id, "name" => salsa.name, "values" => [ "Inexistente" ] } ]
+      order = order_for(schedules(:sorrentinos_today), selection)
+
+      expect(order).not_to be_valid
+      expect(order.errors[:base]).to include(I18n.t("validations.invalid_options"))
+    end
+
     context "when a group allows more than one option" do
       let(:extras) do
         menus(:milanesa).option_groups.create!(name: "Extras", options: [ "Papaya", "Arándanos", "Limón" ], limit: 2)

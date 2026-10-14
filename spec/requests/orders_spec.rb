@@ -171,6 +171,29 @@ RSpec.describe "Orders", type: :request do
         )
       end
 
+      it "exposes option groups with required false for optional groups" do
+        menu_option_groups(:salsa_sorrentinos).update!(required: false)
+        order = Order.create!(
+          consumer: consumers(:one),
+          schedule: schedules(:sorrentinos_today),
+          amount: 1,
+          price: 320,
+          discounted_price: 320,
+          address: "18 de Julio 1006",
+          delivery_method: :office,
+          selected_options: [
+            { group_id: menu_option_groups(:relleno_sorrentinos).id, name: "Relleno", values: [ "Ricota y nuez" ] }
+          ]
+        )
+
+        get order_path(order)
+
+        expect(inertia.props[:option_groups]).to include(
+          hash_including("name" => "Salsa", "required" => false),
+          hash_including("name" => "Relleno", "required" => true)
+        )
+      end
+
       # Un plato sin grupos no tiene nada que elegir: la lista llega vacía y el
       # pedido no carga ninguna selección.
       it "exposes no groups for a dish that offers none" do
@@ -329,6 +352,65 @@ RSpec.describe "Orders", type: :request do
       expect do
         post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: [ "Filetto", "Puerro" ] } ])
       end.not_to change(Order, :count)
+    end
+
+    it "orders a dish with both required and optional groups when the optional group is completely omitted" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options(required: true)
+      required_group = schedule.menu.option_groups.first
+      schedule.menu.option_groups.create!(name: "Extras", options: [ "Queso", "Bacon" ], limit: 1, required: false)
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [ { group_id: required_group.id, values: [ "Filetto" ] } ])
+      end.to change(Order, :count).by(1)
+
+      expect(Order.last.selected_options).to eq(
+        [ { "group_id" => required_group.id, "name" => "Salsa", "values" => [ "Filetto" ] } ]
+      )
+    end
+
+    it "refuses an option not offered by an optional group" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options(required: false)
+      group = schedule.menu.option_groups.first
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: [ "Inexistente" ] } ])
+      end.not_to change(Order, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.invalid_options") })
+    end
+
+    it "refuses options with invalid non-array data types without crashing" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options(required: true)
+      group = schedule.menu.option_groups.first
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: "Filetto" } ])
+      end.not_to change(Order, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.invalid_options") })
+    end
+
+    it "redirects visitors without a session when posting an order" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule
+      sign_out
+
+      post orders_path, params: cart_params(company, schedule, options: [])
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "redirects users with provider role when posting an order" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule
+      sign_in users(:provider_user), role: :provider
+
+      post orders_path, params: cart_params(company, schedule, options: [])
+      expect(response).to redirect_to(root_path)
     end
 
     it "creates the cart atomically with server prices, benefit and delivery address" do

@@ -47,6 +47,18 @@ RSpec.describe "Provider::Menus", type: :request do
   describe "POST /provider/menus" do
     before { sign_in provider_user, role: :provider }
 
+    it "redirects visitors without a session to the sign in page" do
+      sign_out
+      post provider_menus_path, params: { menu: { name: "Plato", price: 200 } }
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    it "redirects consumers to the root page" do
+      sign_in users(:one), role: :consumer
+      post provider_menus_path, params: { menu: { name: "Plato", price: 200 } }
+      expect(response).to redirect_to(root_path)
+    end
+
     it "creates a new dish with option groups and goes back to the new dish page" do
       expect do
         post provider_menus_path, params: {
@@ -483,6 +495,20 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(group.reload.limit).to eq(2)
       expect(group.reload).to be_required
     end
+
+      it "updates an existing required option group to optional" do
+        menu = menus(:milanesa)
+        group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1, required: true)
+
+        patch provider_menu_path(menu), params: {
+          menu: {
+            option_groups_attributes: [ { id: group.id, name: "Salsa", options: [ "Tuco" ], limit: 1, required: false } ]
+          }
+        }
+
+        expect(response).to redirect_to(edit_provider_menu_path(menu))
+        expect(group.reload).not_to be_required
+      end
 
       it "updates the provider's dish information and records audit data" do
         menu = menus(:milanesa)
