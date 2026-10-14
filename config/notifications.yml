@@ -29,6 +29,10 @@ configurations:
     roles: [admin]
     configurable: true
 
+  order_cancellations:
+    roles: [provider]
+    configurable: true
+
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
 # atributo configuration, especificar un único rol de los que están disponibles
@@ -87,4 +91,9 @@ events:
   company_payment_approved:
     configuration: company_payments
     role: admin
+    requires_action: false
+
+  order_cancellation:
+    configuration: order_cancellations
+    role: provider
     requires_action: false

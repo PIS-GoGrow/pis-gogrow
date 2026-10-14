@@ -114,6 +114,10 @@
         "description": "Recibí una notificación cuando tu deuda supere el monto definido por RRHH.",
         "title": "Alertas de deuda"
       },
+      "order_cancellations": {
+        "description": "Recibí una notificación cuando un pedido sea cancelado por el cliente.",
+        "title": "Cancelaciones"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
@@ -147,6 +151,10 @@
       "debt_threshold_exceeded": {
         "description": "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca.",
         "title": "Tu deuda superó el monto límite"
+      },
+      "order_cancellation": {
+        "description": "El pedido de %{consumer} del %{date} de %{dish} fue cancelado.",
+        "title": "Un pedido fue cancelado"
       },
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",

@@ -137,6 +137,9 @@ es:
     company_payment_approved:
       title: "Pago confirmado"
       description: "%{provider} confirmó el pago de %{company} por %{period} (%{amount})."
+    order_cancellation:
+      title: "Un pedido fue cancelado"
+      description: "El pedido de %{consumer} del %{date} de %{dish} fue cancelado."
   notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
@@ -153,6 +156,9 @@ es:
     company_payments:
       title: "Pagos a proveedores"
       description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
+    order_cancellations:
+      title: "Cancelaciones"
+      description: "Recibí una notificación cuando un pedido sea cancelado por el cliente."
   activerecord:
     errors:
       models:
