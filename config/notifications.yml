@@ -13,6 +13,10 @@ configurations:
     roles: [consumer]
     configurable: true
 
+  debt_alerts:
+    roles: [consumer]
+    configurable: false
+
   provider_payment_reminders:
     roles: [consumer]
     configurable: false
@@ -44,6 +48,11 @@ events:
     configuration: order_updates
     role: consumer
     requires_action: false
+
+  debt_threshold_exceeded:
+    configuration: debt_alerts
+    role: consumer
+    requires_action: true
 
   debt_payment_reminder:
     configuration: provider_payment_reminders

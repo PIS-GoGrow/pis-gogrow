@@ -110,6 +110,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
     t.datetime "created_at", null: false
     t.string "description"
     t.date "due_date"
+    t.decimal "max_price", precision: 10, scale: 2
     t.integer "percentage"
     t.integer "status"
     t.datetime "updated_at", null: false
@@ -121,6 +122,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
   create_table "companies", force: :cascade do |t|
     t.string "address"
     t.datetime "created_at", null: false
+    t.integer "debt_alert_threshold", default: 2000, null: false
     t.string "name"
     t.datetime "updated_at", null: false
   end
