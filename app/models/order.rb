@@ -414,22 +414,23 @@ class Order < ApplicationRecord
 
   private
 
-  # Cada grupo que el plato ofrece tiene que venir una sola vez y con entre 1 y
-  # limit opciones, todas del propio grupo. La pantalla ya lo impide, pero esta
-  # es la única guarda real: un POST directo no pasa por ella.
+  # Cada grupo elegido tiene que ser del plato y venir una sola vez, con hasta
+  # limit opciones del propio grupo; los obligatorios, con al menos una. La
+  # pantalla ya lo impide, pero esta es la única guarda real: un POST directo no
+  # pasa por ella.
   def selected_options_offered_by_menu
     groups = schedule&.menu&.option_groups.to_a
     chosen = Array(selected_options).index_by { it["group_id"].to_i }
 
     valid = chosen.size == Array(selected_options).size &&
-      chosen.keys.sort == groups.map(&:id).sort &&
-      groups.all? { chosen_within_group?(chosen[it.id]["values"], it) }
+      (chosen.keys - groups.map(&:id)).empty? &&
+      groups.all? { chosen_within_group?(chosen.dig(it.id, "values") || [], it) }
 
     errors.add(:base, I18n.t("validations.invalid_options")) unless valid
   end
 
   def chosen_within_group?(values, group)
-    values.is_a?(Array) && values.any? && values.size <= group.limit &&
+    values.is_a?(Array) && (values.any? || !group.required?) && values.size <= group.limit &&
       values.uniq.size == values.size && values.all? { group.options.include?(it) }
   end
   def snapshot_menu

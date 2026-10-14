@@ -165,7 +165,7 @@ RSpec.describe Order, type: :model do
   # IBP-022 — Como EMPLEADO, quiero seleccionar las opciones de personalización que el
   # plato admita al momento de pedir, para recibir la vianda según mi preferencia.
   # Criterio 1: lo elegido tiene que ser una de las opciones que el proveedor cargó al
-  # plato, y todos los grupos del plato tienen que estar respondidos.
+  # plato. Criterio 2: los grupos obligatorios tienen que estar respondidos.
   describe "selected options" do
     let(:salsa) { menu_option_groups(:salsa_sorrentinos) }
     let(:relleno) { menu_option_groups(:relleno_sorrentinos) }
@@ -190,17 +190,43 @@ RSpec.describe Order, type: :model do
       expect(order_for(schedules(:sorrentinos_today), chosen(salsa, relleno))).to be_valid
     end
 
-    it "requires an answer for every group the dish offers" do
+    it "requires an answer for every required group" do
       order = order_for(schedules(:sorrentinos_today), chosen(salsa))
 
       expect(order).not_to be_valid
       expect(order.errors[:base]).to include(I18n.t("validations.invalid_options"))
     end
 
-    it "rejects a group answered with an empty list" do
+    it "rejects a required group answered with an empty list" do
       selection = chosen(salsa) + [ { "group_id" => relleno.id, "name" => relleno.name, "values" => [] } ]
 
       expect(order_for(schedules(:sorrentinos_today), selection)).not_to be_valid
+    end
+
+    context "when a group is optional" do
+      before { salsa.update!(required: false) }
+
+      it "accepts leaving it out" do
+        expect(order_for(schedules(:sorrentinos_today), chosen(relleno))).to be_valid
+      end
+
+      it "accepts it answered with an empty list" do
+        selection = chosen(relleno) + [ { "group_id" => salsa.id, "name" => salsa.name, "values" => [] } ]
+
+        expect(order_for(schedules(:sorrentinos_today), selection)).to be_valid
+      end
+
+      it "still rejects more options than its limit" do
+        selection = chosen(relleno) + [ { "group_id" => salsa.id, "name" => salsa.name, "values" => [ "Filetto", "Bolognesa" ] } ]
+
+        expect(order_for(schedules(:sorrentinos_today), selection)).not_to be_valid
+      end
+    end
+
+    it "accepts a dish whose groups are all optional with nothing chosen" do
+      [ salsa, relleno ].each { it.update!(required: false) }
+
+      expect(order_for(schedules(:sorrentinos_today), [])).to be_valid
     end
 
     # El mismo grupo existe en el otro plato: no es que el dato no exista.

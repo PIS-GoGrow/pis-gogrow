@@ -159,8 +159,8 @@ RSpec.describe "Orders", type: :request do
 
         expect(inertia.props[:option_groups]).to eq(
           [
-            { "id" => menu_option_groups(:salsa_sorrentinos).id, "name" => "Salsa", "options" => [ "Filetto", "Bolognesa" ], "limit" => 1 },
-            { "id" => menu_option_groups(:relleno_sorrentinos).id, "name" => "Relleno", "options" => [ "Ricota y nuez", "Espinaca y queso" ], "limit" => 1 }
+            { "id" => menu_option_groups(:salsa_sorrentinos).id, "name" => "Salsa", "options" => [ "Filetto", "Bolognesa" ], "limit" => 1, "required" => true },
+            { "id" => menu_option_groups(:relleno_sorrentinos).id, "name" => "Relleno", "options" => [ "Ricota y nuez", "Espinaca y queso" ], "limit" => 1, "required" => true }
           ]
         )
         expect(inertia.props[:order][:selected_options]).to eq(
@@ -253,9 +253,9 @@ RSpec.describe "Orders", type: :request do
       Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount:, available:)
     end
 
-    def create_schedule_with_options(limit: 1)
+    def create_schedule_with_options(limit: 1, required: true)
       schedule = create_schedule
-      schedule.menu.option_groups.create!(name: "Salsa", options: [ "Filetto", "Puerro" ], limit:)
+      schedule.menu.option_groups.create!(name: "Salsa", options: [ "Filetto", "Puerro" ], limit:, required:)
       schedule
     end
 
@@ -287,7 +287,19 @@ RSpec.describe "Orders", type: :request do
       expect(Order.last.selected_options.first["values"]).to eq([ "Filetto", "Puerro" ])
     end
 
-    it "refuses a cart that leaves a group of the dish unanswered" do
+    it "orders a dish leaving an optional group unanswered" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options(required: false)
+      group = schedule.menu.option_groups.first
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: [] } ])
+      end.to change(Order, :count).by(1)
+
+      expect(Order.last.selected_options).to eq([])
+    end
+
+    it "refuses a cart that leaves a required group of the dish unanswered" do
       _consumer, company = setup_consumer
       schedule = create_schedule_with_options
 
@@ -1156,7 +1168,15 @@ RSpec.describe "Orders", type: :request do
           )
         end
 
-        it "refuses to leave a group unanswered and keeps what was chosen" do
+        it "removes the choice of an optional group" do
+          group.update!(required: false)
+
+          patch order_path(order), params: update_params(options: options_params([]))
+
+          expect(order.reload.selected_options.pluck("group_id")).to eq([ other_group.id ])
+        end
+
+        it "refuses to leave a required group unanswered and keeps what was chosen" do
           patch order_path(order), params: update_params(options: [ { group_id: group.id, values: [ "Bolognesa" ] } ])
 
           expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
