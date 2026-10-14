@@ -24,7 +24,7 @@ RSpec.describe "Provider::Closures", type: :request do
     it "redirects to sign in without a session" do
       expect { post provider_closures_path, params: }.not_to change(ProviderClosure, :count)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects a consumer to the home page" do
@@ -155,7 +155,7 @@ RSpec.describe "Provider::Closures", type: :request do
     it "redirects to sign in without a session" do
       patch provider_closure_path(closure), params: { reason: "Otro" }
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
       expect(closure.reload.reason).to eq("Vacaciones")
     end
   end
