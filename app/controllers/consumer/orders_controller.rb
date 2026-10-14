@@ -165,6 +165,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def order_error_reason(order)
+    return :provider_closed if order.errors[:schedule_id].include?(t("validations.provider_closed"))
     return :order_deadline_passed if order.errors[:schedule_id].include?(t("validations.order_deadline_passed"))
     return :invalid_options if order.errors[:base].include?(t("validations.invalid_options"))
 

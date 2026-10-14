@@ -60,6 +60,7 @@ class SchedulesController < Provider::InertiaController
             date.on_weekday? &&
             date >= Date.current &&
             date <= maximum_publish_date &&
+            !provider.closed_on?(date) &&
             !published
           ),
           editable: published && date >= Date.current,
@@ -114,6 +115,12 @@ class SchedulesController < Provider::InertiaController
     if date > maximum_publish_date
       redirect_to schedules_path,
                   inertia: { errors: { date: [ "La fecha está fuera del rango permitido de publicación" ] } }
+      return
+    end
+
+    if provider.closed_on?(date)
+      redirect_to schedules_path,
+                  inertia: { errors: { date: [ t("validations.publish_date_closed") ] } }
       return
     end
 
@@ -202,6 +209,8 @@ class SchedulesController < Provider::InertiaController
     redirect_to schedules_path(week_start: date.beginning_of_week(:monday).to_s),
                 notice: "Menú actualizado con éxito.",
                 status: :see_other
+  rescue ActiveRecord::RecordInvalid => error
+    redirect_to schedules_path, inertia: { errors: error.record.errors }
   end
 
   private

@@ -2,7 +2,9 @@
 
 class Provider::OperationalSettingsShowSerializer < ApplicationSerializer
   has_one :provider, serializer: Provider::OperationalSettingsProviderSerializer
+  has_many :closures, serializer: ProviderClosureSerializer
 
   typelize order_deadline_passed_today: :boolean
-  attributes :order_deadline_passed_today
+  typelize today: :string
+  attributes :order_deadline_passed_today, :today
 end

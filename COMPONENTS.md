@@ -398,6 +398,11 @@ Botón con la fecha elegida que abre un `Calendar` en un `Popover`, en español.
 | `min`, `max` | Primer y último día habilitado (`DateRangePicker` solo acepta `min`) |
 | `weekdaysOnly` | Deshabilita sábados y domingos (`DatePicker`) |
 | `id` | Para vincularlo con un `FieldLabel htmlFor` |
+| `className` | Clases del botón; `w-full` para que ocupe todo el ancho (`DateRangePicker`) |
+
+`DateRangePicker` escribe el rango como en el Figma, "9 junio – 27 junio 2027": el año una sola vez, salvo que el rango cruce de año.
+
+El encabezado del calendario sigue el Figma: domingo primero y días y meses en inglés ("Su Mo Tu…", "Jun"). Los textos accesibles quedan en español.
 
 ```tsx
 <Field>

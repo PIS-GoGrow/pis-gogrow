@@ -281,6 +281,99 @@ RSpec.describe "Consumer dashboard", type: :request do
       expect(by_id.fetch(available_dish.id)).to include(sold_out: false, remaining: 2)
     end
 
+    # IBP-087: el empleado no ve los platos del proveedor que cerró ese día, y
+    # sabe por qué: el cierre viaja aparte, con el motivo y el período.
+    describe "provider closures" do
+      def close(owner, from, to = from, reason: "Vacaciones")
+        owner.closures.create!(starts_on: from, ends_on: to, reason:)
+      end
+
+      def schedule_ids
+        inertia.props[:schedules].pluck(:id)
+      end
+
+      it "leaves out the dishes of the provider that closed that day and keeps the rest" do
+        closed_dish = publish(menus(:milanesa), monday)
+        open_dish = publish(menus(:sorrentinos), monday)
+        close(providers(:tuviandita), monday, monday + 1)
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(schedule_ids).to eq([ open_dish.id ])
+        expect(schedule_ids).not_to include(closed_dish.id)
+      end
+
+      it "leaves out only the closed days and not the rest of the week" do
+        before_closure = publish(menus(:milanesa), monday)
+        on_closure = publish(menus(:milanesa), monday + 1)
+        after_closure = publish(menus(:milanesa), monday + 2)
+        close(providers(:tuviandita), monday + 1)
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(schedule_ids).to contain_exactly(before_closure.id, after_closure.id)
+        expect(schedule_ids).not_to include(on_closure.id)
+      end
+
+      it "shows the dish again once the closure is deleted" do
+        dish = publish(menus(:milanesa), monday)
+        close(providers(:tuviandita), monday).destroy!
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(schedule_ids).to eq([ dish.id ])
+      end
+
+      it "sends the closures of every provider with the provider, the reason and the period" do
+        close(providers(:tuviandita), Date.new(2026, 9, 21), Date.new(2026, 10, 2), reason: "Vacaciones")
+        close(providers(:endulzate), Date.new(2026, 9, 14), reason: "Feriado")
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(inertia.props[:closures]).to contain_exactly(
+          a_hash_including(provider_name: users(:provider_user).name, reason: "Vacaciones",
+                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21 de septiembre al 2 de octubre de 2026"),
+          a_hash_including(provider_name: users(:other_provider_user).name, reason: "Feriado",
+                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14 de septiembre de 2026")
+        )
+      end
+
+      it "does not send closures that already ended" do
+        close(providers(:tuviandita), monday, monday + 1)
+        travel_to Time.zone.local(2026, 9, 16, 10)
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(inertia.props[:closures]).to eq([])
+      end
+
+      it "sends an empty list when nobody closed" do
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(inertia.props[:closures]).to eq([])
+      end
+
+      it "loads the closures with a fixed number of queries, however many dishes there are" do
+        3.times { |day| publish(menus(:milanesa), monday + day) }
+        publish(menus(:sorrentinos), monday)
+        close(providers(:tuviandita), monday + 4)
+        sign_in users(:one)
+        queries = []
+        callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?("provider_closures") }
+
+        ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { get dashboard_path }
+
+        expect(queries.size).to be <= 2
+      end
+    end
+
     it "does not count cancelled orders against the quota" do
       schedule = publish(menus(:milanesa), monday, amount: 1)
       order_for(schedule, 1).update!(status: :cancelled)

@@ -155,6 +155,20 @@ RSpec.describe "Provider::Menus", type: :request do
         expect(created.agendas).to be_empty
       end
 
+      it "does not create the dish when the single day is one the provider closed" do
+        provider.closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 10), reason: "Feriado")
+
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ], amount: 6 }
+          }
+        end.not_to change { [ Menu.count, Schedule.count ] }
+
+        follow_redirect!
+        expect(inertia).to have_props(errors: { agenda: [ I18n.t("validations.menu_agenda.date_closed") ] })
+      end
+
       it "programs every week from the start date" do
         post provider_menus_path, params: {
           menu: dish,
