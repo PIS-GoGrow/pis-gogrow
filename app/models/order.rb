@@ -92,6 +92,7 @@ class Order < ApplicationRecord
 
   after_update_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
   after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
+  after_create_commit :notify_received
 
   # Inicializa una orden con el precio que calculó OrderPricing. benefits es
   # { Benefit => viandas que cubre }; sin discounted_price se cobra el precio de
@@ -367,6 +368,22 @@ class Order < ApplicationRecord
   end
 
   # Notifica al consumidor usando los datos capturados antes de que el schedule pueda eliminarse.
+  def notify_received
+    return unless provider&.user
+
+    Notifier.call(
+      event_key: :order_received,
+      user: provider.user,
+      notifiable: self,
+      description_data: {
+        consumer: consumer.user.name,
+        amount:,
+        dish: menu_name,
+        date: I18n.l(schedule.date, format: :short)
+      }
+    )
+  end
+
   def notify_rejected
     reason = I18n.t!(
       "notifications.order_rejection.reasons.#{rejection_reason}",

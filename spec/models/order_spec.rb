@@ -815,6 +815,16 @@ RSpec.describe Order, type: :model do
       expect(missing).to be_empty
     end
 
+    it "notifies the provider when a new order is placed" do
+      order = orders(:upcoming_pending_today).dup
+      order.save!
+
+      notification = Notification.find_by!(event: "order_received", notifiable: order)
+
+      expect(notification).to have_attributes(user: order.provider.user, role: "provider", requires_action: false)
+      expect(notification.description).to start_with("#{order.consumer.user.name} pidió #{order.amount} de #{order.menu_name}")
+    end
+
     it "notifies the consumer when the provider rejects an order" do
       order = orders(:upcoming_pending_today)
 

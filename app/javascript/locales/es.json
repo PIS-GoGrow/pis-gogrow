@@ -114,9 +114,17 @@
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
       },
+      "provider_orders": {
+        "description": "Recibí una notificación cuando un empleado te haga un pedido.",
+        "title": "Pedidos nuevos"
+      },
       "provider_payment_reminders": {
         "description": "Recordatorios de pagos vencidos enviados por el proveedor.",
         "title": "Recordatorios de pago del proveedor"
+      },
+      "provider_payments": {
+        "description": "Recibí una notificación cuando te envíen un comprobante de pago.",
+        "title": "Comprobantes de pago"
       }
     },
     "notifications": {
@@ -144,6 +152,10 @@
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
         "title": "Tu pedido fue confirmado"
       },
+      "order_received": {
+        "description": "%{consumer} pidió %{amount} de %{dish} para el %{date}.",
+        "title": "Nuevo pedido"
+      },
       "order_rejection": {
         "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}.",
         "reasons": {
@@ -168,6 +180,10 @@
       "payment_due_soon": {
         "description": "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!",
         "title": "Tu pago vence pronto..."
+      },
+      "payment_receipt_submitted": {
+        "description": "%{payer} envió un comprobante de pago de %{month}.",
+        "title": "Nuevo comprobante de pago"
       }
     },
     "pages": {
@@ -639,6 +655,8 @@
           "operational_settings_description": "Configurá horarios y días sin servicio",
           "payment_details": "Datos de cobro",
           "payment_details_description": "Configurá dónde querés recibir tus cobros",
+          "profile": "Perfil",
+          "profile_description": "Editá tu nombre, correo, teléfono y contraseña",
           "settings": "Configuración",
           "sign_out": "Salir",
           "title": "Cuenta"
@@ -1126,6 +1144,27 @@
           "title": "Nueva contraseña"
         }
       },
+      "provider_payment_details": {
+        "show": {
+          "back": "Volver a Cuenta",
+          "bank_account_holder": "Titular de la cuenta",
+          "bank_account_number": "Número de cuenta",
+          "bank_account_type": "Tipo de cuenta",
+          "bank_account_type_placeholder": "Elegí el tipo de cuenta",
+          "bank_account_types": {
+            "checking": "Cuenta corriente",
+            "savings": "Caja de ahorro"
+          },
+          "bank_name": "Banco",
+          "bank_name_placeholder": "Ej. BROU",
+          "description": "Indicá la cuenta donde querés recibir los pagos de los empleados.",
+          "sensitive_notice": "Los cambios en estos datos quedan registrados.",
+          "submit": "Guardar",
+          "tax_id": "RUT o CI del titular",
+          "tax_id_description": "Solo números: 12 dígitos para RUT, 7 u 8 para CI.",
+          "title": "Datos de cobro"
+        }
+      },
       "provider_sessions": {
         "new": {
           "description": "Ingrese a su cuenta para continuar gestionando sus viandas.",
@@ -1248,12 +1287,15 @@
           "title": "Configuración de contraseña"
         },
         "profile": {
-          "description": "Actualiza tu nombre",
+          "description": "Actualiza tu nombre y tu teléfono",
           "heading": "Información del perfil",
           "home_delivery": {
             "heading": "Editar información de pedidos",
             "label": "También realizo entregas a domicilio"
           },
+          "phone": "Teléfono",
+          "phone_description": "Lo usamos para enviarte notificaciones por WhatsApp.",
+          "phone_placeholder": "+59899123456",
           "title": "Configuración del perfil"
         },
         "sessions": {

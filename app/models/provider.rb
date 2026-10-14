@@ -2,6 +2,9 @@
 
 class Provider < ApplicationRecord
   include SyncsUserRoles
+  include Auditable
+
+  enum :bank_account_type, { savings: 0, checking: 1 }, prefix: :bank_account, validate: { allow_nil: true }
 
   has_many :menus, dependent: :destroy
   has_many :schedules, through: :menus
@@ -11,6 +14,17 @@ class Provider < ApplicationRecord
   has_many :schedules, through: :menus
   has_many :orders, through: :schedules
   has_many :payments, through: :accounts
+
+  normalizes :tax_id, with: -> { it.gsub(/\D/, "") }
+  normalizes :bank_name, :bank_account_number, :bank_account_holder, with: -> { it.strip }
+
+  with_options on: :payment_details do
+    validates :bank_name, :bank_account_type, :bank_account_number, :bank_account_holder, :tax_id, presence: true
+    validates :bank_account_number, format: { with: /\A[\d -]{4,30}\z/ }, allow_blank: true
+    validates :tax_id, format: { with: /\A(\d{7,8}|\d{12})\z/ }, allow_blank: true
+  end
+
+  audits :home_delivery, :bank_name, :bank_account_type, :bank_account_number, :bank_account_holder, :tax_id
 
   def delivery_methods
     home_delivery? ? Order.delivery_methods.keys : [ "office" ]
