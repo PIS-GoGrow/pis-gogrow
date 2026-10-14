@@ -932,6 +932,21 @@
           "title": "Inicio"
         }
       },
+      "provider_deliveries": {
+        "show": {
+          "back": "Volver a Cuenta",
+          "description": "Elegí dónde realizás tus entregas y si aceptás direcciones personalizadas.",
+          "home": {
+            "description": "También aceptás pedidos con direcciones de entrega personalizadas.",
+            "title": "Oficinas y direcciones personalizadas"
+          },
+          "office": {
+            "description": "Entregás todos los pedidos en las oficinas de las empresas.",
+            "title": "Solo Oficinas"
+          },
+          "title": "Entregas"
+        }
+      },
       "provider_invitations": {
         "show": {
           "description": "Configure su contraseña para completar el registro.",
