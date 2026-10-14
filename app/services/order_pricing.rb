@@ -96,7 +96,7 @@ class OrderPricing
     return if base_percentage.zero? && specials.empty?
 
     Summary.new(
-      total: [ benefits.sum(&:percentage), 100 ].min,
+      total: [ base_percentage + specials.sum(&:percentage), 100 ].min,
       base: base_percentage,
       specials: specials.map { { name: it.description.to_s, percentage: it.percentage } }
     )
