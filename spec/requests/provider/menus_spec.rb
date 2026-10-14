@@ -55,7 +55,7 @@ RSpec.describe "Provider::Menus", type: :request do
             price: 360.0,
             description: "Con guarnición a elección",
             option_groups_attributes: [
-              { name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 1 },
+              { name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 1, required: true },
               { name: "Guarnición", options: [ "Papas fritas", "Ensalada" ], limit: 1 }
             ]
           }
@@ -67,6 +67,8 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(created.name).to eq("Suprema napolitana")
       expect(created.option_groups.count).to eq(2)
       expect(created.option_groups.find_by(name: "Salsa").options).to eq([ "Tuco", "Caruso" ])
+      expect(created.option_groups.find_by(name: "Salsa")).to be_required
+      expect(created.option_groups.find_by(name: "Guarnición")).not_to be_required
     end
 
     it "creates a dish without option groups" do
@@ -472,13 +474,14 @@ RSpec.describe "Provider::Menus", type: :request do
 
       patch provider_menu_path(menu), params: {
         menu: {
-          option_groups_attributes: [ { id: group.id, name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 2 } ]
+          option_groups_attributes: [ { id: group.id, name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 2, required: true } ]
         }
       }
 
       expect(response).to redirect_to(edit_provider_menu_path(menu))
       expect(group.reload.options).to eq([ "Tuco", "Caruso" ])
       expect(group.reload.limit).to eq(2)
+      expect(group.reload).to be_required
     end
 
       it "updates the provider's dish information and records audit data" do
