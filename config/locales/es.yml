@@ -115,6 +115,12 @@ es:
     debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
+    payment_available:
+      title: "¡Ya podés realizar tu pago!"
+      description: "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!"
+    payment_due_soon:
+      title: "Tu pago vence pronto..."
+      description: "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!"
     company_payment_upcoming:
       title: "Se acerca el vencimiento de un pago"
       description: "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos."
@@ -134,6 +140,9 @@ es:
     provider_payment_reminders:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
+    automatic_payment_reminders:
+      title: "Recordatorios automáticos de pago"
+      description: "Avisos sobre la apertura y el vencimiento próximo de pagos."
     company_payments:
       title: "Pagos a proveedores"
       description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
@@ -1080,16 +1089,31 @@ es:
         cancel: "Cancelar"
         submit: "Seleccionar"
     home:
-      title: "Te damos la bienvenida"
-      dashboard: "Panel"
-      tagline: "Rails + Inertia.js + React + shadcn/ui"
-      resources_intro: "Estos son algunos recursos para empezar:"
-      learn_more: "Más información"
-      resources:
-        inertia_rails: "Documentación de Inertia Rails"
-        shadcn: "Componentes de shadcn/ui"
-        react: "Documentación de React"
-        rails: "Guías de Rails"
+      title: "Viandas GoGrow"
+      consumer:
+        heading: "Viandas GoGrow"
+        description: "Tu almuerzo, sin complicaciones"
+        sign_in: "Iniciar sesión con Google"
+      admin:
+        heading: "Viandas GoGrow"
+        description: "Simplificá las viandas de tu equipo"
+        sign_in: "Continuar con Google"
+      provider:
+        heading: "Bienvenido a Viandas GoGrow"
+        description: "¡Hola {{username}}! {{company_name}} te invitó a unirte como proveedor de viandas."
+        sign_in: "Unirse ahora"
+      features:
+        label: "Qué podés hacer en Viandas GoGrow"
+        go_to: "Ver la tarjeta %{number}"
+        menu:
+          title: "Tu menú, siempre actualizado"
+          description: "Cargá tus platos, precios y disponibilidad de cada día de forma sencilla."
+        orders:
+          title: "Todos tus pedidos bajo control"
+          description: "Recibí, confirmá y seguí cada uno de tus pedidos en tiempo real."
+        collections:
+          title: "Cobros claros y ordenados"
+          description: "Revisá pagos, comprobantes y tu historial de cobros sin perder ningún detalle."
     dashboard:
       title: "Panel"
       roles:
@@ -1154,13 +1178,6 @@ es:
         title: "Elegir rol"
         heading: "Elegir tu rol"
         description: "Tenés más de un rol disponible. Podés elegir cuál usar ahora, o cambiarlo después."
-    users:
-      new:
-        title: "Registro"
-        heading: "Crea una cuenta"
-        description: "Ingresa tus datos para crear tu cuenta"
-        submit: "Crear cuenta"
-        have_account: "¿Ya tienes una cuenta?"
     provider_sessions:
       new:
         title: "Iniciar sesión"

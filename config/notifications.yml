@@ -12,9 +12,15 @@ configurations:
   order_updates:
     roles: [consumer]
     configurable: true
+
   provider_payment_reminders:
     roles: [consumer]
     configurable: false
+
+  automatic_payment_reminders:
+    roles: [consumer]
+    configurable: false
+
   company_payments:
     roles: [admin]
     configurable: true
@@ -43,6 +49,16 @@ events:
     configuration: provider_payment_reminders
     role: consumer
     requires_action: true
+
+  payment_available:
+    configuration: automatic_payment_reminders
+    role: consumer
+    requires_action: false
+
+  payment_due_soon:
+    configuration: automatic_payment_reminders
+    role: consumer
+    requires_action: false
 
   company_payment_upcoming:
     configuration: company_payments
