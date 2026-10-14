@@ -15,7 +15,7 @@ configurations:
 
   debt_alerts:
     roles: [consumer]
-    configurable: true
+    configurable: false
 
   provider_payment_reminders:
     roles: [consumer]
