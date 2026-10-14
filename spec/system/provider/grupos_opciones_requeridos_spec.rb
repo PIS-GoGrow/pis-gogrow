@@ -12,12 +12,23 @@ RSpec.describe "Configurar grupos de opciones obligatorios y opcionales", type: 
     sign_in provider_user, role: :provider
   end
 
+  def calm_animations
+    page.execute_script(<<~JS)
+      const style = document.createElement("style")
+      style.textContent = "*, *::before, *::after { animation: none !important; transition: none !important; }"
+      document.head.appendChild(style)
+    JS
+  end
+
   def open_add_group_sheet
+    expect(page).to have_no_css("[role=dialog]")
     find("button.-mr-2", text: "Agregar").click
+    expect(page).to have_css("[role=dialog]")
   end
 
   it "permite al proveedor marcar grupos como obligatorios u opcionales y muestra los indicadores en la lista" do
     visit_hydrated new_provider_menu_path
+    calm_animations
 
     fill_in "name", with: "Canelones caseros"
     fill_in "price", with: "380"
@@ -33,6 +44,7 @@ RSpec.describe "Configurar grupos de opciones obligatorios y opcionales", type: 
       click_button "Agregar"
     end
 
+    expect(page).to have_no_css("[role=dialog]")
     expect(page).to have_content("Relleno")
     expect(page).to have_content("Carne, Verdura")
     expect(page).to have_content("Obligatorio")
@@ -46,6 +58,7 @@ RSpec.describe "Configurar grupos de opciones obligatorios y opcionales", type: 
       click_button "Agregar"
     end
 
+    expect(page).to have_no_css("[role=dialog]")
     expect(page).to have_content("Salsa")
     expect(page).to have_content("Filetto, Blanca")
     expect(page).to have_content("Opcional")
@@ -55,7 +68,7 @@ RSpec.describe "Configurar grupos de opciones obligatorios y opcionales", type: 
       first("button[type=submit]", text: "Agregar").click
     end
 
-    expect(page).to have_content("¡Plato agregado!")
+    expect(page).to have_content("¡Plato agregado!", wait: 15)
 
     # 4. Validar integridad en base de datos
     created_menu = provider.menus.find_by!(name: "Canelones caseros")

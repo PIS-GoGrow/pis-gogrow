@@ -95,7 +95,9 @@ describe("OptionChoices", () => {
     )
 
     expect(screen.getByRole("checkbox", { name: "Papas" })).toBeChecked()
-    expect(screen.getByRole("checkbox", { name: "Ensalada" })).not.toBeDisabled()
+    expect(
+      screen.getByRole("checkbox", { name: "Ensalada" }),
+    ).not.toBeDisabled()
 
     // At limit
     rerender(
