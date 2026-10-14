@@ -74,7 +74,7 @@ class Consumer::OrdersController < Consumer::InertiaController
         requested_items.map { |item| { schedule: schedules.fetch(item[:schedule_id].to_i), quantity: item[:quantity].to_i } }
       )
 
-      requested_items.zip(lines).each do |item, line|
+      requested_items.each do |item|
         quantity = item[:quantity].to_i
         schedule = schedules.fetch(item[:schedule_id].to_i)
 
@@ -97,9 +97,9 @@ class Consumer::OrdersController < Consumer::InertiaController
           schedule:,
           quantity:,
           notes: item[:notes],
-          discounted_price: line.discounted_price,
+          discounted_price: lines[schedule.id].discounted_price,
           selected_options: selected_options_for(schedule.menu, item[:options]),
-          benefits: line.benefits,
+          benefits: lines[schedule.id].benefits,
           **delivery
         )
 

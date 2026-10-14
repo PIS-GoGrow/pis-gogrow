@@ -6,7 +6,7 @@
 # restantes; los porcentajes de una misma vianda se suman con tope en 100%.
 # Cada beneficio se reparte sobre las primeras viandas, en el orden de los ítems.
 #
-# Con held_by (al modificar una orden) se le devuelve a cada beneficio lo que
+# Con modifiable_order (al modificar una orden) se le devuelve a cada beneficio lo que
 # esa orden ya tenía reservado, para no rechazarla contra su propio consumo.
 class OrderPricing
   Line = Data.define(:price, :discounted_price, :benefits)
@@ -79,7 +79,7 @@ class OrderPricing
     return if base_percentage.zero? && specials.empty?
 
     Summary.new(
-      total: [ benefits.sum(&:percentage), 100 ].min,
+      total: [ base_percentage + specials.sum(&:percentage), 100 ].min,
       base: base_percentage,
       specials: specials.map { { name: it.description.to_s, percentage: it.percentage } }
     )
@@ -92,7 +92,7 @@ class OrderPricing
   def benefits
     @benefits ||= consumer
       .benefits
-      .where.not(status: expired)
+      .where.not(status: :expired)
       .order(percentage: :asc)
       .to_a
   end
@@ -127,8 +127,10 @@ class OrderPricing
       .sum(:benefit_used)
   end
 
+  # Indica para cada beneficio, cuánto se uso en la orden modificable
   def benefit_held
-    return unless @benefit_held
+    return @benefit_held if @benefit_held
+
     if @modifiable_order
       @benefit_held =
         @modifiable_order
