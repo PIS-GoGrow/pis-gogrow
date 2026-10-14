@@ -11,7 +11,7 @@ RSpec.describe CompanyPaymentNotifications do
     Admin.create!(user: users(:two), company:)
     users(:two)
   end
-  # Vence el 5 de septiembre: el aviso de que se aproxima sale desde el 2.
+  # Vence el 10 de septiembre: el aviso de que se aproxima sale desde el 7.
   let(:account) do
     Account.create!(owner: company, provider: providers(:endulzate), month: Date.new(2026, 8, 1), amount: 4500)
   end
@@ -40,7 +40,7 @@ RSpec.describe CompanyPaymentNotifications do
       account
       other_admin_user
 
-      travel_to Date.new(2026, 9, 2) do
+      travel_to Date.new(2026, 9, 7) do
         described_class.remind!
       end
 
@@ -51,7 +51,7 @@ RSpec.describe CompanyPaymentNotifications do
           role: "admin",
           requires_action: true,
           title: "Se acerca el vencimiento de un pago",
-          description: "El pago de GoGrow a Other Provider User por agosto 2026 ($4.500) vence el 5/9/2026. Revisá el detalle en Pagos."
+          description: "El pago de GoGrow a Other Provider User por agosto 2026 ($4.500) vence el 10/9/2026. Revisá el detalle en Pagos."
         )
       end
     end
@@ -59,7 +59,7 @@ RSpec.describe CompanyPaymentNotifications do
     it "no duplica el aviso si el job corre más de una vez" do
       account
 
-      travel_to Date.new(2026, 9, 2) do
+      travel_to Date.new(2026, 9, 7) do
         described_class.remind!
         expect { described_class.remind! }.not_to change(Notification, :count)
       end
@@ -68,14 +68,15 @@ RSpec.describe CompanyPaymentNotifications do
     it "reemplaza el aviso de que se aproxima por el de vencido al pasar la fecha" do
       account
 
-      travel_to(Date.new(2026, 9, 3)) { described_class.remind! }
-      travel_to Date.new(2026, 9, 6) do
+      travel_to(Date.new(2026, 9, 7)) { described_class.remind! }
+
+      travel_to Date.new(2026, 9, 11) do
         described_class.remind!
       end
 
       expect(active_events(admin_user)).to eq([ "company_payment_overdue" ])
       expect(admin_user.notifications.active.find_by!(notifiable: account).description)
-        .to eq("El pago de GoGrow a Other Provider User por agosto 2026 ($4.500) venció el 5/9/2026. Revisá el detalle en Pagos.")
+        .to eq("El pago de GoGrow a Other Provider User por agosto 2026 ($4.500) venció el 10/9/2026. Revisá el detalle en Pagos.")
     end
 
     it "no avisa por cuentas con un comprobante enviado, aprobado o rechazado" do
@@ -101,7 +102,7 @@ RSpec.describe CompanyPaymentNotifications do
   end
 
   describe "al cambiar el estado de un pago de la empresa" do
-    before { travel_to Date.new(2026, 9, 6) }
+    before { travel_to Date.new(2026, 9, 11) }
 
     it "resuelve los avisos pendientes cuando RR.HH. sube el comprobante" do
       account

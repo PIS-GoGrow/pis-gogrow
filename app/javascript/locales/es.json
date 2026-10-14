@@ -95,12 +95,17 @@
       "settings": {
         "appearance": "Apariencia",
         "email": "Correo electrónico",
+        "notifications": "Notificaciones",
         "password": "Contraseña",
         "profile": "Perfil",
         "sessions": "Sesiones"
       }
     },
     "notification_configurations": {
+      "automatic_payment_reminders": {
+        "description": "Avisos sobre la apertura y el vencimiento próximo de pagos.",
+        "title": "Recordatorios automáticos de pago"
+      },
       "company_payments": {
         "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
         "title": "Pagos a proveedores"
@@ -163,6 +168,14 @@
       "order_withdrawal": {
         "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible.",
         "title": "Tu pedido fue cancelado"
+      },
+      "payment_available": {
+        "description": "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!",
+        "title": "¡Ya podés realizar tu pago!"
+      },
+      "payment_due_soon": {
+        "description": "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!",
+        "title": "Tu pago vence pronto..."
       }
     },
     "pages": {
@@ -1237,6 +1250,11 @@
           "resend": "Haz clic aquí para reenviar el correo de verificación.",
           "title": "Configuración de correo",
           "unverified": "Tu dirección de correo no está verificada."
+        },
+        "notifications": {
+          "description": "Configurá qué alertas querés recibir por WhatsApp",
+          "heading": "Notificaciones",
+          "title": "Notificaciones"
         },
         "password": {
           "description": "Asegúrate de usar una contraseña larga y aleatoria para mantener tu cuenta segura",

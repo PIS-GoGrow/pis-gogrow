@@ -53,7 +53,7 @@ class Account < ApplicationRecord
   end
 
   def due_date
-    month + 1.month + 4.days
+    month.next_month.change(day: 10)
   end
 
   # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.

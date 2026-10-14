@@ -54,6 +54,7 @@ es:
     payment_receipt_removed: "Comprobante eliminado."
     invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
     invoice_removed: "Factura eliminada."
+    config_update: "Configuración actualizada"
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -118,6 +119,12 @@ es:
     debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
+    payment_available:
+      title: "¡Ya podés realizar tu pago!"
+      description: "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!"
+    payment_due_soon:
+      title: "Tu pago vence pronto..."
+      description: "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!"
     company_payment_upcoming:
       title: "Se acerca el vencimiento de un pago"
       description: "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos."
@@ -140,6 +147,9 @@ es:
     provider_payment_reminders:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
+    automatic_payment_reminders:
+      title: "Recordatorios automáticos de pago"
+      description: "Avisos sobre la apertura y el vencimiento próximo de pagos."
     company_payments:
       title: "Pagos a proveedores"
       description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
@@ -258,6 +268,7 @@ es:
       password: "Contraseña"
       sessions: "Sesiones"
       appearance: "Apariencia"
+      notifications: "Notificaciones"
     payments: "Pagos"
     collections: "Cobros"
     consumer:
@@ -1243,6 +1254,10 @@ es:
         ip: "IP: %{address}"
         active_since: "Activa desde: %{time}"
         log_out: "Cerrar sesión"
+      notifications:
+        heading: "Notificaciones"
+        title: "Notificaciones"
+        description: "Configurá qué alertas querés recibir por WhatsApp"
   date:
     formats:
       month_year: "%B de %Y"

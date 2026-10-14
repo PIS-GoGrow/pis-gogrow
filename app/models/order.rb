@@ -53,6 +53,7 @@ class Order < ApplicationRecord
   validates :amount, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :discounted_price, comparison: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true
+  validates :notes, length: { maximum: 140 }
   validates :address, presence: true, if: :home?
   validates :delivery_method, presence: true
   validates :rejection_reason, presence: true, if: :rejected?
