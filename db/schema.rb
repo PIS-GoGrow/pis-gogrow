@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -121,6 +121,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
     t.datetime "created_at", null: false
     t.string "description"
     t.date "due_date"
+    t.decimal "max_price", precision: 10, scale: 2
     t.integer "percentage"
     t.integer "status"
     t.datetime "updated_at", null: false
@@ -132,6 +133,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
   create_table "companies", force: :cascade do |t|
     t.string "address"
     t.datetime "created_at", null: false
+    t.integer "debt_alert_threshold", default: 2000, null: false
     t.string "name"
     t.datetime "updated_at", null: false
   end
@@ -195,6 +197,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
     t.bigint "menu_id", null: false
     t.string "name", null: false
     t.string "options", default: [], array: true
+    t.boolean "required", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["menu_id"], name: "index_menu_option_groups_on_menu_id"
   end

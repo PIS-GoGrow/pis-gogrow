@@ -51,9 +51,8 @@ export function DishDetail({
   )
   const line = pricing.lines[""]
   const reviews = item.menu.reviews
-  // Cada grupo que el plato ofrece tiene que quedar elegido antes de agregarlo.
   const choicesMissing = item.menu.option_groups.some(
-    (group) => !selections[group.id]?.length,
+    (group) => group.required && !selections[group.id]?.length,
   )
   const addDisabled = item.sold_out || item.orders_closed || choicesMissing
 

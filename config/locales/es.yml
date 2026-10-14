@@ -27,6 +27,7 @@ es:
     order_updated: "Pedido actualizado."
     already_signed_in: "Ya inició sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
+    debt_alert_updated: "Monto de alerta de deuda actualizado"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
     email_verification_sent: "Enviamos un correo de verificación a tu dirección"
@@ -119,6 +120,9 @@ es:
     order_withdrawal:
       title: "Tu pedido fue cancelado"
       description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible."
+    debt_threshold_exceeded:
+      title: "Tu deuda superó el monto límite"
+      description: "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca."
     debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
@@ -150,6 +154,9 @@ es:
     order_updates:
       title: "Actualizaciones de pedidos"
       description: "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado."
+    debt_alerts:
+      title: "Alertas de deuda"
+      description: "Recibí una notificación cuando tu deuda supere el monto definido por RRHH."
     provider_payment_reminders:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
@@ -383,6 +390,13 @@ es:
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
               unexpected: "Error inesperado. Por favor reintentá la operación."
+          debt_alert:
+            title: "Alerta de deuda"
+            description: "Avisamos a cada empleado cuando su deuda supera este monto."
+            threshold: "Monto límite"
+            edit: "Editar monto"
+            cancel: "Cancelar"
+            submit: "Guardar"
           special:
             title: "Subsidios especiales"
             description: "Los subsidios especiales se suman al Base."
@@ -1000,6 +1014,8 @@ es:
           edit: "Editar %{name}"
           remove: "Borrar %{name}"
           limit: "Límite %{limit}"
+          required: "Obligatorio"
+          optional: "Opcional"
         group:
           title: "Agregá opciones"
           description: "Armá un grupo de opciones para que el empleado elija."
@@ -1010,6 +1026,8 @@ es:
           options_hint: "Ingresá las opciones separadas por coma."
           duplicates: "No se permiten opciones repetidas."
           limit: "¿Cuántas opciones pueden elegir a la vez?"
+          required: "Obligatorio"
+          required_hint: "El empleado tiene que elegir al menos una opción de este grupo para pedir el plato."
           cancel: "Cancelar"
           add: "Agregar"
           modify: "Modificar"
@@ -1196,6 +1214,8 @@ es:
       options:
         choose: "Elegí tu %{name}"
         limit: "Podés elegir hasta %{count}"
+        required: "Obligatorio"
+        optional: "Opcional"
     sessions:
       new:
         title: "Iniciar sesión"

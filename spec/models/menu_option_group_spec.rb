@@ -52,6 +52,16 @@ RSpec.describe MenuOptionGroup, type: :model do
       expect(group).not_to be_valid
       expect(group.errors[:options]).to be_present
     end
+    it "defaults required to false" do
+      group = described_class.new(menu:, name: "Salsa", options: [ "Tuco" ], limit: 1)
+      expect(group.required).to be(false)
+    end
+
+    it "can be marked as required" do
+      group = described_class.new(menu:, name: "Salsa", options: [ "Tuco" ], limit: 1, required: true)
+      expect(group.required).to be(true)
+      expect(group).to be_valid
+    end
   end
 
   describe "associations" do
@@ -70,6 +80,7 @@ end
 #  limit      :integer          default(1), not null
 #  name       :string           not null
 #  options    :string           default([]), is an Array
+#  required   :boolean          default(FALSE), not null
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #  menu_id    :bigint           not null

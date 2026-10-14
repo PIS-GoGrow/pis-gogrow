@@ -10,6 +10,7 @@ class Payment < ApplicationRecord
 
   before_validation :clear_rejection_reason, if: :submitted?
   after_commit :notify_receipt_submitted, if: -> { saved_change_to_status? && submitted? }
+  after_commit :check_debt_alert, if: -> { account.owner.is_a?(Consumer) && (destroyed? || saved_change_to_status?) }
   after_commit :notify_company_admins, on: [ :create, :update ], if: -> { saved_change_to_status? && account.company? }
 
   validates :rejection_reason, presence: true, if: :rejected?
@@ -47,6 +48,8 @@ class Payment < ApplicationRecord
         month: I18n.l(account.month, format: "%B %Y")
       }
     )
+  def check_debt_alert
+    account.owner.check_debt_alert!
   end
 
   def clear_rejection_reason

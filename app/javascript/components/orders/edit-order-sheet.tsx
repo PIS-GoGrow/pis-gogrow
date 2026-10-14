@@ -54,7 +54,12 @@ export default function EditOrderSheet({
     })),
   })
 
-  const missingChoice = data.options.some((option) => !option.values.length)
+  const missingChoice = optionGroups.some(
+    (group) =>
+      group.required &&
+      !data.options.find((option) => option.group_id === group.id)?.values
+        .length,
+  )
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
