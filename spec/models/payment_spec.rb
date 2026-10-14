@@ -163,6 +163,87 @@ RSpec.describe Payment, type: :model do
       expect(account.reload.payments).to contain_exactly(payment2)
     end
   end
+
+  describe "automatic payment reminders" do
+    before do
+      Notification::Configuration.find_or_create_by!(
+        key: "automatic_payment_reminders"
+      ) do |configuration|
+        configuration.roles = [ "consumer" ]
+      end
+    end
+
+    it "closes an active reminder when the employee submits a payment" do
+      notification = Notifier.call(
+        event_key: "payment_due_soon",
+        user: consumer.user,
+        notifiable: account,
+        description_data: {
+          amount: "$500",
+          provider: provider.user.name,
+          due_date: "10/11/2026",
+          days: 3
+        }
+      )
+
+      payment = payment_with_receipt(status: :submitted)
+      payment.save!
+
+      expect(notification.reload.closed_at).to be_present
+    end
+
+    it "closes an active reminder when a rejected payment is submitted again" do
+      payment = payment_with_receipt(
+        status: :rejected,
+        rejection_reason: "La imagen está borrosa"
+      )
+      payment.save!
+
+      notification = Notifier.call(
+        event_key: "payment_due_soon",
+        user: consumer.user,
+        notifiable: account,
+        description_data: {
+          amount: "$500",
+          provider: provider.user.name,
+          due_date: "10/11/2026",
+          days: 3
+        }
+      )
+
+      payment.receipt.attach(
+        io: StringIO.new("comprobante nuevo"),
+        filename: "nuevo.png",
+        content_type: "image/png"
+      )
+      payment.update!(status: :submitted)
+
+      expect(notification.reload.closed_at).to be_present
+    end
+
+    it "does not close reminders when a payment is rejected" do
+      notification = Notifier.call(
+        event_key: "payment_due_soon",
+        user: consumer.user,
+        notifiable: account,
+        description_data: {
+          amount: "$500",
+          provider: provider.user.name,
+          due_date: "10/11/2026",
+          days: 3
+        }
+      )
+
+      payment = account.payments.create!(
+        provider:,
+        status: :pending
+      )
+
+      payment.reject_with("El comprobante no es válido")
+
+      expect(notification.reload.closed_at).to be_nil
+    end
+  end
 end
 
 # == Schema Information

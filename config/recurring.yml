@@ -19,6 +19,9 @@ production:
   generate_menu_schedules:
     class: MenusGenerateSchedulesJob
     schedule: every day at 3am
+  payment_reminders:
+    class: PaymentRemindersJob
+    schedule: every day at 1am
   company_payment_reminders:
     class: CompanyPaymentRemindersJob
     schedule: every day at 6am America/Montevideo
