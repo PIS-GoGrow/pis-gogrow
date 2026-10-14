@@ -109,6 +109,10 @@
         "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
         "title": "Pagos a proveedores"
       },
+      "employee_debts": {
+        "description": "Avisos cuando empleados de tu empresa acumulan más de un mes de deuda con un proveedor.",
+        "title": "Deudas de empleados"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
@@ -138,6 +142,13 @@
       "debt_payment_reminder": {
         "description": "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}.",
         "title": "Recordatorio de pago pendiente"
+      },
+      "employee_debt_overdue": {
+        "description": {
+          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio.",
+          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+        },
+        "title": "Hay empleados con pagos pendientes"
       },
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",

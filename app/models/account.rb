@@ -56,16 +56,9 @@ class Account < ApplicationRecord
     month.next_month.change(day: 10)
   end
 
-  # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
+  # Necesario para formatear la suma de varias cuentas
   def formatted_amount
-    ActionController::Base.helpers.number_to_currency(
-      amount,
-      unit: "$",
-      format: "%u%n",
-      precision: amount.frac.zero? ? 0 : 2,
-      delimiter: ".",
-      separator: ","
-    )
+    self.class.format_amount(amount)
   end
 
   # Se busca en memoria para que un preload(:payments) evite una consulta por
@@ -142,6 +135,20 @@ class Account < ApplicationRecord
     results.each_with_object({}) do |(account_id, amount_sum, price_sum), hash|
       hash[account_id] = { amount: amount_sum, price: price_sum }
     end
+  end
+
+  # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
+  def self.format_amount(value)
+    amount = value.to_d
+
+    ActionController::Base.helpers.number_to_currency(
+      amount,
+      unit: "$",
+      format: "%u%n",
+      precision: amount.frac.zero? ? 0 : 2,
+      delimiter: ".",
+      separator: ","
+    )
   end
 
   private
