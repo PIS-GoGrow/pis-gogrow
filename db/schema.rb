@@ -9,7 +9,7 @@
 # migrations use external dependencies or application code.
 #
 # It's strongly recommended that you check this file into your version control system.
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -183,6 +183,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
     t.bigint "menu_id", null: false
     t.string "name", null: false
     t.string "options", default: [], array: true
+    t.boolean "required", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["menu_id"], name: "index_menu_option_groups_on_menu_id"
   end
