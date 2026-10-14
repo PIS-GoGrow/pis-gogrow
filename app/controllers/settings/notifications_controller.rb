@@ -5,7 +5,10 @@ class Settings::NotificationsController < InertiaController
   wrap_parameters false
 
   def index
-    @notification_configurations = Notification::Configuration.for_role Current.session.role
+    @notification_configurations =
+      Notification::Configuration
+        .where(configurable: true)
+        .for_role Current.session.role
     @subscribed_keys =
       @notification_configurations
         .joins(:notification_configuration_users)
