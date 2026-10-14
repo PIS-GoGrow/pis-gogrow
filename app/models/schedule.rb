@@ -21,6 +21,8 @@ class Schedule < ApplicationRecord
 
   validates :menu_id, uniqueness: { scope: :date }
 
+  after_create_commit :close_missing_publication_notification
+
   # Las programaciones de platos eliminados (archivados) no se muestran.
   scope :on_active_menus, -> { joins(:menu).where(menus: { archived_at: nil }) }
 
@@ -51,6 +53,12 @@ class Schedule < ApplicationRecord
   # cancelled_by/cancelled_at.
   def set_availability(available:, by:)
     update(available:, availability_changed_at: Time.current, availability_changed_by: by)
+  end
+
+  private
+
+  def close_missing_publication_notification
+    Menus::MissingPublicationNotifier.close_for(schedule: self)
   end
 end
 

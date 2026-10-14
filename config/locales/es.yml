@@ -132,6 +132,9 @@ es:
     company_payment_approved:
       title: "Pago confirmado"
       description: "%{provider} confirmó el pago de %{company} por %{period} (%{amount})."
+    provider_menu_unpublished:
+      title: "Publicá el menú del día"
+      description: "Todavía no publicaste un menú para el %{date}."
   notification_configurations:
     order_updates:
       title: "Actualizaciones de pedidos"
@@ -145,6 +148,9 @@ es:
     company_payments:
       title: "Pagos a proveedores"
       description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
+    menu_publication_reminders:
+      title: "Recordatorios de publicación del menú"
+      description: "Avisos cuando falta publicar el menú de un día hábil."
   activerecord:
     errors:
       models:
