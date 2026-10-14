@@ -44,7 +44,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
     # Los dos platos se publican el mismo día: el de sorrentinos trae los grupos
     # de los fixtures y el de milanesa uno con límite 2, para poder probar las dos
     # formas de elegir (una sola opción o varias).
-    milanesa.option_groups.create!(name: "Extras", options: [ "Papaya", "Arándanos", "Limón" ], limit: 2)
+    milanesa.option_groups.create!(name: "Extras", options: [ "Papaya", "Arándanos", "Limón" ], limit: 2, required: true)
     # Los viernes, la publicación future de schedules.yml (hoy + 3) cae en este lunes.
     Schedule.where(date: monday).destroy_all
     sorrentinos_schedule
@@ -204,7 +204,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   end
 
   describe "criterio 2: no se puede confirmar con campos obligatorios sin responder" do
-    it "no deja agregar el plato al carrito hasta responder todos los grupos" do
+    it "no deja agregar el plato al carrito hasta responder los grupos obligatorios" do
       open_dish(sorrentinos)
       expect(page).to have_button("Agregar", disabled: true)
 
@@ -220,7 +220,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       expect(Order.last).to be_present
     end
 
-    it "no deja guardar los cambios de un pedido con un grupo sin responder" do
+    it "no deja guardar los cambios de un pedido con un grupo obligatorio sin responder" do
       order = milanesa_order([ "Papaya" ])
       visit order_path(order)
       calm_animations
@@ -260,6 +260,52 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
 
       expect(order.reload.selected_options.map { it["values"] })
         .to contain_exactly([ "Bolognesa" ], [ "Ricota y nuez" ])
+    end
+
+    context "cuando el proveedor deja un grupo como opcional" do
+      before { salsa.update!(required: false) }
+
+      it "deja pedir el plato sin elegir nada de ese grupo" do
+        open_dish(sorrentinos)
+        expect(find("section", text: "Elegí tu Salsa")).to have_content("Opcional")
+        expect(find("section", text: "Elegí tu Relleno")).to have_content("Obligatorio")
+
+        pick_option("Relleno", "Ricota y nuez")
+        expect(page).to have_button("Agregar", disabled: false)
+
+        add_to_cart
+        open_cart
+        confirm_order
+        expect(Order.last.selected_options).to eq(
+          [ { "group_id" => relleno.id, "name" => "Relleno", "values" => [ "Ricota y nuez" ] } ]
+        )
+      end
+
+      it "deja desmarcar la opción elegida" do
+        open_dish(sorrentinos)
+
+        pick_option("Salsa", "Bolognesa")
+        expect(checked_option("Salsa")).to eq("Bolognesa")
+
+        pick_option("Salsa", "Bolognesa")
+        expect(find("section", text: "Elegí tu Salsa")).to have_no_selector("[role=radio][aria-checked=true]")
+      end
+
+      it "deja quitar la opción elegida al modificar el pedido" do
+        order = order_with_selections
+        visit order_path(order)
+        calm_animations
+
+        click_button "Editar"
+        within("[role=dialog]") do
+          pick_option("Salsa", "Bolognesa")
+          expect(page).to have_button("Guardar cambios", disabled: false)
+          click_button "Guardar cambios"
+        end
+        expect(page).to have_no_selector("[role=dialog]")
+
+        expect(order.reload.selected_options.pluck("group_id")).to eq([ relleno.id ])
+      end
     end
 
     it "guarda la personalización cambiada del pedido y la muestra en su detalle" do
