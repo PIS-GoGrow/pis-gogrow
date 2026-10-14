@@ -226,5 +226,52 @@ RSpec.describe Notifier do
           .to change(Notification, :count).by(1)
       end
     end
+
+    describe "WhatsApp" do
+      include ActiveJob::TestHelper
+
+      let(:other_configuration) { create(:notification_configuration, key: "other_key", roles: %w[consumer]) }
+
+      before do
+        user.update!(phone: "+59899123456")
+        Notification::Registry.set_data([
+          {
+            config_key: registry_configuration,
+            other_key: Notification::Registry::Configuration.new(key: :other_key, roles: [ :consumer ], configurable: true)
+          },
+          {
+            order_confirmation: registry_event,
+            debt_payment_reminder: Notification::Registry::Event.new(
+              key: :debt_payment_reminder, configuration_key: :other_key, role: :consumer, requires_action: true
+            )
+          }
+        ])
+      end
+
+      it "encola el envío con el evento y el teléfono si el usuario está suscrito al grupo" do
+        configuration.users << user
+
+        expect { described_class.call(**params) }
+          .to have_enqueued_job(WhatsappSenderJob).with(event_key, {}, {}, "+59899123456")
+      end
+
+      it "no encola nada si el usuario no está suscrito" do
+        expect { described_class.call(**params) }.not_to have_enqueued_job(WhatsappSenderJob)
+      end
+
+      it "no encola nada si el que está suscrito es otro usuario" do
+        configuration.users << users(:other_consumer_user)
+
+        expect { described_class.call(**params) }.not_to have_enqueued_job(WhatsappSenderJob)
+      end
+
+      it "no encola un evento de otro grupo aunque esté suscrito a este" do
+        configuration.users << user
+        other_configuration
+
+        expect { described_class.call(**params, event_key: :debt_payment_reminder) }
+          .not_to have_enqueued_job(WhatsappSenderJob)
+      end
+    end
   end
 end

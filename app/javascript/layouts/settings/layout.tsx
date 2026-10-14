@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import {
   settingsAppearance,
   settingsEmails,
+  settingsNotifications,
   settingsPasswords,
   settingsProfiles,
   settingsSessions,
@@ -46,6 +47,11 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
     {
       title: t("nav.settings.appearance"),
       href: settingsAppearance().url,
+      icon: null,
+    },
+    {
+      title: t("nav.settings.notifications"),
+      href: settingsNotifications.index().url,
       icon: null,
     },
   ]

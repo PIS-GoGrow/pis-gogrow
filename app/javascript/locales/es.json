@@ -96,6 +96,7 @@
       "settings": {
         "appearance": "Apariencia",
         "email": "Correo electrónico",
+        "notifications": "Notificaciones",
         "password": "Contraseña",
         "profile": "Perfil",
         "sessions": "Sesiones"
@@ -1265,6 +1266,11 @@
           "resend": "Haz clic aquí para reenviar el correo de verificación.",
           "title": "Configuración de correo",
           "unverified": "Tu dirección de correo no está verificada."
+        },
+        "notifications": {
+          "description": "Configurá qué alertas querés recibir por WhatsApp",
+          "heading": "Notificaciones",
+          "title": "Notificaciones"
         },
         "password": {
           "description": "Asegúrate de usar una contraseña larga y aleatoria para mantener tu cuenta segura",
