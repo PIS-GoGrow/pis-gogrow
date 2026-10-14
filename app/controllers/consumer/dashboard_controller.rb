@@ -13,6 +13,8 @@ class Consumer::DashboardController < Consumer::InertiaController
   def confirmation
     @consumer = Current.user.consumer
     order_confirmation = order_confirmation_data
+    return redirect_to dashboard_path unless order_confirmation
+
     @total = order_confirmation[:total]
     @orders = order_confirmation[:orders]
   end
@@ -34,7 +36,7 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def schedule_data
-    schedules = Schedule.includes(:orders, menu: [ :reviews, :option_groups, { provider: [ :user, :closures ] } ])
+    schedules = Schedule.on_active_menus.includes(:orders, menu: [ :reviews, :option_groups, { provider: [ :user, :closures ] } ])
                         .where(date: week_range)
                         .order(:date, :id)
 

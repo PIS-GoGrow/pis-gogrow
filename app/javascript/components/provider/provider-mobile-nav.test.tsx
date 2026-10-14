@@ -1,14 +1,19 @@
 import { render, screen, within } from "@testing-library/react"
 import type React from "react"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { ProviderMobileNav } from "./provider-mobile-nav"
+
+const page = vi.hoisted(() => ({
+  url: "/provider/dashboard",
+  component: "provider/dashboard/index",
+}))
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
-    usePage: () => ({ url: "/provider/dashboard", props: {} }),
+    usePage: () => ({ ...page, props: {} }),
     Link: ({
       children,
       href,
@@ -26,6 +31,11 @@ vi.mock("@inertiajs/react", async () => {
 })
 
 describe("ProviderMobileNav", () => {
+  afterEach(() => {
+    page.url = "/provider/dashboard"
+    page.component = "provider/dashboard/index"
+  })
+
   function nav() {
     render(<ProviderMobileNav />)
     return within(
@@ -67,6 +77,18 @@ describe("ProviderMobileNav", () => {
     )
     expect(menu.getByRole("link", { name: "Pedidos" })).not.toHaveAttribute(
       "aria-current",
+    )
+  })
+
+  it("marca Menú como la página actual al editar un plato", () => {
+    page.url = "/provider/menus/1/edit"
+    page.component = "provider/menus/edit"
+
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Menú" })).toHaveAttribute(
+      "aria-current",
+      "page",
     )
   })
 })

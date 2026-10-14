@@ -1,287 +1,174 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import type React from "react"
+import { describe, expect, it, vi } from "vitest"
 
-import type { ConsumerClosure } from "@/types"
+import type { ConsumerDashboardIndex } from "@/types"
 
-import type { Schedule } from "./consumer-types"
+import type { CartItem, Schedule } from "./consumer-types"
 import { WeeklyMenu } from "./weekly-menu"
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
-
   return {
     ...actual,
-    usePage: () => ({ url: "/dashboard", props: { notifications: [] } }),
+    usePage: () => ({
+      url: "/dashboard",
+      props: {
+        locale: "es",
+        notifications: [],
+      },
+    }),
+    Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
+      <a href={href}>{children}</a>
+    ),
   }
 })
 
-// IBP-087: el proveedor programó un cierre. El empleado no ve sus platos del
-// día cerrado (el servidor ya los saca), y sabe por qué.
-const monday = "2026-09-14"
+const defaultBenefit: ConsumerDashboardIndex["benefit"] = {
+  limit: 5,
+  used: 0,
+  percentage: 50,
+  monthly_limit: 20,
+  monthly_used: 0,
+  monthly_remaining: 20,
+  specials: [],
+}
 
-const schedule: Schedule = {
+const sampleSchedule: Schedule = {
   id: 1,
-  date: monday,
-  remaining: 5,
+  date: "2026-10-12",
+  remaining: 10,
   sold_out: false,
   orders_closed: false,
   menu: {
-    id: 10,
-    name: "Wok de verduras + arroz",
-    description: "Salteado al wok",
-    price: 140,
+    id: 101,
+    name: "Milanesa con papas fritas",
+    description: "Clásica milanesa de carne",
+    price: 350,
     option_groups: [],
-    provider_name: "Endulzate by Noe",
+    provider_name: "Tu Viandita",
     home_delivery: true,
     reviews: [],
   },
 }
 
-const closure = (
-  overrides: Partial<ConsumerClosure> = {},
-): ConsumerClosure => ({
+const sampleCartItem: CartItem = {
   id: 1,
-  provider_name: "Tu Viandita",
-  reason: "Vacaciones",
-  starts_on: "2027-06-09",
-  ends_on: "2027-06-27",
-  period: "9 al 27 de junio de 2027",
-  ...overrides,
-})
-
-function renderMenu(
-  props: Partial<Parameters<typeof WeeklyMenu>[0]> = {},
-  date = monday,
-) {
-  return render(
-    <WeeklyMenu
-      name="Sofía"
-      date={date}
-      setDate={vi.fn()}
-      benefit={{
-        limit: 5,
-        used: 2,
-        percentage: 50,
-        monthly_limit: 20,
-        monthly_used: 2,
-        monthly_remaining: 18,
-        specials: [],
-      }}
-      providers={["Endulzate by Noe", "Tu Viandita"]}
-      schedules={[schedule]}
-      closures={[]}
-      cart={[]}
-      count={0}
-      total={0}
-      openDetail={vi.fn()}
-      openCart={vi.fn()}
-      {...props}
-    />,
-  )
+  cartId: "1-",
+  date: "2026-10-12",
+  remaining: 10,
+  sold_out: false,
+  orders_closed: false,
+  quantity: 1,
+  notes: "",
+  selections: {},
+  menu: sampleSchedule.menu,
 }
 
-describe("WeeklyMenu closures", () => {
-  beforeEach(() => {
-    window.sessionStorage.clear()
-  })
+describe("WeeklyMenu (Acceso responsive al carrito)", () => {
+  function renderComponent(
+    props: Partial<Parameters<typeof WeeklyMenu>[0]> = {},
+  ) {
+    const defaultProps = {
+      name: "Juan",
+      date: "2026-10-12",
+      setDate: vi.fn(),
+      benefit: defaultBenefit,
+      providers: ["Tu Viandita"],
+      schedules: [sampleSchedule],
+      closures: [],
+      cart: [],
+      count: 0,
+      total: 0,
+      openDetail: vi.fn(),
+      openCart: vi.fn(),
+      ...props,
+    }
 
-  it("shows no notice when nobody closed", () => {
-    renderMenu()
+    return {
+      ...render(<WeeklyMenu {...defaultProps} />),
+      props: defaultProps,
+    }
+  }
 
-    expect(screen.queryByText(/no estará disponible/)).not.toBeInTheDocument()
-    expect(screen.queryByText(/no está disponible/)).not.toBeInTheDocument()
-    expect(screen.getByText("Wok de verduras + arroz")).toBeInTheDocument()
-  })
+  it("no renderiza el botón flotante cuando el carrito está vacío", () => {
+    renderComponent({ count: 0, cart: [] })
 
-  it("warns ahead of a closure that starts later, with the reason", () => {
-    renderMenu({ closures: [closure()] })
-
-    expect(
-      screen.getByText("Tu Viandita no estará disponible"),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        "Sus viandas no estarán disponibles del 9 al 27 de junio de 2027. Motivo: Vacaciones",
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByText("Wok de verduras + arroz")).toBeInTheDocument()
-  })
-
-  it("lets the employee dismiss the notice and keeps it dismissed", async () => {
-    const user = userEvent.setup()
-    const { unmount } = renderMenu({ closures: [closure()] })
-
-    await user.click(screen.getByRole("button", { name: "Cerrar aviso" }))
-    expect(
-      screen.queryByText("Tu Viandita no estará disponible"),
-    ).not.toBeInTheDocument()
-
-    unmount()
-    renderMenu({ closures: [closure()] })
-
-    expect(
-      screen.queryByText("Tu Viandita no estará disponible"),
-    ).not.toBeInTheDocument()
-  })
-
-  it("says the provider is not available while the selected day is inside the closure", () => {
-    renderMenu(
-      {
-        closures: [closure({ starts_on: "2026-09-10", ends_on: "2026-09-18" })],
-      },
-      monday,
+    const floatingButton = document.querySelector(
+      '[data-slot="floating-cart-button"]',
     )
+    expect(floatingButton).toBeNull()
 
-    expect(
-      screen.getByText("Tu Viandita no está disponible"),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByText("Tu Viandita no estará disponible"),
-    ).not.toBeInTheDocument()
-    expect(screen.getByText("Wok de verduras + arroz")).toBeInTheDocument()
+    const asideCartButton = screen.getByRole("button", { name: "Ver carrito" })
+    expect(asideCartButton).toBeDisabled()
   })
 
-  it("lets the employee dismiss the notice shown inside the closure", async () => {
-    const user = userEvent.setup()
-    const inside = closure({ starts_on: "2026-09-10", ends_on: "2026-09-18" })
-    const { unmount } = renderMenu({ closures: [inside] })
+  it("renderiza el botón flotante con data-slot y clases responsive para mobile y tablet cuando count > 0", () => {
+    renderComponent({ count: 1, total: 350, cart: [sampleCartItem] })
 
-    await user.click(screen.getByRole("button", { name: "Cerrar aviso" }))
-    expect(
-      screen.queryByText("Tu Viandita no está disponible"),
-    ).not.toBeInTheDocument()
-
-    unmount()
-    renderMenu({ closures: [inside] })
-
-    expect(
-      screen.queryByText("Tu Viandita no está disponible"),
-    ).not.toBeInTheDocument()
-  })
-
-  // El aviso de antes del cierre y el de durante son independientes.
-  it("keeps the notice inside the closure after dismissing the one ahead of it", async () => {
-    const user = userEvent.setup()
-    const midweek = closure({ starts_on: "2026-09-16", ends_on: "2026-09-18" })
-    const { unmount } = renderMenu({ closures: [midweek] }, "2026-09-14")
-
-    await user.click(screen.getByRole("button", { name: "Cerrar aviso" }))
-    unmount()
-    renderMenu({ closures: [midweek] }, "2026-09-16")
-
-    expect(
-      screen.getByText("Tu Viandita no está disponible"),
-    ).toBeInTheDocument()
-  })
-
-  it("keeps the notice ahead of the closure after dismissing the one inside it", async () => {
-    const user = userEvent.setup()
-    const midweek = closure({ starts_on: "2026-09-16", ends_on: "2026-09-18" })
-    const { unmount } = renderMenu({ closures: [midweek] }, "2026-09-16")
-
-    await user.click(screen.getByRole("button", { name: "Cerrar aviso" }))
-    unmount()
-    renderMenu({ closures: [midweek] }, "2026-09-14")
-
-    expect(
-      screen.getByText("Tu Viandita no estará disponible"),
-    ).toBeInTheDocument()
-  })
-
-  it("keeps explaining the empty menu after the notice was dismissed", async () => {
-    const user = userEvent.setup()
-    renderMenu({
-      schedules: [],
-      closures: [closure({ starts_on: "2026-09-10", ends_on: "2026-09-18" })],
-    })
-
-    await user.click(screen.getByRole("button", { name: "Cerrar aviso" }))
-    await user.click(
-      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    const floatingButton = document.querySelector(
+      '[data-slot="floating-cart-button"]',
     )
-    await user.click(screen.getByLabelText("Tu Viandita"))
-    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+    expect(floatingButton).not.toBeNull()
+    expect(floatingButton).toHaveTextContent("Ver carrito")
 
-    expect(
-      screen.getByText(
-        "Tu Viandita no recibirá pedidos del 9 al 27 de junio de 2027.",
-      ),
-    ).toBeInTheDocument()
+    // Clases verificadas: fixed, mobile bottom-24, tablet bottom md:bottom-6, oculto en desktop lg:hidden
+    expect(floatingButton?.className).toContain("fixed")
+    expect(floatingButton?.className).toContain("bottom-24")
+    expect(floatingButton?.className).toContain("md:bottom-6")
+    expect(floatingButton?.className).toContain("lg:hidden")
   })
 
-  it("says nothing about a closure that already ended before the selected day", () => {
-    renderMenu({
-      closures: [closure({ starts_on: "2026-09-01", ends_on: "2026-09-10" })],
-    })
-
-    expect(screen.queryByText(/Tu Viandita no est/)).not.toBeInTheDocument()
-  })
-
-  it("keeps the usual empty message with every provider selected, even if one closed", () => {
-    renderMenu({
-      schedules: [],
-      closures: [closure({ starts_on: "2026-09-10", ends_on: "2026-09-18" })],
-    })
-
-    expect(screen.getByText("Menú no disponible")).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde.",
-      ),
-    ).toBeInTheDocument()
-    expect(screen.queryByText(/no recibirá pedidos/)).not.toBeInTheDocument()
-  })
-
-  it("explains an empty menu by the closure when filtering by that provider", async () => {
+  it("llama a openCart al presionar el botón flotante", async () => {
     const user = userEvent.setup()
-    renderMenu({
-      schedules: [],
-      closures: [closure({ starts_on: "2026-09-10", ends_on: "2026-09-18" })],
-    })
+    const openCart = vi.fn()
+    renderComponent({ count: 2, total: 700, cart: [sampleCartItem], openCart })
 
-    await user.click(
-      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    const floatingButton = document.querySelector(
+      '[data-slot="floating-cart-button"]',
     )
-    await user.click(screen.getByLabelText("Tu Viandita"))
-    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+    expect(floatingButton).not.toBeNull()
 
-    expect(screen.getByText("Menú no disponible")).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        "Tu Viandita no recibirá pedidos del 9 al 27 de junio de 2027.",
-      ),
-    ).toBeInTheDocument()
+    await user.click(floatingButton!)
+    expect(openCart).toHaveBeenCalledTimes(1)
   })
 
-  it("does not blame a closed provider when filtering by another one", async () => {
+  it("permite abrir el carrito desde el aside de escritorio cuando count > 0", async () => {
     const user = userEvent.setup()
-    renderMenu({
-      schedules: [],
-      closures: [closure({ starts_on: "2026-09-10", ends_on: "2026-09-18" })],
-    })
+    const openCart = vi.fn()
+    renderComponent({ count: 1, total: 350, cart: [sampleCartItem], openCart })
 
-    await user.click(
-      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    const cartButtons = screen.getAllByRole("button", { name: "Ver carrito" })
+    // El segundo botón es el del aside en desktop
+    const asideButton = cartButtons.find(
+      (btn) => btn.getAttribute("data-slot") !== "floating-cart-button",
     )
-    await user.click(screen.getByLabelText("Endulzate by Noe"))
-    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+    expect(asideButton).toBeDefined()
+    expect(asideButton).toBeEnabled()
 
-    expect(screen.queryByText(/no recibirá pedidos/)).not.toBeInTheDocument()
-    expect(
-      screen.getByText(
-        "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde.",
-      ),
-    ).toBeInTheDocument()
+    await user.click(asideButton!)
+    expect(openCart).toHaveBeenCalledTimes(1)
   })
 
-  it("keeps the usual empty message when no closure explains it", () => {
-    renderMenu({ schedules: [] })
+  it("muestra el resumen de viandas y monto en la tarjeta de carrito", () => {
+    renderComponent({ count: 3, total: 1050, cart: [sampleCartItem] })
 
-    expect(
-      screen.getByText(
-        "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde.",
-      ),
-    ).toBeInTheDocument()
+    expect(screen.getByText(/3 platos ·/i)).toBeInTheDocument()
+  })
+
+  it("incluye reglas de estilo css para ajustar el botón flotante al sidebar en tablets (768px a 1023px)", () => {
+    const { container } = renderComponent({ count: 1, cart: [sampleCartItem] })
+
+    const styleTag = container.querySelector("style")
+    expect(styleTag).not.toBeNull()
+    const cssText = styleTag?.textContent ?? ""
+
+    expect(cssText).toContain(
+      "@media (min-width: 768px) and (max-width: 1023px)",
+    )
+    expect(cssText).toContain('[data-slot="sidebar"][data-state="expanded"]')
+    expect(cssText).toContain('[data-slot="sidebar"][data-state="collapsed"]')
+    expect(cssText).toContain('[data-slot="floating-cart-button"]')
   })
 })

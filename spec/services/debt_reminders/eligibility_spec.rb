@@ -12,7 +12,7 @@ RSpec.describe DebtReminders::Eligibility do
   describe "#eligible?" do
     it "devuelve true para una cuenta de consumidor con deuda vencida y sin recordatorios recientes" do
       consumer_account.update!(amount: 100)
-      # due_date = month + 1.month + 4.days
+      # due_date = month.next_month.change(day: 10)
       # Para que esté vencida hoy, viajamos a después de due_date
       travel_to consumer_account.due_date + 1.day do
         eligibility = described_class.new(account: consumer_account)

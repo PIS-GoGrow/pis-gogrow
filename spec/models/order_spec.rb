@@ -9,7 +9,8 @@ RSpec.describe Order, type: :model do
   it { is_expected.to define_enum_for(:delivery_method).with_values(office: 0, home: 1) }
   it do
     expect(subject).to define_enum_for(:rejection_reason)
-      .with_values(out_of_stock: 0, duplicate_order: 1, customer_request: 2, order_error: 3, other: 4, dish_modified: 5)
+      .with_values(out_of_stock: 0, duplicate_order: 1, customer_request: 2, order_error: 3, other: 4, dish_modified: 5,
+                    dish_deleted: 6)
       .with_prefix(:rejection_reason)
   end
 
@@ -125,6 +126,39 @@ RSpec.describe Order, type: :model do
 
     it "keeps the message when there is content" do
       expect(order_with_notes("Sin sal, por favor").notes).to eq("Sin sal, por favor")
+    end
+
+    it "rejects messages longer than 140 characters" do
+      order = Order.new(
+        consumer: consumers(:one),
+        schedule: schedules(:future),
+        amount: 1,
+        price: 100,
+        discounted_price: 100,
+        delivery_method: :office,
+        notes: "a" * 141
+      )
+
+      expect(order).not_to be_valid
+      expect(order.errors[:notes]).to be_present
+    end
+
+    it "accepts messages with 140 characters" do
+      expect(order_with_notes("a" * 140).notes.length).to eq(140)
+    end
+
+    it "accepts nil notes" do
+      order = Order.new(
+        consumer: consumers(:one),
+        schedule: schedules(:future),
+        amount: 1,
+        price: 100,
+        discounted_price: 100,
+        delivery_method: :office,
+        notes: nil
+      )
+
+      expect(order.errors[:notes]).to be_blank
     end
   end
 
@@ -769,6 +803,16 @@ RSpec.describe Order, type: :model do
       Notification::Configuration.find_or_create_by!(key: "order_updates") do |configuration|
         configuration.roles = %w[consumer]
       end
+    end
+
+    # notify_rejected arma el texto con I18n.t!: un motivo sin traducción hace
+    # fallar el rechazo del proveedor.
+    it "has a notification text for every rejection reason" do
+      missing = Order.rejection_reasons.keys.reject do |reason|
+        I18n.exists?("notifications.order_rejection.reasons.#{reason}")
+      end
+
+      expect(missing).to be_empty
     end
 
     it "notifies the consumer when the provider rejects an order" do

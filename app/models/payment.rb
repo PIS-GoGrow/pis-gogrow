@@ -9,12 +9,16 @@ class Payment < ApplicationRecord
   has_one_attached :receipt
 
   before_validation :clear_rejection_reason, if: :submitted?
+  after_commit :notify_company_admins, on: [ :create, :update ], if: -> { saved_change_to_status? && account.company? }
 
   validates :rejection_reason, presence: true, if: :rejected?
 
   validate :receipt_is_attached_when_submitted
   validate :receipt_has_allowed_type
   validate :receipt_is_within_size_limit
+
+  after_save_commit :close_automatic_payment_reminders,
+                  if: :should_close_automatic_payment_reminders?
 
   def approve
     update(status: :approved, rejection_reason: nil)
@@ -28,6 +32,10 @@ class Payment < ApplicationRecord
 
   def clear_rejection_reason
     self.rejection_reason = nil
+  end
+
+  def notify_company_admins
+    CompanyPaymentNotifications.payment_status_changed(self)
   end
 
   def receipt_is_attached_when_submitted
@@ -46,6 +54,14 @@ class Payment < ApplicationRecord
     return unless receipt.blob.byte_size > 10.megabytes
 
     errors.add(:receipt, :too_large)
+  end
+
+  def should_close_automatic_payment_reminders?
+    saved_change_to_status? && (submitted? || approved?)
+  end
+
+  def close_automatic_payment_reminders
+    PaymentReminders::CloseActive.call(account:)
   end
 end
 

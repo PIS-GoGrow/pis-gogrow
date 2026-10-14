@@ -1426,6 +1426,36 @@ RSpec.describe "Orders", type: :request do
           expect(inertia).to have_flash(alert: I18n.t("validations.invalid_quantity"))
         end
       end
+
+      it "accepts updating notes with up to 140 characters" do
+        notes_140 = "a" * 140
+        patch order_path(order), params: update_params(notes: notes_140)
+
+        expect(order.reload.notes).to eq(notes_140)
+        follow_redirect!
+        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+      end
+
+      it "refuses notes exceeding 140 characters and preserves the previous notes" do
+        order.update!(notes: "Nota previa")
+        oversized_notes = "a" * 141
+
+        patch order_path(order), params: update_params(notes: oversized_notes)
+
+        expect(order.reload.notes).to eq("Nota previa")
+        follow_redirect!
+        expect(flash[:alert]).to include("140")
+      end
+
+      it "allows clearing notes by sending an empty string or nil" do
+        order.update!(notes: "Nota previa")
+
+        patch order_path(order), params: update_params(notes: "")
+
+        expect(order.reload.notes).to be_nil
+        follow_redirect!
+        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+      end
     end
   end
 end
