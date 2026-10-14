@@ -5,8 +5,16 @@ Rails.application.routes.draw do
 
   get  "sign_in", to: "sessions#new", as: :sign_in
   post "sign_in", to: "sessions#create"
-  get  "sign_up", to: "users#new", as: :sign_up
-  post "sign_up", to: "users#create"
+
+  get  "provider", to: "provider_sessions#new", as: :provider_sign_in
+  post "provider", to: "provider_sessions#create"
+  resource :provider_invitation, path: "provider/invitation", only: [ :show, :update ]
+  resource :provider_password_reset, path: "provider/password", only: [ :create, :edit, :update ], path_names: { edit: "new" }
+  resource :provider_password_reset_code, path: "provider/password/code", only: [ :show, :create ]
+
+  namespace :internal do
+    resources :provider_invitations, only: [ :create ]
+  end
 
   resources :sessions, only: [ :destroy, :edit, :update ]
   resource :users, only: [ :destroy ]
@@ -15,14 +23,13 @@ Rails.application.routes.draw do
   end
 
   # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the
-  # OmniAuth middleware before it reaches the router â€” only the callback and
+  # OmniAuth middleware before it reaches the router — only the callback and
   # failure paths need a route.
   get "auth/google_oauth2/callback", to: "omniauth_callbacks#google_oauth2"
   get "auth/failure", to: "omniauth_callbacks#failure"
 
   namespace :identity do
     resource :email_verification, only: [ :show, :create ]
-    resource :password_reset,     only: [ :new, :edit, :create, :update ]
   end
 
   namespace :settings do
@@ -30,6 +37,7 @@ Rails.application.routes.draw do
     resource :password, only: [ :show, :update ]
     resource :email, only: [ :show, :update ]
     resources :sessions, only: [ :index ]
+    resources :notifications, only: [ :index, :update ]
     inertia :appearance
   end
 
@@ -85,9 +93,12 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
     resources :special_subsidies, only: [ :create, :update, :destroy ]
+
+    resource :debt_alert, only: [ :update ]
     resources :consumers, only: [ :index, :show ] do
       resources :debt_reminders, only: [ :create ]
     end
+
     resources :invoices, only: [ :index ] do
       get :file, on: :member
     end
@@ -97,6 +108,8 @@ Rails.application.routes.draw do
   end
 
   root "home#index"
+  get "proveedor", to: redirect("/provider"), as: :provider_welcome
+  get "rrhh", to: "home#admin", as: :admin_welcome
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   get "up" => "rails/health#show", as: :rails_health_check

@@ -24,7 +24,7 @@ RSpec.describe "Provider::DebtReminders", type: :request do
     context "Control de acceso por rol y autenticación" do
       it "redirige al inicio de sesión cuando no hay sesión activa" do
         post provider_collection_debt_reminders_path(consumer_account)
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(provider_sign_in_path)
       end
 
       it "redirige al inicio (root) cuando el usuario es un consumidor" do

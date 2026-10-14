@@ -124,7 +124,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       # P1 tiene publicado un menú para el martes.
       milanesa_tuesday = publish(p1_milanesa, tuesday, amount: 8)
       publish(p1_wok, tuesday, amount: 3)
-      p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ])
+      p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ], required: true)
 
       # E1 elige fecha, plato, opción, nota, entrega y dirección, y confirma.
       open_menu(as: e1_user, day: tuesday)
@@ -610,6 +610,24 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       fill_in "notes", with: "a" * 141
 
       expect(find_field("notes").value.length).to eq(140)
+    end
+
+    it "no deja escribir más de 140 caracteres al editar un pedido" do
+      place_order(e1, milanesa_tuesday, notes: "Sin sal")
+
+      sign_in e1_user, role: :consumer
+      visit orders_path
+
+      within(find("[data-slot=card]", text: "Milanesa al pan")) do
+        click_link "Editar"
+      end
+
+      within("[role=dialog]") do
+        fill_in "notes", with: "a" * 141
+
+        expect(find_field("notes").value.length).to eq(140)
+        expect(page).to have_content("140/140")
+      end
     end
   end
 

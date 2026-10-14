@@ -18,15 +18,12 @@ class User < ApplicationRecord
     email
   end
 
-  generates_token_for :password_reset, expires_in: 20.minutes do
-    password_salt.last(10)
-  end
-
   has_many :notifications
   has_many :notification_configuration_users, class_name: "Notification::ConfigurationUser"
   has_many :notification_configurations, through: :notification_configuration_users, source: :notification_configuration
 
   has_many :sessions, dependent: :destroy
+  has_many :otp_codes, dependent: :destroy
 
   has_one :provider, dependent: :destroy
   has_one :admin, dependent: :destroy
@@ -36,6 +33,7 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, allow_nil: true, length: { minimum: 12 }
   validates :google_uid, uniqueness: true, allow_nil: true
+  validate :password_meets_provider_policy, on: :provider_password
 
   normalizes :email, with: -> { _1.strip.downcase }
 
@@ -110,6 +108,15 @@ class User < ApplicationRecord
       ("admin" if Admin.exists?(user_id: id))
     ].compact)
   end
+
+  private
+
+  def password_meets_provider_policy
+    return errors.add(:password, :blank) if password.blank?
+
+    strong = password.length >= 16 && password.match?(/[A-Z]/) && password.match?(/\d/) && password.match?(/[^[:alnum:]]/)
+    errors.add(:password, :provider_policy) unless strong
+  end
 end
 
 # == Schema Information
@@ -122,6 +129,7 @@ end
 #  google_uid      :string
 #  name            :string           not null
 #  password_digest :string           not null
+#  phone           :string
 #  roles           :string           default([]), not null, is an Array
 #  verified        :boolean          default(FALSE), not null
 #  created_at      :datetime         not null

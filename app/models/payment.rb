@@ -9,6 +9,7 @@ class Payment < ApplicationRecord
   has_one_attached :receipt
 
   before_validation :clear_rejection_reason, if: :submitted?
+  after_commit :check_debt_alert, if: -> { account.owner.is_a?(Consumer) && (destroyed? || saved_change_to_status?) }
   after_commit :notify_company_admins, on: [ :create, :update ], if: -> { saved_change_to_status? && account.company? }
 
   validates :rejection_reason, presence: true, if: :rejected?
@@ -18,6 +19,8 @@ class Payment < ApplicationRecord
   validate :receipt_is_within_size_limit
 
   after_update_commit :close_debt_reminder, if: -> { saved_change_to_status? && approved? }
+  after_save_commit :close_automatic_payment_reminders,
+                    if: :should_close_automatic_payment_reminders?
 
   def approve
     update(status: :approved, rejection_reason: nil)
@@ -28,6 +31,10 @@ class Payment < ApplicationRecord
   end
 
   private
+
+  def check_debt_alert
+    account.owner.check_debt_alert!
+  end
 
   # El recordatorio que manda Recursos Humanos es por toda la deuda vencida del
   # empleado, así que se cierra recién cuando no le queda ninguna.
@@ -62,6 +69,14 @@ class Payment < ApplicationRecord
 
     errors.add(:receipt, :too_large)
   end
+
+  def should_close_automatic_payment_reminders?
+    saved_change_to_status? && (submitted? || approved?)
+  end
+
+  def close_automatic_payment_reminders
+    PaymentReminders::CloseActive.call(account:)
+  end
 end
 
 # == Schema Information
@@ -85,4 +100,3 @@ end
 #
 #  fk_rails_...  (account_id => accounts.id)
 #  fk_rails_...  (provider_id => providers.id)
-#

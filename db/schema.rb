@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -122,6 +122,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
   create_table "companies", force: :cascade do |t|
     t.string "address"
     t.datetime "created_at", null: false
+    t.integer "debt_alert_threshold", default: 2000, null: false
     t.string "name"
     t.datetime "updated_at", null: false
   end
@@ -185,6 +186,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
     t.bigint "menu_id", null: false
     t.string "name", null: false
     t.string "options", default: [], array: true
+    t.boolean "required", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["menu_id"], name: "index_menu_option_groups_on_menu_id"
   end
@@ -293,6 +295,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
     t.index ["modified_by_id"], name: "index_orders_on_modified_by_id"
     t.index ["schedule_id"], name: "index_orders_on_schedule_id"
     t.check_constraint "delivery_method <> 1 OR address IS NOT NULL AND btrim(address::text) <> ''::text", name: "orders_home_delivery_requires_address"
+  end
+
+  create_table "otp_codes", force: :cascade do |t|
+    t.integer "attempts", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.string "nonce", null: false
+    t.integer "purpose", null: false
+    t.datetime "sent_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "purpose"], name: "index_otp_codes_on_user_id_and_purpose", unique: true
   end
 
   create_table "payments", force: :cascade do |t|
@@ -527,6 +541,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
     t.string "google_uid"
     t.string "name", null: false
     t.string "password_digest", null: false
+    t.string "phone"
     t.string "roles", default: [], null: false, array: true
     t.datetime "updated_at", null: false
     t.boolean "verified", default: false, null: false
@@ -569,6 +584,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
   add_foreign_key "orders", "schedules"
   add_foreign_key "orders", "users", column: "cancelled_by_id"
   add_foreign_key "orders", "users", column: "modified_by_id"
+  add_foreign_key "otp_codes", "users"
   add_foreign_key "payments", "accounts"
   add_foreign_key "payments", "providers"
   add_foreign_key "providers", "users", on_delete: :nullify

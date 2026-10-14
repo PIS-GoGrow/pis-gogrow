@@ -97,5 +97,12 @@ RSpec.describe "Sessions", type: :request do
       expect(response).to redirect_to(root_path)
       expect(Session.exists?(session_record.id)).to be(false)
     end
+
+    it "sends a provider back to the provider sign in" do
+      sign_in users(:provider_user), role: :provider
+      delete session_path(users(:provider_user).sessions.last)
+
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
   end
 end

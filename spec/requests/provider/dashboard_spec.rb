@@ -14,7 +14,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
       it "redirige al usuario a la pantalla de iniciar sesión" do
         get provider_dashboard_path
 
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(provider_sign_in_path)
       end
     end
 

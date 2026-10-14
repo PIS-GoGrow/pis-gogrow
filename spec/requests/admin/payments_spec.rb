@@ -92,6 +92,51 @@ RSpec.describe "Admin::Payments", type: :request do
         expect(inertia.props[:providers].pluck(:name))
           .to eq([ "Office Provider User", "Other Provider User", "Provider User" ])
       end
+
+      # El inicio de RR. HH. llega con ?month= desde "Ver detalle del consumo".
+      it "opens the detail of the month the URL asks for on the pending tab" do
+        get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
+
+        period = inertia.props[:period]
+        expect(period).to include(
+          "month" => I18n.l(Date.current.beginning_of_month, format: :month_year),
+          "amount" => 601.0,
+          "tab" => "pending"
+        )
+        expect(period["orders"].pluck("id")).to contain_exactly(
+          orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id, orders(:other_consumer_upcoming).id
+        )
+      end
+
+      it "opens an already paid month on the history tab" do
+        get admin_payments_path, params: { month: 1.month.ago.strftime("%Y-%m") }
+
+        expect(inertia.props[:period]).to include("amount" => 900.0, "tab" => "history", "orders" => [])
+      end
+
+      it "sends the detail of the current month for the consumption card" do
+        get admin_payments_path
+
+        expect(inertia.props[:current_period]).to include(
+          "month" => I18n.l(Date.current.beginning_of_month, format: :month_year), "amount" => 601.0
+        )
+      end
+
+      it "opens nothing without a month, with an invalid one or with one without payments" do
+        [ nil, "agosto", "2020-01" ].each do |month|
+          get admin_payments_path, params: { month: }.compact
+
+          expect(inertia.props[:period]).to be_nil
+        end
+      end
+
+      it "does not open the period of another company" do
+        other_company_account
+
+        get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
+
+        expect(inertia.props[:period]["amount"]).to eq(601.0)
+      end
     end
   end
 
