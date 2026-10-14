@@ -53,6 +53,7 @@ es:
     payment_receipt_removed: "Comprobante eliminado."
     invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
     invoice_removed: "Factura eliminada."
+    config_update: "Configuración actualizada"
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -260,6 +261,7 @@ es:
       password: "Contraseña"
       sessions: "Sesiones"
       appearance: "Apariencia"
+      notifications: "Notificaciones"
     payments: "Pagos"
     collections: "Cobros"
     consumer:
@@ -1244,6 +1246,10 @@ es:
         ip: "IP: %{address}"
         active_since: "Activa desde: %{time}"
         log_out: "Cerrar sesión"
+      notifications:
+        heading: "Notificaciones"
+        title: "Notificaciones"
+        description: "Configurá qué alertas querés recibir por WhatsApp"
   date:
     formats:
       month_year: "%B de %Y"
