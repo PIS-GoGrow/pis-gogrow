@@ -20,8 +20,6 @@ class Notification < ApplicationRecord
   scope :closed, -> { where.not(closed_at: nil) }
   scope :active, -> { where(closed_at: nil) }
 
-  after_create_commit :send_whatsapp
-
   # Cierra la notificación para que ya no le aparezca más al usuario.
   def close!(time: Time.current)
     return if closed_at
@@ -53,10 +51,6 @@ class Notification < ApplicationRecord
   end
 
   private
-
-  def send_whatsapp
-    # TODO: a definir
-  end
 
   def role_belongs_to_user
     user.sync_roles!
