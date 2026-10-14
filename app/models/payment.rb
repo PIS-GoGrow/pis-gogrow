@@ -48,6 +48,8 @@ class Payment < ApplicationRecord
         month: I18n.l(account.month, format: "%B %Y")
       }
     )
+  end
+
   def check_debt_alert
     account.owner.check_debt_alert!
   end
