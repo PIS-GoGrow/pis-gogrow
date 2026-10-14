@@ -491,7 +491,9 @@
         },
         "options": {
           "choose": "Elegí tu %{name}",
-          "limit": "Podés elegir hasta %{count}"
+          "limit": "Podés elegir hasta %{count}",
+          "optional": "Opcional",
+          "required": "Obligatorio"
         }
       },
       "consumer_profiles": {
@@ -969,6 +971,8 @@
             "options": "Opciones",
             "options_hint": "Ingresá las opciones separadas por coma.",
             "options_placeholder": "Ej: Boloñesa, Caruso, 4 quesos",
+            "required": "Obligatorio",
+            "required_hint": "El empleado tiene que elegir al menos una opción de este grupo para pedir el plato.",
             "title": "Agregá opciones"
           },
           "name": "Nombre del plato",
@@ -978,7 +982,9 @@
             "edit": "Editar %{name}",
             "empty": "¿Tiene sabores para elegir? ¡Agregalos!",
             "limit": "Límite %{limit}",
+            "optional": "Opcional",
             "remove": "Borrar %{name}",
+            "required": "Obligatorio",
             "title": "Opciones"
           },
           "price": "Precio",

@@ -1001,6 +1001,8 @@ es:
           edit: "Editar %{name}"
           remove: "Borrar %{name}"
           limit: "Límite %{limit}"
+          required: "Obligatorio"
+          optional: "Opcional"
         group:
           title: "Agregá opciones"
           description: "Armá un grupo de opciones para que el empleado elija."
@@ -1011,6 +1013,8 @@ es:
           options_hint: "Ingresá las opciones separadas por coma."
           duplicates: "No se permiten opciones repetidas."
           limit: "¿Cuántas opciones pueden elegir a la vez?"
+          required: "Obligatorio"
+          required_hint: "El empleado tiene que elegir al menos una opción de este grupo para pedir el plato."
           cancel: "Cancelar"
           add: "Agregar"
           modify: "Modificar"
@@ -1177,6 +1181,8 @@ es:
       options:
         choose: "Elegí tu %{name}"
         limit: "Podés elegir hasta %{count}"
+        required: "Obligatorio"
+        optional: "Opcional"
     sessions:
       new:
         title: "Iniciar sesión"
