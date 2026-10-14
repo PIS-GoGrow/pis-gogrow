@@ -14,64 +14,72 @@ class OrderPricing
 
   attr_reader :consumer
 
-  def initialize(consumer, held_by: nil)
+  # Si queremos modificar una orden, modifiable_order representa la orden que estamos
+  # modificando. Esa orden está sujeta a cambios: podemos cambiar
+  def initialize(consumer, modifiable_order: nil)
     @consumer = consumer
-    @held_by = held_by
+    @modifiable_order = modifiable_order
   end
 
-  # items: [{ schedule:, quantity: }]. Devuelve un Line por ítem, con benefits
-  # como { Benefit => viandas cubiertas }.
+  # items: [{ schedule:, quantity: }].
+  # Devuelve un Line por ítem, con benefits como { Benefit => viandas cubiertas }.
   def call(items)
-    base_left = base_percentage.positive? ? consumer.remaining_monthly_benefit + base_held : 0
-    special_left = special_benefits.to_h { [ it, remaining_uses(it) ] }
+    # Los beneficios que tenemos disponible para usar.
+    # De la forma { benefit: remaining_uses }
+    benefit_left = benefits.to_h { |benefit| [ benefit, remaining_uses(benefit) ] }
 
-    items.map do |item|
+    # Ordenamos los items según el precio por unidad del menú al que corresponden,
+    # de mayor a menor.
+    # De esta manera, si quedan pocos beneficios, estos se van a aplicar sobre las
+    # órdenes más caras, beneficiando al consumidor.
+    items.sort_by! { |item| item[:schedule].menu.price }.reverse!
+    
+    items.to_h do |item|
       schedule = item[:schedule]
       quantity = item[:quantity]
+
+      # coverage es un arreglo con cada beneficio que se va aplicar, su porcentaje y
+      # la cantidad que se va a aplicar
       coverage = []
 
-      base_units = [ quantity, base_left ].min
-      base_left -= base_units
-      coverage << [ consumer.monthly_benefit_for(schedule), base_percentage, base_units ]
+      # Calculamos para cada beneficio especial cuánto podemos aplicar a la orden
+      benefits.each do |benefit|
+        # No aplicar el beneficio
+        next unless benefit.valid_on?(schedule.date)
+        # No aplicar el beneficio si se supera el precio máximo
+        next if benefit.max_price && benefit.max_price < quantity * schedule.menu.price
+        # No seguir aplicando beneficios si ya superamos el cien porciento con los que
+        # tenemos
+        next if coverage.sum { |benefit| benefit[1] } >= 100
 
-      special_benefits.each do |benefit|
-        next unless valid_on?(benefit, schedule.date)
-
-        units = [ quantity, special_left[benefit] ].compact.min
-        special_left[benefit] -= units if special_left[benefit]
-        coverage << [ benefit, benefit.percentage, units ]
+        appliable_units = [ quantity, benefit_left[benefit] ].compact.min
+        benefit_left[benefit] -= appliable_units if benefit_left[benefit]
+        coverage << [ benefit, benefit.percentage, appliable_units ]
       end
 
-      line_for(schedule.menu.price, quantity, coverage)
+      [schedule.id, line_for(schedule.menu.price, quantity, coverage)]
     end
   end
 
-  def base_percentage
-    @base_percentage ||= consumer.current_monthly_benefit&.percentage.to_i.clamp(0, 100)
-  end
-
-  def special_benefits
-    @special_benefits ||= consumer.benefits.current
-      .where(benefit_configuration: BenefitConfiguration.special.active)
-      .order(:id)
-      .to_a
-  end
-
+  # Devuelve los usos disponibles para un beneficio, teniendo en cuenta
+  # que la orden modificable puede tenerlos.
   # nil significa usos ilimitados, como el de antigüedad.
   def remaining_uses(benefit)
     return if benefit.amount.nil?
 
-    [ benefit.amount - special_used.fetch(benefit.id, 0) + special_held.fetch(benefit.id, 0), 0 ].max
+    [ benefit.amount - benefit_used.fetch(benefit.id, 0) + benefit_held.fetch(benefit.id, 0), 0 ].max
   end
 
   # Lo que le corresponde hoy a una vianda que entre en todos los cupos: el base
   # y los especiales vigentes que todavía tienen usos. nil si no tiene ninguno.
   def summary(date: Date.current)
-    specials = special_benefits.select { valid_on?(it, date) && remaining_uses(it) != 0 }
+    base_percentage = @consumer.monthly_benefit_percentage
+    specials = @consumer.special_benefits.select { it.valid_on?(date) && remaining_uses(it) != 0 }
+    
     return if base_percentage.zero? && specials.empty?
 
     Summary.new(
-      total: [ base_percentage + specials.sum(&:percentage), 100 ].min,
+      total: [ benefits.sum(&:percentage), 100 ].min,
       base: base_percentage,
       specials: specials.map { { name: it.description.to_s, percentage: it.percentage } }
     )
@@ -79,11 +87,27 @@ class OrderPricing
 
   private
 
+  # Devuelve los beneficios no expirados del usuario ordenados por porcentaje,
+  # de modo de que los beneficios de mayor porcentaje se apliquen antes.
+  def benefits
+    @benefits ||= consumer
+      .benefits
+      .where.not(status: expired)
+      .order(percentage: :asc)
+      .to_a
+  end
+
   # Por vianda y no por ítem: cada vianda puede tener una combinación distinta
   # de beneficios según cuántos usos le quedaban a cada uno.
   def line_for(unit_price, quantity, coverage)
+    # Para cada unidad, evaluamos qué beneficios se pueden aplicar a él y calculamos
+    # su precio.
+    # El precio descontado total, es la suma de los precios descontados de cada unidad
     discounted_price = (0...quantity).sum do |unit|
-      percentage = coverage.sum { |_benefit, benefit_percentage, units| unit < units ? benefit_percentage : 0 }
+      percentage = coverage.sum do |_benefit, benefit_percentage, units|
+        unit < units ? benefit_percentage : 0
+      end
+
       unit_price * (100 - percentage.clamp(0, 100)) / 100
     end
 
@@ -94,24 +118,26 @@ class OrderPricing
     )
   end
 
-  def valid_on?(benefit, date)
-    benefit.due_date.nil? || benefit.due_date >= date
-  end
-
-  def special_used
-    @special_used ||= OrderBenefit
+  def benefit_used
+    @benefit_used ||= OrderBenefit
       .joins(:order)
-      .where(benefit_id: special_benefits.map(&:id))
+      .where(benefit_id: benefits.map(&:id))
       .where.not(orders: { status: [ :cancelled, :rejected ] })
       .group(:benefit_id)
       .sum(:benefit_used)
   end
 
-  def special_held
-    @special_held ||= @held_by ? @held_by.order_benefits.where(benefit_id: special_benefits.map(&:id)).group(:benefit_id).sum(:benefit_used) : {}
-  end
-
-  def base_held
-    @held_by&.subsidized_units_held.to_i
+  def benefit_held
+    return unless @benefit_held
+    if @modifiable_order
+      @benefit_held =
+        @modifiable_order
+          .order_benefits
+          .where(benefit_id: benefits.map(&:id))
+          .group(:benefit_id)
+          .sum(:benefit_used)
+    else
+      @benefit_held = {}
+    end
   end
 end

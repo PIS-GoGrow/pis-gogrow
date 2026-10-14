@@ -56,6 +56,24 @@ class Benefit < ApplicationRecord
     benefit_configuration&.benefit_rules&.any? { |rule| rule.type == MonthlyBenefit.name }
   end
 
+  def valid_on?(date)
+    if future?
+      # Si es future, no puede haber otros beneficios que no hayan vencido para esa
+      # fecha, para ese usuario y configuración, ni tampoco puede haber beneficios
+      # futuros que se vayan a aplicar entre hoy y date, y que no vayan a haber
+      # vencido.
+      competing_benefits = 
+        Benefit
+          .current
+          .or(Benefit.future.where(due_date: ...due_date))
+          .where(due_date: date.., benefit_configuration_id:, consumer_id:)
+      
+      return false if competing_benefits.any?
+    end
+
+    due_date.nil? || due_date >= date
+  end
+
   private
 
   def only_one_monthly_benefit_per_consumer

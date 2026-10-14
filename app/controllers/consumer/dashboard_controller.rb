@@ -78,11 +78,11 @@ class Consumer::DashboardController < Consumer::InertiaController
     {
       limit: @consumer.monthly_benefit_available / 4,
       used: @consumer.monthly_benefit_used_this_week,
-      percentage: pricing.base_percentage,
+      percentage: @consumer.monthly_benefit_percentage,
       monthly_limit: @consumer.monthly_benefit_available,
       monthly_used: @consumer.monthly_benefit_used_this_month,
       monthly_remaining: @consumer.remaining_monthly_benefit,
-      specials: pricing.special_benefits.map do |benefit|
+      specials: @consumer.special_benefits.map do |benefit|
         {
           id: benefit.id,
           name: benefit.description.to_s,

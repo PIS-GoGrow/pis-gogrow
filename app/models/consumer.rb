@@ -50,6 +50,19 @@ class Consumer < ApplicationRecord
     benefits.current.monthly.first
   end
 
+  # Devuelve el porcentaje del beneficio mensual actual 
+  def monthly_benefit_percentage
+    current_monthly_benefit&.percentage || 0
+  end
+
+  def special_benefits
+    benefits.current
+      .where(benefit_configuration: BenefitConfiguration.special.active)
+  end
+
+  # Devuelve la cantidad del beneficio mensual actual.
+  # No tiene en cuenta las órdenes que ya se hicieron: para eso consultar
+  # remaining_monthly_benefit
   def monthly_benefit_available
     current_monthly_benefit&.amount || 0
   end
@@ -85,17 +98,6 @@ class Consumer < ApplicationRecord
   # contando solo las órdenes confirmadas
   def remaining_monthly_benefit
     [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
-  end
-
-  # Devuelve el beneficio mensual que puede ser aplicado en un schedule.
-  # Esto es, el current_monthly_benefit si la fecha del schedule lo permite,
-  # o el siguiente si no.
-  def monthly_benefit_for(schedule)
-    monthly_benefits
-      .where.not(status: :expired)
-      .where(due_date: schedule.date..)
-      .order(due_date: :asc) # Debería haber a lo sumo 2: uno current y uno future
-      .first # Obtenemos el que debería ser el current
   end
 
   # Se espera que no se incluyan direcciones blank acá
