@@ -14,13 +14,12 @@ vi.mock("@inertiajs/react", async () => {
     Head: () => null,
     Link: ({
       children,
-      href: _href,
-      ...props
+      "aria-label": ariaLabel,
     }: {
       children: React.ReactNode
-      href: unknown
+      "aria-label"?: string
     }) => (
-      <a href="#" {...props}>
+      <a href="#" aria-label={ariaLabel}>
         {children}
       </a>
     ),
@@ -84,7 +83,9 @@ describe("Provider Deliveries Show Page", () => {
         name: /Oficinas y direcciones personalizadas/,
       }),
     ).toBeChecked()
-    expect(screen.getByRole("radio", { name: /Solo Oficinas/ })).not.toBeChecked()
+    expect(
+      screen.getByRole("radio", { name: /Solo Oficinas/ }),
+    ).not.toBeChecked()
   })
 
   it("selects office only when home delivery is off", () => {
