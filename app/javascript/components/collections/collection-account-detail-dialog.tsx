@@ -117,30 +117,34 @@ function CompanyCollection({
 }) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
-  // Los importes llegan calculados por el servidor para que el detalle y los
-  // resúmenes apliquen exactamente la misma regla de IVA.
-  const vat = account.vat_amount
-  const total = account.payable_amount
 
   return (
     <div className="grid gap-4 rounded-lg border p-3">
       <dl className="grid gap-3 text-sm">
-        <div className="grid gap-1">
-          <dt className="text-muted-foreground">{t(`${page}.subtotal`)}</dt>
-          <dd className="font-semibold">{formatMoney(account.amount)}</dd>
-        </div>
-        <Separator />
-        <div className="grid gap-1">
-          <dt className="text-muted-foreground">{t(`${page}.vat`)}</dt>
-          <dd className="font-semibold">{formatMoney(vat)}</dd>
-        </div>
-        <Separator className="bg-foreground/50" />
+        {account.vat_rate > 0 && (
+          <>
+            <div className="grid gap-1">
+              <dt className="text-muted-foreground">{t(`${page}.subtotal`)}</dt>
+              <dd className="font-semibold">{formatMoney(account.amount)}</dd>
+            </div>
+            <Separator />
+            <div className="grid gap-1">
+              <dt className="text-muted-foreground">{t(`${page}.vat`)}</dt>
+              <dd className="font-semibold">
+                {formatMoney(account.vat_amount)}
+              </dd>
+            </div>
+            <Separator className="bg-foreground/50" />
+          </>
+        )}
         <div className="flex items-end justify-between gap-3">
           <div className="grid gap-1">
             <dt className="text-muted-foreground">
               {t(`${page}.total_label`)}
             </dt>
-            <dd className="font-semibold">{formatMoney(total)}</dd>
+            <dd className="font-semibold">
+              {formatMoney(account.payable_amount)}
+            </dd>
           </div>
           <StatusBadge status={account.status} kind="payment" />
         </div>

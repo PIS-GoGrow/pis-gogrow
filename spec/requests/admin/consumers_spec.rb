@@ -47,6 +47,54 @@ RSpec.describe "Admin::Consumers", type: :request do
           hash_including(id: consumers(:other).id, amount: 150.25, status: "submitted")
         )
       end
+
+      it "opens on the filter the URL asks for, so the home can link to the pending ones" do
+        get admin_consumers_path, params: { filter: "pending" }
+
+        expect(inertia).to have_props(filter: "pending")
+      end
+
+      # El ranking del inicio se calcula con el mes elegido y su chevron trae ese mes.
+      it "summarizes the month the URL asks for" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+
+        get admin_consumers_path, params: { filter: "pending", month: previous.strftime("%Y-%m") }
+
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:one).id, amount: 0.0, status: nil),
+          hash_including(id: consumers(:other).id, amount: 80.0, status: "pending")
+        )
+      end
+
+      it "summarizes the current month with an invalid or future month" do
+        [ "agosto", "2026-13", (Date.current + 2.months).strftime("%Y-%m") ].each do |month|
+          get admin_consumers_path, params: { month: }
+
+          expect(inertia.props[:consumers]).to include(
+            hash_including(id: consumers(:one).id, amount: 950.75, status: "pending")
+          )
+        end
+      end
+
+      it "sends the photo of each employee" do
+        users(:one).update!(avatar_url: "https://foto.example/one.jpg")
+
+        get admin_consumers_path
+
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:one).id, avatar_url: "https://foto.example/one.jpg"),
+          hash_including(id: consumers(:other).id, avatar_url: nil)
+        )
+      end
+
+      it "opens on every employee without a filter or with an unknown one" do
+        get admin_consumers_path
+        expect(inertia).to have_props(filter: "all")
+
+        get admin_consumers_path, params: { filter: "everyone" }
+        expect(inertia).to have_props(filter: "all")
+      end
     end
   end
 

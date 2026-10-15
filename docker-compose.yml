@@ -38,6 +38,7 @@ services:
         condition: service_healthy
     environment:
       RAILS_ENV: development
+      SOLID_QUEUE_IN_PUMA: "true"
       PGHOST: db
       PGUSER: postgres
       PGPASSWORD: postgres

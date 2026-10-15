@@ -32,7 +32,7 @@ RSpec.describe "Provider::Orders", type: :request do
     it "redirects to sign in without a session" do
       get provider_orders_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects a consumer to the home page" do
@@ -195,7 +195,7 @@ RSpec.describe "Provider::Orders", type: :request do
     it "redirects to sign in without a session" do
       get provider_order_path(orders(:upcoming_pending_today))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     %i[consumer admin].each do |role|
@@ -366,7 +366,7 @@ RSpec.describe "Provider::Orders", type: :request do
     it "redirects to sign in without a session" do
       patch confirm_provider_order_path(orders(:upcoming_pending_today))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
       expect(orders(:upcoming_pending_today).reload).to be_pending
     end
 
@@ -467,7 +467,7 @@ RSpec.describe "Provider::Orders", type: :request do
     it "redirects to sign in without a session" do
       patch reject_provider_order_path(orders(:upcoming_pending_today))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
       expect(orders(:upcoming_pending_today).reload).to be_pending
     end
 

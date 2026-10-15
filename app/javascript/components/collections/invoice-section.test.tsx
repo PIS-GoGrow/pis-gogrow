@@ -20,6 +20,7 @@ const historicalCompanyAccount = {
   owner_name: "GoGrow",
   meals: 10,
   amount: 30_000,
+  vat_rate: 0.22,
   vat_amount: 6_600,
   payable_amount: 36_600,
   source: "company",

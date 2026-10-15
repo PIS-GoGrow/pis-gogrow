@@ -26,6 +26,7 @@ const baseAccount = {
   owner_name: "Juan Pérez",
   meals: 2,
   amount: 800,
+  vat_rate: 0,
   vat_amount: 0,
   payable_amount: 800,
   source: "consumer",
@@ -33,7 +34,7 @@ const baseAccount = {
   can_approve_payment: false,
   overdue: false,
   month: "Octubre 2026",
-  due_date: "05/11/26",
+  due_date: "10/11/26",
   paid_on: null,
   payment_id: 1,
   receipt_url: "/receipt.pdf",
@@ -60,6 +61,24 @@ const baseAccount = {
 } satisfies ProviderCollectionAccount
 
 describe("CollectionAccountDetailDialog", () => {
+  it.each(["pending", "approved"] as const)(
+    "conserva el importe de una cuenta de empresa anterior con estado %s",
+    async (status) => {
+      const user = userEvent.setup()
+      render(
+        <CollectionAccountDetailDialog
+          account={{ ...baseAccount, source: "company", status }}
+        />,
+      )
+
+      await user.click(screen.getByRole("button", { name: "Ver detalle" }))
+
+      expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+      expect(screen.queryByText("IVA (22 %)")).not.toBeInTheDocument()
+      expect(screen.queryByText("976,00 UYU")).not.toBeInTheDocument()
+    },
+  )
+
   it("shows the employee consumption history", async () => {
     const user = userEvent.setup()
     render(<CollectionAccountDetailDialog account={baseAccount} />)
@@ -77,13 +96,14 @@ describe("CollectionAccountDetailDialog", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("shows the VAT breakdown and meals for a pending company", async () => {
+  it("shows collection totals and meals for a company", async () => {
     const user = userEvent.setup()
     const company = {
       ...baseAccount,
       id: 2,
       owner_name: "GoGrow",
       source: "company",
+      vat_rate: 0.22,
       vat_amount: 176,
       payable_amount: 976,
       status: "pending",
@@ -92,9 +112,10 @@ describe("CollectionAccountDetailDialog", () => {
     render(<CollectionAccountDetailDialog account={company} />)
     await user.click(screen.getByRole("button", { name: "Ver detalle" }))
 
-    expect(screen.getByText("Subtotal sin IVA")).toBeInTheDocument()
-    expect(screen.getByText("IVA (22%)")).toBeInTheDocument()
+    expect(screen.getByText("Total")).toBeInTheDocument()
     expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("Subtotal sin IVA")).toBeInTheDocument()
+    expect(screen.getByText("IVA (22 %)")).toBeInTheDocument()
     expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
     expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
     expect(screen.getByText("Pendiente")).toBeInTheDocument()
@@ -114,6 +135,7 @@ describe("CollectionAccountDetailDialog", () => {
       id: 2,
       owner_name: "GoGrow",
       source: "company",
+      vat_rate: 0.22,
       vat_amount: 176,
       payable_amount: 976,
       status: "approved",
@@ -134,7 +156,7 @@ describe("CollectionAccountDetailDialog", () => {
     await user.click(screen.getByRole("button", { name: "Ver detalle" }))
 
     expect(screen.getByText("Subtotal sin IVA")).toBeInTheDocument()
-    expect(screen.getByText("IVA (22%)")).toBeInTheDocument()
+    expect(screen.getByText("IVA (22 %)")).toBeInTheDocument()
     expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
     expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
     expect(screen.getByText("Confirmado")).toBeInTheDocument()
@@ -151,6 +173,7 @@ describe("CollectionAccountDetailDialog", () => {
         ...baseAccount,
         id: source === "consumer" ? 11 : 22,
         source,
+        vat_rate: source === "company" ? 0.22 : 0,
         vat_amount: source === "company" ? 176 : 0,
         payable_amount: source === "company" ? 976 : 800,
         status: "rejected",
@@ -207,6 +230,7 @@ describe("Collections payment history destination", () => {
       const account = {
         ...baseAccount,
         source,
+        vat_rate: source === "company" ? 0.22 : 0,
         vat_amount: source === "company" ? 176 : 0,
         payable_amount: source === "company" ? 976 : 800,
         status: "rejected",

@@ -5,10 +5,10 @@ class MenuSerializer < ApplicationSerializer
 
   attributes :id, :name, :description, :price, :created_at, :updated_at
 
-  typelize "{ id: number; name: string; options: string[]; limit: number }[]"
+  typelize "{ id: number; name: string; options: string[]; limit: number; required: boolean }[]"
   attribute :option_groups do |menu|
     menu.option_groups.map do |g|
-      { id: g.id, name: g.name, options: g.options, limit: g.limit }
+      { id: g.id, name: g.name, options: g.options, limit: g.limit, required: g.required }
     end
   end
 end
@@ -18,11 +18,13 @@ end
 # Table name: menus
 #
 #  id              :bigint           not null, primary key
+#  archived_at     :datetime
 #  description     :string
 #  modified_at     :datetime
 #  modified_values :jsonb
 #  name            :string
 #  price           :decimal(10, 2)
+#  skipped_dates   :date             default([]), not null, is an Array
 #  valid_from      :date
 #  valid_until     :date
 #  created_at      :datetime         not null

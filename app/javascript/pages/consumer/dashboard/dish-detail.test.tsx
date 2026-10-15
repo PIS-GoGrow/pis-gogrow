@@ -244,17 +244,24 @@ describe("DishDetail", () => {
       name: "relleno",
       options: ["Ricota y nuez", "Jamón y queso"],
       limit: 1,
+      required: true,
     },
-    { id: 2, name: "salsa", options: ["Filetto", "Puerro", "Rosa"], limit: 2 },
+    {
+      id: 2,
+      name: "salsa",
+      options: ["Filetto", "Puerro", "Rosa"],
+      limit: 2,
+      required: false,
+    },
   ]
 
-  // IBP-022, criterio 2: no se puede pedir sin resolver lo que el plato pregunta.
-  it("requires picking an option from every group before adding the dish", async () => {
+  // IBP-022, criterio 2: no se puede pedir sin resolver los grupos obligatorios.
+  it("requires picking an option only from the required groups", async () => {
     const user = userEvent.setup()
     const add = vi.fn()
     const { rerender } = renderDetail({
       item: schedule({ option_groups: groups }),
-      selections: { 1: ["Ricota y nuez"] },
+      selections: { 2: ["Filetto"] },
       add,
     })
 
@@ -267,7 +274,7 @@ describe("DishDetail", () => {
         setQuantity={vi.fn()}
         notes=""
         setNotes={vi.fn()}
-        selections={{ 1: ["Ricota y nuez"], 2: ["Filetto"] }}
+        selections={{ 1: ["Ricota y nuez"] }}
         setSelections={vi.fn()}
         benefit={benefit()}
         cart={[]}
@@ -280,6 +287,36 @@ describe("DishDetail", () => {
     expect(button).toBeEnabled()
     await user.click(button)
     expect(add).toHaveBeenCalledOnce()
+  })
+
+  it("tells which groups are required and which are optional", () => {
+    renderDetail({ item: schedule({ option_groups: groups }) })
+
+    expect(screen.getByText("Obligatorio")).toBeInTheDocument()
+    expect(screen.getByText("Opcional")).toBeInTheDocument()
+  })
+
+  it("unselects the chosen option of a single-choice group", async () => {
+    const user = userEvent.setup()
+    const setSelections = vi.fn()
+    renderDetail({
+      item: schedule({ option_groups: groups }),
+      selections: { 1: ["Ricota y nuez"] },
+      setSelections,
+    })
+
+    await user.click(screen.getByRole("radio", { name: "Ricota y nuez" }))
+
+    expect(setSelections).toHaveBeenCalledWith({ 1: [] })
+  })
+
+  it("does not let a dish be added after unselecting a required group", () => {
+    renderDetail({
+      item: schedule({ option_groups: groups }),
+      selections: { 1: [] },
+    })
+
+    expect(screen.getByRole("button", { name: "Agregar" })).toBeDisabled()
   })
 
   // Criterio 1: se ofrece lo que el proveedor definió para ese plato.

@@ -104,11 +104,20 @@ class ProviderCollectionSummary
 
   def sales_detail
     orders = current_month_orders
+    current_accounts = accounts.select { it.month == Date.current.beginning_of_month }.group_by { client_of(it).id }
 
     {
       month: I18n.l(Date.current.beginning_of_month, format: :month_name_year),
       clients: orders.map(&:consumer).map(&:company).uniq
-                     .sort_by(&:name).map { { id: it.id, name: it.name } },
+                     .sort_by(&:name).map do |client|
+        client_accounts = current_accounts.fetch(client.id, [])
+        {
+          id: client.id, name: client.name,
+          subtotal: client_accounts.sum { it.amount.to_d }.to_f,
+          vat_amount: client_accounts.sum(&:vat_amount).to_f,
+          payable_amount: client_accounts.sum(&:payable_amount).to_f
+        }
+      end,
       days: orders.group_by { it.schedule.date }
                   .sort_by { |date, _| -date.jd }
                   .map do |date, day_orders|

@@ -12,6 +12,11 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   end
 
   typelize :number
+  attribute :vat_rate do |row|
+    row.account.vat_rate.to_f
+  end
+
+  typelize :number
   attribute :vat_amount do |row|
     row.vat_amount.to_f
   end
