@@ -11,7 +11,6 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card"
-import { SheetTrigger } from "@/components/ui/sheet"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { adminPayments } from "@/routes"
@@ -89,12 +88,10 @@ export default function PeriodCard({
             </span>
           )}
 
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" onClick={onOpenDetail}>
-              <Eye aria-hidden="true" />
-              {t("pages.admin.payments.index.see_detail")}
-            </Button>
-          </SheetTrigger>
+          <Button variant="ghost" size="sm" onClick={onOpenDetail}>
+            <Eye aria-hidden="true" />
+            {t("pages.admin.payments.index.see_detail")}
+          </Button>
         </div>
 
         <PaymentReceiptDialog

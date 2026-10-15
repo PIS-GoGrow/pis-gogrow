@@ -99,27 +99,61 @@ RSpec.describe "Admin::Payments", type: :request do
 
         period = inertia.props[:period]
         expect(period).to include(
-          "month" => I18n.l(Date.current.beginning_of_month, format: :month_year),
-          "amount" => 601.0,
+          "month" => I18n.l(Date.current.beginning_of_month, format: :month_name_year).upcase_first,
           "tab" => "pending"
         )
-        expect(period["orders"].pluck("id")).to contain_exactly(
+        expect(period["providers"].sole).to include(
+          "id" => providers(:tuviandita).id, "name" => "Provider User", "meals" => 4,
+          "subtotal" => 601.0, "vat_rate" => 0.0, "vat_amount" => 0.0, "payable_amount" => 601.0
+        )
+        expect(period["providers"].sole["days"].flat_map { it["orders"] }.pluck("id")).to contain_exactly(
           orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id, orders(:other_consumer_upcoming).id
+        )
+      end
+
+      it "splits what the employee pays from what GoGrow pays in each order" do
+        get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
+
+        rows = inertia.props[:period]["providers"].sole["days"].flat_map { it["orders"] }
+        expect(rows.find { it["id"] == orders(:upcoming_confirmed_future).id }).to include(
+          "consumer_name" => users(:one).name, "meals" => 2, "employee_amount" => 300.5, "company_amount" => 300.5
+        )
+      end
+
+      it "sends one detail per provider of the month, sorted by name" do
+        Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: Date.current, amount: 200)
+
+        get admin_payments_path
+
+        expect(inertia.props[:current_period]["providers"].pluck("name")).to eq([ "Other Provider User", "Provider User" ])
+      end
+
+      it "breaks down the VAT of each provider with its own rate" do
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+        Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: Date.current, amount: 800)
+
+        get admin_payments_path
+
+        expect(inertia.props[:current_period]["providers"].find { it["id"] == providers(:endulzate).id }).to include(
+          "subtotal" => 800.0, "vat_rate" => 22.0, "vat_amount" => 176.0, "payable_amount" => 976.0, "days" => []
         )
       end
 
       it "opens an already paid month on the history tab" do
         get admin_payments_path, params: { month: 1.month.ago.strftime("%Y-%m") }
 
-        expect(inertia.props[:period]).to include("amount" => 900.0, "tab" => "history", "orders" => [])
+        expect(inertia.props[:period]).to include("tab" => "history")
+        expect(inertia.props[:period]["providers"].sole).to include("subtotal" => 900.0, "days" => [])
       end
 
       it "sends the detail of the current month for the consumption card" do
         get admin_payments_path
 
         expect(inertia.props[:current_period]).to include(
-          "month" => I18n.l(Date.current.beginning_of_month, format: :month_year), "amount" => 601.0
+          "month" => I18n.l(Date.current.beginning_of_month, format: :month_name_year).upcase_first
         )
+        expect(inertia.props[:current_period]["providers"].sole["subtotal"]).to eq(601.0)
       end
 
       it "opens nothing without a month, with an invalid one or with one without payments" do
@@ -135,7 +169,7 @@ RSpec.describe "Admin::Payments", type: :request do
 
         get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
 
-        expect(inertia.props[:period]["amount"]).to eq(601.0)
+        expect(inertia.props[:period]["providers"].pluck("subtotal")).to eq([ 601.0 ])
       end
     end
   end
@@ -147,16 +181,17 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(response).to redirect_to(sign_in_path)
     end
 
-    it "answers with the confirmed orders that make up the period" do
+    it "answers with the detail of every provider of the period's month" do
+      Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: Date.current, amount: 200)
       sign_in users(:admin), role: :admin
 
       get admin_payment_path(accounts(:gogrow_tuviandita_current))
 
       body = response.parsed_body
 
-      expect(body["month"]).to eq(I18n.l(Date.current, format: :month_year))
-      expect(body["amount"]).to eq(601.0)
-      expect(body["orders"].pluck("id")).to contain_exactly(
+      expect(body["month"]).to eq(I18n.l(Date.current.beginning_of_month, format: :month_name_year).upcase_first)
+      expect(body["providers"].pluck("name", "subtotal")).to eq([ [ "Other Provider User", 200.0 ], [ "Provider User", 601.0 ] ])
+      expect(body["providers"].last["days"].flat_map { it["orders"] }.pluck("id")).to contain_exactly(
         orders(:upcoming_confirmed_future).id,
         orders(:history_confirmed_past).id,
         orders(:other_consumer_upcoming).id

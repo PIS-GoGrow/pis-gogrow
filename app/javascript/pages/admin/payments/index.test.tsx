@@ -1,8 +1,8 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
-import type { AdminPaymentsIndex } from "@/types"
+import type { Account, AdminPaymentsIndex } from "@/types"
 
 import Index from "./index"
 
@@ -31,13 +31,36 @@ const props: AdminPaymentsIndex = {
   providers: [],
 }
 
+const provider = (id: number, name: string) => ({
+  id,
+  name,
+  meals: 108,
+  subtotal: 16200,
+  vat_rate: 22,
+  vat_amount: 3564,
+  payable_amount: 19764,
+  days: [],
+})
+
 const period: NonNullable<AdminPaymentsIndex["period"]> = {
-  orders: [
-    { id: 1, date: "04/08/2026", menu_name: "Milanesa", amount: 1, price: 300 },
-  ],
-  month: "agosto de 2026",
-  amount: 1250,
+  month: "Agosto 2026",
   tab: "history",
+  providers: [provider(1, "Endulzate by Noe"), provider(2, "Tu Viandita")],
+}
+
+const account: Account = {
+  id: 7,
+  provider_id: 2,
+  amount: 15000,
+  vat_amount: 0,
+  payable_amount: 15000,
+  current: false,
+  month: "agosto de 2026",
+  due_date: "10/09/26",
+  due_date_passed: false,
+  orders_amount_sum: 100,
+  orders_price_sum: 15000,
+  payments: [],
 }
 
 // Historia IBP-032: "Ver detalle del consumo" del inicio abre en Pagos el
@@ -46,7 +69,9 @@ describe("Admin Payments Page", () => {
   it("opens the detail of the period the home asked for", () => {
     render(<Index {...props} period={period} />)
 
-    expect(screen.getByRole("dialog")).toHaveTextContent("agosto de 2026")
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Endulzate by Noe: Consumo Agosto 2026",
+    )
     expect(
       // El panel es modal: Radix esconde lo de atrás del árbol accesible.
       screen.getByRole("tab", { name: "Historial", hidden: true }),
@@ -79,7 +104,9 @@ describe("Admin Payments Page", () => {
       screen.getByRole("button", { name: "Ver detalle del consumo" }),
     )
 
-    expect(screen.getByRole("dialog")).toHaveTextContent("agosto de 2026")
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Endulzate by Noe: Consumo Agosto 2026",
+    )
   })
 
   it("starts closed on the pending tab without a period", () => {
@@ -90,5 +117,33 @@ describe("Admin Payments Page", () => {
       "aria-selected",
       "true",
     )
+  })
+
+  it("opens the detail of a period with its provider already chosen", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue({ ok: true, json: () => Promise.resolve(period) }),
+    )
+
+    render(
+      <Index
+        {...props}
+        accounts={[account]}
+        providers={[{ id: 2, name: "Tu Viandita", home_delivery: true }]}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole("button", { name: "Ver detalle" }))
+
+    await waitFor(() =>
+      expect(screen.getByRole("dialog")).toHaveTextContent(
+        "Tu Viandita: Consumo Agosto 2026",
+      ),
+    )
+    expect(fetch).toHaveBeenCalledWith("/admin/payments/7", expect.anything())
+
+    vi.unstubAllGlobals()
   })
 })

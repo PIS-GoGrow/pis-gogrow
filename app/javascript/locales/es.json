@@ -507,7 +507,23 @@
         },
         "payments": {
           "index": {
-            "detail_title": "Detalle del período",
+            "detail": {
+              "company": "GoGrow",
+              "description": "Lo que la empresa le paga al proveedor en el mes y los pedidos confirmados de cada día.",
+              "employee": "Empleado",
+              "empty": "No hay pedidos confirmados de este proveedor en el mes.",
+              "filter_providers": "Filtrar por proveedor",
+              "loading_title": "Detalle del consumo",
+              "meals_tab": "Viandas",
+              "payment_tab": "Pago",
+              "provider": "Proveedor:",
+              "quantity": "Cant.",
+              "subtotal": "Subtotal sin IVA",
+              "title": "%{provider}: Consumo %{month}",
+              "total": "Total pagado",
+              "user": "Usuario",
+              "vat": "IVA (%{rate}%)"
+            },
             "due": "Vence: %{date}",
             "empty_history_description": "Cuando termines de pagar un período, va a aparecer acá.",
             "empty_history_title": "Todavía no hay períodos pagados",
