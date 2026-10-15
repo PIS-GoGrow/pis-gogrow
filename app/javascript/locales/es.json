@@ -118,6 +118,7 @@
       "order_cancellations": {
         "description": "Recibí una notificación cuando un pedido sea cancelado por el cliente.",
         "title": "Cancelaciones"
+      },
       "hr_payment_reminders": {
         "description": "Recordatorios de pagos vencidos enviados por Recursos Humanos.",
         "title": "Recordatorios de pago de Recursos Humanos"
@@ -171,6 +172,7 @@
       "order_cancellation": {
         "description": "El pedido de %{consumer} del %{date} de %{dish} fue cancelado.",
         "title": "Un pedido fue cancelado"
+      },
       "hr_debt_payment_reminder": {
         "description": "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos.",
         "title": "Recordatorio de pago pendiente"
