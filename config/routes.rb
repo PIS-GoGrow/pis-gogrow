@@ -61,6 +61,7 @@ Rails.application.routes.draw do
       get :file, on: :member
     end
     resource :order_deadline, only: [ :update ]
+    resources :closures, only: [ :create, :update, :destroy ]
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :payments, only: [ :update ] do
       get :receipt, on: :member

@@ -14,6 +14,7 @@ class Provider < ApplicationRecord
   has_many :schedules, through: :menus
   has_many :orders, through: :schedules
   has_many :payments, through: :accounts
+  has_many :closures, class_name: "ProviderClosure", dependent: :destroy
 
   normalizes :tax_id, with: -> { it.gsub(/\D/, "") }
   normalizes :bank_name, :bank_account_number, :bank_account_holder, with: -> { it.strip }
@@ -41,6 +42,12 @@ class Provider < ApplicationRecord
     today = Date.current
     deadline_at = Time.zone.local(today.year, today.month, today.day, deadline.hour, deadline.min, deadline.sec)
     Time.current >= deadline_at
+  end
+
+  # Mira todos los cierres en memoria: así un includes(:closures) sirve a todas
+  # las fechas de un menú sin una consulta por cada una.
+  def closed_on?(date)
+    closures.any? { it.covers?(date) }
   end
 end
 

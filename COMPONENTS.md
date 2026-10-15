@@ -150,7 +150,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `Icon` | `@/components/icon` | Renderizar un ícono de lucide recibido como prop |
 | `GoogleMark` | `@/components/branding/google-mark` | Logo de Google en el acceso con Google |
 | `DevLoginForm` | `@/components/dev-login-form` | Acceso con correo y contraseña a las cuentas de prueba; sólo se muestra con `DEV_LOGIN_ENABLED` |
-| `DatePicker` | `@/components/date-picker` | Elegir una fecha en un formulario; recibe y devuelve fechas `YYYY-MM-DD` |
+| `DatePicker`, `DateRangePicker` | `@/components/date-picker` | Elegir una fecha o un rango en un formulario; reciben y devuelven fechas `YYYY-MM-DD` |
 | `OptionChoices` | `@/components/menus/option-choices` | Elegir las opciones de un grupo de un plato: `RadioGroup` si el grupo admite una, casillas con tope si admite varias |
 | `QuantityInput` | `@/components/quantity-input` | Elegir una cantidad entre un mínimo y un máximo |
 | `PasswordSetupForm` | `@/components/password-setup-form` | Formulario de contraseña nueva con checklist de requisitos y confirmación; el botón queda deshabilitado hasta que se cumplen. Recibe `action`, `submitLabel` y, opcional, `email` de solo lectura. Lo usan el alta del proveedor y el reseteo |
@@ -407,21 +407,26 @@ Es el `Select` de Radix, **no** un `<select>` nativo: las opciones son `SelectIt
 </Field>
 ```
 
-### DatePicker
+### DatePicker y DateRangePicker
 
 ```tsx
-import { DatePicker } from "@/components/date-picker"
+import { DatePicker, DateRangePicker } from "@/components/date-picker"
 ```
 
 Botón con la fecha elegida que abre un `Calendar` en un `Popover`, en español. Es el [date picker de shadcn](https://ui.shadcn.com/docs/components/radix/date-picker) armado una sola vez para que las pantallas no repitan la composición.
 
 | Prop | Uso |
 |---|---|
-| `value` | Fecha `YYYY-MM-DD`; `""` si no hay |
-| `onChange` | Recibe la fecha elegida |
-| `min`, `max` | Primer y último día habilitado |
-| `weekdaysOnly` | Deshabilita sábados y domingos |
+| `value` / `from` y `to` | Fechas `YYYY-MM-DD`; `""` si no hay |
+| `onChange` | Recibe la fecha elegida (`DatePicker`) o el desde y el hasta (`DateRangePicker`) |
+| `min`, `max` | Primer y último día habilitado (`DateRangePicker` solo acepta `min`) |
+| `weekdaysOnly` | Deshabilita sábados y domingos (`DatePicker`) |
 | `id` | Para vincularlo con un `FieldLabel htmlFor` |
+| `className` | Clases del botón; `w-full` para que ocupe todo el ancho (`DateRangePicker`) |
+
+`DateRangePicker` escribe el rango como en el Figma, "9 junio – 27 junio 2027": el año una sola vez, salvo que el rango cruce de año.
+
+El encabezado del calendario sigue el Figma: domingo primero y días y meses en inglés ("Su Mo Tu…", "Jun"). Los textos accesibles quedan en español.
 
 ```tsx
 <Field>
@@ -430,7 +435,7 @@ Botón con la fecha elegida que abre un `Calendar` en un `Popover`, en español.
 </Field>
 ```
 
-- Para fechas en un formulario se usa este componente y no `Input type="date"`. Un rango se arma con dos, "Desde" y "Hasta", como en la agenda de un plato.
+- Para fechas en un formulario se usa este componente y no `Input type="date"`. Un rango en un solo campo, como el de los cierres programados, es `DateRangePicker`; si el diseño pide dos campos, "Desde" y "Hasta", como en la agenda de un plato, se usan dos `DatePicker`.
 - `Calendar` se puede usar suelto si la pantalla muestra un calendario siempre visible.
 
 ### ToggleGroup

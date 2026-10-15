@@ -161,6 +161,20 @@ RSpec.describe "Provider::Menus", type: :request do
         expect(created.agendas).to be_empty
       end
 
+      it "does not create the dish when the single day is one the provider closed" do
+        provider.closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 10), reason: "Feriado")
+
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ], amount: 6 }
+          }
+        end.not_to change { [ Menu.count, Schedule.count ] }
+
+        follow_redirect!
+        expect(inertia).to have_props(errors: { agenda: [ I18n.t("validations.menu_agenda.date_closed") ] })
+      end
+
       it "programs a single day without stock" do
         post provider_menus_path, params: {
           menu: dish,
@@ -870,6 +884,28 @@ RSpec.describe "Provider::Menus", type: :request do
 
     it "no publica nada si uno de los platos es de otro proveedor" do
       expect { publish("2030-01-10", [ milanesa, menus(:sorrentinos) ]) }.not_to change(Schedule, :count)
+    end
+
+    # IBP-087: un día con cierre programado no se puede publicar.
+    it "no publica en una fecha que el proveedor cerró y dice por qué" do
+      provider.closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 11), reason: "Vacaciones")
+
+      expect { publish("2030-01-10") }.not_to change(Schedule, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { date: [ I18n.t("validations.publish_date_closed") ] })
+    end
+
+    it "publica el día siguiente al cierre" do
+      provider.closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 10), reason: "Feriado")
+
+      expect { publish("2030-01-11") }.to change(Schedule, :count).by(1)
+    end
+
+    it "publica un día que solo cerró otro proveedor" do
+      providers(:endulzate).closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 10), reason: "Feriado")
+
+      expect { publish("2030-01-10") }.to change(Schedule, :count).by(1)
     end
 
     it "no publica dos veces el mismo plato el mismo día" do
