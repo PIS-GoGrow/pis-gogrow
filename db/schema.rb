@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_172331) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -63,6 +63,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_172331) do
     t.bigint "user_id", null: false
     t.index ["company_id"], name: "index_admins_on_company_id"
     t.index ["user_id"], name: "index_admins_on_user_id"
+  end
+
+  create_table "audit_logs", force: :cascade do |t|
+    t.bigint "auditable_id", null: false
+    t.string "auditable_type", null: false
+    t.jsonb "changeset", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["auditable_type", "auditable_id"], name: "index_audit_logs_on_auditable"
+    t.index ["user_id"], name: "index_audit_logs_on_user_id"
   end
 
   create_table "benefit_configuration_changes", force: :cascade do |t|
@@ -121,6 +132,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_172331) do
   create_table "companies", force: :cascade do |t|
     t.string "address"
     t.datetime "created_at", null: false
+    t.integer "debt_alert_threshold", default: 2000, null: false
     t.string "name"
     t.datetime "updated_at", null: false
   end
@@ -184,6 +196,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_172331) do
     t.bigint "menu_id", null: false
     t.string "name", null: false
     t.string "options", default: [], array: true
+    t.boolean "required", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["menu_id"], name: "index_menu_option_groups_on_menu_id"
   end
@@ -330,9 +343,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_172331) do
   end
 
   create_table "providers", force: :cascade do |t|
+    t.string "bank_account_holder"
+    t.string "bank_account_number"
+    t.integer "bank_account_type"
+    t.string "bank_name"
     t.datetime "created_at", null: false
     t.boolean "home_delivery", default: true, null: false
     t.time "order_deadline"
+    t.string "tax_id"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.index ["user_id"], name: "index_providers_on_user_id", unique: true
@@ -563,6 +581,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_172331) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "admins", "companies"
   add_foreign_key "admins", "users"
+  add_foreign_key "audit_logs", "users", on_delete: :nullify
   add_foreign_key "benefit_configuration_changes", "benefit_configurations"
   add_foreign_key "benefit_configuration_changes", "users"
   add_foreign_key "benefit_configurations", "companies"

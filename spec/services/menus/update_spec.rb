@@ -22,7 +22,7 @@ RSpec.describe Menus::Update do
 
   let(:attributes) do
     { name: "Milanesa napolitana", description: "Con jamón y queso", price: "350",
-      option_groups_attributes: [ { name: "Guarnición", options: [ "Papas" ], limit: 1 } ] }
+      option_groups_attributes: [ { name: "Guarnición", options: [ "Papas" ], limit: 1, required: true } ] }
   end
 
   def order_for(schedule, status: :confirmed)
@@ -45,6 +45,7 @@ RSpec.describe Menus::Update do
     expect(today.reload.menu.name).to eq("Milanesa")
     expect(tomorrow.reload.menu.name).to eq("Milanesa napolitana")
     expect(tomorrow.menu.option_groups.first.options).to eq([ "Papas" ])
+    expect(tomorrow.menu.option_groups.first).to be_required
     expect(menu.reload.name).to eq("Milanesa")
   end
 

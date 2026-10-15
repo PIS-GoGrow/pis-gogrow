@@ -111,13 +111,29 @@
         "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
         "title": "Pagos a proveedores"
       },
+      "debt_alerts": {
+        "description": "Recibí una notificación cuando tu deuda supere el monto definido por RRHH.",
+        "title": "Alertas de deuda"
+      },
+      "hr_payment_reminders": {
+        "description": "Recordatorios de pagos vencidos enviados por Recursos Humanos.",
+        "title": "Recordatorios de pago de Recursos Humanos"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
       },
+      "provider_orders": {
+        "description": "Recibí una notificación cuando un empleado te haga un pedido.",
+        "title": "Pedidos nuevos"
+      },
       "provider_payment_reminders": {
         "description": "Recordatorios de pagos vencidos enviados por el proveedor.",
         "title": "Recordatorios de pago del proveedor"
+      },
+      "provider_payments": {
+        "description": "Recibí una notificación cuando te envíen un comprobante de pago.",
+        "title": "Comprobantes de pago"
       }
     },
     "notifications": {
@@ -141,9 +157,21 @@
         "description": "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}.",
         "title": "Recordatorio de pago pendiente"
       },
+      "debt_threshold_exceeded": {
+        "description": "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca.",
+        "title": "Tu deuda superó el monto límite"
+      },
+      "hr_debt_payment_reminder": {
+        "description": "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos.",
+        "title": "Recordatorio de pago pendiente"
+      },
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
         "title": "Tu pedido fue confirmado"
+      },
+      "order_received": {
+        "description": "%{consumer} pidió %{amount} de %{dish} para el %{date}.",
+        "title": "Nuevo pedido"
       },
       "order_rejection": {
         "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}.",
@@ -169,6 +197,10 @@
       "payment_due_soon": {
         "description": "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!",
         "title": "Tu pago vence pronto..."
+      },
+      "payment_receipt_submitted": {
+        "description": "%{payer} envió un comprobante de pago de %{month}.",
+        "title": "Nuevo comprobante de pago"
       }
     },
     "pages": {
@@ -254,6 +286,14 @@
               "submit": "Programar Subsidio",
               "subsidy_percentage": "Se descuenta",
               "title": "Subsidio Base"
+            },
+            "debt_alert": {
+              "cancel": "Cancelar",
+              "description": "Avisamos a cada empleado cuando su deuda supera este monto.",
+              "edit": "Editar monto",
+              "submit": "Guardar",
+              "threshold": "Monto límite",
+              "title": "Alerta de deuda"
             },
             "description": "Gestioná los subsidios de tu compañía",
             "special": {
@@ -360,6 +400,28 @@
             "orders_empty": "No hay pedidos confirmados en este mes.",
             "provider": "Proveedor",
             "quantity": "Cant.",
+            "reminder": {
+              "back": "Volver",
+              "confirm": {
+                "description": "Se le va a enviar un recordatorio a %{employeeName} por sus pagos vencidos, que suman %{amount}.",
+                "title": "Recordar pago pendiente"
+              },
+              "done": "Listo",
+              "error": {
+                "description": "Intentá nuevamente.",
+                "title": "No pudimos enviar el recordatorio"
+              },
+              "limit_reached": "Alcanzaste el límite de recordatorios para este empleado.",
+              "next_available": "Recordatorio enviado. Vas a poder enviar otro el %{date}.",
+              "retry": "Reintentar",
+              "send": "Enviar recordatorio",
+              "sending": "Enviando...",
+              "success": {
+                "description": "Le enviamos un recordatorio a %{employeeName} por sus pagos vencidos.",
+                "title": "Recordatorio enviado"
+              },
+              "trigger": "Recordar pago pendiente"
+            },
             "this_month": "Este mes",
             "title": "Detalle del empleado",
             "total": "Total: %{amount}",
@@ -483,7 +545,9 @@
         },
         "options": {
           "choose": "Elegí tu %{name}",
-          "limit": "Podés elegir hasta %{count}"
+          "limit": "Podés elegir hasta %{count}",
+          "optional": "Opcional",
+          "required": "Obligatorio"
         }
       },
       "consumer_profiles": {
@@ -647,6 +711,8 @@
           "operational_settings_description": "Configurá horarios y días sin servicio",
           "payment_details": "Datos de cobro",
           "payment_details_description": "Configurá dónde querés recibir tus cobros",
+          "profile": "Perfil",
+          "profile_description": "Editá tu nombre, correo, teléfono y contraseña",
           "settings": "Configuración",
           "sign_out": "Salir",
           "title": "Cuenta"
@@ -961,6 +1027,8 @@
             "options": "Opciones",
             "options_hint": "Ingresá las opciones separadas por coma.",
             "options_placeholder": "Ej: Boloñesa, Caruso, 4 quesos",
+            "required": "Obligatorio",
+            "required_hint": "El empleado tiene que elegir al menos una opción de este grupo para pedir el plato.",
             "title": "Agregá opciones"
           },
           "name": "Nombre del plato",
@@ -970,7 +1038,9 @@
             "edit": "Editar %{name}",
             "empty": "¿Tiene sabores para elegir? ¡Agregalos!",
             "limit": "Límite %{limit}",
+            "optional": "Opcional",
             "remove": "Borrar %{name}",
+            "required": "Obligatorio",
             "title": "Opciones"
           },
           "price": "Precio",
@@ -1158,6 +1228,27 @@
           "title": "Nueva contraseña"
         }
       },
+      "provider_payment_details": {
+        "show": {
+          "back": "Volver a Cuenta",
+          "bank_account_holder": "Titular de la cuenta",
+          "bank_account_number": "Número de cuenta",
+          "bank_account_type": "Tipo de cuenta",
+          "bank_account_type_placeholder": "Elegí el tipo de cuenta",
+          "bank_account_types": {
+            "checking": "Cuenta corriente",
+            "savings": "Caja de ahorro"
+          },
+          "bank_name": "Banco",
+          "bank_name_placeholder": "Ej. BROU",
+          "description": "Indicá la cuenta donde querés recibir los pagos de los empleados.",
+          "sensitive_notice": "Los cambios en estos datos quedan registrados.",
+          "submit": "Guardar",
+          "tax_id": "RUT o CI del titular",
+          "tax_id_description": "Solo números: 12 dígitos para RUT, 7 u 8 para CI.",
+          "title": "Datos de cobro"
+        }
+      },
       "provider_sessions": {
         "new": {
           "description": "Ingrese a su cuenta para continuar gestionando sus viandas.",
@@ -1280,12 +1371,15 @@
           "title": "Configuración de contraseña"
         },
         "profile": {
-          "description": "Actualiza tu nombre",
+          "description": "Actualiza tu nombre y tu teléfono",
           "heading": "Información del perfil",
           "home_delivery": {
             "heading": "Editar información de pedidos",
             "label": "También realizo entregas a domicilio"
           },
+          "phone": "Teléfono",
+          "phone_description": "Lo usamos para enviarte notificaciones por WhatsApp.",
+          "phone_placeholder": "+59899123456",
           "title": "Configuración del perfil"
         },
         "sessions": {

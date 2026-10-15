@@ -8,6 +8,7 @@ export interface OptionGroup {
   name: string
   options: string[]
   limit: number
+  required: boolean
 }
 
 interface OptionChoicesProps {
@@ -25,9 +26,18 @@ export default function OptionChoices({
 
   return (
     <section className="border-border border-b py-5">
-      <h2 className="text-xs font-semibold">
-        {t("pages.consumer_dashboard.options.choose", { name: group.name })}
-      </h2>
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="text-xs font-semibold">
+          {t("pages.consumer_dashboard.options.choose", { name: group.name })}
+        </h2>
+        <span className="text-muted-foreground shrink-0 text-[10px]">
+          {t(
+            group.required
+              ? "pages.consumer_dashboard.options.required"
+              : "pages.consumer_dashboard.options.optional",
+          )}
+        </span>
+      </div>
       {group.limit > 1 && (
         <p className="text-muted-foreground mt-1 text-[10px]">
           {t("pages.consumer_dashboard.options.limit", { count: group.limit })}
@@ -45,7 +55,15 @@ export default function OptionChoices({
               key={option}
               className="flex cursor-pointer items-center gap-2 text-xs"
             >
-              <RadioGroupItem value={option} aria-label={option} />
+              <RadioGroupItem
+                value={option}
+                aria-label={option}
+                // Radix no destilda un radio: volver a tocar la opción elegida
+                // la quita.
+                onClick={() => {
+                  if (values[0] === option) setValues([])
+                }}
+              />
               {option}
             </label>
           ))}

@@ -55,7 +55,7 @@ class Consumer::DashboardController < Consumer::InertiaController
           description: menu.description,
           price: menu.price.to_f,
           option_groups: menu.option_groups.map do |group|
-            { id: group.id, name: group.name, options: group.options, limit: group.limit }
+            { id: group.id, name: group.name, options: group.options, limit: group.limit, required: group.required }
           end,
           provider_name: menu.provider_name,
           home_delivery: menu.provider.home_delivery?,
