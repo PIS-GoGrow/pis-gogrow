@@ -114,14 +114,17 @@ describe("ClosuresSection", () => {
   })
 
   it("invoca router.delete al confirmar la eliminación de un cierre y previene doble click", () => {
-    let capturedOptions: { onStart?: () => void; onFinish?: () => void } | undefined
+    let capturedOptions:
+      { onStart?: () => void; onFinish?: () => void } | undefined
     routerDeleteMock.mockImplementationOnce((_url, options) => {
       capturedOptions = options as typeof capturedOptions
     })
 
     render(<ClosuresSection closures={sampleClosures} today="2026-10-12" />)
 
-    const deleteButtons = screen.getAllByRole("button", { name: /Eliminar cierre/ })
+    const deleteButtons = screen.getAllByRole("button", {
+      name: /Eliminar cierre/,
+    })
     fireEvent.click(deleteButtons[0])
 
     expect(routerDeleteMock).toHaveBeenCalledWith(
