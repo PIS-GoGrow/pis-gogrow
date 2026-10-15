@@ -41,6 +41,7 @@ es:
     too_many_attempts: "Realizó demasiados intentos. Espere unos minutos y vuelva a probar."
     profile_updated: "Tu perfil fue actualizado"
     payment_details_updated: "Datos de cobro actualizados"
+    deliveries_updated: "Guardamos tu modalidad de entrega"
     session_logged_out: "Esa sesión fue cerrada"
     signed_in: "Inició sesión correctamente"
     signed_up: "¡Te damos la bienvenida! Tu registro se completó correctamente"
@@ -1242,6 +1243,17 @@ es:
         tax_id_description: "Solo números: 12 dígitos para RUT, 7 u 8 para CI."
         sensitive_notice: "Los cambios en estos datos quedan registrados."
         submit: "Guardar"
+    provider_deliveries:
+      show:
+        title: "Entregas"
+        description: "Elegí dónde realizás tus entregas y si aceptás direcciones personalizadas."
+        back: "Volver a Cuenta"
+        office:
+          title: "Solo Oficinas"
+          description: "Entregás todos los pedidos en las oficinas de las empresas."
+        home:
+          title: "Oficinas y direcciones personalizadas"
+          description: "También aceptás pedidos con direcciones de entrega personalizadas."
     provider_operational_settings:
       show:
         title: "Configuración operativa"
