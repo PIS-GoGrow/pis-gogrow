@@ -74,7 +74,7 @@ class OrderPricing
         coverage << [ benefit, benefit.percentage, appliable_units ]
       end
 
-      [schedule.id, pricing_for(schedule.price, quantity, coverage)]
+      [ schedule.id, pricing_for(schedule.price, quantity, coverage) ]
     end
   end
 
@@ -124,7 +124,7 @@ class OrderPricing
     discounted_price = unit_price * quantity * (100 - discount_percentage.clamp(0, 100)) / 100
 
     benefits = coverage.filter_map do |benefit, _percentage, units_used|
-      [benefit, units_used] if benefit && units_used.positive?
+      [ benefit, units_used ] if benefit && units_used.positive?
     end
 
     OrderItemPricing.new(

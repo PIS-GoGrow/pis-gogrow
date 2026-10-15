@@ -50,7 +50,7 @@ class Consumer < ApplicationRecord
     benefits.current.monthly.first
   end
 
-  # Devuelve el porcentaje del beneficio mensual actual 
+  # Devuelve el porcentaje del beneficio mensual actual
   def monthly_benefit_percentage
     current_monthly_benefit&.percentage || 0
   end
