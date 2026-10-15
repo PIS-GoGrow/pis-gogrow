@@ -252,10 +252,10 @@ order = Order.create!(
 order.apply_benefit! benefit, 1
 
 
-# Cuentas pendientes de pago de meses anteriores (para probar el historial de pagos)
+# Cuentas de meses anteriores para probar pagos pendientes e históricos.
 [
-  { provider: tu_viandita, months_ago: 2 },
-  { provider: tu_viandita, months_ago: 3 }
+  { provider: tu_viandita, months_ago: 1 },
+  { provider: tu_viandita, months_ago: 2 }
 ].each do |data|
   provider = data[:provider]
   menu = provider.menus.first
@@ -301,24 +301,20 @@ end
 # TuViandita queda con los cuatro estados repartidos en las dos pestañas:
 # - este mes (cuentas reales de los pedidos): el empleado informó su pago y la
 #   empresa todavía no, así que va a Pendientes;
-# - hace dos meses: la empresa pagó pero al empleado le rechazaron el
-#   comprobante, así que sigue en Pendientes;
+# - hace dos meses: la empresa envió su comprobante y al empleado le rechazaron
+#   el suyo, así que sigue en Pendientes;
 # - el mes pasado: todo confirmado, así que va al Historial.
 seed_payment(consumer.accounts.find_by!(provider: tu_viandita, month: Date.current.beginning_of_month), :submitted)
 
-{ 2.months.ago => [ :approved, :rejected ], 1.month.ago => [ :approved, :approved ] }.each do |date, (company_status, consumer_status)|
+{ 2.months.ago => [ :submitted, :rejected ], 1.month.ago => [ :approved, :approved ] }.each do |date, (company_status, consumer_status)|
   month = date.beginning_of_month
 
-  # find_or_create_by!, no create!: el mes "hace 2 meses" ya tiene cuenta de
-  # empresa y de empleado creadas por ensure_accounts! (las Order de más
-  # arriba), así que un create! directo pisaría el índice único. Se fuerza el
-  # amount para esta demo sin importar si la cuenta ya existía.
-  company_account = company.accounts.find_or_create_by!(provider: tu_viandita, month:)
-  company_account.update!(amount: 1_250.00)
+  # Las órdenes históricas de arriba ya crearon estas cuentas y calcularon sus
+  # montos. Acá solamente se agregan los comprobantes con distintos estados.
+  company_account = company.accounts.find_by!(provider: tu_viandita, month:)
   seed_payment(company_account, company_status)
 
-  consumer_account = consumer.accounts.find_or_create_by!(provider: tu_viandita, month:)
-  consumer_account.update!(amount: 1_250.00)
+  consumer_account = consumer.accounts.find_by!(provider: tu_viandita, month:)
   seed_payment(consumer_account, consumer_status)
 end
 

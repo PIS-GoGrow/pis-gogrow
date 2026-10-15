@@ -12,7 +12,7 @@ class SimplifiedOrderSerializer < ApplicationSerializer
 
   typelize :string?
   attribute :date do |order|
-    order.created_at.strftime("%d/%m/%y")
+    (order.schedule&.date || order.created_at.to_date).strftime("%d/%m/%y")
   end
 
   typelize :string?
