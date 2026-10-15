@@ -41,6 +41,10 @@ configurations:
     roles: [provider]
     configurable: true
 
+  menu_publication_reminders:
+    roles: [provider]
+    configurable: true
+
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
 # atributo configuration, especificar un único rol de los que están disponibles
@@ -100,6 +104,11 @@ events:
     configuration: company_payments
     role: admin
     requires_action: false
+
+  provider_menu_unpublished:
+    configuration: menu_publication_reminders
+    role: provider
+    requires_action: true
 
   hr_debt_payment_reminder:
     configuration: hr_payment_reminders
