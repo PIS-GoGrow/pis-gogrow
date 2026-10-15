@@ -56,13 +56,15 @@ RSpec.describe "Settings::Notifications", type: :request do
       expect(inertia).to have_props { |props| props[:notification_configurations].map { it[:key] } == [ "company_payments" ] }
     end
 
-    it "al proveedor le muestra el grupo de cancelaciones, apagado al principio" do
+    it "al proveedor le muestra sus grupos configurables, incluido cancelaciones, apagados al principio" do
       sign_in users(:provider_user), role: :provider
 
       get settings_notifications_path
 
       expect(inertia).to have_props { |props|
-        props[:notification_configurations].map { it[:key] } == [ "order_cancellations" ] && props[:subscribed_keys] == []
+        keys = props[:notification_configurations].map { it[:key] }
+        keys.sort == %w[order_cancellations provider_orders provider_payments] &&
+          props[:subscribed_keys] == []
       }
     end
 
