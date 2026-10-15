@@ -14,6 +14,7 @@ import {
   providerAccount,
   providerCollections,
   providerDashboard,
+  providerDeliveries,
   providerOperationalSettings,
   providerOrders,
   schedules,
@@ -56,7 +57,8 @@ export function ProviderMobileNav() {
       href: providerAccount().url,
       active:
         url.startsWith(providerAccount().url) ||
-        url.startsWith(providerOperationalSettings.show().url),
+        url.startsWith(providerOperationalSettings.show().url) ||
+        url.startsWith(providerDeliveries.show().url),
     },
   ]
 
