@@ -1,4 +1,3 @@
-import { router } from "@inertiajs/react"
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
@@ -130,7 +129,7 @@ describe("CollectionAccountDetailDialog", () => {
   })
 
   it.each(["consumer", "company"] as const)(
-    "links a %s account with one rejected partial payment to its history",
+    "does not show the history link for a %s account",
     async (source) => {
       const user = userEvent.setup()
       const account = {
@@ -163,21 +162,9 @@ describe("CollectionAccountDetailDialog", () => {
       }
       expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
 
-      const link = screen.getByRole("link", { name: "Ver historial de pagos" })
-      expect(link).toHaveAttribute(
-        "href",
-        `/provider/collections/${account.id}`,
-      )
-
-      const visit = vi
-        .spyOn(router, "visit")
-        .mockImplementation(() => undefined)
-      await user.click(link)
-      expect(visit).toHaveBeenCalledWith(
-        `/provider/collections/${account.id}`,
-        expect.any(Object),
-      )
-      visit.mockRestore()
+      expect(
+        screen.queryByRole("link", { name: "Ver historial de pagos" }),
+      ).not.toBeInTheDocument()
 
       if (source === "company") {
         await user.click(screen.getByRole("tab", { name: "Cobro" }))

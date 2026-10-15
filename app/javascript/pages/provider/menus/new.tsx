@@ -21,18 +21,22 @@ import AppLayout from "@/layouts/app-layout"
 import { providerMenus as menusRoutes, schedules } from "@/routes"
 import type { BreadcrumbItem, ProviderMenusNew } from "@/types"
 
+type AddedOrigin = "new" | "saved"
+
 export default function New(props: ProviderMenusNew) {
   const { t } = useTranslation()
   const key = "pages.provider_menus.new"
+  const [defaultDate] = useState(props.default_date)
   const [addedOpen, setAddedOpen] = useState(false)
   const [addedDate, setAddedDate] = useState<string | null>(null)
+  const [addedOrigin, setAddedOrigin] = useState<AddedOrigin | null>(null)
   const [formKey, setFormKey] = useState(0)
   // Día al que se vuelve desde el cartel de "Plato agregado": el día donde quedó publicado.
   const [landingDate, setLandingDate] = useState<string | null>(null)
 
   // "Volver" lleva al día desde el que se tocó "Agregar platos".
   const backUrl = schedules.index(
-    props.default_date ? { query: { date: props.default_date } } : undefined,
+    defaultDate ? { query: { date: defaultDate } } : undefined,
   ).url
 
   const landingUrl = schedules.index(
@@ -43,9 +47,19 @@ export default function New(props: ProviderMenusNew) {
     { title: t(`${key}.title`), href: menusRoutes.new().url },
   ]
 
-  function keepAdding() {
+  function closeAdded() {
     setAddedOpen(false)
-    setFormKey((value) => value + 1)
+    if (addedOrigin === "new") setFormKey((value) => value + 1)
+    setAddedOrigin(null)
+  }
+
+  function handleAddedOpenChange(open: boolean) {
+    if (open) {
+      setAddedOpen(true)
+      return
+    }
+
+    closeAdded()
   }
 
   return (
@@ -76,10 +90,11 @@ export default function New(props: ProviderMenusNew) {
           <TabsContent value="new">
             <NewMenuForm
               key={formKey}
-              create={props}
+              create={{ ...props, default_date: defaultDate }}
               onCreated={(publishedDate) => {
+                setAddedOrigin("new")
                 setAddedDate(null)
-                setLandingDate(publishedDate ?? props.default_date)
+                setLandingDate(publishedDate ?? defaultDate)
                 setAddedOpen(true)
               }}
             />
@@ -93,6 +108,7 @@ export default function New(props: ProviderMenusNew) {
               today={props.today}
               maximumPublishDate={props.maximum_publish_date}
               onPublished={(date) => {
+                setAddedOrigin("saved")
                 setAddedDate(date)
                 setLandingDate(date)
                 setAddedOpen(true)
@@ -102,7 +118,7 @@ export default function New(props: ProviderMenusNew) {
         </Tabs>
       </div>
 
-      <Sheet open={addedOpen} onOpenChange={setAddedOpen}>
+      <Sheet open={addedOpen} onOpenChange={handleAddedOpenChange}>
         <SheetContent
           side="bottom"
           showCloseButton={false}
@@ -129,7 +145,7 @@ export default function New(props: ProviderMenusNew) {
             <Button variant="secondary" className="h-11" asChild>
               <Link href={landingUrl}>{t(`${key}.added.back`)}</Link>
             </Button>
-            <Button type="button" className="h-11" onClick={keepAdding}>
+            <Button type="button" className="h-11" onClick={closeAdded}>
               {t(`${key}.added.continue`)}
             </Button>
           </SheetFooter>

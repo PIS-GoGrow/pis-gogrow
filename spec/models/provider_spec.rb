@@ -80,6 +80,52 @@ RSpec.describe Provider, type: :model do
       expect(provider.order_deadline_passed_today?).to be true
     end
   end
+
+  describe "#closed_on?" do
+    let(:provider) { providers(:tuviandita) }
+    let(:monday) { Date.new(2026, 10, 12) }
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 10, 12, 9, 0)) { example.run }
+    end
+
+    it "is false without closures" do
+      expect(provider.closed_on?(monday)).to be false
+    end
+
+    it "is true on every day of a closure, ends included" do
+      provider.closures.create!(starts_on: monday + 1, ends_on: monday + 3, reason: "Vacaciones")
+
+      expect((monday + 1..monday + 3).map { provider.closed_on?(it) }).to all(be true)
+    end
+
+    it "is false the day before and the day after" do
+      provider.closures.create!(starts_on: monday + 1, ends_on: monday + 3, reason: "Vacaciones")
+
+      expect(provider.closed_on?(monday)).to be false
+      expect(provider.closed_on?(monday + 4)).to be false
+    end
+
+    it "only looks at its own closures" do
+      providers(:endulzate).closures.create!(starts_on: monday + 1, ends_on: monday + 3, reason: "Vacaciones")
+
+      expect(provider.closed_on?(monday + 2)).to be false
+    end
+
+    it "does not run a query per date once the closures are loaded" do
+      provider.closures.create!(starts_on: monday + 1, ends_on: monday + 1, reason: "Feriado")
+      loaded = described_class.includes(:closures).find(provider.id)
+
+      queries = []
+      callback = ->(*, payload) { queries << payload[:sql] unless payload[:name] == "SCHEMA" }
+
+      ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+        5.times { |day| loaded.closed_on?(monday + day) }
+      end
+
+      expect(queries).to be_empty
+    end
+  end
 end
 
 # == Schema Information

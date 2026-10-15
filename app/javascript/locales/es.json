@@ -37,7 +37,8 @@
         "done": "Listo"
       },
       "date_picker": {
-        "placeholder": "Elegí una fecha"
+        "placeholder": "Elegí una fecha",
+        "range_placeholder": "Elegí un rango"
       },
       "delete_account": {
         "caution": "Procede con precaución, esta acción no se puede deshacer.",
@@ -541,6 +542,13 @@
       },
       "consumer_dashboard": {
         "index": {
+          "closure": {
+            "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
+            "dismiss": "Cerrar aviso",
+            "empty": "%{provider} no recibirá pedidos del %{period}.",
+            "title_now": "%{provider} no está disponible",
+            "title_soon": "%{provider} no estará disponible"
+          },
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
         },
         "options": {
@@ -1090,6 +1098,30 @@
           "back": "Volver a Cuenta",
           "closing_time": "Hora de cierre",
           "closing_time_description": "Hasta qué hora recibís pedidos.",
+          "closures": {
+            "cancel": "Cancelar",
+            "date_range": "Rango de fechas",
+            "delete": "Eliminar cierre %{reason}",
+            "description": "Días en los que no recibís pedidos.",
+            "edit": "Editar cierre %{reason}",
+            "edit_title": "Editar cierre",
+            "period": {
+              "other_year": "%{from} al %{to}",
+              "same_month": "%{from_day} al %{to_day_month} de %{year}",
+              "same_year": "%{from_day_month} al %{to_day_month} de %{year}",
+              "single": "%{date}"
+            },
+            "reason": "Motivo",
+            "reason_placeholder": "Vacaciones",
+            "save": "Guardar cambios",
+            "saved_description": "No recibirás pedidos del %{period}.",
+            "saved_title": "¡Cierre programado!",
+            "schedule": "Programar cierre",
+            "sheet_description": "Selecciona el rango de fechas y el motivo del cierre.",
+            "sheet_title": "Programar cierre",
+            "title": "Cierres programados",
+            "updated_title": "¡Cierre actualizado!"
+          },
           "description": "Configurá tus horarios y días sin servicio.",
           "done": "Listo",
           "save_changes": "Guardar cambios",
