@@ -16,7 +16,12 @@ import MenuAgendaFields, {
 } from "@/components/menus/menu-agenda-fields"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -27,6 +32,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { providerMenus as menusRoutes, schedules } from "@/routes"
 import type { Menu, ProviderMenusEdit, ProviderMenusNew } from "@/types"
@@ -36,9 +42,15 @@ interface OptionGroupDraft {
   name: string
   options: string
   limit: number
+  required: boolean
 }
 
-const emptyDraft: OptionGroupDraft = { name: "", options: "", limit: 1 }
+const emptyDraft: OptionGroupDraft = {
+  name: "",
+  options: "",
+  limit: 1,
+  required: false,
+}
 
 interface MenuFormProps {
   menu?: Menu
@@ -49,7 +61,6 @@ interface MenuFormProps {
 
 function agendaIsComplete(agenda: AgendaDraft) {
   if (agenda.weekdays.length === 0) return true
-  if (agenda.amount !== "" && !(Number(agenda.amount) > 0)) return false
   if (agenda.mode === "single") return agenda.date !== ""
   if (agenda.mode === "range")
     return agenda.starts_on !== "" && agenda.ends_on >= agenda.starts_on
@@ -74,6 +85,7 @@ export default function MenuForm({
           name: group.name,
           options: group.options.join(", "),
           limit: group.limit,
+          required: group.required,
         }))
       : [],
   )
@@ -234,6 +246,7 @@ export default function MenuForm({
             .map((o) => o.trim())
             .filter(Boolean),
           limit: g.limit,
+          required: g.required,
         })),
         ...removedGroupIds.map((id) => ({
           id,
@@ -421,6 +434,12 @@ export default function MenuForm({
                     <div className="text-muted-foreground flex items-start justify-between gap-2 text-xs">
                       <span>{group.options}</span>
                       <span className="shrink-0">
+                        {t(
+                          group.required
+                            ? `${key}.options.required`
+                            : `${key}.options.optional`,
+                        )}
+                        {" · "}
                         {t(`${key}.options.limit`, { limit: group.limit })}
                       </span>
                     </div>
@@ -447,14 +466,14 @@ export default function MenuForm({
         )}
 
         {menu ? (
-          <div className="mt-8 flex justify-end gap-3">
-            <Button type="button" variant="outline" asChild>
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            <Button type="button" variant="secondary" className="h-11" asChild>
               <Link href={edit?.return_to ?? schedules.index().url}>
                 {t(`${key}.cancel`)}
               </Link>
             </Button>
 
-            <Button type="submit" disabled={processing}>
+            <Button type="submit" className="h-11" disabled={processing}>
               {processing ? t(`${key}.updating`) : t(`${key}.update`)}
             </Button>
           </div>
@@ -547,6 +566,24 @@ export default function MenuForm({
                   }
                 />
               </div>
+            </Field>
+
+            <Field orientation="horizontal">
+              <FieldContent>
+                <FieldLabel htmlFor="group-required">
+                  {t(`${key}.group.required`)}
+                </FieldLabel>
+                <FieldDescription>
+                  {t(`${key}.group.required_hint`)}
+                </FieldDescription>
+              </FieldContent>
+              <Switch
+                id="group-required"
+                checked={draft.required}
+                onCheckedChange={(required) =>
+                  setDraft((prev) => ({ ...prev, required }))
+                }
+              />
             </Field>
           </div>
 

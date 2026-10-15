@@ -1,37 +1,74 @@
-import { Head, usePage } from "@inertiajs/react"
-import { ChevronRight, Info } from "lucide-react"
+import { Head, Link, router, usePage } from "@inertiajs/react"
+import { ChevronRight } from "lucide-react"
+import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
 import HeadingSmall from "@/components/heading-small"
 import NotificationBanners from "@/components/notification-banners"
 import PageContainer from "@/components/page-container"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
+import StatusBadge from "@/components/status-badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { useFormatters } from "@/hooks/use-formatters"
+import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
+import { cn } from "@/lib/utils"
+import { adminConsumers, adminDashboard, adminPayments } from "@/routes"
 import type { AdminDashboardIndex } from "@/types/serializers"
+
+const page = "pages.admin.dashboard"
 
 export default function AdminDashboard({
   today,
+  month,
+  current_month,
+  months,
+  summary,
   payment_month,
+  payments,
+  debtors,
 }: AdminDashboardIndex) {
   const { t } = useTranslation()
+  const { formatMoneyShort } = useFormatters()
+  const getInitials = useInitials()
   const { auth } = usePage().props
-  const title = t("pages.admin.dashboard.title")
   const firstName = auth.user.name.split(" ")[0]
+
+  const progress = summary.meals_limit
+    ? Math.min(100, (summary.meals / summary.meals_limit) * 100)
+    : 0
+
+  function selectMonth(key: string) {
+    router.get(
+      adminDashboard.index({
+        query: key === current_month ? {} : { month: key },
+      }).url,
+      {},
+      { preserveScroll: true },
+    )
+  }
+
   return (
     <AppLayout>
-      <Head title={title} />
+      <Head title={t(`${page}.title`)} />
 
       <PageContainer
-        title={t("pages.admin.dashboard.greeting", { name: firstName })}
+        title={t(`${page}.greeting`, { name: firstName })}
         description={today}
         titleVariant="prominent"
         compactHeading
@@ -39,60 +76,164 @@ export default function AdminDashboard({
         <NotificationBanners />
 
         <div className="grid gap-4 lg:grid-cols-2 lg:gap-8">
-          <Alert role="status" className="lg:col-span-2">
-            <Info aria-hidden="true" />
-            <AlertTitle>{t("pages.admin.dashboard.alert.title")}</AlertTitle>
-            <AlertDescription>
-              {t("pages.admin.dashboard.alert.pending")}
-            </AlertDescription>
-          </Alert>
-
           <Card className="bg-muted/60 h-fit gap-4 rounded-lg py-4 shadow-none">
             <CardHeader className="grid-cols-[1fr_auto] grid-rows-1 items-center px-4">
-              <CardDescription>
-                {t("pages.admin.dashboard.consumption.title")}
-              </CardDescription>
-              <Badge variant="secondary" className="bg-background font-normal">
-                {t("pages.admin.dashboard.this_month")}
-              </Badge>
+              <CardDescription>{t(`${page}.benefit.title`)}</CardDescription>
+              <Select value={month} onValueChange={selectMonth}>
+                <SelectTrigger
+                  size="sm"
+                  aria-label={t(`${page}.month_label`)}
+                  className="bg-background dark:bg-background text-muted-foreground rounded-full border-none shadow-none"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent align="end">
+                  {months.map((option) => (
+                    <SelectItem key={option.key} value={option.key}>
+                      {option.key === current_month
+                        ? t(`${page}.this_month`)
+                        : option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardHeader>
+
             <CardContent className="space-y-4 px-4">
-              <p className="text-2xl font-semibold tracking-tight">
-                {t("pages.admin.dashboard.coming_soon")}
+              <p className="flex flex-wrap items-baseline gap-x-2">
+                <strong className="text-3xl font-semibold tracking-tight">
+                  {summary.meals_limit === null
+                    ? summary.meals
+                    : t(`${page}.benefit.meals_of_limit`, {
+                        meals: summary.meals,
+                        limit: summary.meals_limit,
+                      })}
+                </strong>
+                <span className="text-lg font-medium">
+                  {t(`${page}.benefit.meals_ordered`, {
+                    count: summary.meals_limit ?? summary.meals,
+                  })}
+                </span>
               </p>
-              <div className="bg-border h-2 rounded-full" aria-hidden="true" />
-              <div className="grid grid-cols-2 gap-2">
-                <PendingMetric
-                  label={t("pages.admin.dashboard.consumption.participation")}
+
+              {summary.meals_limit !== null && (
+                <Progress
+                  value={progress}
+                  aria-label={t(`${page}.benefit.title`)}
                 />
-                <PendingMetric
-                  label={t("pages.admin.dashboard.consumption.spending")}
+              )}
+
+              <div className="grid grid-cols-2 gap-2">
+                <Metric
+                  label={t(`${page}.benefit.participation`)}
+                  value={`${summary.participation}%`}
+                />
+                <Metric
+                  label={t(`${page}.benefit.spending`)}
+                  value={formatMoneyShort(summary.spending)}
                 />
               </div>
+
+              <p className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-sm">
+                <span>
+                  {t(`${page}.benefit.paid`, {
+                    amount: formatMoneyShort(summary.paid),
+                  })}
+                </span>
+                <span>
+                  {t(`${page}.benefit.pending`, {
+                    amount: formatMoneyShort(summary.pending),
+                  })}
+                </span>
+                {summary.projected > 0 && (
+                  <span>
+                    {t(`${page}.benefit.projected`, {
+                      amount: formatMoneyShort(summary.projected),
+                    })}
+                  </span>
+                )}
+              </p>
+
               <Button
-                type="button"
+                asChild
                 className="h-11 w-full cursor-pointer rounded-[10px] bg-neutral-900 text-base font-medium text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
               >
-                {t("pages.admin.dashboard.consumption.view_detail")}
+                <Link href={adminPayments.index({ query: { month } }).url}>
+                  {t(`${page}.benefit.view_detail`)}
+                </Link>
               </Button>
             </CardContent>
           </Card>
 
           <div className="grid content-start gap-8">
-            <PendingSection
+            <Section
               id="admin-payments-title"
-              title={t("pages.admin.dashboard.payments.title", {
-                month: payment_month,
-              })}
-              description={t("pages.admin.dashboard.payments.pending")}
-              actionLabel={t("pages.admin.dashboard.payments.view")}
-            />
-            <PendingSection
+              title={t(`${page}.payments.title`, { month: payment_month })}
+              actionLabel={t(`${page}.payments.view`)}
+              href={adminPayments.index().url}
+            >
+              {payments.length === 0 ? (
+                <EmptyRow>
+                  {t(`${page}.payments.empty`, { month: payment_month })}
+                </EmptyRow>
+              ) : (
+                payments.map((payment) => (
+                  <Row key={payment.name}>
+                    <span className="min-w-0 flex-1 truncate">
+                      {payment.name}
+                    </span>
+                    <span className="font-semibold">
+                      {formatMoneyShort(payment.amount)}
+                    </span>
+                    <StatusBadge status={payment.status} kind="payment" />
+                  </Row>
+                ))
+              )}
+            </Section>
+
+            <Section
               id="admin-debts-title"
-              title={t("pages.admin.dashboard.debts.title")}
-              description={t("pages.admin.dashboard.debts.pending")}
-              actionLabel={t("pages.admin.dashboard.debts.view")}
-            />
+              title={t(`${page}.debts.title`)}
+              actionLabel={t(`${page}.debts.view`)}
+              href={
+                adminConsumers.index({
+                  query:
+                    month === current_month
+                      ? { filter: "pending" }
+                      : { filter: "pending", month },
+                }).url
+              }
+            >
+              {debtors.length === 0 ? (
+                <EmptyRow>{t(`${page}.debts.empty`)}</EmptyRow>
+              ) : (
+                debtors.map((debtor) => (
+                  <Row
+                    key={debtor.id}
+                    className="hover:bg-accent/40 relative transition-colors"
+                  >
+                    <Avatar size="lg">
+                      {debtor.avatar_url && (
+                        <AvatarImage src={debtor.avatar_url} alt="" />
+                      )}
+                      <AvatarFallback className="text-foreground text-xs font-semibold">
+                        {getInitials(debtor.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <Link
+                      href={adminConsumers.show(debtor.id).url}
+                      className="min-w-0 flex-1 truncate font-medium after:absolute after:inset-0 hover:underline"
+                    >
+                      {debtor.name}
+                    </Link>
+                    <span className="font-semibold">
+                      {formatMoneyShort(debtor.amount)}
+                    </span>
+                    <ConsumptionStatusBadge status={debtor.status} />
+                  </Row>
+                ))
+              )}
+            </Section>
           </div>
         </div>
       </PageContainer>
@@ -100,61 +241,64 @@ export default function AdminDashboard({
   )
 }
 
-function PendingMetric({ label }: { label: string }) {
-  const { t } = useTranslation()
-
+function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-background rounded-xl border px-3 py-2.5">
       <p className="text-muted-foreground text-sm">{label}</p>
-      <p className="mt-1 text-xl font-semibold">
-        {t("pages.admin.dashboard.pending_value")}
-      </p>
+      <p className="mt-1 text-xl font-semibold">{value}</p>
     </div>
   )
 }
 
-function PendingSection({
+function Section({
   id,
   title,
-  description,
   actionLabel,
+  href,
+  children,
 }: {
   id: string
   title: string
-  description: string
   actionLabel: string
+  href: string
+  children: ReactNode
 }) {
-  const { t } = useTranslation()
-
   return (
     <section aria-labelledby={id} className="space-y-3">
       <div className="flex items-center justify-between">
         <div id={id}>
           <HeadingSmall title={title} />
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          aria-label={actionLabel}
-          className="group cursor-pointer"
-        >
-          <ChevronRight
-            className="size-4 transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
+        <Button asChild variant="ghost" size="icon-sm" className="group">
+          <Link href={href} aria-label={actionLabel}>
+            <ChevronRight
+              className="size-4 transition-transform group-hover:translate-x-0.5"
+              aria-hidden="true"
+            />
+          </Link>
         </Button>
       </div>
-      <Card className="min-h-28 justify-center gap-1 rounded-lg py-4 shadow-none">
-        <CardHeader className="px-4">
-          <CardTitle className="text-base">
-            {t("pages.admin.dashboard.coming_soon")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-4">
-          <p className="text-muted-foreground text-sm">{description}</p>
-        </CardContent>
+      <Card className="gap-0 divide-y rounded-lg py-0 shadow-none">
+        {children}
       </Card>
     </section>
   )
+}
+
+function Row({
+  className,
+  children,
+}: {
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <div className={cn("flex items-center gap-3 px-4 py-3", className)}>
+      {children}
+    </div>
+  )
+}
+
+function EmptyRow({ children }: { children: ReactNode }) {
+  return <p className="text-muted-foreground px-4 py-6 text-sm">{children}</p>
 }

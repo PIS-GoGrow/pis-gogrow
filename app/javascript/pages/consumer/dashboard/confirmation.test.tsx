@@ -103,4 +103,45 @@ describe("OrderConfirmation Page", () => {
     expect(ordersLink).toBeInTheDocument()
     expect(ordersLink).toHaveAttribute("href", "/orders")
   })
+
+  it("renders a close button linking back to the dashboard", () => {
+    render(<OrderConfirmation total={450} orders={sampleOrders} />)
+
+    const closeButton = screen.getByRole("link", { name: "Cerrar" })
+    expect(closeButton).toBeInTheDocument()
+    expect(closeButton).toHaveAttribute("href", "/dashboard")
+  })
+
+  it("handles orders with different delivery methods and providers", () => {
+    const multiProviderOrders = [
+      {
+        id: 201,
+        date: "2026-10-06",
+        address: "18 de Julio 1006",
+        delivery_method: "office",
+        provider_name: "La Cocina",
+        name: "Ensalada César",
+        quantity: 1,
+        discounted_price: 200,
+      },
+      {
+        id: 202,
+        date: "2026-10-06",
+        address: "Bulevar Artigas 500",
+        delivery_method: "home",
+        provider_name: "Rotisería del Parque",
+        name: "Milanesa de carne",
+        quantity: 1,
+        discounted_price: 320,
+      },
+    ]
+
+    render(<OrderConfirmation total={520} orders={multiProviderOrders} />)
+
+    expect(screen.getByText("La Cocina")).toBeInTheDocument()
+    expect(screen.getByText("Rotisería del Parque")).toBeInTheDocument()
+    expect(screen.getByText("Ensalada César")).toBeInTheDocument()
+    expect(screen.getByText("Milanesa de carne")).toBeInTheDocument()
+    expect(screen.getByText("$520")).toBeInTheDocument()
+  })
 })

@@ -1,16 +1,19 @@
 import { render, screen, within } from "@testing-library/react"
 import type React from "react"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { ProviderMobileNav } from "./provider-mobile-nav"
 
-let currentUrl = "/provider/dashboard"
+const page = vi.hoisted(() => ({
+  url: "/provider/dashboard",
+  component: "provider/dashboard/index",
+}))
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
-    usePage: () => ({ url: currentUrl, props: {} }),
+    usePage: () => ({ ...page, props: {} }),
     Link: ({
       children,
       href,
@@ -28,8 +31,14 @@ vi.mock("@inertiajs/react", async () => {
 })
 
 describe("ProviderMobileNav", () => {
-  function nav(url = "/provider/dashboard") {
-    currentUrl = url
+  afterEach(() => {
+    page.url = "/provider/dashboard"
+    page.component = "provider/dashboard/index"
+  })
+
+  function nav(url?: string, component?: string) {
+    if (url) page.url = url
+    if (component) page.component = component
     render(<ProviderMobileNav />)
     return within(
       screen.getByRole("navigation", { name: "Navegación del proveedor" }),
@@ -73,10 +82,37 @@ describe("ProviderMobileNav", () => {
     )
   })
 
-  it("mantiene Menú activo al navegar a agregar o editar platos (/provider/menus)", () => {
-    const menu = nav("/provider/menus/new")
+  it("marca Menú como la página actual al editar un plato", () => {
+    page.url = "/provider/menus/1/edit"
+    page.component = "provider/menus/edit"
+
+    const menu = nav()
 
     expect(menu.getByRole("link", { name: "Menú" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+  })
+
+  it("mantiene Menú activo al navegar a agregar o editar platos (/provider/menus)", () => {
+    page.url = "/provider/menus/new"
+    page.component = "provider/menus/new"
+
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Menú" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+  })
+
+  it("marca Cuenta como la página actual en Entregas", () => {
+    page.url = "/provider/deliveries"
+    page.component = "provider/deliveries/show"
+
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
       "aria-current",
       "page",
     )

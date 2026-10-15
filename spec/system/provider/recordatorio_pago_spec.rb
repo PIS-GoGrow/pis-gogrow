@@ -24,7 +24,7 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
   end
 
   it "permite al proveedor recordar el pago de una deuda vencida elegible y luego entra en cooldown" do
-    # due_date = month + 1.month + 4.days
+    # due_date = month.next_month.change(day: 10)
     # Estando en el mes anterior, hoy en Date.current ya está vencida
     sign_in provider_user, role: :provider
 

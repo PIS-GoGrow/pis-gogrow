@@ -144,7 +144,7 @@ export default function Show({
               <p className="text-muted-foreground text-sm">
                 {t("pages.orders.show.notes")}
               </p>
-              <p className="text-sm">
+              <p className="min-w-0 text-sm [overflow-wrap:anywhere]">
                 {order.notes ?? t("pages.orders.show.no_notes")}
               </p>
             </div>

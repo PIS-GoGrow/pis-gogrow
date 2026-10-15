@@ -35,6 +35,22 @@ RSpec.describe "Provider payments", type: :request do
     expect(payment.reload).to be_approved
   end
 
+  it "lets HR know when the payment of the company is approved" do
+    company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+    admin_user = User.create!(email: "review-admin@gmail.com", name: "RRHH", password: "password123456")
+    Admin.create!(user: admin_user, company:)
+    provider = create_provider("review-provider@gmail.com")
+    account = Account.create!(owner: company, provider:, month: Date.current.prev_month, amount: 500)
+    payment = account.payments.build(provider:, status: :submitted)
+    payment.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+    payment.save!
+    sign_in(provider.user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "approved" }
+
+    expect(admin_user.notifications.active.sole).to have_attributes(event: "company_payment_approved", notifiable: account)
+  end
+
   it "does not approve a payment of the current month" do
     user, payment = setup_submitted_payment
     payment.account.update!(month: Date.current.beginning_of_month)

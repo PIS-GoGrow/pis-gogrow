@@ -14,9 +14,9 @@ import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { consumerOrders } from "@/routes"
 import type { ConsumerOrdersShow, Order } from "@/types"
@@ -54,7 +54,12 @@ export default function EditOrderSheet({
     })),
   })
 
-  const missingChoice = data.options.some((option) => !option.values.length)
+  const missingChoice = optionGroups.some(
+    (group) =>
+      group.required &&
+      !data.options.find((option) => option.group_id === group.id)?.values
+        .length,
+  )
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -94,7 +99,7 @@ export default function EditOrderSheet({
       </AdaptableDialogTrigger>
 
       <AdaptableDialogContent showCloseButton={false} className="p-5">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-5">
           <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
             {t("pages.orders.show.edit_dialog.title")}
           </AdaptableDialogTitle>
@@ -186,13 +191,19 @@ export default function EditOrderSheet({
               {t("pages.orders.show.edit_dialog.notes")}
             </FieldLabel>
 
-            <Input
+            <Textarea
               id="notes"
               name="notes"
+              maxLength={140}
               value={data.notes}
               placeholder={t("pages.orders.show.edit_dialog.notes_placeholder")}
               onChange={(event) => setData("notes", event.target.value)}
+              className="field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-xs"
             />
+
+            <p className="text-muted-foreground text-right text-[10px]">
+              {data.notes.length}/140
+            </p>
           </Field>
 
           <div className="grid grid-cols-2 gap-3">

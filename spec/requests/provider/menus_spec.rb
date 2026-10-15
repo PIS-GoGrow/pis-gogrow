@@ -47,6 +47,18 @@ RSpec.describe "Provider::Menus", type: :request do
   describe "POST /provider/menus" do
     before { sign_in provider_user, role: :provider }
 
+    it "redirects visitors without a session to the sign in page" do
+      sign_out
+      post provider_menus_path, params: { menu: { name: "Plato", price: 200 } }
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    it "redirects consumers to the root page" do
+      sign_in users(:one), role: :consumer
+      post provider_menus_path, params: { menu: { name: "Plato", price: 200 } }
+      expect(response).to redirect_to(root_path)
+    end
+
     it "creates a new dish with option groups and goes back to the new dish page" do
       expect do
         post provider_menus_path, params: {
@@ -55,7 +67,7 @@ RSpec.describe "Provider::Menus", type: :request do
             price: 360.0,
             description: "Con guarnición a elección",
             option_groups_attributes: [
-              { name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 1 },
+              { name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 1, required: true },
               { name: "Guarnición", options: [ "Papas fritas", "Ensalada" ], limit: 1 }
             ]
           }
@@ -67,6 +79,8 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(created.name).to eq("Suprema napolitana")
       expect(created.option_groups.count).to eq(2)
       expect(created.option_groups.find_by(name: "Salsa").options).to eq([ "Tuco", "Caruso" ])
+      expect(created.option_groups.find_by(name: "Salsa")).to be_required
+      expect(created.option_groups.find_by(name: "Guarnición")).not_to be_required
     end
 
     it "creates a dish without option groups" do
@@ -145,6 +159,20 @@ RSpec.describe "Provider::Menus", type: :request do
         created = provider.menus.order(:id).last
         expect(created.schedules.pluck(:date, :amount)).to eq([ [ Date.new(2030, 1, 10), 6 ] ])
         expect(created.agendas).to be_empty
+      end
+
+      it "does not create the dish when the single day is one the provider closed" do
+        provider.closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 10), reason: "Feriado")
+
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ], amount: 6 }
+          }
+        end.not_to change { [ Menu.count, Schedule.count ] }
+
+        follow_redirect!
+        expect(inertia).to have_props(errors: { agenda: [ I18n.t("validations.menu_agenda.date_closed") ] })
       end
 
       it "programs a single day without stock" do
@@ -259,7 +287,7 @@ RSpec.describe "Provider::Menus", type: :request do
     it "redirects visitors without a session to the sign in page" do
       get edit_provider_menu_path(menus(:milanesa))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects consumers to the root page" do
@@ -444,7 +472,7 @@ RSpec.describe "Provider::Menus", type: :request do
     it "redirects visitors without a session to the sign in page" do
       patch provider_menu_path(menus(:milanesa)), params: { menu: { name: "Nuevo" } }
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects consumers to the root page" do
@@ -472,14 +500,29 @@ RSpec.describe "Provider::Menus", type: :request do
 
       patch provider_menu_path(menu), params: {
         menu: {
-          option_groups_attributes: [ { id: group.id, name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 2 } ]
+          option_groups_attributes: [ { id: group.id, name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 2, required: true } ]
         }
       }
 
       expect(response).to redirect_to(edit_provider_menu_path(menu))
       expect(group.reload.options).to eq([ "Tuco", "Caruso" ])
       expect(group.reload.limit).to eq(2)
+      expect(group.reload).to be_required
     end
+
+      it "updates an existing required option group to optional" do
+        menu = menus(:milanesa)
+        group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1, required: true)
+
+        patch provider_menu_path(menu), params: {
+          menu: {
+            option_groups_attributes: [ { id: group.id, name: "Salsa", options: [ "Tuco" ], limit: 1, required: false } ]
+          }
+        }
+
+        expect(response).to redirect_to(edit_provider_menu_path(menu))
+        expect(group.reload).not_to be_required
+      end
 
       it "updates the provider's dish information and records audit data" do
         menu = menus(:milanesa)
@@ -841,6 +884,28 @@ RSpec.describe "Provider::Menus", type: :request do
 
     it "no publica nada si uno de los platos es de otro proveedor" do
       expect { publish("2030-01-10", [ milanesa, menus(:sorrentinos) ]) }.not_to change(Schedule, :count)
+    end
+
+    # IBP-087: un día con cierre programado no se puede publicar.
+    it "no publica en una fecha que el proveedor cerró y dice por qué" do
+      provider.closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 11), reason: "Vacaciones")
+
+      expect { publish("2030-01-10") }.not_to change(Schedule, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { date: [ I18n.t("validations.publish_date_closed") ] })
+    end
+
+    it "publica el día siguiente al cierre" do
+      provider.closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 10), reason: "Feriado")
+
+      expect { publish("2030-01-11") }.to change(Schedule, :count).by(1)
+    end
+
+    it "publica un día que solo cerró otro proveedor" do
+      providers(:endulzate).closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 10), reason: "Feriado")
+
+      expect { publish("2030-01-10") }.to change(Schedule, :count).by(1)
     end
 
     it "no publica dos veces el mismo plato el mismo día" do

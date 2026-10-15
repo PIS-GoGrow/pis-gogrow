@@ -3,6 +3,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
+import ClosureBanner from "@/components/consumer/menus/closure-banner"
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
 import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
@@ -15,7 +16,8 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
-import type { ConsumerDashboardIndex } from "@/types"
+import useSessionStorage from "@/hooks/use-session-storage"
+import type { ConsumerClosure, ConsumerDashboardIndex } from "@/types"
 
 import { BenefitCard } from "./benefit-card"
 import type { CartItem, Schedule } from "./consumer-types"
@@ -28,6 +30,7 @@ interface Props {
   benefit: ConsumerDashboardIndex["benefit"]
   providers: string[]
   schedules: Schedule[]
+  closures: ConsumerClosure[]
   cart: CartItem[]
   count: number
   total: number
@@ -49,6 +52,7 @@ export function WeeklyMenu({
   benefit,
   providers,
   schedules,
+  closures,
   cart,
   count,
   total,
@@ -57,6 +61,13 @@ export function WeeklyMenu({
 }: Props) {
   const { t } = useTranslation()
   const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set())
+  // Se guarda en la sesión para que el aviso no vuelva al entrar a un plato y
+  // volver al menú. Cada aviso (el de antes del cierre y el de durante) se
+  // cierra por separado: la clave lleva el tipo y el id del cierre.
+  const [dismissed, setDismissed] = useSessionStorage<string[]>(
+    "dismissed-closure-notices",
+    [],
+  )
   const currentDate = today()
   const filteredSchedules =
     activeProviders.size === 0
@@ -68,10 +79,25 @@ export function WeeklyMenu({
     activeProviders.size === 0
       ? t("pages.consumer_dashboard.weekly_menu.all_providers")
       : providers.filter((provider) => activeProviders.has(provider)).join(", ")
+  const soonClosures = closures.filter(
+    (closure) =>
+      closure.starts_on > date && !dismissed.includes(`soon-${closure.id}`),
+  )
+  const closedToday = closures.filter(
+    (closure) =>
+      closure.starts_on <= date &&
+      date <= closure.ends_on &&
+      (activeProviders.size === 0 ||
+        activeProviders.has(closure.provider_name)),
+  )
+  const closedBanners = closedToday.filter(
+    (closure) => !dismissed.includes(`now-${closure.id}`),
+  )
+  const dismiss = (key: string) => setDismissed((keys) => [...keys, key])
 
   return (
     <>
-      <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-10">
+      <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-24 lg:pb-10">
         <header className="mb-4">
           <h1 className="text-2xl font-bold">
             {t("pages.consumer_dashboard.weekly_menu.greeting", { name })}
@@ -85,8 +111,16 @@ export function WeeklyMenu({
           </p>
         </header>
 
-        <div className="mb-6">
+        <div className="mb-6 flex flex-col gap-3">
           <NotificationBanners />
+          {soonClosures.map((closure) => (
+            <ClosureBanner
+              key={closure.id}
+              closure={closure}
+              when="soon"
+              onDismiss={() => dismiss(`soon-${closure.id}`)}
+            />
+          ))}
         </div>
 
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_330px] lg:gap-8">
@@ -97,6 +131,19 @@ export function WeeklyMenu({
               {t("pages.consumer_dashboard.weekly_menu.title")}
             </h2>
             <WeekNav date={date} onChange={setDate} showArrows={false} />
+
+            {closedBanners.length > 0 && (
+              <div className="mt-4 flex flex-col gap-3">
+                {closedBanners.map((closure) => (
+                  <ClosureBanner
+                    key={closure.id}
+                    closure={closure}
+                    when="now"
+                    onDismiss={() => dismiss(`now-${closure.id}`)}
+                  />
+                ))}
+              </div>
+            )}
 
             <div className="mt-6 mb-3 flex items-center">
               <span className="text-muted-foreground min-w-0 truncate text-sm">
@@ -122,13 +169,22 @@ export function WeeklyMenu({
                     {t("pages.consumer_dashboard.weekly_menu.empty_title")}
                   </EmptyTitle>
                   <EmptyDescription>
-                    {schedules.length === 0
-                      ? t(
-                          "pages.consumer_dashboard.weekly_menu.empty_no_schedules",
-                        )
-                      : t(
-                          "pages.consumer_dashboard.weekly_menu.empty_filtered",
-                        )}
+                    {activeProviders.size > 0 && closedToday.length > 0
+                      ? closedToday
+                          .map((closure) =>
+                            t("pages.consumer_dashboard.index.closure.empty", {
+                              provider: closure.provider_name,
+                              period: closure.period,
+                            }),
+                          )
+                          .join(" ")
+                      : schedules.length === 0
+                        ? t(
+                            "pages.consumer_dashboard.weekly_menu.empty_no_schedules",
+                          )
+                        : t(
+                            "pages.consumer_dashboard.weekly_menu.empty_filtered",
+                          )}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
@@ -186,11 +242,26 @@ export function WeeklyMenu({
         </div>
       </div>
 
+      <style>{`
+        @media (min-width: 768px) and (max-width: 1023px) {
+          [data-slot="sidebar"][data-state="expanded"] ~ [data-slot="sidebar-inset"] [data-slot="floating-cart-button"] {
+            left: calc(var(--sidebar-width) + 2rem);
+            right: 2.5rem;
+          }
+
+          [data-slot="sidebar"][data-state="collapsed"] ~ [data-slot="sidebar-inset"] [data-slot="floating-cart-button"] {
+            left: calc(var(--sidebar-width-icon) + 3.5rem);
+            right: 2.5rem;
+          }
+        }
+      `}</style>
+
       {count > 0 && (
         <Button
           type="button"
           onClick={openCart}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed inset-x-5 bottom-24 z-20 h-12 rounded-[10px] text-base font-medium shadow-lg md:hidden"
+          data-slot="floating-cart-button"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed right-5 bottom-24 left-5 z-20 h-12 rounded-[10px] text-base font-medium shadow-lg md:bottom-6 lg:hidden"
         >
           {t("pages.consumer_dashboard.weekly_menu.view_cart")}
         </Button>

@@ -12,7 +12,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
-import { providerCollections } from "@/routes"
+import { providerCollections, providerDebtReminders } from "@/routes"
 import type { ProviderCollectionAccount } from "@/types"
 
 interface CollectionAccountPanelProps {
@@ -81,7 +81,7 @@ export default function CollectionAccountPanel({
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-foreground text-base font-semibold">
-          {formatMoney(account.amount)}
+          {formatMoney(account.payable_amount)}
           <span className="text-muted-foreground font-normal">
             {" | "}
             {t("pages.provider_collections.meals", { count: account.meals })}
@@ -110,7 +110,7 @@ export default function CollectionAccountPanel({
           receiptUrl={account.receipt_url ?? ""}
           contentType={account.receipt_content_type}
           filename={account.owner_name}
-          expectedAmount={account.amount}
+          expectedAmount={account.payable_amount}
           canApprove={account.can_approve_payment}
         >
           <AdaptableDialogTrigger asChild>
@@ -122,11 +122,11 @@ export default function CollectionAccountPanel({
         reminder.blocked_reason === "cooldown" ||
         reminder.blocked_reason === "limit_reached") && (
         <DebtReminderDialog
-          accountId={account.id}
+          action={providerDebtReminders.create(account.id).url}
           eligible={reminder.eligible}
           employeeName={account.owner_name}
           month={account.month}
-          amount={account.amount}
+          amount={account.payable_amount}
         />
       )}
       {reminder.blocked_reason === "cooldown" && (

@@ -46,7 +46,8 @@ class SchedulesController < Provider::InertiaController
           publishable: (
             date.on_weekday? &&
             date >= Date.current &&
-            date <= maximum_publish_date
+            date <= maximum_publish_date &&
+            !provider.closed_on?(date)
           ),
           schedules: day_schedules.map do |schedule|
             ScheduleSerializer.new(schedule).to_inertia
@@ -102,6 +103,12 @@ class SchedulesController < Provider::InertiaController
     if date > maximum_publish_date
       redirect_to schedules_path,
                   inertia: { errors: { date: [ "La fecha está fuera del rango permitido de publicación" ] } }
+      return
+    end
+
+    if provider.closed_on?(date)
+      redirect_to schedules_path,
+                  inertia: { errors: { date: [ t("validations.publish_date_closed") ] } }
       return
     end
 

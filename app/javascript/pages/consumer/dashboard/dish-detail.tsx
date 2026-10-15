@@ -52,9 +52,8 @@ export function DishDetail({
   )
   const line = pricing.lines[""]
   const reviews = item.menu.reviews
-  // Cada grupo que el plato ofrece tiene que quedar elegido antes de agregarlo.
   const choicesMissing = item.menu.option_groups.some(
-    (group) => !selections[group.id]?.length,
+    (group) => group.required && !selections[group.id]?.length,
   )
   const addDisabled = item.sold_out || item.orders_closed || choicesMissing
 
@@ -159,7 +158,7 @@ export function DishDetail({
           placeholder={t(
             "pages.consumer_dashboard.dish_detail.notes_placeholder",
           )}
-          className="placeholder:text-muted-foreground mt-3 h-[87px] resize-none rounded-[10px] p-3 text-base"
+          className="placeholder:text-muted-foreground mt-3 field-sizing-fixed h-[87px] w-full max-w-full min-w-0 resize-none rounded-[10px] p-3 text-base"
         />
         <p className="text-muted-foreground mt-2 text-right text-sm">
           {notes.length}/140

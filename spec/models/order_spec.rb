@@ -127,12 +127,45 @@ RSpec.describe Order, type: :model do
     it "keeps the message when there is content" do
       expect(order_with_notes("Sin sal, por favor").notes).to eq("Sin sal, por favor")
     end
+
+    it "rejects messages longer than 140 characters" do
+      order = Order.new(
+        consumer: consumers(:one),
+        schedule: schedules(:future),
+        amount: 1,
+        price: 100,
+        discounted_price: 100,
+        delivery_method: :office,
+        notes: "a" * 141
+      )
+
+      expect(order).not_to be_valid
+      expect(order.errors[:notes]).to be_present
+    end
+
+    it "accepts messages with 140 characters" do
+      expect(order_with_notes("a" * 140).notes.length).to eq(140)
+    end
+
+    it "accepts nil notes" do
+      order = Order.new(
+        consumer: consumers(:one),
+        schedule: schedules(:future),
+        amount: 1,
+        price: 100,
+        discounted_price: 100,
+        delivery_method: :office,
+        notes: nil
+      )
+
+      expect(order.errors[:notes]).to be_blank
+    end
   end
 
   # IBP-022 — Como EMPLEADO, quiero seleccionar las opciones de personalización que el
   # plato admita al momento de pedir, para recibir la vianda según mi preferencia.
   # Criterio 1: lo elegido tiene que ser una de las opciones que el proveedor cargó al
-  # plato, y todos los grupos del plato tienen que estar respondidos.
+  # plato. Criterio 2: los grupos obligatorios tienen que estar respondidos.
   describe "selected options" do
     let(:salsa) { menu_option_groups(:salsa_sorrentinos) }
     let(:relleno) { menu_option_groups(:relleno_sorrentinos) }
@@ -157,17 +190,43 @@ RSpec.describe Order, type: :model do
       expect(order_for(schedules(:sorrentinos_today), chosen(salsa, relleno))).to be_valid
     end
 
-    it "requires an answer for every group the dish offers" do
+    it "requires an answer for every required group" do
       order = order_for(schedules(:sorrentinos_today), chosen(salsa))
 
       expect(order).not_to be_valid
       expect(order.errors[:base]).to include(I18n.t("validations.invalid_options"))
     end
 
-    it "rejects a group answered with an empty list" do
+    it "rejects a required group answered with an empty list" do
       selection = chosen(salsa) + [ { "group_id" => relleno.id, "name" => relleno.name, "values" => [] } ]
 
       expect(order_for(schedules(:sorrentinos_today), selection)).not_to be_valid
+    end
+
+    context "when a group is optional" do
+      before { salsa.update!(required: false) }
+
+      it "accepts leaving it out" do
+        expect(order_for(schedules(:sorrentinos_today), chosen(relleno))).to be_valid
+      end
+
+      it "accepts it answered with an empty list" do
+        selection = chosen(relleno) + [ { "group_id" => salsa.id, "name" => salsa.name, "values" => [] } ]
+
+        expect(order_for(schedules(:sorrentinos_today), selection)).to be_valid
+      end
+
+      it "still rejects more options than its limit" do
+        selection = chosen(relleno) + [ { "group_id" => salsa.id, "name" => salsa.name, "values" => [ "Filetto", "Bolognesa" ] } ]
+
+        expect(order_for(schedules(:sorrentinos_today), selection)).not_to be_valid
+      end
+    end
+
+    it "accepts a dish whose groups are all optional with nothing chosen" do
+      [ salsa, relleno ].each { it.update!(required: false) }
+
+      expect(order_for(schedules(:sorrentinos_today), [])).to be_valid
     end
 
     # El mismo grupo existe en el otro plato: no es que el dato no exista.
@@ -197,6 +256,31 @@ RSpec.describe Order, type: :model do
 
     it "rejects options for a dish that offers none" do
       expect(order_for(schedules(:future), chosen(salsa))).not_to be_valid
+    end
+
+    it "rejects an option group with non-array values (direct bypass)" do
+      selection = [ { "group_id" => salsa.id, "name" => salsa.name, "values" => "Filetto" } ]
+      order = order_for(schedules(:sorrentinos_today), selection)
+
+      expect(order).not_to be_valid
+      expect(order.errors[:base]).to include(I18n.t("validations.invalid_options"))
+    end
+
+    it "rejects a selection with an unknown group_id" do
+      selection = chosen(salsa, relleno) + [ { "group_id" => 999_999, "name" => "Fake", "values" => [ "Algo" ] } ]
+      order = order_for(schedules(:sorrentinos_today), selection)
+
+      expect(order).not_to be_valid
+      expect(order.errors[:base]).to include(I18n.t("validations.invalid_options"))
+    end
+
+    it "rejects an optional group when an option is not offered by the group" do
+      salsa.update!(required: false)
+      selection = chosen(relleno) + [ { "group_id" => salsa.id, "name" => salsa.name, "values" => [ "Inexistente" ] } ]
+      order = order_for(schedules(:sorrentinos_today), selection)
+
+      expect(order).not_to be_valid
+      expect(order.errors[:base]).to include(I18n.t("validations.invalid_options"))
     end
 
     context "when a group allows more than one option" do
@@ -801,6 +885,16 @@ RSpec.describe Order, type: :model do
       end
 
       expect(missing).to be_empty
+    end
+
+    it "notifies the provider when a new order is placed" do
+      order = orders(:upcoming_pending_today).dup
+      order.save!
+
+      notification = Notification.find_by!(event: "order_received", notifiable: order)
+
+      expect(notification).to have_attributes(user: order.provider.user, role: "provider", requires_action: false)
+      expect(notification.description).to start_with("#{order.consumer.user.name} pidió #{order.amount} de #{order.menu_name}")
     end
 
     it "notifies the consumer when the provider rejects an order" do

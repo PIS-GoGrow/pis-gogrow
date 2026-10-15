@@ -16,7 +16,7 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
   it "permite configurar un plato para repetir todas las semanas y persiste la agenda semanal sin errores" do
     visit edit_provider_menu_path(milanesa)
 
-    expect(page).to have_content(milanesa.name)
+    expect(page).to have_field("name", with: milanesa.name)
 
     # Selecciona la opción 'Repetir todas las semanas' primero
     find("label", text: "Repetir todas las semanas").click
@@ -24,9 +24,6 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
     # Selecciona lunes y miércoles en los botones de días de la semana
     find("button[aria-label='Lunes']").click
     find("button[aria-label='Miércoles']").click
-
-    # Completa el stock por día si está vacío
-    fill_in "agenda-amount", with: "15"
 
     click_button "Modificar"
 
@@ -42,7 +39,7 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
     agenda = milanesa.reload.current_agenda
     expect(agenda).to be_present
     expect(agenda.weekdays).to include(1, 3)
-    expect(agenda.amount).to eq(15)
+    expect(agenda.amount).to be_nil
 
     # Al acceder a editar un día programado generado por la agenda, se mantiene el modo weekly
     future_schedule = Schedule.where(menu_id: milanesa.family_ids, date: Date.current..).first
@@ -50,7 +47,7 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
 
     visit edit_provider_menu_path(milanesa, schedule_id: future_schedule.id)
 
-    expect(page).to have_content(milanesa.name)
+    expect(page).to have_field("name", with: milanesa.name)
     expect(page).to have_selector("#agenda-mode-weekly[data-state='checked']")
   end
 end

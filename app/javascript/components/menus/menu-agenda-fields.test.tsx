@@ -33,7 +33,6 @@ describe("MenuAgendaFields helpers", () => {
 
     expect(draftFromNone.mode).toBe("single")
     expect(draftFromNone.weekdays).toEqual([])
-    expect(draftFromNone.amount).toBe("")
 
     const draftFromWeekly = initialAgenda({
       mode: "weekly",
@@ -46,7 +45,7 @@ describe("MenuAgendaFields helpers", () => {
 
     expect(draftFromWeekly.mode).toBe("weekly")
     expect(draftFromWeekly.weekdays).toEqual([1, 5])
-    expect(draftFromWeekly.amount).toBe("10")
+    expect(draftFromWeekly).not.toHaveProperty("amount")
   })
 
   it("returns mode none in agendaPayload when weekdays is empty", () => {
@@ -56,7 +55,6 @@ describe("MenuAgendaFields helpers", () => {
       date: "",
       starts_on: "2030-01-09",
       ends_on: "",
-      amount: "5",
     }
 
     expect(agendaPayload(draft)).toEqual({ mode: "none" })
@@ -69,7 +67,6 @@ describe("MenuAgendaFields helpers", () => {
       date: "",
       starts_on: "2030-01-10",
       ends_on: "2030-01-15",
-      amount: "8",
     }
 
     expect(agendaPayload(draft)).toEqual(draft)
@@ -82,7 +79,6 @@ describe("MenuAgendaFields helpers", () => {
       date: "",
       starts_on: "2030-01-09",
       ends_on: "",
-      amount: "12",
     }
 
     expect(agendaPayload(weeklyDraft)).toEqual(weeklyDraft)
@@ -96,29 +92,38 @@ describe("MenuAgendaFields component", () => {
     date: "2030-01-09",
     starts_on: "",
     ends_on: "",
-    amount: "15",
   }
 
-  it("renders stock input and calls onChange when edited", async () => {
-    const user = userEvent.setup()
-    const onChange = vi.fn()
-
+  it("does not render a stock input", () => {
     render(
       <MenuAgendaFields
         value={defaultDraft}
-        onChange={onChange}
+        onChange={vi.fn()}
         today="2030-01-09"
         maximumPublishDate="2030-01-18"
       />,
     )
 
-    const amountInput = screen.getByDisplayValue("15")
-    expect(amountInput).toBeInTheDocument()
+    expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument()
+  })
 
-    await user.clear(amountInput)
-    await user.type(amountInput, "20")
+  it("renders separate from and to pickers for a custom range", () => {
+    render(
+      <MenuAgendaFields
+        value={{
+          ...defaultDraft,
+          mode: "range",
+          starts_on: "2030-01-10",
+          ends_on: "2030-01-15",
+        }}
+        onChange={vi.fn()}
+        today="2030-01-09"
+        maximumPublishDate="2030-01-18"
+      />,
+    )
 
-    expect(onChange).toHaveBeenCalled()
+    expect(screen.getByLabelText("Desde")).toHaveTextContent("Enero 10, 2030")
+    expect(screen.getByLabelText("Hasta")).toHaveTextContent("Enero 15, 2030")
   })
 
   it("renders error message when error prop is provided", () => {
@@ -147,7 +152,6 @@ describe("MenuAgendaFields component", () => {
       date: "",
       starts_on: "2030-01-09",
       ends_on: "",
-      amount: "10",
     }
 
     render(

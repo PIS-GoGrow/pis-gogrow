@@ -43,7 +43,7 @@ class Menus::AgendaScheduler
 
   def program(menu, agenda, taken)
     agenda.dates_until(@limit).each do |date|
-      next if taken.include?(date)
+      next if taken.include?(date) || @menu.provider.closed_on?(date)
 
       target = block_given? ? yield(date) : menu
       next if target.nil?
