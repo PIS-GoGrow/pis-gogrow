@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { act, fireEvent, render, screen } from "@testing-library/react"
 import type React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -113,7 +113,12 @@ describe("ClosuresSection", () => {
     )
   })
 
-  it("invoca router.delete al confirmar la eliminación de un cierre", () => {
+  it("invoca router.delete al confirmar la eliminación de un cierre y previene doble click", () => {
+    let capturedOptions: { onStart?: () => void; onFinish?: () => void } | undefined
+    routerDeleteMock.mockImplementationOnce((_url, options) => {
+      capturedOptions = options as typeof capturedOptions
+    })
+
     render(<ClosuresSection closures={sampleClosures} today="2026-10-12" />)
 
     const deleteButtons = screen.getAllByRole("button", { name: /Eliminar cierre/ })
@@ -123,6 +128,19 @@ describe("ClosuresSection", () => {
       expect.stringContaining("/provider/closures/1"),
       expect.objectContaining({ preserveScroll: true }),
     )
+
+    expect(capturedOptions?.onStart).toBeDefined()
+    expect(capturedOptions?.onFinish).toBeDefined()
+
+    act(() => {
+      capturedOptions?.onStart?.()
+    })
+    expect(deleteButtons[0]).toBeDisabled()
+
+    act(() => {
+      capturedOptions?.onFinish?.()
+    })
+    expect(deleteButtons[0]).not.toBeDisabled()
   })
 
   it("muestra errores de validación devueltos por el servidor", () => {

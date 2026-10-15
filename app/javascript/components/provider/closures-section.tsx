@@ -40,6 +40,7 @@ export default function ClosuresSection({
   const [editing, setEditing] = useState<ProviderClosure | null>(null)
   const [range, setRange] = useState<Range>({ from: "", to: "" })
   const [saved, setSaved] = useState<Range>({ from: "", to: "" })
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   // Un solo día se elige con un solo toque: el fin es el mismo día.
   const endsOn = range.to || range.from
@@ -53,6 +54,14 @@ export default function ClosuresSection({
     setRange({ from: closure?.starts_on ?? "", to: closure?.ends_on ?? "" })
     setStage("form")
     setOpen(true)
+  }
+
+  const handleDelete = (closure: ProviderClosure) => {
+    router.delete(providerClosures.destroy(closure.id).url, {
+      preserveScroll: true,
+      onStart: () => setDeletingId(closure.id),
+      onFinish: () => setDeletingId(null),
+    })
   }
 
   return (
@@ -87,6 +96,7 @@ export default function ClosuresSection({
                   type="button"
                   variant="ghost"
                   size="icon-sm"
+                  disabled={deletingId !== null}
                   aria-label={t(`${page}.edit`, { reason: closure.reason })}
                   onClick={() => openSheet(closure)}
                 >
@@ -96,12 +106,9 @@ export default function ClosuresSection({
                   type="button"
                   variant="ghost"
                   size="icon-sm"
+                  disabled={deletingId !== null}
                   aria-label={t(`${page}.delete`, { reason: closure.reason })}
-                  onClick={() =>
-                    router.delete(providerClosures.destroy(closure.id).url, {
-                      preserveScroll: true,
-                    })
-                  }
+                  onClick={() => handleDelete(closure)}
                 >
                   <Trash2 aria-hidden="true" />
                 </Button>

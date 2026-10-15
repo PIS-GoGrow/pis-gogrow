@@ -109,6 +109,18 @@ RSpec.describe "Provider::Closures", type: :request do
         expect(response).to redirect_to(provider_operational_settings_path)
       end
 
+      it "rejects missing date parameters" do
+        expect do
+          post provider_closures_path, params: { reason: "Vacaciones" }
+        end.not_to change(ProviderClosure, :count)
+
+        follow_redirect!
+        expect(inertia).to have_props(errors: {
+          starts_on: [ error_message(:starts_on, :blank) ],
+          ends_on: [ error_message(:ends_on, :blank) ]
+        })
+      end
+
       it "rejects a whitespace-only reason" do
         expect { post provider_closures_path, params: params.merge(reason: "   ") }.not_to change(ProviderClosure, :count)
 
@@ -206,6 +218,20 @@ RSpec.describe "Provider::Closures", type: :request do
         expect(closure.reload.reason).to eq("Vacaciones")
         follow_redirect!
         expect(inertia).to have_props(errors: { reason: [ error_message(:reason, :too_long, count: 100) ] })
+      end
+
+      it "rejects updating start date to the past" do
+        patch provider_closure_path(closure), params: { starts_on: (today - 1.day).iso8601 }
+
+        expect(closure.reload.starts_on).to eq(today + 7)
+        follow_redirect!
+        expect(inertia).to have_props(errors: { starts_on: [ error_message(:starts_on, :greater_than_or_equal_to) ] })
+      end
+
+      it "ignores attempts to reassign the closure to another provider" do
+        patch provider_closure_path(closure), params: { provider_id: providers(:endulzate).id, reason: "Nuevo motivo" }
+
+        expect(closure.reload).to have_attributes(provider_id: provider.id, reason: "Nuevo motivo")
       end
 
       it "does not overlap with itself but rejects overlapping another closure" do
