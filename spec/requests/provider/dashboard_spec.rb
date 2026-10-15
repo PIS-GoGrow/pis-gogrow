@@ -182,5 +182,15 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
       expect(inertia.props[:notifications]).to be_empty
     end
+
+    it "le muestra al proveedor el aviso cuando un empleado cancela un pedido confirmado" do
+      order = orders(:upcoming_confirmed_future)
+      order.cancel(by: order.consumer.user)
+
+      sign_in provider_user, role: :provider
+      get provider_dashboard_path
+
+      expect(inertia.props[:notifications].pluck(:title)).to eq([ "Un pedido fue cancelado" ])
+    end
   end
 end

@@ -124,6 +124,10 @@
         "description": "Avisos cuando falta publicar el menú de un día hábil.",
         "title": "Recordatorios de publicación del menú"
       },
+      "order_cancellations": {
+        "description": "Recibí una notificación cuando un pedido sea cancelado por el cliente.",
+        "title": "Cancelaciones"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
@@ -169,6 +173,10 @@
       "hr_debt_payment_reminder": {
         "description": "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos.",
         "title": "Recordatorio de pago pendiente"
+      },
+      "order_cancellation": {
+        "description": "El pedido de %{consumer} del %{date} de %{dish} fue cancelado.",
+        "title": "Un pedido fue cancelado"
       },
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",

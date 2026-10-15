@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Settings::Notifications", type: :request do
-  fixtures :users
+  fixtures :users, :providers
 
   let(:employee) { users(:one) }
   let(:other_employee) { users(:other_consumer_user) }
@@ -54,6 +54,18 @@ RSpec.describe "Settings::Notifications", type: :request do
       get settings_notifications_path
 
       expect(inertia).to have_props { |props| props[:notification_configurations].map { it[:key] } == [ "company_payments" ] }
+    end
+
+    it "al proveedor le muestra sus grupos configurables, incluido cancelaciones, apagados al principio" do
+      sign_in users(:provider_user), role: :provider
+
+      get settings_notifications_path
+
+      expect(inertia).to have_props { |props|
+        keys = props[:notification_configurations].map { it[:key] }
+        keys.sort == %w[menu_publication_reminders order_cancellations provider_orders provider_payments] &&
+          props[:subscribed_keys] == []
+      }
     end
 
     it "redirige al login sin sesión" do

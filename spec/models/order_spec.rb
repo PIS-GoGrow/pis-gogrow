@@ -980,6 +980,45 @@ RSpec.describe Order, type: :model do
         order.cancel(by: order.consumer.user)
       }.not_to change(Notification, :count)
     end
+
+    it "notifies the provider when the consumer cancels a confirmed order" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification).to have_attributes(
+        user: order.provider.user,
+        event: "order_cancellation",
+        role: "provider",
+        requires_action: false,
+        notifiable: order,
+        title: "Un pedido fue cancelado"
+      )
+      expect(notification.description).to eq(
+        "El pedido de #{order.consumer.user.name} del #{order.schedule.date.strftime("%d/%m")} " \
+        "de #{order.menu_name} fue cancelado."
+      )
+    end
+
+    it "does not notify the provider when the cancellation is refused" do
+      order = orders(:upcoming_pending_today)
+      order.update_columns(status: Order.statuses[:confirmed])
+
+      expect(order.cancel(by: order.consumer.user)).to be(false)
+      expect(Notification.where(event: "order_cancellation")).to be_empty
+    end
+
+    it "does not notify the provider when the provider cancels the order itself" do
+      order = orders(:upcoming_confirmed_future)
+
+      order.withdraw!(by: order.provider.user)
+
+      expect(Notification.where(event: "order_cancellation")).to be_empty
+    end
   end
 
   describe "confirmation notification" do
