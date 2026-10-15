@@ -19,8 +19,9 @@ class Payment < ApplicationRecord
   validate :receipt_has_allowed_type
   validate :receipt_is_within_size_limit
 
+  after_update_commit :close_debt_reminder, if: -> { saved_change_to_status? && approved? }
   after_save_commit :close_automatic_payment_reminders,
-                  if: :should_close_automatic_payment_reminders?
+                    if: :should_close_automatic_payment_reminders?
 
   def approve
     update(status: :approved, rejection_reason: nil)
@@ -52,6 +53,14 @@ class Payment < ApplicationRecord
 
   def check_debt_alert
     account.owner.check_debt_alert!
+  end
+
+  # El recordatorio que manda Recursos Humanos es por toda la deuda vencida del
+  # empleado, así que se cierra recién cuando no le queda ninguna.
+  def close_debt_reminder
+    owner = account.owner
+
+    DebtReminders::EmployeeRequest.close_if_settled(owner) if owner.is_a?(Consumer)
   end
 
   def clear_rejection_reason
@@ -110,4 +119,3 @@ end
 #
 #  fk_rails_...  (account_id => accounts.id)
 #  fk_rails_...  (provider_id => providers.id)
-#
