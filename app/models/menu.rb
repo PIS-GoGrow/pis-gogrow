@@ -81,7 +81,7 @@ class Menu < ApplicationRecord
 
   def build_variant(valid_from:, valid_until:)
     saved_menu.variants.build(provider:, name:, description:, price:, valid_from:, valid_until:).tap do |variant|
-      option_groups.each { |g| variant.option_groups.build(name: g.name, options: g.options, limit: g.limit) }
+      option_groups.each { |g| variant.option_groups.build(name: g.name, options: g.options, limit: g.limit, required: g.required) }
     end
   end
 end

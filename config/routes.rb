@@ -44,6 +44,7 @@ Rails.application.routes.draw do
   namespace :provider do
     get "account", to: "accounts#show", as: :account
     get "operational_settings", to: "operational_settings#show", as: :operational_settings
+    resource :payment_details, only: [ :show, :update ]
     resources :menus, except: [ :index, :show ] do
       post :publish, on: :collection
     end

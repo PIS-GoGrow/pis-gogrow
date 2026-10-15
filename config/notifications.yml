@@ -28,6 +28,12 @@ configurations:
   company_payments:
     roles: [admin]
     configurable: true
+  provider_orders:
+    roles: [provider]
+    configurable: true
+  provider_payments:
+    roles: [provider]
+    configurable: true
 
   order_cancellations:
     roles: [provider]
@@ -95,5 +101,15 @@ events:
 
   order_cancellation:
     configuration: order_cancellations
+    role: provider
+    requires_action: false
+
+  order_received:
+    configuration: provider_orders
+    role: provider
+    requires_action: false
+
+  payment_receipt_submitted:
+    configuration: provider_payments
     role: provider
     requires_action: false
