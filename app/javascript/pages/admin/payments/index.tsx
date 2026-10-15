@@ -3,10 +3,10 @@ import { CircleCheck, Wallet } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import BankDetails from "@/components/admin/payments/bank-details"
 import ConsumptionDetailDialog, {
   type ConsumptionDetail,
 } from "@/components/admin/payments/consumption-detail-dialog"
-import BankDetails from "@/components/admin/payments/bank-details"
 import PeriodCard from "@/components/admin/payments/period-card"
 import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
