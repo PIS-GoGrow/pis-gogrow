@@ -1,6 +1,7 @@
 import { UtensilsCrossed } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
+import { Link } from "@inertiajs/react"
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import ClosureBanner from "@/components/consumer/menus/closure-banner"
@@ -23,6 +24,8 @@ import { BenefitCard } from "./benefit-card"
 import type { CartItem, Schedule } from "./consumer-types"
 import { money } from "./formatters"
 
+import { dashboardCart } from "@/routes"
+
 interface Props {
   name: string
   date: string
@@ -35,7 +38,6 @@ interface Props {
   count: number
   total: number
   openDetail: (item: Schedule) => void
-  openCart: () => void
 }
 
 export const today = () => {
@@ -57,7 +59,6 @@ export function WeeklyMenu({
   count,
   total,
   openDetail,
-  openCart,
 }: Props) {
   const { t } = useTranslation()
   const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set())
@@ -217,14 +218,15 @@ export function WeeklyMenu({
               <p className="text-muted-foreground mt-4 text-sm">
                 Agregá platos de distintos días y proveedores.
               </p>
-              <Button
-                type="button"
-                onClick={openCart}
-                disabled={count === 0}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-8 w-full"
-              >
-                Ver carrito
-              </Button>
+              <Link href={dashboardCart().url}>
+                <Button
+                  type="button"
+                  disabled={count === 0}
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-8 w-full"
+                >
+                  Ver carrito
+                </Button>
+              </Link>
             </div>
           </aside>
         </div>
@@ -247,7 +249,6 @@ export function WeeklyMenu({
       {count > 0 && (
         <Button
           type="button"
-          onClick={openCart}
           data-slot="floating-cart-button"
           className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed right-5 bottom-24 left-5 z-20 h-12 rounded-lg text-sm shadow-lg md:bottom-6 lg:hidden"
         >

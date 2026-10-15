@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import { ConsumerCart } from "./consumer-cart"
+import { ConsumerCart } from "./cart"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
 import { type Benefit, cartPricedItem, priceItems } from "./pricing"
 

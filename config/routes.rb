@@ -75,15 +75,19 @@ Rails.application.routes.draw do
   end
 
   scope module: :consumer do
-    get "dashboard", to: "dashboard#index", as: :dashboard
     resource :profile, only: [ :show ]
+
+    get "dashboard", to: "dashboard#index", as: :dashboard
     get "dashboard/confirmation", to: "dashboard#confirmation", as: :dashboard_confirmation
+    get "dashboard/cart", to: "dashboard#cart", as: :dashboard_cart
+    get "dashboard/error", to: "dashboard#error", as: :dashboard_error
 
     resources :menus, only: [ :index ]
     resources :delivery_addresses, only: [ :create ]
 
     resources :orders, only: [ :index, :show, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer
+      post :pricing, on: :collection, as: :pricing
     end
 
     resources :payments, only: [ :create, :update, :destroy ] do

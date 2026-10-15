@@ -11,8 +11,8 @@
 # Con modifiable_order (al modificar una orden) se le devuelve a cada beneficio lo que
 # esa orden ya tenía reservado, para no rechazarla contra su propio consumo.
 class OrderPricing
-  # benefits es un arreglo de la forma:
-  #   [ benefit, units_used ]
+  # benefits es un hash de la forma:
+  #   { benefit, units_used }
   OrderItemPricing = Data.define(:price, :discounted_price, :benefits)
   # total contiene el porcentaje total de subsidios aplicable, base el porcentaje de
   # subsidio mensual, y specials es un arreglo de hashes de la forma

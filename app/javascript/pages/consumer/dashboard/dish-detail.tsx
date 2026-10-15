@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react"
+
 import { ChevronLeft, Star } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
@@ -10,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
-import { type Benefit, cartPricedItem, priceItems } from "./pricing"
+import { Pricing, cartPricedItem, priceItems } from "./pricing"
 
 interface Props {
   item: Schedule
@@ -20,7 +22,6 @@ interface Props {
   setNotes: (value: string) => void
   selections: Selections
   setSelections: (value: Selections) => void
-  benefit: Benefit
   cart: CartItem[]
   back: () => void
   add: () => void
@@ -34,7 +35,6 @@ export function DishDetail({
   setNotes,
   selections,
   setSelections,
-  benefit,
   cart,
   back,
   add,
@@ -42,14 +42,27 @@ export function DishDetail({
   const { t } = useTranslation()
   // El plato se agrega al final del carrito, así que lo que ya está ahí gasta
   // primero el cupo y los usos de los beneficios.
-  const pricing = priceItems(
-    [
-      ...cart.map(cartPricedItem),
-      { key: "", date: item.date, price: item.menu.price, quantity },
-    ],
-    benefit,
-  )
-  const line = pricing.lines[""]
+  const [loading, setLoading] = useState<boolean>(true)
+  const [pricing, setPricing] = useState<Pricing | null>(null)
+
+  useEffect(() => {
+    const handlePrice = async () => {
+      const result = await priceItems([
+        ...cart.map(cartPricedItem),
+        {
+          schedule_id: item.id,
+          quantity,
+        },
+      ])
+
+      setPricing(result)
+      setLoading(false)
+    }
+
+    handlePrice()
+  }, [cart, item.id, item.date, item.menu.price, quantity])
+
+  const line = pricing?.lines[String(item.id)]
   const reviews = item.menu.reviews
   const choicesMissing = item.menu.option_groups.some(
     (group) => group.required && !selections[group.id]?.length,
@@ -148,9 +161,10 @@ export function DishDetail({
         </p>
       </section>
       <OrderSummary
-        subtotal={line.subtotal}
-        total={line.total}
-        tiers={line.tiers}
+        loading={loading}
+        subtotal={line?.subtotal}
+        total={line?.total}
+        tiers={line?.tiers}
       />
       <BottomAction className="flex">
         <QuantityInput
