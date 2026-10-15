@@ -59,6 +59,7 @@ const account: Account = {
   month: "agosto de 2026",
   due_date: "10/09/26",
   due_date_passed: false,
+  collection_status: "pending",
   orders_amount_sum: 100,
   orders_price_sum: 15000,
   payments: [],
@@ -162,5 +163,52 @@ describe("Admin Payments Page", () => {
 
     expect(screen.getByText("$19.500")).toBeInTheDocument()
     expect(screen.getByText("(130 viandas)")).toBeInTheDocument()
+  })
+
+  it("shows the status the server resolved for each period", () => {
+    const payment = {
+      rejection_reason: null,
+      receipt_uploaded_at: "01/09/2026",
+    }
+
+    render(
+      <Index
+        {...props}
+        accounts={[
+          {
+            ...account,
+            collection_status: "submitted",
+            payments: [
+              {
+                ...payment,
+                id: 1,
+                status: "submitted",
+                created_at: "2026-09-01T10:00:00Z",
+              },
+              {
+                ...payment,
+                id: 2,
+                status: "approved",
+                created_at: "2026-09-02T10:00:00Z",
+              },
+            ],
+          },
+        ]}
+        providers={[
+          {
+            id: 2,
+            name: "Tu Viandita",
+            home_delivery: true,
+            bank_name: null,
+            bank_account_number: null,
+            bank_account_holder: null,
+          },
+        ]}
+      />,
+    )
+
+    expect(
+      document.querySelector("[data-slot='card-header'] [data-status]"),
+    ).toHaveAttribute("data-status", "submitted")
   })
 })

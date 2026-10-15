@@ -80,6 +80,26 @@ RSpec.describe "Admin::Payments", type: :request do
         expect(inertia.props[:history].pluck(:id)).to contain_exactly(accounts(:gogrow_tuviandita_previous).id)
       end
 
+      # Con un comprobante viejo sin revisar, el período sigue en revisión
+      # aunque haya otro aprobado después: es la regla de Account#collection_status,
+      # la misma que usa el inicio de RR. HH.
+      it "shows a period with the same status as the home when an older receipt is still under review" do
+        account = accounts(:gogrow_tuviandita_previous)
+        older = account.payments.build(provider: account.provider, status: :submitted, created_at: 1.day.ago)
+        older.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+        older.save!
+
+        get admin_dashboard_path
+        home_status = inertia.props[:payments].sole["status"]
+
+        get admin_payments_path
+        period = inertia.props[:accounts].find { it[:id] == account.id }
+
+        expect(home_status).to eq("submitted")
+        expect(period[:collection_status]).to eq(home_status)
+        expect(inertia.props[:history].pluck(:id)).not_to include(account.id)
+      end
+
       it "counts the subsidy and the meals of the current month" do
         get admin_payments_path
 
