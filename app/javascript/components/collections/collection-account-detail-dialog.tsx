@@ -12,7 +12,6 @@ import {
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
 import StatusBadge from "@/components/status-badge"
-import TextLink from "@/components/text-link"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -24,7 +23,6 @@ import {
 } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
-import { providerCollections } from "@/routes"
 import type {
   ProviderCollectionAccount,
   ProviderCollectionOrder,
@@ -179,15 +177,7 @@ export default function CollectionAccountDetailDialog({
           )}
         </div>
 
-        <AdaptableDialogFooter className="p-4 sm:flex-col">
-          {account.payments.length > 0 && (
-            <TextLink
-              href={providerCollections.show(account.id)}
-              className="self-center text-sm"
-            >
-              {t(`${page}.payment_history`)}
-            </TextLink>
-          )}
+        <AdaptableDialogFooter className="p-4">
           <AdaptableDialogClose asChild>
             <Button className="w-full">{t(`${page}.close`)}</Button>
           </AdaptableDialogClose>
