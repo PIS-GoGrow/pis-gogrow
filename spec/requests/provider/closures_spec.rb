@@ -4,7 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Provider::Closures", type: :request do
-  fixtures :users, :providers
+  fixtures :users, :providers, :admins
 
   let(:provider) { providers(:tuviandita) }
   let(:today) { Date.new(2026, 10, 12) }
@@ -16,8 +16,8 @@ RSpec.describe "Provider::Closures", type: :request do
     owner.closures.create!(starts_on:, ends_on:, reason:)
   end
 
-  def error_message(attribute, key)
-    I18n.t("activerecord.errors.models.provider_closure.attributes.#{attribute}.#{key}")
+  def error_message(attribute, key, **options)
+    I18n.t("activerecord.errors.models.provider_closure.attributes.#{attribute}.#{key}", **options)
   end
 
   describe "POST /provider/closures" do
@@ -35,8 +35,17 @@ RSpec.describe "Provider::Closures", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    it "redirects an admin to the home page" do
+      sign_in users(:admin), role: :admin
+
+      expect { post provider_closures_path, params: }.not_to change(ProviderClosure, :count)
+
+      expect(response).to redirect_to(root_path)
+    end
+
     context "as a provider" do
       before { sign_in users(:provider_user), role: :provider }
+
 
       it "saves the closure for the signed-in provider and shows it back" do
         expect { post provider_closures_path, params: }.to change { provider.closures.count }.by(1)
@@ -100,6 +109,31 @@ RSpec.describe "Provider::Closures", type: :request do
         expect(response).to redirect_to(provider_operational_settings_path)
       end
 
+      it "rejects a whitespace-only reason" do
+        expect { post provider_closures_path, params: params.merge(reason: "   ") }.not_to change(ProviderClosure, :count)
+
+        expect(response).to redirect_to(provider_operational_settings_path)
+        follow_redirect!
+        expect(inertia).to have_props(errors: { reason: [ error_message(:reason, :blank) ] })
+      end
+
+      it "rejects a reason longer than 100 characters" do
+        expect { post provider_closures_path, params: params.merge(reason: "a" * 101) }.not_to change(ProviderClosure, :count)
+
+        expect(response).to redirect_to(provider_operational_settings_path)
+        follow_redirect!
+        expect(inertia).to have_props(errors: { reason: [ error_message(:reason, :too_long, count: 100) ] })
+      end
+
+      it "ignores unpermitted injected attributes" do
+        expect do
+          post provider_closures_path, params: params.merge(injected_role: "admin", is_admin: true)
+        end.to change { provider.closures.count }.by(1)
+
+        expect(response).to redirect_to(provider_operational_settings_path)
+        expect(provider.closures.last.reason).to eq("Vacaciones")
+      end
+
       it "rejects a range that overlaps another closure of the provider" do
         create_closure(starts_on: today + 8, ends_on: today + 12)
 
@@ -113,6 +147,32 @@ RSpec.describe "Provider::Closures", type: :request do
 
   describe "PATCH /provider/closures/:id" do
     let!(:closure) { create_closure }
+
+    it "redirects an admin to the home page and keeps the closure" do
+      sign_in users(:admin), role: :admin
+
+      patch provider_closure_path(closure), params: { reason: "Admin patch" }
+
+      expect(response).to redirect_to(root_path)
+      expect(closure.reload.reason).to eq("Vacaciones")
+    end
+
+    it "redirects a consumer to the home page and keeps the closure" do
+      sign_in users(:one), role: :consumer
+
+      patch provider_closure_path(closure), params: { reason: "Consumer patch" }
+
+      expect(response).to redirect_to(root_path)
+      expect(closure.reload.reason).to eq("Vacaciones")
+    end
+
+    it "returns 404 for a non-existent closure id" do
+      sign_in users(:provider_user), role: :provider
+
+      patch provider_closure_path(id: 999_999), params: { reason: "Nuevo" }
+
+      expect(response).to have_http_status(:not_found)
+    end
 
     context "as a provider" do
       before { sign_in users(:provider_user), role: :provider }
@@ -130,6 +190,22 @@ RSpec.describe "Provider::Closures", type: :request do
         expect(closure.reload.reason).to eq("Vacaciones")
         follow_redirect!
         expect(inertia).to have_props(errors: { reason: [ error_message(:reason, :blank) ] })
+      end
+
+      it "rejects an end date before the start date on update" do
+        patch provider_closure_path(closure), params: { ends_on: (closure.starts_on - 1.day).iso8601 }
+
+        expect(closure.reload.ends_on).to eq(today + 9)
+        follow_redirect!
+        expect(inertia).to have_props(errors: { ends_on: [ error_message(:ends_on, :greater_than_or_equal_to) ] })
+      end
+
+      it "rejects a reason longer than 100 characters on update" do
+        patch provider_closure_path(closure), params: { reason: "a" * 101 }
+
+        expect(closure.reload.reason).to eq("Vacaciones")
+        follow_redirect!
+        expect(inertia).to have_props(errors: { reason: [ error_message(:reason, :too_long, count: 100) ] })
       end
 
       it "does not overlap with itself but rejects overlapping another closure" do
@@ -162,6 +238,22 @@ RSpec.describe "Provider::Closures", type: :request do
 
   describe "DELETE /provider/closures/:id" do
     let!(:closure) { create_closure }
+
+    it "redirects an admin to the home page and keeps the closure" do
+      sign_in users(:admin), role: :admin
+
+      expect { delete provider_closure_path(closure) }.not_to change(ProviderClosure, :count)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "returns 404 for a non-existent closure id" do
+      sign_in users(:provider_user), role: :provider
+
+      delete provider_closure_path(id: 999_999)
+
+      expect(response).to have_http_status(:not_found)
+    end
 
     context "as a provider" do
       before { sign_in users(:provider_user), role: :provider }

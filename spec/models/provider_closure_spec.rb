@@ -174,4 +174,34 @@ RSpec.describe ProviderClosure, type: :model do
 
     expect { provider.destroy! }.to change { described_class.exists?(record.id) }.from(true).to(false)
   end
+
+  describe "database integrity and boundary cases" do
+    it "raises NotNullViolation when starts_on is nil at database level" do
+      record = closure.tap(&:save!)
+      expect { record.update_column(:starts_on, nil) }.to raise_error(ActiveRecord::NotNullViolation)
+    end
+
+    it "raises NotNullViolation when ends_on is nil at database level" do
+      record = closure.tap(&:save!)
+      expect { record.update_column(:ends_on, nil) }.to raise_error(ActiveRecord::NotNullViolation)
+    end
+
+    it "raises NotNullViolation when reason is nil at database level" do
+      record = closure.tap(&:save!)
+      expect { record.update_column(:reason, nil) }.to raise_error(ActiveRecord::NotNullViolation)
+    end
+
+    it "raises NotNullViolation when provider_id is nil at database level" do
+      record = closure.tap(&:save!)
+      expect { record.update_column(:provider_id, nil) }.to raise_error(ActiveRecord::NotNullViolation)
+    end
+
+    it "handles ranges crossing the year boundary" do
+      new_year_closure = closure(starts_on: Date.new(2026, 12, 30), ends_on: Date.new(2027, 1, 3))
+      expect(new_year_closure).to be_valid
+      expect(new_year_closure.covers?(Date.new(2026, 12, 31))).to be true
+      expect(new_year_closure.covers?(Date.new(2027, 1, 1))).to be true
+      expect(new_year_closure.covers?(Date.new(2027, 1, 4))).to be false
+    end
+  end
 end
