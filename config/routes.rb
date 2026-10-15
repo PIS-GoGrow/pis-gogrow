@@ -37,12 +37,14 @@ Rails.application.routes.draw do
     resource :password, only: [ :show, :update ]
     resource :email, only: [ :show, :update ]
     resources :sessions, only: [ :index ]
+    resources :notifications, only: [ :index, :update ]
     inertia :appearance
   end
 
   namespace :provider do
     get "account", to: "accounts#show", as: :account
     get "operational_settings", to: "operational_settings#show", as: :operational_settings
+    resource :payment_details, only: [ :show, :update ]
     resources :menus, except: [ :index, :show ] do
       post :publish, on: :collection
     end
@@ -92,6 +94,7 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
     resources :special_subsidies, only: [ :create, :update, :destroy ]
+    resource :debt_alert, only: [ :update ]
     resources :consumers, only: [ :index, :show ]
     resources :invoices, only: [ :index ] do
       get :file, on: :member

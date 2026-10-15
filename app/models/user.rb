@@ -10,6 +10,8 @@
 class User < ApplicationRecord
   class DomainNotAllowed < StandardError; end
 
+  include Auditable
+
   ROLES = %i[consumer provider admin].freeze
 
   has_secure_password
@@ -33,9 +35,13 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, allow_nil: true, length: { minimum: 12 }
   validates :google_uid, uniqueness: true, allow_nil: true
+  validates :phone, format: { with: /\A\+?\d{8,15}\z/ }, allow_blank: true
   validate :password_meets_provider_policy, on: :provider_password
 
   normalizes :email, with: -> { _1.strip.downcase }
+  normalizes :phone, with: -> { it.gsub(/[\s()-]/, "").presence }
+
+  audits :email, :phone
 
   before_validation if: :email_changed?, on: :update do
     self.verified = false
@@ -129,6 +135,7 @@ end
 #  google_uid      :string
 #  name            :string           not null
 #  password_digest :string           not null
+#  phone           :string
 #  roles           :string           default([]), not null, is an Array
 #  verified        :boolean          default(FALSE), not null
 #  created_at      :datetime         not null

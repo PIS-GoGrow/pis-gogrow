@@ -27,6 +27,7 @@ es:
     order_updated: "Pedido actualizado."
     already_signed_in: "Ya inició sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
+    debt_alert_updated: "Monto de alerta de deuda actualizado"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
     email_verification_sent: "Enviamos un correo de verificación a tu dirección"
@@ -39,6 +40,7 @@ es:
     invitation_invalid: "La invitación no es válida o ya fue usada. Solicite a su administrador que se la envíe nuevamente."
     too_many_attempts: "Realizó demasiados intentos. Espere unos minutos y vuelva a probar."
     profile_updated: "Tu perfil fue actualizado"
+    payment_details_updated: "Datos de cobro actualizados"
     session_logged_out: "Esa sesión fue cerrada"
     signed_in: "Inició sesión correctamente"
     signed_up: "¡Te damos la bienvenida! Tu registro se completó correctamente"
@@ -53,6 +55,7 @@ es:
     payment_receipt_removed: "Comprobante eliminado."
     invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
     invoice_removed: "Factura eliminada."
+    config_update: "Configuración actualizada"
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -94,6 +97,12 @@ es:
       invalid_date: "Elegí un día de semana entre hoy y la fecha máxima de publicación."
       invalid_menus: "Algún plato elegido no existe."
   notifications:
+    order_received:
+      title: "Nuevo pedido"
+      description: "%{consumer} pidió %{amount} de %{dish} para el %{date}."
+    payment_receipt_submitted:
+      title: "Nuevo comprobante de pago"
+      description: "%{payer} envió un comprobante de pago de %{month}."
     order_confirmation:
       title: "Tu pedido fue confirmado"
       description: "Tu pedido del %{date} fue confirmado por %{provider}."
@@ -111,6 +120,9 @@ es:
     order_withdrawal:
       title: "Tu pedido fue cancelado"
       description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible."
+    debt_threshold_exceeded:
+      title: "Tu deuda superó el monto límite"
+      description: "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca."
     debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
@@ -136,9 +148,18 @@ es:
       title: "Publicá el menú del día"
       description: "Todavía no publicaste un menú para el %{date}."
   notification_configurations:
+    provider_orders:
+      title: "Pedidos nuevos"
+      description: "Recibí una notificación cuando un empleado te haga un pedido."
+    provider_payments:
+      title: "Comprobantes de pago"
+      description: "Recibí una notificación cuando te envíen un comprobante de pago."
     order_updates:
       title: "Actualizaciones de pedidos"
       description: "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado."
+    debt_alerts:
+      title: "Alertas de deuda"
+      description: "Recibí una notificación cuando tu deuda supere el monto definido por RRHH."
     provider_payment_reminders:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
@@ -266,6 +287,7 @@ es:
       password: "Contraseña"
       sessions: "Sesiones"
       appearance: "Apariencia"
+      notifications: "Notificaciones"
     payments: "Pagos"
     collections: "Cobros"
     consumer:
@@ -374,6 +396,13 @@ es:
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
               unexpected: "Error inesperado. Por favor reintentá la operación."
+          debt_alert:
+            title: "Alerta de deuda"
+            description: "Avisamos a cada empleado cuando su deuda supera este monto."
+            threshold: "Monto límite"
+            edit: "Editar monto"
+            cancel: "Cancelar"
+            submit: "Guardar"
           special:
             title: "Subsidios especiales"
             description: "Los subsidios especiales se suman al Base."
@@ -991,6 +1020,8 @@ es:
           edit: "Editar %{name}"
           remove: "Borrar %{name}"
           limit: "Límite %{limit}"
+          required: "Obligatorio"
+          optional: "Opcional"
         group:
           title: "Agregá opciones"
           description: "Armá un grupo de opciones para que el empleado elija."
@@ -1001,6 +1032,8 @@ es:
           options_hint: "Ingresá las opciones separadas por coma."
           duplicates: "No se permiten opciones repetidas."
           limit: "¿Cuántas opciones pueden elegir a la vez?"
+          required: "Obligatorio"
+          required_hint: "El empleado tiene que elegir al menos una opción de este grupo para pedir el plato."
           cancel: "Cancelar"
           add: "Agregar"
           modify: "Modificar"
@@ -1147,6 +1180,26 @@ es:
         deliveries_description: "Elegí dónde realizás tus entregas"
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
+        profile: "Perfil"
+        profile_description: "Editá tu nombre, correo, teléfono y contraseña"
+    provider_payment_details:
+      show:
+        title: "Datos de cobro"
+        description: "Indicá la cuenta donde querés recibir los pagos de los empleados."
+        back: "Volver a Cuenta"
+        bank_name: "Banco"
+        bank_name_placeholder: "Ej. BROU"
+        bank_account_type: "Tipo de cuenta"
+        bank_account_type_placeholder: "Elegí el tipo de cuenta"
+        bank_account_types:
+          savings: "Caja de ahorro"
+          checking: "Cuenta corriente"
+        bank_account_number: "Número de cuenta"
+        bank_account_holder: "Titular de la cuenta"
+        tax_id: "RUT o CI del titular"
+        tax_id_description: "Solo números: 12 dígitos para RUT, 7 u 8 para CI."
+        sensitive_notice: "Los cambios en estos datos quedan registrados."
+        submit: "Guardar"
     provider_operational_settings:
       show:
         title: "Configuración operativa"
@@ -1167,6 +1220,8 @@ es:
       options:
         choose: "Elegí tu %{name}"
         limit: "Podés elegir hasta %{count}"
+        required: "Obligatorio"
+        optional: "Opcional"
     sessions:
       new:
         title: "Iniciar sesión"
@@ -1221,7 +1276,10 @@ es:
       profile:
         title: "Configuración del perfil"
         heading: "Información del perfil"
-        description: "Actualiza tu nombre"
+        description: "Actualiza tu nombre y tu teléfono"
+        phone: "Teléfono"
+        phone_placeholder: "+59899123456"
+        phone_description: "Lo usamos para enviarte notificaciones por WhatsApp."
         home_delivery:
           heading: "Editar información de pedidos"
           label: "También realizo entregas a domicilio"
@@ -1244,6 +1302,10 @@ es:
         ip: "IP: %{address}"
         active_since: "Activa desde: %{time}"
         log_out: "Cerrar sesión"
+      notifications:
+        heading: "Notificaciones"
+        title: "Notificaciones"
+        description: "Configurá qué alertas querés recibir por WhatsApp"
   date:
     formats:
       month_year: "%B de %Y"

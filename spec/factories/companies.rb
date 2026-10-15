@@ -11,9 +11,10 @@ end
 #
 # Table name: companies
 #
-#  id         :bigint           not null, primary key
-#  address    :string
-#  name       :string
-#  created_at :datetime         not null
-#  updated_at :datetime         not null
+#  id                   :bigint           not null, primary key
+#  address              :string
+#  debt_alert_threshold :integer          default(2000), not null
+#  name                 :string
+#  created_at           :datetime         not null
+#  updated_at           :datetime         not null
 #

@@ -124,7 +124,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       # P1 tiene publicado un menú para el martes.
       milanesa_tuesday = publish(p1_milanesa, tuesday, amount: 8)
       publish(p1_wok, tuesday, amount: 3)
-      p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ])
+      p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ], required: true)
 
       # E1 elige fecha, plato, opción, nota, entrega y dirección, y confirma.
       open_menu(as: e1_user, day: tuesday)

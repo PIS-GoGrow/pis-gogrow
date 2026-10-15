@@ -13,6 +13,10 @@ configurations:
     roles: [consumer]
     configurable: true
 
+  debt_alerts:
+    roles: [consumer]
+    configurable: false
+
   provider_payment_reminders:
     roles: [consumer]
     configurable: false
@@ -23,6 +27,12 @@ configurations:
 
   company_payments:
     roles: [admin]
+    configurable: true
+  provider_orders:
+    roles: [provider]
+    configurable: true
+  provider_payments:
+    roles: [provider]
     configurable: true
 
   menu_publication_reminders:
@@ -48,6 +58,11 @@ events:
     configuration: order_updates
     role: consumer
     requires_action: false
+
+  debt_threshold_exceeded:
+    configuration: debt_alerts
+    role: consumer
+    requires_action: true
 
   debt_payment_reminder:
     configuration: provider_payment_reminders
@@ -88,3 +103,13 @@ events:
     configuration: menu_publication_reminders
     role: provider
     requires_action: true
+
+  order_received:
+    configuration: provider_orders
+    role: provider
+    requires_action: false
+
+  payment_receipt_submitted:
+    configuration: provider_payments
+    role: provider
+    requires_action: false
