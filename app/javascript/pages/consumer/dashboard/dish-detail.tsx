@@ -65,7 +65,7 @@ export function DishDetail({
         size="icon"
         onClick={back}
         aria-label={t("pages.consumer_dashboard.dish_detail.back")}
-        className="mb-3 size-9 rounded-[10px]"
+        className="mb-3 size-9"
       >
         <ChevronLeft aria-hidden="true" className="size-4" />
       </Button>
@@ -178,7 +178,7 @@ export function DishDetail({
         <Button
           disabled={addDisabled}
           onClick={add}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-[10px] text-base font-medium disabled:opacity-50"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 text-base font-medium disabled:opacity-50"
         >
           {t("pages.consumer_dashboard.dish_detail.add")}
         </Button>

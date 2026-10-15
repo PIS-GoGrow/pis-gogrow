@@ -2,6 +2,7 @@ import { router, usePage } from "@inertiajs/react"
 import { Head } from "@inertiajs/react"
 import { SlidersHorizontal, UtensilsCrossed } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
@@ -28,11 +29,13 @@ import type { BreadcrumbItem, ConsumerMenusIndex, SharedProps } from "@/types"
 
 function formatDateHeading(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00")
-  const str = d.toLocaleDateString("es-AR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  })
+  const str = d
+    .toLocaleDateString("es-AR", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    })
+    .replace(",", "")
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
@@ -50,6 +53,7 @@ export default function Index({
   schedules,
   providers,
 }: ConsumerMenusIndex) {
+  const { t } = useTranslation()
   const { auth } = usePage<SharedProps>().props
   const firstName = auth.user.name.split(" ")[0]
   const isPast = date < todayStr()
@@ -119,9 +123,11 @@ export default function Index({
         <WeekNav date={date} onChange={handleDateChange} />
 
         <div className="mt-6 mb-3 flex items-center">
-          <span className="text-muted-foreground text-sm">
-            Proveedores:{" "}
-            <span className="text-foreground font-medium">{filterLabel}</span>
+          <span className="text-foreground text-sm">
+            {t("pages.consumer_dashboard.weekly_menu.providers")}{" "}
+            <span className="text-muted-foreground font-normal">
+              {filterLabel}
+            </span>
           </span>
           <Button
             variant="ghost"

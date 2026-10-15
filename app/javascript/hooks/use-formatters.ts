@@ -3,7 +3,13 @@ import { usePage } from "@inertiajs/react"
 // Fechas e importes siguen el locale de la app, igual que los textos: si el día
 // de mañana se agrega otro idioma, no hay que tocar los componentes.
 export const useFormatters = () => {
-  const { locale } = usePage().props
+  let locale = "es"
+  try {
+    const pageProps = usePage()?.props as { locale?: string } | undefined
+    if (pageProps?.locale) locale = pageProps.locale
+  } catch {
+    // Fallback when rendered outside Inertia context (e.g. unit tests)
+  }
 
   const formatMoney = (amount: number) =>
     new Intl.NumberFormat(locale, {

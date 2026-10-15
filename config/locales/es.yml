@@ -1434,7 +1434,7 @@ es:
         description: "Configurá qué alertas querés recibir por WhatsApp"
   date:
     formats:
-      month_year: "%B de %Y"
+      month_year: "%B %Y"
       month_name_year: "%B %Y"
       day_month: "%-d de %B"
       day_month_year: "%-d de %B de %Y"

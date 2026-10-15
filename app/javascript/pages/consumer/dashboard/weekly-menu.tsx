@@ -103,11 +103,13 @@ export function WeeklyMenu({
             {t("pages.consumer_dashboard.weekly_menu.greeting", { name })}
           </h1>
           <p className="text-muted-foreground text-base capitalize">
-            {new Date(`${currentDate}T00:00:00`).toLocaleDateString("es-UY", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
+            {new Date(`${currentDate}T00:00:00`)
+              .toLocaleDateString("es-UY", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })
+              .replace(",", "")}
           </p>
         </header>
 
@@ -146,9 +148,9 @@ export function WeeklyMenu({
             )}
 
             <div className="mt-6 mb-3 flex items-center">
-              <span className="text-muted-foreground min-w-0 truncate text-sm">
+              <span className="text-foreground min-w-0 truncate text-sm">
                 {t("pages.consumer_dashboard.weekly_menu.providers")}{" "}
-                <span className="text-foreground font-medium">
+                <span className="text-muted-foreground font-normal">
                   {filterLabel}
                 </span>
               </span>
@@ -261,7 +263,7 @@ export function WeeklyMenu({
           type="button"
           onClick={openCart}
           data-slot="floating-cart-button"
-          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed right-5 bottom-24 left-5 z-20 h-12 rounded-[10px] text-base font-medium shadow-lg md:bottom-6 lg:hidden"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed right-5 bottom-24 left-5 z-20 h-12 text-base font-medium shadow-lg md:bottom-6 lg:hidden"
         >
           {t("pages.consumer_dashboard.weekly_menu.view_cart")}
         </Button>

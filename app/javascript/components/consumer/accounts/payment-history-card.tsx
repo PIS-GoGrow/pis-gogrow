@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/collapsible"
 import { Separator } from "@/components/ui/separator"
 import { SheetTrigger } from "@/components/ui/sheet"
+import { useFormatters } from "@/hooks/use-formatters"
 import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
@@ -39,6 +40,7 @@ export default function PaymentHistoryCard({
   setLoading,
 }: PaymentHistoryCardProps) {
   const { t } = useTranslation()
+  const { formatMoney } = useFormatters()
 
   const receipts = [...account.payments]
     .filter((payment) => Boolean(payment.receipt_url))
@@ -78,7 +80,7 @@ export default function PaymentHistoryCard({
 
         <CardTitle className="flex items-center">
           <span>
-            ${account.orders_price_sum}
+            {formatMoney(account.orders_price_sum)}
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
               {account.orders_amount_sum}{" "}

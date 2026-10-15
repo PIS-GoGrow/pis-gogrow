@@ -68,7 +68,7 @@ export function ProviderMobileNav() {
   return (
     <nav
       aria-label={t("nav.provider.mobile_navigation")}
-      className="bg-background fixed inset-x-0 bottom-0 z-30 flex h-[72px] items-center justify-center px-6 md:hidden"
+      className="fixed bottom-4 left-1/2 z-30 flex h-[60px] w-[354px] max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center justify-center rounded-full border-y border-white bg-white/80 p-1 shadow-[0px_0px_24px_rgba(10,10,10,0.1),inset_0px_6px_6px_rgba(255,255,255,0.3)] backdrop-blur-[5px] md:hidden dark:border-white/10 dark:bg-neutral-900/80 dark:shadow-[0px_0px_24px_rgba(0,0,0,0.4),inset_0px_1px_1px_rgba(255,255,255,0.1)]"
     >
       {links.map(({ label, icon, href, active }) => (
         <Link
@@ -77,10 +77,10 @@ export function ProviderMobileNav() {
           prefetch
           aria-current={active ? "page" : undefined}
           className={cn(
-            "text-foreground flex h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full p-1 text-[12px] leading-4 font-medium transition-colors",
+            "flex h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-full p-1 text-[12px] leading-4 font-medium text-[#0A0A0A] transition-colors dark:text-neutral-100",
             active
-              ? "bg-[#EDEDED] dark:bg-neutral-800"
-              : "hover:bg-[#EDEDED]/50 dark:hover:bg-neutral-800/50",
+              ? "bg-[#E5E5E5] dark:bg-neutral-800"
+              : "hover:bg-[#E5E5E5]/50 dark:hover:bg-neutral-800/50",
           )}
         >
           <HugeiconsIcon
