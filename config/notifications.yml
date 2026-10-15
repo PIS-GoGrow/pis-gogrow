@@ -28,9 +28,18 @@ configurations:
   company_payments:
     roles: [admin]
     configurable: true
+
   hr_payment_reminders:
     roles: [consumer]
     configurable: false
+
+  provider_orders:
+    roles: [provider]
+    configurable: true
+
+  provider_payments:
+    roles: [provider]
+    configurable: true
 
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
@@ -95,4 +104,14 @@ events:
   hr_debt_payment_reminder:
     configuration: hr_payment_reminders
     role: consumer
+    requires_action: false
+
+  order_received:
+    configuration: provider_orders
+    role: provider
+    requires_action: false
+
+  payment_receipt_submitted:
+    configuration: provider_payments
+    role: provider
     requires_action: false

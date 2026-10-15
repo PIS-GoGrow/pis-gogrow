@@ -9,6 +9,7 @@ class Payment < ApplicationRecord
   has_one_attached :receipt
 
   before_validation :clear_rejection_reason, if: :submitted?
+  after_commit :notify_receipt_submitted, if: -> { saved_change_to_status? && submitted? }
   after_commit :check_debt_alert, if: -> { account.owner.is_a?(Consumer) && (destroyed? || saved_change_to_status?) }
   after_commit :notify_company_admins, on: [ :create, :update ], if: -> { saved_change_to_status? && account.company? }
 
@@ -31,6 +32,24 @@ class Payment < ApplicationRecord
   end
 
   private
+
+  # Un comprobante reenviado es el mismo pago, y solo puede haber una
+  # notificación activa por pago.
+  def notify_receipt_submitted
+    user = account.provider.user
+    return unless user
+
+    Notification.close_by(event: "payment_receipt_submitted", notifiable: self, user:)
+    Notifier.call(
+      event_key: :payment_receipt_submitted,
+      user:,
+      notifiable: self,
+      description_data: {
+        payer: account.owner.is_a?(Consumer) ? account.owner.user.name : account.owner.name,
+        month: I18n.l(account.month, format: "%B %Y")
+      }
+    )
+  end
 
   def check_debt_alert
     account.owner.check_debt_alert!

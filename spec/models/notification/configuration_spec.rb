@@ -8,7 +8,7 @@ RSpec.describe Notification::Configuration do
       expect(described_class.for_role(:consumer).pluck(:key))
         .to contain_exactly("order_updates", "provider_payment_reminders", "automatic_payment_reminders", "debt_alerts", "hr_payment_reminders")
       expect(described_class.for_role(:admin).pluck(:key)).to eq([ "company_payments" ])
-      expect(described_class.for_role(:provider)).to be_empty
+      expect(described_class.for_role(:provider).pluck(:key)).to contain_exactly("provider_orders", "provider_payments")
     end
   end
 end

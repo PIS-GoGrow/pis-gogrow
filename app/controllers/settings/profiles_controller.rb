@@ -5,6 +5,7 @@ class Settings::ProfilesController < InertiaController
 
   def show
     @provider = Current.session.provider? ? Current.user.provider : nil
+    @phone = @user.phone
   end
 
   def update
@@ -24,7 +25,7 @@ class Settings::ProfilesController < InertiaController
   end
 
   def user_params
-    params.permit(:name)
+    params.permit(:name, :phone)
   end
 
   def update_provider
