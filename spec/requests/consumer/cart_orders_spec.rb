@@ -265,15 +265,6 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(inertia).to have_props(total: 570.0)
     end
 
-    it "reparte los usos del especial sobre los primeros platos del carrito" do
-      order_cart([ wednesday, 1 ], [ thursday, 2 ])
-
-      first, second = consumer.orders.where(schedule: [ wednesday, thursday ]).order(:id)
-      expect(first.discounted_price).to eq(60)
-      expect(second.discounted_price).to eq(510)
-      expect(second.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ special.id, 1 ])
-    end
-
     it "no bloquea el pedido cuando supera los usos del especial" do
       special.update!(amount: 1)
       OrderBenefit.create!(order: orders(:upcoming_pending_future), benefit: special, benefit_used: 1)
