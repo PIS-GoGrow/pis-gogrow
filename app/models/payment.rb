@@ -18,8 +18,8 @@ class Payment < ApplicationRecord
   validate :receipt_has_allowed_type
   validate :receipt_is_within_size_limit
 
-  after_save_commit :close_automatic_payment_reminders,
-                  if: :should_close_automatic_payment_reminders?
+  after_save_commit :close_payment_reminders,
+                  if: :should_close_payment_reminders?
 
   def approve
     update(status: :approved, rejection_reason: nil)
@@ -61,12 +61,12 @@ class Payment < ApplicationRecord
     errors.add(:receipt, :too_large)
   end
 
-  def should_close_automatic_payment_reminders?
+  def should_close_payment_reminders?
     saved_change_to_status? && (submitted? || approved?)
   end
 
-  def close_automatic_payment_reminders
-    PaymentReminders::CloseActive.call(account:)
+  def close_payment_reminders
+    PaymentReminders::CloseActive.call(account:, settled: approved?)
   end
 end
 

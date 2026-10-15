@@ -52,8 +52,24 @@ RSpec.describe PaymentReminders::CloseActive do
     expect(due_soon.reload.closed_at).to be_present
   end
 
-  it "does not close the provider manual debt reminder" do
-    notification = Notifier.call(
+  it "does not close the provider manual debt reminder while the receipt is under review" do
+    notification = manual_reminder
+
+    described_class.call(account:)
+
+    expect(notification.reload.closed_at).to be_nil
+  end
+
+  it "closes the provider manual debt reminder once the payment is settled" do
+    notification = manual_reminder
+
+    described_class.call(account:, settled: true)
+
+    expect(notification.reload.closed_at).to be_present
+  end
+
+  def manual_reminder
+    Notifier.call(
       event_key: "debt_payment_reminder",
       user:,
       notifiable: account,
@@ -63,9 +79,5 @@ RSpec.describe PaymentReminders::CloseActive do
         period: "octubre de 2026"
       }
     )
-
-    described_class.call(account:)
-
-    expect(notification.reload.closed_at).to be_nil
   end
 end
