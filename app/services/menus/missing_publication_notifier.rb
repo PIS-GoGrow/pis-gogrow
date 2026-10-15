@@ -18,23 +18,23 @@ class Menus::MissingPublicationNotifier
     end
   end
 
+  def self.close_obsolete(date: Date.current)
+    Notification.active.where(event: EVENT, created_at: ...date.in_time_zone).find_each do |notification|
+      Notification.close_by(event: EVENT, notifiable: notification.notifiable, user: notification.user)
+    end
+  end
+
   def initialize(providers:, date:)
     @providers = providers
     @date = date
   end
 
   def call
-    close_obsolete
+    self.class.close_obsolete(date: @date)
     @providers.includes(:user).find_each { notify(it) }
   end
 
   private
-
-  def close_obsolete
-    Notification.active.where(event: EVENT, created_at: ...@date.in_time_zone).find_each do |notification|
-      Notification.close_by(event: EVENT, notifiable: notification.notifiable, user: notification.user)
-    end
-  end
 
   def notify(provider)
     return unless provider.user
