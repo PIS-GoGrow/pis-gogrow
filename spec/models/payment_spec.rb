@@ -28,6 +28,35 @@ RSpec.describe Payment, type: :model do
     expect(described_class.new.status).to eq("pending")
   end
 
+  describe "the provider notification" do
+    let(:notifications) { Notification.where(event: "payment_receipt_submitted", user: provider.user) }
+
+    it "notifies the provider when a receipt is sent" do
+      payment_with_receipt.save!
+
+      expect(notifications.sole).to have_attributes(
+        role: "provider",
+        title: "Nuevo comprobante de pago",
+        description: start_with("Lucía envió un comprobante de pago de")
+      )
+    end
+
+    it "keeps a single active notification when the receipt is sent again" do
+      payment = payment_with_receipt.tap(&:save!)
+      payment.reject_with("Ilegible")
+      payment.update!(status: :submitted)
+
+      expect(notifications.active.count).to eq(1)
+      expect(notifications.closed.count).to eq(1)
+    end
+
+    it "does not notify for a payment that was not sent" do
+      account.payments.create!(provider:)
+
+      expect(notifications).to be_empty
+    end
+  end
+
   describe "the receipt" do
     it "is required to send a payment" do
       payment = account.payments.build(provider:, status: :submitted)
@@ -161,6 +190,87 @@ RSpec.describe Payment, type: :model do
       expect(ActiveStorage::Attachment.exists?(attachment1_id)).to be(false)
       expect(ActiveStorage::Attachment.exists?(attachment2_id)).to be(true)
       expect(account.reload.payments).to contain_exactly(payment2)
+    end
+  end
+
+  describe "automatic payment reminders" do
+    before do
+      Notification::Configuration.find_or_create_by!(
+        key: "automatic_payment_reminders"
+      ) do |configuration|
+        configuration.roles = [ "consumer" ]
+      end
+    end
+
+    it "closes an active reminder when the employee submits a payment" do
+      notification = Notifier.call(
+        event_key: "payment_due_soon",
+        user: consumer.user,
+        notifiable: account,
+        description_data: {
+          amount: "$500",
+          provider: provider.user.name,
+          due_date: "10/11/2026",
+          days: 3
+        }
+      )
+
+      payment = payment_with_receipt(status: :submitted)
+      payment.save!
+
+      expect(notification.reload.closed_at).to be_present
+    end
+
+    it "closes an active reminder when a rejected payment is submitted again" do
+      payment = payment_with_receipt(
+        status: :rejected,
+        rejection_reason: "La imagen está borrosa"
+      )
+      payment.save!
+
+      notification = Notifier.call(
+        event_key: "payment_due_soon",
+        user: consumer.user,
+        notifiable: account,
+        description_data: {
+          amount: "$500",
+          provider: provider.user.name,
+          due_date: "10/11/2026",
+          days: 3
+        }
+      )
+
+      payment.receipt.attach(
+        io: StringIO.new("comprobante nuevo"),
+        filename: "nuevo.png",
+        content_type: "image/png"
+      )
+      payment.update!(status: :submitted)
+
+      expect(notification.reload.closed_at).to be_present
+    end
+
+    it "does not close reminders when a payment is rejected" do
+      notification = Notifier.call(
+        event_key: "payment_due_soon",
+        user: consumer.user,
+        notifiable: account,
+        description_data: {
+          amount: "$500",
+          provider: provider.user.name,
+          due_date: "10/11/2026",
+          days: 3
+        }
+      )
+
+      payment = account.payments.create!(
+        provider:,
+        status: :pending
+      )
+
+      payment.reject_with("El comprobante no es válido")
+
+      expect(notification.reload.closed_at).to be_nil
     end
   end
 end

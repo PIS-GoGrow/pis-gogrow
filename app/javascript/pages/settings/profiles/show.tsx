@@ -6,7 +6,12 @@ import { useTranslation } from "react-i18next"
 import DeleteUser from "@/components/delete-user"
 import HeadingSmall from "@/components/heading-small"
 import { Button } from "@/components/ui/button"
-import { Field, FieldError, FieldLabel } from "@/components/ui/field"
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import AppLayout from "@/layouts/app-layout"
@@ -14,7 +19,7 @@ import SettingsLayout from "@/layouts/settings/layout"
 import { settingsProfiles } from "@/routes"
 import type { BreadcrumbItem, SettingsProfilesShow } from "@/types"
 
-export default function Profile({ provider }: SettingsProfilesShow) {
+export default function Profile({ provider, phone }: SettingsProfilesShow) {
   const { t } = useTranslation()
   const [updatingHomeDelivery, setUpdatingHomeDelivery] = useState(false)
 
@@ -62,6 +67,31 @@ export default function Profile({ provider }: SettingsProfilesShow) {
 
                     <FieldError
                       errors={errors.name?.map((message) => ({ message }))}
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="phone">
+                      {t("pages.settings.profile.phone")}
+                    </FieldLabel>
+
+                    <Input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      defaultValue={phone ?? ""}
+                      autoComplete="tel"
+                      placeholder={t(
+                        "pages.settings.profile.phone_placeholder",
+                      )}
+                    />
+
+                    <FieldDescription>
+                      {t("pages.settings.profile.phone_description")}
+                    </FieldDescription>
+
+                    <FieldError
+                      errors={errors.phone?.map((message) => ({ message }))}
                     />
                   </Field>
 

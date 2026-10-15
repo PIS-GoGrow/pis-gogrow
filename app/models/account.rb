@@ -53,7 +53,7 @@ class Account < ApplicationRecord
   end
 
   def due_date
-    month + 1.month + 4.days
+    month.next_month.change(day: 10)
   end
 
   # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
@@ -115,6 +115,8 @@ class Account < ApplicationRecord
         update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
       end
     end
+
+    owner.check_debt_alert! if owner.is_a?(Consumer)
   end
 
   # Acepta un arreglo de ids de cuentas.

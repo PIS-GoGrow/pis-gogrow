@@ -53,6 +53,7 @@ class Order < ApplicationRecord
   validates :amount, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :discounted_price, comparison: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true
+  validates :notes, length: { maximum: 140 }
   validates :address, presence: true, if: :home?
   validates :delivery_method, presence: true
   validates :rejection_reason, presence: true, if: :rejected?
@@ -91,6 +92,7 @@ class Order < ApplicationRecord
 
   after_update_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
   after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
+  after_create_commit :notify_received
 
   # Inicializa una orden con el precio que calculó OrderPricing. benefits es
   # { Benefit => viandas que cubre }; sin discounted_price se cobra el precio de
@@ -366,6 +368,22 @@ class Order < ApplicationRecord
   end
 
   # Notifica al consumidor usando los datos capturados antes de que el schedule pueda eliminarse.
+  def notify_received
+    return unless provider&.user
+
+    Notifier.call(
+      event_key: :order_received,
+      user: provider.user,
+      notifiable: self,
+      description_data: {
+        consumer: consumer.user.name,
+        amount:,
+        dish: menu_name,
+        date: I18n.l(schedule.date, format: :short)
+      }
+    )
+  end
+
   def notify_rejected
     reason = I18n.t!(
       "notifications.order_rejection.reasons.#{rejection_reason}",
@@ -413,22 +431,23 @@ class Order < ApplicationRecord
 
   private
 
-  # Cada grupo que el plato ofrece tiene que venir una sola vez y con entre 1 y
-  # limit opciones, todas del propio grupo. La pantalla ya lo impide, pero esta
-  # es la única guarda real: un POST directo no pasa por ella.
+  # Cada grupo elegido tiene que ser del plato y venir una sola vez, con hasta
+  # limit opciones del propio grupo; los obligatorios, con al menos una. La
+  # pantalla ya lo impide, pero esta es la única guarda real: un POST directo no
+  # pasa por ella.
   def selected_options_offered_by_menu
     groups = schedule&.menu&.option_groups.to_a
     chosen = Array(selected_options).index_by { it["group_id"].to_i }
 
     valid = chosen.size == Array(selected_options).size &&
-      chosen.keys.sort == groups.map(&:id).sort &&
-      groups.all? { chosen_within_group?(chosen[it.id]["values"], it) }
+      (chosen.keys - groups.map(&:id)).empty? &&
+      groups.all? { chosen_within_group?(chosen.dig(it.id, "values") || [], it) }
 
     errors.add(:base, I18n.t("validations.invalid_options")) unless valid
   end
 
   def chosen_within_group?(values, group)
-    values.is_a?(Array) && values.any? && values.size <= group.limit &&
+    values.is_a?(Array) && (values.any? || !group.required?) && values.size <= group.limit &&
       values.uniq.size == values.size && values.all? { group.options.include?(it) }
   end
   def snapshot_menu

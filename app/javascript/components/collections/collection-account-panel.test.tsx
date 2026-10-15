@@ -30,7 +30,7 @@ const account = {
   can_approve_payment: false,
   overdue: false,
   month: "Octubre 2026",
-  due_date: "05/11/26",
+  due_date: "10/11/26",
   paid_on: null,
   payment_id: null,
   receipt_url: null,
@@ -147,7 +147,7 @@ describe("CollectionAccountPanel", () => {
   it("shows a neutral due date for a pending account that is not overdue", () => {
     render(<CollectionAccountPanel account={account} />)
 
-    const due = screen.getByText("Vence: 05/11/26")
+    const due = screen.getByText("Vence: 10/11/26")
     expect(due).toHaveClass("text-muted-foreground")
     expect(due).not.toHaveClass("text-red-600", "dark:text-red-400")
     expect(due.querySelector("svg")).not.toBeInTheDocument()
@@ -156,7 +156,7 @@ describe("CollectionAccountPanel", () => {
   it("warns about an overdue pending account", () => {
     render(<CollectionAccountPanel account={{ ...account, overdue: true }} />)
 
-    const due = screen.getByText("Vence: 05/11/26")
+    const due = screen.getByText("Vence: 10/11/26")
     expect(due).toHaveClass("text-red-700", "dark:text-red-400")
     expect(due.querySelector("svg")).toBeInTheDocument()
   })
@@ -166,7 +166,7 @@ describe("CollectionAccountPanel", () => {
       <CollectionAccountPanel account={{ ...account, status: "approved" }} />,
     )
 
-    expect(screen.queryByText("Vence: 05/11/26")).not.toBeInTheDocument()
+    expect(screen.queryByText("Vence: 10/11/26")).not.toBeInTheDocument()
     expect(screen.getByText("Octubre 2026")).toBeInTheDocument()
     expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
   })
@@ -180,6 +180,6 @@ describe("CollectionAccountPanel", () => {
     )
 
     expect(screen.getByText("06/11/26")).toBeInTheDocument()
-    expect(screen.queryByText("Vence: 05/11/26")).not.toBeInTheDocument()
+    expect(screen.queryByText("Vence: 10/11/26")).not.toBeInTheDocument()
   })
 })

@@ -12,13 +12,15 @@
 class Notification::Configuration < ApplicationRecord
   has_many :notification_configuration_users,
            dependent: :destroy,
-           foreign_key: :notification_configuration,
+           foreign_key: :notification_configuration_id,
            class_name: "Notification::ConfigurationUser"
   has_many :users, through: :notification_configuration_users, source: :user
 
   has_many :notifications,
            dependent: :restrict_with_error,
-           foreign_key: :notification_configuration
+           foreign_key: :notification_configuration_id
+
+  scope :for_role, ->(role) { where("? = ANY (roles)", role) }
 
   # Crea las configuraciones según lo que dice Notification::Registry.
   # Nunca borra configuraciones, las reporta para elegir qué hacer, pero sí
@@ -42,6 +44,14 @@ class Notification::Configuration < ApplicationRecord
       Rails.logger.warn("[Notification::Configuration] Habría que eliminarlas si no son necesarias o revisar la configuración de config/notifications.yml")
       orphans
     end
+  end
+
+  def title
+    I18n.t "notification_configurations.#{key}.title"
+  end
+
+  def description
+    I18n.t "notification_configurations.#{key}.description"
   end
 end
 

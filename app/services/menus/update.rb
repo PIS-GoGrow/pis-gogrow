@@ -233,7 +233,7 @@ class Menus::Update
 
     menu.option_groups.each(&:mark_for_destruction)
     groups.reject { ActiveModel::Type::Boolean.new.cast(it[:_destroy]) }
-          .each { menu.option_groups.build(name: it[:name], options: Array(it[:options]), limit: it[:limit]) }
+          .each { menu.option_groups.build(name: it[:name], options: Array(it[:options]), limit: it[:limit], required: it[:required]) }
   end
 
   def reject_confirmed(schedules)

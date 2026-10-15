@@ -5,8 +5,6 @@ Rails.application.routes.draw do
 
   get  "sign_in", to: "sessions#new", as: :sign_in
   post "sign_in", to: "sessions#create"
-  get  "sign_up", to: "users#new", as: :sign_up
-  post "sign_up", to: "users#create"
 
   get  "provider", to: "provider_sessions#new", as: :provider_sign_in
   post "provider", to: "provider_sessions#create"
@@ -39,12 +37,14 @@ Rails.application.routes.draw do
     resource :password, only: [ :show, :update ]
     resource :email, only: [ :show, :update ]
     resources :sessions, only: [ :index ]
+    resources :notifications, only: [ :index, :update ]
     inertia :appearance
   end
 
   namespace :provider do
     get "account", to: "accounts#show", as: :account
     get "operational_settings", to: "operational_settings#show", as: :operational_settings
+    resource :payment_details, only: [ :show, :update ]
     resources :menus, except: [ :index, :show ] do
       post :publish, on: :collection
     end
@@ -94,6 +94,7 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
     resources :special_subsidies, only: [ :create, :update, :destroy ]
+    resource :debt_alert, only: [ :update ]
     resources :consumers, only: [ :index, :show ]
     resources :invoices, only: [ :index ] do
       get :file, on: :member
@@ -104,6 +105,8 @@ Rails.application.routes.draw do
   end
 
   root "home#index"
+  get "proveedor", to: redirect("/provider"), as: :provider_welcome
+  get "rrhh", to: "home#admin", as: :admin_welcome
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   get "up" => "rails/health#show", as: :rails_health_check
