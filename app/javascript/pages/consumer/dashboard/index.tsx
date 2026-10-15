@@ -1,12 +1,11 @@
-import { Head, useForm, usePage } from "@inertiajs/react"
+import { Head, usePage } from "@inertiajs/react"
 import { useMemo, useState } from "react"
 
 import useSessionStorage from "@/hooks/use-session-storage"
 import AppLayout from "@/layouts/app-layout"
-import { consumerDashboard, consumerOrders } from "@/routes"
+import { consumerDashboard } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
 
-import { ConsumerCart } from "./consumer-cart"
 import type {
   CartItem,
   DeliveryAddressOption,
@@ -14,18 +13,15 @@ import type {
   Selections,
 } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
-import { OrderError } from "./order-error"
-import { cartPricedItem, priceItems } from "./pricing"
 import { WeeklyMenu, today } from "./weekly-menu"
 
-type View = "menu" | "detail" | "cart" | "confirmation" | "error"
+type View = "menu" | "detail" | "error"
 
 export default function Index({
   week,
   schedules,
   closures,
-  benefit,
-  addresses,
+  benefit
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")
@@ -43,21 +39,6 @@ export default function Index({
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
   const [selections, setSelections] = useState<Selections>({})
-  const [address, setAddress] = useState(addresses[0]?.address ?? "")
-  const [unsavedAddresses, setUnsavedAddresses] = useState<
-    DeliveryAddressOption[]
-  >([])
-
-  const form = useForm({
-    address: "",
-    order_error: "",
-    items: [] as {
-      schedule_id: number
-      quantity: number
-      notes: string
-      options: { group_id: number; values: string[] }[]
-    }[],
-  })
 
   // Un proveedor cerrado no tiene platos que mostrar, pero tiene que seguir en
   // el filtro para poder ver por qué no hay menú.
@@ -73,25 +54,7 @@ export default function Index({
 
   const visibleSchedules = schedules.filter((item) => item.date === date)
 
-  const pricing = priceItems(cart.map(cartPricedItem), benefit)
-
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
-  const addressOptions = [
-    ...addresses,
-    ...unsavedAddresses.filter(
-      (unsaved) => !addresses.some((item) => item.address === unsaved.address),
-    ),
-  ]
-
-  function addAddress(option: DeliveryAddressOption, saved: boolean) {
-    if (!saved) {
-      setUnsavedAddresses((items) => [
-        option,
-        ...items.filter((item) => item.address !== option.address),
-      ])
-    }
-    setAddress(option.address)
-  }
 
   function openDetail(item: Schedule) {
     setSelected(item)
@@ -135,29 +98,6 @@ export default function Index({
     setView("menu")
   }
 
-  function confirm() {
-    if (!cart.length || form.processing || !address) return
-
-    const items = cart.map((item) => ({
-      schedule_id: item.id,
-      quantity: item.quantity,
-      notes: item.notes,
-      options: Object.entries(item.selections).map(([groupId, values]) => ({
-        group_id: Number(groupId),
-        values,
-      })),
-    }))
-
-    form.transform(() => ({ order: { address, items } }))
-
-    form.post(consumerOrders.create().url, {
-      preserveState: true,
-      preserveScroll: false,
-      onSuccess: () => setCart([]),
-      onError: () => setView("error"),
-    })
-  }
-
   return (
     <AppLayout
       breadcrumbs={[{ title: "Menú", href: consumerDashboard.index().url }]}
@@ -180,9 +120,8 @@ export default function Index({
             closures={closures}
             cart={cart}
             count={count}
-            total={pricing.total}
+            total={123132123}
             openDetail={openDetail}
-            openCart={() => setView("cart")}
           />
         )}
         {view === "detail" && selected && (
@@ -198,40 +137,6 @@ export default function Index({
             cart={cart}
             back={() => setView("menu")}
             add={addToCart}
-          />
-        )}
-        {view === "cart" && (
-          <ConsumerCart
-            monthlyLimit={benefit.monthly_limit}
-            monthlyRemaining={benefit.monthly_remaining}
-            pricing={pricing}
-            cart={cart}
-            addresses={addressOptions}
-            address={address}
-            setAddress={setAddress}
-            onAddAddress={addAddress}
-            processing={form.processing}
-            error={form.errors.order_error}
-            back={() => setView("menu")}
-            confirm={confirm}
-            remove={(cartId) => {
-              setCart((items) => items.filter((item) => item.cartId !== cartId))
-              form.clearErrors()
-            }}
-          />
-        )}
-        {view === "error" && (
-          <OrderError
-            retry={() => {
-              form.clearErrors()
-              setView("cart")
-            }}
-            homeUrl={consumerDashboard.index().url}
-            error={
-              Array.isArray(form.errors.order_error)
-                ? form.errors.order_error[0]
-                : form.errors.order_error
-            }
           />
         )}
       </div>

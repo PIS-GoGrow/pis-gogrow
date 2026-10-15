@@ -1,5 +1,7 @@
 import { ChevronLeft, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import { useForm, Link } from "@inertiajs/react"
+import { useState } from "react"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -13,40 +15,33 @@ import { AddressOption } from "./address-option"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
 import { money } from "./formatters"
 import { BenefitLine, OrderSummary } from "./order-summary"
-import type { Pricing } from "./pricing"
 import { SavedAddressesSheet } from "./saved-addresses-sheet"
 
-interface Props {
-  monthlyLimit: number
-  monthlyRemaining: number
-  pricing: Pricing
-  cart: CartItem[]
-  addresses: DeliveryAddressOption[]
-  address: string
-  setAddress: (value: string) => void
-  onAddAddress: (option: DeliveryAddressOption, saved: boolean) => void
-  processing: boolean
-  error?: string | string[]
-  back: () => void
-  confirm: () => void
-  remove: (cartId: string) => void
-}
+import useSessionStorage from "@/hooks/use-session-storage"
+
+import { consumerOrders, dashboardError, dashboard } from "@/routes"
+
+import type { ConsumerDashboardCart } from "@/types"
 
 export function ConsumerCart({
-  monthlyLimit,
-  monthlyRemaining,
+  benefit,
   pricing,
-  cart,
   addresses,
-  address,
-  setAddress,
-  onAddAddress,
-  processing,
-  error,
-  back,
-  confirm,
-  remove,
-}: Props) {
+}: ConsumerDashboardCart) {
+  const [cart, setCart] = useSessionStorage<CartItem[]>("cart", [])
+  const [address, setAddress] = useState(addresses[0]?.address ?? "")
+
+  const form = useForm({
+    address: "",
+    order_error: "",
+    items: [] as {
+      schedule_id: number
+      quantity: number
+      notes: string
+      options: { group_id: number; values: string[] }[]
+    }[],
+  })
+
   const { t } = useTranslation()
   const office = addresses.find((item) => item.id === "office")
   const officeOnlyProviders = [
@@ -59,7 +54,7 @@ export function ConsumerCart({
   const missingOffice = officeOnlyProviders.length > 0 && !office
   // Sin ningún proveedor que entregue a domicilio, todo el pedido va a la oficina.
   const homeDeliveryAvailable = cart.some((item) => item.menu.home_delivery)
-  const customDisabled = processing || !homeDeliveryAvailable
+  const customDisabled = form.processing || !homeDeliveryAvailable
   const selectedAddress =
     homeDeliveryAvailable || !office ? address : office.address
   const customAddresses = addresses.filter((item) => item.id !== "office")
@@ -73,29 +68,78 @@ export function ConsumerCart({
     !!selectedAddress &&
     selectedAddress !== office?.address
 
+  const [unsavedAddresses, setUnsavedAddresses] = useState<
+    DeliveryAddressOption[]
+  >([])
+
+  const addressOptions = [
+    ...addresses,
+    ...unsavedAddresses.filter(
+      (unsaved) => !addresses.some((item) => item.address === unsaved.address),
+    ),
+  ]
+
+  function addAddress(option: DeliveryAddressOption, saved: boolean) {
+    if (!saved) {
+      setUnsavedAddresses((items) => [
+        option,
+        ...items.filter((item) => item.address !== option.address),
+      ])
+    }
+    setAddress(option.address)
+  }
+
+  function remove(cartId: string) {
+    setCart((items) => items.filter((item) => item.cartId !== cartId))
+    form.clearErrors()
+  }
+
+  function confirm() {
+    if (!cart.length || form.processing || !address) return
+
+    const items = cart.map((item) => ({
+      schedule_id: item.id,
+      quantity: item.quantity,
+      notes: item.notes,
+      options: Object.entries(item.selections).map(([groupId, values]) => ({
+        group_id: Number(groupId),
+        values,
+      })),
+    }))
+
+    form.transform(() => ({ order: { address, items } }))
+
+    form.post(consumerOrders.create().url, {
+      preserveState: true,
+      preserveScroll: false,
+      onSuccess: () => setCart([])
+    })
+  }
+
   return (
     <MobileCard>
+      <Link href={dashboard().url}>
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        onClick={back}
-        disabled={processing}
+        disabled={form.processing}
         aria-label="Volver"
         className="mb-3"
       >
         <ChevronLeft aria-hidden="true" className="size-5" />
-      </Button>
+        </Button>
+      </Link>
       <h1 className="text-xl font-bold">Tu carrito</h1>
       <section className="border-border mt-8 border-b pb-4">
         <div className="mb-3 flex items-center justify-between text-sm font-semibold">
           <h2>{t("pages.cart.delivery_address")}</h2>
-          <AddAddressSheet disabled={customDisabled} onAdd={onAddAddress} />
+          <AddAddressSheet disabled={customDisabled} onAdd={addAddress} />
         </div>
         <RadioGroup
           value={selectedAddress}
           onValueChange={setAddress}
-          disabled={processing}
+          disabled={form.processing}
           className="gap-3"
         >
           {visibleAddresses.map((item) => (
@@ -138,15 +182,15 @@ export function ConsumerCart({
         <Alert className="mt-4 border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
           <TriangleAlert aria-hidden="true" className="text-amber-600" />
           <AlertDescription>
-            {monthlyRemaining === 0 ? (
+            {benefit.monthly_remaining === 0 ? (
               <p>
-                Ya utilizaste las {monthlyLimit} viandas subsidiadas de este
+                Ya utilizaste las {benefit.monthly_limit} viandas subsidiadas de este
                 mes. Las {pricing.fullPriceQuantity} viandas de este pedido se
                 cobrarán a precio completo.
               </p>
             ) : (
               <p>
-                Te quedan {monthlyRemaining} viandas subsidiadas este mes. De
+                Te quedan {benefit.monthly_remaining} viandas subsidiadas este mes. De
                 este pedido, {pricing.subsidizedQuantity} tendrán el beneficio y{" "}
                 {pricing.fullPriceQuantity} se cobrarán a precio completo.
               </p>
@@ -206,7 +250,7 @@ export function ConsumerCart({
                 type="button"
                 variant="ghost"
                 size="sm"
-                disabled={processing}
+                disabled={form.processing}
                 onClick={() => remove(item.cartId)}
                 className="mt-2"
               >
@@ -229,15 +273,15 @@ export function ConsumerCart({
         />
         <Button
           disabled={
-            !cart.length || processing || !selectedAddress || missingOffice
+            !cart.length || form.processing || !selectedAddress || missingOffice
           }
           onClick={confirm}
           className={cn(
             "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
-            processing && "bg-muted hover:bg-muted",
+            form.processing && "bg-muted hover:bg-muted",
           )}
         >
-          {processing ? (
+          {form.processing ? (
             <>
               <Spinner />
               Confirmando pedido
@@ -247,10 +291,10 @@ export function ConsumerCart({
           )}
         </Button>
       </BottomAction>
-      {error && (
+      {form.errors.order_error && (
         <Alert variant="destructive" className="mt-3">
           <AlertDescription>
-            {Array.isArray(error) ? error.join(" ") : error}
+            {Array.isArray(form.errors.order_error) ? form.errors.order_error.join(" ") : form.errors.order_error}
           </AlertDescription>
         </Alert>
       )}

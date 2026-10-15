@@ -173,6 +173,7 @@ class BenefitConfiguration < ApplicationRecord
         benefit.update!(
           amount: benefit_limit,
           due_date: benefit_deadline(consumer, date),
+          max_price: benefit_max_price,
           percentage: subsidy_percentage,
           description: name
         )
