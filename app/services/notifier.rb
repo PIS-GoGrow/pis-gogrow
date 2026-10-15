@@ -26,7 +26,7 @@ class Notifier
       description: I18n.t!("notifications.#{event.key}.description", **description_data)
     )
 
-    if configuration.users.pluck(:id).include? user.id
+    if notification.send_to_user?
       WhatsappSenderJob.perform_now(event_key, title_data, description_data, user.phone)
     end
 
