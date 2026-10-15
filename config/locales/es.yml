@@ -507,7 +507,6 @@ es:
           filter_label: "Filtrar empleados"
           all: "Todos"
           pending: "Pendientes"
-          completed: "Completados"
           search_placeholder: "Buscar empleado..."
           search_label: "Buscar empleado por nombre o correo"
           no_consumption: "Sin consumos"

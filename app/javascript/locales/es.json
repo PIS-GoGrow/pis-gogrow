@@ -392,7 +392,6 @@
         "consumers": {
           "index": {
             "all": "Todos",
-            "completed": "Completados",
             "count_one": "%{count} empleado",
             "count_other": "%{count} empleados",
             "empty_description": "Todavía no hay empleados en la organización.",
