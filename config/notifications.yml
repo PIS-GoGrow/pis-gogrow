@@ -42,6 +42,9 @@ configurations:
     configurable: true
 
   order_cancellations:
+    roles: [provider]
+    configurable: true
+
   menu_publication_reminders:
     roles: [provider]
     configurable: true
@@ -109,6 +112,8 @@ events:
   order_cancellation:
     configuration: order_cancellations
     role: provider
+    requires_action: false
+
   provider_menu_unpublished:
     configuration: menu_publication_reminders
     role: provider
