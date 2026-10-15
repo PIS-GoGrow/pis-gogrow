@@ -41,6 +41,10 @@ configurations:
     roles: [provider]
     configurable: true
 
+  order_cancellations:
+    roles: [provider]
+    configurable: true
+
   menu_publication_reminders:
     roles: [provider]
     configurable: true
@@ -103,6 +107,11 @@ events:
   company_payment_approved:
     configuration: company_payments
     role: admin
+    requires_action: false
+
+  order_cancellation:
+    configuration: order_cancellations
+    role: provider
     requires_action: false
 
   provider_menu_unpublished:
