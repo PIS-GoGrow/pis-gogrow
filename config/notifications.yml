@@ -28,6 +28,12 @@ configurations:
   company_payments:
     roles: [admin]
     configurable: true
+  provider_orders:
+    roles: [provider]
+    configurable: true
+  provider_payments:
+    roles: [provider]
+    configurable: true
 
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
@@ -87,4 +93,14 @@ events:
   company_payment_approved:
     configuration: company_payments
     role: admin
+    requires_action: false
+
+  order_received:
+    configuration: provider_orders
+    role: provider
+    requires_action: false
+
+  payment_receipt_submitted:
+    configuration: provider_payments
+    role: provider
     requires_action: false
