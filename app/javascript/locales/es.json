@@ -507,6 +507,14 @@
         },
         "payments": {
           "index": {
+            "bank": {
+              "account_number": "Nº de cuenta: %{number}",
+              "copied": "Número de cuenta copiado",
+              "copy": "Copiar número de cuenta",
+              "copy_failed": "No pudimos copiar el número de cuenta",
+              "holder": "Beneficiario: %{holder}",
+              "missing": "Este proveedor todavía no cargó sus datos de cobro."
+            },
             "detail": {
               "company": "GoGrow",
               "description": "Lo que la empresa le paga al proveedor en el mes y los pedidos confirmados de cada día.",
@@ -534,6 +542,8 @@
             "meals_used_other": "%{count} viandas consumidas",
             "meals_used_with_limit": "%{meals} de %{limit} viandas consumidas",
             "no_debt": "¡Sin deudas pendientes con este proveedor!",
+            "pending_meals_one": "(%{count} vianda)",
+            "pending_meals_other": "(%{count} viandas)",
             "pending_payments": "Pagos pendientes",
             "pending_tab": "Pendientes",
             "section": "Pagos",

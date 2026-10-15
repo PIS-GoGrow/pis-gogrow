@@ -25,6 +25,7 @@ const props: AdminPaymentsIndex = {
   accounts: [],
   history: [],
   total_debt: 0,
+  total_meals: 0,
   current_month: { amount: 0, meals: 0, limit: null },
   period: null,
   current_period: null,
@@ -131,7 +132,16 @@ describe("Admin Payments Page", () => {
       <Index
         {...props}
         accounts={[account]}
-        providers={[{ id: 2, name: "Tu Viandita", home_delivery: true }]}
+        providers={[
+          {
+            id: 2,
+            name: "Tu Viandita",
+            home_delivery: true,
+            bank_name: null,
+            bank_account_number: null,
+            bank_account_holder: null,
+          },
+        ]}
       />,
     )
 
@@ -145,5 +155,12 @@ describe("Admin Payments Page", () => {
     expect(fetch).toHaveBeenCalledWith("/admin/payments/7", expect.anything())
 
     vi.unstubAllGlobals()
+  })
+
+  it("shows the meals next to the pending total", () => {
+    render(<Index {...props} total_debt={19500} total_meals={130} />)
+
+    expect(screen.getByText("$19.500")).toBeInTheDocument()
+    expect(screen.getByText("(130 viandas)")).toBeInTheDocument()
   })
 })

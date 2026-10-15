@@ -86,6 +86,29 @@ RSpec.describe "Admin::Payments", type: :request do
         expect(inertia.props[:current_month]).to eq("amount" => 601.0, "meals" => 4, "limit" => 40)
       end
 
+      it "counts the meals of what the company still owes" do
+        get admin_payments_path
+
+        expect(inertia).to have_props(total_debt: 601.0, total_meals: 4)
+      end
+
+      it "sends the payment details each provider loaded, without its tax id" do
+        providers(:endulzate).update!(
+          bank_name: "Banco Itaú", bank_account_type: :checking, bank_account_number: "1951234",
+          bank_account_holder: "Noelia Patricia Pinheiro", tax_id: "211234560019"
+        )
+
+        get admin_payments_path
+
+        endulzate = inertia.props[:providers].find { it[:id] == providers(:endulzate).id }
+        expect(endulzate).to include(
+          bank_name: "Banco Itaú", bank_account_number: "1951234", bank_account_holder: "Noelia Patricia Pinheiro"
+        )
+        expect(endulzate).not_to have_key(:tax_id)
+        expect(inertia.props[:providers].find { it[:id] == providers(:tuviandita).id })
+          .to include(bank_name: nil, bank_account_number: nil, bank_account_holder: nil)
+      end
+
       it "lists every provider so the ones without debt also show up" do
         get admin_payments_path
 

@@ -15,6 +15,7 @@ class Admin::PaymentsController < Admin::InertiaController
     @history = serialize(settled, sums)
     @providers = Provider.eager_load(:user).order("LOWER(users.name)")
     @total_debt = unpaid.sum(&:payable_amount).to_f
+    @total_meals = unpaid.sum { sums.dig(it.id, :amount).to_i }
     @current_month = AdminMonthlySummary.new(company).then { { amount: it.spending, meals: it.meals, limit: it.meals_limit } }
     @period = requested_month&.then { AdminConsumptionDetail.new(company, it).to_h }
     @current_period = AdminConsumptionDetail.new(company, Date.current).to_h

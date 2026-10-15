@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 import ConsumptionDetailDialog, {
   type ConsumptionDetail,
 } from "@/components/admin/payments/consumption-detail-dialog"
+import BankDetails from "@/components/admin/payments/bank-details"
 import PeriodCard from "@/components/admin/payments/period-card"
 import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
@@ -32,12 +33,13 @@ export default function Index({
   history,
   providers,
   total_debt,
+  total_meals,
   current_month,
   period,
   current_period,
 }: AdminPaymentsIndex) {
   const { t } = useTranslation()
-  const { formatMoney, formatMoneyShort } = useFormatters()
+  const { formatMoneyShort } = useFormatters()
 
   const [open, setOpen] = useState(period !== null)
   const [detail, setDetail] = useState<ConsumptionDetail | null>(period)
@@ -147,7 +149,16 @@ export default function Index({
                   {t("pages.admin.payments.index.total_debt")}
                 </Badge>
               }
-              value={formatMoney(total_debt)}
+              value={
+                <>
+                  {formatMoneyShort(total_debt)}{" "}
+                  <span className="text-lg">
+                    {t("pages.admin.payments.index.pending_meals", {
+                      count: total_meals,
+                    })}
+                  </span>
+                </>
+              }
             />
 
             {providers.map((provider) => {
@@ -162,6 +173,8 @@ export default function Index({
                   </CardHeader>
 
                   <CardContent className="grid gap-4">
+                    <BankDetails provider={provider} />
+
                     {periods.length === 0 ? (
                       <p className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
                         <CircleCheck className="size-4" aria-hidden="true" />

@@ -9,12 +9,12 @@ class Admin::PaymentsIndexSerializer < ApplicationSerializer
                        "orders: Array<{ id: number; consumer_name: string; avatar_url: string | null; meals: number; " \
                        "employee_amount: number; company_amount: number }> }> }> } | null"
 
-  typelize accounts: "Account[]", history: "Account[]", total_debt: :number
+  typelize accounts: "Account[]", history: "Account[]", total_debt: :number, total_meals: :number
   typelize current_month: "{ amount: number; meals: number; limit: number | null }"
-  attributes :accounts, :history, :total_debt, :current_month
+  attributes :accounts, :history, :total_debt, :total_meals, :current_month
 
   typelize period: CONSUMPTION_DETAIL, current_period: CONSUMPTION_DETAIL
   attributes :period, :current_period
 
-  has_many :providers, resource: ProviderSerializer
+  has_many :providers, resource: Admin::PaymentProviderSerializer
 end
