@@ -16,6 +16,7 @@ end
 #  amount      :decimal(10, 2)
 #  month       :date
 #  owner_type  :string           not null
+#  vat_rate    :decimal(3, 2)    default(0.0), not null
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  owner_id    :bigint           not null

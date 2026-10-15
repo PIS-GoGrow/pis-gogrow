@@ -192,21 +192,24 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(payment.receipt.filename.to_s).to eq("comprobante.png")
     end
 
-    it "allows multiple receipts for the same company account" do
+    it "does not allow a second receipt while one is under review for the same company account" do
       sign_in users(:admin), role: :admin
 
-      2.times do |index|
+      expect {
         post admin_payments_path, params: {
-          payment: {
-            account_id: account.id,
-            receipt: receipt_upload(filename: "comprobante_#{index + 1}.png")
-          }
+          payment: { account_id: account.id, receipt: receipt_upload(filename: "comprobante_1.png") }
         }, headers: { "HTTP_REFERER" => admin_payments_url }
-      end
+      }.to change(Payment, :count).by(1)
 
-      expect(account.payments.reload.order(:id).last(2).map(&:status)).to eq([ "submitted", "submitted" ])
-      expect(account.payments.order(:id).last(2).map { it.receipt.filename.to_s })
-        .to eq([ "comprobante_1.png", "comprobante_2.png" ])
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload(filename: "comprobante_2.png") }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(response).to redirect_to(admin_payments_path)
+      expect(account.payments.reload.submitted.count).to eq(1)
+      expect(account.payments.submitted.sole.receipt.filename.to_s).to eq("comprobante_1.png")
     end
 
     it "resolves the pending payment alert of the account" do

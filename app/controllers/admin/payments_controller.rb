@@ -47,6 +47,12 @@ class Admin::PaymentsController < Admin::InertiaController
       redirect_back fallback_location: admin_payments_path,
                     inertia: { errors: payment.errors.to_hash }, status: :see_other
     end
+  rescue ActiveRecord::RecordNotUnique
+    # Dos envíos simultáneos pasan la validación de Payment a la vez; el segundo
+    # lo frena el índice único de la tabla.
+    redirect_back fallback_location: admin_payments_path, inertia: {
+      errors: { receipt: [ t("activerecord.errors.models.payment.attributes.receipt.already_under_review") ] }
+    }, status: :see_other
   end
 
   def receipt

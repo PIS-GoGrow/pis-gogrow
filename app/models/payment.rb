@@ -18,6 +18,7 @@ class Payment < ApplicationRecord
   validate :receipt_is_attached_when_submitted
   validate :receipt_has_allowed_type
   validate :receipt_is_within_size_limit
+  validate :only_one_submitted_per_account, if: :submitted?
 
   after_update_commit :close_debt_reminder, if: -> { saved_change_to_status? && approved? }
   after_save_commit :close_automatic_payment_reminders,
@@ -89,6 +90,17 @@ class Payment < ApplicationRecord
     errors.add(:receipt, :too_large)
   end
 
+  # Una cuenta puede tener varios comprobantes con el tiempo, pero solo uno en
+  # revisión. Esta validación da el mensaje; la garantía contra dos envíos
+  # simultáneos es el índice único parcial de la tabla.
+  def only_one_submitted_per_account
+    return unless account_id
+
+    others = self.class.submitted.where(account_id:)
+    others = others.where.not(id:) if persisted?
+    errors.add(:receipt, :already_under_review) if others.exists?
+  end
+
   def should_close_automatic_payment_reminders?
     saved_change_to_status? && (submitted? || approved?)
   end
@@ -112,8 +124,9 @@ end
 #
 # Indexes
 #
-#  index_payments_on_account_id   (account_id)
-#  index_payments_on_provider_id  (provider_id)
+#  index_payments_on_account_id            (account_id)
+#  index_payments_on_account_id_submitted  (account_id) UNIQUE WHERE (status = 1)
+#  index_payments_on_provider_id           (provider_id)
 #
 # Foreign Keys
 #

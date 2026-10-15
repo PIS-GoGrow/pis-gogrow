@@ -375,16 +375,10 @@ RSpec.describe "Payments", type: :request do
     )
   end
 
-  it "allows uploading multiple receipts for the same account and serializes them in accounts view" do
+  it "allows uploading another receipt once the previous one was reviewed and serializes both in accounts view" do
     user, account, provider = setup_payment_account
+    submitted_payment(account:, provider:).reject_with("Comprobante ilegible")
     sign_in(user, role: :consumer)
-
-    expect {
-      post payments_path, params: {
-        payment: { account_id: account.id, receipt: receipt_upload(filename: "receipt_1.png") }
-      }, headers: account_page_headers
-    }.to change(Payment, :count).by(1)
-    expect(response).to redirect_to(accounts_path)
 
     expect {
       post payments_path, params: {
@@ -393,9 +387,7 @@ RSpec.describe "Payments", type: :request do
     }.to change(Payment, :count).by(1)
     expect(response).to redirect_to(accounts_path)
 
-    expect(account.reload.payments.count).to eq(2)
-    expect(account.payments.map(&:status)).to contain_exactly("submitted", "submitted")
-    expect(account.payments.map { |p| p.receipt.filename.to_s }).to contain_exactly("receipt_1.png", "receipt_2.png")
+    expect(account.reload.payments.map(&:status)).to contain_exactly("rejected", "submitted")
 
     get accounts_path
     expect(response).to have_http_status(:ok)
@@ -404,8 +396,48 @@ RSpec.describe "Payments", type: :request do
       target_account = accounts.find { |a| a[:id] == account.id }
       payments = target_account[:payments]
       payments.size == 2 &&
-        payments.all? { |p| p[:status] == "submitted" && p[:receipt_url].present? && p[:receipt_filename].present? && p[:receipt_uploaded_at].present? }
+        payments.map { |p| p[:status] }.sort == %w[rejected submitted] &&
+        payments.all? { |p| p[:receipt_url].present? && p[:receipt_filename].present? && p[:receipt_uploaded_at].present? }
     }
+  end
+
+  it "does not accept a second receipt while one is still under review" do
+    user, account, provider = setup_payment_account
+    first = submitted_payment(account:, provider:)
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "receipt_2.png") }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+    expect(account.reload.payments).to contain_exactly(first)
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.already_under_review") ] }
+    )
+  end
+
+  it "does not resubmit a rejected receipt while another one is under review" do
+    user, account, provider = setup_payment_account
+    rejected = account.payments.create!(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
+    rejected.receipt.attach(io: StringIO.new("old receipt"), filename: "old.png", content_type: "image/png")
+    submitted_payment(account:, provider:)
+    sign_in(user, role: :consumer)
+
+    patch payment_path(rejected), params: {
+      payment: { receipt: receipt_upload(filename: "replacement.png") }
+    }, headers: account_page_headers
+
+    expect(response).to redirect_to(accounts_path)
+    expect(rejected.reload).to be_rejected
+    expect(rejected.receipt.filename.to_s).to eq("old.png")
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.already_under_review") ] }
+    )
   end
 
   it "deletes only the targeted receipt when an account has multiple receipts and preserves the others" do
