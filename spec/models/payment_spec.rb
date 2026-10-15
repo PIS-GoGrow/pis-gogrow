@@ -28,6 +28,35 @@ RSpec.describe Payment, type: :model do
     expect(described_class.new.status).to eq("pending")
   end
 
+  describe "the provider notification" do
+    let(:notifications) { Notification.where(event: "payment_receipt_submitted", user: provider.user) }
+
+    it "notifies the provider when a receipt is sent" do
+      payment_with_receipt.save!
+
+      expect(notifications.sole).to have_attributes(
+        role: "provider",
+        title: "Nuevo comprobante de pago",
+        description: start_with("Lucía envió un comprobante de pago de")
+      )
+    end
+
+    it "keeps a single active notification when the receipt is sent again" do
+      payment = payment_with_receipt.tap(&:save!)
+      payment.reject_with("Ilegible")
+      payment.update!(status: :submitted)
+
+      expect(notifications.active.count).to eq(1)
+      expect(notifications.closed.count).to eq(1)
+    end
+
+    it "does not notify for a payment that was not sent" do
+      account.payments.create!(provider:)
+
+      expect(notifications).to be_empty
+    end
+  end
+
   describe "the receipt" do
     it "is required to send a payment" do
       payment = account.payments.build(provider:, status: :submitted)

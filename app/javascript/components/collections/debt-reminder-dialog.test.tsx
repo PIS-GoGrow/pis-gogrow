@@ -23,7 +23,7 @@ vi.mock("@inertiajs/react", async () => {
 
 describe("DebtReminderDialog", () => {
   const defaultProps = {
-    accountId: 42,
+    action: "/provider/collections/42/debt_reminders",
     eligible: true,
     employeeName: "Juan Pérez",
     month: "Octubre 2026",

@@ -7,6 +7,7 @@ class Consumer::DashboardController < Consumer::InertiaController
     @schedules = schedule_data
     @benefit = benefit_data
     @addresses = @consumer.delivery_address_options
+    @closures = ProviderClosure.upcoming.includes(provider: :user)
   end
 
   def confirmation
@@ -35,11 +36,11 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def schedule_data
-    schedules = Schedule.on_active_menus.includes(:orders, menu: [ :reviews, :option_groups, { provider: :user } ])
+    schedules = Schedule.on_active_menus.includes(:orders, menu: [ :reviews, :option_groups, { provider: [ :user, :closures ] } ])
                         .where(date: week_range)
                         .order(:date, :id)
 
-    schedules.map do |schedule|
+    schedules.reject(&:provider_closed?).map do |schedule|
       menu = schedule.menu
 
       {
@@ -54,7 +55,7 @@ class Consumer::DashboardController < Consumer::InertiaController
           description: menu.description,
           price: menu.price.to_f,
           option_groups: menu.option_groups.map do |group|
-            { id: group.id, name: group.name, options: group.options, limit: group.limit }
+            { id: group.id, name: group.name, options: group.options, limit: group.limit, required: group.required }
           end,
           provider_name: menu.provider_name,
           home_delivery: menu.provider.home_delivery?,

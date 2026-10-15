@@ -151,4 +151,38 @@ RSpec.describe "Settings::Profiles", type: :request do
       expect(provider.user.reload.roles).not_to include("admin")
     end
   end
+
+  describe "PATCH /settings/profile phone" do
+    let(:user) { providers(:tuviandita).user }
+
+    before { sign_in user, role: :provider }
+
+    it "guarda el teléfono sin espacios ni guiones" do
+      patch settings_profile_path, params: { name: user.name, phone: "+598 99 123-456" }
+
+      expect(user.reload.phone).to eq("+59899123456")
+      follow_redirect!
+      expect(inertia).to have_props(phone: "+59899123456")
+    end
+
+    it "rechaza un teléfono inválido" do
+      patch settings_profile_path, params: { name: user.name, phone: "llamame" }
+
+      expect(user.reload.phone).to be_nil
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("phone")
+    end
+
+    it "registra el cambio de teléfono" do
+      patch settings_profile_path, params: { name: user.name, phone: "099123456" }
+
+      expect(user.audit_logs.sole.changeset).to eq("phone" => [ nil, "099123456" ])
+    end
+
+    it "registra el cambio de entregas a domicilio" do
+      patch settings_profile_path, params: { home_delivery: false }
+
+      expect(providers(:tuviandita).audit_logs.sole).to have_attributes(user:, changeset: { "home_delivery" => [ true, false ] })
+    end
+  end
 end

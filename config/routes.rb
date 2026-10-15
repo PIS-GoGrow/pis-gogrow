@@ -23,7 +23,7 @@ Rails.application.routes.draw do
   end
 
   # The GET to /auth/google_oauth2 (start of the flow) is intercepted by the
-  # OmniAuth middleware before it reaches the router â€” only the callback and
+  # OmniAuth middleware before it reaches the router — only the callback and
   # failure paths need a route.
   get "auth/google_oauth2/callback", to: "omniauth_callbacks#google_oauth2"
   get "auth/failure", to: "omniauth_callbacks#failure"
@@ -37,12 +37,15 @@ Rails.application.routes.draw do
     resource :password, only: [ :show, :update ]
     resource :email, only: [ :show, :update ]
     resources :sessions, only: [ :index ]
+    resources :notifications, only: [ :index, :update ]
     inertia :appearance
   end
 
   namespace :provider do
     get "account", to: "accounts#show", as: :account
     get "operational_settings", to: "operational_settings#show", as: :operational_settings
+    resource :payment_details, only: [ :show, :update ]
+    resource :deliveries, only: [ :show, :update ]
     resources :menus, except: [ :index, :show ] do
       post :publish, on: :collection
     end
@@ -59,6 +62,7 @@ Rails.application.routes.draw do
       get :file, on: :member
     end
     resource :order_deadline, only: [ :update ]
+    resources :closures, only: [ :create, :update, :destroy ]
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :payments, only: [ :update ] do
       get :receipt, on: :member
@@ -92,7 +96,12 @@ Rails.application.routes.draw do
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :benefit_configurations, only: [ :index, :create ]
     resources :special_subsidies, only: [ :create, :update, :destroy ]
-    resources :consumers, only: [ :index, :show ]
+
+    resource :debt_alert, only: [ :update ]
+    resources :consumers, only: [ :index, :show ] do
+      resources :debt_reminders, only: [ :create ]
+    end
+
     resources :invoices, only: [ :index ] do
       get :file, on: :member
     end

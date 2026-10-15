@@ -91,4 +91,16 @@ describe("ProviderMobileNav", () => {
       "page",
     )
   })
+
+  it("marca Cuenta como la página actual en Entregas", () => {
+    page.url = "/provider/deliveries"
+    page.component = "provider/deliveries/show"
+
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+  })
 })

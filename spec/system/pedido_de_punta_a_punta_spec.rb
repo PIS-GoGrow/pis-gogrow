@@ -124,7 +124,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       # P1 tiene publicado un menú para el martes.
       milanesa_tuesday = publish(p1_milanesa, tuesday, amount: 8)
       publish(p1_wok, tuesday, amount: 3)
-      p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ])
+      p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ], required: true)
 
       # E1 elige fecha, plato, opción, nota, entrega y dirección, y confirma.
       open_menu(as: e1_user, day: tuesday)
@@ -632,17 +632,17 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   end
 
   describe "IBP-068: P1 cambia las modalidades y E1 solo elige las habilitadas" do
-    # El switch cambia al instante y queda deshabilitado mientras dura el PATCH:
-    # esperar el estado nuevo prueba que React ya hidrató, y esperar que se
-    # habilite otra vez, que el servidor respondió.
-    def turn_off_home_delivery
-      visit settings_profile_path
-      without_animations
-      switch = find("#home_delivery:not([disabled])")
-      switch.click
-      switch.click unless has_css?("#home_delivery[aria-checked=false]", wait: 1)
-      expect(page).to have_css("#home_delivery[aria-checked=false]")
-      expect(page).to have_css("#home_delivery:not([disabled])")
+    # Se llega a Entregas por el menú de usuario y Cuenta, no por URL: así se
+    # detectó el defecto 86e3mhpbb (Entregas no tenía enlace). El aviso prueba
+    # que el servidor guardó.
+    def choose_delivery(option)
+      visit_hydrated provider_dashboard_path
+      find("[data-sidebar=menu-button]", text: p1_user.name).click
+      find("[role=menuitem]", text: "Configuración").click
+      click_on "Entregas"
+      wait_for_hydration
+      find("label", text: option).click
+      expect(page).to have_content("Guardamos tu modalidad de entrega")
     end
 
     it "deja pedir solo en la oficina y no toca el pedido a domicilio ya creado" do
@@ -652,7 +652,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       # CA1 y CA2: P1 deja de entregar a domicilio desde su configuración.
       sign_in p1_user, role: :provider
-      turn_off_home_delivery
+      choose_delivery("Solo Oficinas")
       expect(p1.reload.home_delivery).to be(false)
       expect(providers(:endulzate).reload.home_delivery).to be(true)
       # CA4: la oficina sigue habilitada y el menú publicado sigue en pie.
@@ -680,6 +680,24 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       visit provider_order_path(order)
       expect(page).to have_content("Colonia 1370")
       expect(order.reload).to have_attributes(delivery_method: "home", address: "Colonia 1370")
+    end
+
+    it "vuelve a dejar pedir a domicilio cuando P1 lo habilita de nuevo" do
+      publish(p1_milanesa, tuesday)
+      p1.update!(home_delivery: false)
+
+      sign_in p1_user, role: :provider
+      choose_delivery("Oficinas y direcciones personalizadas")
+      expect(p1.reload.home_delivery).to be(true)
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+      add_to_cart(p1_milanesa)
+      open_cart
+      use_new_address(name: "Estudio", street: "Colonia 1370")
+      click_button "Confirmar pedido"
+      expect(page).to have_content("¡Pedido recibido!")
+      expect(e1.orders.sole).to have_attributes(delivery_method: "home", address: "Colonia 1370")
     end
   end
 

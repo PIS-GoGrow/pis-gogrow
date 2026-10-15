@@ -157,7 +157,7 @@ class Provider::MenusController < Provider::InertiaController
   def menu_params
     params.expect(menu: [
       :name, :price, :description,
-      option_groups_attributes: [ [ :id, :name, :limit, :_destroy, options: [] ] ]
+      option_groups_attributes: [ [ :id, :name, :limit, :required, :_destroy, options: [] ] ]
     ])
   end
 end

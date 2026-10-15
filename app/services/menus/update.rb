@@ -88,6 +88,7 @@ class Menus::Update
     case mode
     when "single"
       add_agenda_error(:invalid_date) unless date && date >= Date.current && date.on_weekday? && date <= Calendar.new.maximum_publish_date
+      add_agenda_error(:date_closed) if date && closed_and_unscheduled?(date)
     when "weekly", "range"
       add_agenda_error(:invalid_date) unless starts_on && starts_on >= Date.current
       add_agenda_error(:invalid_range) if mode == "range" && !(ends_on && starts_on && ends_on >= starts_on)
@@ -103,6 +104,10 @@ class Menus::Update
 
   def add_agenda_error(type)
     @errors.add(:agenda, I18n.t("validations.menu_agenda.#{type}"))
+  end
+
+  def closed_and_unscheduled?(date)
+    @saved.provider.closed_on?(date) && !Schedule.exists?(menu_id: @saved.family_ids, date:)
   end
 
   def new_agenda(ends_on:)
@@ -233,7 +238,7 @@ class Menus::Update
 
     menu.option_groups.each(&:mark_for_destruction)
     groups.reject { ActiveModel::Type::Boolean.new.cast(it[:_destroy]) }
-          .each { menu.option_groups.build(name: it[:name], options: Array(it[:options]), limit: it[:limit]) }
+          .each { menu.option_groups.build(name: it[:name], options: Array(it[:options]), limit: it[:limit], required: it[:required]) }
   end
 
   def reject_confirmed(schedules)

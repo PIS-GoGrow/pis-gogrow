@@ -1,11 +1,18 @@
 import { Head, Link } from "@inertiajs/react"
-import { ArrowLeft, ChevronRight, Users } from "lucide-react"
+import {
+  ArrowLeft,
+  ChevronRight,
+  CircleCheck,
+  TriangleAlert,
+  Users,
+} from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import ConsumerMonthSheet from "@/components/admin/consumer-month-sheet"
 import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
 import BenefitSummaryCard from "@/components/benefit-summary-card"
+import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
 import HeadingSmall from "@/components/heading-small"
 import ListItemCard from "@/components/list-item-card"
 import PageContainer from "@/components/page-container"
@@ -39,7 +46,7 @@ import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
 import { cn } from "@/lib/utils"
-import { adminConsumers } from "@/routes"
+import { adminConsumers, adminDebtReminders } from "@/routes"
 import type { AdminConsumersShow, BreadcrumbItem } from "@/types"
 
 const page = "pages.admin.consumers.show"
@@ -49,6 +56,7 @@ export default function Show({
   summary,
   benefit_summary,
   months,
+  debt_reminder,
 }: AdminConsumersShow) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -66,6 +74,13 @@ export default function Show({
     summary.meals_limit > 0
       ? Math.min(100, (summary.meals_used / summary.meals_limit) * 100)
       : 0
+
+  // El recordatorio solo aparece cuando hay algo que decir: se puede mandar, hay
+  // que esperar, o se agotaron los envíos.
+  const showReminder =
+    debt_reminder.eligible ||
+    debt_reminder.blocked_reason === "cooldown" ||
+    debt_reminder.blocked_reason === "limit_reached"
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -95,19 +110,49 @@ export default function Show({
         }
       >
         <Card className="gap-4 py-4">
-          <CardContent className="flex items-center gap-3 px-4">
-            <Avatar size="lg">
-              <AvatarFallback className="text-foreground text-xs font-semibold">
-                {getInitials(consumer.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold">{consumer.name}</p>
-              <p className="text-muted-foreground truncate text-sm">
-                {consumer.email}
-              </p>
+          <CardContent className="grid gap-4 px-4">
+            <div className="flex items-center gap-3">
+              <Avatar size="lg">
+                <AvatarFallback className="text-foreground text-xs font-semibold">
+                  {getInitials(consumer.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">{consumer.name}</p>
+                <p className="text-muted-foreground truncate text-sm">
+                  {consumer.email}
+                </p>
+              </div>
+              <ConsumptionStatusBadge status={summary.status} />
             </div>
-            <ConsumptionStatusBadge status={summary.status} />
+
+            {showReminder && (
+              <div className="grid gap-2">
+                <DebtReminderDialog
+                  action={adminDebtReminders.create(consumer.id).url}
+                  eligible={debt_reminder.eligible}
+                  employeeName={consumer.name}
+                  amount={debt_reminder.amount}
+                  translationKey={`${page}.reminder`}
+                />
+
+                {debt_reminder.blocked_reason === "cooldown" && (
+                  <p className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                    <CircleCheck className="size-4" aria-hidden="true" />
+                    {t(`${page}.reminder.next_available`, {
+                      date: debt_reminder.next_available_at,
+                    })}
+                  </p>
+                )}
+
+                {debt_reminder.blocked_reason === "limit_reached" && (
+                  <p className="text-muted-foreground flex items-center gap-2 text-sm">
+                    <TriangleAlert className="size-4" aria-hidden="true" />
+                    {t(`${page}.reminder.limit_reached`)}
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 

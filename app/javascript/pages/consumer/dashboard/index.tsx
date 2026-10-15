@@ -23,6 +23,7 @@ type View = "menu" | "detail" | "cart" | "confirmation" | "error"
 export default function Index({
   week,
   schedules,
+  closures,
   benefit,
   addresses,
 }: ConsumerDashboardIndex) {
@@ -58,9 +59,16 @@ export default function Index({
     }[],
   })
 
+  // Un proveedor cerrado no tiene platos que mostrar, pero tiene que seguir en
+  // el filtro para poder ver por qué no hay menú.
   const providers = useMemo(
-    () => [...new Set(schedules.map((item) => item.menu.provider_name))],
-    [schedules],
+    () => [
+      ...new Set([
+        ...schedules.map((item) => item.menu.provider_name),
+        ...closures.map((closure) => closure.provider_name),
+      ]),
+    ],
+    [schedules, closures],
   )
 
   const visibleSchedules = schedules.filter((item) => item.date === date)
@@ -169,6 +177,7 @@ export default function Index({
             benefit={benefit}
             providers={providers}
             schedules={visibleSchedules}
+            closures={closures}
             cart={cart}
             count={count}
             total={pricing.total}

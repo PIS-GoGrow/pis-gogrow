@@ -67,8 +67,14 @@ describe("Settings Profiles Show Page", () => {
     patchMock.mockClear()
   })
 
+  it("renders the saved phone so it can be edited", () => {
+    render(<Profile provider={null} phone="+59899123456" />)
+
+    expect(screen.getByLabelText("Teléfono")).toHaveValue("+59899123456")
+  })
+
   it("does not render home delivery settings when provider is null (consumer/admin)", () => {
-    render(<Profile provider={null} />)
+    render(<Profile provider={null} phone={null} />)
 
     expect(
       screen.queryByText("Editar información de pedidos"),
@@ -81,6 +87,7 @@ describe("Settings Profiles Show Page", () => {
   it("renders home delivery switch checked when provider.home_delivery is true", () => {
     render(
       <Profile
+        phone={null}
         provider={{
           id: 1,
           name: "Proveedor Test",
@@ -102,6 +109,7 @@ describe("Settings Profiles Show Page", () => {
   it("renders home delivery switch unchecked when provider.home_delivery is false", () => {
     render(
       <Profile
+        phone={null}
         provider={{
           id: 1,
           name: "Proveedor Test",
@@ -120,6 +128,7 @@ describe("Settings Profiles Show Page", () => {
   it("calls router.patch with home_delivery: false when clicked while checked", async () => {
     render(
       <Profile
+        phone={null}
         provider={{
           id: 1,
           name: "Proveedor Test",
@@ -146,6 +155,7 @@ describe("Settings Profiles Show Page", () => {
   it("calls router.patch with home_delivery: true when clicked while unchecked", async () => {
     render(
       <Profile
+        phone={null}
         provider={{
           id: 1,
           name: "Proveedor Test",
