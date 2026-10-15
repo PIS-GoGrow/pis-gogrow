@@ -6,6 +6,10 @@
 # El atributo month dice para qué mes es válida la cuenta. Este atributo
 # siempre es igual al primer día de un mes, esto se hace automáticamente.
 class Account < ApplicationRecord
+  VAT_RATE = BigDecimal("0.22")
+
+  attr_readonly :vat_rate
+
   belongs_to :owner, polymorphic: true
 
   belongs_to :provider
@@ -16,6 +20,7 @@ class Account < ApplicationRecord
   has_many :orders, through: :order_accounts
 
   before_create :correct_month
+  before_create :assign_vat_rate
 
   scope :current, -> { where(month: Date.current.beginning_of_month) }
   scope :companies, -> { where(owner_type: "Company") }
@@ -39,9 +44,33 @@ class Account < ApplicationRecord
     month == Date.current.beginning_of_month
   end
 
-  def due_date
-    month + 1.month + 4.days
+  def vat_amount
+    (amount.to_d * vat_rate.to_d).round(2, BigDecimal::ROUND_HALF_UP)
   end
+
+  def payable_amount
+    amount.to_d + vat_amount
+  end
+
+  def due_date
+    month.next_month.change(day: 10)
+  end
+
+  # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
+  # Recursos Humanos reclama la suma de varias cuentas, así que el formato vive
+  # en un método de clase y el de instancia lo reusa.
+  def self.format_amount(value)
+    ActionController::Base.helpers.number_to_currency(
+      value,
+      unit: "$",
+      format: "%u%n",
+      precision: value.frac.zero? ? 0 : 2,
+      delimiter: ".",
+      separator: ","
+    )
+  end
+
+  def formatted_amount = self.class.format_amount(amount)
 
   # Se busca en memoria para que un preload(:payments) evite una consulta por
   # cuenta. El id desempata dos pagos del mismo instante.
@@ -90,6 +119,8 @@ class Account < ApplicationRecord
         update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
       end
     end
+
+    owner.check_debt_alert! if owner.is_a?(Consumer)
   end
 
   # Acepta un arreglo de ids de cuentas.
@@ -120,6 +151,14 @@ class Account < ApplicationRecord
   end
 
   private
+
+  def assign_vat_rate
+    self.vat_rate = if company? && ENV["COMPANY_ACCOUNT_VAT_ENABLED"] == "true" && month >= Date.new(2026, 10, 1)
+      VAT_RATE
+    else
+      0
+    end
+  end
 
   # Mantener el mes de las cuentas como la fecha correspondiente al primer
   # día del mes en el que son válidas

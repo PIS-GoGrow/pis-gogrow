@@ -1,0 +1,11 @@
+<h1><%= t(".title") %></h1>
+
+<p><%= t(".greeting", name: @user.name) %></p>
+
+<p><%= t(".intro", company: @company.name) %></p>
+
+<p><%= link_to t(".cta"), provider_invitation_url(token: @token) %></p>
+
+<p><%= t(".after", url: provider_sign_in_url) %></p>
+
+<p><%= @company.name %></p>

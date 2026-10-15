@@ -20,7 +20,8 @@ class Order < ApplicationRecord
     customer_request: 2,
     order_error: 3,
     other: 4,
-    dish_modified: 5
+    dish_modified: 5,
+    dish_deleted: 6
   }, prefix: :rejection_reason
 
   # Esta línea tiene que estar antes de has_many :order_accounts.
@@ -52,6 +53,7 @@ class Order < ApplicationRecord
   validates :amount, presence: true, numericality: { only_integer: true, greater_than: 0 }
   validates :discounted_price, comparison: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :price, comparison: { greater_than_or_equal_to: 0 }, presence: true
+  validates :notes, length: { maximum: 140 }
   validates :address, presence: true, if: :home?
   validates :delivery_method, presence: true
   validates :rejection_reason, presence: true, if: :rejected?
@@ -86,8 +88,11 @@ class Order < ApplicationRecord
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
 
   # Notificaciones al consumidor cuando cambia el estado de la orden
+  before_update :capture_rejection_notification_data, if: -> { will_save_change_to_status? && rejected? }
+
   after_update_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
   after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
+  after_create_commit :notify_received
 
   # Inicializa una orden con el precio que calculó OrderPricing. benefits es
   # { Benefit => viandas que cubre }; sin discounted_price se cobra el precio de
@@ -320,13 +325,14 @@ class Order < ApplicationRecord
   def menu_description = super || schedule&.menu&.description
   def menu_option_groups = super || schedule&.menu&.option_groups_snapshot || []
 
-  # El proveedor modificó el plato de esta programación y eligió no mantener los
-  # pedidos ya confirmados. Igual que #withdraw!, no respeta la ventana de RN-12/13.
-  def reject_for_dish_change!
+  # El proveedor modificó o eliminó el plato de esta programación y eligió no
+  # mantener los pedidos ya confirmados. Igual que #withdraw!, no respeta la
+  # ventana de RN-12/13.
+  def reject_for_dish_change!(reason: :dish_modified)
     with_lock do
       return false unless confirmed?
 
-      update!(status: :rejected, rejection_reason: :dish_modified)
+      update!(status: :rejected, rejection_reason: reason)
     end
   end
 
@@ -361,6 +367,23 @@ class Order < ApplicationRecord
     )
   end
 
+  # Notifica al consumidor usando los datos capturados antes de que el schedule pueda eliminarse.
+  def notify_received
+    return unless provider&.user
+
+    Notifier.call(
+      event_key: :order_received,
+      user: provider.user,
+      notifiable: self,
+      description_data: {
+        consumer: consumer.user.name,
+        amount:,
+        dish: menu_name,
+        date: I18n.l(schedule.date, format: :short)
+      }
+    )
+  end
+
   def notify_rejected
     reason = I18n.t!(
       "notifications.order_rejection.reasons.#{rejection_reason}",
@@ -371,13 +394,19 @@ class Order < ApplicationRecord
       event_key: :order_rejection,
       user: consumer.user,
       notifiable: self,
-      description_data: {
-        date: I18n.l(schedule.date, format: :short),
-        dish: menu_name,
-        provider: provider.user.name,
-        reason:
-      }
+      description_data: @rejection_notification_data.merge(reason:)
     )
+  ensure
+    @rejection_notification_data = nil
+  end
+
+  # Guarda los datos necesarios para notificar un rechazo aunque luego se elimine el schedule.
+  def capture_rejection_notification_data
+    @rejection_notification_data = {
+      date: I18n.l(schedule.date, format: :short),
+      dish: menu_name,
+      provider: provider.user.name
+    }
   end
 
   # El cupo del schedule ya descuenta esta orden, así que el máximo que el
@@ -402,22 +431,23 @@ class Order < ApplicationRecord
 
   private
 
-  # Cada grupo que el plato ofrece tiene que venir una sola vez y con entre 1 y
-  # limit opciones, todas del propio grupo. La pantalla ya lo impide, pero esta
-  # es la única guarda real: un POST directo no pasa por ella.
+  # Cada grupo elegido tiene que ser del plato y venir una sola vez, con hasta
+  # limit opciones del propio grupo; los obligatorios, con al menos una. La
+  # pantalla ya lo impide, pero esta es la única guarda real: un POST directo no
+  # pasa por ella.
   def selected_options_offered_by_menu
     groups = schedule&.menu&.option_groups.to_a
     chosen = Array(selected_options).index_by { it["group_id"].to_i }
 
     valid = chosen.size == Array(selected_options).size &&
-      chosen.keys.sort == groups.map(&:id).sort &&
-      groups.all? { chosen_within_group?(chosen[it.id]["values"], it) }
+      (chosen.keys - groups.map(&:id)).empty? &&
+      groups.all? { chosen_within_group?(chosen.dig(it.id, "values") || [], it) }
 
     errors.add(:base, I18n.t("validations.invalid_options")) unless valid
   end
 
   def chosen_within_group?(values, group)
-    values.is_a?(Array) && values.any? && values.size <= group.limit &&
+    values.is_a?(Array) && (values.any? || !group.required?) && values.size <= group.limit &&
       values.uniq.size == values.size && values.all? { group.options.include?(it) }
   end
   def snapshot_menu

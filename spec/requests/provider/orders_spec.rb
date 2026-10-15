@@ -5,6 +5,14 @@ require "rails_helper"
 RSpec.describe "Provider::Orders", type: :request do
   fixtures :users, :companies, :providers, :consumers, :menus, :menu_option_groups, :schedules, :orders
 
+  before do
+    travel_to schedules(:today).date.noon
+  end
+
+  after do
+    travel_back
+  end
+
   # El pedido del otro proveedor se crea acá y no en los fixtures: los specs de
   # "Mis pedidos" cuentan órdenes y una fila más les cambiaría las listas.
   let(:other_provider_order) do
@@ -24,7 +32,7 @@ RSpec.describe "Provider::Orders", type: :request do
     it "redirects to sign in without a session" do
       get provider_orders_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects a consumer to the home page" do
@@ -187,7 +195,7 @@ RSpec.describe "Provider::Orders", type: :request do
     it "redirects to sign in without a session" do
       get provider_order_path(orders(:upcoming_pending_today))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     %i[consumer admin].each do |role|
@@ -358,7 +366,7 @@ RSpec.describe "Provider::Orders", type: :request do
     it "redirects to sign in without a session" do
       patch confirm_provider_order_path(orders(:upcoming_pending_today))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
       expect(orders(:upcoming_pending_today).reload).to be_pending
     end
 
@@ -459,7 +467,7 @@ RSpec.describe "Provider::Orders", type: :request do
     it "redirects to sign in without a session" do
       patch reject_provider_order_path(orders(:upcoming_pending_today))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
       expect(orders(:upcoming_pending_today).reload).to be_pending
     end
 

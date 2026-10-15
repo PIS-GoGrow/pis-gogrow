@@ -23,6 +23,94 @@ RSpec.describe Account, type: :model do
   let(:provider_user) { User.create!(email: "provider-account-test@gmail.com", name: "Rotisería Central", password: "password123456") }
   let(:provider) { Provider.create!(user: provider_user) }
 
+  describe "IVA de las cuentas de empresa" do
+    before do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+    end
+
+    [ [ "800", "176", "976" ], [ "16200", "3564", "19764" ],
+      [ "800.03", "176.01", "976.04" ], [ "0.25", "0.06", "0.31" ],
+      [ "0", "0", "0" ] ].each do |subtotal, vat, total|
+      it "calcula y redondea el IVA del subtotal #{subtotal}" do
+        account = described_class.create!(owner: company, provider:, month: Date.new(2026, 10, 1), amount: subtotal)
+
+        expect(account.vat_amount).to eq(BigDecimal(vat))
+        expect(account.payable_amount).to eq(BigDecimal(total))
+        expect(account.payable_amount).to be_a(BigDecimal)
+        expect(account.amount).to eq(BigDecimal(subtotal))
+      end
+    end
+
+    it "no agrega IVA a las cuentas de empleados" do
+      account = described_class.create!(owner: consumer, provider:, month: Date.new(2026, 10, 1), amount: "800.03", vat_rate: "0.22")
+
+      expect(account.vat_amount).to be_zero
+      expect(account.payable_amount).to eq(BigDecimal("800.03"))
+    end
+
+    it "no acumula IVA al consultar ni al aprobar pagos" do
+      account = described_class.create!(owner: company, provider:, month: Date.new(2026, 10, 1), amount: "800")
+      2.times { expect(account.payable_amount).to eq(BigDecimal("976")) }
+      account.payments.create!(provider: account.provider, status: :approved)
+
+      expect(account.reload.amount).to eq(BigDecimal("800"))
+      expect(account.payable_amount).to eq(BigDecimal("976"))
+    end
+
+    [ nil, "false" ].each do |activation|
+      it "no activa IVA cuando la configuración es #{activation.inspect}" do
+        allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return(activation)
+        account = described_class.create!(owner: company, provider:, month: Date.new(2026, 10, 1), amount: 800, vat_rate: "0.22")
+        allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+
+        expect(account.reload.vat_rate).to be_zero
+        expect(account.payable_amount).to eq(800.to_d)
+      end
+    end
+
+    it "no aplica IVA a una cuenta nueva de un período anterior a octubre de 2026" do
+      account = described_class.create!(owner: company, provider:, month: Date.new(2026, 9, 30), amount: 800)
+
+      expect(account.vat_rate).to be_zero
+      expect(account.payable_amount).to eq(800.to_d)
+    end
+
+    it "conserva las cuentas existentes pendientes y pagadas al activar IVA" do
+      [ accounts(:gogrow_tuviandita_current), accounts(:gogrow_tuviandita_previous) ].each do |account|
+        original = account.attributes.slice("amount", "month", "updated_at")
+        payments = account.payments.map(&:attributes)
+
+        expect(account.reload.vat_rate).to be_zero
+        expect(account.payable_amount).to eq(original["amount"])
+        expect(account.attributes.slice(*original.keys)).to eq(original)
+        expect(account.payments.map(&:attributes)).to eq(payments)
+      end
+    end
+
+    it "conserva una cuenta futura creada antes de activar IVA al reutilizarla" do
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("false")
+      account = described_class.create!(owner: company, provider:, month: Date.new(2026, 11, 1), amount: 800)
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+      same_account = company.accounts.create_or_find_by!(provider:, month: account.month)
+      same_account.update!(amount: 900)
+
+      expect(same_account.id).to eq(account.id)
+      expect(same_account.reload.vat_rate).to be_zero
+      expect(same_account.payable_amount).to eq(900.to_d)
+    end
+
+    it "mantiene fija la tasa aunque se desactive la configuración o cambie el período" do
+      account = described_class.create!(owner: company, provider:, month: Date.new(2026, 10, 1), amount: 800)
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("false")
+      account.update!(amount: 900, month: Date.new(2026, 9, 1))
+
+      expect(account.reload.vat_rate).to eq(BigDecimal("0.22"))
+      expect(account.payable_amount).to eq(1098.to_d)
+      expect { account.update!(vat_rate: 0) }.to raise_error(ActiveRecord::ReadonlyAttributeError)
+    end
+  end
+
   describe "callbacks and helpers" do
     it "normalizes month to the beginning of the month" do
       account = Account.create!(
@@ -54,7 +142,7 @@ RSpec.describe Account, type: :model do
       expect(past_account.current?).to be(false)
     end
 
-    it "calculates the due date as the 5th day after the following month" do
+    it "calculates the due date as the 10th day of the following month" do
       account = Account.create!(
         owner: consumer,
         provider: provider,
@@ -62,7 +150,7 @@ RSpec.describe Account, type: :model do
         amount: 400
       )
 
-      expect(account.due_date).to eq(Date.new(2026, 10, 5))
+      expect(account.due_date).to eq(Date.new(2026, 10, 10))
     end
   end
 
@@ -129,6 +217,11 @@ RSpec.describe Account, type: :model do
       account = company.accounts.find_by!(provider:, month: schedule.date.beginning_of_month)
 
       expect(account.amount).to eq(150.to_d)
+      2.times do
+        account.sync_amount!
+        expect(account.reload.amount).to eq(150.to_d)
+        expect(account.payable_amount).to eq(150.to_d)
+      end
     end
   end
 

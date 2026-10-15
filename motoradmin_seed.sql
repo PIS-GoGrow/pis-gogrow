@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 2BqrV7fixlF37GUwV79mIgpmN2MBZd7U9HFGroTGTHVUQZuibsyqrmbKXTSnbll
+\restrict bCTZ6Mj8d7E0b7InZZlf96KTkAnrg0Qk1ApLA7kRswQ0ITXQHuf4Vvl1sGHBgcs
 
 -- Dumped from database version 17.11 (Debian 17.11-1.pgdg13+2)
 -- Dumped by pg_dump version 17.11 (Debian 17.11-1.pgdg13+2)
@@ -1147,7 +1147,7 @@ COPY public.motor_admin_user_roles (id, admin_user_id, role_id, created_at, upda
 --
 
 COPY public.motor_admin_users (id, email, first_name, last_name, encrypted_password, reset_password_token, reset_password_sent_at, remember_created_at, sign_in_count, current_sign_in_at, last_sign_in_at, current_sign_in_ip, last_sign_in_ip, failed_attempts, unlock_token, locked_at, deleted_at, created_at, updated_at) FROM stdin;
-1	rrhh.gogrow@gmail.com			$2a$12$ctDUkiSQYyVIqx4vFhnR9OhHQ3G/qPflW8D8zjok77oympWV23mE6	\N	\N	2026-09-21 20:56:05.17875	3	2026-09-21 21:04:08.911392	2026-09-21 20:56:05.183711	192.168.65.1	192.168.65.1	0	\N	\N	\N	2026-09-21 20:54:47.355552	2026-09-21 21:04:08.911974
+1	rrhh.gogrow@gmail.com			$2a$12$ctDUkiSQYyVIqx4vFhnR9OhHQ3G/qPflW8D8zjok77oympWV23mE6	\N	\N	2026-09-21 20:56:05.17875	7	2026-09-25 18:44:42.417711	2026-09-25 18:44:07.765139	172.18.0.1	172.18.0.1	0	\N	\N	\N	2026-09-21 20:54:47.355552	2026-09-25 18:44:42.418051
 \.
 
 
@@ -1174,6 +1174,7 @@ COPY public.motor_alerts (id, query_id, name, description, to_emails, is_enabled
 COPY public.motor_api_configs (id, name, url, preferences, credentials, description, deleted_at, created_at, updated_at) FROM stdin;
 1	https://jsonplaceholder.typicode.com	https://jsonplaceholder.typicode.com	{}	{"p":"yXM=","h":{"iv":"wyXEyWJdzKBtOvKu","at":"IDBUkDFYUkBGUVQMnmxUkQ=="}}	\N	\N	2026-09-21 20:54:22.949954	2026-09-21 20:54:22.949954
 2	origin	/	{}	{"p":"4iQ=","h":{"iv":"QI5tgsxV6sLMMUuV","at":"uF7ON2Jzx7ZtZBylHk53nQ=="}}	\N	\N	2026-09-21 20:54:22.95642	2026-09-21 20:54:22.95642
+3	GoGrow	http://web:3000	{}	{"p":"lot/ZmzFTMrFe6VPppTczl92Uearvf2cGa2M6zaLsIdS7yGAwbHVIka0GwQr3Vph2T61rH23DLcDdT4sQGuXocszxPh7EgwKK3afQeGOfsKChWphW9DvWTdq0NpZlAfKmQQHVOdBxfys6ysFvL0ZSckfo9NUgvE=","h":{"iv":"lIuPacOV4saKSNTf","at":"PM1H7FSb7v2z3Aja4EQHIA=="}}	\N	\N	2026-10-13 16:34:35.363253	2026-10-13 16:34:35.363253
 \.
 
 
@@ -1198,6 +1199,14 @@ COPY public.motor_audits (id, auditable_id, auditable_type, associated_id, assoc
 14	5	Motor::Query	\N	\N	1	Motor::AdminUser	\N	update	{"description":[null,"Las cuentas calculan el monto de sus órdenes en un atributo. Si esto se calcula mal, el empleado va a pagar un precio que no es el correcto."],"sql_body":["SELECT *\\nFROM accounts\\nWHERE accounts.owner_type = 'Consumer'\\n      AND accounts.amount \\u003c\\u003e (SELECT SUM(orders.price - orders.discounted_price)\\n                              FROM orders INNER JOIN order_accounts ON order_accounts.order_id = orders.id\\n                              WHERE order_accounts.account_id = accounts.id)","(\\n    SELECT *\\n    FROM (\\n      SELECT accounts.*,\\n             (SELECT SUM(orders.price - orders.discounted_price)\\n              FROM orders\\n              INNER JOIN order_accounts ON order_accounts.order_id = orders.id\\n              WHERE order_accounts.account_id = accounts.id\\n                AND orders.status = 1) AS real_amount\\n      FROM accounts\\n      WHERE accounts.owner_type = 'Consumer'\\n    ) t\\n    WHERE t.amount IS DISTINCT FROM t.real_amount\\n) UNION (\\n    SELECT *\\n    FROM (\\n      SELECT accounts.*,\\n             (SELECT SUM(orders.discounted_price)\\n              FROM orders\\n              INNER JOIN order_accounts ON order_accounts.order_id = orders.id\\n              WHERE order_accounts.account_id = accounts.id\\n                AND orders.status = 1) AS real_amount\\n      FROM accounts\\n      WHERE accounts.owner_type = 'Company'\\n    ) t\\n    WHERE t.amount IS DISTINCT FROM t.real_amount\\n)"]}	2	\N	192.168.65.1	a941d8ee-919e-4b56-8b38-579eb67657c3	2026-09-21 21:37:19.743325
 15	4	Motor::Query	\N	\N	1	Motor::AdminUser	\N	update	{"description":["Estas órdenes no van a ser cobradas. Su existencia representa un error en la aplicación a revisar","Estas órdenes no van a ser cobradas. Su existencia representa un error a revisar en la aplicación"],"sql_body":["(\\n    SELECT *\\n    FROM orders\\n    WHERE orders.price - orders.discounted_price \\u003e 0\\n          AND orders.id NOT IN (SELECT DISTINCT order_accounts.order_id\\n                                FROM order_accounts INNER JOIN accounts ON accounts.id = order_accounts.account_id\\n                                WHERE accounts.owner_type = 'Consumer')\\n) UNION (\\n    SELECT *\\n    FROM orders\\n    WHERE orders.discounted_price \\u003e 0\\n          AND orders.id NOT IN (SELECT DISTINCT order_accounts.order_id\\n                                FROM order_accounts INNER JOIN accounts ON accounts.id = order_accounts.account_id\\n                                WHERE accounts.owner_type = 'Company')\\n)","(\\n    SELECT 'Consumer' AS account_missing, *\\n    FROM orders\\n    WHERE orders.price - orders.discounted_price \\u003e 0\\n          AND orders.id NOT IN (SELECT DISTINCT order_accounts.order_id\\n                                FROM order_accounts INNER JOIN accounts ON accounts.id = order_accounts.account_id\\n                                WHERE accounts.owner_type = 'Consumer')\\n) UNION (\\n    SELECT 'Company' AS account_missing, *\\n    FROM orders\\n    WHERE orders.discounted_price \\u003e 0\\n          AND orders.id NOT IN (SELECT DISTINCT order_accounts.order_id\\n                                FROM order_accounts INNER JOIN accounts ON accounts.id = order_accounts.account_id\\n                                WHERE accounts.owner_type = 'Company')\\n)"]}	3	\N	192.168.65.1	d95aaddb-cdc6-439f-97e3-c0dfa716f3ba	2026-09-22 00:36:20.64782
 16	6	Motor::Query	\N	\N	1	Motor::AdminUser	\N	create	{"name":"Sesiones con roles discrepantes","description":"Un usuario no debería efectuar un rol en una sesión, si no lo posee.","sql_body":"SELECT *\\nFROM sessions\\nWHERE (sessions.role = 0 AND NOT EXISTS (SELECT * FROM providers WHERE providers.user_id = sessions.user_id))\\n      OR (sessions.role = 1 AND NOT EXISTS (SELECT * FROM consumers WHERE consumers.user_id = sessions.user_id))\\n      OR (sessions.role = 2 AND NOT EXISTS (SELECT * FROM admins WHERE admins.user_id = sessions.user_id))","preferences":{"query_type":"sql","database":"Default","visualization":"table","visualization_options":{},"variables":[]},"author_id":null,"author_type":null,"deleted_at":null}	1	\N	192.168.65.1	f69d0a86-740e-4c1c-9466-c31f3a172b01	2026-09-22 00:44:28.046982
+17	66	Order	\N	\N	1	Motor::AdminUser	\N	create	{"address":"prueba","amount":1,"consumer_id":21,"discounted_price":"199.0","notes":"prueba motor admin","price":"400.0","schedule_id":171,"status":0,"cancelled_at":null,"status_before_cancellation":null,"cancelled_by_id":null,"delivery_method":0}	1	\N	172.18.0.1	c1a46f6e-c326-4285-a005-4c0e3958af80	2026-09-25 18:47:35.915534
+18	2	Motor::Config	\N	\N	1	Motor::AdminUser	\N	create	{"key":"resources.consumer.columns.order","value":["user_id","id","company_id","address","updated_at","created_at"]}	1	\N	172.18.0.1	9813189c-573f-4deb-ba5a-b379827f5cc6	2026-09-25 18:48:53.931213
+19	66	Order	\N	\N	1	Motor::AdminUser	\N	update	{"status":[0,1]}	2	\N	172.18.0.1	b622feb0-02a6-422a-ab4f-ff8ad295d3cc	2026-09-25 18:50:53.199632
+20	66	Order	\N	\N	1	Motor::AdminUser	\N	update	{"schedule_id":[171,178]}	3	\N	172.18.0.1	975cdb41-704d-4293-b96a-2f71b451deb9	2026-09-25 18:51:46.336022
+21	66	Order	\N	\N	1	Motor::AdminUser	\N	update	{"schedule_id":[178,170]}	4	\N	172.18.0.1	4f653eb8-33b6-403e-ba23-4f74bba044ac	2026-09-25 18:52:16.764828
+22	20	Account	\N	\N	1	Motor::AdminUser	\N	create	{"amount":"999.0","month":"2026-09-25","owner_id":2,"owner_type":"d","provider_id":36}	1	\N	172.18.0.1	db1e4ea5-2221-4955-90b4-86fccb77103c	2026-09-25 18:52:40.426052
+23	180	Schedule	\N	\N	1	Motor::AdminUser	\N	create	{"amount":111,"date":"2026-09-25","menu_id":142}	1	\N	172.18.0.1	4e550c13-1e5d-4614-92dc-7f0c2b3e10ae	2026-09-25 18:53:51.515903
+24	2	Motor::Form	\N	\N	\N	\N	\N	create	{"name":"Invitar proveedor","description":"Invitar a un nuevo proveedor al sistema por correo","api_path":"/internal/provider_invitations","http_method":"POST","preferences":{"fields":[{"display_name":"Nombre","name":"name","field_type":"text","validators":[{"required":true}],"is_array":false},{"display_name":"Correo electr??nico","name":"email","field_type":"text","validators":[{"required":true}],"is_array":false}]},"author_id":null,"author_type":null,"deleted_at":null,"api_config_name":"GoGrow"}	1	\N	\N	bc7c47df-b572-4441-82b3-fb610331fa80	2026-10-13 16:34:35.405053
 \.
 
 
@@ -1207,6 +1216,7 @@ COPY public.motor_audits (id, auditable_id, auditable_type, associated_id, assoc
 
 COPY public.motor_configs (id, key, value, created_at, updated_at) FROM stdin;
 1	header.links	[{"name":"Reports","link_type":"reports"},{"name":"Forms","link_type":"forms"}]	2026-09-21 20:54:22.909604	2026-09-21 20:57:05.297672
+2	resources.consumer.columns.order	["user_id","id","company_id","address","updated_at","created_at"]	2026-09-25 18:48:53.925839	2026-09-25 18:48:53.925839
 \.
 
 
@@ -1234,6 +1244,7 @@ COPY public.motor_encrypted_configs (id, key, value, created_at, updated_at) FRO
 
 COPY public.motor_forms (id, name, description, api_path, http_method, preferences, author_id, author_type, deleted_at, created_at, updated_at, api_config_name) FROM stdin;
 1	Hello Form	\N	/todos	POST	{"fields":[{"display_name":"Message","name":"message","field_type":"richtext","validators":[{"required":true}],"is_array":false}]}	\N	\N	\N	2026-09-21 20:54:22.920579	2026-09-21 20:54:22.951326	https://jsonplaceholder.typicode.com
+2	Invitar proveedor	Invitar a un nuevo proveedor al sistema por correo	/internal/provider_invitations	POST	{"fields":[{"display_name":"Nombre","name":"name","field_type":"text","validators":[{"required":true}],"is_array":false},{"display_name":"Correo electr??nico","name":"email","field_type":"text","validators":[{"required":true}],"is_array":false}]}	\N	\N	\N	2026-10-13 16:34:35.385915	2026-10-13 16:34:35.385915	GoGrow
 \.
 
 
@@ -1401,21 +1412,21 @@ SELECT pg_catalog.setval('public.motor_alerts_id_seq', 1, false);
 -- Name: motor_api_configs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.motor_api_configs_id_seq', 2, true);
+SELECT pg_catalog.setval('public.motor_api_configs_id_seq', 3, true);
 
 
 --
 -- Name: motor_audits_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.motor_audits_id_seq', 16, true);
+SELECT pg_catalog.setval('public.motor_audits_id_seq', 24, true);
 
 
 --
 -- Name: motor_configs_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.motor_configs_id_seq', 1, true);
+SELECT pg_catalog.setval('public.motor_configs_id_seq', 2, true);
 
 
 --
@@ -1436,7 +1447,7 @@ SELECT pg_catalog.setval('public.motor_encrypted_configs_id_seq', 1, true);
 -- Name: motor_forms_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.motor_forms_id_seq', 1, true);
+SELECT pg_catalog.setval('public.motor_forms_id_seq', 2, true);
 
 
 --
@@ -2121,5 +2132,5 @@ ALTER TABLE ONLY public.motor_note_tag_tags
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 2BqrV7fixlF37GUwV79mIgpmN2MBZd7U9HFGroTGTHVUQZuibsyqrmbKXTSnbll
+\unrestrict bCTZ6Mj8d7E0b7InZZlf96KTkAnrg0Qk1ApLA7kRswQ0ITXQHuf4Vvl1sGHBgcs
 

@@ -13,6 +13,34 @@ configurations:
     roles: [consumer]
     configurable: true
 
+  debt_alerts:
+    roles: [consumer]
+    configurable: false
+
+  provider_payment_reminders:
+    roles: [consumer]
+    configurable: false
+
+  automatic_payment_reminders:
+    roles: [consumer]
+    configurable: false
+
+  company_payments:
+    roles: [admin]
+    configurable: true
+
+  hr_payment_reminders:
+    roles: [consumer]
+    configurable: false
+
+  provider_orders:
+    roles: [provider]
+    configurable: true
+
+  provider_payments:
+    roles: [provider]
+    configurable: true
+
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
 # atributo configuration, especificar un único rol de los que están disponibles
@@ -31,4 +59,59 @@ events:
   order_withdrawal:
     configuration: order_updates
     role: consumer
+    requires_action: false
+
+  debt_threshold_exceeded:
+    configuration: debt_alerts
+    role: consumer
+    requires_action: true
+
+  debt_payment_reminder:
+    configuration: provider_payment_reminders
+    role: consumer
+    requires_action: true
+
+  payment_available:
+    configuration: automatic_payment_reminders
+    role: consumer
+    requires_action: false
+
+  payment_due_soon:
+    configuration: automatic_payment_reminders
+    role: consumer
+    requires_action: false
+
+  company_payment_upcoming:
+    configuration: company_payments
+    role: admin
+    requires_action: true
+
+  company_payment_overdue:
+    configuration: company_payments
+    role: admin
+    requires_action: true
+
+  company_payment_rejected:
+    configuration: company_payments
+    role: admin
+    requires_action: true
+
+  company_payment_approved:
+    configuration: company_payments
+    role: admin
+    requires_action: false
+
+  hr_debt_payment_reminder:
+    configuration: hr_payment_reminders
+    role: consumer
+    requires_action: false
+
+  order_received:
+    configuration: provider_orders
+    role: provider
+    requires_action: false
+
+  payment_receipt_submitted:
+    configuration: provider_payments
+    role: provider
     requires_action: false

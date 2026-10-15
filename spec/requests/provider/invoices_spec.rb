@@ -27,6 +27,25 @@ RSpec.describe "Provider::Invoices", type: :request do
   end
 
   describe "POST /provider/invoices" do
+    it "conserva el total informado con IVA sin volver a aplicarlo" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+      account = Account.create!(owner: companies(:gogrow), provider: providers(:tuviandita), month: Date.current.next_month, amount: 800)
+      sign_in provider_user, role: :provider
+
+      post provider_invoices_path, params: invoice_params(account_id: account.id, total_amount: "976"), headers: collections_headers
+
+      expect(account.invoices.sole.total_amount).to eq(976.to_d)
+      expect(account.reload.amount).to eq(800.to_d)
+      follow_redirect!
+      expect(inertia).to have_props { |page|
+        row = page[:pending].find { it[:company][:id] == account.id }[:company]
+        expect(row).to include(amount: 800.0, vat_amount: 176.0, payable_amount: 976.0)
+        expect(row[:invoice][:total_amount]).to eq(976.0)
+        true
+      }
+    end
+
     it "redirects a consumer to the home page" do
       sign_in users(:one), role: :consumer
 

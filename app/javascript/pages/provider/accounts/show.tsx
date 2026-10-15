@@ -10,7 +10,10 @@ import AppLayout from "@/layouts/app-layout"
 import {
   providerAccount,
   providerOperationalSettings,
+  providerPaymentDetails,
   sessions,
+  settingsNotifications,
+  settingsProfiles,
 } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 
@@ -25,8 +28,14 @@ export default function ProviderAccount() {
   ]
   const settings = [
     {
+      title: t(`${account}.profile`),
+      description: t(`${account}.profile_description`),
+      href: settingsProfiles.show().url,
+    },
+    {
       title: t(`${account}.payment_details`),
       description: t(`${account}.payment_details_description`),
+      href: providerPaymentDetails.show().url,
     },
     {
       title: t(`${account}.operational_settings`),
@@ -36,10 +45,12 @@ export default function ProviderAccount() {
     {
       title: t(`${account}.deliveries`),
       description: t(`${account}.deliveries_description`),
+      href: settingsProfiles.show().url,
     },
     {
       title: t(`${account}.notifications`),
       description: t(`${account}.notifications_description`),
+      href: settingsNotifications.index().url,
     },
   ]
 
@@ -103,14 +114,10 @@ export default function ProviderAccount() {
               const className =
                 "hover:bg-accent/50 flex w-full cursor-pointer items-center gap-4 border-b px-1 py-5 transition-colors"
 
-              return href ? (
+              return (
                 <Link key={title} href={href} prefetch className={className}>
                   {content}
                 </Link>
-              ) : (
-                <button key={title} type="button" className={className}>
-                  {content}
-                </button>
               )
             })}
           </div>

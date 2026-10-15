@@ -22,7 +22,7 @@ RSpec.describe Menus::Update do
 
   let(:attributes) do
     { name: "Milanesa napolitana", description: "Con jamón y queso", price: "350",
-      option_groups_attributes: [ { name: "Guarnición", options: [ "Papas" ], limit: 1 } ] }
+      option_groups_attributes: [ { name: "Guarnición", options: [ "Papas" ], limit: 1, required: true } ] }
   end
 
   def order_for(schedule, status: :confirmed)
@@ -45,6 +45,7 @@ RSpec.describe Menus::Update do
     expect(today.reload.menu.name).to eq("Milanesa")
     expect(tomorrow.reload.menu.name).to eq("Milanesa napolitana")
     expect(tomorrow.menu.option_groups.first.options).to eq([ "Papas" ])
+    expect(tomorrow.menu.option_groups.first).to be_required
     expect(menu.reload.name).to eq("Milanesa")
   end
 
@@ -75,6 +76,15 @@ RSpec.describe Menus::Update do
     expect(menu.current_agenda.weekdays).to eq([ 1, 5 ])
     expect(Schedule.where(menu_id: menu.family_ids).order(:date).pluck(:date))
       .to eq([ friday, next_monday, Date.new(2030, 1, 18) ])
+  end
+
+  it "programs again the dates the provider had removed when a new agenda starts" do
+    menu.update!(skipped_dates: [ friday ])
+
+    update({ mode: "weekly", weekdays: [ "1", "5" ], starts_on: wednesday.iso8601, amount: 6 })
+
+    expect(menu.reload.skipped_dates).to be_empty
+    expect(Schedule.where(menu_id: menu.family_ids, date: friday)).to exist
   end
 
   it "applies the changes only during a range and goes back to the saved dish after it" do

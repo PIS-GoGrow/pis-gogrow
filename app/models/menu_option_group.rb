@@ -27,6 +27,7 @@ end
 #  limit      :integer          default(1), not null
 #  name       :string           not null
 #  options    :string           default([]), is an Array
+#  required   :boolean          default(FALSE), not null
 #  created_at :datetime         not null
 #  updated_at :datetime         not null
 #  menu_id    :bigint           not null
