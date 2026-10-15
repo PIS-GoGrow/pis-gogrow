@@ -96,8 +96,8 @@ class Order < ApplicationRecord
   after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
   after_create_commit :notify_received
 
-  # Inicializa una orden con el precio que calculó OrderPricing. benefits es
-  # { Benefit => viandas que cubre }; sin discounted_price se cobra el precio de
+  # Inicializa una orden con el precio que calculó OrderPricing. benefits es un arreglo
+  # [[ benefit, viandas que cubre ]]; sin discounted_price se cobra el precio de
   # lista.
   def self.reserve(
     consumer:,
@@ -460,6 +460,7 @@ class Order < ApplicationRecord
     values.is_a?(Array) && (values.any? || !group.required?) && values.size <= group.limit &&
       values.uniq.size == values.size && values.all? { group.options.include?(it) }
   end
+
   def snapshot_order_context
     menu = schedule&.menu
     return if menu.nil?

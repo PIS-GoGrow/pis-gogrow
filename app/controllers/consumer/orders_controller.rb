@@ -70,7 +70,7 @@ class Consumer::OrdersController < Consumer::InertiaController
       # rango de fechas permitidas (definidas por Calendar#allowed_order_dates)
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
-      lines = OrderPricing.new(consumer).call(
+      pricing = OrderPricing.new(consumer).call(
         requested_items.map { |item| { schedule: schedules.fetch(item[:schedule_id].to_i), quantity: item[:quantity].to_i } }
       )
 
@@ -97,9 +97,9 @@ class Consumer::OrdersController < Consumer::InertiaController
           schedule:,
           quantity:,
           notes: item[:notes],
-          discounted_price: lines[schedule.id].discounted_price,
+          discounted_price: pricing[schedule.id].discounted_price,
           selected_options: selected_options_for(schedule.menu, item[:options]),
-          benefits: lines[schedule.id].benefits,
+          benefits: pricing[schedule.id].benefits,
           **delivery
         )
 
