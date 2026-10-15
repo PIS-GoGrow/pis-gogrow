@@ -35,6 +35,15 @@ RSpec.describe Menus::AgendaScheduler do
     expect(menu.schedules.find_by(date: Date.current).amount).to eq(2)
   end
 
+  it "skips the dates the provider has closed" do
+    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 8)
+    providers(:tuviandita).closures.create!(starts_on: Date.new(2030, 1, 14), ends_on: Date.new(2030, 1, 15), reason: "Vacaciones")
+
+    described_class.call(menu)
+
+    expect(scheduled_dates(menu)).to eq([ Date.new(2030, 1, 9), Date.new(2030, 1, 16) ])
+  end
+
   it "does not program a date the provider removed" do
     menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 8)
     menu.update!(skipped_dates: [ Date.new(2030, 1, 14) ])
@@ -42,6 +51,26 @@ RSpec.describe Menus::AgendaScheduler do
     described_class.call(menu)
 
     expect(scheduled_dates(menu)).to eq([ Date.new(2030, 1, 9), Date.new(2030, 1, 16) ])
+  end
+
+  it "programs the dates again once the closure is removed" do
+    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 8)
+    closure = providers(:tuviandita).closures.create!(starts_on: Date.new(2030, 1, 14), ends_on: Date.new(2030, 1, 15), reason: "Vacaciones")
+    described_class.call(menu)
+
+    closure.destroy!
+    described_class.call(menu.reload)
+
+    expect(scheduled_dates(menu)).to eq([ Date.new(2030, 1, 9), Date.new(2030, 1, 14), Date.new(2030, 1, 16) ])
+  end
+
+  it "does not close another provider's dates" do
+    menu.agendas.create!(weekdays: [ 1 ], starts_on: Date.current, amount: 8)
+    providers(:endulzate).closures.create!(starts_on: Date.new(2030, 1, 14), ends_on: Date.new(2030, 1, 14), reason: "Vacaciones")
+
+    described_class.call(menu)
+
+    expect(scheduled_dates(menu)).to eq([ Date.new(2030, 1, 14) ])
   end
 
   it "uses the agenda of a ranged variant during its range and the saved dish after it" do

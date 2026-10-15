@@ -121,7 +121,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
     t.datetime "created_at", null: false
     t.string "description"
     t.date "due_date"
-    t.decimal "max_price", precision: 10, scale: 2
     t.integer "percentage"
     t.integer "status"
     t.datetime "updated_at", null: false
@@ -329,6 +328,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_payments_on_account_id"
     t.index ["provider_id"], name: "index_payments_on_provider_id"
+  end
+
+  create_table "provider_closures", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "ends_on", null: false
+    t.bigint "provider_id", null: false
+    t.string "reason", null: false
+    t.date "starts_on", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider_id", "starts_on"], name: "index_provider_closures_on_provider_id_and_starts_on"
+    t.index ["provider_id"], name: "index_provider_closures_on_provider_id"
+    t.check_constraint "ends_on >= starts_on", name: "provider_closures_ends_on_after_starts_on"
   end
 
   create_table "providers", force: :cascade do |t|
@@ -604,6 +615,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
   add_foreign_key "otp_codes", "users"
   add_foreign_key "payments", "accounts"
   add_foreign_key "payments", "providers"
+  add_foreign_key "provider_closures", "providers"
   add_foreign_key "providers", "users", on_delete: :nullify
   add_foreign_key "reviews", "menus"
   add_foreign_key "schedules", "menus"
