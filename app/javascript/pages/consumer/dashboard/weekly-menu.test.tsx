@@ -77,6 +77,7 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
       benefit: defaultBenefit,
       providers: ["Tu Viandita"],
       schedules: [sampleSchedule],
+      closures: [],
       cart: [],
       count: 0,
       total: 0,

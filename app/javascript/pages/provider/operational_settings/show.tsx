@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import PageContainer from "@/components/page-container"
+import ClosuresSection from "@/components/provider/closures-section"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import {
@@ -38,6 +39,8 @@ const quarterHourOptions = Array.from({ length: 96 }, (_, index) => {
 
 export default function OperationalSettings({
   provider,
+  closures,
+  today,
   order_deadline_passed_today,
 }: ProviderOperationalSettingsShow) {
   const { t } = useTranslation()
@@ -146,6 +149,8 @@ export default function OperationalSettings({
             </Button>
           )}
         </section>
+
+        <ClosuresSection closures={closures} today={today} />
       </PageContainer>
 
       <Sheet open={sheetOpen} onOpenChange={(open) => !open && closeSheet()}>

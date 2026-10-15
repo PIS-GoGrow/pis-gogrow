@@ -41,6 +41,7 @@ es:
     too_many_attempts: "Realizó demasiados intentos. Espere unos minutos y vuelva a probar."
     profile_updated: "Tu perfil fue actualizado"
     payment_details_updated: "Datos de cobro actualizados"
+    deliveries_updated: "Guardamos tu modalidad de entrega"
     session_logged_out: "Esa sesión fue cerrada"
     signed_in: "Inició sesión correctamente"
     signed_up: "¡Te damos la bienvenida! Tu registro se completó correctamente"
@@ -55,6 +56,7 @@ es:
     payment_receipt_removed: "Comprobante eliminado."
     invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
     invoice_removed: "Factura eliminada."
+    provider_closure_deleted: "Cierre eliminado."
     config_update: "Configuración actualizada"
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
@@ -66,6 +68,8 @@ es:
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
     insufficient_stock: "Ya no hay suficiente stock para la cantidad solicitada. Revisá la cantidad e intentá nuevamente."
     order_deadline_passed: "Este proveedor ya cerró la recepción de pedidos para hoy."
+    provider_closed: "Este proveedor no recibe pedidos en esta fecha."
+    publish_date_closed: "Tenés un cierre programado en esa fecha, así que no podés publicar un menú."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
@@ -93,6 +97,7 @@ es:
       invalid_range: "La fecha de fin no puede ser anterior a la de inicio."
       invalid_amount: "Si cargás un stock por día, tiene que ser un entero mayor a 0."
       invalid_weekdays: "Elegí al menos un día de lunes a viernes."
+      date_closed: "Tenés un cierre programado en esa fecha."
     menu_publish:
       invalid_date: "Elegí un día de semana entre hoy y la fecha máxima de publicación."
       invalid_menus: "Algún plato elegido no existe."
@@ -147,6 +152,12 @@ es:
     order_cancellation:
       title: "Un pedido fue cancelado"
       description: "El pedido de %{consumer} del %{date} de %{dish} fue cancelado."
+    provider_menu_unpublished:
+      title: "Publicá el menú del día"
+      description: "Todavía no publicaste un menú para el %{date}."
+    hr_debt_payment_reminder:
+      title: "Recordatorio de pago pendiente"
+      description: "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos."
   notification_configurations:
     provider_orders:
       title: "Pedidos nuevos"
@@ -172,6 +183,12 @@ es:
     order_cancellations:
       title: "Cancelaciones"
       description: "Recibí una notificación cuando un pedido sea cancelado por el cliente."
+    menu_publication_reminders:
+      title: "Recordatorios de publicación del menú"
+      description: "Avisos cuando falta publicar el menú de un día hábil."
+    hr_payment_reminders:
+      title: "Recordatorios de pago de Recursos Humanos"
+      description: "Recordatorios de pagos vencidos enviados por Recursos Humanos."
   activerecord:
     errors:
       models:
@@ -183,6 +200,19 @@ es:
           attributes:
             effective_from:
               taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
+        provider_closure:
+          attributes:
+            reason:
+              blank: "Ingresá el motivo del cierre."
+              too_long: "Usá como máximo %{count} caracteres."
+            starts_on:
+              blank: "Elegí las fechas del cierre."
+              greater_than_or_equal_to: "No podés programar un cierre en una fecha pasada."
+            ends_on:
+              blank: "Elegí las fechas del cierre."
+              greater_than_or_equal_to: "La fecha de fin no puede ser anterior a la de inicio."
+            base:
+              overlaps: "Ya tenés un cierre programado en esas fechas."
         menu_option_group:
           attributes:
             options:
@@ -321,6 +351,7 @@ es:
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
     date_picker:
       placeholder: "Elegí una fecha"
+      range_placeholder: "Elegí un rango"
     benefit_summary:
       active: "Activo"
       inactive: "Sin beneficio"
@@ -490,6 +521,24 @@ es:
           history: "Historial de consumo"
           year_label: "Año"
           view_month: "Ver el detalle de %{month}"
+          reminder:
+            trigger: "Recordar pago pendiente"
+            next_available: "Recordatorio enviado. Vas a poder enviar otro el %{date}."
+            limit_reached: "Alcanzaste el límite de recordatorios para este empleado."
+            confirm:
+              title: "Recordar pago pendiente"
+              description: "Se le va a enviar un recordatorio a %{employeeName} por sus pagos vencidos, que suman %{amount}."
+            success:
+              title: "Recordatorio enviado"
+              description: "Le enviamos un recordatorio a %{employeeName} por sus pagos vencidos."
+            error:
+              title: "No pudimos enviar el recordatorio"
+              description: "Intentá nuevamente."
+            back: "Volver"
+            send: "Enviar recordatorio"
+            sending: "Enviando..."
+            retry: "Reintentar"
+            done: "Listo"
           history_empty_title: "Sin consumos"
           history_empty_description: "Este empleado todavía no realizó ningún pedido de viandas."
           month_detail: "Historial de consumo: %{month}"
@@ -1200,6 +1249,17 @@ es:
         tax_id_description: "Solo números: 12 dígitos para RUT, 7 u 8 para CI."
         sensitive_notice: "Los cambios en estos datos quedan registrados."
         submit: "Guardar"
+    provider_deliveries:
+      show:
+        title: "Entregas"
+        description: "Elegí dónde realizás tus entregas y si aceptás direcciones personalizadas."
+        back: "Volver a Cuenta"
+        office:
+          title: "Solo Oficinas"
+          description: "Entregás todos los pedidos en las oficinas de las empresas."
+        home:
+          title: "Oficinas y direcciones personalizadas"
+          description: "También aceptás pedidos con direcciones de entrega personalizadas."
     provider_operational_settings:
       show:
         title: "Configuración operativa"
@@ -1214,9 +1274,37 @@ es:
         saved_description: "El cambio se aplica desde ahora. Los pedidos cerrarán todos los días a las %{time}."
         saved_description_closed_today: "El cambio se aplica desde ahora. La recepción de pedidos de hoy ya está cerrada. A partir de mañana, cerrará todos los días a las %{time}."
         done: "Listo"
+        closures:
+          title: "Cierres programados"
+          description: "Días en los que no recibís pedidos."
+          schedule: "Programar cierre"
+          sheet_title: "Programar cierre"
+          edit_title: "Editar cierre"
+          sheet_description: "Selecciona el rango de fechas y el motivo del cierre."
+          date_range: "Rango de fechas"
+          reason: "Motivo"
+          reason_placeholder: "Vacaciones"
+          cancel: "Cancelar"
+          save: "Guardar cambios"
+          saved_title: "¡Cierre programado!"
+          updated_title: "¡Cierre actualizado!"
+          saved_description: "No recibirás pedidos del %{period}."
+          edit: "Editar cierre %{reason}"
+          delete: "Eliminar cierre %{reason}"
+          period:
+            single: "%{date}"
+            same_month: "%{from_day} al %{to_day_month} de %{year}"
+            same_year: "%{from_day_month} al %{to_day_month} de %{year}"
+            other_year: "%{from} al %{to}"
     consumer_dashboard:
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
+        closure:
+          title_now: "%{provider} no está disponible"
+          title_soon: "%{provider} no estará disponible"
+          description: "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}"
+          empty: "%{provider} no recibirá pedidos del %{period}."
+          dismiss: "Cerrar aviso"
       options:
         choose: "Elegí tu %{name}"
         limit: "Podés elegir hasta %{count}"
@@ -1310,4 +1398,6 @@ es:
     formats:
       month_year: "%B de %Y"
       month_name_year: "%B %Y"
+      day_month: "%-d de %B"
+      day_month_year: "%-d de %B de %Y"
     month_names: [~, Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Septiembre, Octubre, Noviembre, Diciembre]

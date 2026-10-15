@@ -6,10 +6,11 @@ RSpec.describe Notification::Configuration do
   describe ".for_role" do
     it "devuelve solo los grupos que incluyen ese rol" do
       expect(described_class.for_role(:consumer).pluck(:key))
-        .to contain_exactly("order_updates", "provider_payment_reminders", "automatic_payment_reminders", "debt_alerts")
+        .to contain_exactly("order_updates", "provider_payment_reminders", "automatic_payment_reminders", "debt_alerts", "hr_payment_reminders")
       expect(described_class.for_role(:admin).pluck(:key)).to eq([ "company_payments" ])
       expect(described_class.for_role(:provider).pluck(:key))
         .to contain_exactly("provider_orders", "provider_payments", "order_cancellations")
+        .to contain_exactly("provider_orders", "provider_payments", "menu_publication_reminders")
     end
   end
 end
