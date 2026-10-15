@@ -179,7 +179,7 @@ export default function AdminDashboard({
               ) : (
                 payments.map((payment) => (
                   <Row key={payment.name}>
-                    <span className="min-w-0 flex-1 truncate">
+                    <span className="min-w-0 flex-1 truncate font-medium">
                       {payment.name}
                     </span>
                     <span className="font-semibold">

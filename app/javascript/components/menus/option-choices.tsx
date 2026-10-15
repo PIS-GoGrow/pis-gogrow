@@ -48,7 +48,7 @@ export default function OptionChoices({
         <RadioGroup
           value={values[0] ?? ""}
           onValueChange={(value) => setValues([value])}
-          className="mt-3 space-y-3"
+          className="mt-3"
         >
           {group.options.map((option) => (
             <label

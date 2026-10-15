@@ -586,6 +586,12 @@
           "cart_summary_one": "%{count} plato · %{total}",
           "cart_summary_other": "%{count} platos · %{total}",
           "cart_title": "Tu carrito",
+          "consumption": {
+            "meals_ordered_one": "vianda pedida",
+            "meals_ordered_other": "viandas pedidas",
+            "this_week": "Esta semana",
+            "title": "Tu consumo"
+          },
           "empty_filtered": "No hay platos de los proveedores seleccionados para esta fecha. Probá cambiando el filtro.",
           "empty_no_schedules": "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde.",
           "empty_title": "Menú no disponible",

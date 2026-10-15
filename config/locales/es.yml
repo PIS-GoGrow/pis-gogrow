@@ -1319,6 +1319,11 @@ es:
         cart_summary_other: "%{count} platos · %{total}"
         cart_hint: "Agregá platos de distintos días y proveedores."
         view_cart: "Ver carrito"
+        consumption:
+          title: "Tu consumo"
+          this_week: "Esta semana"
+          meals_ordered_one: "vianda pedida"
+          meals_ordered_other: "viandas pedidas"
       dish_detail:
         back: "Volver"
         reviews_title: "Opiniones del plato"
