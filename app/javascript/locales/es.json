@@ -114,6 +114,10 @@
         "description": "Recibí una notificación cuando tu deuda supere el monto definido por RRHH.",
         "title": "Alertas de deuda"
       },
+      "hr_payment_reminders": {
+        "description": "Recordatorios de pagos vencidos enviados por Recursos Humanos.",
+        "title": "Recordatorios de pago de Recursos Humanos"
+      },
       "menu_publication_reminders": {
         "description": "Avisos cuando falta publicar el menú de un día hábil.",
         "title": "Recordatorios de publicación del menú"
@@ -159,6 +163,10 @@
       "debt_threshold_exceeded": {
         "description": "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca.",
         "title": "Tu deuda superó el monto límite"
+      },
+      "hr_debt_payment_reminder": {
+        "description": "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos.",
+        "title": "Recordatorio de pago pendiente"
       },
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
@@ -399,6 +407,28 @@
             "orders_empty": "No hay pedidos confirmados en este mes.",
             "provider": "Proveedor",
             "quantity": "Cant.",
+            "reminder": {
+              "back": "Volver",
+              "confirm": {
+                "description": "Se le va a enviar un recordatorio a %{employeeName} por sus pagos vencidos, que suman %{amount}.",
+                "title": "Recordar pago pendiente"
+              },
+              "done": "Listo",
+              "error": {
+                "description": "Intentá nuevamente.",
+                "title": "No pudimos enviar el recordatorio"
+              },
+              "limit_reached": "Alcanzaste el límite de recordatorios para este empleado.",
+              "next_available": "Recordatorio enviado. Vas a poder enviar otro el %{date}.",
+              "retry": "Reintentar",
+              "send": "Enviar recordatorio",
+              "sending": "Enviando...",
+              "success": {
+                "description": "Le enviamos un recordatorio a %{employeeName} por sus pagos vencidos.",
+                "title": "Recordatorio enviado"
+              },
+              "trigger": "Recordar pago pendiente"
+            },
             "this_month": "Este mes",
             "title": "Detalle del empleado",
             "total": "Total: %{amount}",

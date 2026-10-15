@@ -12,7 +12,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
-import { providerCollections } from "@/routes"
+import { providerCollections, providerDebtReminders } from "@/routes"
 import type { ProviderCollectionAccount } from "@/types"
 
 interface CollectionAccountPanelProps {
@@ -122,7 +122,7 @@ export default function CollectionAccountPanel({
         reminder.blocked_reason === "cooldown" ||
         reminder.blocked_reason === "limit_reached") && (
         <DebtReminderDialog
-          accountId={account.id}
+          action={providerDebtReminders.create(account.id).url}
           eligible={reminder.eligible}
           employeeName={account.owner_name}
           month={account.month}

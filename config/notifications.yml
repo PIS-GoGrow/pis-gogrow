@@ -28,9 +28,15 @@ configurations:
   company_payments:
     roles: [admin]
     configurable: true
+
+  hr_payment_reminders:
+    roles: [consumer]
+    configurable: false
+
   provider_orders:
     roles: [provider]
     configurable: true
+
   provider_payments:
     roles: [provider]
     configurable: true
@@ -103,6 +109,11 @@ events:
     configuration: menu_publication_reminders
     role: provider
     requires_action: true
+
+  hr_debt_payment_reminder:
+    configuration: hr_payment_reminders
+    role: consumer
+    requires_action: false
 
   order_received:
     configuration: provider_orders
