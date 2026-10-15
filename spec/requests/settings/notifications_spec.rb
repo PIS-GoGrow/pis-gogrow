@@ -63,7 +63,7 @@ RSpec.describe "Settings::Notifications", type: :request do
 
       expect(inertia).to have_props { |props|
         keys = props[:notification_configurations].map { it[:key] }
-        keys.sort == %w[order_cancellations provider_orders provider_payments] &&
+        keys.sort == %w[menu_publication_reminders order_cancellations provider_orders provider_payments] &&
           props[:subscribed_keys] == []
       }
     end
