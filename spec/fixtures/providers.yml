@@ -1,13 +1,16 @@
 tuviandita:
   user: provider_user
   home_delivery: true
+  onboarding_completed_at: <%= 1.week.ago.to_fs(:db) %>
 
 office_provider:
   user: office_provider_user
   home_delivery: false
+  onboarding_completed_at: <%= 1.week.ago.to_fs(:db) %>
 
 endulzate:
   user: other_provider_user
+  onboarding_completed_at: <%= 1.week.ago.to_fs(:db) %>
 
 # == Schema Information
 #
