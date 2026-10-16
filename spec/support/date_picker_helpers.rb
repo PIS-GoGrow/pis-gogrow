@@ -62,9 +62,10 @@ module DatePickerHelpers
   # clic sobre un elemento en movimiento apunta a una posición que ya no existe.
   def open_date_picker(trigger)
     wait_until_settled trigger
-    find(trigger).click
-    find(trigger).click if page.has_no_css?(OPEN_CALENDAR, wait: 2)
-
+    3.times do
+      find(trigger).click
+      break if page.has_css?(OPEN_CALENDAR, wait: 0.5)
+    end
     expect(page).to have_css(OPEN_CALENDAR)
   end
 
@@ -76,7 +77,9 @@ module DatePickerHelpers
         current = page.evaluate_script(<<~JS)
           (() => {
             const el = document.querySelector(#{trigger.to_json})
-            return el ? Math.round(el.getBoundingClientRect().x) : null
+            if (!el) return null
+            const rect = el.getBoundingClientRect()
+            return [Math.round(rect.x), Math.round(rect.y)]
           })()
         JS
         break if current && current == previous
