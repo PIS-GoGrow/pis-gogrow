@@ -555,4 +555,47 @@ RSpec.describe "Payments", type: :request do
     expect(inertia).to have_flash(alert: I18n.t("validations.payment_not_removable"))
     expect(Payment.exists?(payment.id)).to be(true)
   end
+
+  it "rescues ActiveRecord::RecordNotUnique and redirects with already_under_review error prop" do
+    user, account, = setup_payment_account
+    sign_in(user, role: :consumer)
+
+    allow_any_instance_of(Payment).to receive(:save).and_raise(ActiveRecord::RecordNotUnique)
+
+    post payments_path, params: {
+      payment: { account_id: account.id, receipt: receipt_upload }
+    }, headers: account_page_headers
+
+    expect(response).to have_http_status(:see_other)
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.already_under_review") ] }
+    )
+  end
+
+  it "returns not found when account_id is invalid or does not exist" do
+    user, = setup_payment_account
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: "invalid-account-id", receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to have_http_status(:not_found)
+  end
+
+  it "requires authentication to submit a payment" do
+    _user, account, = setup_payment_account
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(sign_in_path)
+  end
 end

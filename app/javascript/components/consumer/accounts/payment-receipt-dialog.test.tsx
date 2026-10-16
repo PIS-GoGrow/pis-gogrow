@@ -152,6 +152,26 @@ describe("PaymentReceiptDialog", () => {
     )
   })
 
+  it("does not open the upload dialog when clicking the button if uploadDisabled is set", async () => {
+    const user = userEvent.setup()
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        payments={[submittedPayment]}
+        uploadDisabled
+      />,
+    )
+
+    const button = screen.getByRole("button", {
+      name: "Subir comprobante de pago",
+    })
+    await user.click(button)
+
+    expect(
+      screen.queryByRole("dialog", { name: "Subir comprobante" }),
+    ).not.toBeInTheDocument()
+  })
+
   it("renders multiple receipts with filenames, dates, links and status badges", () => {
     render(
       <PaymentReceiptDialog

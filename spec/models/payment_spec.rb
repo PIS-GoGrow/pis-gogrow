@@ -208,6 +208,26 @@ RSpec.describe Payment, type: :model do
 
       expect(other).to be_valid
     end
+
+    it "handles validation safely when account_id is nil" do
+      payment = described_class.new(status: :submitted)
+      payment.receipt.attach(io: StringIO.new("comprobante"), filename: "comprobante.png", content_type: "image/png")
+
+      expect { payment.valid? }.not_to raise_error
+      expect(payment.errors[:account]).to be_present
+      expect(payment.errors[:receipt]).not_to include(already_under_review)
+    end
+
+    it "allows multiple payments in non-submitted statuses for the same account" do
+      rejected1 = payment_with_receipt(status: :rejected, rejection_reason: "Comprobante ilegible", filename: "c1.png")
+      rejected1.save!
+      rejected2 = payment_with_receipt(status: :rejected, rejection_reason: "Monto incorrecto", filename: "c2.png")
+      rejected2.save!
+
+      expect(rejected1).to be_persisted
+      expect(rejected2).to be_persisted
+      expect(account.payments.rejected.count).to eq(2)
+    end
   end
 
   describe "multiple receipts and deletion integrity" do

@@ -83,4 +83,28 @@ RSpec.describe "Subida de varios comprobantes y eliminación por el empleado", t
       expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: false)
     end
   end
+
+  it "vuelve a habilitar el botón de subida cuando el comprobante en revisión es rechazado" do
+    payment = account.payments.build(provider: account.provider, status: :submitted)
+    payment.receipt.attach(io: File.open(receipt_file), filename: "icon.png", content_type: "image/png")
+    payment.save!
+
+    sign_in employee
+    visit accounts_path
+
+    within(find("[role=tabpanel]")) do
+      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: true)
+      expect(page).to have_content(I18n.t("pages.accounts.show.receipt_under_review_hint"))
+    end
+
+    payment.reject_with("Comprobante ilegible")
+
+    visit accounts_path
+
+    within(find("[role=tabpanel]")) do
+      expect(page).to have_content("Rechazado")
+      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: false)
+      expect(page).to have_no_content(I18n.t("pages.accounts.show.receipt_under_review_hint"))
+    end
+  end
 end

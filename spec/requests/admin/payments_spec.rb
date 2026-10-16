@@ -308,6 +308,18 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    it "does not allow a provider to upload a company receipt" do
+      sign_in users(:provider_user), role: :provider
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload }
+        }
+      }.not_to change(Payment, :count)
+
+      expect(response).to redirect_to(root_path)
+    end
+
     it "requires an admin session" do
       expect {
         post admin_payments_path, params: {
@@ -316,6 +328,34 @@ RSpec.describe "Admin::Payments", type: :request do
       }.not_to change(Payment, :count)
 
       expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "rescues ActiveRecord::RecordNotUnique and redirects with already_under_review error prop" do
+      sign_in users(:admin), role: :admin
+      allow_any_instance_of(Payment).to receive(:save).and_raise(ActiveRecord::RecordNotUnique)
+
+      post admin_payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: { "HTTP_REFERER" => admin_payments_url }
+
+      expect(response).to have_http_status(:see_other)
+      expect(response).to redirect_to(admin_payments_path)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.already_under_review") ] }
+      )
+    end
+
+    it "returns not found when account_id is invalid or does not exist" do
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: "invalid-id", receipt: receipt_upload }
+        }
+      }.not_to change(Payment, :count)
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 

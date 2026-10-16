@@ -82,6 +82,21 @@ describe("AccountCard", () => {
     ).not.toBeInTheDocument()
   })
 
+  it("keeps the upload button enabled when an earlier payment was approved", () => {
+    const account = makeAccount({
+      payments: [makePayment({ status: "approved" })],
+    })
+
+    renderCard(account)
+
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeEnabled()
+    expect(
+      screen.queryByText(/Ya hay un comprobante en revisión/),
+    ).not.toBeInTheDocument()
+  })
+
   it("renders yellow warning when rejection reason is partial payment", () => {
     const payment = makePayment({
       status: "rejected",
