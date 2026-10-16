@@ -203,6 +203,17 @@ describe("ConsumerCart delivery address", () => {
   })
 })
 
+describe("ConsumerCart notes", () => {
+  it("breaks a note without spaces instead of overflowing the card", () => {
+    const longNote = "A".repeat(140)
+    renderCart({
+      cart: [{ ...cartItem("Tu Viandita", true), notes: longNote }],
+    })
+
+    expect(screen.getByText(longNote)).toHaveClass("wrap-anywhere")
+  })
+})
+
 // IBP-037: el subsidio especial se suma al base, y cada línea del carrito
 // muestra qué beneficio le descuenta cuánto.
 describe("ConsumerCart benefits", () => {

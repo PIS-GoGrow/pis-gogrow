@@ -200,7 +200,9 @@ export function ConsumerCart({
                   </p>
                 ))}
               {item.notes && (
-                <p className="text-muted-foreground mt-2">{item.notes}</p>
+                <p className="text-muted-foreground mt-2 wrap-anywhere">
+                  {item.notes}
+                </p>
               )}
               <Button
                 type="button"
