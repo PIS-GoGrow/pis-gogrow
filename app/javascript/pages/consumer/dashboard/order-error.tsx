@@ -5,8 +5,6 @@ import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Button } from "@/components/ui/button"
 import { consumerDashboard } from "@/routes"
 
-import { consumerDashboard } from "@/routes"
-
 interface Props {
   retry: () => void
   error?: string
