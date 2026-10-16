@@ -17,7 +17,12 @@ RSpec.describe "Sessions", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    # El valor se fija acá y no se deja al entorno: quien tenga el login de prueba
+    # prendido en su .env vería este ejemplo fallar.
     it "hides the password form unless the test login is enabled" do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("DEV_LOGIN_ENABLED", "false").and_return("false")
+
       get sign_in_path
 
       expect(inertia).to render_component("sessions/new")
@@ -91,6 +96,13 @@ RSpec.describe "Sessions", type: :request do
       delete session_path(session_record)
       expect(response).to redirect_to(root_path)
       expect(Session.exists?(session_record.id)).to be(false)
+    end
+
+    it "sends a provider back to the provider sign in" do
+      sign_in users(:provider_user), role: :provider
+      delete session_path(users(:provider_user).sessions.last)
+
+      expect(response).to redirect_to(provider_sign_in_path)
     end
   end
 end

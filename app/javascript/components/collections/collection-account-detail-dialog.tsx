@@ -31,7 +31,6 @@ import type {
 
 interface CollectionAccountDetailDialogProps {
   account: ProviderCollectionAccount
-  settled?: boolean
 }
 
 const page = "pages.provider_collections.group.detail_dialog"
@@ -43,11 +42,9 @@ function shortDate(date: string | null) {
 function ConsumptionTable({
   account,
   footer = false,
-  settled = false,
 }: {
   account: ProviderCollectionAccount
   footer?: boolean
-  settled?: boolean
 }) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -65,7 +62,7 @@ function ConsumptionTable({
 
   return (
     <div className="overflow-hidden rounded-xl border">
-      <Table className={settled ? "table-fixed" : "min-w-[33rem] table-fixed"}>
+      <Table className="min-w-[33rem] table-fixed">
         <TableHeader className="bg-muted/70">
           <TableRow>
             <TableHead className="w-[17%]">{t(`${page}.date`)}</TableHead>
@@ -82,11 +79,7 @@ function ConsumptionTable({
           {account.orders.map((order) => (
             <TableRow key={order.id}>
               <TableCell>{shortDate(order.delivery_date)}</TableCell>
-              <TableCell
-                className={
-                  settled ? "truncate" : "wrap-anywhere whitespace-normal"
-                }
-              >
+              <TableCell className="wrap-anywhere whitespace-normal">
                 {order.menu_name}
               </TableCell>
               <TableCell className="text-center">{order.amount}</TableCell>
@@ -117,30 +110,34 @@ function CompanyCollection({
 }) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
-  // Los importes llegan calculados por el servidor para que el detalle y los
-  // resúmenes apliquen exactamente la misma regla de IVA.
-  const vat = account.vat_amount
-  const total = account.payable_amount
 
   return (
     <div className="grid gap-4 rounded-lg border p-3">
       <dl className="grid gap-3 text-sm">
-        <div className="grid gap-1">
-          <dt className="text-muted-foreground">{t(`${page}.subtotal`)}</dt>
-          <dd className="font-semibold">{formatMoney(account.amount)}</dd>
-        </div>
-        <Separator />
-        <div className="grid gap-1">
-          <dt className="text-muted-foreground">{t(`${page}.vat`)}</dt>
-          <dd className="font-semibold">{formatMoney(vat)}</dd>
-        </div>
-        <Separator className="bg-foreground/50" />
+        {account.vat_rate > 0 && (
+          <>
+            <div className="grid gap-1">
+              <dt className="text-muted-foreground">{t(`${page}.subtotal`)}</dt>
+              <dd className="font-semibold">{formatMoney(account.amount)}</dd>
+            </div>
+            <Separator />
+            <div className="grid gap-1">
+              <dt className="text-muted-foreground">{t(`${page}.vat`)}</dt>
+              <dd className="font-semibold">
+                {formatMoney(account.vat_amount)}
+              </dd>
+            </div>
+            <Separator className="bg-foreground/50" />
+          </>
+        )}
         <div className="flex items-end justify-between gap-3">
           <div className="grid gap-1">
             <dt className="text-muted-foreground">
               {t(`${page}.total_label`)}
             </dt>
-            <dd className="font-semibold">{formatMoney(total)}</dd>
+            <dd className="font-semibold">
+              {formatMoney(account.payable_amount)}
+            </dd>
           </div>
           <StatusBadge status={account.status} kind="payment" />
         </div>
@@ -151,7 +148,6 @@ function CompanyCollection({
 
 export default function CollectionAccountDetailDialog({
   account,
-  settled = false,
 }: CollectionAccountDetailDialogProps) {
   const { t } = useTranslation()
 
@@ -161,7 +157,7 @@ export default function CollectionAccountDetailDialog({
         <Button
           variant="ghost"
           size="sm"
-          className={settled ? "-mr-2.5" : "-mr-2.5 text-sm font-semibold"}
+          className="-mr-2.5 text-sm font-semibold"
         >
           <Eye aria-hidden="true" />
           {t("pages.provider_collections.group.detail")}
@@ -196,11 +192,11 @@ export default function CollectionAccountDetailDialog({
                 <CompanyCollection account={account} />
               </TabsContent>
               <TabsContent value="meals">
-                <ConsumptionTable account={account} settled={settled} />
+                <ConsumptionTable account={account} />
               </TabsContent>
             </Tabs>
           ) : (
-            <ConsumptionTable account={account} footer settled={settled} />
+            <ConsumptionTable account={account} footer />
           )}
         </div>
 

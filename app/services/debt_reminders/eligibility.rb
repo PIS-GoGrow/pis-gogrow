@@ -16,14 +16,17 @@ module DebtReminders
 
     def eligible? = reason.nil?
 
-    def reason
+    def reason = debt_reason || history_reason
+
+    # Motivos que dependen del estado de la cuenta y no de los recordatorios ya
+    # enviados. EmployeeEligibility los reusa para quedarse con las cuentas
+    # vencidas de un empleado.
+    def debt_reason
       return :not_consumer unless account.owner_type == "Consumer"
       return :no_debt unless account.amount.to_d > MIN_AMOUNT
       return :not_overdue unless account.due_date < Date.current
       return :payment_under_review if account.collection_status == "submitted"
       return :paid unless account.collection_status.in?(%w[pending rejected])
-      return :limit_reached if sent_count >= MAX_REMINDERS
-      return :cooldown if next_available_at && next_available_at > Time.current
 
       nil
     end
@@ -37,6 +40,13 @@ module DebtReminders
     end
 
     private
+
+    def history_reason
+      return :limit_reached if sent_count >= MAX_REMINDERS
+      return :cooldown if next_available_at && next_available_at > Time.current
+
+      nil
+    end
 
     def history
       @history ||= if account.owner_type != "Consumer"

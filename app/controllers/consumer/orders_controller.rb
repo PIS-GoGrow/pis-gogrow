@@ -32,7 +32,8 @@ class Consumer::OrdersController < Consumer::InertiaController
         id: group.id,
         name: group.name,
         options: group.options,
-        limit: group.limit
+        limit: group.limit,
+        required: group.required
       }
     end
   end
@@ -165,6 +166,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def order_error_reason(order)
+    return :provider_closed if order.errors[:schedule_id].include?(t("validations.provider_closed"))
     return :order_deadline_passed if order.errors[:schedule_id].include?(t("validations.order_deadline_passed"))
     return :invalid_options if order.errors[:base].include?(t("validations.invalid_options"))
 
@@ -200,9 +202,10 @@ class Consumer::OrdersController < Consumer::InertiaController
 
     options.to_a.filter_map do |option|
       group = groups[option[:group_id].to_i]
-      next if group.nil?
+      values = Array(option[:values]).map(&:to_s).compact_blank
+      next if group.nil? || values.empty?
 
-      { group_id: group.id, name: group.name, values: Array(option[:values]).map(&:to_s) }
+      { group_id: group.id, name: group.name, values: }
     end
   end
 

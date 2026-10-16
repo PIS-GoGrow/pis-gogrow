@@ -3,6 +3,7 @@ import { AlertCircleIcon, PencilIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import DebtAlertCard from "@/components/benefit-configurations/debt-alert-card"
 import EditBenefitConfigurationForm from "@/components/benefit-configurations/edit-benefit-configuration-form"
 import SpecialSubsidiesSection from "@/components/benefit-configurations/special-subsidies-section"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -26,6 +27,7 @@ export default function Index({
   configurable_month,
   special_subsidies,
   employees,
+  debt_alert_threshold,
 }: AdminBenefitConfigurationsIndex) {
   const { t } = useTranslation()
   const [isEditing, setIsEditing] = useState(false)
@@ -180,6 +182,8 @@ export default function Index({
           specialSubsidies={special_subsidies}
           employees={employees}
         />
+
+        <DebtAlertCard threshold={debt_alert_threshold} />
       </div>
     </AppLayout>
   )

@@ -56,6 +56,17 @@ RSpec.describe Schedule, type: :model do
     expect(schedule).to be_valid
   end
 
+  it "allows no amount and never runs out of quota" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: nil,
+      menu: menu
+    )
+
+    expect(schedule).to be_valid
+    expect(schedule.remaining_amount).to eq(described_class::MAX_AMOUNT)
+  end
+
   it "allows an amount equal to the maximum limit" do
     schedule = described_class.new(
       date: Date.current,
@@ -122,6 +133,58 @@ RSpec.describe Schedule, type: :model do
     )
 
     expect(another_day).to be_valid
+  end
+
+  describe "provider closures" do
+    let(:monday) { Date.new(2026, 9, 14) }
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 9, 14, 10, 0)) { example.run }
+    end
+
+    before { provider.closures.create!(starts_on: monday + 1, ends_on: monday + 3, reason: "Vacaciones") }
+
+    it "is provider_closed? and not available on a closed day" do
+      schedule = described_class.new(date: monday + 2, amount: 10, menu: menu)
+
+      expect(schedule.provider_closed?).to be true
+      expect(schedule).not_to be_available
+    end
+
+    it "keeps the days around the closure open" do
+      before_closure = described_class.new(date: monday, amount: 10, menu: menu)
+      after_closure = described_class.new(date: monday + 4, amount: 10, menu: menu)
+
+      expect([ before_closure, after_closure ].map(&:provider_closed?)).to all(be false)
+      expect(before_closure).to be_available
+      expect(after_closure).to be_available
+    end
+
+    it "cannot be created on a closed day" do
+      schedule = described_class.new(date: monday + 1, amount: 10, menu: menu)
+
+      expect(schedule).not_to be_valid
+      expect(schedule.errors[:date]).to eq([ I18n.t("validations.publish_date_closed") ])
+    end
+
+    it "can be created on an open day" do
+      expect(described_class.new(date: monday + 4, amount: 10, menu: menu)).to be_valid
+    end
+
+    it "can still be edited when it was published before the closure" do
+      published = described_class.new(date: monday + 2, amount: 10, menu: menu).tap { it.save!(validate: false) }
+
+      expect(published.update(amount: 5)).to be true
+    end
+
+    it "ignores the closures of other providers" do
+      other_menu = Menu.create!(
+        name: "Tarta", description: "De verdura", price: 200,
+        provider: Provider.create!(user: users(:two))
+      )
+
+      expect(described_class.new(date: monday + 2, amount: 10, menu: other_menu)).to be_valid
+    end
   end
 
   describe "#order_deadline_passed?" do
@@ -244,7 +307,7 @@ end
 # Table name: schedules
 #
 #  id                         :bigint           not null, primary key
-#  amount                     :integer          not null
+#  amount                     :integer
 #  availability_changed_at    :datetime
 #  available                  :boolean          default(TRUE), not null
 #  date                       :date             not null

@@ -88,6 +88,7 @@ class Menus::Update
     case mode
     when "single"
       add_agenda_error(:invalid_date) unless date && date >= Date.current && date.on_weekday? && date <= Calendar.new.maximum_publish_date
+      add_agenda_error(:date_closed) if date && closed_and_unscheduled?(date)
     when "weekly", "range"
       add_agenda_error(:invalid_date) unless starts_on && starts_on >= Date.current
       add_agenda_error(:invalid_range) if mode == "range" && !(ends_on && starts_on && ends_on >= starts_on)
@@ -105,6 +106,10 @@ class Menus::Update
     @errors.add(:agenda, I18n.t("validations.menu_agenda.#{type}"))
   end
 
+  def closed_and_unscheduled?(date)
+    @saved.provider.closed_on?(date) && !Schedule.exists?(menu_id: @saved.family_ids, date:)
+  end
+
   def new_agenda(ends_on:)
     MenuAgenda.new(weekdays:, starts_on: starts_on || date, ends_on:, amount: @agenda[:amount])
   end
@@ -119,6 +124,7 @@ class Menus::Update
     unless agenda == :keep
       close_agendas(from)
       agenda&.tap { it.menu = @saved }&.save!
+      @saved.skipped_dates = @saved.skipped_dates.reject { it >= from } if agenda
     end
 
     assign(@saved)
@@ -128,6 +134,7 @@ class Menus::Update
 
   def apply_range
     carve(starts_on, ends_on)
+    @saved.update!(skipped_dates: @saved.skipped_dates.reject { (starts_on..ends_on).cover?(it) })
     variant = build_edited_variant(starts_on, ends_on)
     variant.agendas.build(weekdays:, starts_on:, ends_on:, amount: @agenda[:amount])
     variant.save!
@@ -142,6 +149,7 @@ class Menus::Update
   end
 
   def ensure_schedule(date)
+    @saved.update!(skipped_dates: @saved.skipped_dates - [ date ])
     return if Schedule.exists?(menu_id: @saved.family_ids, date:)
 
     target = Menu.where(base_menu_id: @saved.id).find { it.valid_on?(date) } || @saved
@@ -230,7 +238,7 @@ class Menus::Update
 
     menu.option_groups.each(&:mark_for_destruction)
     groups.reject { ActiveModel::Type::Boolean.new.cast(it[:_destroy]) }
-          .each { menu.option_groups.build(name: it[:name], options: Array(it[:options]), limit: it[:limit]) }
+          .each { menu.option_groups.build(name: it[:name], options: Array(it[:options]), limit: it[:limit], required: it[:required]) }
   end
 
   def reject_confirmed(schedules)

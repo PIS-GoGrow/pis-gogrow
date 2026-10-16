@@ -17,10 +17,40 @@ RSpec.describe "Provider::Collections", type: :request do
   end
 
   describe "GET /provider/collections" do
+    it "mantiene el subtotal y aplica IVA una sola vez en detalle, deuda e historial" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+      company = Account.create!(owner: companies(:gogrow), provider: providers(:tuviandita), month: Date.current.next_month, amount: "800")
+      sign_in provider_user, role: :provider
+
+      2.times do
+        get provider_collection_path(company)
+        expect(inertia).to have_props { |page|
+          expect(page[:account]).to include(amount: 800.0, vat_amount: 176.0, payable_amount: 976.0)
+          true
+        }
+      end
+
+      get provider_collections_path
+      expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 }, outstanding: { total: 2178.0, meals: 4 })
+
+      company.payments.create!(provider: company.provider, status: :approved)
+      get provider_collections_path
+      expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 }, outstanding: { total: 1202.0, meals: 4 })
+      expect(inertia).to have_props { |page|
+        group = page[:history].find { it[:company][:id] == company.id }
+        expect(group[:confirmed_total]).to eq(976.0)
+        expect(group[:company]).to include(amount: 800.0, vat_amount: 176.0, payable_amount: 976.0)
+        expect(group[:employees]).to all(include(vat_amount: 0.0))
+        true
+      }
+      expect(company.reload.amount).to eq(800.to_d)
+    end
+
     it "redirects to sign in without a session" do
       get provider_collections_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects a consumer to the home page" do
@@ -49,8 +79,8 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(inertia).to render_component("provider/collections/index")
       # Cuatro viandas confirmadas: cada pedido se cuenta una vez aunque cuelgue
       # de la cuenta del empleado y de la de la empresa.
-      expect(props[:sales]).to include(total: 1334.22, meals: 4)
-      expect(props[:outstanding]).to include(total: 1334.22, meals: 4)
+      expect(props[:sales]).to include(total: 1202.0, meals: 4)
+      expect(props[:outstanding]).to include(total: 1202.0, meals: 4)
     end
 
     %i[beginning_of_month end_of_month].each do |boundary|
@@ -65,13 +95,13 @@ RSpec.describe "Provider::Collections", type: :request do
 
           get provider_collections_path
 
-          expect(inertia).to have_props(sales: { total: 1334.22, meals: 4 })
+          expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 })
           expect(inertia).to have_props { |page|
             detail = page[:sales_detail]
             detail_orders = detail[:days].flat_map { it[:orders] }
 
             expect(detail[:month]).to eq(I18n.l(month, format: :month_name_year))
-            expect(detail[:clients]).to eq([ { "id" => companies(:gogrow).id, "name" => "GoGrow" } ])
+            expect(detail[:clients]).to eq([ { "id" => companies(:gogrow).id, "name" => "GoGrow", "subtotal" => 1202.0, "vat_amount" => 0.0, "payable_amount" => 1202.0 } ])
             expect(detail_orders.pluck(:id)).to match_array(
               [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
             )
@@ -91,7 +121,7 @@ RSpec.describe "Provider::Collections", type: :request do
 
       group = group_for(:pending, Date.current)
 
-      expect(group).to include(client_name: "GoGrow", total: 1334.22, confirmed_total: 0.0, meals: 4)
+      expect(group).to include(client_name: "GoGrow", total: 1202.0, confirmed_total: 0.0, meals: 4)
       expect(group[:company]).to include(owner_name: "GoGrow", amount: 601.0, status: "pending")
       expect(group[:employees].pluck(:owner_name, :status)).to eq(
         [ [ "Other Consumer User", "submitted" ], [ "Test User", "rejected" ] ]
@@ -122,7 +152,7 @@ RSpec.describe "Provider::Collections", type: :request do
       get provider_collections_path
 
       expect(props[:pending].pluck(:month)).to eq([ I18n.l(Date.current, format: :month_name_year) ])
-      expect(group_for(:history, 1.month.ago.to_date)).to include(total: 1098.0, confirmed_total: 1098.0)
+      expect(group_for(:history, 1.month.ago.to_date)).to include(total: 900.0, confirmed_total: 900.0)
       expect(group_for(:history, 1.month.ago.to_date)[:company][:paid_on]).to be_present
     end
 
@@ -239,7 +269,7 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(props[:clients]).to eq([ { id: companies(:gogrow).id, name: "GoGrow" } ])
     end
 
-    it "keeps each total equal to the sum of its payable account amounts" do
+    it "keeps each total equal to the sum of its accounts" do
       sign_in provider_user, role: :provider
 
       get provider_collections_path
@@ -267,11 +297,7 @@ RSpec.describe "Provider::Collections", type: :request do
       get provider_collections_path
 
       expect(inertia).to have_props { |page|
-        # Historial abre el detalle en la misma pantalla, por eso conserva sus viandas.
-        page[:history].any? do |group|
-          company = group[:company]
-          company && company[:id] == account.id && company[:status] == "approved" && company[:orders].pluck(:id).sort == order_ids.sort
-        end
+        page[:history].any? { it[:company]&.slice(:id, :status, :orders) == { "id" => account.id, "status" => "approved", "orders" => [] } }
       }
 
       get provider_collection_path(account)

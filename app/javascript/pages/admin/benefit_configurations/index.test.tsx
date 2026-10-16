@@ -16,6 +16,7 @@ vi.mock("@inertiajs/react", async () => {
     Head: () => null,
     usePage: () => ({
       flash: { notice: currentFlashNotice },
+      props: { locale: "es" },
     }),
     useForm: (initialValues: Record<string, unknown>) => ({
       data: initialValues,
@@ -90,6 +91,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         pending_base_subsidies={[]}
         base_subsidy={null}
         configurable_month={""}
+        debt_alert_threshold={2000}
       />,
     )
 
@@ -107,13 +109,14 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         pending_base_subsidies={[]}
         base_subsidy={currentConfig}
         configurable_month={""}
+        debt_alert_threshold={2000}
       />,
     )
 
     expect(screen.getByText("50%")).toBeInTheDocument()
     expect(screen.getByText("≤$150")).toBeInTheDocument()
     expect(screen.getByText("20")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /editar/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument()
   })
 
   it("toggles inline editing form when clicking 'Editar'", async () => {
@@ -126,10 +129,11 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         pending_base_subsidies={[]}
         base_subsidy={currentConfig}
         configurable_month={"12/12/2026"}
+        debt_alert_threshold={2000}
       />,
     )
 
-    await user.click(screen.getByRole("button", { name: /editar/i }))
+    await user.click(screen.getByRole("button", { name: "Editar" }))
 
     expect(
       screen.getByRole("button", { name: /programar subsidio/i }),
@@ -141,7 +145,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
 
     // Clicking cancel toggles back to read-only view
     await user.click(screen.getByRole("button", { name: /cancelar/i }))
-    expect(screen.getByRole("button", { name: /editar/i })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Editar" })).toBeInTheDocument()
   })
 
   it("renders scheduled changes when pending_base_subsidies are present", () => {
@@ -153,6 +157,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         pending_base_subsidies={[pendingConfig]}
         base_subsidy={currentConfig}
         configurable_month={"12/12/2026"}
+        debt_alert_threshold={2000}
       />,
     )
 
@@ -171,11 +176,32 @@ describe("Admin::BenefitConfigurations Index Page", () => {
         pending_base_subsidies={[]}
         base_subsidy={currentConfig}
         configurable_month={"12/12/2026"}
+        debt_alert_threshold={2000}
       />,
     )
 
     expect(
       screen.queryByText(/hay un cambio programado/i),
     ).not.toBeInTheDocument()
+  })
+
+  it("shows the debt alert threshold set by HR", () => {
+    render(
+      <Index
+        benefit_configurations={[]}
+        special_subsidies={[]}
+        employees={[]}
+        pending_base_subsidies={[]}
+        base_subsidy={null}
+        configurable_month={""}
+        debt_alert_threshold={2500}
+      />,
+    )
+
+    expect(screen.getByText("Alerta de deuda")).toBeInTheDocument()
+    expect(screen.getByText(/2500/)).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Editar monto" }),
+    ).toBeInTheDocument()
   })
 })

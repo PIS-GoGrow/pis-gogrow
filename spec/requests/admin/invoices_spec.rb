@@ -52,6 +52,21 @@ RSpec.describe "Admin::Invoices", type: :request do
     context "when signed in as HR" do
       before { sign_in users(:admin), role: :admin }
 
+      it "compara una factura nueva con el total con IVA sin modificar el importe informado" do
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+        account = Account.create!(owner: companies(:gogrow), provider: providers(:tuviandita), month: Date.current.next_month, amount: 800)
+        billed = account.invoices.create!(issued_on: Date.current, total_amount: 976, file: upload)
+
+        get admin_invoices_path
+
+        expect(inertia).to have_props { |page|
+          page[:invoices].any? { it[:id] == billed.id && it[:total_amount] == 976.0 && it[:period_amount] == 976.0 }
+        }
+        expect(billed.reload.total_amount).to eq(976.to_d)
+        expect(account.reload.amount).to eq(800.to_d)
+      end
+
       it "lists the invoices of the company, newest period first" do
         previous = Invoice.create!(account: accounts(:gogrow_tuviandita_previous), issued_on: Date.current - 1.month, total_amount: 900, file: upload)
         current = invoice
