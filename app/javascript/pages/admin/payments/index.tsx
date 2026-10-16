@@ -3,6 +3,14 @@ import { CircleCheck, Wallet } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogClose,
+  AdaptableDialogContent,
+  AdaptableDialogFooter,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
 import PeriodCard from "@/components/admin/payments/period-card"
 // El detalle de un período es la misma tabla que ve el empleado en sus pagos.
 import OrdersTable from "@/components/consumer/accounts/orders-table"
@@ -20,18 +28,9 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Progress } from "@/components/ui/progress"
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetFooter,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
-import { useIsMobile } from "@/hooks/use-mobile"
 import AppLayout from "@/layouts/app-layout"
 import { adminPayments } from "@/routes"
 import type {
@@ -58,7 +57,6 @@ export default function Index({
 }: AdminPaymentsIndex) {
   const { t } = useTranslation()
   const { formatMoney, formatMoneyShort } = useFormatters()
-  const isMobile = useIsMobile()
 
   const [detail, setDetail] = useState<PeriodDetail | null>(period)
   const [loading, setLoading] = useState(false)
@@ -106,7 +104,7 @@ export default function Index({
       <Head title={t("pages.admin.payments.index.title")} />
 
       <PageContainer title={t("pages.admin.payments.index.title")}>
-        <Sheet defaultOpen={period !== null}>
+        <AdaptableDialog desktopVariant="sheet" defaultOpen={period !== null}>
           <Stat
             label={t("pages.admin.payments.index.spending")}
             badge={
@@ -116,6 +114,7 @@ export default function Index({
             }
             value={formatMoneyShort(current_month.amount)}
             detail={`| ${meals}`}
+            className="lg:max-w-[50%]"
             action={
               <div className="grid w-full gap-4">
                 {current_month.limit !== null && (
@@ -127,7 +126,7 @@ export default function Index({
                     aria-label={t("pages.admin.payments.index.spending")}
                   />
                 )}
-                <SheetTrigger asChild>
+                <AdaptableDialogTrigger asChild>
                   <Button
                     disabled={current_period === null}
                     onClick={() => setDetail(current_period)}
@@ -135,7 +134,7 @@ export default function Index({
                   >
                     {t("pages.admin.payments.index.view_detail")}
                   </Button>
-                </SheetTrigger>
+                </AdaptableDialogTrigger>
               </div>
             }
           />
@@ -174,7 +173,7 @@ export default function Index({
                       <CardTitle>{provider.name}</CardTitle>
                     </CardHeader>
 
-                    <CardContent className="grid gap-4">
+                    <CardContent className="grid gap-4 lg:grid-cols-2">
                       {periods.length === 0 ? (
                         <p className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
                           <CircleCheck className="size-4" aria-hidden="true" />
@@ -195,7 +194,7 @@ export default function Index({
               })}
             </TabsContent>
 
-            <TabsContent value="history" className="grid gap-4">
+            <TabsContent value="history">
               {history.length === 0 ? (
                 <Empty className="border">
                   <EmptyHeader>
@@ -213,22 +212,24 @@ export default function Index({
                   </EmptyHeader>
                 </Empty>
               ) : (
-                history.map((account) => (
-                  <PeriodCard
-                    key={account.id}
-                    account={account}
-                    providerName={providerName(account.provider_id)}
-                    onOpenDetail={() => void openDetail(account)}
-                  />
-                ))
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {history.map((account) => (
+                    <PeriodCard
+                      key={account.id}
+                      account={account}
+                      providerName={providerName(account.provider_id)}
+                      onOpenDetail={() => void openDetail(account)}
+                    />
+                  ))}
+                </div>
               )}
             </TabsContent>
           </Tabs>
 
-          <SheetContent side={isMobile ? "bottom" : "right"} className="pt-8">
-            <SheetTitle className="sr-only">
+          <AdaptableDialogContent className="pt-8">
+            <AdaptableDialogTitle className="sr-only">
               {t("pages.admin.payments.index.detail_title")}
-            </SheetTitle>
+            </AdaptableDialogTitle>
 
             {loading ? (
               <Spinner className="mx-auto size-8" />
@@ -240,13 +241,13 @@ export default function Index({
               />
             )}
 
-            <SheetFooter>
-              <SheetClose asChild>
+            <AdaptableDialogFooter>
+              <AdaptableDialogClose asChild>
                 <Button>{t("common.close")}</Button>
-              </SheetClose>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+              </AdaptableDialogClose>
+            </AdaptableDialogFooter>
+          </AdaptableDialogContent>
+        </AdaptableDialog>
       </PageContainer>
     </AppLayout>
   )

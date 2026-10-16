@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils"
  * En mobile siempre es un Sheet con side="bottom".
  * En deskrop puede ser un Sheet con side="bottom" o un Dialog.
  */
-export type AdaptableDialogDesktopVariant = "dialog" | "sheet"
+export type AdaptableDialogDesktopVariant = "dialog" | "sheet" | "sheet-bottom"
 
 type Mode = "dialog" | "sheet-right" | "sheet-bottom"
 
@@ -92,7 +92,7 @@ function AdaptableDialog({
     ? "sheet-bottom"
     : desktopVariant === "sheet"
       ? "sheet-right"
-      : "dialog"
+      : desktopVariant
 
   const Root = mode === "dialog" ? Dialog : Sheet
 
@@ -144,7 +144,10 @@ function AdaptableDialogContent({
       <SheetContent
         side="bottom"
         // Evita que el sheet tape toda la pantalla y permite scroll interno
-        className={cn("max-h-[90dvh] overflow-y-auto rounded-t-xl", className)}
+        className={cn(
+          "mx-auto max-h-[90dvh] max-w-2xl overflow-y-auto rounded-t-xl",
+          className,
+        )}
         {...sheetProps}
       />
     )

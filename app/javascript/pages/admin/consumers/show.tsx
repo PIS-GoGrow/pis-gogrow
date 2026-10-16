@@ -109,54 +109,56 @@ export default function Show({
           </Link>
         }
       >
-        <Card className="gap-4 py-4">
-          <CardContent className="grid gap-4 px-4">
-            <div className="flex items-center gap-3">
-              <Avatar size="lg">
-                <AvatarFallback className="text-foreground text-xs font-semibold">
-                  {getInitials(consumer.name)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold">{consumer.name}</p>
-                <p className="text-muted-foreground truncate text-sm">
-                  {consumer.email}
-                </p>
-              </div>
-              <ConsumptionStatusBadge status={summary.status} />
-            </div>
-
-            {showReminder && (
-              <div className="grid gap-2">
-                <DebtReminderDialog
-                  action={adminDebtReminders.create(consumer.id).url}
-                  eligible={debt_reminder.eligible}
-                  employeeName={consumer.name}
-                  amount={debt_reminder.amount}
-                  translationKey={`${page}.reminder`}
-                />
-
-                {debt_reminder.blocked_reason === "cooldown" && (
-                  <p className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
-                    <CircleCheck className="size-4" aria-hidden="true" />
-                    {t(`${page}.reminder.next_available`, {
-                      date: debt_reminder.next_available_at,
-                    })}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <Card className="gap-4 py-4">
+            <CardContent className="grid gap-4 px-4">
+              <div className="flex items-center gap-3">
+                <Avatar size="lg">
+                  <AvatarFallback className="text-foreground text-xs font-semibold">
+                    {getInitials(consumer.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold">{consumer.name}</p>
+                  <p className="text-muted-foreground truncate text-sm">
+                    {consumer.email}
                   </p>
-                )}
-
-                {debt_reminder.blocked_reason === "limit_reached" && (
-                  <p className="text-muted-foreground flex items-center gap-2 text-sm">
-                    <TriangleAlert className="size-4" aria-hidden="true" />
-                    {t(`${page}.reminder.limit_reached`)}
-                  </p>
-                )}
+                </div>
+                <ConsumptionStatusBadge status={summary.status} />
               </div>
-            )}
-          </CardContent>
-        </Card>
 
-        <div className="grid gap-4 md:grid-cols-2">
+              {showReminder && (
+                <div className="grid gap-2">
+                  <DebtReminderDialog
+                    action={adminDebtReminders.create(consumer.id).url}
+                    eligible={debt_reminder.eligible}
+                    employeeName={consumer.name}
+                    amount={debt_reminder.amount}
+                    translationKey={`${page}.reminder`}
+                  />
+
+                  {debt_reminder.blocked_reason === "cooldown" && (
+                    <p className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                      <CircleCheck className="size-4" aria-hidden="true" />
+                      {t(`${page}.reminder.next_available`, {
+                        date: debt_reminder.next_available_at,
+                      })}
+                    </p>
+                  )}
+
+                  {debt_reminder.blocked_reason === "limit_reached" && (
+                    <p className="text-muted-foreground flex items-center gap-2 text-sm">
+                      <TriangleAlert className="size-4" aria-hidden="true" />
+                      {t(`${page}.reminder.limit_reached`)}
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <div></div>
+
           <Card className="bg-muted/50 gap-3 py-4">
             <CardHeader className="px-4">
               <CardDescription>{t(`${page}.consumption`)}</CardDescription>
@@ -248,7 +250,7 @@ export default function Show({
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 lg:grid-cols-2">
             {visibleMonths.map((month) => (
               <ListItemCard
                 key={month.key}
