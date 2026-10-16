@@ -30,6 +30,7 @@ export interface Pricing {
   fullPriceQuantity: number
 }
 
+// No hace ningún cálculo: Obtiene los precios de la orden desde el backend
 export async function priceItems(items: PricedItem[]): Promise<Pricing> {
   const response = await fetch(pricingOrders().url, {
     method: "POST",
