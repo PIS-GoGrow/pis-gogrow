@@ -13,7 +13,7 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "has the correct subject" do
-      expect(mail.subject).to eq("Verifica tu correo electrónico")
+      expect(mail.subject).to eq("Verificá tu correo electrónico")
     end
   end
 
@@ -31,7 +31,7 @@ RSpec.describe UserMailer, type: :mailer do
       body = mail.body.encoded
 
       expect(body).to include("Hola Ana Proveedora,")
-      expect(body).to include("Recibió una invitación de GoGrow para unirse como proveedor de viandas")
+      expect(body).to include("Recibiste una invitación de GoGrow para unirte como proveedor de viandas")
       expect(body).to include("/provider/invitation?token=#{user.id}.#{otp_code.code}")
       expect(body).to include("/provider")
     end

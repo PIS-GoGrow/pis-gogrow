@@ -61,7 +61,7 @@ RSpec.describe "Reset del formulario después de agregar un plato", type: :syste
     expect_clean_form(date_label)
     add_new_dish("Ravioles")
 
-    find('[data-slot="sheet-overlay"]').click
+    find('[data-slot="dialog-overlay"]').click
 
     expect(page).to have_no_content("¡Plato agregado!")
     expect_clean_form(date_label)

@@ -12,7 +12,7 @@ RSpec.describe "Inicio y cierre de sesión de proveedor", type: :system do
     visit_hydrated provider_sign_in_path
 
     expect(page).to have_content("¡Bienvenido de nuevo!")
-    expect(page).to have_content("Ingrese a su cuenta para continuar gestionando sus viandas.")
+    expect(page).to have_content("Ingresá a tu cuenta para continuar gestionando tus viandas.")
 
     # Credenciales incorrectas
     fill_in "email", with: provider_user.email
@@ -39,9 +39,9 @@ RSpec.describe "Inicio y cierre de sesión de proveedor", type: :system do
   it "muestra el diálogo de recuperación de contraseña al hacer clic en Olvidó su contraseña" do
     visit_hydrated provider_sign_in_path
 
-    click_button "¿Olvidó su contraseña?"
+    click_button "¿Olvidaste tu contraseña?"
 
-    expect(page).to have_content("Ingrese su email y le enviaremos un código para restablecer su contraseña.")
+    expect(page).to have_content("Ingresá tu email y te enviaremos un código para restablecer tu contraseña.")
     expect(page).to have_button("Enviar código")
   end
 end
