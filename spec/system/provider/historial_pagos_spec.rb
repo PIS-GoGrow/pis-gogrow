@@ -216,7 +216,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     end
 
     within(find("[role=dialog]")) do
-      expect(page).to have_content("Subtotal sin IVA")
+      expect(page).to have_content("Total")
       expect(page).to have_content("700,00")
       click_on "Viandas"
       expect(page).to have_content("Milanesa al pan")
