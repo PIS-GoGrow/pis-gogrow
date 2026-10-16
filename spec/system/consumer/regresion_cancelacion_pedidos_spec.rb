@@ -21,15 +21,15 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
   end
 
   def reserve_subsidized_order(schedule:)
+    discounted_price = (schedule.menu.price * (100 - benefit.percentage) / 100.0).round(2)
     Order.reserve(
       consumer:,
       schedule:,
       delivery_method: :office,
       address: "18 de Julio 1006",
       quantity: 1,
-      discount_percentage: benefit.percentage,
-      subsidized_quantity: 1,
-      benefits: [ benefit ]
+      discounted_price:,
+      benefits: { benefit => 1 }
     )
   end
 
@@ -86,10 +86,10 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       visit provider_orders_path
       sleep 1.5
 
-      find("button", text: "Pendientes").click
+      find("[role='tab']", text: "Por revisar").click
       expect(page).to have_no_content("PED-#{order_1.id}")
 
-      find("button", text: "Cancelados").click
+      find("[role='tab']", text: "Todos").click
       expect(page).to have_content("PED-#{order_1.id}")
       expect(page).to have_content("Cancelado")
     end

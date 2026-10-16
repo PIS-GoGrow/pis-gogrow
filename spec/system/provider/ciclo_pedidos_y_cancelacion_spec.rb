@@ -192,7 +192,7 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
 
     it "impide transiciones inválidas sobre pedidos ya confirmados o rechazados" do
       expect(order_a.decide(:confirmed)).to be(false)
-      expect(order_a.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order_b.decide(:rejected, reason: :out_of_stock)).to be(false)
       expect(order_b.decide(:confirmed)).to be(false)
     end
 

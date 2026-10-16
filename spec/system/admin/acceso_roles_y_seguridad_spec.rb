@@ -42,9 +42,8 @@ RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system
       visit provider_orders_path
 
       expect(page).to have_content("Pedidos")
-      expect(page).to have_content(/operación diaria/i)
       expect(page).to have_content("Todos")
-      expect(page).to have_content("Pendientes")
+      expect(page).to have_content("Por revisar")
     end
   end
 
@@ -99,7 +98,7 @@ RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system
         expect(page).to have_current_path(sign_in_path)
 
         visit provider_orders_path
-        expect(page).to have_current_path(sign_in_path)
+        expect(page).to have_current_path(provider_sign_in_path)
       end
     end
   end

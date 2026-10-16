@@ -273,7 +273,13 @@ class Order < ApplicationRecord
   def subsidized_units_held
     return 0 unless schedule&.date&.then { Date.current.all_month.cover?(it) }
 
-    order_benefits.where(benefit_id: consumer&.monthly_benefits).sum(:benefit_used)
+    if order_benefits.any?
+      order_benefits.where(benefit_id: consumer&.monthly_benefits).sum(:benefit_used)
+    elsif discounted_price.to_d < price.to_d
+      amount.to_i
+    else
+      0
+    end
   end
 
   # El lock no es por dinero: evita que un doble envío cancele dos veces y pise
