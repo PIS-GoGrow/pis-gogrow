@@ -149,5 +149,23 @@ RSpec.describe "Settings::Notifications", type: :request do
 
       expect(inertia).to have_props { |props| props[:subscribed_keys].include?("hr_pending_invoices") }
     end
+
+    it "no lo suscribe a una configuración que existe pero es de otro rol" do
+      patch settings_notification_path(order_updates), params: { subscribe: true }, as: :json
+
+      expect(response).to redirect_to(settings_notifications_path)
+      expect(flash[:alert]).to eq(I18n.t("flash.config_update_error"))
+      expect(order_updates.reload.users).to be_empty
+    end
+
+    it "informa el error si no se pudo guardar y no deja la suscripción a medias" do
+      allow(Notification::Configuration).to receive(:for_role).and_raise(ActiveRecord::ConnectionNotEstablished)
+
+      patch settings_notification_path(pending_invoices), params: { subscribe: true }, as: :json
+
+      expect(response).to redirect_to(settings_notifications_path)
+      expect(flash[:alert]).to eq(I18n.t("flash.config_update_error"))
+      expect(pending_invoices.reload.users).to be_empty
+    end
   end
 end
