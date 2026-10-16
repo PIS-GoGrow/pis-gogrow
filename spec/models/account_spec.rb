@@ -348,6 +348,20 @@ RSpec.describe Account, type: :model do
     end
   end
 
+  describe ".format_amount" do
+    it "formats whole amounts without decimals" do
+      expect(described_class.format_amount(BigDecimal("750"))).to eq("$750")
+    end
+
+    it "uses thousands and decimal separators for fractional amounts" do
+      expect(described_class.format_amount(BigDecimal("1250.5"))).to eq("$1.250,50")
+    end
+
+    it "formats zero" do
+      expect(described_class.format_amount(0)).to eq("$0")
+    end
+  end
+
   describe ".amount_and_price_sum" do
     it "aggregates total amounts and final discounted prices for confirmed orders of the given accounts" do
       menu = Menu.create!(provider:, name: "Milanesa", description: "Con puré", price: 350)

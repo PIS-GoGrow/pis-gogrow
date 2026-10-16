@@ -12,6 +12,7 @@ class Payment < ApplicationRecord
   after_commit :notify_receipt_submitted, if: -> { saved_change_to_status? && submitted? }
   after_commit :check_debt_alert, if: -> { account.owner.is_a?(Consumer) && (destroyed? || saved_change_to_status?) }
   after_commit :notify_company_admins, on: [ :create, :update ], if: -> { saved_change_to_status? && account.company? }
+  after_commit :refresh_employee_debt_notifications, on: [ :create, :update ], if: -> { saved_change_to_status? && !account.company? }
 
   validates :rejection_reason, presence: true, if: :rejected?
 
@@ -70,6 +71,10 @@ class Payment < ApplicationRecord
 
   def notify_company_admins
     CompanyPaymentNotifications.payment_status_changed(self)
+  end
+
+  def refresh_employee_debt_notifications
+    EmployeeDebtNotifications.refresh(account, renotify: rejected?)
   end
 
   def receipt_is_attached_when_submitted
