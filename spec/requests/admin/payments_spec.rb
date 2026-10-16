@@ -82,7 +82,9 @@ RSpec.describe "Admin::Payments", type: :request do
 
       # Con un comprobante viejo sin revisar, el período sigue en revisión
       # aunque haya otro aprobado después: es la regla de Account#collection_status,
-      # la misma que usa el inicio de RR. HH.
+      # la misma que usa el inicio de RR. HH. Desde IBP-019 la app ya no deja
+      # subir otro comprobante mientras haya uno en revisión, pero este estado
+      # puede venir de antes: la migración solo rechazó los duplicados en revisión.
       it "shows a period with the same status as the home when an older receipt is still under review" do
         account = accounts(:gogrow_tuviandita_previous)
         older = account.payments.build(provider: account.provider, status: :submitted, created_at: 1.day.ago)
