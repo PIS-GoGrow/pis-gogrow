@@ -1,8 +1,9 @@
 import { ChevronLeft, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useForm, Link } from "@inertiajs/react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 
+import AppLayout from "@/layouts/app-layout"
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -19,17 +20,22 @@ import { SavedAddressesSheet } from "./saved-addresses-sheet"
 
 import useSessionStorage from "@/hooks/use-session-storage"
 
-import { consumerOrders, dashboardError, dashboard } from "@/routes"
+import { consumerOrders, dashboard, consumerDashboard } from "@/routes"
 
 import type { ConsumerDashboardCart } from "@/types"
 
-export function ConsumerCart({
+import { Pricing, cartPricedItem, priceItems } from "./pricing"
+import { OrderError } from "./order-error"
+
+type View = "error" | "cart"
+
+export default function ConsumerCart({
   benefit,
-  pricing,
   addresses,
 }: ConsumerDashboardCart) {
   const [cart, setCart] = useSessionStorage<CartItem[]>("cart", [])
   const [address, setAddress] = useState(addresses[0]?.address ?? "")
+  const [view, setView] = useState<View>("cart")
 
   const form = useForm({
     address: "",
@@ -112,12 +118,46 @@ export function ConsumerCart({
     form.post(consumerOrders.create().url, {
       preserveState: true,
       preserveScroll: false,
-      onSuccess: () => setCart([])
+      onSuccess: () => setCart([]),
+        onError: () => setView("error"),
     })
   }
 
+  const [loading, setLoading] = useState<boolean>(true)
+  const [pricing, setPricing] = useState<Pricing | null>(null)
+
+  useEffect(() => {
+    // No consultar con el carrito vacío (incluye el primer render, antes de cargar el storage)
+    if (cart.length === 0) {
+      setPricing(null)
+      setLoading(false)
+      return
+    }
+
+    const handlePrice = async () => {
+      setLoading(true)
+      const result = await priceItems(cart.map(cartPricedItem))
+
+      setPricing(result)
+      setLoading(false)
+    }
+
+    handlePrice()
+  }, [cart])
+
   return (
+  <AppLayout
+    breadcrumbs={[{ title: "Menú", href: consumerDashboard.index().url }]}
+  >
+    <style>
+      {
+        '@media (max-width: 767px) { [data-slot="sidebar-inset"] > header { display: none; } }'
+      }
+    </style>
+    <div className="bg-background text-foreground min-h-svh md:min-h-[calc(100svh-4rem)]">
+    {view === "cart" ? (
     <MobileCard>
+
       <Link href={dashboard().url}>
       <Button
         type="button"
@@ -178,21 +218,21 @@ export function ConsumerCart({
         )}
       </section>
 
-      {pricing.fullPriceQuantity > 0 && (
+      {(pricing?.fullPriceQuantity || 0) > 0 && (
         <Alert className="mt-4 border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
           <TriangleAlert aria-hidden="true" className="text-amber-600" />
           <AlertDescription>
             {benefit.monthly_remaining === 0 ? (
               <p>
                 Ya utilizaste las {benefit.monthly_limit} viandas subsidiadas de este
-                mes. Las {pricing.fullPriceQuantity} viandas de este pedido se
+                mes. Las {pricing?.fullPriceQuantity} viandas de este pedido se
                 cobrarán a precio completo.
               </p>
             ) : (
               <p>
                 Te quedan {benefit.monthly_remaining} viandas subsidiadas este mes. De
-                este pedido, {pricing.subsidizedQuantity} tendrán el beneficio y{" "}
-                {pricing.fullPriceQuantity} se cobrarán a precio completo.
+                este pedido, {pricing?.subsidizedQuantity} tendrán el beneficio y{" "}
+                {pricing?.fullPriceQuantity} se cobrarán a precio completo.
               </p>
             )}
           </AlertDescription>
@@ -225,7 +265,7 @@ export function ConsumerCart({
                 </span>
                 <span>{money(line)}</span>
               </div>
-              {pricing.lines[item.cartId]?.tiers
+              {pricing?.lines[item.id]?.tiers
                 .filter((tier) => tier.discount > 0)
                 .map((tier, index) => (
                   <BenefitLine
@@ -267,8 +307,9 @@ export function ConsumerCart({
       </section>
       <BottomAction>
         <OrderSummary
-          subtotal={pricing.subtotal}
-          total={pricing.total}
+          loading={loading}
+          subtotal={pricing?.subtotal}
+          total={pricing?.total}
           compact
         />
         <Button
@@ -299,5 +340,18 @@ export function ConsumerCart({
         </Alert>
       )}
     </MobileCard>
+        ) : (
+            <OrderError retry={() => {
+                          form.clearErrors()
+                          setView("cart")
+                        }}
+                        error={
+                          Array.isArray(form.errors.order_error)
+                            ? form.errors.order_error[0]
+                            : form.errors.order_error
+                        } />
+    )}
+    </div>
+  </AppLayout>
   )
 }

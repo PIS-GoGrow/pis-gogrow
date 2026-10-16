@@ -1,5 +1,5 @@
 import { Head, usePage } from "@inertiajs/react"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 
 import useSessionStorage from "@/hooks/use-session-storage"
 import AppLayout from "@/layouts/app-layout"
@@ -8,14 +8,15 @@ import type { ConsumerDashboardIndex } from "@/types"
 
 import type {
   CartItem,
-  DeliveryAddressOption,
   Schedule,
   Selections,
 } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
 import { WeeklyMenu, today } from "./weekly-menu"
 
-type View = "menu" | "detail" | "error"
+import { Pricing, cartPricedItem, priceItems } from "./pricing"
+
+type View = "menu" | "detail"
 
 export default function Index({
   week,
@@ -98,6 +99,36 @@ export default function Index({
     setView("menu")
   }
 
+  const [loading, setLoading] = useState<boolean>(true)
+  const [pricing, setPricing] = useState<Pricing | null>(null)
+
+  useEffect(() => {
+    // No consultar con el carrito vacío (incluye el primer render, antes de cargar el storage)
+    if (cart.length === 0) {
+      setPricing(null)
+      setLoading(false)
+      return
+    }
+
+    let cancelled = false
+    setLoading(true)
+
+    // Debounce: si el usuario toca "+" varias veces seguidas, solo sale la última consulta
+    const timeout = setTimeout(async () => {
+      try {
+        const result = await priceItems(cart.map(cartPricedItem))
+        if (!cancelled) setPricing(result)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }, 250)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
+    }
+  }, [cart])
+
   return (
     <AppLayout
       breadcrumbs={[{ title: "Menú", href: consumerDashboard.index().url }]}
@@ -120,7 +151,8 @@ export default function Index({
             closures={closures}
             cart={cart}
             count={count}
-            total={123132123}
+            loading={loading}
+            total={pricing?.total}
             openDetail={openDetail}
           />
         )}
@@ -133,7 +165,6 @@ export default function Index({
             selections={selections}
             setSelections={setSelections}
             setNotes={setNotes}
-            benefit={benefit}
             cart={cart}
             back={() => setView("menu")}
             add={addToCart}
