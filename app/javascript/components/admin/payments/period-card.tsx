@@ -99,6 +99,9 @@ export default function PeriodCard({
 
         <PaymentReceiptDialog
           accountId={account.id}
+          uploadDisabled={account.payments.some(
+            ({ status }) => status === "submitted",
+          )}
           createAction={adminPayments.create()}
           destroyAction={adminPayments.destroy}
           payments={account.payments}

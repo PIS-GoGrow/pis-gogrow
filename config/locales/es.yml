@@ -147,6 +147,11 @@ es:
     company_payment_approved:
       title: "Pago confirmado"
       description: "%{provider} confirmó el pago de %{company} por %{period} (%{amount})."
+    employee_debt_overdue:
+      title: "Hay empleados con pagos pendientes"
+      description:
+        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio."
+        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
     order_cancellation:
       title: "Un pedido fue cancelado"
       description: "El pedido de %{consumer} del %{date} de %{dish} fue cancelado."
@@ -178,6 +183,9 @@ es:
     company_payments:
       title: "Pagos a proveedores"
       description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
+    employee_debts:
+      title: "Deudas de empleados"
+      description: "Avisos cuando empleados de tu empresa acumulan más de un mes de deuda con un proveedor."
     order_cancellations:
       title: "Cancelaciones"
       description: "Recibí una notificación cuando un pedido sea cancelado por el cliente."
@@ -221,6 +229,7 @@ es:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
+              already_under_review: "Ya hay un comprobante en revisión para esta cuenta. Esperá a que se resuelva para enviar otro."
             rejection_reason:
               blank: "es obligatorio para rechazar un comprobante"
         invoice:
@@ -615,6 +624,7 @@ es:
         receipt_error_title: "No se pudo subir el comprobante"
         receipt_error_description: "Ocurrió un problema al subir el archivo. Intentá nuevamente."
         receipt_error_action: "Entendido"
+        receipt_under_review_hint: "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva."
         receipt_sent_at: "Enviado: %{date}"
         receipt_remove: "Eliminar comprobante"
         receipt_remove_title: "¿Eliminar comprobante?"

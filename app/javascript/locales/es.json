@@ -115,6 +115,10 @@
         "description": "Recibí una notificación cuando tu deuda supere el monto definido por RRHH.",
         "title": "Alertas de deuda"
       },
+      "employee_debts": {
+        "description": "Avisos cuando empleados de tu empresa acumulan más de un mes de deuda con un proveedor.",
+        "title": "Deudas de empleados"
+      },
       "hr_payment_reminders": {
         "description": "Recordatorios de pagos vencidos enviados por Recursos Humanos.",
         "title": "Recordatorios de pago de Recursos Humanos"
@@ -168,6 +172,13 @@
       "debt_threshold_exceeded": {
         "description": "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca.",
         "title": "Tu deuda superó el monto límite"
+      },
+      "employee_debt_overdue": {
+        "description": {
+          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio.",
+          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+        },
+        "title": "Hay empleados con pagos pendientes"
       },
       "hr_debt_payment_reminder": {
         "description": "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos.",
@@ -259,6 +270,7 @@
           "receipt_success_title": "Comprobante enviado",
           "receipt_title": "Subir comprobante",
           "receipt_unavailable": "Comprobante no disponible",
+          "receipt_under_review_hint": "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva.",
           "receipt_update": "Actualizar comprobante",
           "receipt_uploading": "Subiendo comprobante...",
           "receipt_view_edit": "Ver o editar comprobante",

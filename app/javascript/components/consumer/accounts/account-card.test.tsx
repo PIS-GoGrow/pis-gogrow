@@ -46,6 +46,57 @@ function renderCard(account: Account) {
 }
 
 describe("AccountCard", () => {
+  it("disables uploading another receipt while one is under review", () => {
+    const account = makeAccount({
+      payments: [makePayment({ status: "submitted" })],
+    })
+
+    renderCard(account)
+
+    expect(screen.getByText("receipt.png")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeDisabled()
+    expect(
+      screen.getByText(/Ya hay un comprobante en revisión/),
+    ).toBeInTheDocument()
+  })
+
+  it("offers uploading another receipt once the previous one was rejected", () => {
+    const account = makeAccount({
+      payments: [
+        makePayment({
+          status: "rejected",
+          rejection_reason: "Comprobante ilegible",
+        }),
+      ],
+    })
+
+    renderCard(account)
+
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeEnabled()
+    expect(
+      screen.queryByText(/Ya hay un comprobante en revisión/),
+    ).not.toBeInTheDocument()
+  })
+
+  it("keeps the upload button enabled when an earlier payment was approved", () => {
+    const account = makeAccount({
+      payments: [makePayment({ status: "approved" })],
+    })
+
+    renderCard(account)
+
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeEnabled()
+    expect(
+      screen.queryByText(/Ya hay un comprobante en revisión/),
+    ).not.toBeInTheDocument()
+  })
+
   it("renders yellow warning when rejection reason is partial payment", () => {
     const payment = makePayment({
       status: "rejected",
