@@ -31,6 +31,7 @@ import type {
 
 interface CollectionAccountDetailDialogProps {
   account: ProviderCollectionAccount
+  settled?: boolean
 }
 
 const page = "pages.provider_collections.group.detail_dialog"
@@ -42,9 +43,11 @@ function shortDate(date: string | null) {
 function ConsumptionTable({
   account,
   footer = false,
+  settled = false,
 }: {
   account: ProviderCollectionAccount
   footer?: boolean
+  settled?: boolean
 }) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -62,7 +65,7 @@ function ConsumptionTable({
 
   return (
     <div className="overflow-hidden rounded-xl border">
-      <Table className="min-w-[33rem] table-fixed">
+      <Table className={settled ? "table-fixed" : "min-w-[33rem] table-fixed"}>
         <TableHeader className="bg-muted/70">
           <TableRow>
             <TableHead className="w-[17%]">{t(`${page}.date`)}</TableHead>
@@ -79,7 +82,11 @@ function ConsumptionTable({
           {account.orders.map((order) => (
             <TableRow key={order.id}>
               <TableCell>{shortDate(order.delivery_date)}</TableCell>
-              <TableCell className="wrap-anywhere whitespace-normal">
+              <TableCell
+                className={
+                  settled ? "truncate" : "wrap-anywhere whitespace-normal"
+                }
+              >
                 {order.menu_name}
               </TableCell>
               <TableCell className="text-center">{order.amount}</TableCell>
@@ -148,6 +155,7 @@ function CompanyCollection({
 
 export default function CollectionAccountDetailDialog({
   account,
+  settled = false,
 }: CollectionAccountDetailDialogProps) {
   const { t } = useTranslation()
 
@@ -157,7 +165,7 @@ export default function CollectionAccountDetailDialog({
         <Button
           variant="ghost"
           size="sm"
-          className="-mr-2.5 text-sm font-semibold"
+          className={settled ? "-mr-2.5" : "-mr-2.5 text-sm font-semibold"}
         >
           <Eye aria-hidden="true" />
           {t("pages.provider_collections.group.detail")}
@@ -192,11 +200,11 @@ export default function CollectionAccountDetailDialog({
                 <CompanyCollection account={account} />
               </TabsContent>
               <TabsContent value="meals">
-                <ConsumptionTable account={account} />
+                <ConsumptionTable account={account} settled={settled} />
               </TabsContent>
             </Tabs>
           ) : (
-            <ConsumptionTable account={account} footer />
+            <ConsumptionTable account={account} footer settled={settled} />
           )}
         </div>
 
