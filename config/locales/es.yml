@@ -41,6 +41,7 @@ es:
     too_many_attempts: "Realizó demasiados intentos. Espere unos minutos y vuelva a probar."
     profile_updated: "Tu perfil fue actualizado"
     payment_details_updated: "Datos de cobro actualizados"
+    deliveries_updated: "Guardamos tu modalidad de entrega"
     session_logged_out: "Esa sesión fue cerrada"
     signed_in: "Inició sesión correctamente"
     signed_up: "¡Te damos la bienvenida! Tu registro se completó correctamente"
@@ -148,6 +149,12 @@ es:
     company_payment_approved:
       title: "Pago confirmado"
       description: "%{provider} confirmó el pago de %{company} por %{period} (%{amount})."
+    order_cancellation:
+      title: "Un pedido fue cancelado"
+      description: "El pedido de %{consumer} del %{date} de %{dish} fue cancelado."
+    provider_menu_unpublished:
+      title: "Publicá el menú del día"
+      description: "Todavía no publicaste un menú para el %{date}."
     hr_debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos."
@@ -173,6 +180,12 @@ es:
     company_payments:
       title: "Pagos a proveedores"
       description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
+    order_cancellations:
+      title: "Cancelaciones"
+      description: "Recibí una notificación cuando un pedido sea cancelado por el cliente."
+    menu_publication_reminders:
+      title: "Recordatorios de publicación del menú"
+      description: "Avisos cuando falta publicar el menú de un día hábil."
     hr_payment_reminders:
       title: "Recordatorios de pago de Recursos Humanos"
       description: "Recordatorios de pagos vencidos enviados por Recursos Humanos."
@@ -1243,6 +1256,17 @@ es:
         tax_id_description: "Solo números: 12 dígitos para RUT, 7 u 8 para CI."
         sensitive_notice: "Los cambios en estos datos quedan registrados."
         submit: "Guardar"
+    provider_deliveries:
+      show:
+        title: "Entregas"
+        description: "Elegí dónde realizás tus entregas y si aceptás direcciones personalizadas."
+        back: "Volver a Cuenta"
+        office:
+          title: "Solo Oficinas"
+          description: "Entregás todos los pedidos en las oficinas de las empresas."
+        home:
+          title: "Oficinas y direcciones personalizadas"
+          description: "También aceptás pedidos con direcciones de entrega personalizadas."
     provider_operational_settings:
       show:
         title: "Configuración operativa"

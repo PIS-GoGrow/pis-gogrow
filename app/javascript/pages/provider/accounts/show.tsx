@@ -9,6 +9,7 @@ import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
 import {
   providerAccount,
+  providerDeliveries,
   providerOperationalSettings,
   providerPaymentDetails,
   sessions,
@@ -45,7 +46,7 @@ export default function ProviderAccount() {
     {
       title: t(`${account}.deliveries`),
       description: t(`${account}.deliveries_description`),
-      href: settingsProfiles.show().url,
+      href: providerDeliveries.show().url,
     },
     {
       title: t(`${account}.notifications`),

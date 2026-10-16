@@ -22,6 +22,8 @@ class Schedule < ApplicationRecord
   validates :menu_id, uniqueness: { scope: :date }
   validate :provider_open_on_date, on: :create
 
+  after_create_commit :close_missing_publication_notification
+
   # Las programaciones de platos eliminados (archivados) no se muestran.
   scope :on_active_menus, -> { joins(:menu).where(menus: { archived_at: nil }) }
 
@@ -59,6 +61,10 @@ class Schedule < ApplicationRecord
   end
 
   private
+
+  def close_missing_publication_notification
+    Menus::MissingPublicationNotifier.close_for(schedule: self)
+  end
 
   def provider_open_on_date
     return if date.nil? || menu.nil?
