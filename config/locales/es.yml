@@ -775,6 +775,7 @@ es:
         company: "Empresa"
         due: "Vence: %{date}"
         detail: "Ver detalle"
+        download_receipts: "Descargar comprobantes"
         detail_dialog:
           title: "Historial de consumo: %{month}"
           description: "Detalle del consumo correspondiente a %{name}."
