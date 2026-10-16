@@ -79,6 +79,8 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def benefit_data
+    pricing = OrderPricing.new(@consumer)
+
     {
       limit: @consumer.monthly_benefit_available / 4,
       used: @consumer.monthly_benefit_used_this_week,
@@ -86,6 +88,15 @@ class Consumer::DashboardController < Consumer::InertiaController
       monthly_limit: @consumer.monthly_benefit_available,
       monthly_used: @consumer.monthly_benefit_used_this_month,
       monthly_remaining: @consumer.remaining_monthly_benefit,
+      specials: @consumer.special_benefits.map do |benefit|
+        {
+          id: benefit.id,
+          name: benefit.description.to_s,
+          percentage: benefit.percentage,
+          remaining: pricing.remaining_uses(benefit),
+          due_date: benefit.due_date&.iso8601
+        }
+      end
     }
   end
 
