@@ -53,7 +53,6 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
   const selectedClient = detail.clients.find(
     (option) => String(option.id) === client,
   )
-  const visibleClients = selectedClient ? [selectedClient] : detail.clients
 
   const days = useMemo(
     () =>
@@ -210,42 +209,6 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
         </div>
 
         <AdaptableDialogFooter className="p-4 sm:flex-col">
-          <dl className="grid w-full gap-2 text-sm">
-            <div className="flex justify-between gap-3">
-              <dt>{t(`${page}.subtotal`)}</dt>
-              <dd>
-                {formatMoney(
-                  visibleClients.reduce((sum, item) => sum + item.subtotal, 0),
-                )}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-3">
-              <dt>{t("pages.provider_collections.index.subsidy_vat")}</dt>
-              <dd>
-                {formatMoney(
-                  visibleClients.reduce(
-                    (sum, item) => sum + item.vat_amount,
-                    0,
-                  ),
-                )}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-3 font-semibold">
-              <dt>
-                {t(
-                  "pages.provider_collections.group.detail_dialog.total_label",
-                )}
-              </dt>
-              <dd>
-                {formatMoney(
-                  visibleClients.reduce(
-                    (sum, item) => sum + item.payable_amount,
-                    0,
-                  ),
-                )}
-              </dd>
-            </div>
-          </dl>
           <AdaptableDialogClose asChild>
             <Button className="w-full">
               {t(`${page}.close_consumption_detail`)}
