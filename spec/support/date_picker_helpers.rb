@@ -58,9 +58,33 @@ module DatePickerHelpers
     expect(find("#agenda-date")).to be_present
   end
 
+  # El disparador puede estar entrando con la animación del Sheet (500 ms) y un
+  # clic sobre un elemento en movimiento apunta a una posición que ya no existe.
   def open_date_picker(trigger)
+    wait_until_settled trigger
     find(trigger).click
+    find(trigger).click if page.has_no_css?(OPEN_CALENDAR, wait: 2)
+
     expect(page).to have_css(OPEN_CALENDAR)
+  end
+
+  def wait_until_settled(trigger)
+    previous = nil
+
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      loop do
+        current = page.evaluate_script(<<~JS)
+          (() => {
+            const el = document.querySelector(#{trigger.to_json})
+            return el ? Math.round(el.getBoundingClientRect().x) : null
+          })()
+        JS
+        break if current && current == previous
+
+        previous = current
+        sleep 0.05
+      end
+    end
   end
 
   # El disparador es un toggle: si el calendario quedó abierto de una consulta
