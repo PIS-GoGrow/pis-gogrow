@@ -217,7 +217,8 @@ export function WeeklyMenu({
             <div className="border-border bg-card rounded-xl border p-5">
               <p className="text-muted-foreground text-sm">Tu carrito</p>
               <h3 className="mt-8 text-lg">
-                {count} platos · {!loading ? money(total || 0) : (<Spinner className="inline"/>)}
+                {count} platos ·{" "}
+                {!loading ? money(total || 0) : <Spinner className="inline" />}
               </h3>
               <p className="text-muted-foreground mt-4 text-sm">
                 Agregá platos de distintos días y proveedores.

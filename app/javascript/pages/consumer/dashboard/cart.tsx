@@ -119,7 +119,7 @@ export default function ConsumerCart({
       preserveState: true,
       preserveScroll: false,
       onSuccess: () => setCart([]),
-        onError: () => setView("error"),
+      onError: () => setView("error"),
     })
   }
 
@@ -146,212 +146,224 @@ export default function ConsumerCart({
   }, [cart])
 
   return (
-  <AppLayout
-    breadcrumbs={[{ title: "Menú", href: consumerDashboard.index().url }]}
-  >
-    <style>
-      {
-        '@media (max-width: 767px) { [data-slot="sidebar-inset"] > header { display: none; } }'
-      }
-    </style>
-    <div className="bg-background text-foreground min-h-svh md:min-h-[calc(100svh-4rem)]">
-    {view === "cart" ? (
-    <MobileCard>
-
-      <Link href={dashboard().url}>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        disabled={form.processing}
-        aria-label="Volver"
-        className="mb-3"
-      >
-        <ChevronLeft aria-hidden="true" className="size-5" />
-        </Button>
-      </Link>
-      <h1 className="text-xl font-bold">Tu carrito</h1>
-      <section className="border-border mt-8 border-b pb-4">
-        <div className="mb-3 flex items-center justify-between text-sm font-semibold">
-          <h2>{t("pages.cart.delivery_address")}</h2>
-          <AddAddressSheet disabled={customDisabled} onAdd={addAddress} />
-        </div>
-        <RadioGroup
-          value={selectedAddress}
-          onValueChange={setAddress}
-          disabled={form.processing}
-          className="gap-3"
-        >
-          {visibleAddresses.map((item) => (
-            <AddressOption
-              key={item.id}
-              option={item}
-              selected={selectedAddress === item.address}
-              disabled={item.id !== "office" && customDisabled}
-            />
-          ))}
-        </RadioGroup>
-        <SavedAddressesSheet
-          addresses={addresses}
-          address={selectedAddress}
-          disabled={customDisabled}
-          onSelect={setAddress}
-        />
-        {showDeliveryWarning && (
-          <Alert className="mt-3 border-0 bg-transparent p-0 text-amber-700">
-            <TriangleAlert aria-hidden="true" className="text-amber-500" />
-            <AlertDescription className="gap-1 text-amber-700">
-              {missingOffice ? (
-                <p>{t("pages.cart.office_address_missing")}</p>
-              ) : (
-                <p>
-                  {t("pages.cart.office_delivery_warning", {
-                    count: officeOnlyProviders.length,
-                    providers: new Intl.ListFormat("es", {
-                      type: "conjunction",
-                    }).format(officeOnlyProviders),
-                  })}
-                </p>
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
-      </section>
-
-      {(pricing?.fullPriceQuantity || 0) > 0 && (
-        <Alert className="mt-4 border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
-          <TriangleAlert aria-hidden="true" className="text-amber-600" />
-          <AlertDescription>
-            {benefit.monthly_remaining === 0 ? (
-              <p>
-                Ya utilizaste las {benefit.monthly_limit} viandas subsidiadas de este
-                mes. Las {pricing?.fullPriceQuantity} viandas de este pedido se
-                cobrarán a precio completo.
-              </p>
-            ) : (
-              <p>
-                Te quedan {benefit.monthly_remaining} viandas subsidiadas este mes. De
-                este pedido, {pricing?.subsidizedQuantity} tendrán el beneficio y{" "}
-                {pricing?.fullPriceQuantity} se cobrarán a precio completo.
-              </p>
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <section className="border-border mt-6 pb-4 text-sm md:border-b">
-        {cart.map((item) => {
-          const line = item.menu.price * item.quantity
-          return (
-            <div
-              key={item.cartId}
-              className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
-            >
-              <p className="text-muted-foreground mb-2">
-                {t("pages.cart.delivery", {
-                  date: new Date(`${item.date}T12:00:00`).toLocaleDateString(
-                    "es-UY",
-                    {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                    },
-                  ),
-                })}
-              </p>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  {item.menu.name} x{item.quantity}
-                </span>
-                <span>{money(line)}</span>
-              </div>
-              {pricing?.lines[item.id]?.tiers
-                .filter((tier) => tier.discount > 0)
-                .map((tier, index) => (
-                  <BenefitLine
-                    key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
-                    tier={tier}
-                    className="mt-3"
-                  />
-                ))}
-              {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
-                  aparte, así que el carrito lo muestra por su cuenta. */}
-              {item.menu.option_groups
-                .filter((group) => item.selections[group.id]?.length)
-                .map((group) => (
-                  <p key={group.id} className="text-muted-foreground mt-2">
-                    {group.name}: {item.selections[group.id].join(", ")}
-                  </p>
-                ))}
-              {item.notes && (
-                <p className="text-muted-foreground mt-2">{item.notes}</p>
-              )}
+    <AppLayout
+      breadcrumbs={[{ title: "Menú", href: consumerDashboard.index().url }]}
+    >
+      <style>
+        {
+          '@media (max-width: 767px) { [data-slot="sidebar-inset"] > header { display: none; } }'
+        }
+      </style>
+      <div className="bg-background text-foreground min-h-svh md:min-h-[calc(100svh-4rem)]">
+        {view === "cart" ? (
+          <MobileCard>
+            <Link href={dashboard().url}>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
+                size="icon"
                 disabled={form.processing}
-                onClick={() => remove(item.cartId)}
-                className="mt-2"
+                aria-label="Volver"
+                className="mb-3"
               >
-                {t("pages.cart.remove", { name: item.menu.name })}
+                <ChevronLeft aria-hidden="true" className="size-5" />
               </Button>
-            </div>
-          )
-        })}
-        {!cart.length && (
-          <p className="text-muted-foreground py-6 text-center">
-            Todavía no agregaste platos.
-          </p>
-        )}
-      </section>
-      <BottomAction>
-        <OrderSummary
-          loading={loading}
-          subtotal={pricing?.subtotal}
-          total={pricing?.total}
-          compact
-        />
-        <Button
-          disabled={
-            !cart.length || form.processing || !selectedAddress || missingOffice
-          }
-          onClick={confirm}
-          className={cn(
-            "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
-            form.processing && "bg-muted hover:bg-muted",
-          )}
-        >
-          {form.processing ? (
-            <>
-              <Spinner />
-              Confirmando pedido
-            </>
-          ) : (
-            "Confirmar pedido"
-          )}
-        </Button>
-      </BottomAction>
-      {form.errors.order_error && (
-        <Alert variant="destructive" className="mt-3">
-          <AlertDescription>
-            {Array.isArray(form.errors.order_error) ? form.errors.order_error.join(" ") : form.errors.order_error}
-          </AlertDescription>
-        </Alert>
-      )}
-    </MobileCard>
+            </Link>
+            <h1 className="text-xl font-bold">Tu carrito</h1>
+            <section className="border-border mt-8 border-b pb-4">
+              <div className="mb-3 flex items-center justify-between text-sm font-semibold">
+                <h2>{t("pages.cart.delivery_address")}</h2>
+                <AddAddressSheet disabled={customDisabled} onAdd={addAddress} />
+              </div>
+              <RadioGroup
+                value={selectedAddress}
+                onValueChange={setAddress}
+                disabled={form.processing}
+                className="gap-3"
+              >
+                {visibleAddresses.map((item) => (
+                  <AddressOption
+                    key={item.id}
+                    option={item}
+                    selected={selectedAddress === item.address}
+                    disabled={item.id !== "office" && customDisabled}
+                  />
+                ))}
+              </RadioGroup>
+              <SavedAddressesSheet
+                addresses={addresses}
+                address={selectedAddress}
+                disabled={customDisabled}
+                onSelect={setAddress}
+              />
+              {showDeliveryWarning && (
+                <Alert className="mt-3 border-0 bg-transparent p-0 text-amber-700">
+                  <TriangleAlert
+                    aria-hidden="true"
+                    className="text-amber-500"
+                  />
+                  <AlertDescription className="gap-1 text-amber-700">
+                    {missingOffice ? (
+                      <p>{t("pages.cart.office_address_missing")}</p>
+                    ) : (
+                      <p>
+                        {t("pages.cart.office_delivery_warning", {
+                          count: officeOnlyProviders.length,
+                          providers: new Intl.ListFormat("es", {
+                            type: "conjunction",
+                          }).format(officeOnlyProviders),
+                        })}
+                      </p>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </section>
+
+            {(pricing?.fullPriceQuantity || 0) > 0 && (
+              <Alert className="mt-4 border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
+                <TriangleAlert aria-hidden="true" className="text-amber-600" />
+                <AlertDescription>
+                  {benefit.monthly_remaining === 0 ? (
+                    <p>
+                      Ya utilizaste las {benefit.monthly_limit} viandas
+                      subsidiadas de este mes. Las {pricing?.fullPriceQuantity}{" "}
+                      viandas de este pedido se cobrarán a precio completo.
+                    </p>
+                  ) : (
+                    <p>
+                      Te quedan {benefit.monthly_remaining} viandas subsidiadas
+                      este mes. De este pedido, {pricing?.subsidizedQuantity}{" "}
+                      tendrán el beneficio y {pricing?.fullPriceQuantity} se
+                      cobrarán a precio completo.
+                    </p>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <section className="border-border mt-6 pb-4 text-sm md:border-b">
+              {cart.map((item) => {
+                const line = item.menu.price * item.quantity
+                return (
+                  <div
+                    key={item.cartId}
+                    className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
+                  >
+                    <p className="text-muted-foreground mb-2">
+                      {t("pages.cart.delivery", {
+                        date: new Date(
+                          `${item.date}T12:00:00`,
+                        ).toLocaleDateString("es-UY", {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                        }),
+                      })}
+                    </p>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">
+                        {item.menu.name} x{item.quantity}
+                      </span>
+                      <span>{money(line)}</span>
+                    </div>
+                    {pricing?.lines[item.id]?.tiers
+                      .filter((tier) => tier.discount > 0)
+                      .map((tier, index) => (
+                        <BenefitLine
+                          key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
+                          tier={tier}
+                          className="mt-3"
+                        />
+                      ))}
+                    {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
+                  aparte, así que el carrito lo muestra por su cuenta. */}
+                    {item.menu.option_groups
+                      .filter((group) => item.selections[group.id]?.length)
+                      .map((group) => (
+                        <p
+                          key={group.id}
+                          className="text-muted-foreground mt-2"
+                        >
+                          {group.name}: {item.selections[group.id].join(", ")}
+                        </p>
+                      ))}
+                    {item.notes && (
+                      <p className="text-muted-foreground mt-2">{item.notes}</p>
+                    )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={form.processing}
+                      onClick={() => remove(item.cartId)}
+                      className="mt-2"
+                    >
+                      {t("pages.cart.remove", { name: item.menu.name })}
+                    </Button>
+                  </div>
+                )
+              })}
+              {!cart.length && (
+                <p className="text-muted-foreground py-6 text-center">
+                  Todavía no agregaste platos.
+                </p>
+              )}
+            </section>
+            <BottomAction>
+              <OrderSummary
+                loading={loading}
+                subtotal={pricing?.subtotal}
+                total={pricing?.total}
+                compact
+              />
+              <Button
+                disabled={
+                  !cart.length ||
+                  form.processing ||
+                  !selectedAddress ||
+                  missingOffice
+                }
+                onClick={confirm}
+                className={cn(
+                  "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
+                  form.processing && "bg-muted hover:bg-muted",
+                )}
+              >
+                {form.processing ? (
+                  <>
+                    <Spinner />
+                    Confirmando pedido
+                  </>
+                ) : (
+                  "Confirmar pedido"
+                )}
+              </Button>
+            </BottomAction>
+            {form.errors.order_error && (
+              <Alert variant="destructive" className="mt-3">
+                <AlertDescription>
+                  {Array.isArray(form.errors.order_error)
+                    ? form.errors.order_error.join(" ")
+                    : form.errors.order_error}
+                </AlertDescription>
+              </Alert>
+            )}
+          </MobileCard>
         ) : (
-            <OrderError retry={() => {
-                          form.clearErrors()
-                          setView("cart")
-                        }}
-                        error={
-                          Array.isArray(form.errors.order_error)
-                            ? form.errors.order_error[0]
-                            : form.errors.order_error
-                        } />
-    )}
-    </div>
-  </AppLayout>
+          <OrderError
+            retry={() => {
+              form.clearErrors()
+              setView("cart")
+            }}
+            error={
+              Array.isArray(form.errors.order_error)
+                ? form.errors.order_error[0]
+                : form.errors.order_error
+            }
+          />
+        )}
+      </div>
+    </AppLayout>
   )
 }

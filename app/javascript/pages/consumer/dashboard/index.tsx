@@ -6,11 +6,7 @@ import AppLayout from "@/layouts/app-layout"
 import { consumerDashboard } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
 
-import type {
-  CartItem,
-  Schedule,
-  Selections,
-} from "./consumer-types"
+import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
 import { WeeklyMenu, today } from "./weekly-menu"
 
@@ -22,7 +18,7 @@ export default function Index({
   week,
   schedules,
   closures,
-  benefit
+  benefit,
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")

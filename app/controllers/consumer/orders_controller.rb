@@ -165,7 +165,7 @@ class Consumer::OrdersController < Consumer::InertiaController
 
     requested_items.map! do |item|
       schedule = schedules.dig(item[:schedule_id].to_i)
-      { schedule: , quantity: item[:quantity].to_i } if schedule
+      { schedule:, quantity: item[:quantity].to_i } if schedule
     end.compact!
 
     @pricing = OrderPricing.new(@consumer).call(requested_items)

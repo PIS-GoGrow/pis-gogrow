@@ -2,9 +2,9 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import { ConsumerCart } from "./cart"
+import ConsumerCart from "./cart"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
-import { type Benefit, cartPricedItem, priceItems } from "./pricing"
+import { cartPricedItem, priceItems } from "./pricing"
 
 // El formulario de "Agregar una dirección" habla con el servidor; acá solo
 // importa qué direcciones ofrece el carrito y cuándo.
