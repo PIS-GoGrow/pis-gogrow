@@ -43,6 +43,10 @@ describe("AdminMobileNav", () => {
       "/admin/dashboard",
     )
     expect(menu.getByRole("link", { name: "Cuenta" })).toBeInTheDocument()
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "href",
+      "/admin/account",
+    )
     expect(menu.getByRole("link", { name: "Empleados" })).toHaveAttribute(
       "href",
       "/admin/consumers",
@@ -103,6 +107,26 @@ describe("AdminMobileNav", () => {
     )
     expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
       "aria-current",
+    )
+  })
+
+  it("marca Cuenta como activo en /admin/account", () => {
+    currentUrl = "/admin/account"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+  })
+
+  it("marca Cuenta como activo en /admin/preferences", () => {
+    currentUrl = "/admin/preferences"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
     )
   })
 

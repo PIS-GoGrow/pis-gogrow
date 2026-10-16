@@ -5,6 +5,15 @@ require "rails_helper"
 RSpec.describe "Settings::Notifications", type: :request do
   fixtures :users, :providers
 
+  ADMIN_CONFIGURATION_KEYS = %w[
+    company_payments
+    hr_partial_payments
+    hr_pending_invoices
+    hr_pending_payments
+    hr_rejected_receipts
+    hr_subsidy_changes
+  ].freeze
+
   let(:employee) { users(:one) }
   let(:other_employee) { users(:other_consumer_user) }
   let(:order_updates) { Notification::Configuration.find_by!(key: "order_updates") }
@@ -48,12 +57,14 @@ RSpec.describe "Settings::Notifications", type: :request do
       expect(inertia).to have_props(subscribed_keys: [])
     end
 
-    it "al admin le muestra solo los grupos de admin" do
+    it "al admin le muestra solo los grupos configurables de RRHH" do
       sign_in users(:admin), role: :admin
 
       get settings_notifications_path
 
-      expect(inertia).to have_props { |props| props[:notification_configurations].map { it[:key] } == [ "company_payments" ] }
+      expect(inertia).to have_props { |props|
+        props[:notification_configurations].map { it[:key] }.sort == ADMIN_CONFIGURATION_KEYS
+      }
     end
 
     it "al proveedor le muestra sus grupos configurables, incluido cancelaciones, apagados al principio" do
@@ -110,6 +121,32 @@ RSpec.describe "Settings::Notifications", type: :request do
 
       expect(response).to redirect_to(sign_in_path)
       expect(order_updates.reload.users).to be_empty
+    end
+
+    it "muestra un error cuando la configuración no pertenece al rol" do
+      patch settings_notification_path(999_999), params: { subscribe: true }, as: :json
+
+      expect(response).to redirect_to(settings_notifications_path)
+      expect(flash[:alert]).to eq(I18n.t("flash.config_update_error"))
+    end
+  end
+
+  describe "PATCH /settings/notifications/:id as RRHH" do
+    let(:admin) { users(:admin) }
+    let(:pending_invoices) { Notification::Configuration.find_by!(key: "hr_pending_invoices") }
+
+    before { sign_in admin, role: :admin }
+
+    it "guarda y recupera una nueva preferencia" do
+      patch settings_notification_path(pending_invoices), params: { subscribe: true }, as: :json
+
+      expect(response).to redirect_to(settings_notifications_path)
+      expect(flash[:notice]).to eq(I18n.t("flash.config_update"))
+      expect(pending_invoices.reload.users).to include(admin)
+
+      get settings_notifications_path
+
+      expect(inertia).to have_props { |props| props[:subscribed_keys].include?("hr_pending_invoices") }
     end
   end
 end
