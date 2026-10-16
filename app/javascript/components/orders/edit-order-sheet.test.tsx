@@ -79,4 +79,118 @@ describe("EditOrderSheet", () => {
 
     expect(screen.getByText("0/140")).toBeInTheDocument()
   })
+
+  it("applies max-h-[90dvh] and overflow-y-auto to dialog content for scrollability", () => {
+    render(
+      <EditOrderSheet
+        order={baseOrder}
+        addresses={addresses}
+        optionGroups={[]}
+        maxQuantity={5}
+        editing={true}
+      />,
+    )
+
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveClass("max-h-[90dvh]")
+    expect(dialog).toHaveClass("overflow-y-auto")
+  })
+
+  it("renders customization option groups and their choices", () => {
+    const optionGroups: ConsumerOrdersShow["option_groups"] = [
+      {
+        id: 1,
+        name: "Salsa",
+        options: ["Filetto", "Bolognesa"],
+        limit: 1,
+        required: true,
+      },
+      {
+        id: 2,
+        name: "Relleno",
+        options: ["Ricota", "Espinaca"],
+        limit: 1,
+        required: false,
+      },
+    ]
+
+    render(
+      <EditOrderSheet
+        order={{
+          ...baseOrder,
+          selected_options: [
+            { group_id: 1, name: "Salsa", values: ["Filetto"] },
+          ],
+        }}
+        addresses={addresses}
+        optionGroups={optionGroups}
+        maxQuantity={5}
+        editing={true}
+      />,
+    )
+
+    expect(screen.getByText("Filetto")).toBeInTheDocument()
+    expect(screen.getByText("Bolognesa")).toBeInTheDocument()
+    expect(screen.getByText("Ricota")).toBeInTheDocument()
+    expect(screen.getByText("Espinaca")).toBeInTheDocument()
+  })
+
+  it("disables the submit button if a required option group has no selection", () => {
+    const optionGroups: ConsumerOrdersShow["option_groups"] = [
+      {
+        id: 1,
+        name: "Salsa",
+        options: ["Filetto", "Bolognesa"],
+        limit: 1,
+        required: true,
+      },
+    ]
+
+    render(
+      <EditOrderSheet
+        order={{
+          ...baseOrder,
+          selected_options: [],
+        }}
+        addresses={addresses}
+        optionGroups={optionGroups}
+        maxQuantity={5}
+        editing={true}
+      />,
+    )
+
+    const submitButton = screen.getByRole("button", { name: "Guardar cambios" })
+    expect(submitButton).toBeDisabled()
+  })
+
+  it("enables the submit button when required option groups are satisfied", () => {
+    const optionGroups: ConsumerOrdersShow["option_groups"] = [
+      {
+        id: 1,
+        name: "Salsa",
+        options: ["Filetto", "Bolognesa"],
+        limit: 1,
+        required: true,
+      },
+    ]
+
+    render(
+      <EditOrderSheet
+        order={{
+          ...baseOrder,
+          selected_options: [
+            { group_id: 1, name: "Salsa", values: ["Filetto"] },
+          ],
+        }}
+        addresses={addresses}
+        optionGroups={optionGroups}
+        maxQuantity={5}
+        editing={true}
+      />,
+    )
+
+    const submitButton = screen.getByRole("button", { name: "Guardar cambios" })
+    expect(submitButton).toBeEnabled()
+  })
 })
+
