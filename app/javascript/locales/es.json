@@ -770,6 +770,7 @@
             "total_label": "Total",
             "vat": "IVA (22 %)"
           },
+          "download_receipts": "Descargar comprobantes",
           "due": "Vence: %{date}",
           "employees": "Empleados",
           "rejected_one": "%{count} cobro rechazado",
