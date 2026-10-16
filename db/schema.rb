@@ -121,6 +121,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
     t.datetime "created_at", null: false
     t.string "description"
     t.date "due_date"
+    t.decimal "max_price", precision: 10, scale: 2
     t.integer "percentage"
     t.integer "status"
     t.datetime "updated_at", null: false
@@ -327,6 +328,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_payments_on_account_id"
+    t.index ["account_id"], name: "index_payments_on_account_id_submitted", unique: true, where: "(status = 1)"
     t.index ["provider_id"], name: "index_payments_on_provider_id"
   end
 

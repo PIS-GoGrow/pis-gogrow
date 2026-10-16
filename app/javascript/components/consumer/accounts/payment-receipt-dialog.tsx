@@ -1,7 +1,7 @@
 import { Form } from "@inertiajs/react"
 import { FileText, Trash2 } from "lucide-react"
 import type { ComponentProps } from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useId, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -39,6 +39,9 @@ import type { Payment } from "@/types"
 interface PaymentReceiptDialogProps {
   accountId: number
   canUpload?: boolean
+  // Se muestra el botón pero deshabilitado, por ej. mientras hay un comprobante
+  // en revisión: la cuenta solo admite uno a la vez.
+  uploadDisabled?: boolean
   payments: Payment[]
   allowDelete?: boolean
   createAction?: ComponentProps<typeof Form>["action"]
@@ -50,12 +53,14 @@ type UploadResult = "success" | "error" | null
 export default function PaymentReceiptDialog({
   accountId,
   canUpload = true,
+  uploadDisabled = false,
   payments,
   allowDelete = true,
   createAction = consumerPayments.create(),
   destroyAction = consumerPayments.destroy,
 }: PaymentReceiptDialogProps) {
   const { t } = useTranslation()
+  const uploadHintId = useId()
   const receipts = payments.filter((payment) => payment.receipt_url)
   const [open, setOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -174,10 +179,17 @@ export default function PaymentReceiptDialog({
         </div>
       ))}
 
-      <AdaptableDialog open={canUpload && open} onOpenChange={handleOpenChange}>
+      <AdaptableDialog
+        open={canUpload && !uploadDisabled && open}
+        onOpenChange={handleOpenChange}
+      >
         {canUpload && (
           <AdaptableDialogTrigger asChild>
-            <Button className="w-full">
+            <Button
+              className="w-full"
+              disabled={uploadDisabled}
+              aria-describedby={uploadDisabled ? uploadHintId : undefined}
+            >
               {t("pages.accounts.show.receipt")}
             </Button>
           </AdaptableDialogTrigger>
@@ -266,6 +278,12 @@ export default function PaymentReceiptDialog({
           </Form>
         </AdaptableDialogContent>
       </AdaptableDialog>
+
+      {canUpload && uploadDisabled && (
+        <p id={uploadHintId} className="text-muted-foreground text-sm">
+          {t("pages.accounts.show.receipt_under_review_hint")}
+        </p>
+      )}
 
       <AdaptableDialog
         open={uploadResult !== null}

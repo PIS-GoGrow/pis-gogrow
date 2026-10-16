@@ -56,21 +56,10 @@ class Account < ApplicationRecord
     month.next_month.change(day: 10)
   end
 
-  # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
-  # Recursos Humanos reclama la suma de varias cuentas, así que el formato vive
-  # en un método de clase y el de instancia lo reusa.
-  def self.format_amount(value)
-    ActionController::Base.helpers.number_to_currency(
-      value,
-      unit: "$",
-      format: "%u%n",
-      precision: value.frac.zero? ? 0 : 2,
-      delimiter: ".",
-      separator: ","
-    )
+  # Necesario para formatear la suma de varias cuentas
+  def formatted_amount
+    self.class.format_amount(amount)
   end
-
-  def formatted_amount = self.class.format_amount(amount)
 
   # Se busca en memoria para que un preload(:payments) evite una consulta por
   # cuenta. El id desempata dos pagos del mismo instante.
@@ -78,12 +67,11 @@ class Account < ApplicationRecord
     payments.max_by { |payment| [ payment.created_at, payment.id ] }
   end
 
-  # El pago que el proveedor tiene que revisar. Puede haber más de uno en
-  # submitted a la vez (por ej. dos comprobantes enviados sin refrescar entre
-  # pestañas), así que se resuelven de a uno, del más viejo al más nuevo, para
-  # que ninguno quede sin revisión posible.
+  # El pago que el proveedor tiene que revisar. Payment impide que haya más de
+  # uno en submitted por cuenta (validación e índice único), así que a lo sumo
+  # hay uno. Se busca en memoria por lo mismo que last_payment.
   def payment_pending_review
-    payments.select(&:submitted?).min_by { |payment| [ payment.created_at, payment.id ] }
+    payments.detect(&:submitted?)
   end
 
   def latest_invoice
@@ -150,6 +138,20 @@ class Account < ApplicationRecord
     end
   end
 
+  # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
+  def self.format_amount(value)
+    amount = value.to_d
+
+    ActionController::Base.helpers.number_to_currency(
+      amount,
+      unit: "$",
+      format: "%u%n",
+      precision: amount.frac.zero? ? 0 : 2,
+      delimiter: ".",
+      separator: ","
+    )
+  end
+
   private
 
   def assign_vat_rate
@@ -176,6 +178,7 @@ end
 #  amount      :decimal(10, 2)
 #  month       :date
 #  owner_type  :string           not null
+#  vat_rate    :decimal(3, 2)    default(0.0), not null
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  owner_id    :bigint           not null

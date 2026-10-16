@@ -38,3 +38,25 @@ RSpec.describe User, type: :model do
     end
   end
 end
+
+# == Schema Information
+#
+# Table name: users
+#
+#  id              :bigint           not null, primary key
+#  avatar_url      :string
+#  email           :string           not null
+#  google_uid      :string
+#  name            :string           not null
+#  password_digest :string           not null
+#  phone           :string
+#  roles           :string           default([]), not null, is an Array
+#  verified        :boolean          default(FALSE), not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#
+# Indexes
+#
+#  index_users_on_email       (email) UNIQUE
+#  index_users_on_google_uid  (google_uid) UNIQUE
+#
