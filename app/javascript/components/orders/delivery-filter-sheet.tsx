@@ -55,7 +55,6 @@ export default function DeliveryFilterAdaptableDialog({
       </AdaptableDialogTrigger>
 
       <AdaptableDialogContent
-        side="bottom"
         showCloseButton={false}
         data-delivery-filter-sheet
         aria-describedby={undefined}

@@ -42,11 +42,11 @@ export default function ConsumerMonthAdaptableDialog({
 
   return (
     <AdaptableDialog
-      desktopVariant="sheet-bottom"
+      desktopVariant="sheet"
       open={open}
       onOpenChange={(isOpen) => !isOpen && onClose()}
     >
-      <AdaptableDialogContent side="bottom" showCloseButton={false}>
+      <AdaptableDialogContent className="max-w-xl!" showCloseButton={false}>
         {month && (
           <>
             <AdaptableDialogHeader>

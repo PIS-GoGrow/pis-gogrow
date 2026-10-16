@@ -106,7 +106,6 @@ export default function SpecialSubsidiesSection({
 
       <AdaptableDialog open={sheetOpen} onOpenChange={setAdaptableDialogOpen}>
         <AdaptableDialogContent
-          side="bottom"
           showCloseButton={false}
           className="p-5"
         >
