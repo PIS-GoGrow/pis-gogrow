@@ -76,10 +76,7 @@ function renderCart(
   const defaults = {
     monthlyLimit: 20,
     monthlyRemaining: 20,
-    pricing: priceItems(cart.map(cartPricedItem), {
-      ...benefit,
-      ...benefitProps,
-    }),
+    pricing: priceItems(cart.map(cartPricedItem)),
     cart,
     addresses,
     address: "Av. 18 de Julio 1006",
