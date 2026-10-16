@@ -48,6 +48,9 @@
         "title": "Eliminar cuenta",
         "warning": "Advertencia"
       },
+      "month_select": {
+        "this_month": "Este mes"
+      },
       "password_fields": {
         "confirm_label": "Confirmar contraseña",
         "create_label": "Crear contraseña",
@@ -482,7 +485,6 @@
             "title": "Tus pagos de %{month}",
             "view": "Ver pagos a proveedores"
           },
-          "this_month": "Este mes",
           "title": "Inicio"
         },
         "invoices": {
@@ -540,6 +542,7 @@
             "meals_used_one": "%{count} vianda consumida",
             "meals_used_other": "%{count} viandas consumidas",
             "meals_used_with_limit": "%{meals} de %{limit} viandas consumidas",
+            "month_label": "Mes del consumo",
             "no_debt": "¡Sin deudas pendientes con este proveedor!",
             "pending_meals_one": "(%{count} vianda)",
             "pending_meals_other": "(%{count} viandas)",
@@ -548,7 +551,6 @@
             "section": "Pagos",
             "see_detail": "Ver detalle",
             "spending": "Tu consumo",
-            "this_month": "Este mes",
             "title": "Pagos",
             "total_debt": "Deuda total",
             "view_detail": "Ver detalle del consumo"

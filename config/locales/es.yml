@@ -358,6 +358,8 @@ es:
       caution: "Procede con precaución, esta acción no se puede deshacer."
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
+    month_select:
+      this_month: "Este mes"
     date_picker:
       placeholder: "Elegí una fecha"
       range_placeholder: "Elegí un rango"
@@ -371,7 +373,6 @@ es:
       dashboard:
         title: "Inicio"
         greeting: "Hola, %{name} 👋"
-        this_month: "Este mes"
         coming_soon: "Próximamente"
         month_label: "Mes del resumen"
         benefit:
@@ -564,7 +565,7 @@ es:
           title: "Pagos"
           section: "Pagos"
           spending: "Tu consumo"
-          this_month: "Este mes"
+          month_label: "Mes del consumo"
           view_detail: "Ver detalle del consumo"
           meals_used_one: "%{count} vianda consumida"
           meals_used_other: "%{count} viandas consumidas"

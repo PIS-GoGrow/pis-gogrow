@@ -35,7 +35,7 @@ import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
 import type { AdminPaymentsIndex } from "@/types"
 
-export type ConsumptionDetail = NonNullable<AdminPaymentsIndex["period"]>
+export type ConsumptionDetail = NonNullable<AdminPaymentsIndex["consumption"]>
 type DetailOrder =
   ConsumptionDetail["providers"][number]["days"][number]["orders"][number]
 

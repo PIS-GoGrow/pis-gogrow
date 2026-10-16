@@ -26,9 +26,14 @@ const props: AdminPaymentsIndex = {
   history: [],
   total_debt: 0,
   total_meals: 0,
-  current_month: { amount: 0, meals: 0, limit: null },
-  period: null,
-  current_period: null,
+  month: "2026-08",
+  current_month: "2026-08",
+  months: [
+    { key: "2026-08", label: "Agosto 2026" },
+    { key: "2026-07", label: "Julio 2026" },
+  ],
+  summary: { amount: 0, meals: 0, limit: null },
+  consumption: null,
   providers: [],
 }
 
@@ -43,9 +48,8 @@ const provider = (id: number, name: string) => ({
   days: [],
 })
 
-const period: NonNullable<AdminPaymentsIndex["period"]> = {
+const period: NonNullable<AdminPaymentsIndex["consumption"]> = {
   month: "Agosto 2026",
-  tab: "history",
   providers: [provider(1, "Endulzate by Noe"), provider(2, "Tu Viandita")],
 }
 
@@ -65,30 +69,16 @@ const account: Account = {
   payments: [],
 }
 
-// Historia IBP-032: "Ver detalle del consumo" del inicio abre en Pagos el
-// período elegido.
 describe("Admin Payments Page", () => {
-  it("opens the detail of the period the home asked for", () => {
-    render(<Index {...props} period={period} />)
-
-    expect(screen.getByRole("dialog")).toHaveTextContent(
-      "Endulzate by Noe: Consumo Agosto 2026",
-    )
-    expect(
-      // El panel es modal: Radix esconde lo de atrás del árbol accesible.
-      screen.getByRole("tab", { name: "Historial", hidden: true }),
-    ).toHaveAttribute("aria-selected", "true")
-  })
-
   it("shows the consumption of the month as in the design", () => {
     render(
-      <Index
-        {...props}
-        current_month={{ amount: 2100, meals: 14, limit: 300 }}
-      />,
+      <Index {...props} summary={{ amount: 2100, meals: 14, limit: 300 }} />,
     )
 
     expect(screen.getByText("Tu consumo")).toBeInTheDocument()
+    expect(
+      screen.getByRole("combobox", { name: "Mes del consumo" }),
+    ).toHaveTextContent("Este mes")
     expect(screen.getByText("$2.100")).toBeInTheDocument()
     expect(
       screen.getByText("| 14 de 300 viandas consumidas"),
@@ -99,8 +89,16 @@ describe("Admin Payments Page", () => {
     ).toBeDisabled()
   })
 
-  it("opens the detail of the current month from the consumption card", () => {
-    render(<Index {...props} current_period={{ ...period, tab: "pending" }} />)
+  it("shows a past month chosen in the consumption card", () => {
+    render(<Index {...props} month="2026-07" />)
+
+    expect(
+      screen.getByRole("combobox", { name: "Mes del consumo" }),
+    ).toHaveTextContent("Julio 2026")
+  })
+
+  it("opens the detail of the chosen month from the consumption card", () => {
+    render(<Index {...props} consumption={period} />)
 
     fireEvent.click(
       screen.getByRole("button", { name: "Ver detalle del consumo" }),

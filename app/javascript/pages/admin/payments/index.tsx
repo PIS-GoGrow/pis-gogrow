@@ -1,8 +1,9 @@
-import { Head } from "@inertiajs/react"
+import { Head, router } from "@inertiajs/react"
 import { CircleCheck, Wallet } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import MonthSelect from "@/components/admin/month-select"
 import BankDetails from "@/components/admin/payments/bank-details"
 import ConsumptionDetailDialog, {
   type ConsumptionDetail,
@@ -34,15 +35,17 @@ export default function Index({
   providers,
   total_debt,
   total_meals,
+  month,
   current_month,
-  period,
-  current_period,
+  months,
+  summary,
+  consumption,
 }: AdminPaymentsIndex) {
   const { t } = useTranslation()
   const { formatMoneyShort } = useFormatters()
 
-  const [open, setOpen] = useState(period !== null)
-  const [detail, setDetail] = useState<ConsumptionDetail | null>(period)
+  const [open, setOpen] = useState(false)
+  const [detail, setDetail] = useState<ConsumptionDetail | null>(null)
   const [providerId, setProviderId] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -53,9 +56,20 @@ export default function Index({
     },
   ]
 
+  // preserveState mantiene la pestaña de abajo al cambiar el mes de la tarjeta.
+  function selectMonth(key: string) {
+    router.get(
+      adminPayments.index({
+        query: key === current_month ? {} : { month: key },
+      }).url,
+      {},
+      { preserveScroll: true, preserveState: true },
+    )
+  }
+
   // Sin proveedor elegido, el panel abre el primero del mes por nombre.
-  function openCurrentDetail() {
-    setDetail(current_period)
+  function openMonthDetail() {
+    setDetail(consumption)
     setProviderId(null)
     setOpen(true)
   }
@@ -84,13 +98,13 @@ export default function Index({
     providers.find((provider) => provider.id === id)?.name
 
   const meals =
-    current_month.limit === null
+    summary.limit === null
       ? t("pages.admin.payments.index.meals_used", {
-          count: current_month.meals,
+          count: summary.meals,
         })
       : t("pages.admin.payments.index.meals_used_with_limit", {
-          meals: current_month.meals,
-          limit: current_month.limit,
+          meals: summary.meals,
+          limit: summary.limit,
         })
 
   return (
@@ -101,26 +115,27 @@ export default function Index({
         <Stat
           label={t("pages.admin.payments.index.spending")}
           badge={
-            <Badge variant="secondary" className="bg-background font-normal">
-              {t("pages.admin.payments.index.this_month")}
-            </Badge>
+            <MonthSelect
+              value={month}
+              currentMonth={current_month}
+              months={months}
+              onValueChange={selectMonth}
+              label={t("pages.admin.payments.index.month_label")}
+            />
           }
-          value={formatMoneyShort(current_month.amount)}
+          value={formatMoneyShort(summary.amount)}
           detail={`| ${meals}`}
           action={
             <div className="grid w-full gap-4">
-              {current_month.limit !== null && (
+              {summary.limit !== null && (
                 <Progress
-                  value={Math.min(
-                    100,
-                    (current_month.meals / current_month.limit) * 100,
-                  )}
+                  value={Math.min(100, (summary.meals / summary.limit) * 100)}
                   aria-label={t("pages.admin.payments.index.spending")}
                 />
               )}
               <Button
-                disabled={current_period === null}
-                onClick={openCurrentDetail}
+                disabled={consumption === null}
+                onClick={openMonthDetail}
                 className="w-full bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
               >
                 {t("pages.admin.payments.index.view_detail")}
@@ -131,7 +146,7 @@ export default function Index({
 
         <HeadingSmall title={t("pages.admin.payments.index.section")} />
 
-        <Tabs defaultValue={period?.tab ?? "pending"} className="gap-4">
+        <Tabs defaultValue="pending" className="gap-4">
           <TabsList className="w-full">
             <TabsTrigger value="pending">
               {t("pages.admin.payments.index.pending_tab")}

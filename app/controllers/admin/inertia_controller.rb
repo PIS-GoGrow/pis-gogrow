@@ -14,4 +14,9 @@ class Admin::InertiaController < InertiaController
   rescue Date::Error
     Date.current
   end
+
+  # Las opciones del selector de mes del Inicio y de Pagos.
+  def month_options(months)
+    months.map { { key: it.strftime("%Y-%m"), label: I18n.l(it, format: :month_name_year) } }
+  end
 end

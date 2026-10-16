@@ -69,7 +69,7 @@ function Harness({
 
   return (
     <ConsumptionDetailDialog
-      detail={{ month: "Agosto 2026", tab: "pending", providers }}
+      detail={{ month: "Agosto 2026", providers }}
       providerId={providerId}
       onProviderChange={setProviderId}
       loading={false}

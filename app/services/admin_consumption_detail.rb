@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # El detalle del consumo de una empresa en un mes, un bloque por proveedor: lo
-# que muestra el panel "Ver detalle del consumo" de Pagos. Los importes son los
+# que muestra el panel "Ver detalle del consumo" del Inicio y de Pagos. Los importes son los
 # de la cuenta de la empresa (el subsidio y su IVA) y los días salen de los
 # pedidos confirmados de esa cuenta.
 class AdminConsumptionDetail
@@ -16,7 +16,6 @@ class AdminConsumptionDetail
 
     {
       month: I18n.l(@month, format: :month_name_year).upcase_first,
-      tab: accounts.all? { it.collection_status == "approved" } ? "history" : "pending",
       providers: accounts.sort_by { it.provider.user.name.downcase }.map { provider_detail(it) }
     }
   end

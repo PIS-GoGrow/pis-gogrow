@@ -16,9 +16,14 @@ class Admin::PaymentsController < Admin::InertiaController
     @providers = Provider.eager_load(:user).order("LOWER(users.name)")
     @total_debt = unpaid.sum(&:payable_amount).to_f
     @total_meals = unpaid.sum { sums.dig(it.id, :amount).to_i }
-    @current_month = AdminMonthlySummary.new(company).then { { amount: it.spending, meals: it.meals, limit: it.meals_limit } }
-    @period = requested_month&.then { AdminConsumptionDetail.new(company, it).to_h }
-    @current_period = AdminConsumptionDetail.new(company, Date.current).to_h
+
+    # La tarjeta "Tu consumo" muestra el mes de ?month=AAAA-MM, o el actual.
+    summary = AdminMonthlySummary.new(company, selected_month)
+    @month = summary.month.strftime("%Y-%m")
+    @current_month = Date.current.strftime("%Y-%m")
+    @months = month_options(summary.months)
+    @summary = { amount: summary.spending, meals: summary.meals, limit: summary.meals_limit }
+    @consumption = AdminConsumptionDetail.new(company, summary.month).to_h
   end
 
   # El find va sobre las cuentas de la empresa y no sobre Account: pedir la de
@@ -84,13 +89,6 @@ class Admin::PaymentsController < Admin::InertiaController
 
   def set_payment
     @payment = Payment.where(account: company.accounts).find(params[:id])
-  end
-
-  # El inicio de RR. HH. manda ?month=AAAA-MM para abrir el detalle de ese mes.
-  def requested_month
-    Date.strptime(params[:month].to_s, "%Y-%m")
-  rescue Date::Error
-    nil
   end
 
   def payment_params
