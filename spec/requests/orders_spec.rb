@@ -67,7 +67,28 @@ RSpec.describe "Orders", type: :request do
 
         order = inertia.props[:past_orders].find { |o| o[:id] == orders(:history_without_schedule).id }
 
-        expect(order).to include(date: nil, menu_name: nil, provider_name: nil, delivery_method: "home")
+        expect(order).to include(date: nil, menu_name: nil, provider_id: nil, provider_name: nil, delivery_method: "home")
+      end
+
+      it "preserves the rejected order context after its publication is deleted" do
+        order = orders(:upcoming_confirmed_future)
+        schedule = order.schedule
+
+        order.reject_for_dish_change!(reason: :dish_unpublished, by: users(:provider_user))
+        schedule.destroy!
+
+        get orders_path
+
+        serialized = inertia.props[:past_orders].find { |item| item[:id] == order.id }
+        expect(serialized).to include(
+          status: "rejected",
+          date: (Date.current + 3).iso8601,
+          provider_id: providers(:tuviandita).id,
+          menu_name: "Milanesa con papas fritas",
+          provider_name: "Provider User",
+          rejection_reason: "dish_unpublished"
+        )
+        expect(inertia.props[:providers].pluck(:id)).to include(providers(:tuviandita).id)
       end
 
       it "hides orders belonging to another employee" do
@@ -122,6 +143,24 @@ RSpec.describe "Orders", type: :request do
           price: 601.0,
           subsidy: 300.50,
           discounted_price: 300.50
+        )
+      end
+
+      it "shows the historical context after the provider removes the publication" do
+        order = orders(:upcoming_confirmed_future)
+        schedule = order.schedule
+        order.reject_for_dish_change!(reason: :dish_unpublished, by: users(:provider_user))
+        schedule.destroy!
+
+        get order_path(order)
+
+        expect(inertia.props[:order]).to include(
+          status: "rejected",
+          date: (Date.current + 3).iso8601,
+          provider_id: providers(:tuviandita).id,
+          provider_name: "Provider User",
+          menu_name: "Milanesa con papas fritas",
+          rejection_reason: "dish_unpublished"
         )
       end
 

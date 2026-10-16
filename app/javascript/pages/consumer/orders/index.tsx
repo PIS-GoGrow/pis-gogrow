@@ -79,25 +79,29 @@ export default function Index({
       ))
     )
 
-  const providersName = providers.map((provider) => provider.name)
-  const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set())
+  const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
   const filtered_upcoming_orders =
     activeProviders.size === 0
       ? upcoming_orders
       : upcoming_orders.filter((order) =>
-          activeProviders.has(order.provider_name ?? ""),
+          order.provider_id == null
+            ? false
+            : activeProviders.has(order.provider_id),
         )
   const filtered_past_orders =
     activeProviders.size === 0
       ? past_orders
       : past_orders.filter((order) =>
-          activeProviders.has(order.provider_name ?? ""),
+          order.provider_id == null
+            ? false
+            : activeProviders.has(order.provider_id),
         )
   const filterLabel =
     activeProviders.size === 0
       ? "Todos"
-      : providersName
-          .filter((provider) => activeProviders.has(provider))
+      : providers
+          .filter((provider) => activeProviders.has(provider.id))
+          .map((provider) => provider.name)
           .join(", ")
 
   return (
@@ -113,7 +117,7 @@ export default function Index({
             <span className="text-foreground font-medium">{filterLabel}</span>
           </span>
           <ProviderFilterSheet
-            providers={providersName}
+            providers={providers}
             selectedProviders={activeProviders}
             onApply={setActiveProviders}
           />

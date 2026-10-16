@@ -8,11 +8,9 @@ class Provider < ApplicationRecord
 
   has_many :menus, dependent: :destroy
   has_many :schedules, through: :menus
-  has_many :orders, through: :schedules
+  has_many :orders, dependent: :nullify
   has_many :accounts, dependent: :destroy
   has_many :invoices, through: :accounts
-  has_many :schedules, through: :menus
-  has_many :orders, through: :schedules
   has_many :payments, through: :accounts
   has_many :closures, class_name: "ProviderClosure", dependent: :destroy
 

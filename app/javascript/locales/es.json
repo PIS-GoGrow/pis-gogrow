@@ -191,15 +191,12 @@
           "customer_request": "por solicitud del cliente",
           "dish_deleted": "porque el plato fue eliminado",
           "dish_modified": "porque el plato fue modificado",
+          "dish_unpublished": "porque el plato fue retirado del menú de ese día",
           "duplicate_order": "porque el pedido estaba duplicado",
           "order_error": "por un error en el pedido",
           "other": "por el siguiente motivo: %{details}",
           "out_of_stock": "porque no había stock disponible"
         },
-        "title": "Tu pedido fue cancelado"
-      },
-      "order_withdrawal": {
-        "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible.",
         "title": "Tu pedido fue cancelado"
       },
       "payment_available": {
@@ -1212,6 +1209,7 @@
           "customer_request": "Solicitud del cliente",
           "dish_deleted": "Plato eliminado",
           "dish_modified": "Plato modificado",
+          "dish_unpublished": "Plato retirado del menú",
           "duplicate_order": "Pedido duplicado",
           "order_error": "Error en el pedido",
           "other": "Otro motivo",

@@ -781,7 +781,8 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(orders(:upcoming_confirmed_future).reload).to be_confirmed
       expect(orders(:upcoming_confirmed_future).schedule).to eq(schedules(:future))
       expect(schedules(:future).reload.available).to be(false)
-      expect(orders(:upcoming_pending_future).reload).to be_cancelled
+      expect(orders(:upcoming_pending_future).reload).to be_rejected
+      expect(orders(:upcoming_pending_future)).to be_rejection_reason_dish_deleted
     end
 
     it "rejects the confirmed orders of upcoming days when asked to" do
@@ -793,7 +794,7 @@ RSpec.describe "Provider::Menus", type: :request do
           params: { confirmed_orders: "reject" }
       end.to change {
         order.consumer.user.notifications
-            .where(event: "order_rejection")
+            .where(event: "order_rejection", notifiable: order)
             .count
       }.by(1)
 

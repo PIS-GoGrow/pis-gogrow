@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -284,6 +284,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
     t.bigint "cancelled_by_id"
     t.bigint "consumer_id", null: false
     t.datetime "created_at", null: false
+    t.date "delivery_date"
     t.integer "delivery_method", null: false
     t.decimal "discounted_price", precision: 10, scale: 2
     t.string "menu_description"
@@ -293,6 +294,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
     t.bigint "modified_by_id"
     t.string "notes"
     t.decimal "price", precision: 10, scale: 2
+    t.bigint "provider_id"
+    t.string "provider_name"
+    t.datetime "rejected_at"
+    t.bigint "rejected_by_id"
     t.string "rejection_details"
     t.integer "rejection_reason"
     t.bigint "schedule_id"
@@ -303,6 +308,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
     t.index ["cancelled_by_id"], name: "index_orders_on_cancelled_by_id"
     t.index ["consumer_id"], name: "index_orders_on_consumer_id"
     t.index ["modified_by_id"], name: "index_orders_on_modified_by_id"
+    t.index ["provider_id"], name: "index_orders_on_provider_id"
+    t.index ["rejected_by_id"], name: "index_orders_on_rejected_by_id"
     t.index ["schedule_id"], name: "index_orders_on_schedule_id"
     t.check_constraint "delivery_method <> 1 OR address IS NOT NULL AND btrim(address::text) <> ''::text", name: "orders_home_delivery_requires_address"
   end
@@ -609,9 +616,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_120100) do
   add_foreign_key "order_benefits", "benefits"
   add_foreign_key "order_benefits", "orders"
   add_foreign_key "orders", "consumers"
+  add_foreign_key "orders", "providers", on_delete: :nullify
   add_foreign_key "orders", "schedules"
   add_foreign_key "orders", "users", column: "cancelled_by_id"
   add_foreign_key "orders", "users", column: "modified_by_id"
+  add_foreign_key "orders", "users", column: "rejected_by_id", on_delete: :nullify
   add_foreign_key "otp_codes", "users"
   add_foreign_key "payments", "accounts"
   add_foreign_key "payments", "providers"

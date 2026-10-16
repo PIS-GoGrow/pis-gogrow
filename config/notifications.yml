@@ -64,11 +64,6 @@ events:
     role: consumer
     requires_action: false
 
-  order_withdrawal:
-    configuration: order_updates
-    role: consumer
-    requires_action: false
-
   debt_threshold_exceeded:
     configuration: debt_alerts
     role: consumer

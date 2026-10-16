@@ -12,7 +12,7 @@ class Provider::OrderSerializer < ApplicationSerializer
 
   typelize :string, nullable: true
   attribute :date do |order|
-    order.schedule&.date&.iso8601
+    order.delivery_date&.iso8601
   end
 
   typelize :string

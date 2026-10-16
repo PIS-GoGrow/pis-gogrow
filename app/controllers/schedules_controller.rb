@@ -150,7 +150,7 @@ class SchedulesController < Provider::InertiaController
 
     Schedule.transaction do
       schedule.orders.where(status: [ :pending, :confirmed ]).each do |order|
-        order.withdraw!(by: Current.user)
+        order.reject_for_dish_change!(reason: :dish_unpublished, by: Current.user)
       end
 
       saved_menu = schedule.menu.saved_menu
