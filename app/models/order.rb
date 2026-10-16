@@ -129,7 +129,9 @@ class Order < ApplicationRecord
     return order unless order.valid?
 
     schedule.with_lock do
-      if schedule.order_deadline_passed?
+      if schedule.provider_closed?
+        order.errors.add(:schedule_id, I18n.t("validations.provider_closed"))
+      elsif schedule.order_deadline_passed?
         order.errors.add(:schedule_id, I18n.t("validations.order_deadline_passed"))
       elsif schedule.available?(quantity:)
         order.save
@@ -279,8 +281,10 @@ class Order < ApplicationRecord
   def cancel(by:)
     with_lock do
       return false unless cancellable?
+      return false unless update(status_before_cancellation: status, status: :cancelled, cancelled_at: Time.current, cancelled_by: by)
 
-      update(status_before_cancellation: status, status: :cancelled, cancelled_at: Time.current, cancelled_by: by)
+      notify_cancelled if before_cancellation_confirmed?
+      true
     end
   end
 
@@ -363,6 +367,21 @@ class Order < ApplicationRecord
       description_data: {
         date: I18n.l(schedule.date, format: :short),
         provider: provider.user.name
+      }
+    )
+  end
+
+  def notify_cancelled
+    return unless provider&.user
+
+    Notifier.call(
+      event_key: :order_cancellation,
+      user: provider.user,
+      notifiable: self,
+      description_data: {
+        consumer: consumer.user.name,
+        date: I18n.l(schedule.date, format: "%d/%m"),
+        dish: menu_name
       }
     )
   end

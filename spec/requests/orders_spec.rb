@@ -846,6 +846,65 @@ RSpec.describe "Orders", type: :request do
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.order_deadline_passed") })
     end
 
+    it "rejects an order for a day inside the provider's scheduled closure" do
+      consumer, = setup_consumer
+      schedule = create_schedule
+      schedule.menu.provider.closures.create!(starts_on: Date.current, ends_on: Date.current + 2, reason: "Vacaciones")
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      end.not_to change(Order, :count)
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(schedule.reload.remaining_amount).to eq(5)
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.provider_closed") })
+    end
+
+    it "accepts an order for a day outside the provider's scheduled closure" do
+      consumer, = setup_consumer
+      schedule = create_schedule
+      schedule.menu.provider.closures.create!(starts_on: Date.current + 1, ends_on: Date.current + 3, reason: "Vacaciones")
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      end.to change(Order, :count).by(1)
+    end
+
+    it "leaves orders placed before the closure untouched" do
+      consumer, = setup_consumer
+      schedule = create_schedule
+      post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 2 } ] } }
+      order = Order.last
+
+      schedule.menu.provider.closures.create!(starts_on: Date.current, ends_on: Date.current + 2, reason: "Vacaciones")
+      get orders_path
+
+      expect(order.reload).to have_attributes(status: "pending", amount: 2)
+      expect(schedule.reload.remaining_amount).to eq(3)
+    end
+
+    it "does not create a partial cart when one provider is closed" do
+      consumer, = setup_consumer
+      open_schedule = create_schedule
+      closed_provider = Provider.create!(user: users(:consumer_user))
+      closed_menu = Menu.create!(provider: closed_provider, name: "Tarta", description: "De verdura", price: 200)
+      closed_schedule = Schedule.create!(menu: closed_menu, date: Date.current, amount: 5)
+      closed_provider.closures.create!(starts_on: Date.current, ends_on: Date.current, reason: "Feriado")
+
+      expect do
+        post orders_path, params: {
+          order: {
+            address: consumer.address,
+            items: [ { schedule_id: open_schedule.id, quantity: 1 }, { schedule_id: closed_schedule.id, quantity: 1 } ]
+          }
+        }
+      end.not_to change(Order, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.provider_closed") })
+    end
+
     it "rejects past schedules" do
       consumer, = setup_consumer
       schedule = create_schedule
@@ -1271,7 +1330,35 @@ RSpec.describe "Orders", type: :request do
           patch order_path(order), params: update_params(options: options_params([ "Carbonara" ]))
 
           expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
         end
+
+        it "refuses options that exceed the group limit and preserves database integrity" do
+          patch order_path(order), params: update_params(options: options_params([ "Filetto", "Bolognesa" ]))
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
+        it "refuses options with duplicate values within the same group" do
+          patch order_path(order), params: update_params(options: options_params([ "Filetto", "Filetto" ]))
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
+        it "refuses options with non-existent group_id bypassing the interface" do
+          invalid_options = [ { group_id: 999_999, values: [ "Inexistente" ] }, { group_id: other_group.id, values: [ "Ricota y nuez" ] } ]
+          patch order_path(order), params: update_params(options: invalid_options)
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
 
         # Los pedidos anteriores a esta funcionalidad no tienen elección
         # guardada; el proveedor tiene que poder confirmarlos igual.

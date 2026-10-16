@@ -37,7 +37,8 @@
         "done": "Listo"
       },
       "date_picker": {
-        "placeholder": "Elegí una fecha"
+        "placeholder": "Elegí una fecha",
+        "range_placeholder": "Elegí un rango"
       },
       "delete_account": {
         "caution": "Procede con precaución, esta acción no se puede deshacer.",
@@ -114,9 +115,21 @@
         "description": "Recibí una notificación cuando tu deuda supere el monto definido por RRHH.",
         "title": "Alertas de deuda"
       },
+      "employee_debts": {
+        "description": "Avisos cuando empleados de tu empresa acumulan más de un mes de deuda con un proveedor.",
+        "title": "Deudas de empleados"
+      },
       "hr_payment_reminders": {
         "description": "Recordatorios de pagos vencidos enviados por Recursos Humanos.",
         "title": "Recordatorios de pago de Recursos Humanos"
+      },
+      "menu_publication_reminders": {
+        "description": "Avisos cuando falta publicar el menú de un día hábil.",
+        "title": "Recordatorios de publicación del menú"
+      },
+      "order_cancellations": {
+        "description": "Recibí una notificación cuando un pedido sea cancelado por el cliente.",
+        "title": "Cancelaciones"
       },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
@@ -160,9 +173,20 @@
         "description": "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca.",
         "title": "Tu deuda superó el monto límite"
       },
+      "employee_debt_overdue": {
+        "description": {
+          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio.",
+          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+        },
+        "title": "Hay empleados con pagos pendientes"
+      },
       "hr_debt_payment_reminder": {
         "description": "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos.",
         "title": "Recordatorio de pago pendiente"
+      },
+      "order_cancellation": {
+        "description": "El pedido de %{consumer} del %{date} de %{dish} fue cancelado.",
+        "title": "Un pedido fue cancelado"
       },
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
@@ -200,6 +224,10 @@
       "payment_receipt_submitted": {
         "description": "%{payer} envió un comprobante de pago de %{month}.",
         "title": "Nuevo comprobante de pago"
+      },
+      "provider_menu_unpublished": {
+        "description": "Todavía no publicaste un menú para el %{date}.",
+        "title": "Publicá el menú del día"
       }
     },
     "pages": {
@@ -245,6 +273,7 @@
           "receipt_success_title": "Comprobante enviado",
           "receipt_title": "Subir comprobante",
           "receipt_unavailable": "Comprobante no disponible",
+          "receipt_under_review_hint": "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva.",
           "receipt_update": "Actualizar comprobante",
           "receipt_uploading": "Subiendo comprobante...",
           "receipt_view_edit": "Ver o editar comprobante",
@@ -533,6 +562,13 @@
       },
       "consumer_dashboard": {
         "index": {
+          "closure": {
+            "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
+            "dismiss": "Cerrar aviso",
+            "empty": "%{provider} no recibirá pedidos del %{period}.",
+            "title_now": "%{provider} no está disponible",
+            "title_soon": "%{provider} no estará disponible"
+          },
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
         },
         "options": {
@@ -925,6 +961,21 @@
           "title": "Inicio"
         }
       },
+      "provider_deliveries": {
+        "show": {
+          "back": "Volver a Cuenta",
+          "description": "Elegí dónde realizás tus entregas y si aceptás direcciones personalizadas.",
+          "home": {
+            "description": "También aceptás pedidos con direcciones de entrega personalizadas.",
+            "title": "Oficinas y direcciones personalizadas"
+          },
+          "office": {
+            "description": "Entregás todos los pedidos en las oficinas de las empresas.",
+            "title": "Solo Oficinas"
+          },
+          "title": "Entregas"
+        }
+      },
       "provider_invitations": {
         "show": {
           "description": "Configure su contraseña para completar el registro.",
@@ -1083,6 +1134,30 @@
           "back": "Volver a Cuenta",
           "closing_time": "Hora de cierre",
           "closing_time_description": "Hasta qué hora recibís pedidos.",
+          "closures": {
+            "cancel": "Cancelar",
+            "date_range": "Rango de fechas",
+            "delete": "Eliminar cierre %{reason}",
+            "description": "Días en los que no recibís pedidos.",
+            "edit": "Editar cierre %{reason}",
+            "edit_title": "Editar cierre",
+            "period": {
+              "other_year": "%{from} al %{to}",
+              "same_month": "%{from_day} al %{to_day_month} de %{year}",
+              "same_year": "%{from_day_month} al %{to_day_month} de %{year}",
+              "single": "%{date}"
+            },
+            "reason": "Motivo",
+            "reason_placeholder": "Vacaciones",
+            "save": "Guardar cambios",
+            "saved_description": "No recibirás pedidos del %{period}.",
+            "saved_title": "¡Cierre programado!",
+            "schedule": "Programar cierre",
+            "sheet_description": "Selecciona el rango de fechas y el motivo del cierre.",
+            "sheet_title": "Programar cierre",
+            "title": "Cierres programados",
+            "updated_title": "¡Cierre actualizado!"
+          },
           "description": "Configurá tus horarios y días sin servicio.",
           "done": "Listo",
           "save_changes": "Guardar cambios",

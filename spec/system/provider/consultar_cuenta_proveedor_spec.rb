@@ -30,7 +30,7 @@ RSpec.describe "Consultar la cuenta del proveedor" do
     expect(page).to have_link("Perfil", href: settings_profile_path)
     expect(page).to have_link("Datos de cobro", href: provider_payment_details_path)
     expect(page).to have_link("Configuración operativa", href: provider_operational_settings_path)
-    expect(page).to have_link("Entregas", href: settings_profile_path)
+    expect(page).to have_link("Entregas", href: provider_deliveries_path)
     expect(page).to have_link("Notificaciones", href: settings_notifications_path)
   end
 

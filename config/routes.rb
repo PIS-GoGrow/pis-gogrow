@@ -45,6 +45,7 @@ Rails.application.routes.draw do
     get "account", to: "accounts#show", as: :account
     get "operational_settings", to: "operational_settings#show", as: :operational_settings
     resource :payment_details, only: [ :show, :update ]
+    resource :deliveries, only: [ :show, :update ]
     resources :menus, except: [ :index, :show ] do
       post :publish, on: :collection
     end
@@ -61,6 +62,7 @@ Rails.application.routes.draw do
       get :file, on: :member
     end
     resource :order_deadline, only: [ :update ]
+    resources :closures, only: [ :create, :update, :destroy ]
     get "dashboard", to: "dashboard#index", as: :dashboard
     resources :payments, only: [ :update ] do
       get :receipt, on: :member
