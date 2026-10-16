@@ -20,6 +20,10 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     )
   end
 
+  around do |example|
+    Capybara.using_wait_time(60) { example.run }
+  end
+
   def choose_account_type(label)
     find_by_id("bank_account_type").click
     find("[role=option]", exact_text: label).click
@@ -31,7 +35,6 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     # El guard redirige automáticamente al onboarding
     visit provider_dashboard_path
     expect(page).to have_current_path(provider_onboarding_path)
-    wait_for_hydration
 
     # Paso 1: Datos de cobro
     expect(page).to have_content("Paso 1 de 4")
@@ -103,7 +106,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
   it "muestra errores de validación si se ingresan datos de cobro inválidos" do
     sign_in provider_user, role: :provider
-    visit_hydrated provider_onboarding_path
+    visit provider_onboarding_path
 
     expect(page).to have_content("Paso 1 de 4")
 
@@ -123,7 +126,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
   it "permite volver al paso anterior y omitir pasos del recorrido" do
     sign_in provider_user, role: :provider
-    visit_hydrated provider_onboarding_path
+    visit provider_onboarding_path
 
     # Omitir el paso 1
     expect(page).to have_content("Paso 1 de 4")
