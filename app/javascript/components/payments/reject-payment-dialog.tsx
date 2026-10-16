@@ -116,7 +116,11 @@ export default function RejectPaymentDialog({
                       : "hover:border-primary/50",
                   )}
                 >
-                  <RadioGroupItem id={id} value={reason} />
+                  <RadioGroupItem
+                    id={id}
+                    value={reason}
+                    data-testid={`provider-payment-report-reason-${reason}`}
+                  />
                   <span className="font-normal">
                     {t(`${page}.reasons.${reason}`)}
                   </span>

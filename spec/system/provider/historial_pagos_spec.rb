@@ -107,7 +107,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     else
       within(find("[role=dialog]")) { click_on "Reportar" }
       within(find("[role=dialog]", text: "Reportar un problema")) do
-        choose "Otro motivo"
+        find('[data-testid="provider-payment-report-reason-other"]').click
         fill_in "Describir el motivo", with: "El importe no coincide"
         click_on "Continuar"
       end
@@ -146,7 +146,7 @@ RSpec.describe "Historial de pagos del proveedor" do
       expect(page).to have_content(approved.created_at.strftime("%d/%m/%y"))
       expect(page).to have_content("300,00")
 
-      click_on "Ver comprobantes"
+      expect(page).to have_button("Descargar comprobantes")
       expect(page).to have_link("Descargar primer-intento.png", href: receipt_provider_payment_path(rejected))
       expect(page).to have_link("Descargar segundo-intento.png", href: receipt_provider_payment_path(approved))
       expect(page).to have_content(rejected.created_at.strftime("%d/%m/%y"))
@@ -241,7 +241,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     within(history_card("GoGrow")) do
       click_on "Empleados"
       click_on employee.name
-      click_on "Ver comprobantes"
+      expect(page).to have_button("Descargar comprobantes")
       payments.each do |payment|
         expect(page).to have_link(href: receipt_provider_payment_path(payment))
       end

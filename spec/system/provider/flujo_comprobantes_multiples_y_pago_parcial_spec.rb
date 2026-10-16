@@ -68,7 +68,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     within(find("[role=dialog]")) { click_on "Reportar" }
 
     within(find("[role=dialog]", text: "Reportar un problema")) do
-      find("label", text: "El pago es parcial").click
+      find('[data-testid="provider-payment-report-reason-partial_payment"]').click
       click_on "Continuar"
     end
 
@@ -135,11 +135,8 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     within(history_card) { click_on "Empleados" }
     click_on employee_user.name
 
-    # En el historial con múltiples comprobantes aparece 'Ver comprobantes'
-    expect(page).to have_button("Ver comprobantes")
-    click_on "Ver comprobantes"
-
-    # Al desplegarlo muestra ambos comprobantes con botón de descarga individual
+    # El historial muestra ambos comprobantes y permite descargarlos juntos.
+    expect(page).to have_button("Descargar comprobantes")
     expect(page).to have_content("Pago parcial")
     expect(page).to have_css("a[download]", minimum: 2)
   end

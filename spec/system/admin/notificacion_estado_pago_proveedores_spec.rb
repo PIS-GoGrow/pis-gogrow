@@ -76,7 +76,7 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
     else
       within(find("[role=dialog]")) { click_on "Reportar" }
       within(find("[role=dialog]", text: "Reportar un problema")) do
-        choose "Otro motivo"
+        find('[data-testid="provider-payment-report-reason-other"]').click
         fill_in "Describir el motivo", with: "El importe no coincide"
         click_on "Continuar"
       end

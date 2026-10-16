@@ -1,5 +1,4 @@
 import { render, screen, within } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
 import type { ProviderCollectionPayment } from "@/types"
@@ -73,8 +72,7 @@ describe("CollectionPaymentHistory", () => {
     expect(screen.getByText("rechazado.pdf")).toBeInTheDocument()
   })
 
-  it("lists every receipt with its date, status and file under 'Ver comprobantes' when showDownloadAll is true", async () => {
-    const user = userEvent.setup()
+  it("lists every receipt with its date, status and file alongside the bulk download action", () => {
     render(
       <CollectionPaymentHistory
         payments={[approved, rejected, withoutReceipt]}
@@ -82,9 +80,9 @@ describe("CollectionPaymentHistory", () => {
       />,
     )
 
-    expect(screen.queryByText("aprobado.png")).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole("button", { name: "Ver comprobantes" }))
+    expect(
+      screen.getByRole("button", { name: "Descargar comprobantes" }),
+    ).toBeInTheDocument()
 
     const approvedLink = screen.getByRole("link", {
       name: "Descargar aprobado.png",

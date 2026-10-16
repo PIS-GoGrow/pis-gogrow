@@ -201,7 +201,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     click_on "Revisar pago"
     within(find("[role=dialog]")) { click_on "Reportar" }
     within(find("[role=dialog]", text: "Reportar un problema")) do
-      choose "El comprobante no corresponde"
+      find('[data-testid="provider-payment-report-reason-incorrect_receipt"]').click
       click_on "Continuar"
     end
     expect(page).to have_content(I18n.t("pages.provider_collections.review.rejected_title"))
