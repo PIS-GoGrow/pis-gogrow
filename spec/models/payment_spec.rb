@@ -273,6 +273,41 @@ RSpec.describe Payment, type: :model do
       expect(notification.reload.closed_at).to be_nil
     end
   end
+
+  describe "avisos de deuda de empleados" do
+    before { allow(EmployeeDebtNotifications).to receive(:refresh) }
+
+    it "refresca los avisos cuando el empleado informa un pago" do
+      payment_with_receipt.save!
+
+      expect(EmployeeDebtNotifications).to have_received(:refresh).with(account, renotify: false)
+    end
+
+    it "los refresca de nuevo cuando el proveedor aprueba el pago" do
+      payment = payment_with_receipt
+      payment.save!
+      payment.approve
+
+      expect(EmployeeDebtNotifications).to have_received(:refresh).with(account, renotify: false).twice
+    end
+
+    it "pide avisar de nuevo cuando el proveedor rechaza el pago" do
+      payment = payment_with_receipt
+      payment.save!
+      payment.reject_with("Comprobante ilegible")
+
+      expect(EmployeeDebtNotifications).to have_received(:refresh).with(account, renotify: true)
+    end
+
+    it "no los refresca para pagos de la cuenta de la empresa" do
+      company_account = Account.create!(owner: company, provider:, month: Date.current, amount: 500)
+      payment = company_account.payments.build(provider:, status: :submitted)
+      payment.receipt.attach(io: StringIO.new("comprobante"), filename: "comprobante.png", content_type: "image/png")
+      payment.save!
+
+      expect(EmployeeDebtNotifications).not_to have_received(:refresh)
+    end
+  end
 end
 
 # == Schema Information
