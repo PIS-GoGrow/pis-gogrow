@@ -72,7 +72,7 @@ export default function ConsumptionDetailDialog({
         showCloseButton={false}
         className="gap-4 p-4 sm:max-w-xl"
       >
-        <AdaptableDialogHeader className="text-left">
+        <AdaptableDialogHeader className="p-0 text-left">
           <AdaptableDialogTitle>
             {provider && detail
               ? t(`${page}.title`, {
@@ -232,7 +232,7 @@ export default function ConsumptionDetailDialog({
           </>
         )}
 
-        <AdaptableDialogFooter className="sm:flex-col">
+        <AdaptableDialogFooter className="p-0 sm:flex-col">
           <AdaptableDialogClose asChild>
             <Button className="w-full">{t("common.close")}</Button>
           </AdaptableDialogClose>
