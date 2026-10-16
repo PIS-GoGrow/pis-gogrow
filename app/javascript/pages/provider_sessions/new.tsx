@@ -2,6 +2,13 @@ import { Form, Head } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+} from "@/components/adaptable-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -10,13 +17,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import {
-  AdaptableDialog,
-  AdaptableDialogContent,
-  AdaptableDialogDescription,
-  AdaptableDialogHeader,
-  AdaptableDialogTitle,
-} from "@/components/adaptable-dialog"
 import { Spinner } from "@/components/ui/spinner"
 import AuthLayout from "@/layouts/auth-layout"
 import { providerPasswordResets, providerSessions } from "@/routes"

@@ -105,10 +105,7 @@ export default function SpecialSubsidiesSection({
       </CardContent>
 
       <AdaptableDialog open={sheetOpen} onOpenChange={setAdaptableDialogOpen}>
-        <AdaptableDialogContent
-          showCloseButton={false}
-          className="p-5"
-        >
+        <AdaptableDialogContent showCloseButton={false} className="p-5">
           <div className="flex flex-col gap-1">
             <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
               {editing

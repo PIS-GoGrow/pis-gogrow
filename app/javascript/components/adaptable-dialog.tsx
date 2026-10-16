@@ -144,10 +144,7 @@ function AdaptableDialogContent({
       <SheetContent
         side="bottom"
         // Evita que el sheet tape toda la pantalla y permite scroll interno
-        className={cn(
-          "max-h-[90dvh] overflow-y-auto rounded-t-xl",
-          className,
-        )}
+        className={cn("max-h-[90dvh] overflow-y-auto rounded-t-xl", className)}
         {...sheetProps}
       />
     )
