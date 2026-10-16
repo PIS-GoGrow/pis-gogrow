@@ -3,9 +3,10 @@ import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import Onboarding from "./show"
-import type { ProviderOnboardingProvider } from "@/types/serializers/ProviderOnboardingProvider"
 import type { SettingsNotificationConfiguration } from "@/types"
+import type { ProviderOnboardingProvider } from "@/types/serializers/ProviderOnboardingProvider"
+
+import Onboarding from "./show"
 
 const patchMock = vi.fn()
 const getMock = vi.fn()
@@ -34,8 +35,12 @@ vi.mock("@inertiajs/react", async () => {
       )
     },
     router: {
-      patch: (...args: unknown[]) => patchMock(...args),
-      get: (...args: unknown[]) => getMock(...args),
+      patch: (...args: unknown[]) => {
+        patchMock(...args)
+      },
+      get: (...args: unknown[]) => {
+        getMock(...args)
+      },
     },
     Form: ({
       children,
