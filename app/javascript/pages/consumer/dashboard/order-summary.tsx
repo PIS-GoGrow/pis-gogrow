@@ -54,9 +54,7 @@ export function OrderSummary({
       </div>
     )
   } else {
-    return (
-      <Spinner className="mx-auto my-4"/>
-    )
+    return <Spinner className="mx-auto my-4" />
   }
 }
 

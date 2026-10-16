@@ -1,4 +1,3 @@
-import type { ConsumerOrdersPricing } from "@/types"
 import { pricingOrders } from "@/routes"
 
 import type { CartItem } from "./consumer-types"
