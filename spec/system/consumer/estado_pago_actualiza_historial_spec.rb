@@ -147,11 +147,11 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     click_on users(:one).name
     expect(page).to have_content("300")
 
-    # El botón de Aprobar vive dentro del sheet del comprobante: hay que
+    # El botón de Confirmar vive dentro del sheet del comprobante: hay que
     # abrirlo primero (PaymentReviewSheet), al que se entra por "Revisar pago"
     # desde la fila del empleado.
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Aprobar" }
+    within(find("[role=dialog]")) { click_on "Confirmar" }
     expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     click_on I18n.t("pages.provider_collections.review.done")
 
@@ -195,12 +195,15 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     click_on users(:one).name
 
     # Mismo motivo que en el caso de arriba: primero hay que abrir el
-    # comprobante para llegar al botón de Rechazar, que abre a su vez el
+    # comprobante para llegar al botón de Reportar, que abre a su vez el
     # diálogo de motivo. Los dos quedan abiertos a la vez (role=dialog
     # matchea ambos), así que el segundo find se desambigua por texto.
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Rechazar" }
-    within(find("[role=dialog]", text: "Rechazar comprobante")) { click_on "Rechazar comprobante" }
+    within(find("[role=dialog]")) { click_on "Reportar" }
+    within(find("[role=dialog]", text: "Reportar un problema")) do
+      choose "El comprobante no corresponde"
+      click_on "Continuar"
+    end
     expect(page).to have_content(I18n.t("pages.provider_collections.review.rejected_title"))
     click_on I18n.t("pages.provider_collections.review.done")
 
@@ -210,7 +213,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
 
     within(find("[role=tabpanel]")) do
       expect(page).to have_content("Rechazado")
-      expect(page).to have_content("La imagen está borrosa")
+      expect(page).to have_content("El comprobante no corresponde")
     end
 
     find("[role=tab]", text: "Historial").click

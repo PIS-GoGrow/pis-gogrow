@@ -102,14 +102,14 @@ RSpec.describe "Historial de pagos del proveedor" do
     click_on "Revisar pago"
 
     if decision == :approve
-      within(find("[role=dialog]")) { click_on "Aprobar" }
+      within(find("[role=dialog]")) { click_on "Confirmar" }
       expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     else
-      within(find("[role=dialog]")) { click_on "Rechazar" }
-      within(find("[role=dialog]", text: "Rechazar comprobante")) do
-        choose "Otro"
-        fill_in "Motivo", with: "El importe no coincide"
-        click_on "Rechazar comprobante"
+      within(find("[role=dialog]")) { click_on "Reportar" }
+      within(find("[role=dialog]", text: "Reportar un problema")) do
+        choose "Otro motivo"
+        fill_in "Describir el motivo", with: "El importe no coincide"
+        click_on "Continuar"
       end
       expect(page).to have_content(I18n.t("pages.provider_collections.review.rejected_title"))
     end

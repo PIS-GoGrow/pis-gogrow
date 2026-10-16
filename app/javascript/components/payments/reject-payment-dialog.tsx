@@ -14,22 +14,18 @@ import {
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import {
+  PAYMENT_REJECTION_REASON_KEYS,
+  type PaymentRejectionReasonKey,
+} from "@/lib/payment-rejection-reasons"
 import { cn } from "@/lib/utils"
 import { providerPayments as paymentsRoutes } from "@/routes"
-
-const REJECTION_REASONS = [
-  "La imagen está borrosa",
-  "El archivo enviado no corresponde a un comprobante",
-  PARTIAL_PAYMENT_REJECTION_REASON,
-]
-
-const OTHER_OPTION = "other"
 
 interface RejectPaymentDialogProps {
   children: ReactNode
   paymentId: number
-  onRejected?: (reason: string) => void
+  onRejected?: (reason: PaymentRejectionReasonKey) => void
 }
 
 export default function RejectPaymentDialog({
@@ -40,35 +36,39 @@ export default function RejectPaymentDialog({
   const { t } = useTranslation()
   const page = "pages.provider_collections.review"
   const [open, setOpen] = useState(false)
-  const [selectedReason, setSelectedReason] = useState<string>(
-    REJECTION_REASONS[0],
-  )
-  const [customReason, setCustomReason] = useState("")
+  const [selectedReason, setSelectedReason] =
+    useState<PaymentRejectionReasonKey | null>(null)
+  const [rejectionDetails, setRejectionDetails] = useState("")
   const [processing, setProcessing] = useState(false)
 
-  const isOther = selectedReason === OTHER_OPTION
-  const finalReason = isOther ? customReason.trim() : selectedReason
-  const canSubmit = finalReason.length > 0
+  const isOtherReason = selectedReason === "other"
+  const normalizedDetails = rejectionDetails.trim()
+  const canSubmit =
+    selectedReason !== null && (!isOtherReason || normalizedDetails.length > 0)
 
   function resetForm() {
-    setSelectedReason(REJECTION_REASONS[0])
-    setCustomReason("")
+    setSelectedReason(null)
+    setRejectionDetails("")
   }
 
-  function handleReject() {
-    if (!canSubmit || processing) return
+  function handleConfirm() {
+    if (!selectedReason || !canSubmit || processing) return
 
     setProcessing(true)
 
     router.patch(
       paymentsRoutes.update(paymentId).url,
-      { status: "rejected", rejection_reason: finalReason },
+      {
+        status: "rejected",
+        rejection_reason: selectedReason,
+        rejection_details: isOtherReason ? normalizedDetails : null,
+      },
       {
         preserveState: true,
         onSuccess: () => {
           setOpen(false)
           resetForm()
-          onRejected?.(finalReason)
+          onRejected?.(selectedReason)
         },
         onFinish: () => setProcessing(false),
       },
@@ -95,60 +95,52 @@ export default function RejectPaymentDialog({
           </AdaptableDialogDescription>
         </AdaptableDialogHeader>
 
-        <div className="flex flex-col gap-2 px-4 sm:px-0">
-          {REJECTION_REASONS.map((reason) => (
-            <label
-              key={reason}
-              className={cn(
-                "flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition-colors",
-                selectedReason === reason
-                  ? "border-primary bg-primary/5"
-                  : "hover:border-primary/50",
-              )}
-            >
-              <input
-                type="radio"
-                name="rejection_reason"
-                className="accent-primary"
-                checked={selectedReason === reason}
-                onChange={() => setSelectedReason(reason)}
-              />
-              {reason}
-            </label>
-          ))}
+        <RadioGroup
+          value={selectedReason ?? ""}
+          onValueChange={(reason) =>
+            setSelectedReason(reason as PaymentRejectionReasonKey)
+          }
+          className="gap-2 px-4 sm:px-0"
+        >
+          {PAYMENT_REJECTION_REASON_KEYS.map((reason) => {
+            const id = `payment-rejection-${reason}`
 
-          <label
-            className={cn(
-              "flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-sm transition-colors",
-              isOther
-                ? "border-primary bg-primary/5"
-                : "hover:border-primary/50",
-            )}
-          >
-            <input
-              type="radio"
-              name="rejection_reason"
-              className="accent-primary"
-              checked={isOther}
-              onChange={() => setSelectedReason(OTHER_OPTION)}
-            />
-            Otro
-          </label>
-
-          {isOther && (
-            <Field>
-              <FieldLabel htmlFor="custom-reason" className="sr-only">
-                Motivo
+            return (
+              <FieldLabel key={reason} htmlFor={id}>
+                <Field
+                  orientation="horizontal"
+                  className={cn(
+                    "cursor-pointer rounded-lg border p-3 transition-colors",
+                    selectedReason === reason
+                      ? "border-primary bg-primary/5"
+                      : "hover:border-primary/50",
+                  )}
+                >
+                  <RadioGroupItem id={id} value={reason} />
+                  <span className="font-normal">
+                    {t(`${page}.reasons.${reason}`)}
+                  </span>
+                </Field>
               </FieldLabel>
-              <Input
-                id="custom-reason"
-                placeholder="Escribí el motivo..."
-                value={customReason}
-                onChange={(e) => setCustomReason(e.target.value)}
-              />
-            </Field>
-          )}
-        </div>
+            )
+          })}
+        </RadioGroup>
+
+        {isOtherReason && (
+          <Field className="px-4 sm:px-0">
+            <FieldLabel htmlFor="payment-rejection-details" className="sr-only">
+              {t(`${page}.details_label`)}
+            </FieldLabel>
+            <Input
+              id="payment-rejection-details"
+              value={rejectionDetails}
+              onChange={(event) => setRejectionDetails(event.target.value)}
+              placeholder={t(`${page}.details_placeholder`)}
+              maxLength={500}
+              disabled={processing}
+            />
+          </Field>
+        )}
 
         <AdaptableDialogFooter className="flex-row gap-3 px-4 pb-4 sm:justify-start sm:p-0">
           <Button
@@ -167,9 +159,9 @@ export default function RejectPaymentDialog({
             size="sm"
             disabled={!canSubmit || processing}
             aria-busy={processing}
-            onClick={handleReject}
+            onClick={handleConfirm}
           >
-            {t(`${page}.${processing ? "rejecting" : "reject_receipt"}`)}
+            {t(`${page}.${processing ? "continuing" : "continue"}`)}
           </Button>
         </AdaptableDialogFooter>
       </AdaptableDialogContent>

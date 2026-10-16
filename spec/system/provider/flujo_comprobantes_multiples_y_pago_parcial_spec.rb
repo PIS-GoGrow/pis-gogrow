@@ -65,11 +65,11 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     click_on employee_user.name
 
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Rechazar" }
+    within(find("[role=dialog]")) { click_on "Reportar" }
 
-    within(find("[role=dialog]", text: "Rechazar comprobante")) do
+    within(find("[role=dialog]", text: "Reportar un problema")) do
       find("label", text: "El pago es parcial").click
-      click_on "Rechazar comprobante"
+      click_on "Continuar"
     end
 
     expect(page).to have_content("Pago parcial registrado")
@@ -117,7 +117,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
 
     # 6. El proveedor revisa y aprueba el segundo comprobante
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Aprobar" }
+    within(find("[role=dialog]")) { click_on "Confirmar" }
     expect(page).to have_content("Cobro confirmado")
     click_on "Listo"
 
