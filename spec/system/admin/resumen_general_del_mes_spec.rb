@@ -54,6 +54,9 @@ RSpec.describe "Resumen general del mes de RRHH", type: :system do
     click_on "Ver detalle del consumo"
 
     expect(page).to have_current_path(admin_payments_path(month: current_key))
+    within(:css, "[role='dialog']") do
+      expect(page).to have_content("Provider User: Consumo #{I18n.l(Date.current, format: :month_name_year).upcase_first}")
+    end
   end
 
   # El resumen es de la empresa del admin: la cuenta de otra empresa no cambia
