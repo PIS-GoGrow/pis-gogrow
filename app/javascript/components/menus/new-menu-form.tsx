@@ -3,7 +3,15 @@ import { Pencil, Plus, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import EditMenuSheet, {
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogFooter,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+} from "@/components/adaptable-dialog"
+import EditMenuAdaptableDialog, {
   type ConfirmedOrders,
   type EditScope,
 } from "@/components/menus/edit-menu-sheet"
@@ -24,14 +32,6 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { providerMenus as menusRoutes, schedules } from "@/routes"
@@ -91,10 +91,11 @@ export default function MenuForm({
   )
 
   const [removedGroupIds, setRemovedGroupIds] = useState<number[]>([])
-  const [groupSheetOpen, setGroupSheetOpen] = useState(false)
+  const [groupAdaptableDialogOpen, setGroupAdaptableDialogOpen] =
+    useState(false)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [draft, setDraft] = useState<OptionGroupDraft>(emptyDraft)
-  const [saveSheetOpen, setSaveSheetOpen] = useState(false)
+  const [saveAdaptableDialogOpen, setSaveAdaptableDialogOpen] = useState(false)
   const [saved, setSaved] = useState(false)
   const [agenda, setAgenda] = useState<AgendaDraft | null>(() =>
     edit
@@ -154,16 +155,16 @@ export default function MenuForm({
   const canSaveDraft =
     draft.name.trim() !== "" && draftOptions.length > 0 && !hasDuplicateOptions
 
-  function openAddGroupSheet() {
+  function openAddGroupAdaptableDialog() {
     setEditingIndex(null)
     setDraft(emptyDraft)
-    setGroupSheetOpen(true)
+    setGroupAdaptableDialogOpen(true)
   }
 
-  function openEditGroupSheet(index: number) {
+  function openEditGroupAdaptableDialog(index: number) {
     setEditingIndex(index)
     setDraft(groups[index])
-    setGroupSheetOpen(true)
+    setGroupAdaptableDialogOpen(true)
   }
 
   function saveDraft() {
@@ -180,7 +181,7 @@ export default function MenuForm({
         : prev.map((g, i) => (i === editingIndex ? groupToSave : g)),
     )
 
-    setGroupSheetOpen(false)
+    setGroupAdaptableDialogOpen(false)
   }
 
   function removeGroup(index: number) {
@@ -213,7 +214,7 @@ export default function MenuForm({
     if (edit) {
       transform((formData) => ({ menu: menuPayload(formData) }))
       setSaved(false)
-      setSaveSheetOpen(true)
+      setSaveAdaptableDialogOpen(true)
       return
     }
 
@@ -275,7 +276,7 @@ export default function MenuForm({
       preserveState: true,
       onSuccess: () => setSaved(true),
       onError: () => {
-        setSaveSheetOpen(false)
+        setSaveAdaptableDialogOpen(false)
       },
     })
   }
@@ -382,7 +383,7 @@ export default function MenuForm({
                 variant="ghost"
                 size="sm"
                 className="-mr-2"
-                onClick={openAddGroupSheet}
+                onClick={openAddGroupAdaptableDialog}
               >
                 <Plus aria-hidden="true" className="h-4 w-4" />
                 {t(`${key}.options.add`)}
@@ -410,7 +411,7 @@ export default function MenuForm({
                           aria-label={t(`${key}.options.edit`, {
                             name: group.name,
                           })}
-                          onClick={() => openEditGroupSheet(index)}
+                          onClick={() => openEditGroupAdaptableDialog(index)}
                         >
                           <Pencil aria-hidden="true" className="h-4 w-4" />
                         </Button>
@@ -490,22 +491,19 @@ export default function MenuForm({
         )}
       </form>
 
-      <Sheet open={groupSheetOpen} onOpenChange={setGroupSheetOpen}>
-        <SheetContent
-          side="bottom"
-          showCloseButton={false}
-          className="mx-auto gap-0 rounded-t-3xl pb-[env(safe-area-inset-bottom)] md:max-w-xl"
-        >
-          <div className="bg-muted-foreground/30 mx-auto mt-3 h-1 w-10 rounded-full" />
-
-          <SheetHeader className="items-start px-6 pt-8 text-left">
-            <SheetTitle className="text-base">
+      <AdaptableDialog
+        open={groupAdaptableDialogOpen}
+        onOpenChange={setGroupAdaptableDialogOpen}
+      >
+        <AdaptableDialogContent showCloseButton={false} className="p-0">
+          <AdaptableDialogHeader className="items-start px-6 pt-8 text-left">
+            <AdaptableDialogTitle className="text-base">
               {t(`${key}.group.title`)}
-            </SheetTitle>
-            <SheetDescription className="sr-only">
+            </AdaptableDialogTitle>
+            <AdaptableDialogDescription className="sr-only">
               {t(`${key}.group.description`)}
-            </SheetDescription>
-          </SheetHeader>
+            </AdaptableDialogDescription>
+          </AdaptableDialogHeader>
 
           <div className="flex flex-col gap-4 px-6 pt-2">
             <Field>
@@ -587,12 +585,12 @@ export default function MenuForm({
             </Field>
           </div>
 
-          <SheetFooter className="grid grid-cols-2 gap-3 px-6 pt-6 pb-6">
+          <AdaptableDialogFooter className="grid grid-cols-2 gap-3 px-6 pt-6 pb-6">
             <Button
               type="button"
               variant="secondary"
               className="h-11"
-              onClick={() => setGroupSheetOpen(false)}
+              onClick={() => setGroupAdaptableDialogOpen(false)}
             >
               {t(`${key}.group.cancel`)}
             </Button>
@@ -607,14 +605,14 @@ export default function MenuForm({
                 ? t(`${key}.group.add`)
                 : t(`${key}.group.modify`)}
             </Button>
-          </SheetFooter>
-        </SheetContent>
-      </Sheet>
+          </AdaptableDialogFooter>
+        </AdaptableDialogContent>
+      </AdaptableDialog>
 
       {edit && agenda && (
-        <EditMenuSheet
-          open={saveSheetOpen}
-          onOpenChange={setSaveSheetOpen}
+        <EditMenuAdaptableDialog
+          open={saveAdaptableDialogOpen}
+          onOpenChange={setSaveAdaptableDialogOpen}
           saved={saved}
           processing={processing}
           agenda={agendaPayload(agenda)}
