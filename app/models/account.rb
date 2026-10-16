@@ -59,21 +59,7 @@ class Account < ApplicationRecord
   # Necesario para formatear la suma de varias cuentas
   def formatted_amount
     self.class.format_amount(amount)
-  # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
-  # Recursos Humanos reclama la suma de varias cuentas, así que el formato vive
-  # en un método de clase y el de instancia lo reusa.
-  def self.format_amount(value)
-    ActionController::Base.helpers.number_to_currency(
-      value,
-      unit: "$",
-      format: "%u%n",
-      precision: value.frac.zero? ? 0 : 2,
-      delimiter: ".",
-      separator: ","
-    )
   end
-
-  def formatted_amount = self.class.format_amount(amount)
 
   # Se busca en memoria para que un preload(:payments) evite una consulta por
   # cuenta. El id desempata dos pagos del mismo instante.
