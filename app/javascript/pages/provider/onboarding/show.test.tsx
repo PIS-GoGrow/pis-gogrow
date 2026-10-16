@@ -26,7 +26,7 @@ vi.mock("@inertiajs/react", async () => {
       href: string | { url: string }
       className?: string
     }) => {
-      const resolvedHref = typeof href === "string" ? href : href?.url ?? ""
+      const resolvedHref = typeof href === "string" ? href : (href?.url ?? "")
       return (
         <a href={resolvedHref} className={className}>
           {children}
@@ -72,17 +72,22 @@ const mockConfigurations: SettingsNotificationConfiguration[] = [
     id: 10,
     key: "order_created",
     title: "Pedidos nuevos",
-    description: "Recibí una notificación cuando un empleado te haga un pedido.",
+    description:
+      "Recibí una notificación cuando un empleado te haga un pedido.",
   },
   {
     id: 20,
     key: "payment_receipt_uploaded",
     title: "Comprobantes de pago",
-    description: "Recibí una notificación cuando te envíen un comprobante de pago.",
+    description:
+      "Recibí una notificación cuando te envíen un comprobante de pago.",
   },
 ]
 
-function renderPage(step: string, overrides: Partial<ProviderOnboardingProvider> = {}) {
+function renderPage(
+  step: string,
+  overrides: Partial<ProviderOnboardingProvider> = {},
+) {
   return render(
     <Onboarding
       provider={{ ...defaultProvider, ...overrides }}
@@ -110,12 +115,24 @@ describe("Provider Onboarding Show Page", () => {
       expect(screen.getByText("Paso 1 de 4")).toBeInTheDocument()
       expect(screen.getByText("Datos de cobro")).toBeInTheDocument()
       expect(screen.getByLabelText("Banco")).toHaveValue("BROU")
-      expect(screen.getByLabelText("Número de cuenta")).toHaveValue("001234567-00001")
-      expect(screen.getByLabelText("Titular de la cuenta")).toHaveValue("Tu Vianda SRL")
-      expect(screen.getByLabelText("RUT o CI del titular")).toHaveValue("212345670012")
-      expect(screen.queryByLabelText("Volver al paso anterior")).not.toBeInTheDocument()
-      expect(screen.getByRole("button", { name: "Continuar" })).toBeInTheDocument()
-      expect(screen.getAllByRole("button", { name: "Omitir por ahora" })).toHaveLength(2)
+      expect(screen.getByLabelText("Número de cuenta")).toHaveValue(
+        "001234567-00001",
+      )
+      expect(screen.getByLabelText("Titular de la cuenta")).toHaveValue(
+        "Tu Vianda SRL",
+      )
+      expect(screen.getByLabelText("RUT o CI del titular")).toHaveValue(
+        "212345670012",
+      )
+      expect(
+        screen.queryByLabelText("Volver al paso anterior"),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Continuar" }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getAllByRole("button", { name: "Omitir por ahora" }),
+      ).toHaveLength(2)
     })
 
     it("muestra errores de validación en los campos cuando el servidor los devuelve", () => {
@@ -126,8 +143,12 @@ describe("Provider Onboarding Show Page", () => {
 
       renderPage("1")
 
-      expect(screen.getByText("El banco no puede estar en blanco")).toBeInTheDocument()
-      expect(screen.getByText("El RUT debe tener 12 dígitos")).toBeInTheDocument()
+      expect(
+        screen.getByText("El banco no puede estar en blanco"),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText("El RUT debe tener 12 dígitos"),
+      ).toBeInTheDocument()
     })
   })
 
@@ -137,7 +158,9 @@ describe("Provider Onboarding Show Page", () => {
 
       expect(screen.getByText("Paso 2 de 4")).toBeInTheDocument()
       expect(screen.getByLabelText("Hora de cierre")).toHaveValue("12:00")
-      expect(screen.getByLabelText("Volver al paso anterior")).toBeInTheDocument()
+      expect(
+        screen.getByLabelText("Volver al paso anterior"),
+      ).toBeInTheDocument()
     })
 
     it("permite volver al paso anterior haciendo clic en el botón de atrás", async () => {
@@ -193,7 +216,9 @@ describe("Provider Onboarding Show Page", () => {
       const switches = screen.getAllByRole("switch")
       expect(switches[0]).toBeChecked() // order_created
       expect(switches[1]).not.toBeChecked() // payment_receipt_uploaded
-      expect(screen.getByRole("button", { name: "Finalizar" })).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Finalizar" }),
+      ).toBeInTheDocument()
     })
 
     it("envía las IDs suscritas al finalizar el paso 4", async () => {
@@ -219,7 +244,9 @@ describe("Provider Onboarding Show Page", () => {
 
       expect(screen.getByText("¡Todo listo!")).toBeInTheDocument()
       expect(
-        screen.getByText("Tu cuenta ya está configurada y podés empezar a recibir pedidos."),
+        screen.getByText(
+          "Tu cuenta ya está configurada y podés empezar a recibir pedidos.",
+        ),
       ).toBeInTheDocument()
 
       const ctaLink = screen.getByRole("link", { name: "Ir al Inicio" })
@@ -232,7 +259,9 @@ describe("Provider Onboarding Show Page", () => {
     it("envía commit: 'skip' con el paso actual al hacer clic en Omitir por ahora", async () => {
       renderPage("1")
 
-      const skipButtons = screen.getAllByRole("button", { name: "Omitir por ahora" })
+      const skipButtons = screen.getAllByRole("button", {
+        name: "Omitir por ahora",
+      })
       await user.click(skipButtons[1]) // footer button
 
       expect(patchMock).toHaveBeenCalledWith(
