@@ -7,6 +7,7 @@ RSpec.describe "Settings::Notifications", type: :request do
 
   ADMIN_CONFIGURATION_KEYS = %w[
     company_payments
+    employee_debts
     hr_partial_payments
     hr_pending_invoices
     hr_pending_payments

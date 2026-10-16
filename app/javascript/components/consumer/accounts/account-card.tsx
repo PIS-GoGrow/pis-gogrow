@@ -157,6 +157,9 @@ export default function AccountCard({
           <PaymentReceiptDialog
             accountId={account.id}
             canUpload={!account.current}
+            uploadDisabled={account.payments.some(
+              ({ status }) => status === "submitted",
+            )}
             payments={[...account.payments].sort(
               (first, second) =>
                 new Date(second.created_at).getTime() -

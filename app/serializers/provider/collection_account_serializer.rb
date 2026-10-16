@@ -76,9 +76,9 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     row.paid_on&.strftime("%d/%m/%y")
   end
 
-  # El pago que hay que revisar: el más viejo en submitted si hay alguno sin
-  # resolver (ver Account#payment_pending_review), o el último si no hay nada
-  # pendiente (para mostrar, por ejemplo, el motivo de un rechazo).
+  # El pago que hay que revisar: el que está en submitted, si lo hay (ver
+  # Account#payment_pending_review), o el último si no hay nada pendiente (para
+  # mostrar, por ejemplo, el motivo de un rechazo).
   typelize :number, nullable: true
   attribute :payment_id do |row|
     row.account.payment_pending_review&.id || row.account.last_payment&.id
