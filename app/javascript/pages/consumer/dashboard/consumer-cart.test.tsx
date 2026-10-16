@@ -2,10 +2,11 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
+import type { ConsumerDashboardIndex } from "@/types"
+
 import { ConsumerCart } from "./consumer-cart"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
 import { cartPricedItem, priceItems } from "./pricing"
-import type { ConsumerDashboardIndex } from "@/types"
 
 type Benefit = ConsumerDashboardIndex["benefit"]
 
@@ -105,8 +106,8 @@ async function renderCart(
 }
 
 describe("ConsumerCart delivery address", () => {
-  it("shows the office and the last custom address used", () => {
-    renderCart()
+  it("shows the office and the last custom address used", async () => {
+    await renderCart()
 
     const options = screen.getAllByRole("radio")
     expect(options).toHaveLength(2)
@@ -115,8 +116,8 @@ describe("ConsumerCart delivery address", () => {
     expect(screen.queryByText("Flora Café")).not.toBeInTheDocument()
   })
 
-  it("shows the selected custom address next to the office", () => {
-    renderCart({ address: "Canelones 892" })
+  it("shows the selected custom address next to the office", async () => {
+    await renderCart({ address: "Canelones 892" })
 
     expect(screen.getByRole("radio", { name: /Flora Café/ })).toBeChecked()
     expect(screen.queryByText("Casa")).not.toBeInTheDocument()
@@ -125,7 +126,7 @@ describe("ConsumerCart delivery address", () => {
   it("lets the employee pick any of their addresses", async () => {
     const user = userEvent.setup()
     const setAddress = vi.fn()
-    renderCart({ setAddress })
+    await renderCart({ setAddress })
 
     await user.click(
       screen.getByRole("button", { name: "Ver mis direcciones" }),
@@ -141,7 +142,7 @@ describe("ConsumerCart delivery address", () => {
 
   it("opens the form to add a new address", async () => {
     const user = userEvent.setup()
-    renderCart()
+    await renderCart()
 
     await user.click(screen.getByRole("button", { name: "Agregar" }))
     const sheet = screen.getByRole("dialog", {
@@ -165,8 +166,8 @@ describe("ConsumerCart delivery address", () => {
 
   // Criterio 1: la dirección personalizada solo se habilita si el proveedor
   // entrega a domicilio.
-  it("keeps the order at the office when no provider delivers home", () => {
-    renderCart({
+  it("keeps the order at the office when no provider delivers home", async () => {
+    await renderCart({
       cart: [cartItem("Endulzate by Noe", false)],
       address: "Ellauri 1234",
     })
@@ -179,8 +180,8 @@ describe("ConsumerCart delivery address", () => {
     ).toBeDisabled()
   })
 
-  it("warns which provider only delivers to the office in a mixed cart", () => {
-    renderCart({
+  it("warns which provider only delivers to the office in a mixed cart", async () => {
+    await renderCart({
       cart: [
         cartItem("Endulzate by Noe", false, 1),
         cartItem("Tu Viandita", true, 2),
@@ -195,8 +196,8 @@ describe("ConsumerCart delivery address", () => {
     ).toBeInTheDocument()
   })
 
-  it("lists every office-only provider in a single warning", () => {
-    renderCart({
+  it("lists every office-only provider in a single warning", async () => {
+    await renderCart({
       cart: [
         cartItem("Endulzate by Noe", false, 1),
         cartItem("Dulce Sur", false, 2),
@@ -227,8 +228,8 @@ describe("ConsumerCart benefits", () => {
 
   // Figma: una sola línea "Beneficio GoGrow" por plato, con el porcentaje
   // combinado del base y los especiales.
-  it("shows the combined benefit in a single line per dish", () => {
-    renderCart(
+  it("shows the combined benefit in a single line per dish", async () => {
+    await renderCart(
       { cart: [{ ...cartItem("Tu Viandita", true), quantity: 2 }] },
       { specials: [premio] },
     )
@@ -243,8 +244,8 @@ describe("ConsumerCart benefits", () => {
     )
   })
 
-  it("shows one line per percentage when the meals of a dish differ", () => {
-    renderCart(
+  it("shows one line per percentage when the meals of a dish differ", async () => {
+    await renderCart(
       { cart: [{ ...cartItem("Tu Viandita", true), quantity: 3 }] },
       { monthly_remaining: 1, specials: [premio] },
     )
@@ -262,8 +263,8 @@ describe("ConsumerCart benefits", () => {
     )
   })
 
-  it("leaves the base alone when the special has no uses left", () => {
-    renderCart({}, { specials: [{ ...premio, remaining: 0 }] })
+  it("leaves the base alone when the special has no uses left", async () => {
+    await renderCart({}, { specials: [{ ...premio, remaining: 0 }] })
 
     expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
