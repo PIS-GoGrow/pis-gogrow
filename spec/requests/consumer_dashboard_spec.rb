@@ -79,11 +79,95 @@ RSpec.describe "Consumer dashboard", type: :request do
         percentage: 50,
         monthly_limit: 20,
         monthly_used: 5,
-        monthly_remaining: 15
+        monthly_remaining: 15,
+        specials: []
       }
     )
   end
 
+  describe "shared notifications" do
+    let!(:notification_configuration) do
+      Notification::Configuration.find_or_create_by!(key: "order_updates") do |configuration|
+        configuration.roles = %w[consumer]
+      end
+    end
+
+    def create_notification(user:, notifiable:, role: "consumer", title:)
+      Notification.create!(
+        notification_configuration:,
+        user:,
+        role:,
+        event: "order_confirmation",
+        requires_action: false,
+        notifiable:,
+        title:,
+        description: "#{title} description"
+      )
+    end
+
+    it "shares only active notifications for the current user and active role" do
+      user = consumer_user
+
+      # El mismo usuario también tiene rol provider para poder comprobar
+      # que las notificaciones de otro rol no aparecen en sesión consumer.
+      provider = Provider.create!(user:)
+      user.reload
+
+      visible = create_notification(
+        user:,
+        notifiable: user,
+        title: "Visible"
+      )
+
+      closed = create_notification(
+        user:,
+        notifiable: user.consumer,
+        title: "Closed"
+      )
+      closed.update_column(:closed_at, Time.current)
+
+      create_notification(
+        user:,
+        notifiable: provider,
+        role: "provider",
+        title: "Wrong role"
+      )
+
+      other_user = User.create!(
+        email: "other-dashboard-notifications@gmail.com",
+        name: "Martín",
+        password: "password123456"
+      )
+      other_company = Company.create!(
+        name: "Otra empresa",
+        address: "Colonia 1234"
+      )
+      other_consumer = Consumer.create!(
+        user: other_user,
+        company: other_company,
+        address: "Ejido 1234"
+      )
+      other_user.reload
+
+      create_notification(
+        user: other_user,
+        notifiable: other_consumer,
+        title: "Other user"
+      )
+
+      sign_in_as_consumer(user)
+
+      get dashboard_path
+
+      notifications = inertia.props[:notifications]
+
+      expect(notifications.pluck("id")).to eq([ visible.id ])
+      expect(notifications.first).to include(
+        "title" => "Visible",
+        "requires_action" => false
+      )
+    end
+  end
   # IBP-003 — "Como EMPLEADO, quiero consultar en un único lugar el menú
   # disponible para una fecha, incluyendo las opciones de todos los proveedores,
   # para elegir qué comida pedir."
@@ -195,6 +279,99 @@ RSpec.describe "Consumer dashboard", type: :request do
       by_id = inertia.props[:schedules].index_by { |s| s[:id] }
       expect(by_id.fetch(sold_out_dish.id)).to include(sold_out: true, remaining: 0)
       expect(by_id.fetch(available_dish.id)).to include(sold_out: false, remaining: 2)
+    end
+
+    # IBP-087: el empleado no ve los platos del proveedor que cerró ese día, y
+    # sabe por qué: el cierre viaja aparte, con el motivo y el período.
+    describe "provider closures" do
+      def close(owner, from, to = from, reason: "Vacaciones")
+        owner.closures.create!(starts_on: from, ends_on: to, reason:)
+      end
+
+      def schedule_ids
+        inertia.props[:schedules].pluck(:id)
+      end
+
+      it "leaves out the dishes of the provider that closed that day and keeps the rest" do
+        closed_dish = publish(menus(:milanesa), monday)
+        open_dish = publish(menus(:sorrentinos), monday)
+        close(providers(:tuviandita), monday, monday + 1)
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(schedule_ids).to eq([ open_dish.id ])
+        expect(schedule_ids).not_to include(closed_dish.id)
+      end
+
+      it "leaves out only the closed days and not the rest of the week" do
+        before_closure = publish(menus(:milanesa), monday)
+        on_closure = publish(menus(:milanesa), monday + 1)
+        after_closure = publish(menus(:milanesa), monday + 2)
+        close(providers(:tuviandita), monday + 1)
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(schedule_ids).to contain_exactly(before_closure.id, after_closure.id)
+        expect(schedule_ids).not_to include(on_closure.id)
+      end
+
+      it "shows the dish again once the closure is deleted" do
+        dish = publish(menus(:milanesa), monday)
+        close(providers(:tuviandita), monday).destroy!
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(schedule_ids).to eq([ dish.id ])
+      end
+
+      it "sends the closures of every provider with the provider, the reason and the period" do
+        close(providers(:tuviandita), Date.new(2026, 9, 21), Date.new(2026, 10, 2), reason: "Vacaciones")
+        close(providers(:endulzate), Date.new(2026, 9, 14), reason: "Feriado")
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(inertia.props[:closures]).to contain_exactly(
+          a_hash_including(provider_name: users(:provider_user).name, reason: "Vacaciones",
+                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21 de septiembre al 2 de octubre de 2026"),
+          a_hash_including(provider_name: users(:other_provider_user).name, reason: "Feriado",
+                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14 de septiembre de 2026")
+        )
+      end
+
+      it "does not send closures that already ended" do
+        close(providers(:tuviandita), monday, monday + 1)
+        travel_to Time.zone.local(2026, 9, 16, 10)
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(inertia.props[:closures]).to eq([])
+      end
+
+      it "sends an empty list when nobody closed" do
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(inertia.props[:closures]).to eq([])
+      end
+
+      it "loads the closures with a fixed number of queries, however many dishes there are" do
+        3.times { |day| publish(menus(:milanesa), monday + day) }
+        publish(menus(:sorrentinos), monday)
+        close(providers(:tuviandita), monday + 4)
+        sign_in users(:one)
+        queries = []
+        callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?("provider_closures") }
+
+        ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { get dashboard_path }
+
+        expect(queries.size).to be <= 2
+      end
     end
 
     it "does not count cancelled orders against the quota" do
@@ -530,7 +707,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       )
     end
 
-    it "fails with NoMethodError when order IDs do not belong to the signed-in consumer (bypass bug)" do
+    it "redirects to the dashboard when order IDs do not belong to the signed-in consumer" do
       other_user = User.create!(email: "other-conf@gmail.com", name: "Otro", password: "password123456")
       other_consumer = Consumer.create!(user: other_user, company: consumer.company, address: "Dir 123")
       provider_user = User.create!(email: "prov-conf-3@gmail.com", name: "La Cocina", password: "password123456")
@@ -549,9 +726,140 @@ RSpec.describe "Consumer dashboard", type: :request do
       )
 
       sign_in_as_consumer(user)
+      get dashboard_confirmation_path(confirmed_order_ids: [ other_order.id ])
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(response.body).not_to include(other_order.address)
+    end
+
+    it "redirects to the dashboard without confirmed order IDs" do
+      sign_in_as_consumer(user)
+
+      get dashboard_confirmation_path
+
+      expect(response).to redirect_to(dashboard_path)
+    end
+
+    it "redirects to the dashboard when confirmed_order_ids is empty or an empty string" do
+      sign_in_as_consumer(user)
+
+      get dashboard_confirmation_path(confirmed_order_ids: [])
+      expect(response).to redirect_to(dashboard_path)
+
+      get dashboard_confirmation_path(confirmed_order_ids: "")
+      expect(response).to redirect_to(dashboard_path)
+    end
+
+    it "redirects to the dashboard when confirmed_order_ids contains non-numeric strings or negative numbers" do
+      sign_in_as_consumer(user)
+
+      get dashboard_confirmation_path(confirmed_order_ids: [ "invalido", "null", "<script>" ])
+      expect(response).to redirect_to(dashboard_path)
+
+      get dashboard_confirmation_path(confirmed_order_ids: [ -1, 0 ])
+      expect(response).to redirect_to(dashboard_path)
+    end
+
+    it "redirects to the dashboard when mixing a valid own order ID with an unauthorized order ID" do
+      provider_user = User.create!(email: "prov-mix@gmail.com", name: "La Cocina", password: "password123456")
+      provider = Provider.create!(user: provider_user)
+      menu = Menu.create!(provider:, name: "Tarta Mixta", description: "Plato de prueba", price: 250)
+      schedule = Schedule.create!(menu:, date: Date.current, amount: 10)
+      own_order = Order.create!(
+        consumer:,
+        schedule:,
+        amount: 1,
+        price: 250,
+        discounted_price: 250,
+        address: consumer.company.address,
+        delivery_method: :office,
+        status: :pending
+      )
+
+      other_user = User.create!(email: "other-mix@gmail.com", name: "Otro Mix", password: "password123456")
+      other_consumer = Consumer.create!(user: other_user, company: consumer.company, address: "Dir 456")
+      other_order = Order.create!(
+        consumer: other_consumer,
+        schedule:,
+        amount: 1,
+        price: 250,
+        discounted_price: 250,
+        address: other_consumer.address,
+        delivery_method: :home,
+        status: :pending
+      )
+
+      sign_in_as_consumer(user)
+      get dashboard_confirmation_path(confirmed_order_ids: [ own_order.id, other_order.id ])
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(response.body).not_to include(own_order.address)
+      expect(response.body).not_to include(other_order.address)
+    end
+
+    it "redirects admin users to root_path" do
+      sign_in users(:admin), role: :admin
+
+      get dashboard_confirmation_path
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "preserves database integrity and does not create or alter orders on GET request" do
+      sign_in_as_consumer(user)
+
       expect {
-        get dashboard_confirmation_path(confirmed_order_ids: [ other_order.id ])
-      }.to raise_error(NoMethodError)
+        get dashboard_confirmation_path(confirmed_order_ids: [ 999_999 ])
+      }.not_to change(Order, :count)
+
+      expect(response).to redirect_to(dashboard_path)
+    end
+  end
+
+  # IBP-037: el carrito necesita los subsidios especiales vigentes para mostrar
+  # el precio con base + especial antes de confirmar.
+  describe "GET /dashboard — subsidios especiales" do
+    around do |example|
+      travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
+    end
+
+    let(:consumer) { consumers(:one) }
+
+    before do
+      consumer.benefits.destroy_all
+      consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly), percentage: 50, amount: 20, due_date: Date.new(2026, 9, 30)
+      )
+      sign_in users(:one)
+    end
+
+    it "exposes the special subsidies in force with their uses left" do
+      gift = consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2, due_date: Date.new(2026, 9, 19)
+      )
+      seniority = consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:seniority), description: "Antigüedad", percentage: 10
+      )
+      OrderBenefit.create!(order: orders(:upcoming_pending_future), benefit: gift, benefit_used: 1)
+
+      get dashboard_path
+
+      expect(inertia.props[:benefit]).to include(
+        percentage: 50,
+        specials: [
+          { id: gift.id, name: "Premio", percentage: 30, remaining: 1, due_date: "2026-09-19" },
+          { id: seniority.id, name: "Antigüedad", percentage: 10, remaining: nil, due_date: nil }
+        ]
+      )
+    end
+
+    it "leaves out expired and deactivated special subsidies" do
+      consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), percentage: 30, status: :expired)
+      consumer.benefits.create!(benefit_configuration: benefit_configurations(:seniority), percentage: 10)
+      benefit_configurations(:seniority).update!(deactivated_at: Time.current)
+
+      get dashboard_path
+
+      expect(inertia.props[:benefit][:specials]).to eq([])
     end
   end
 end

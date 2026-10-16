@@ -25,4 +25,10 @@ RSpec.configure do |config|
 
   config.include FactoryBot::Syntax::Methods
   config.include ActiveSupport::Testing::TimeHelpers
+
+  # Crear las configuraciones de notificación antes de correr los tests
+  config.before(:suite) do
+    Rails.application.load_tasks
+    Rake::Task["notifications:sync"].invoke
+  end
 end

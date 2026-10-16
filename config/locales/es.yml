@@ -25,8 +25,9 @@ es:
     order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
     order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     order_updated: "Pedido actualizado."
-    already_signed_in: "Ya has iniciado sesión"
+    already_signed_in: "Ya inició sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
+    debt_alert_updated: "Monto de alerta de deuda actualizado"
     email_changed: "Tu correo electrónico fue modificado"
     email_verification_invalid: "El enlace de verificación de correo no es válido"
     email_verification_sent: "Enviamos un correo de verificación a tu dirección"
@@ -35,14 +36,15 @@ es:
     google_domain_not_allowed: "Esta cuenta de Google no tiene permitido iniciar sesión aquí."
     incorrect_credentials: "El correo electrónico o la contraseña son incorrectos"
     password_changed: "Tu contraseña fue modificada"
-    password_reset_instructions: "Revisa tu correo para ver las instrucciones de restablecimiento"
-    password_reset_invalid: "El enlace para restablecer la contraseña no es válido"
-    password_reset_success: "Tu contraseña se restableció correctamente. Inicia sesión"
+    password_reset_expired: "Su solicitud venció. Solicite un código nuevo para continuar."
+    invitation_invalid: "La invitación no es válida o ya fue usada. Solicite a su administrador que se la envíe nuevamente."
+    too_many_attempts: "Realizó demasiados intentos. Espere unos minutos y vuelva a probar."
     profile_updated: "Tu perfil fue actualizado"
+    payment_details_updated: "Datos de cobro actualizados"
+    deliveries_updated: "Guardamos tu modalidad de entrega"
     session_logged_out: "Esa sesión fue cerrada"
-    signed_in: "Has iniciado sesión correctamente"
+    signed_in: "Inició sesión correctamente"
     signed_up: "¡Te damos la bienvenida! Tu registro se completó correctamente"
-    unverified_email: "No puedes restablecer tu contraseña hasta que verifiques tu correo electrónico"
     user_deleted: "Tu cuenta fue eliminada"
     user_not_found: "La cuenta de Google con la que ingresaste no está registrada. Por favor probá con otra."
     role_not_available: "No tenés acceso a este rol. Probá entrar con uno al que tengas acceso."
@@ -54,6 +56,8 @@ es:
     payment_receipt_removed: "Comprobante eliminado."
     invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
     invoice_removed: "Factura eliminada."
+    provider_closure_deleted: "Cierre eliminado."
+    config_update: "Configuración actualizada"
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -64,9 +68,14 @@ es:
     schedule_unavailable: "Este plato ya no está disponible para la fecha seleccionada."
     insufficient_stock: "Ya no hay suficiente stock para la cantidad solicitada. Revisá la cantidad e intentá nuevamente."
     order_deadline_passed: "Este proveedor ya cerró la recepción de pedidos para hoy."
+    provider_closed: "Este proveedor no recibe pedidos en esta fecha."
+    publish_date_closed: "Tenés un cierre programado en esa fecha, así que no podés publicar un menú."
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
+    invalid_code: "Código incorrecto."
+    invalid_email: "Ingrese un correo válido."
+    password_required: "Ingrese una contraseña."
     order_not_modifiable: "Este pedido ya no se puede modificar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
@@ -75,18 +84,143 @@ es:
     payment_not_removable: "Solo podés eliminar comprobantes en revisión o rechazados."
     payment_not_reviewable: "Este comprobante ya fue revisado."
     invoice_not_removable: "Esta factura ya fue revisada y no se puede eliminar."
+    debt_reminder_not_consumer: "Solo podés recordar pagos de empleados."
+    debt_reminder_no_debt: "Esta cuenta ya no tiene una deuda pendiente."
+    debt_reminder_not_overdue: "Esta cuenta todavía no está vencida."
+    debt_reminder_payment_under_review: "Hay un comprobante pendiente de revisión."
+    debt_reminder_paid: "Esta cuenta ya fue pagada."
+    debt_reminder_cooldown: "Todavía no podés enviar otro recordatorio."
+    debt_reminder_limit_reached: "Se alcanzó el límite de recordatorios."
+    debt_reminder_failed: "No pudimos enviar el recordatorio. Intentá nuevamente."
     menu_agenda:
       invalid_date: "Elegí un día hábil desde hoy y dentro del período de publicación."
       invalid_range: "La fecha de fin no puede ser anterior a la de inicio."
-      invalid_amount: "El stock por día debe ser un entero mayor a 0."
+      invalid_amount: "Si cargás un stock por día, tiene que ser un entero mayor a 0."
       invalid_weekdays: "Elegí al menos un día de lunes a viernes."
+      date_closed: "Tenés un cierre programado en esa fecha."
+    menu_publish:
+      invalid_date: "Elegí un día de semana entre hoy y la fecha máxima de publicación."
+      invalid_menus: "Algún plato elegido no existe."
+  notifications:
+    order_received:
+      title: "Nuevo pedido"
+      description: "%{consumer} pidió %{amount} de %{dish} para el %{date}."
+    payment_receipt_submitted:
+      title: "Nuevo comprobante de pago"
+      description: "%{payer} envió un comprobante de pago de %{month}."
+    order_confirmation:
+      title: "Tu pedido fue confirmado"
+      description: "Tu pedido del %{date} fue confirmado por %{provider}."
+    order_rejection:
+      title: "Tu pedido fue cancelado"
+      description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}."
+      reasons:
+        out_of_stock: "porque no había stock disponible"
+        duplicate_order: "porque el pedido estaba duplicado"
+        customer_request: "por solicitud del cliente"
+        order_error: "por un error en el pedido"
+        other: "por el siguiente motivo: %{details}"
+        dish_modified: "porque el plato fue modificado"
+        dish_deleted: "porque el plato fue eliminado"
+    order_withdrawal:
+      title: "Tu pedido fue cancelado"
+      description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible."
+    debt_threshold_exceeded:
+      title: "Tu deuda superó el monto límite"
+      description: "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca."
+    debt_payment_reminder:
+      title: "Recordatorio de pago pendiente"
+      description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
+    payment_available:
+      title: "¡Ya podés realizar tu pago!"
+      description: "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!"
+    payment_due_soon:
+      title: "Tu pago vence pronto..."
+      description: "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!"
+    company_payment_upcoming:
+      title: "Se acerca el vencimiento de un pago"
+      description: "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos."
+    company_payment_overdue:
+      title: "Tenés un pago pendiente"
+      description: "El pago de %{company} a %{provider} por %{period} (%{amount}) venció el %{due_date}. Revisá el detalle en Pagos."
+    company_payment_rejected:
+      title: "Tu comprobante fue rechazado"
+      description: "El comprobante que subiste fue rechazado por %{provider}. Volvé a cargarlo para confirmar tu pago."
+    company_payment_approved:
+      title: "Pago confirmado"
+      description: "%{provider} confirmó el pago de %{company} por %{period} (%{amount})."
+    employee_debt_overdue:
+      title: "Hay empleados con pagos pendientes"
+      description:
+        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio."
+        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+    order_cancellation:
+      title: "Un pedido fue cancelado"
+      description: "El pedido de %{consumer} del %{date} de %{dish} fue cancelado."
+    provider_menu_unpublished:
+      title: "Publicá el menú del día"
+      description: "Todavía no publicaste un menú para el %{date}."
+    hr_debt_payment_reminder:
+      title: "Recordatorio de pago pendiente"
+      description: "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos."
+  notification_configurations:
+    provider_orders:
+      title: "Pedidos nuevos"
+      description: "Recibí una notificación cuando un empleado te haga un pedido."
+    provider_payments:
+      title: "Comprobantes de pago"
+      description: "Recibí una notificación cuando te envíen un comprobante de pago."
+    order_updates:
+      title: "Actualizaciones de pedidos"
+      description: "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado."
+    debt_alerts:
+      title: "Alertas de deuda"
+      description: "Recibí una notificación cuando tu deuda supere el monto definido por RRHH."
+    provider_payment_reminders:
+      title: "Recordatorios de pago del proveedor"
+      description: "Recordatorios de pagos vencidos enviados por el proveedor."
+    automatic_payment_reminders:
+      title: "Recordatorios automáticos de pago"
+      description: "Avisos sobre la apertura y el vencimiento próximo de pagos."
+    company_payments:
+      title: "Pagos a proveedores"
+      description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
+    employee_debts:
+      title: "Deudas de empleados"
+      description: "Avisos cuando empleados de tu empresa acumulan más de un mes de deuda con un proveedor."
+    order_cancellations:
+      title: "Cancelaciones"
+      description: "Recibí una notificación cuando un pedido sea cancelado por el cliente."
+    menu_publication_reminders:
+      title: "Recordatorios de publicación del menú"
+      description: "Avisos cuando falta publicar el menú de un día hábil."
+    hr_payment_reminders:
+      title: "Recordatorios de pago de Recursos Humanos"
+      description: "Recordatorios de pagos vencidos enviados por Recursos Humanos."
   activerecord:
     errors:
       models:
+        user:
+          attributes:
+            password:
+              provider_policy: "debe tener al menos 16 caracteres, una mayúscula, un número y un carácter especial"
         benefit_configuration:
           attributes:
             effective_from:
               taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
+        provider_closure:
+          attributes:
+            reason:
+              blank: "Ingresá el motivo del cierre."
+              too_long: "Usá como máximo %{count} caracteres."
+            starts_on:
+              blank: "Elegí las fechas del cierre."
+              greater_than_or_equal_to: "No podés programar un cierre en una fecha pasada."
+            ends_on:
+              blank: "Elegí las fechas del cierre."
+              greater_than_or_equal_to: "La fecha de fin no puede ser anterior a la de inicio."
+            base:
+              overlaps: "Ya tenés un cierre programado en esas fechas."
         menu_option_group:
           attributes:
             options:
@@ -97,6 +231,7 @@ es:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
+              already_under_review: "Ya hay un comprobante en revisión para esta cuenta. Esperá a que se resuelva para enviar otro."
             rejection_reason:
               blank: "es obligatorio para rechazar un comprobante"
         invoice:
@@ -142,17 +277,26 @@ es:
         rejection_details: "Detalle del motivo"
   user_mailer:
     greeting: "Hola,"
-    support: "¿Tienes dudas o necesitas ayuda? Responde este correo y nuestro equipo de soporte te ayudará a resolverlo."
+    support: "¿Tiene dudas o necesita ayuda? Responda este correo y nuestro equipo de soporte le ayudará a resolverlo."
+    invitation:
+      subject: "Invitación a Viandas GoGrow"
+      title: "Invitación a Viandas GoGrow"
+      greeting: "Hola %{name},"
+      intro: "Recibió una invitación de %{company} para unirse como proveedor de viandas a través de la plataforma Viandas GoGrow."
+      cta: "Aceptar invitación"
+      after: "Una vez completado el registro, puede acceder a su cuenta desde %{url}"
+    password_reset_code:
+      subject: "Restablecimiento de contraseña"
+      title: "Restablecimiento de contraseña"
+      greeting: "Hola %{name},"
+      intro: "Recibimos una solicitud para restablecer la contraseña de su cuenta en Viandas GoGrow. Si la solicitud fue suya, ingrese el siguiente código para crear una nueva contraseña:"
+      validity: "Este código es válido por los próximos %{minutes} minutos."
+      ignore: "Si no solicitó un restablecimiento de contraseña, contacte a nuestro equipo de soporte."
     email_verification:
       subject: "Verifica tu correo electrónico"
-      confirm: "Esto confirma que %{email} es el correo que quieres usar en tu cuenta. Si alguna vez pierdes tu contraseña, allí te enviaremos el enlace para restablecerla."
+      confirm: "Esto confirma que %{email} es el correo que quieres usar en tu cuenta."
       must_click: "Debes hacer clic en el enlace de abajo para confirmar que recibiste este correo."
       cta: "Sí, usar este correo en mi cuenta"
-    password_reset:
-      subject: "Restablece tu contraseña"
-      intro_html: "¿No recuerdas la contraseña de <strong>%{email}</strong>? No hay problema, suele pasar. Haz clic en el enlace de abajo para definir una nueva."
-      cta: "Restablecer mi contraseña"
-      ignore: "Si no solicitaste restablecer tu contraseña, puedes ignorar este correo; vence en 20 minutos. Solo quien tenga acceso a esta cuenta de correo puede restablecer tu contraseña."
   nav:
     platform: "Plataforma"
     dashboard: "Panel"
@@ -164,8 +308,7 @@ es:
     change_to: "Cambiar a"
     provider:
       home: "Inicio"
-      dishes: "Platos"
-      menus: "Publicar menús"
+      menus: "Menús"
       menu: "Menú"
       orders: "Pedidos"
       payments: "Cobros"
@@ -183,11 +326,23 @@ es:
       password: "Contraseña"
       sessions: "Sesiones"
       appearance: "Apariencia"
+      notifications: "Notificaciones"
     payments: "Pagos"
     collections: "Cobros"
     consumer:
       menu: "Menú del día"
   components:
+    password_fields:
+      create_label: "Crear contraseña"
+      confirm_label: "Confirmar contraseña"
+      requirements_title: "Debe contener:"
+      min_length: "Al menos 16 caracteres"
+      uppercase: "Al menos una mayúscula"
+      number: "Al menos un número"
+      special: "Al menos un carácter especial"
+      mismatch: "La contraseña no coincide."
+    completed_sheet:
+      done: "Listo"
     appearance:
       toggle_theme: "Cambiar tema"
       light: "Claro"
@@ -203,6 +358,14 @@ es:
       caution: "Procede con precaución, esta acción no se puede deshacer."
       confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
+    date_picker:
+      placeholder: "Elegí una fecha"
+      range_placeholder: "Elegí un rango"
+    benefit_summary:
+      active: "Activo"
+      inactive: "Sin beneficio"
+      discount: "de descuento en viandas"
+      base: "Subsidio Base"
   pages:
     admin:
       dashboard:
@@ -210,23 +373,26 @@ es:
         greeting: "Hola, %{name} 👋"
         this_month: "Este mes"
         coming_soon: "Próximamente"
-        pending_value: "—"
-        alert:
-          title: "Avisos de pagos pendientes"
-          pending: "Los avisos por WhatsApp estarán disponibles próximamente."
-        consumption:
-          title: "Tu consumo"
+        month_label: "Mes del resumen"
+        benefit:
+          title: "Tu beneficio"
+          meals_of_limit: "%{meals} de %{limit}"
+          meals_ordered_one: "vianda pedida"
+          meals_ordered_other: "viandas pedidas"
           participation: "Participación"
           spending: "Gasto"
+          paid: "Pagado %{amount}"
+          pending: "Pendiente %{amount}"
+          projected: "Proyectado %{amount}"
           view_detail: "Ver detalle del consumo"
         payments:
           title: "Tus pagos de %{month}"
-          pending: "El estado de los pagos a proveedores estará disponible próximamente."
           view: "Ver pagos a proveedores"
+          empty: "No hay pagos a proveedores de %{month}."
         debts:
           title: "Ranking deuda de empleados"
-          pending: "Acá verás hasta tres empleados con saldos pendientes."
           view: "Ver empleados con saldos pendientes"
+          empty: "Ningún empleado tiene saldos pendientes en este mes."
       invoices:
         index:
           title: "Facturas de proveedores"
@@ -235,7 +401,7 @@ es:
           provider: "Proveedor"
           issued_on: "Emisión"
           total_amount: "Facturado"
-          period_amount: "Consumo del período"
+          period_amount: "Total calculado del período"
           no_period_amount: "Sin consumo registrado"
           status: "Estado"
           file: "Archivo"
@@ -270,6 +436,13 @@ es:
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
               unexpected: "Error inesperado. Por favor reintentá la operación."
+          debt_alert:
+            title: "Alerta de deuda"
+            description: "Avisamos a cada empleado cuando su deuda supera este monto."
+            threshold: "Monto límite"
+            edit: "Editar monto"
+            cancel: "Cancelar"
+            submit: "Guardar"
           special:
             title: "Subsidios especiales"
             description: "Los subsidios especiales se suman al Base."
@@ -353,13 +526,28 @@ es:
           meals_one: "%{count} vianda"
           meals_other: "%{count} viandas"
           benefit: "Beneficio"
-          benefit_active: "Activo"
-          benefit_inactive: "Sin beneficio"
-          benefit_discount: "de descuento en viandas"
           benefit_none: "Este empleado no tiene un beneficio vigente."
           history: "Historial de consumo"
           year_label: "Año"
           view_month: "Ver el detalle de %{month}"
+          reminder:
+            trigger: "Recordar pago pendiente"
+            next_available: "Recordatorio enviado. Vas a poder enviar otro el %{date}."
+            limit_reached: "Alcanzaste el límite de recordatorios para este empleado."
+            confirm:
+              title: "Recordar pago pendiente"
+              description: "Se le va a enviar un recordatorio a %{employeeName} por sus pagos vencidos, que suman %{amount}."
+            success:
+              title: "Recordatorio enviado"
+              description: "Le enviamos un recordatorio a %{employeeName} por sus pagos vencidos."
+            error:
+              title: "No pudimos enviar el recordatorio"
+              description: "Intentá nuevamente."
+            back: "Volver"
+            send: "Enviar recordatorio"
+            sending: "Enviando..."
+            retry: "Reintentar"
+            done: "Listo"
           history_empty_title: "Sin consumos"
           history_empty_description: "Este empleado todavía no realizó ningún pedido de viandas."
           month_detail: "Historial de consumo: %{month}"
@@ -376,8 +564,9 @@ es:
         index:
           title: "Pagos"
           section: "Pagos"
-          spending: "Consumo de la empresa"
+          spending: "Tu consumo"
           this_month: "Este mes"
+          view_detail: "Ver detalle del consumo"
           meals_used_one: "%{count} vianda consumida"
           meals_used_other: "%{count} viandas consumidas"
           meals_used_with_limit: "%{meals} de %{limit} viandas consumidas"
@@ -437,6 +626,7 @@ es:
         receipt_error_title: "No se pudo subir el comprobante"
         receipt_error_description: "Ocurrió un problema al subir el archivo. Intentá nuevamente."
         receipt_error_action: "Entendido"
+        receipt_under_review_hint: "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva."
         receipt_sent_at: "Enviado: %{date}"
         receipt_remove: "Eliminar comprobante"
         receipt_remove_title: "¿Eliminar comprobante?"
@@ -542,6 +732,20 @@ es:
         title: "Cobros"
         sales: "Ventas"
         this_month: "Este mes"
+        view_consumption_detail: "Ver detalle del consumo"
+        consumption_detail_title: "Detalle de consumo: %{month}"
+        consumption_detail_description: "Pedidos confirmados del mes agrupados por día y cliente."
+        consumption_day: "Día: %{date}"
+        consumption_meals: "Viandas: %{count}"
+        consumption_amount: "Monto: %{amount}"
+        consumption_name: "Nombre"
+        consumption_company: "Empresa"
+        consumption_quantity: "Cant."
+        consumption_amount_column: "Monto"
+        subsidy_vat: "IVA sobre subsidios (22 %)"
+        subtotal: "Subtotal"
+        consumption_empty: "No hay consumos confirmados para este cliente."
+        close_consumption_detail: "Cerrar"
         confirmed_meals_one: "%{count} vianda confirmada"
         confirmed_meals_other: "%{count} viandas confirmadas"
         outstanding: "Cobros pendientes"
@@ -571,7 +775,56 @@ es:
         company: "Empresa"
         due: "Vence: %{date}"
         detail: "Ver detalle"
+        detail_dialog:
+          title: "Historial de consumo: %{month}"
+          description: "Detalle del consumo correspondiente a %{name}."
+          collection_tab: "Cobro"
+          meals_tab: "Viandas"
+          date: "Fecha"
+          dish: "Plato"
+          quantity: "Cant."
+          amount: "Monto"
+          subtotal: "Subtotal sin IVA"
+          vat: "IVA (22 %)"
+          total_label: "Total"
+          payment_history: "Ver historial de pagos"
+          total: "Total: %{amount}"
+          empty: "Todavía no hay viandas confirmadas en este período."
+          close: "Cerrar"
+      reminder:
+        trigger: "Recordar pago pendiente"
+        sent: "Recordatorio enviado"
+        next_available: "Podés enviar otro recordatorio el %{date}."
+        limit_reached: "Alcanzaste el límite de recordatorios para este pago."
+        confirm:
+          title: "Recordar pago pendiente"
+          description: "Se enviará un recordatorio a %{employeeName} por su pago pendiente de %{month} de %{amount}."
+        success:
+          title: "Recordatorio enviado"
+          description: "Se envió un recordatorio a %{employeeName} por su pago pendiente de %{month}."
+        error:
+          title: "No pudimos enviar el recordatorio"
+          description: "Intentá nuevamente."
+        back: "Volver"
+        send: "Enviar recordatorio"
+        sending: "Enviando..."
+        retry: "Reintentar"
+        done: "Listo"
       review:
+        receipt_title: "Comprobante"
+        expected_amount: "Importe esperado:"
+        download: "Descargar comprobante"
+        open_receipt: "Abrir comprobante completo"
+        check_receipt: "Comprobá el importe, la cuenta y el concepto del comprobante antes de confirmar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo."
+        current_month_restriction: "Todavía no podés aprobar este comprobante porque la cuenta corresponde al mes en curso. Podrás aprobarlo cuando termine el mes. Si el comprobante es incorrecto, podés rechazarlo."
+        approve: "Aprobar"
+        approving: "Aprobando…"
+        reject: "Rechazar"
+        issue_title: "Reportar un problema"
+        issue_description: "Seleccioná qué ocurrió con este comprobante."
+        back: "Volver"
+        reject_receipt: "Rechazar comprobante"
+        rejecting: "Rechazando…"
         approved_title: "Cobro confirmado"
         approved_description: "El cobro fue confirmado correctamente. Se notificará al usuario."
         partial_title: "Pago parcial registrado"
@@ -639,6 +892,7 @@ es:
         order_error: "Error en el pedido"
         other: "Otro motivo"
         dish_modified: "Plato modificado"
+        dish_deleted: "Plato eliminado"
       statuses:
         pending: "Por revisar"
         confirmed: "Confirmado"
@@ -679,39 +933,21 @@ es:
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"
       show:
-        eyebrow: "Pedido"
+        heading: "Detalle de pedido"
         title: "Pedido %{code}"
         back: "Volver a pedidos"
-        summary: "Resumen"
-        delivery_date: "Fecha de entrega"
-        ordered_at: "Hora del pedido"
-        status: "Estado"
-        rejection_reason: "Motivo de rechazo"
-        rejection_details: "Detalle del rechazo"
-        customer: "Cliente"
-        name: "Nombre"
-        company: "Empresa"
-        email: "Correo"
-        delivery_address: "Dirección de entrega"
-        delivery_method: "Modalidad"
-        preparation: "Preparación"
-        menu: "Plato"
-        description: "Descripción"
-        quantity: "Cantidad"
-        notes: "Notas del cliente"
-        stock: "Cupo del día"
-        stock_detail: "%{remaining} disponibles de %{total} publicados"
-        amounts: "Importe"
-        base_price: "Precio"
+        employee: "Empleado"
+        employee_company: "Empleado %{company}"
+        phone_unavailable: "No disponible"
+        order_detail: "Detalle del pedido"
+        notes: "Notas"
+        delivery_date: "Entrega"
+        total: "Total"
         subsidy: "Subsidio"
         charged: "Paga el empleado"
-        empty: "Sin datos"
-        no_company: "Sin empresa"
-        no_address: "Sin dirección de entrega"
-        no_delivery_date: "Sin fecha de entrega"
-        no_notes: "Sin notas"
-        no_stock: "Sin cupo publicado"
         no_price: "Importe no disponible"
+        rejection_reason: "Motivo de rechazo"
+        rejection_details: "Detalle del rechazo"
     provider_dashboard:
       index:
         title: "Inicio"
@@ -752,11 +988,122 @@ es:
           description: "Los cobros pendientes aparecerán acá próximamente."
     schedules:
       index:
+        title: "Gestión de Menú"
+        week_range: "%{from} - %{to}, %{month}"
+        previous_week: "Semana anterior"
+        next_week: "Semana siguiente"
         availability:
           toggle_label: "En stock"
         edit_dish: "Editar %{name}"
+        add_dishes: "Agregar platos"
+        search_label: "Buscar plato"
+        search_placeholder: "Buscar plato..."
+        empty:
+          title: "No hay platos publicados para el %{day} todavía"
+          description: "Agregá platos a tu menú del %{day} y empezá a recibir pedidos."
+        empty_unpublishable:
+          title: "No se publicó menú para este día."
+        no_results:
+          title: "No se encontraron resultados"
+          description: "No encontramos platos que coincidan con tu búsqueda. Probá con otro nombre o revisá cómo lo escribiste."
+        remove:
+          button: "Quitar"
+          title: "¿Quitar «%{name}» del menú?"
+          description: "Se cancelarán los pedidos pendientes y confirmados de este plato."
+          cancel: "Cancelar"
+          confirm: "Quitar"
+        import_dishes: "Importar platos"
+        tabs:
+          week: "Menú de la semana"
+          saved: "Platos guardados"
+        saved:
+          delete: "Eliminar"
+          delete_sheet:
+            title: "¿Eliminar plato guardado?"
+            description: "Este plato se eliminará de tus platos guardados."
+            description_orders: "Este plato se eliminará de tus platos guardados. Elegí qué hacer con los pedidos que ya incluyen este plato."
+            pending: "Los pedidos pendientes se cancelarán."
+            orders:
+              keep:
+                title: "Mantener los pedidos confirmados"
+                description: "Los pedidos afectados que están confirmados no se modificarán."
+              reject:
+                title: "Rechazar los pedidos confirmados"
+                description: "Los pedidos afectados que están confirmados se cancelarán."
+            back: "Volver"
+            confirm: "Eliminar"
+            deleting: "Eliminando..."
+          empty:
+            title: "Todavía no tenés platos guardados"
+            description: "Cuando crees un plato lo vas a ver acá para editarlo o publicarlo."
     provider_menus:
+      new:
+        title: "Agregar platos"
+        back: "Volver al menú"
+        tabs:
+          new: "Platos nuevos"
+          saved: "Platos guardados"
+        added:
+          title: "¡Plato agregado!"
+          description: "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando."
+          back: "Volver a Menú"
+          continue: "Seguir agregando"
+          description_date: "Tu plato fue agregado al menú del %{date} correctamente."
+        saved:
+          date_label: "¿Para qué fecha vas a agregar platos?"
+          date_hint: "Elegí una fecha para ver qué platos podés agregar."
+          filter_label: "Filtrar platos"
+          filters:
+            all: "Todos"
+            available: "Disponibles"
+            added: "Agregados"
+          already_added: "Los platos listados a continuación ya están agregados a la fecha seleccionada:"
+          select: "Agregar %{name} a la selección"
+          unselect: "Quitar %{name} de la selección"
+          submit: "Agregar"
+          submitting: "Agregando..."
+          no_saved:
+            title: "Todavía no tenés platos guardados"
+            description: "Creá un plato desde la pestaña Platos nuevos y lo vas a ver acá."
+      form:
+        name: "Nombre del plato"
+        name_placeholder: "Ej: Milanesa con puré"
+        price: "Precio"
+        description: "Descripción"
+        description_placeholder: "Descripción del plato..."
+        required: "No puede estar vacío."
+        options:
+          title: "Opciones"
+          add: "Agregar"
+          empty: "¿Tiene sabores para elegir? ¡Agregalos!"
+          edit: "Editar %{name}"
+          remove: "Borrar %{name}"
+          limit: "Límite %{limit}"
+          required: "Obligatorio"
+          optional: "Opcional"
+        group:
+          title: "Agregá opciones"
+          description: "Armá un grupo de opciones para que el empleado elija."
+          name: "Nombre del grupo"
+          name_placeholder: "Ej: Salsa"
+          options: "Opciones"
+          options_placeholder: "Ej: Boloñesa, Caruso, 4 quesos"
+          options_hint: "Ingresá las opciones separadas por coma."
+          duplicates: "No se permiten opciones repetidas."
+          limit: "¿Cuántas opciones pueden elegir a la vez?"
+          required: "Obligatorio"
+          required_hint: "El empleado tiene que elegir al menos una opción de este grupo para pedir el plato."
+          cancel: "Cancelar"
+          add: "Agregar"
+          modify: "Modificar"
+        cancel: "Cancelar"
+        create: "Agregar"
+        creating: "Agregando..."
+        update: "Modificar"
+        updating: "Guardando..."
       edit:
+        title: "Editar plato"
+        back: "Volver"
         agenda:
           title: "Agenda"
           weekdays_label: "Días de la semana"
@@ -779,8 +1126,7 @@ es:
           date: "Día específico"
           starts_on: "Desde"
           ends_on: "Hasta"
-          amount: "Stock por día"
-          incomplete: "Completá las fechas y el stock por día."
+          incomplete: "Completá las fechas."
         sheet:
           back: "Volver"
           apply: "Aplicar cambios"
@@ -820,6 +1166,9 @@ es:
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
       remove: "Quitar %{name}"
       delivery: "Entrega: %{date}"
+      benefit: "Beneficio GoGrow (%{percentage}%)"
+      subtotal: "Precio vianda"
+      total: "Monto a pagar"
       new_address:
         title: "Agregar una dirección"
         description: "Ingresá dónde querés recibir el pedido."
@@ -836,16 +1185,31 @@ es:
         cancel: "Cancelar"
         submit: "Seleccionar"
     home:
-      title: "Te damos la bienvenida"
-      dashboard: "Panel"
-      tagline: "Rails + Inertia.js + React + shadcn/ui"
-      resources_intro: "Estos son algunos recursos para empezar:"
-      learn_more: "Más información"
-      resources:
-        inertia_rails: "Documentación de Inertia Rails"
-        shadcn: "Componentes de shadcn/ui"
-        react: "Documentación de React"
-        rails: "Guías de Rails"
+      title: "Viandas GoGrow"
+      consumer:
+        heading: "Viandas GoGrow"
+        description: "Tu almuerzo, sin complicaciones"
+        sign_in: "Iniciar sesión con Google"
+      admin:
+        heading: "Viandas GoGrow"
+        description: "Simplificá las viandas de tu equipo"
+        sign_in: "Continuar con Google"
+      provider:
+        heading: "Bienvenido a Viandas GoGrow"
+        description: "¡Hola {{username}}! {{company_name}} te invitó a unirte como proveedor de viandas."
+        sign_in: "Unirse ahora"
+      features:
+        label: "Qué podés hacer en Viandas GoGrow"
+        go_to: "Ver la tarjeta %{number}"
+        menu:
+          title: "Tu menú, siempre actualizado"
+          description: "Cargá tus platos, precios y disponibilidad de cada día de forma sencilla."
+        orders:
+          title: "Todos tus pedidos bajo control"
+          description: "Recibí, confirmá y seguí cada uno de tus pedidos en tiempo real."
+        collections:
+          title: "Cobros claros y ordenados"
+          description: "Revisá pagos, comprobantes y tu historial de cobros sin perder ningún detalle."
     dashboard:
       title: "Panel"
       roles:
@@ -854,8 +1218,7 @@ es:
       show:
         title: "Mi cuenta"
         sign_out: "Salir"
-        benefit: "Tu beneficio"
-        percentage: "Subsidio de la empresa"
+        benefit: "Mi beneficio"
         monthly_limit: "Viandas subsidiadas por mes"
         monthly_remaining: "Te quedan este mes"
         max_price: "Tope por vianda"
@@ -876,6 +1239,37 @@ es:
         deliveries_description: "Elegí dónde realizás tus entregas"
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
+        profile: "Perfil"
+        profile_description: "Editá tu nombre, correo, teléfono y contraseña"
+    provider_payment_details:
+      show:
+        title: "Datos de cobro"
+        description: "Indicá la cuenta donde querés recibir los pagos de los empleados."
+        back: "Volver a Cuenta"
+        bank_name: "Banco"
+        bank_name_placeholder: "Ej. BROU"
+        bank_account_type: "Tipo de cuenta"
+        bank_account_type_placeholder: "Elegí el tipo de cuenta"
+        bank_account_types:
+          savings: "Caja de ahorro"
+          checking: "Cuenta corriente"
+        bank_account_number: "Número de cuenta"
+        bank_account_holder: "Titular de la cuenta"
+        tax_id: "RUT o CI del titular"
+        tax_id_description: "Solo números: 12 dígitos para RUT, 7 u 8 para CI."
+        sensitive_notice: "Los cambios en estos datos quedan registrados."
+        submit: "Guardar"
+    provider_deliveries:
+      show:
+        title: "Entregas"
+        description: "Elegí dónde realizás tus entregas y si aceptás direcciones personalizadas."
+        back: "Volver a Cuenta"
+        office:
+          title: "Solo Oficinas"
+          description: "Entregás todos los pedidos en las oficinas de las empresas."
+        home:
+          title: "Oficinas y direcciones personalizadas"
+          description: "También aceptás pedidos con direcciones de entrega personalizadas."
     provider_operational_settings:
       show:
         title: "Configuración operativa"
@@ -890,44 +1284,89 @@ es:
         saved_description: "El cambio se aplica desde ahora. Los pedidos cerrarán todos los días a las %{time}."
         saved_description_closed_today: "El cambio se aplica desde ahora. La recepción de pedidos de hoy ya está cerrada. A partir de mañana, cerrará todos los días a las %{time}."
         done: "Listo"
+        closures:
+          title: "Cierres programados"
+          description: "Días en los que no recibís pedidos."
+          schedule: "Programar cierre"
+          sheet_title: "Programar cierre"
+          edit_title: "Editar cierre"
+          sheet_description: "Selecciona el rango de fechas y el motivo del cierre."
+          date_range: "Rango de fechas"
+          reason: "Motivo"
+          reason_placeholder: "Vacaciones"
+          cancel: "Cancelar"
+          save: "Guardar cambios"
+          saved_title: "¡Cierre programado!"
+          updated_title: "¡Cierre actualizado!"
+          saved_description: "No recibirás pedidos del %{period}."
+          edit: "Editar cierre %{reason}"
+          delete: "Eliminar cierre %{reason}"
+          period:
+            single: "%{date}"
+            same_month: "%{from_day} al %{to_day_month} de %{year}"
+            same_year: "%{from_day_month} al %{to_day_month} de %{year}"
+            other_year: "%{from} al %{to}"
     consumer_dashboard:
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
+        closure:
+          title_now: "%{provider} no está disponible"
+          title_soon: "%{provider} no estará disponible"
+          description: "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}"
+          empty: "%{provider} no recibirá pedidos del %{period}."
+          dismiss: "Cerrar aviso"
       options:
         choose: "Elegí tu %{name}"
         limit: "Podés elegir hasta %{count}"
+        required: "Obligatorio"
+        optional: "Opcional"
     sessions:
       new:
         title: "Iniciar sesión"
         heading: "Inicia sesión en tu cuenta"
         description: "Ingresa con tu cuenta de Google para continuar"
         continue_with_google: "Continuar con Google"
+        or: "o"
+        submit: "Ingresar"
         auth_error_title: "No pudimos iniciar tu sesión"
-        forgot_password: "¿Olvidaste tu contraseña?"
+        forgot_password: "¿Olvidó su contraseña?"
         no_account: "¿No tienes una cuenta?"
       edit:
         title: "Elegir rol"
         heading: "Elegir tu rol"
         description: "Tenés más de un rol disponible. Podés elegir cuál usar ahora, o cambiarlo después."
-    users:
+    provider_sessions:
       new:
-        title: "Registro"
-        heading: "Crea una cuenta"
-        description: "Ingresa tus datos para crear tu cuenta"
-        submit: "Crear cuenta"
-        have_account: "¿Ya tienes una cuenta?"
-    password_resets:
-      new:
-        title: "Olvidé mi contraseña"
-        description: "Ingresa tu correo para recibir un enlace de restablecimiento"
-        submit: "Enviar enlace de restablecimiento"
-        return_to: "O vuelve a"
-        log_in: "iniciar sesión"
+        title: "Iniciar sesión"
+        heading: "¡Bienvenido de nuevo!"
+        description: "Ingrese a su cuenta para continuar gestionando sus viandas."
+        email_placeholder: "ejemplo@empresa.com"
+        submit: "Iniciar sesión"
+        forgot_password: "¿Olvidó su contraseña?"
+        forgot:
+          title: "¿Olvidó su contraseña?"
+          description: "Ingrese su email y le enviaremos un código para restablecer su contraseña."
+          submit: "Enviar código"
+    provider_invitations:
+      show:
+        title: "Registro de proveedor"
+        heading: "Regístrese con Email"
+        description: "Configure su contraseña para completar el registro."
+        submit: "Registrarse"
+    provider_password_reset_codes:
+      show:
+        title: "Revise su email"
+        description: "¡Gracias! Si hay una cuenta asociada con %{email}, recibirá un código de verificación de 6 dígitos. Si no recibió un email después de unos minutos, revise su carpeta de spam."
+        submit: "Verificar"
+        resend: "Volver a mandar código"
+        resend_in: "Volver a mandar código en %{time}"
+        back: "Volver"
+    provider_password_resets:
       edit:
-        title: "Restablecer contraseña"
-        description: "Ingresa tu nueva contraseña"
-        email: "Correo electrónico"
-        submit: "Restablecer contraseña"
+        title: "Nueva contraseña"
+        heading: "Nueva Contraseña"
+        description: "Cree una nueva contraseña para su cuenta."
+        submit: "Confirmar nueva contraseña"
     settings:
       appearance:
         title: "Configuración de apariencia"
@@ -935,7 +1374,10 @@ es:
       profile:
         title: "Configuración del perfil"
         heading: "Información del perfil"
-        description: "Actualiza tu nombre"
+        description: "Actualiza tu nombre y tu teléfono"
+        phone: "Teléfono"
+        phone_placeholder: "+59899123456"
+        phone_description: "Lo usamos para enviarte notificaciones por WhatsApp."
         home_delivery:
           heading: "Editar información de pedidos"
           label: "También realizo entregas a domicilio"
@@ -958,8 +1400,14 @@ es:
         ip: "IP: %{address}"
         active_since: "Activa desde: %{time}"
         log_out: "Cerrar sesión"
+      notifications:
+        heading: "Notificaciones"
+        title: "Notificaciones"
+        description: "Configurá qué alertas querés recibir por WhatsApp"
   date:
     formats:
       month_year: "%B de %Y"
       month_name_year: "%B %Y"
+      day_month: "%-d de %B"
+      day_month_year: "%-d de %B de %Y"
     month_names: [~, Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Septiembre, Octubre, Noviembre, Diciembre]

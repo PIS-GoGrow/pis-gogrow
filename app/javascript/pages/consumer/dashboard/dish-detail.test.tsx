@@ -2,8 +2,9 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import type { Schedule } from "./consumer-types"
+import type { CartItem, Schedule } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
+import type { Benefit } from "./pricing"
 
 // Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
 // plato, para tomar una decisión informada." Esta es la pantalla donde el
@@ -38,6 +39,17 @@ const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
   },
 })
 
+const benefit = (overrides: Partial<Benefit> = {}): Benefit => ({
+  limit: 5,
+  used: 0,
+  percentage: 0,
+  monthly_limit: 20,
+  monthly_used: 0,
+  monthly_remaining: 20,
+  specials: [],
+  ...overrides,
+})
+
 function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
   const defaults = {
     item: schedule(),
@@ -47,10 +59,10 @@ function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
     setNotes: vi.fn(),
     selections: {},
     setSelections: vi.fn(),
-    percentage: 0,
+    benefit: benefit(),
+    cart: [] as CartItem[],
     back: vi.fn(),
     add: vi.fn(),
-    monthlyRemaining: 20,
   }
   return render(<DishDetail {...defaults} {...props} />)
 }
@@ -90,7 +102,10 @@ describe("DishDetail", () => {
   // Criterio 2: el desglose que decide la compra sale de los datos del plato y
   // del beneficio, no de un valor fijo.
   it("breaks down the price with the benefit applied", () => {
-    renderDetail({ quantity: 2, percentage: 50, monthlyRemaining: 20 })
+    renderDetail({
+      quantity: 2,
+      benefit: benefit({ percentage: 50, monthly_remaining: 20 }),
+    })
 
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
       "$640",
@@ -102,7 +117,10 @@ describe("DishDetail", () => {
   })
 
   it("subsidises only the meals left in the monthly quota", () => {
-    renderDetail({ quantity: 3, percentage: 50, monthlyRemaining: 1 })
+    renderDetail({
+      quantity: 3,
+      benefit: benefit({ percentage: 50, monthly_remaining: 1 }),
+    })
 
     // 3 x 320 = 960, y el beneficio alcanza para una sola vianda: 160 de
     // descuento, no 480.
@@ -114,8 +132,81 @@ describe("DishDetail", () => {
     )
   })
 
+  // IBP-037: el subsidio especial se suma al base desde el precio del plato,
+  // en la misma línea "Beneficio GoGrow" con el porcentaje combinado.
+  it("adds the special subsidy to the base one", () => {
+    renderDetail({
+      quantity: 1,
+      benefit: benefit({
+        percentage: 50,
+        specials: [
+          {
+            id: 7,
+            name: "Premio",
+            percentage: 30,
+            remaining: 2,
+            due_date: null,
+          },
+        ],
+      }),
+    })
+
+    expect(
+      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
+    ).toHaveTextContent("- $256")
+    expect(screen.queryByText("Premio (30%)")).not.toBeInTheDocument()
+    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
+      "$64",
+    )
+  })
+
+  it("leaves out a special that expires before the delivery date", () => {
+    renderDetail({
+      benefit: benefit({
+        specials: [
+          {
+            id: 7,
+            name: "Premio",
+            percentage: 30,
+            remaining: null,
+            due_date: "2026-09-15",
+          },
+        ],
+      }),
+    })
+
+    expect(screen.getByText("Beneficio GoGrow (0%)")).toBeInTheDocument()
+    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
+      "$320",
+    )
+  })
+
+  // Lo que ya está en el carrito gasta primero el cupo mensual.
+  it("prices the dish after what is already in the cart", () => {
+    renderDetail({
+      benefit: benefit({ percentage: 50, monthly_remaining: 1 }),
+      cart: [
+        {
+          ...schedule(),
+          id: 2,
+          cartId: "2-",
+          quantity: 1,
+          notes: "",
+          selections: {},
+        },
+      ],
+    })
+
+    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
+      "$320",
+    )
+  })
+
   it("applies no discount when the employee has no benefit", () => {
-    renderDetail({ quantity: 2, percentage: 0, monthlyRemaining: 0 })
+    renderDetail({
+      quantity: 2,
+      benefit: benefit({ percentage: 0, monthly_remaining: 0 }),
+    })
 
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$640",
@@ -153,17 +244,24 @@ describe("DishDetail", () => {
       name: "relleno",
       options: ["Ricota y nuez", "Jamón y queso"],
       limit: 1,
+      required: true,
     },
-    { id: 2, name: "salsa", options: ["Filetto", "Puerro", "Rosa"], limit: 2 },
+    {
+      id: 2,
+      name: "salsa",
+      options: ["Filetto", "Puerro", "Rosa"],
+      limit: 2,
+      required: false,
+    },
   ]
 
-  // IBP-022, criterio 2: no se puede pedir sin resolver lo que el plato pregunta.
-  it("requires picking an option from every group before adding the dish", async () => {
+  // IBP-022, criterio 2: no se puede pedir sin resolver los grupos obligatorios.
+  it("requires picking an option only from the required groups", async () => {
     const user = userEvent.setup()
     const add = vi.fn()
     const { rerender } = renderDetail({
       item: schedule({ option_groups: groups }),
-      selections: { 1: ["Ricota y nuez"] },
+      selections: { 2: ["Filetto"] },
       add,
     })
 
@@ -176,12 +274,12 @@ describe("DishDetail", () => {
         setQuantity={vi.fn()}
         notes=""
         setNotes={vi.fn()}
-        selections={{ 1: ["Ricota y nuez"], 2: ["Filetto"] }}
+        selections={{ 1: ["Ricota y nuez"] }}
         setSelections={vi.fn()}
-        percentage={0}
+        benefit={benefit()}
+        cart={[]}
         back={vi.fn()}
         add={add}
-        monthlyRemaining={20}
       />,
     )
 
@@ -189,6 +287,36 @@ describe("DishDetail", () => {
     expect(button).toBeEnabled()
     await user.click(button)
     expect(add).toHaveBeenCalledOnce()
+  })
+
+  it("tells which groups are required and which are optional", () => {
+    renderDetail({ item: schedule({ option_groups: groups }) })
+
+    expect(screen.getByText("Obligatorio")).toBeInTheDocument()
+    expect(screen.getByText("Opcional")).toBeInTheDocument()
+  })
+
+  it("unselects the chosen option of a single-choice group", async () => {
+    const user = userEvent.setup()
+    const setSelections = vi.fn()
+    renderDetail({
+      item: schedule({ option_groups: groups }),
+      selections: { 1: ["Ricota y nuez"] },
+      setSelections,
+    })
+
+    await user.click(screen.getByRole("radio", { name: "Ricota y nuez" }))
+
+    expect(setSelections).toHaveBeenCalledWith({ 1: [] })
+  })
+
+  it("does not let a dish be added after unselecting a required group", () => {
+    renderDetail({
+      item: schedule({ option_groups: groups }),
+      selections: { 1: [] },
+    })
+
+    expect(screen.getByRole("button", { name: "Agregar" })).toBeDisabled()
   })
 
   // Criterio 1: se ofrece lo que el proveedor definió para ese plato.

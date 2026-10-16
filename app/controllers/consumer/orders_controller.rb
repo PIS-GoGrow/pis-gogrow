@@ -32,7 +32,8 @@ class Consumer::OrdersController < Consumer::InertiaController
         id: group.id,
         name: group.name,
         options: group.options,
-        limit: group.limit
+        limit: group.limit,
+        required: group.required
       }
     end
   end
@@ -40,7 +41,6 @@ class Consumer::OrdersController < Consumer::InertiaController
   def create
     consumer = Current.user.consumer
     requested_items = order_params.fetch(:items)
-    benefit_percentage = consumer&.current_monthly_benefit&.percentage.to_i
 
     # Rechazamos si no hay carrito o si las cantidades no son numéricas.
     return reject_order(:empty_cart) if requested_items.empty?
@@ -55,8 +55,6 @@ class Consumer::OrdersController < Consumer::InertiaController
     Order.transaction do
       consumer.lock!
 
-      remaining_subsidized =
-        benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
       schedule_ids = requested_items.pluck(:schedule_id)
 
       # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos
@@ -72,14 +70,12 @@ class Consumer::OrdersController < Consumer::InertiaController
       # rango de fechas permitidas (definidas por Calendar#allowed_order_dates)
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
-      requested_items.each do |item|
+      lines = OrderPricing.new(consumer).call(
+        requested_items.map { |item| { schedule: schedules.fetch(item[:schedule_id].to_i), quantity: item[:quantity].to_i } }
+      )
+
+      requested_items.zip(lines).each do |item, line|
         quantity = item[:quantity].to_i
-
-        subsidized_quantity = [
-          quantity,
-          remaining_subsidized
-        ].min
-
         schedule = schedules.fetch(item[:schedule_id].to_i)
 
         # Elegimos el modo de entrega. Si el usuario eligió entrega a domicilio, pero
@@ -101,16 +97,14 @@ class Consumer::OrdersController < Consumer::InertiaController
           schedule:,
           quantity:,
           notes: item[:notes],
-          discount_percentage: benefit_percentage,
-          subsidized_quantity:,
+          discounted_price: line.discounted_price,
           selected_options: selected_options_for(schedule.menu, item[:options]),
-          benefits: [ consumer.monthly_benefit_for(schedule) ].compact,
+          benefits: line.benefits,
           **delivery
         )
 
         raise ActiveRecord::RecordInvalid, order unless order.persisted?
 
-        remaining_subsidized -= subsidized_quantity
         created_orders << order
       end
     end
@@ -132,15 +126,12 @@ class Consumer::OrdersController < Consumer::InertiaController
     delivery = consumer.delivery_for(order.provider, update_params[:address])
     return reject_update(order, :office_address_required) if delivery[:address].blank?
 
-    benefit_percentage = consumer&.current_monthly_benefit&.percentage.to_i
     modified = order.modify(
       by: Current.user,
       quantity: update_params[:quantity].to_i,
       notes: update_params[:notes],
       delivery:,
-      discount_percentage: benefit_percentage,
-      selected_options: selected_options_for(order.schedule&.menu, update_params[:options]),
-      remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
+      selected_options: selected_options_for(order.schedule&.menu, update_params[:options])
     )
 
     if modified
@@ -175,6 +166,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def order_error_reason(order)
+    return :provider_closed if order.errors[:schedule_id].include?(t("validations.provider_closed"))
     return :order_deadline_passed if order.errors[:schedule_id].include?(t("validations.order_deadline_passed"))
     return :invalid_options if order.errors[:base].include?(t("validations.invalid_options"))
 
@@ -210,9 +202,10 @@ class Consumer::OrdersController < Consumer::InertiaController
 
     options.to_a.filter_map do |option|
       group = groups[option[:group_id].to_i]
-      next if group.nil?
+      values = Array(option[:values]).map(&:to_s).compact_blank
+      next if group.nil? || values.empty?
 
-      { group_id: group.id, name: group.name, values: Array(option[:values]).map(&:to_s) }
+      { group_id: group.id, name: group.name, values: }
     end
   end
 

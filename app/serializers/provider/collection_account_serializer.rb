@@ -11,6 +11,21 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     row.amount.to_f
   end
 
+  typelize :number
+  attribute :vat_rate do |row|
+    row.account.vat_rate.to_f
+  end
+
+  typelize :number
+  attribute :vat_amount do |row|
+    row.vat_amount.to_f
+  end
+
+  typelize :number
+  attribute :payable_amount do |row|
+    row.payable_amount.to_f
+  end
+
   typelize "'consumer' | 'company'"
   attribute :source do |row|
     row.company? ? "company" : "consumer"
@@ -22,7 +37,28 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   attribute :status, &:collection_status
 
   typelize :boolean
+  attribute :can_approve_payment do |row|
+    row.collection_status == "submitted" && !row.account.current?
+  end
+
+  typelize :boolean
   attribute :overdue, &:overdue?
+
+  typelize "{ eligible: boolean; remaining: number; next_available_at: string | null; blocked_reason: string | null }"
+  attribute :debt_reminder do |row|
+    notifications = row.reminder_notifications
+    if row.account.owner_type == "Consumer"
+      notifications = notifications.select { it.user_id == row.account.owner.user_id }
+    end
+    eligibility = DebtReminders::Eligibility.new(account: row.account, notifications:)
+
+    {
+      eligible: eligibility.eligible?,
+      remaining: eligibility.remaining,
+      next_available_at: eligibility.next_available_at&.in_time_zone(Time.zone)&.strftime("%d/%m/%Y a las %H:%M"),
+      blocked_reason: eligibility.reason&.to_s
+    }
+  end
 
   # Formateadas en el servidor: el SSR corre en UTC y el cliente no.
   typelize :string
@@ -40,9 +76,9 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     row.paid_on&.strftime("%d/%m/%y")
   end
 
-  # El pago que hay que revisar: el más viejo en submitted si hay alguno sin
-  # resolver (ver Account#payment_pending_review), o el último si no hay nada
-  # pendiente (para mostrar, por ejemplo, el motivo de un rechazo).
+  # El pago que hay que revisar: el que está en submitted, si lo hay (ver
+  # Account#payment_pending_review), o el último si no hay nada pendiente (para
+  # mostrar, por ejemplo, el motivo de un rechazo).
   typelize :number, nullable: true
   attribute :payment_id do |row|
     row.account.payment_pending_review&.id || row.account.last_payment&.id
@@ -65,5 +101,6 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   # Solo la cuenta de la empresa lleva factura: es la que le cobra el subsidio a GoGrow.
   typelize invoice: [ nullable: true ]
   has_one :latest_invoice, key: :invoice, resource: Provider::InvoiceSerializer
+  has_many :orders, resource: Provider::CollectionOrderSerializer
   has_many :payments, resource: Provider::CollectionPaymentSerializer
 end

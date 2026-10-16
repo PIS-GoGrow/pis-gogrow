@@ -1,10 +1,15 @@
-import { render, screen } from "@testing-library/react"
+import { act, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import ProviderOrderActions from "./provider-order-actions"
 
-const patchMock = vi.fn()
+interface DecisionCallbacks {
+  onSuccess: (page: { flash: { alert?: string } }) => void
+  onFinish: () => void
+}
+
+const patchMock = vi.fn<(...args: unknown[]) => void>()
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -62,6 +67,27 @@ describe("ProviderOrderActions", () => {
     expect(patchMock).not.toHaveBeenCalled()
   })
 
+  it("pone Confirmar antes de Rechazar en el orden de teclado del detalle móvil", async () => {
+    const user = userEvent.setup()
+    render(
+      <ProviderOrderActions
+        order={{ id: 42, status: "pending" }}
+        keepVisible
+        stackOnMobile
+      />,
+    )
+
+    const confirm = screen.getByRole("button", { name: "Confirmar" })
+    const reject = screen.getByRole("button", { name: "Rechazar" })
+    expect(screen.getAllByRole("button")).toEqual([confirm, reject])
+    await user.tab()
+    expect(confirm).toHaveFocus()
+    await user.tab()
+    expect(reject).toHaveFocus()
+    await user.click(reject)
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+    expect(patchMock).not.toHaveBeenCalled()
+  })
   it("keeps the buttons enabled on a pending order when keepVisible is set", () => {
     render(
       <ProviderOrderActions order={{ id: 8, status: "pending" }} keepVisible />,
@@ -178,6 +204,71 @@ describe("ProviderOrderActions", () => {
     )
   })
 
+  it("conserva el motivo escrito y permite reintentar cuando el servidor devuelve un error", async () => {
+    const user = userEvent.setup()
+    render(
+      <ProviderOrderActions
+        order={{ id: 42, status: "pending" }}
+        keepVisible
+      />,
+    )
+    await user.click(screen.getByRole("button", { name: "Rechazar" }))
+    await user.click(screen.getByLabelText("Otro motivo"))
+    await user.type(
+      screen.getByPlaceholderText("Ingresá el motivo…"),
+      "Cocina cerrada",
+    )
+    await user.click(screen.getByRole("button", { name: "Rechazar pedido" }))
+
+    const callbacks = patchMock.mock.calls[0][2] as DecisionCallbacks
+    act(() => {
+      callbacks.onSuccess({ flash: { alert: "No se pudo rechazar" } })
+      callbacks.onFinish()
+    })
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+    expect(screen.getByLabelText("Otro motivo")).toBeChecked()
+    expect(screen.getByPlaceholderText("Ingresá el motivo…")).toHaveValue(
+      "Cocina cerrada",
+    )
+    expect(
+      screen.getByRole("button", { name: "Rechazar pedido" }),
+    ).toBeEnabled()
+    await user.click(screen.getByRole("button", { name: "Rechazar pedido" }))
+    expect(patchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it("cierra y limpia el motivo después de un rechazo exitoso", async () => {
+    const user = userEvent.setup()
+    render(
+      <ProviderOrderActions
+        order={{ id: 42, status: "pending" }}
+        keepVisible
+      />,
+    )
+    await user.click(screen.getByRole("button", { name: "Rechazar" }))
+    await user.click(screen.getByLabelText("Otro motivo"))
+    await user.type(
+      screen.getByPlaceholderText("Ingresá el motivo…"),
+      "Cocina cerrada",
+    )
+    await user.click(screen.getByRole("button", { name: "Rechazar pedido" }))
+
+    const callbacks = patchMock.mock.calls[0][2] as DecisionCallbacks
+    act(() => {
+      callbacks.onSuccess({ flash: {} })
+      callbacks.onFinish()
+    })
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Rechazar" }))
+    expect(
+      screen.getByRole("button", { name: "Rechazar pedido" }),
+    ).toBeDisabled()
+    expect(screen.getByLabelText("Otro motivo")).not.toBeChecked()
+    await user.click(screen.getByLabelText("Otro motivo"))
+    expect(screen.getByPlaceholderText("Ingresá el motivo…")).toHaveValue("")
+  })
   it("allows cancelling out of the reject dialog without sending a request", async () => {
     const user = userEvent.setup()
 

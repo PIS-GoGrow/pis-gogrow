@@ -7,11 +7,14 @@ class Consumer::DashboardController < Consumer::InertiaController
     @schedules = schedule_data
     @benefit = benefit_data
     @addresses = @consumer.delivery_address_options
+    @closures = ProviderClosure.upcoming.includes(provider: :user)
   end
 
   def confirmation
     @consumer = Current.user.consumer
     order_confirmation = order_confirmation_data
+    return redirect_to dashboard_path unless order_confirmation
+
     @total = order_confirmation[:total]
     @orders = order_confirmation[:orders]
   end
@@ -33,11 +36,11 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def schedule_data
-    schedules = Schedule.includes(:orders, menu: [ :reviews, :option_groups, { provider: :user } ])
+    schedules = Schedule.on_active_menus.includes(:orders, menu: [ :reviews, :option_groups, { provider: [ :user, :closures ] } ])
                         .where(date: week_range)
                         .order(:date, :id)
 
-    schedules.map do |schedule|
+    schedules.reject(&:provider_closed?).map do |schedule|
       menu = schedule.menu
 
       {
@@ -52,7 +55,7 @@ class Consumer::DashboardController < Consumer::InertiaController
           description: menu.description,
           price: menu.price.to_f,
           option_groups: menu.option_groups.map do |group|
-            { id: group.id, name: group.name, options: group.options, limit: group.limit }
+            { id: group.id, name: group.name, options: group.options, limit: group.limit, required: group.required }
           end,
           provider_name: menu.provider_name,
           home_delivery: menu.provider.home_delivery?,
@@ -70,13 +73,24 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def benefit_data
+    pricing = OrderPricing.new(@consumer)
+
     {
       limit: @consumer.monthly_benefit_available / 4,
       used: @consumer.monthly_benefit_used_this_week,
-      percentage: @consumer.current_monthly_benefit&.percentage.to_i.clamp(0, 100),
+      percentage: pricing.base_percentage,
       monthly_limit: @consumer.monthly_benefit_available,
       monthly_used: @consumer.monthly_benefit_used_this_month,
-      monthly_remaining: @consumer.remaining_monthly_benefit
+      monthly_remaining: @consumer.remaining_monthly_benefit,
+      specials: pricing.special_benefits.map do |benefit|
+        {
+          id: benefit.id,
+          name: benefit.description.to_s,
+          percentage: benefit.percentage,
+          remaining: pricing.remaining_uses(benefit),
+          due_date: benefit.due_date&.iso8601
+        }
+      end
     }
   end
 

@@ -58,6 +58,7 @@ Todas las pantallas con sesión iniciada comparten el mismo esqueleto. Las medid
 | Encabezado | `PageContainer` (por dentro usa `Heading`) | `eyebrow` opcional en mayúsculas, título en `text-xl font-semibold` y `description` opcional |
 | Botones del encabezado | Prop `actions` de `PageContainer` | A la derecha del título; debajo, si no entran |
 | Volver a la pantalla anterior | Prop `back` de `PageContainer` | Arriba del título y pegado a la izquierda. No va en `actions`: el volver no es una acción de la pantalla |
+| Pantalla de detalle centrada | Prop `centered` de `PageContainer` | Título centrado. Si lleva `back`, el volver queda a la izquierda en la misma fila del título (conviene que sea solo una flecha, para no pisarlo en celular) |
 | Separaciones | `PageContainer` | `mb-8` entre el encabezado y el contenido, y `gap-4` entre cada hijo directo |
 | Título de la pestaña del navegador | `<Head title>` | El mismo texto que `title` |
 | Breadcrumbs | `breadcrumbs` de `AppLayout` | Al menos la sección actual |
@@ -93,13 +94,16 @@ Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla
 | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter` | `@/components/ui/card` | Superficies: ítems de lista, métricas, formularios, resúmenes |
 | `Alert`, `AlertTitle`, `AlertDescription` | `@/components/ui/alert` | Errores, avisos y confirmaciones dentro de la pantalla |
 | `Field`, `FieldLabel`, `FieldError`, `FieldDescription`, `FieldGroup`, `FieldSet`, `FieldLegend`, `FieldContent`, `FieldTitle`, `FieldSeparator` | `@/components/ui/field` | Estructura de formularios: etiqueta, ayuda, error, grupos, divisor con texto |
-| `Input` | `@/components/ui/input` | Texto, email, número, fecha, búsqueda, archivo |
+| `Input` | `@/components/ui/input` | Texto, email, número, búsqueda, archivo. Para fechas, `DatePicker` |
 | `Textarea` | `@/components/ui/textarea` | Texto multilínea |
+| `InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator` | `@/components/ui/input-otp` | Código de verificación en casillas separadas (6 dígitos del reseteo de contraseña) |
 | `Label` | `@/components/ui/label` | Etiqueta suelta fuera de un `Field` |
 | `Checkbox` | `@/components/ui/checkbox` | Selección múltiple o casilla sí/no |
 | `Switch` | `@/components/ui/switch` | Activar o desactivar una opción |
 | `RadioGroup`, `RadioGroupItem` | `@/components/ui/radio-group` | Selección única con título y descripción |
 | `Select`, `SelectTrigger`, `SelectValue`, `SelectContent`, `SelectItem`, `SelectGroup`, `SelectLabel`, `SelectSeparator` | `@/components/ui/select` | Elegir una opción de una lista |
+| `Calendar` | `@/components/ui/calendar` | Calendario de `react-day-picker`. En formularios se usa a través de `DatePicker` |
+| `Popover`, `PopoverTrigger`, `PopoverContent` | `@/components/ui/popover` | Panel flotante anclado a un botón (selector de fechas) |
 | `ToggleGroup`, `ToggleGroupItem`, `Toggle` | `@/components/ui/toggle-group`, `@/components/ui/toggle` | Filtros, días, control segmentado |
 | `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` | `@/components/ui/tabs` | Alternar entre paneles de contenido |
 | `Separator` | `@/components/ui/separator` | Divisores horizontales o verticales |
@@ -130,7 +134,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | Componente | Importar desde | Usar para |
 |---|---|---|
 | `AppLayout` | `@/layouts/app-layout` | Toda pantalla con sesión iniciada; recibe `breadcrumbs` |
-| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `actions` y `back` |
+| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `actions`, `back` y `centered` |
 | `ListItemCard` | `@/components/list-item-card` | Tarjeta compacta para cada ítem de una lista; acepta las mismas partes que `Card` |
 | `Heading` | `@/components/heading` | Encabezado con `eyebrow`, `description` y `actions` opcionales. En las pantallas se usa a través de `PageContainer` |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
@@ -138,15 +142,19 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `StatusBadge` | `@/components/status-badge` | Estado de un pedido o de un pago: `Badge variant="outline"` con `data-status` y color por estado |
 | `DeliveryFilterSheet` | `@/components/orders/delivery-filter-sheet` | Filtro de tipo de entrega (Todas, Oficina, Domicilios) en un sheet inferior, con Cancelar y Aplicar |
 | `ProviderOrderDays` | `@/components/orders/provider-order-days` | Pedidos del proveedor agrupados por día: acordeón en celular, lista de días y panel del día elegido desde `lg` |
-| `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail` y `badge` opcionales |
+| `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail`, `badge` y `action` opcionales |
 | `MobileNav` | `@/components/mobile-nav` | Barra inferior móvil de RRHH; recibe ítems con ícono, ruta opcional y estado activo |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |
 | `useInitials` | `@/hooks/use-initials` | Iniciales para `AvatarFallback` |
 | `Icon` | `@/components/icon` | Renderizar un ícono de lucide recibido como prop |
 | `GoogleMark` | `@/components/branding/google-mark` | Logo de Google en el acceso con Google |
+| `DevLoginForm` | `@/components/dev-login-form` | Acceso con correo y contraseña a las cuentas de prueba; sólo se muestra con `DEV_LOGIN_ENABLED` |
+| `DatePicker`, `DateRangePicker` | `@/components/date-picker` | Elegir una fecha o un rango en un formulario; reciben y devuelven fechas `YYYY-MM-DD` |
 | `OptionChoices` | `@/components/menus/option-choices` | Elegir las opciones de un grupo de un plato: `RadioGroup` si el grupo admite una, casillas con tope si admite varias |
 | `QuantityInput` | `@/components/quantity-input` | Elegir una cantidad entre un mínimo y un máximo |
+| `PasswordSetupForm` | `@/components/password-setup-form` | Formulario de contraseña nueva con checklist de requisitos y confirmación; el botón queda deshabilitado hasta que se cumplen. Recibe `action`, `submitLabel` y, opcional, `email` de solo lectura. Lo usan el alta del proveedor y el reseteo |
+| `CompletedSheet` | `@/components/completed-sheet` | Sheet inferior de confirmación («¡Registro completado!») con un botón «Listo» que navega a `href` |
 
 `PlaceholderPattern` sólo rellena los dashboards que todavía no están hechos. No se usa en pantallas nuevas.
 
@@ -319,6 +327,26 @@ Cada control de formulario va dentro de un `Field`:
 
 Para un divisor con texto (por ejemplo, «o» entre dos formas de ingresar) se usa `<FieldSeparator>o</FieldSeparator>`.
 
+### InputOTP
+
+```tsx
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
+```
+
+- Va dentro de un `Field` y se conecta a `<Form>` con `name`, como cualquier input.
+- Se usa con `maxLength`, `pattern={REGEXP_ONLY_DIGITS}` (de `input-otp`) y `pushPasswordManagerStrategy="none"`: el valor es un código, no una credencial, y sin esa prop el componente pide `document.elementFromPoint`, que jsdom no tiene.
+- Con error, `aria-invalid` en el `InputOTP` y en cada `InputOTPSlot` pinta el borde.
+
+```tsx
+<InputOTP name="code" maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={code} onChange={setCode}>
+  <InputOTPGroup>
+    {Array.from({ length: 6 }, (_, index) => (
+      <InputOTPSlot key={index} index={index} />
+    ))}
+  </InputOTPGroup>
+</InputOTP>
+```
+
 ### Textarea
 
 ```tsx
@@ -378,6 +406,37 @@ Es el `Select` de Radix, **no** un `<select>` nativo: las opciones son `SelectIt
   </Select>
 </Field>
 ```
+
+### DatePicker y DateRangePicker
+
+```tsx
+import { DatePicker, DateRangePicker } from "@/components/date-picker"
+```
+
+Botón con la fecha elegida que abre un `Calendar` en un `Popover`, en español. Es el [date picker de shadcn](https://ui.shadcn.com/docs/components/radix/date-picker) armado una sola vez para que las pantallas no repitan la composición.
+
+| Prop | Uso |
+|---|---|
+| `value` / `from` y `to` | Fechas `YYYY-MM-DD`; `""` si no hay |
+| `onChange` | Recibe la fecha elegida (`DatePicker`) o el desde y el hasta (`DateRangePicker`) |
+| `min`, `max` | Primer y último día habilitado (`DateRangePicker` solo acepta `min`) |
+| `weekdaysOnly` | Deshabilita sábados y domingos (`DatePicker`) |
+| `id` | Para vincularlo con un `FieldLabel htmlFor` |
+| `className` | Clases del botón; `w-full` para que ocupe todo el ancho (`DateRangePicker`) |
+
+`DateRangePicker` escribe el rango como en el Figma, "9 junio – 27 junio 2027": el año una sola vez, salvo que el rango cruce de año.
+
+El encabezado del calendario sigue el Figma: domingo primero y días y meses en inglés ("Su Mo Tu…", "Jun"). Los textos accesibles quedan en español.
+
+```tsx
+<Field>
+  <FieldLabel htmlFor="agenda-date">{t("…date")}</FieldLabel>
+  <DatePicker id="agenda-date" value={date} min={today} weekdaysOnly onChange={setDate} />
+</Field>
+```
+
+- Para fechas en un formulario se usa este componente y no `Input type="date"`. Un rango en un solo campo, como el de los cierres programados, es `DateRangePicker`; si el diseño pide dos campos, "Desde" y "Hasta", como en la agenda de un plato, se usan dos `DatePicker`.
+- `Calendar` se puede usar suelto si la pantalla muestra un calendario siempre visible.
 
 ### ToggleGroup
 
@@ -630,9 +689,9 @@ La pantalla de pedidos del proveedor no usa la grilla de tarjetas de [Estructura
 import Stat from "@/components/stat"
 ```
 
-Tarjeta de métrica sobre fondo gris: la etiqueta en `CardDescription`, un `badge` opcional arriba a la derecha (el período, por ejemplo), y el valor en `text-2xl` con un `detail` opcional a su lado. Se usa para los totales que encabezan una pantalla.
+Tarjeta de métrica sobre fondo gris: la etiqueta en `CardDescription`, un `badge` opcional arriba a la derecha (el período, por ejemplo), el valor en `text-2xl` con un `detail` opcional a su lado y una `action` opcional en el pie. Se usa para los totales que encabezan una pantalla.
 
-- `value`, `detail` y `badge` son `ReactNode`: aceptan un importe ya formateado con `formatMoney` o un `Badge`.
+- `value`, `detail`, `badge` y `action` son `ReactNode`: aceptan un importe ya formateado con `formatMoney`, un `Badge` o un `Button`.
 - No define su ancho: las métricas se acomodan con el `grid` de la pantalla (`grid gap-4 md:grid-cols-2`).
 
 ```tsx

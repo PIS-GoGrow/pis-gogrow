@@ -534,6 +534,7 @@ DEPENDENCIES
   dotenv-rails
   factory_bot_rails
   faker
+  faraday
   i18n-js (~> 4.2)
   inertia_rails (~> 3.21)
   jbuilder

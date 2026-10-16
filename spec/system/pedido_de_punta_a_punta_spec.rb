@@ -16,6 +16,11 @@ require "rails_helper"
 # menú publicado para IBP-051 CA5 ("queda registrada"). Historia: IBP-051 "editar
 # menús".
 #
+# TODO(integración): falta implementar cambiar el stock de un plato en un día ya
+# publicado antes de poder testear esa parte de IBP-051 CA2. Se hacía desde
+# "Editar menú" (update_by_date), que la #101 quitó; falta confirmar con el autor
+# si pasa a otra historia. Historia: IBP-051 "editar menús".
+#
 # TODO(integración): falta implementar el registro de qué campos cambiaron al
 # modificar un pedido (hoy solo se guardan modified_by y modified_at) antes de
 # poder testear esa parte de IBP-008 CA3. Historia: IBP-008 "modificar pedido".
@@ -48,24 +53,10 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     Provider.update_all(order_deadline: nil)
   end
 
-  # Las hojas entran deslizándose: en CI el clic caía mientras se movían.
-  def without_animations
-    page.execute_script(<<~JS)
-      const style = document.createElement("style")
-      style.textContent = "*, *::before, *::after { animation: none !important; transition: none !important; }"
-      document.head.appendChild(style)
-    JS
-  end
-
   def open_publication_day(date)
     visit schedules_path(week_start: date.beginning_of_week(:monday).to_s)
     without_animations
     find("button", text: /\b#{date.day}\b/).click
-  end
-
-  def pick_dish(dish, amount)
-    find("p", text: dish.name, exact_text: true).click
-    fill_in "amount-#{dish.id}", with: amount.to_s
   end
 
   def open_menu(as:, day:)
@@ -130,25 +121,10 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
   describe "Pasos: P1 publica y edita, E1 pide y edita, P1 consulta" do
     it "deja el mismo pedido, importe, datos y estado en la confirmación, el historial y el proveedor" do
-      # P1 publica un menú para el martes y después lo edita.
-      sign_in p1_user, role: :provider
-      open_publication_day(tuesday)
-      pick_dish(p1_milanesa, 5)
-      click_button "Publicar menú"
-      expect(page).to have_content("Publicado")
-
-      click_button "Editar menú"
-      expect(page).to have_content("Editando menú publicado")
-      fill_in "amount-#{p1_milanesa.id}", with: "8"
-      pick_dish(p1_wok, 3)
-      click_button "Publicar menú"
-      expect(page).to have_content("Menú actualizado con éxito.")
-
-      p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ])
-      milanesa_tuesday = p1_milanesa.schedules.find_by!(date: tuesday)
-      expect(milanesa_tuesday.amount).to eq(8)
-      expect(p1_wok.schedules.find_by!(date: tuesday).amount).to eq(3)
-      sign_out
+      # P1 tiene publicado un menú para el martes.
+      milanesa_tuesday = publish(p1_milanesa, tuesday, amount: 8)
+      publish(p1_wok, tuesday, amount: 3)
+      p1_milanesa.option_groups.create!(name: "Guarnición", options: [ "Papas", "Puré" ], required: true)
 
       # E1 elige fecha, plato, opción, nota, entrega y dirección, y confirma.
       open_menu(as: e1_user, day: tuesday)
@@ -211,9 +187,9 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       expect(page).to have_content("Sin sal, con limón")
       expect_chosen_garnish("Papas", instead_of: "Puré")
       expect(page).to have_content("Colonia 1370")
-      expect(page).to have_content("Pendiente")
-      expect(page).to have_content(uyu(edited.price))
-      expect(page).to have_content(uyu(edited.discounted_price))
+      expect(page).to have_content("Por revisar")
+      expect(page).to have_content(confirmation_money(edited.price))
+      expect(page).to have_content(confirmation_money(edited.discounted_price))
       sign_out
 
       # Persistencia: E1 vuelve a entrar y ve el pedido igual.
@@ -267,7 +243,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       expect(e2_order.reload).to be_pending
       visit provider_order_path(e2_order)
-      expect(page).to have_content("Pendiente")
+      expect(page).to have_content("Por revisar")
       expect(page).to have_button("Confirmar")
       expect(page).to have_button("Rechazar")
     end
@@ -327,13 +303,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     it "refleja para el empleado el stock que el proveedor sube en un menú publicado" do
       wok_tuesday = publish(p1_wok, tuesday, amount: 1)
       place_order(e2, wok_tuesday)
-      sign_in p1_user, role: :provider
-      open_publication_day(tuesday)
-      click_button "Editar menú"
-      fill_in "amount-#{p1_wok.id}", with: "4"
-      click_button "Publicar menú"
-      expect(page).to have_content("Menú actualizado con éxito.")
-      sign_out
+      wok_tuesday.update!(amount: 4)
 
       open_menu(as: e1_user, day: tuesday)
 
@@ -403,7 +373,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       visit provider_order_path(e1_order)
       expect(page).to have_content("Milanesa al pan")
-      expect(page).to have_content(uyu(300))
+      expect(page).to have_content(confirmation_money(300))
       sign_out
 
       sign_in e1_user, role: :consumer
@@ -419,7 +389,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       click_button "Editar Guarnición"
       within("[role=dialog]") do
         fill_in "group-options", with: "Ensalada, Boniato", fill_options: { clear: :backspace }
-        click_button "Guardar"
+        click_button "Modificar"
       end
       click_button "Modificar"
       click_button "Aplicar cambios"
@@ -447,6 +417,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     before do
       sign_in p1_user, role: :provider
       visit edit_provider_menu_path(p1_wok)
+      without_animations
     end
 
     def save_with_simple_confirmation
@@ -476,6 +447,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     it "borra un grupo de opciones" do
       p1_wok.option_groups.create!(name: "Salsa", options: [ "Soja" ])
       visit edit_provider_menu_path(p1_wok)
+      without_animations
 
       click_button "Borrar Salsa"
       save_with_simple_confirmation
@@ -545,21 +517,52 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     end
   end
 
+  describe "IBP-051 CA4: los empleados ven los cambios del menú publicado" do
+    let!(:wok_tuesday) { publish(p1_wok, tuesday) }
+
+    it "muestra el plato que el proveedor agrega a un día ya publicado" do
+      sign_in p1_user, role: :provider
+      visit new_provider_menu_path(date: tuesday.iso8601)
+      without_animations
+      click_on "Platos guardados"
+      click_button "Agregar #{p1_milanesa.name} a la selección"
+      click_button "Agregar", exact: true
+      expect(page).to have_button("Agregar #{p1_milanesa.name} a la selección", disabled: true)
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+
+      expect(page).to have_content(p1_milanesa.name)
+      expect(page).to have_content(p1_wok.name)
+    end
+
+    it "deja de mostrar el plato que el proveedor quita de un día" do
+      publish(p1_milanesa, tuesday)
+      open_menu(as: e1_user, day: tuesday)
+      expect(page).to have_content(p1_milanesa.name)
+      sign_out
+
+      sign_in p1_user, role: :provider
+      open_publication_day(tuesday)
+      within(find("[data-slot=card]", text: p1_milanesa.name)) { click_button "Quitar" }
+      within("[role=dialog]") { click_button "Quitar" }
+      expect(page).to have_content("Plato quitado del menú.")
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+
+      expect(page).to have_no_content(p1_milanesa.name)
+      expect(page).to have_content(p1_wok.name)
+    end
+  end
+
   describe "IBP-051 CA5: editar un menú publicado no cambia los pedidos ya creados" do
     let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday, amount: 5) }
     let!(:wok_tuesday) { publish(p1_wok, tuesday, amount: 5) }
     let!(:e1_order) { place_order(e1, milanesa_tuesday, quantity: 2) }
 
-    before do
-      sign_in p1_user, role: :provider
-      open_publication_day(tuesday)
-      click_button "Editar menú"
-    end
-
     it "mantiene el pedido al bajar el stock del plato" do
-      fill_in "amount-#{p1_milanesa.id}", with: "3"
-      click_button "Publicar menú"
-      expect(page).to have_content("Menú actualizado con éxito.")
+      milanesa_tuesday.update!(amount: 3)
 
       expect(e1_order.reload).to have_attributes(status: "pending", amount: 2, schedule_id: milanesa_tuesday.id)
     end
@@ -608,20 +611,38 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       expect(find_field("notes").value.length).to eq(140)
     end
+
+    it "no deja escribir más de 140 caracteres al editar un pedido" do
+      place_order(e1, milanesa_tuesday, notes: "Sin sal")
+
+      sign_in e1_user, role: :consumer
+      visit orders_path
+
+      within(find("[data-slot=card]", text: "Milanesa al pan")) do
+        click_link "Editar"
+      end
+
+      within("[role=dialog]") do
+        fill_in "notes", with: "a" * 141
+
+        expect(find_field("notes").value.length).to eq(140)
+        expect(page).to have_content("140/140")
+      end
+    end
   end
 
   describe "IBP-068: P1 cambia las modalidades y E1 solo elige las habilitadas" do
-    # El switch cambia al instante y queda deshabilitado mientras dura el PATCH:
-    # esperar el estado nuevo prueba que React ya hidrató, y esperar que se
-    # habilite otra vez, que el servidor respondió.
-    def turn_off_home_delivery
-      visit settings_profile_path
-      without_animations
-      switch = find("#home_delivery:not([disabled])")
-      switch.click
-      switch.click unless has_css?("#home_delivery[aria-checked=false]", wait: 1)
-      expect(page).to have_css("#home_delivery[aria-checked=false]")
-      expect(page).to have_css("#home_delivery:not([disabled])")
+    # Se llega a Entregas por el menú de usuario y Cuenta, no por URL: así se
+    # detectó el defecto 86e3mhpbb (Entregas no tenía enlace). El aviso prueba
+    # que el servidor guardó.
+    def choose_delivery(option)
+      visit_hydrated provider_dashboard_path
+      find("[data-sidebar=menu-button]", text: p1_user.name).click
+      find("[role=menuitem]", text: "Configuración").click
+      click_on "Entregas"
+      wait_for_hydration
+      find("label", text: option).click
+      expect(page).to have_content("Guardamos tu modalidad de entrega")
     end
 
     it "deja pedir solo en la oficina y no toca el pedido a domicilio ya creado" do
@@ -631,7 +652,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       # CA1 y CA2: P1 deja de entregar a domicilio desde su configuración.
       sign_in p1_user, role: :provider
-      turn_off_home_delivery
+      choose_delivery("Solo Oficinas")
       expect(p1.reload.home_delivery).to be(false)
       expect(providers(:endulzate).reload.home_delivery).to be(true)
       # CA4: la oficina sigue habilitada y el menú publicado sigue en pie.
@@ -659,6 +680,24 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       visit provider_order_path(order)
       expect(page).to have_content("Colonia 1370")
       expect(order.reload).to have_attributes(delivery_method: "home", address: "Colonia 1370")
+    end
+
+    it "vuelve a dejar pedir a domicilio cuando P1 lo habilita de nuevo" do
+      publish(p1_milanesa, tuesday)
+      p1.update!(home_delivery: false)
+
+      sign_in p1_user, role: :provider
+      choose_delivery("Oficinas y direcciones personalizadas")
+      expect(p1.reload.home_delivery).to be(true)
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+      add_to_cart(p1_milanesa)
+      open_cart
+      use_new_address(name: "Estudio", street: "Colonia 1370")
+      click_button "Confirmar pedido"
+      expect(page).to have_content("¡Pedido recibido!")
+      expect(e1.orders.sole).to have_attributes(delivery_method: "home", address: "Colonia 1370")
     end
   end
 

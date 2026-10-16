@@ -9,12 +9,21 @@ class Payment < ApplicationRecord
   has_one_attached :receipt
 
   before_validation :clear_rejection_reason, if: :submitted?
+  after_commit :notify_receipt_submitted, if: -> { saved_change_to_status? && submitted? }
+  after_commit :check_debt_alert, if: -> { account.owner.is_a?(Consumer) && (destroyed? || saved_change_to_status?) }
+  after_commit :notify_company_admins, on: [ :create, :update ], if: -> { saved_change_to_status? && account.company? }
+  after_commit :refresh_employee_debt_notifications, on: [ :create, :update ], if: -> { saved_change_to_status? && !account.company? }
 
   validates :rejection_reason, presence: true, if: :rejected?
 
   validate :receipt_is_attached_when_submitted
   validate :receipt_has_allowed_type
   validate :receipt_is_within_size_limit
+  validate :only_one_submitted_per_account, if: :submitted?
+
+  after_update_commit :close_debt_reminder, if: -> { saved_change_to_status? && approved? }
+  after_save_commit :close_automatic_payment_reminders,
+                    if: :should_close_automatic_payment_reminders?
 
   def approve
     update(status: :approved, rejection_reason: nil)
@@ -26,8 +35,46 @@ class Payment < ApplicationRecord
 
   private
 
+  # Un comprobante reenviado es el mismo pago, y solo puede haber una
+  # notificación activa por pago.
+  def notify_receipt_submitted
+    user = account.provider.user
+    return unless user
+
+    Notification.close_by(event: "payment_receipt_submitted", notifiable: self, user:)
+    Notifier.call(
+      event_key: :payment_receipt_submitted,
+      user:,
+      notifiable: self,
+      description_data: {
+        payer: account.owner.is_a?(Consumer) ? account.owner.user.name : account.owner.name,
+        month: I18n.l(account.month, format: "%B %Y")
+      }
+    )
+  end
+
+  def check_debt_alert
+    account.owner.check_debt_alert!
+  end
+
+  # El recordatorio que manda Recursos Humanos es por toda la deuda vencida del
+  # empleado, así que se cierra recién cuando no le queda ninguna.
+  def close_debt_reminder
+    owner = account.owner
+
+    DebtReminders::EmployeeRequest.close_if_settled(owner) if owner.is_a?(Consumer)
+  end
+
   def clear_rejection_reason
     self.rejection_reason = nil
+  end
+
+  def notify_company_admins
+    CompanyPaymentNotifications.payment_status_changed(self)
+  end
+
+  def refresh_employee_debt_notifications
+    EmployeeDebtNotifications.refresh(account, renotify: rejected?)
   end
 
   def receipt_is_attached_when_submitted
@@ -47,6 +94,25 @@ class Payment < ApplicationRecord
 
     errors.add(:receipt, :too_large)
   end
+
+  # Una cuenta puede tener varios comprobantes con el tiempo, pero solo uno en
+  # revisión. Esta validación da el mensaje; la garantía contra dos envíos
+  # simultáneos es el índice único parcial de la tabla.
+  def only_one_submitted_per_account
+    return unless account_id
+
+    others = self.class.submitted.where(account_id:)
+    others = others.where.not(id:) if persisted?
+    errors.add(:receipt, :already_under_review) if others.exists?
+  end
+
+  def should_close_automatic_payment_reminders?
+    saved_change_to_status? && (submitted? || approved?)
+  end
+
+  def close_automatic_payment_reminders
+    PaymentReminders::CloseActive.call(account:)
+  end
 end
 
 # == Schema Information
@@ -63,11 +129,11 @@ end
 #
 # Indexes
 #
-#  index_payments_on_account_id   (account_id)
-#  index_payments_on_provider_id  (provider_id)
+#  index_payments_on_account_id            (account_id)
+#  index_payments_on_account_id_submitted  (account_id) UNIQUE WHERE (status = 1)
+#  index_payments_on_provider_id           (provider_id)
 #
 # Foreign Keys
 #
 #  fk_rails_...  (account_id => accounts.id)
 #  fk_rails_...  (provider_id => providers.id)
-#

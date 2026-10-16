@@ -30,6 +30,8 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
     due_date: "10/10/26",
     due_date_passed: false,
     amount: 500,
+    vat_amount: 0,
+    payable_amount: 500,
     orders_amount_sum: 2,
     orders_price_sum: 500,
     payments: [],

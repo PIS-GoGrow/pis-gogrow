@@ -35,6 +35,22 @@ RSpec.describe "Provider payments", type: :request do
     expect(payment.reload).to be_approved
   end
 
+  it "lets HR know when the payment of the company is approved" do
+    company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+    admin_user = User.create!(email: "review-admin@gmail.com", name: "RRHH", password: "password123456")
+    Admin.create!(user: admin_user, company:)
+    provider = create_provider("review-provider@gmail.com")
+    account = Account.create!(owner: company, provider:, month: Date.current.prev_month, amount: 500)
+    payment = account.payments.build(provider:, status: :submitted)
+    payment.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+    payment.save!
+    sign_in(provider.user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "approved" }
+
+    expect(admin_user.notifications.active.sole).to have_attributes(event: "company_payment_approved", notifiable: account)
+  end
+
   it "does not approve a payment of the current month" do
     user, payment = setup_submitted_payment
     payment.account.update!(month: Date.current.beginning_of_month)
@@ -131,6 +147,25 @@ RSpec.describe "Provider payments", type: :request do
     expect(response).to have_http_status(:not_found)
   end
 
+  it "keeps a rejected partial payment receipt accessible only to its provider" do
+    user, payment = setup_submitted_payment
+    payment.update!(status: :rejected, rejection_reason: "El pago es parcial")
+    sign_in(user, role: :provider)
+
+    get receipt_provider_payment_path(payment)
+
+    expect(response).to have_http_status(:ok)
+    expect(response.media_type).to eq("image/png")
+    expect(payment.reload).to be_rejected
+
+    other = create_provider("other-receipt-provider@gmail.com")
+    sign_in(other.user, role: :provider)
+    get receipt_provider_payment_path(payment)
+
+    expect(response).to have_http_status(:not_found)
+    expect(payment.reload).to be_rejected
+  end
+
   it "redirects a consumer trying to review a payment" do
     _user, payment = setup_submitted_payment
     consumer_user = User.create!(email: "unauth-consumer@gmail.com", name: "Consumer", password: "password123456")
@@ -155,29 +190,19 @@ RSpec.describe "Provider payments", type: :request do
     expect(payment.reload).to be_submitted
   end
 
-  it "handles partial payment rejection without notice and keeps account submitted if another payment is pending" do
-    user, first_payment = setup_submitted_payment
-    account = first_payment.account
-    second_payment = account.payments.build(provider: first_payment.provider, status: :submitted)
-    second_payment.receipt.attach(io: StringIO.new("receipt2"), filename: "receipt2.png", content_type: "image/png")
-    second_payment.save!
+  it "handles partial payment rejection without notice and leaves the account rejected until a new receipt arrives" do
+    user, payment = setup_submitted_payment
+    account = payment.account
 
     sign_in(user, role: :provider)
 
-    patch provider_payment_path(first_payment), params: { status: "rejected", rejection_reason: "El pago es parcial" }
+    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: "El pago es parcial" }
 
     expect(response).to redirect_to(provider_collections_path)
     expect(response).to have_http_status(:see_other)
     expect(flash[:notice]).to be_nil
-    expect(first_payment.reload.rejection_reason).to eq("El pago es parcial")
-    expect(account.reload.collection_status).to eq("submitted")
-    expect(account.payment_pending_review).to eq(second_payment)
-
-    patch provider_payment_path(second_payment), params: { status: "approved" }
-
-    expect(response).to redirect_to(provider_collections_path)
-    expect(second_payment.reload).to be_approved
+    expect(payment.reload.rejection_reason).to eq("El pago es parcial")
     expect(account.reload.payment_pending_review).to be_nil
-    expect(account.collection_status).to eq("approved")
+    expect(account.collection_status).to eq("rejected")
   end
 end

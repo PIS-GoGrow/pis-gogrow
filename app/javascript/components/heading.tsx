@@ -10,6 +10,7 @@ export default function Heading({
   back,
   titleVariant = "default",
   compact = false,
+  centered = false,
 }: {
   title: string
   description?: string
@@ -18,11 +19,20 @@ export default function Heading({
   back?: ReactNode
   titleVariant?: "default" | "prominent"
   compact?: boolean
+  centered?: boolean
 }) {
   return (
     <div className={cn("grid gap-4", compact ? "mb-4" : "mb-8")}>
-      {back && <div className="flex">{back}</div>}
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      {back && !centered && <div className="flex">{back}</div>}
+      <div
+        className={cn(
+          "flex flex-wrap items-end gap-4",
+          centered ? "relative justify-center text-center" : "justify-between",
+        )}
+      >
+        {back && centered && (
+          <div className="absolute top-1/2 left-0 -translate-y-1/2">{back}</div>
+        )}
         <div className="space-y-0.5">
           {eyebrow && (
             <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">

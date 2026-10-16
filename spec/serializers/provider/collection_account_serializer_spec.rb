@@ -19,17 +19,16 @@ RSpec.describe Provider::CollectionAccountSerializer do
     payment
   end
 
-  it "prioritizes the oldest submitted payment for payment_id and receipt_url when multiple payments exist" do
+  it "exposes the submitted payment for payment_id and receipt_url" do
     account.payments.destroy_all
-    older_submitted = create_payment(account, status: :submitted, created_at: 2.days.ago)
-    create_payment(account, status: :submitted, created_at: 1.day.ago)
+    submitted = create_payment(account, status: :submitted)
 
     row = ProviderCollectionSummary::AccountRow.new(account:, meals: 3)
     serialized = described_class.new(row).to_h
 
-    expect(serialized["payment_id"]).to eq(older_submitted.id)
+    expect(serialized["payment_id"]).to eq(submitted.id)
     expect(serialized["status"]).to eq("submitted")
-    expect(serialized["receipt_url"]).to eq(Rails.application.routes.url_helpers.receipt_provider_payment_path(older_submitted))
+    expect(serialized["receipt_url"]).to eq(Rails.application.routes.url_helpers.receipt_provider_payment_path(submitted))
   end
 
   it "falls back to the last payment when no submitted payment exists" do
@@ -53,5 +52,43 @@ RSpec.describe Provider::CollectionAccountSerializer do
     expect(serialized["payment_id"]).to be_nil
     expect(serialized["receipt_url"]).to be_nil
     expect(serialized["status"]).to eq("pending")
+  end
+
+  def serialized(account)
+    described_class.new(ProviderCollectionSummary.row_for(account)).to_h.symbolize_keys
+  end
+
+  def add_payment(account, status)
+    account.payments.create!(
+      provider: account.provider, status:,
+      rejection_reason: status == :rejected ? "El pago es parcial" : nil,
+      receipt: Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png")
+    )
+  end
+
+  [ :consumer, :company ].each do |source|
+    [ [ 0, :submitted, false ], [ 1, :submitted, true ], [ 1, :rejected, false ], [ 1, :approved, false ] ].each do |months_ago, status, allowed|
+      it "exposes approval eligibility for a #{source} account #{months_ago} months ago with #{status} payment" do
+        owner = source == :consumer ? consumers(:one) : companies(:gogrow)
+        account = Account.create!(owner:, provider: providers(:office_provider), month: Date.current.months_ago(months_ago), amount: 800)
+        payment = add_payment(account, status)
+
+        expect(serialized(account)).to include(
+          amount: 800.0, can_approve_payment: allowed,
+          receipt_url: Rails.application.routes.url_helpers.receipt_provider_payment_path(payment), status: status.to_s
+        )
+      end
+    end
+  end
+
+  it "changes eligibility when the account month ends, including the year boundary" do
+    travel_to Time.zone.local(2026, 12, 31, 12) do
+      account = Account.create!(owner: consumers(:one), provider: providers(:office_provider), month: Date.current, amount: 800)
+      add_payment(account, :submitted)
+      expect(serialized(account)[:can_approve_payment]).to be(false)
+
+      travel_to Time.zone.local(2027, 1, 1, 12)
+      expect(serialized(account)[:can_approve_payment]).to be(true)
+    end
   end
 end

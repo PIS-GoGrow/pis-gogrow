@@ -6,6 +6,10 @@
 # El atributo month dice para qué mes es válida la cuenta. Este atributo
 # siempre es igual al primer día de un mes, esto se hace automáticamente.
 class Account < ApplicationRecord
+  VAT_RATE = BigDecimal("0.22")
+
+  attr_readonly :vat_rate
+
   belongs_to :owner, polymorphic: true
 
   belongs_to :provider
@@ -16,6 +20,7 @@ class Account < ApplicationRecord
   has_many :orders, through: :order_accounts
 
   before_create :correct_month
+  before_create :assign_vat_rate
 
   scope :current, -> { where(month: Date.current.beginning_of_month) }
   scope :companies, -> { where(owner_type: "Company") }
@@ -39,8 +44,21 @@ class Account < ApplicationRecord
     month == Date.current.beginning_of_month
   end
 
+  def vat_amount
+    (amount.to_d * vat_rate.to_d).round(2, BigDecimal::ROUND_HALF_UP)
+  end
+
+  def payable_amount
+    amount.to_d + vat_amount
+  end
+
   def due_date
-    month + 1.month + 4.days
+    month.next_month.change(day: 10)
+  end
+
+  # Necesario para formatear la suma de varias cuentas
+  def formatted_amount
+    self.class.format_amount(amount)
   end
 
   # Se busca en memoria para que un preload(:payments) evite una consulta por
@@ -49,12 +67,11 @@ class Account < ApplicationRecord
     payments.max_by { |payment| [ payment.created_at, payment.id ] }
   end
 
-  # El pago que el proveedor tiene que revisar. Puede haber más de uno en
-  # submitted a la vez (por ej. dos comprobantes enviados sin refrescar entre
-  # pestañas), así que se resuelven de a uno, del más viejo al más nuevo, para
-  # que ninguno quede sin revisión posible.
+  # El pago que el proveedor tiene que revisar. Payment impide que haya más de
+  # uno en submitted por cuenta (validación e índice único), así que a lo sumo
+  # hay uno. Se busca en memoria por lo mismo que last_payment.
   def payment_pending_review
-    payments.select(&:submitted?).min_by { |payment| [ payment.created_at, payment.id ] }
+    payments.detect(&:submitted?)
   end
 
   def latest_invoice
@@ -90,6 +107,8 @@ class Account < ApplicationRecord
         update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
       end
     end
+
+    owner.check_debt_alert! if owner.is_a?(Consumer)
   end
 
   # Acepta un arreglo de ids de cuentas.
@@ -119,7 +138,29 @@ class Account < ApplicationRecord
     end
   end
 
+  # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
+  def self.format_amount(value)
+    amount = value.to_d
+
+    ActionController::Base.helpers.number_to_currency(
+      amount,
+      unit: "$",
+      format: "%u%n",
+      precision: amount.frac.zero? ? 0 : 2,
+      delimiter: ".",
+      separator: ","
+    )
+  end
+
   private
+
+  def assign_vat_rate
+    self.vat_rate = if company? && ENV["COMPANY_ACCOUNT_VAT_ENABLED"] == "true" && month >= Date.new(2026, 10, 1)
+      VAT_RATE
+    else
+      0
+    end
+  end
 
   # Mantener el mes de las cuentas como la fecha correspondiente al primer
   # día del mes en el que son válidas
@@ -137,6 +178,7 @@ end
 #  amount      :decimal(10, 2)
 #  month       :date
 #  owner_type  :string           not null
+#  vat_rate    :decimal(3, 2)    default(0.0), not null
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  owner_id    :bigint           not null

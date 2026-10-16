@@ -1,10 +1,18 @@
 import { Head, Link } from "@inertiajs/react"
-import { ArrowLeft, ChevronRight, Users } from "lucide-react"
+import {
+  ArrowLeft,
+  ChevronRight,
+  CircleCheck,
+  TriangleAlert,
+  Users,
+} from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import ConsumerMonthSheet from "@/components/admin/consumer-month-sheet"
 import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
+import BenefitSummaryCard from "@/components/benefit-summary-card"
+import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
 import HeadingSmall from "@/components/heading-small"
 import ListItemCard from "@/components/list-item-card"
 import PageContainer from "@/components/page-container"
@@ -38,7 +46,7 @@ import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
 import { cn } from "@/lib/utils"
-import { adminConsumers } from "@/routes"
+import { adminConsumers, adminDebtReminders } from "@/routes"
 import type { AdminConsumersShow, BreadcrumbItem } from "@/types"
 
 const page = "pages.admin.consumers.show"
@@ -46,8 +54,9 @@ const page = "pages.admin.consumers.show"
 export default function Show({
   consumer,
   summary,
-  benefit_percentage,
+  benefit_summary,
   months,
+  debt_reminder,
 }: AdminConsumersShow) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -65,6 +74,13 @@ export default function Show({
     summary.meals_limit > 0
       ? Math.min(100, (summary.meals_used / summary.meals_limit) * 100)
       : 0
+
+  // El recordatorio solo aparece cuando hay algo que decir: se puede mandar, hay
+  // que esperar, o se agotaron los envíos.
+  const showReminder =
+    debt_reminder.eligible ||
+    debt_reminder.blocked_reason === "cooldown" ||
+    debt_reminder.blocked_reason === "limit_reached"
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -94,19 +110,49 @@ export default function Show({
         }
       >
         <Card className="gap-4 py-4">
-          <CardContent className="flex items-center gap-3 px-4">
-            <Avatar size="lg">
-              <AvatarFallback className="text-foreground text-xs font-semibold">
-                {getInitials(consumer.name)}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-semibold">{consumer.name}</p>
-              <p className="text-muted-foreground truncate text-sm">
-                {consumer.email}
-              </p>
+          <CardContent className="grid gap-4 px-4">
+            <div className="flex items-center gap-3">
+              <Avatar size="lg">
+                <AvatarFallback className="text-foreground text-xs font-semibold">
+                  {getInitials(consumer.name)}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">{consumer.name}</p>
+                <p className="text-muted-foreground truncate text-sm">
+                  {consumer.email}
+                </p>
+              </div>
+              <ConsumptionStatusBadge status={summary.status} />
             </div>
-            <ConsumptionStatusBadge status={summary.status} />
+
+            {showReminder && (
+              <div className="grid gap-2">
+                <DebtReminderDialog
+                  action={adminDebtReminders.create(consumer.id).url}
+                  eligible={debt_reminder.eligible}
+                  employeeName={consumer.name}
+                  amount={debt_reminder.amount}
+                  translationKey={`${page}.reminder`}
+                />
+
+                {debt_reminder.blocked_reason === "cooldown" && (
+                  <p className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+                    <CircleCheck className="size-4" aria-hidden="true" />
+                    {t(`${page}.reminder.next_available`, {
+                      date: debt_reminder.next_available_at,
+                    })}
+                  </p>
+                )}
+
+                {debt_reminder.blocked_reason === "limit_reached" && (
+                  <p className="text-muted-foreground flex items-center gap-2 text-sm">
+                    <TriangleAlert className="size-4" aria-hidden="true" />
+                    {t(`${page}.reminder.limit_reached`)}
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -163,32 +209,11 @@ export default function Show({
             </CardContent>
           </Card>
 
-          <Card className="bg-muted/50 gap-3 py-4">
-            <CardHeader className="px-4">
-              <CardDescription>{t(`${page}.benefit`)}</CardDescription>
-              <CardAction>
-                <Badge variant="secondary">
-                  {benefit_percentage != null
-                    ? t(`${page}.benefit_active`)
-                    : t(`${page}.benefit_inactive`)}
-                </Badge>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="px-4">
-              {benefit_percentage != null ? (
-                <p className="flex flex-wrap items-baseline gap-x-2">
-                  <strong className="text-2xl">{benefit_percentage}%</strong>
-                  <span className="font-medium">
-                    {t(`${page}.benefit_discount`)}
-                  </span>
-                </p>
-              ) : (
-                <p className="text-muted-foreground text-sm">
-                  {t(`${page}.benefit_none`)}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <BenefitSummaryCard
+            title={t(`${page}.benefit`)}
+            summary={benefit_summary}
+            empty={t(`${page}.benefit_none`)}
+          />
         </div>
 
         <div className="flex items-center justify-between gap-4">

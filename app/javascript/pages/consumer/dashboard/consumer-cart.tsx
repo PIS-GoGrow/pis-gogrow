@@ -12,24 +12,19 @@ import { AddAddressSheet } from "./add-address-sheet"
 import { AddressOption } from "./address-option"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
 import { money } from "./formatters"
-import { OrderSummary } from "./order-summary"
+import { BenefitLine, OrderSummary } from "./order-summary"
+import type { Pricing } from "./pricing"
 import { SavedAddressesSheet } from "./saved-addresses-sheet"
 
 interface Props {
   monthlyLimit: number
   monthlyRemaining: number
-  subsidizedQuantity: number
-  fullPriceQuantity: number
-  lineDiscounts: Record<string, number>
+  pricing: Pricing
   cart: CartItem[]
   addresses: DeliveryAddressOption[]
   address: string
   setAddress: (value: string) => void
   onAddAddress: (option: DeliveryAddressOption, saved: boolean) => void
-  percentage: number
-  subtotal: number
-  discount: number
-  total: number
   processing: boolean
   error?: string | string[]
   back: () => void
@@ -40,18 +35,12 @@ interface Props {
 export function ConsumerCart({
   monthlyLimit,
   monthlyRemaining,
-  subsidizedQuantity,
-  fullPriceQuantity,
-  lineDiscounts,
+  pricing,
   cart,
   addresses,
   address,
   setAddress,
   onAddAddress,
-  percentage,
-  subtotal,
-  discount,
-  total,
   processing,
   error,
   back,
@@ -145,32 +134,35 @@ export function ConsumerCart({
         )}
       </section>
 
-      {fullPriceQuantity > 0 && (
+      {pricing.fullPriceQuantity > 0 && (
         <Alert className="mt-4 border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
           <TriangleAlert aria-hidden="true" className="text-amber-600" />
           <AlertDescription>
             {monthlyRemaining === 0 ? (
               <p>
                 Ya utilizaste las {monthlyLimit} viandas subsidiadas de este
-                mes. Las {fullPriceQuantity} viandas de este pedido se cobrarán
-                a precio completo.
+                mes. Las {pricing.fullPriceQuantity} viandas de este pedido se
+                cobrarán a precio completo.
               </p>
             ) : (
               <p>
                 Te quedan {monthlyRemaining} viandas subsidiadas este mes. De
-                este pedido, {subsidizedQuantity} tendrán el beneficio y{" "}
-                {fullPriceQuantity} se cobrarán a precio completo.
+                este pedido, {pricing.subsidizedQuantity} tendrán el beneficio y{" "}
+                {pricing.fullPriceQuantity} se cobrarán a precio completo.
               </p>
             )}
           </AlertDescription>
         </Alert>
       )}
 
-      <section className="border-border mt-6 pb-4 text-xs md:border-b">
+      <section className="border-border mt-6 pb-4 text-sm md:border-b">
         {cart.map((item) => {
           const line = item.menu.price * item.quantity
           return (
-            <div key={item.cartId} className="mb-3 last:mb-0">
+            <div
+              key={item.cartId}
+              className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
+            >
               <p className="text-muted-foreground mb-2">
                 {t("pages.cart.delivery", {
                   date: new Date(`${item.date}T12:00:00`).toLocaleDateString(
@@ -183,12 +175,21 @@ export function ConsumerCart({
                   ),
                 })}
               </p>
-              <div className="text-muted-foreground flex justify-between">
-                <span>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">
                   {item.menu.name} x{item.quantity}
                 </span>
                 <span>{money(line)}</span>
               </div>
+              {pricing.lines[item.cartId]?.tiers
+                .filter((tier) => tier.discount > 0)
+                .map((tier, index) => (
+                  <BenefitLine
+                    key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
+                    tier={tier}
+                    className="mt-3"
+                  />
+                ))}
               {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
                   aparte, así que el carrito lo muestra por su cuenta. */}
               {item.menu.option_groups
@@ -211,12 +212,6 @@ export function ConsumerCart({
               >
                 {t("pages.cart.remove", { name: item.menu.name })}
               </Button>
-              {(lineDiscounts[item.cartId] ?? 0) > 0 && (
-                <div className="mt-2 flex justify-between text-[#29944c]">
-                  <span>Beneficio GoGrow ({percentage}%)</span>
-                  <span>- {money(lineDiscounts[item.cartId] ?? 0)}</span>
-                </div>
-              )}
             </div>
           )
         })}
@@ -228,10 +223,8 @@ export function ConsumerCart({
       </section>
       <BottomAction>
         <OrderSummary
-          subtotal={subtotal}
-          discount={discount}
-          total={total}
-          percentage={percentage}
+          subtotal={pricing.subtotal}
+          total={pricing.total}
           compact
         />
         <Button

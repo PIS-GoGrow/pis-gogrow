@@ -2,16 +2,18 @@ import { Head } from "@inertiajs/react"
 import { useTranslation } from "react-i18next"
 
 import { GoogleMark } from "@/components/branding/google-mark"
+import DevLoginForm from "@/components/dev-login-form"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import AuthLayout from "@/layouts/auth-layout"
 import { readAuthenticityToken } from "@/lib/utils"
+import type { SessionsNew } from "@/types"
 
-interface Props {
+interface Props extends SessionsNew {
   errors?: { auth?: string }
 }
 
-export default function Login({ errors }: Props) {
+export default function Login({ errors, dev_login_enabled }: Props) {
   const { t } = useTranslation()
 
   return (
@@ -44,6 +46,8 @@ export default function Login({ errors }: Props) {
           {t("pages.sessions.new.continue_with_google")}
         </Button>
       </form>
+
+      {dev_login_enabled && <DevLoginForm />}
     </AuthLayout>
   )
 }

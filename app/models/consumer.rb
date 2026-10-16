@@ -10,14 +10,30 @@ class Consumer < ApplicationRecord
   has_many :saved_addresses, class_name: "DeliveryAddress", dependent: :destroy
   has_many :benefits, dependent: :destroy
   has_many :accounts, as: :owner
-  has_many :user_notifications, as: :user
-  has_many :notification_configurations, through: :user_notifications, source: :notification_configuration
 
   has_many :consumer_benefit_configurations
   has_many :benefit_configurations, through: :consumer_benefit_configurations
 
   def total_debt
     accounts.pending.sum :amount
+  end
+
+  # La alerta requiere acción, así que solo se cierra acá, cuando la deuda vuelve
+  # al monto que fijó RRHH; mientras siga abierta se actualiza su texto en vez de
+  # crear otra en cada pedido.
+  def check_debt_alert!
+    debt = total_debt
+    threshold = company.debt_alert_threshold
+    alert = user.notifications.active.find_by(event: "debt_threshold_exceeded", notifiable: self)
+    data = { debt: format_amount(debt), threshold: format_amount(threshold) }
+
+    if debt <= threshold
+      alert&.close!
+    elsif alert
+      alert.update!(description: I18n.t!("notifications.debt_threshold_exceeded.description", **data))
+    else
+      Notifier.call(event_key: :debt_threshold_exceeded, user:, notifiable: self, description_data: data)
+    end
   end
 
   def current_month_spending
@@ -75,7 +91,7 @@ class Consumer < ApplicationRecord
   # Esto es, el current_monthly_benefit si la fecha del schedule lo permite,
   # o el siguiente si no.
   def monthly_benefit_for(schedule)
-    benefits
+    monthly_benefits
       .where.not(status: :expired)
       .where(due_date: schedule.date..)
       .order(due_date: :asc) # Debería haber a lo sumo 2: uno current y uno future
@@ -115,6 +131,14 @@ class Consumer < ApplicationRecord
       { id: "office", label: I18n.t("pages.orders.addresses.office"), address: company.address },
       *custom.partition { it[:address] == last_used }.flatten
     ].select { it[:address].present? }.uniq { it[:address] }
+  end
+
+  private
+
+  def format_amount(amount)
+    ActiveSupport::NumberHelper.number_to_rounded(
+      amount, precision: 2, strip_insignificant_zeros: true, delimiter: ".", separator: ","
+    )
   end
 end
 

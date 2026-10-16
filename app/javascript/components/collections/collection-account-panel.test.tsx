@@ -1,0 +1,185 @@
+import { render, screen, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
+import { describe, expect, it, vi } from "vitest"
+
+import { PaymentReviewResultProvider } from "@/components/payments/payment-review-result-context"
+import type { ProviderCollectionAccount } from "@/types"
+
+import CollectionAccountPanel from "./collection-account-panel"
+import InvoiceSection from "./invoice-section"
+
+vi.mock("@inertiajs/react", async () => {
+  const actual = await vi.importActual("@inertiajs/react")
+
+  return {
+    ...actual,
+    usePage: () => ({ props: { locale: "es" } }),
+  }
+})
+
+const account = {
+  id: 1,
+  owner_name: "Juan Pérez",
+  meals: 2,
+  amount: 800,
+  vat_rate: 0,
+  vat_amount: 0,
+  payable_amount: 800,
+  source: "consumer",
+  status: "pending",
+  can_approve_payment: false,
+  overdue: false,
+  month: "Octubre 2026",
+  due_date: "10/11/26",
+  paid_on: null,
+  payment_id: null,
+  receipt_url: null,
+  receipt_content_type: null,
+  invoice: null,
+  debt_reminder: {
+    eligible: false,
+    remaining: 10,
+    next_available_at: null,
+    blocked_reason: null,
+  },
+  payments: [],
+  orders: [],
+} satisfies ProviderCollectionAccount
+
+describe("CollectionAccountPanel", () => {
+  it("sugiere el total con IVA para una factura sin duplicar el impuesto", async () => {
+    const user = userEvent.setup()
+    const company = {
+      ...account,
+      source: "company",
+      vat_rate: 0.22,
+      vat_amount: 176,
+      payable_amount: 976,
+    } satisfies ProviderCollectionAccount
+    render(
+      <CollectionAccountPanel account={company}>
+        <InvoiceSection account={company} />
+      </CollectionAccountPanel>,
+    )
+
+    await user.upload(
+      screen.getByLabelText("Archivo de la factura"),
+      new File(["factura"], "factura.pdf", { type: "application/pdf" }),
+    )
+    await user.click(screen.getByRole("button", { name: "Subir factura" }))
+
+    const dialog = screen.getByRole("dialog")
+    expect(within(dialog).getByLabelText("Monto total")).toHaveValue(976)
+    expect(
+      within(dialog).getByText("Importe calculado del período: 976,00 UYU"),
+    ).toBeInTheDocument()
+  })
+
+  it("keeps the download available for a single rejected partial payment without allowing another review", () => {
+    render(
+      <CollectionAccountPanel
+        account={{
+          ...account,
+          status: "rejected",
+          payments: [
+            {
+              id: 17,
+              status: "rejected",
+              rejection_reason: "El pago es parcial",
+              date: "09/10/26",
+              receipt_url: "/provider/payments/17/receipt",
+              receipt_filename: "parcial.png",
+              receipt_content_type: "image/png",
+            },
+          ],
+        }}
+      />,
+    )
+    expect(
+      screen.getByRole("link", { name: "Descargar comprobante" }),
+    ).toHaveAttribute("href", "/provider/payments/17/receipt")
+    expect(
+      screen.queryByRole("button", { name: "Revisar pago" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Aprobar" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Rechazar" }),
+    ).not.toBeInTheDocument()
+  })
+  it.each(["consumer", "company"] as const)(
+    "passes the expected amount and current-month restriction for a %s account",
+    async (source) => {
+      const user = userEvent.setup()
+      render(
+        <PaymentReviewResultProvider value={vi.fn()}>
+          <CollectionAccountPanel
+            account={{
+              ...account,
+              source,
+              vat_rate: source === "company" ? 0.22 : 0,
+              vat_amount: source === "company" ? 176 : 0,
+              payable_amount: source === "company" ? 976 : 800,
+              status: "submitted",
+              payment_id: 17,
+              receipt_url: "/provider/payments/17/receipt",
+              receipt_content_type: "image/png",
+            }}
+          />
+        </PaymentReviewResultProvider>,
+      )
+      await user.click(screen.getByRole("button", { name: "Revisar pago" }))
+      const dialog = screen.getByRole("dialog", { name: "Comprobante" })
+      expect(
+        within(dialog).getByText(
+          source === "company" ? "976,00 UYU" : "800,00 UYU",
+        ),
+      ).toBeInTheDocument()
+      expect(
+        within(dialog).getByRole("button", { name: "Aprobar" }),
+      ).toBeDisabled()
+      expect(
+        within(dialog).getByRole("link", { name: "Descargar comprobante" }),
+      ).toHaveAttribute("href", "/provider/payments/17/receipt")
+    },
+  )
+  it("shows a neutral due date for a pending account that is not overdue", () => {
+    render(<CollectionAccountPanel account={account} />)
+
+    const due = screen.getByText("Vence: 10/11/26")
+    expect(due).toHaveClass("text-muted-foreground")
+    expect(due).not.toHaveClass("text-red-600", "dark:text-red-400")
+    expect(due.querySelector("svg")).not.toBeInTheDocument()
+  })
+
+  it("warns about an overdue pending account", () => {
+    render(<CollectionAccountPanel account={{ ...account, overdue: true }} />)
+
+    const due = screen.getByText("Vence: 10/11/26")
+    expect(due).toHaveClass("text-red-700", "dark:text-red-400")
+    expect(due.querySelector("svg")).toBeInTheDocument()
+  })
+
+  it("does not show a due date warning for an approved account", () => {
+    render(
+      <CollectionAccountPanel account={{ ...account, status: "approved" }} />,
+    )
+
+    expect(screen.queryByText("Vence: 10/11/26")).not.toBeInTheDocument()
+    expect(screen.getByText("Octubre 2026")).toBeInTheDocument()
+    expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+  })
+
+  it("shows the payment date for an approved account in the history", () => {
+    render(
+      <CollectionAccountPanel
+        account={{ ...account, status: "approved", paid_on: "06/11/26" }}
+        heading="paid_on"
+      />,
+    )
+
+    expect(screen.getByText("06/11/26")).toBeInTheDocument()
+    expect(screen.queryByText("Vence: 10/11/26")).not.toBeInTheDocument()
+  })
+})

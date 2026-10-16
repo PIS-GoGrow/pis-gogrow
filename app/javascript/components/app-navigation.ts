@@ -9,7 +9,6 @@ import {
   Package,
   Percent,
   UsersRound,
-  Utensils,
   Wallet,
 } from "lucide-react"
 
@@ -24,7 +23,6 @@ import {
   consumerOrders,
   providerCollections,
   providerDashboard,
-  providerMenus,
   providerOrders,
   schedules,
 } from "@/routes"
@@ -44,12 +42,6 @@ export function getNavigationItems(
         title: t("nav.provider.home"),
         href: providerDashboard.index().url,
         icon: LayoutGrid,
-      },
-      {
-        key: "dishes",
-        title: t("nav.provider.dishes"),
-        href: providerMenus.index().url,
-        icon: Utensils,
       },
       {
         key: "menus",

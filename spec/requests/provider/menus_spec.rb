@@ -11,39 +11,55 @@ RSpec.describe "Provider::Menus", type: :request do
   let(:other_provider_user) { users(:other_provider_user) }
   let(:other_provider) { providers(:endulzate) }
 
-  describe "GET /provider/menus" do
-    it "redirects visitors without a session to the sign in page" do
-      get provider_menus_path
-
-      expect(response).to redirect_to(sign_in_path)
-    end
-
-    it "redirects consumers to the root page" do
-      sign_in users(:one), role: :consumer
-
-      get provider_menus_path
-
-      expect(response).to redirect_to(root_path)
-    end
-
-    it "lists the menus of the signed-in provider in descending creation order" do
+  describe "GET /provider/menus/new" do
+    it "renders the new dish page with the publication dates" do
+      travel_to Date.new(2030, 1, 9)
       sign_in provider_user, role: :provider
 
-      get provider_menus_path
+      get new_provider_menu_path
 
-      expect(response).to have_http_status(:success)
-      expect(inertia).to render_component("provider/menus/index")
+      expect(inertia).to render_component("provider/menus/new")
+      expect(inertia).to have_props(today: "2030-01-09", maximum_publish_date: "2030-01-18")
+    end
 
-      listed_menus = inertia.props[:menus]
-      expect(listed_menus.map { |m| m["id"] }).to include(menus(:milanesa).id)
-      expect(listed_menus.map { |m| m["id"] }).not_to include(menus(:sorrentinos).id)
+    it "preselects the day the provider came from when it can be published" do
+      travel_to Date.new(2030, 1, 9)
+      sign_in provider_user, role: :provider
+
+      get new_provider_menu_path(date: "2030-01-10")
+
+      expect(inertia).to have_props(default_date: "2030-01-10")
+    end
+
+    it "does not preselect a day that cannot be published" do
+      travel_to Date.new(2030, 1, 9)
+      sign_in provider_user, role: :provider
+
+      # pasado, sábado, fuera del rango de publicación y una fecha inválida
+      [ "2030-01-08", "2030-01-12", "2030-02-01", "nope" ].each do |date|
+        get new_provider_menu_path(date:)
+
+        expect(inertia.props[:default_date]).to be_nil
+      end
     end
   end
 
   describe "POST /provider/menus" do
     before { sign_in provider_user, role: :provider }
 
-    it "creates a new dish with option groups and redirects to the index" do
+    it "redirects visitors without a session to the sign in page" do
+      sign_out
+      post provider_menus_path, params: { menu: { name: "Plato", price: 200 } }
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    it "redirects consumers to the root page" do
+      sign_in users(:one), role: :consumer
+      post provider_menus_path, params: { menu: { name: "Plato", price: 200 } }
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "creates a new dish with option groups and goes back to the new dish page" do
       expect do
         post provider_menus_path, params: {
           menu: {
@@ -51,18 +67,20 @@ RSpec.describe "Provider::Menus", type: :request do
             price: 360.0,
             description: "Con guarnición a elección",
             option_groups_attributes: [
-              { name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 1 },
+              { name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 1, required: true },
               { name: "Guarnición", options: [ "Papas fritas", "Ensalada" ], limit: 1 }
             ]
           }
         }
       end.to change(provider.menus, :count).by(1)
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(new_provider_menu_path)
       created = provider.menus.order(:id).last
       expect(created.name).to eq("Suprema napolitana")
       expect(created.option_groups.count).to eq(2)
       expect(created.option_groups.find_by(name: "Salsa").options).to eq([ "Tuco", "Caruso" ])
+      expect(created.option_groups.find_by(name: "Salsa")).to be_required
+      expect(created.option_groups.find_by(name: "Guarnición")).not_to be_required
     end
 
     it "creates a dish without option groups" do
@@ -76,7 +94,7 @@ RSpec.describe "Provider::Menus", type: :request do
         }
       end.to change(provider.menus, :count).by(1)
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(new_provider_menu_path)
       expect(provider.menus.order(:id).last.option_groups).to be_empty
     end
 
@@ -91,7 +109,7 @@ RSpec.describe "Provider::Menus", type: :request do
         }
       end.not_to change(Menu, :count)
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(new_provider_menu_path)
       follow_redirect!
       expect(inertia.props[:errors]).to have_key(:"option_groups.options")
     end
@@ -106,7 +124,7 @@ RSpec.describe "Provider::Menus", type: :request do
         }
       end.not_to change(Menu, :count)
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(new_provider_menu_path)
       follow_redirect!
       expect(inertia.props[:errors]).to have_key(:name)
     end
@@ -121,27 +139,147 @@ RSpec.describe "Provider::Menus", type: :request do
         }
       end.not_to change(Menu, :count)
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(new_provider_menu_path)
       follow_redirect!
       expect(inertia.props[:errors]).to have_key(:price)
     end
-  end
 
-  describe "GET /provider/menus/:id" do
-    before { sign_in provider_user, role: :provider }
+    context "with an agenda" do
+      # Miércoles: la fecha máxima de publicación es el viernes 18.
+      before { travel_to Date.new(2030, 1, 9) }
 
-    it "renders the dish detail for the provider's own dish" do
-      get provider_menu_path(menus(:milanesa))
+      let(:dish) { { name: "Wok de verduras", description: "Con arroz", price: 320.0 } }
 
-      expect(response).to have_http_status(:success)
-      expect(inertia).to render_component("provider/menus/show")
-      expect(inertia.props[:menu]["name"]).to eq("Milanesa con papas fritas")
-    end
+      it "programs a single day" do
+        post provider_menus_path, params: {
+          menu: dish,
+          agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ], amount: 6 }
+        }
 
-    it "returns not found when attempting to view another provider's dish" do
-      get provider_menu_path(menus(:sorrentinos))
+        created = provider.menus.order(:id).last
+        expect(created.schedules.pluck(:date, :amount)).to eq([ [ Date.new(2030, 1, 10), 6 ] ])
+        expect(created.agendas).to be_empty
+      end
 
-      expect(response).to have_http_status(:not_found)
+      it "does not create the dish when the single day is one the provider closed" do
+        provider.closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 10), reason: "Feriado")
+
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ], amount: 6 }
+          }
+        end.not_to change { [ Menu.count, Schedule.count ] }
+
+        follow_redirect!
+        expect(inertia).to have_props(errors: { agenda: [ I18n.t("validations.menu_agenda.date_closed") ] })
+      end
+
+      it "programs a single day without stock" do
+        post provider_menus_path, params: {
+          menu: dish,
+          agenda: { mode: "single", date: "2030-01-10", weekdays: [ 4 ], amount: "" }
+        }
+
+        created = provider.menus.order(:id).last
+        expect(created.schedules.pluck(:date, :amount)).to eq([ [ Date.new(2030, 1, 10), nil ] ])
+      end
+
+      it "programs every week from the start date" do
+        post provider_menus_path, params: {
+          menu: dish,
+          agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [ 1, 3 ], amount: 4 }
+        }
+
+        created = provider.menus.order(:id).last
+        expect(created.agendas.sole).to have_attributes(weekdays: [ 1, 3 ], starts_on: Date.new(2030, 1, 9), ends_on: nil, amount: 4)
+        expect(created.schedules.order(:date).pluck(:date))
+          .to eq([ Date.new(2030, 1, 9), Date.new(2030, 1, 14), Date.new(2030, 1, 16) ])
+      end
+
+      it "programs a range on the saved dish without creating variants" do
+        post provider_menus_path, params: {
+          menu: dish.merge(option_groups_attributes: [ { name: "Salsa", options: [ "Soja", "Teriyaki" ], limit: 1 } ]),
+          agenda: { mode: "range", starts_on: "2030-01-10", ends_on: "2030-01-15", weekdays: [ 2, 4 ], amount: 3 }
+        }
+
+        created = provider.menus.order(:id).last
+        expect(created.variants).to be_empty
+        expect(created.option_groups.sole.options).to eq([ "Soja", "Teriyaki" ])
+        expect(created.agendas.sole).to have_attributes(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 15))
+        expect(created.schedules.order(:date).pluck(:date)).to eq([ Date.new(2030, 1, 10), Date.new(2030, 1, 15) ])
+      end
+
+      it "creates the dish without programming it when no day is chosen" do
+        expect do
+          post provider_menus_path, params: { menu: dish, agenda: { mode: "none" } }
+        end.to change(provider.menus, :count).by(1)
+
+        expect(provider.menus.order(:id).last.schedules).to be_empty
+      end
+
+      it "does not create the dish when the agenda is invalid" do
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "single", date: "2030-01-12", weekdays: [ 6 ], amount: 0 }
+          }
+        end.not_to change(Menu, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors][:agenda]).to contain_exactly(
+          I18n.t("validations.menu_agenda.invalid_date"),
+          I18n.t("validations.menu_agenda.invalid_amount")
+        )
+      end
+
+      # IBP-054: los bordes del rango, de a un dato inválido por vez.
+      def program_single_day(date, amount: 6)
+        post provider_menus_path, params: {
+          menu: dish,
+          agenda: { mode: "single", date:, weekdays: [ Date.iso8601(date).cwday ], amount: }
+        }
+      end
+
+      it "programs a single day for today" do
+        expect { program_single_day("2030-01-09") }.to change(Schedule, :count).by(1)
+      end
+
+      it "programs a single day on the last allowed date" do
+        expect { program_single_day("2030-01-18") }.to change(Schedule, :count).by(1)
+      end
+
+      {
+        "a past date" => "2030-01-08",
+        "the first weekday after the last allowed date" => "2030-01-21",
+        "a Saturday" => "2030-01-12"
+      }.each do |label, date|
+        it "does not create the dish for #{label}" do
+          expect { program_single_day(date) }.not_to change(Menu, :count)
+
+          follow_redirect!
+          expect(inertia.props[:errors][:agenda]).to eq([ I18n.t("validations.menu_agenda.invalid_date") ])
+        end
+      end
+
+      it "does not create the dish with zero stock" do
+        expect { program_single_day("2030-01-10", amount: 0) }.not_to change(Menu, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors][:agenda]).to eq([ I18n.t("validations.menu_agenda.invalid_amount") ])
+      end
+
+      it "returns the dish and agenda errors together" do
+        expect do
+          post provider_menus_path, params: {
+            menu: dish.merge(name: ""),
+            agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [], amount: 2 }
+          }
+        end.not_to change(Menu, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors]).to include(:name, :agenda)
+      end
     end
   end
 
@@ -149,7 +287,7 @@ RSpec.describe "Provider::Menus", type: :request do
     it "redirects visitors without a session to the sign in page" do
       get edit_provider_menu_path(menus(:milanesa))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects consumers to the root page" do
@@ -212,6 +350,26 @@ RSpec.describe "Provider::Menus", type: :request do
         expect(agenda_prop[:mode]).to eq("none")
         expect(agenda_prop[:weekdays]).to eq([])
         expect(agenda_prop[:amount]).to be_nil
+      end
+
+      it "goes back to the schedules page by default" do
+        get edit_provider_menu_path(menus(:milanesa))
+
+        expect(inertia.props[:return_to]).to eq(schedules_path)
+      end
+
+      it "goes back to the page the dish was opened from" do
+        get edit_provider_menu_path(menus(:milanesa), return_to: schedules_path(tab: "saved"))
+
+        expect(inertia.props[:return_to]).to eq("/schedules?tab=saved")
+      end
+
+      it "ignores a return_to that points outside the app" do
+        [ "//evil.example", "/\\evil.example", "https://evil.example" ].each do |target|
+          get edit_provider_menu_path(menus(:milanesa), return_to: target)
+
+          expect(inertia.props[:return_to]).to eq(schedules_path)
+        end
       end
 
       it "returns not found when attempting to edit another provider's dish" do
@@ -314,7 +472,7 @@ RSpec.describe "Provider::Menus", type: :request do
     it "redirects visitors without a session to the sign in page" do
       patch provider_menu_path(menus(:milanesa)), params: { menu: { name: "Nuevo" } }
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(provider_sign_in_path)
     end
 
     it "redirects consumers to the root page" do
@@ -342,14 +500,29 @@ RSpec.describe "Provider::Menus", type: :request do
 
       patch provider_menu_path(menu), params: {
         menu: {
-          option_groups_attributes: [ { id: group.id, name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 2 } ]
+          option_groups_attributes: [ { id: group.id, name: "Salsa", options: [ "Tuco", "Caruso" ], limit: 2, required: true } ]
         }
       }
 
       expect(response).to redirect_to(edit_provider_menu_path(menu))
       expect(group.reload.options).to eq([ "Tuco", "Caruso" ])
       expect(group.reload.limit).to eq(2)
+      expect(group.reload).to be_required
     end
+
+      it "updates an existing required option group to optional" do
+        menu = menus(:milanesa)
+        group = menu.option_groups.create!(name: "Salsa", options: [ "Tuco" ], limit: 1, required: true)
+
+        patch provider_menu_path(menu), params: {
+          menu: {
+            option_groups_attributes: [ { id: group.id, name: "Salsa", options: [ "Tuco" ], limit: 1, required: false } ]
+          }
+        }
+
+        expect(response).to redirect_to(edit_provider_menu_path(menu))
+        expect(group.reload).not_to be_required
+      end
 
       it "updates the provider's dish information and records audit data" do
         menu = menus(:milanesa)
@@ -454,6 +627,14 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(menus(:milanesa).reload.name).to eq("Milanesa con papas fritas")
     end
 
+    it "keeps the page the dish was opened from after saving" do
+      patch provider_menu_path(menus(:milanesa)), params: params.merge(return_to: "/schedules?tab=saved")
+
+      expect(response).to redirect_to(
+        edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id, return_to: "/schedules?tab=saved")
+      )
+    end
+
     it "rejects the confirmed orders of that day when the provider asks to" do
       patch provider_menu_path(menus(:milanesa)), params: params.merge(confirmed_orders: "reject")
 
@@ -507,9 +688,9 @@ RSpec.describe "Provider::Menus", type: :request do
     it "keeps the variants out of the saved dishes list" do
       patch provider_menu_path(menus(:milanesa)), params: params
 
-      get provider_menus_path
+      get schedules_path
 
-      expect(inertia.props[:menus].pluck("name")).not_to include("Milanesa napolitana")
+      expect(inertia.props[:saved_menus].pluck("name")).not_to include("Milanesa napolitana")
     end
 
     it "successfully publishes dish with weekly recurrence and creates schedules" do
@@ -579,7 +760,7 @@ RSpec.describe "Provider::Menus", type: :request do
   describe "DELETE /provider/menus/:id" do
     before { sign_in provider_user, role: :provider }
 
-    it "deletes the dish and redirects to index" do
+    it "removes the dish from the saved dishes and redirects to that tab" do
       menu_to_delete = provider.menus.create!(
         name: "Pastel de carne",
         description: "Pastel de carne con puré",
@@ -588,9 +769,54 @@ RSpec.describe "Provider::Menus", type: :request do
 
       expect do
         delete provider_menu_path(menu_to_delete)
-      end.to change(provider.menus, :count).by(-1)
+      end.to change(provider.menus.saved, :count).by(-1)
 
-      expect(response).to redirect_to(provider_menus_path)
+      expect(response).to redirect_to(schedules_path(tab: "saved"))
+      expect(menu_to_delete.reload).to be_archived
+    end
+
+    it "keeps the confirmed orders of upcoming days when asked to" do
+      delete provider_menu_path(menus(:milanesa)), params: { confirmed_orders: "keep" }
+
+      expect(orders(:upcoming_confirmed_future).reload).to be_confirmed
+      expect(orders(:upcoming_confirmed_future).schedule).to eq(schedules(:future))
+      expect(schedules(:future).reload.available).to be(false)
+      expect(orders(:upcoming_pending_future).reload).to be_cancelled
+    end
+
+    it "rejects the confirmed orders of upcoming days when asked to" do
+      future_schedule_id = schedules(:future).id
+      order = orders(:upcoming_confirmed_future)
+
+      expect do
+        delete provider_menu_path(menus(:milanesa)),
+          params: { confirmed_orders: "reject" }
+      end.to change {
+        order.consumer.user.notifications
+            .where(event: "order_rejection")
+            .count
+      }.by(1)
+
+      order.reload
+
+      expect(order).to be_rejected
+      expect(order.rejection_reason).to eq("dish_deleted")
+      expect(Schedule.exists?(future_schedule_id)).to be(false)
+
+      notification =
+        order.consumer.user.notifications
+            .where(event: "order_rejection")
+            .order(:created_at)
+            .last
+
+      expect(notification.description).to include("porque el plato fue eliminado")
+    end
+
+    it "leaves the past orders of the dish alone" do
+      delete provider_menu_path(menus(:milanesa)), params: { confirmed_orders: "reject" }
+
+      expect(orders(:history_confirmed_past).reload).to be_confirmed
+      expect(orders(:history_confirmed_past).schedule).to eq(schedules(:past))
     end
 
     it "returns not found when attempting to delete another provider's dish" do
@@ -599,6 +825,100 @@ RSpec.describe "Provider::Menus", type: :request do
       end.not_to change(Menu, :count)
 
       expect(response).to have_http_status(:not_found)
+    end
+  end
+
+  # IBP-051 CA3: es el camino que usa "Agregar platos → Platos guardados".
+  describe "POST /provider/menus/publish" do
+    let(:milanesa) { menus(:milanesa) }
+
+    before do
+      travel_to Date.new(2030, 1, 9)
+      sign_in provider_user, role: :provider
+    end
+
+    def publish(date, menus = [ milanesa ])
+      post publish_provider_menus_path, params: { date:, menu_ids: menus.map(&:id) }
+    end
+
+    it "publica los platos elegidos en la fecha" do
+      wok = provider.menus.create!(name: "Wok", description: "De vegetales", price: 290)
+
+      expect { publish("2030-01-10", [ milanesa, wok ]) }.to change(Schedule, :count).by(2)
+
+      expect(response).to redirect_to(new_provider_menu_path)
+      expect(Schedule.where(date: Date.new(2030, 1, 10)).pluck(:menu_id)).to contain_exactly(milanesa.id, wok.id)
+    end
+
+    it "publica para hoy" do
+      expect { publish("2030-01-09") }.to change(Schedule, :count).by(1)
+    end
+
+    it "publica en el último día permitido" do
+      expect { publish("2030-01-18") }.to change(Schedule, :count).by(1)
+    end
+
+    {
+      "una fecha pasada" => "2030-01-08",
+      "el primer día hábil después del tope" => "2030-01-21",
+      "un sábado" => "2030-01-12",
+      "un domingo" => "2030-01-13",
+      "una fecha mal escrita" => "nope"
+    }.each do |label, date|
+      it "no publica en #{label}" do
+        expect { publish(date) }.not_to change(Schedule, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors]).to have_key(:date)
+      end
+    end
+
+    it "no publica platos de otro proveedor" do
+      sorrentinos = menus(:sorrentinos)
+
+      expect { publish("2030-01-10", [ sorrentinos ]) }.not_to change(Schedule, :count)
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to have_key(:menu_ids)
+    end
+
+    it "no publica nada si uno de los platos es de otro proveedor" do
+      expect { publish("2030-01-10", [ milanesa, menus(:sorrentinos) ]) }.not_to change(Schedule, :count)
+    end
+
+    # IBP-087: un día con cierre programado no se puede publicar.
+    it "no publica en una fecha que el proveedor cerró y dice por qué" do
+      provider.closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 11), reason: "Vacaciones")
+
+      expect { publish("2030-01-10") }.not_to change(Schedule, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { date: [ I18n.t("validations.publish_date_closed") ] })
+    end
+
+    it "publica el día siguiente al cierre" do
+      provider.closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 10), reason: "Feriado")
+
+      expect { publish("2030-01-11") }.to change(Schedule, :count).by(1)
+    end
+
+    it "publica un día que solo cerró otro proveedor" do
+      providers(:endulzate).closures.create!(starts_on: Date.new(2030, 1, 10), ends_on: Date.new(2030, 1, 10), reason: "Feriado")
+
+      expect { publish("2030-01-10") }.to change(Schedule, :count).by(1)
+    end
+
+    it "no publica dos veces el mismo plato el mismo día" do
+      publish("2030-01-10")
+
+      expect { publish("2030-01-10") }.not_to change(Schedule, :count)
+    end
+
+    it "no deja publicar a un empleado" do
+      sign_in users(:one), role: :consumer
+
+      expect { publish("2030-01-10") }.not_to change(Schedule, :count)
+      expect(response).to redirect_to(root_path)
     end
   end
 end

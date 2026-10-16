@@ -16,13 +16,34 @@ RSpec.describe "Sessions", type: :request do
       get sign_in_path
       expect(response).to redirect_to(root_path)
     end
+
+    # El valor se fija acá y no se deja al entorno: quien tenga el login de prueba
+    # prendido en su .env vería este ejemplo fallar.
+    it "hides the password form unless the test login is enabled" do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("DEV_LOGIN_ENABLED", "false").and_return("false")
+
+      get sign_in_path
+
+      expect(inertia).to render_component("sessions/new")
+      expect(inertia.props[:dev_login_enabled]).to be(false)
+    end
+
+    it "shows the password form when the test login is enabled" do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("DEV_LOGIN_ENABLED", "false").and_return("true")
+
+      get sign_in_path
+
+      expect(inertia.props[:dev_login_enabled]).to be(true)
+    end
   end
 
   describe "POST /sign_in" do
     context "with valid credentials" do
       it "signs in and sets a session cookie" do
         post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*" }
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(root_path)
         expect(cookies[:session_token]).to be_present
 
         get dashboard_path
@@ -38,6 +59,24 @@ RSpec.describe "Sessions", type: :request do
 
         get dashboard_path
         expect(response).to redirect_to(sign_in_path)
+      end
+    end
+
+    context "with a provider account" do
+      it "opens the session with the provider role" do
+        post sign_in_path, params: { email: users(:provider_user).email, password: "Secret1*3*5*" }
+
+        expect(response).to redirect_to(root_path)
+        expect(users(:provider_user).sessions.last.role).to eq("provider")
+      end
+    end
+
+    context "with an HR account" do
+      it "opens the session with the admin role" do
+        post sign_in_path, params: { email: users(:admin).email, password: "Secret1*3*5*" }
+
+        expect(response).to redirect_to(root_path)
+        expect(users(:admin).sessions.last.role).to eq("admin")
       end
     end
 
@@ -57,6 +96,13 @@ RSpec.describe "Sessions", type: :request do
       delete session_path(session_record)
       expect(response).to redirect_to(root_path)
       expect(Session.exists?(session_record.id)).to be(false)
+    end
+
+    it "sends a provider back to the provider sign in" do
+      sign_in users(:provider_user), role: :provider
+      delete session_path(users(:provider_user).sessions.last)
+
+      expect(response).to redirect_to(provider_sign_in_path)
     end
   end
 end

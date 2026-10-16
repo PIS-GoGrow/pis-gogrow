@@ -12,6 +12,16 @@ class AccountSerializer < ApplicationSerializer
     account.amount&.to_f
   end
 
+  typelize :number
+  attribute :vat_amount do |account|
+    account.vat_amount.to_f
+  end
+
+  typelize :number
+  attribute :payable_amount do |account|
+    account.payable_amount.to_f
+  end
+
   typelize :boolean
   attribute :current do |account|
     account.current?
@@ -53,6 +63,7 @@ end
 #  amount      :decimal(10, 2)
 #  month       :date
 #  owner_type  :string           not null
+#  vat_rate    :decimal(3, 2)    default(0.0), not null
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  owner_id    :bigint           not null

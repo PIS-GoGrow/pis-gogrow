@@ -25,4 +25,12 @@ describe("useFormatters", () => {
       expect(formatMoneyShort(300.5)).toBe("$300,50")
     })
   })
+
+  describe("formatLongDate", () => {
+    const { formatLongDate } = renderHook(() => useFormatters()).result.current
+
+    it("escribe día, mes y año sin el día de la semana", () => {
+      expect(formatLongDate("2026-10-07")).toBe("7 de octubre de 2026")
+    })
+  })
 })

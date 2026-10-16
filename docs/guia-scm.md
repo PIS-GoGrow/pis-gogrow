@@ -1,4 +1,4 @@
-# Guía sobre la Gestión de la Configuración v3.0
+# Guía sobre la Gestión de la Configuración v4.0
 
 > Grupo 2 · Proyecto de Ingeniería de Software 2026 · Coach: María Freira · Empresa: GoGrow
 >
@@ -215,6 +215,24 @@ GOOGLE_CLIENT_SECRET=
 
 **Excepción:** las credenciales de PostgreSQL para el entorno de desarrollo local (usuario y contraseña) están definidas directamente en `docker-compose.yml`, no en `.env`. No se consideran secreto porque el ambiente no es accesible fuera de la máquina de cada integrante y el valor es el mismo para todo el equipo: no protegen ningún dato sensible ni un ambiente expuesto.
 
+### 5.1 Acceso de prueba sin Google
+
+*Decisión: reutilizar el login con correo y contraseña que ya trae la aplicación, detrás de una variable de entorno, sobre las cuentas que crea el seed.*
+
+El ingreso a la aplicación es con Google. Para las pruebas de usuario el equipo usaba tres cuentas de Google, una por rol (proveedor, empleado y RR. HH.), y Google las bloqueó. Sin esas cuentas no hay forma de entrar a probar la aplicación, ni en los entornos locales ni en el ambiente desplegado, lo que deja al equipo sin poder verificar el incremento y al cliente sin poder revisarlo.
+
+**Qué se eligió.** El starter kit del que parte el proyecto ya trae implementado el login con correo y contraseña (`POST /sign_in`), que estaba sin uso porque la pantalla de ingreso solo ofrece el botón de Google. La decisión es reutilizarlo: no se agrega ningún endpoint nuevo ni se modifica el flujo de Google. Lo único que cambia es que la pantalla de ingreso puede mostrar, además del botón, un formulario de correo y contraseña. Las cuentas que se usan son las que ya crea `db/seeds.rb`, que son las que tienen los datos de prueba cargados.
+
+**Por qué no se creó un mecanismo nuevo.** La alternativa considerada era un «login de desarrollo»: una pantalla con un botón por usuario que abre sesión sin pedir contraseña. Se descartó porque significa agregar un endpoint cuya única función es iniciar sesión como cualquiera de los usuarios, en un repositorio público y en un ambiente accesible desde internet. El camino elegido no agrega superficie de ataque: el endpoint ya existía y sigue exigiendo contraseña.
+
+**Dónde está habilitado.** La variable de entorno `DEV_LOGIN_ENABLED` controla si la pantalla muestra el formulario, y su valor por defecto es `false`. Se habilita en los entornos locales de cada integrante y en el ambiente de AWS mientras duren las pruebas con el cliente. No se usa `Rails.env.development?` como condición porque el ambiente desplegado corre con `RAILS_ENV=production` y también necesita el formulario.
+
+**Qué riesgo tiene y cómo se mitiga.** El riesgo es que una contraseña conocida por todo el equipo habilite el ingreso a un ambiente accesible desde internet. Las mitigaciones son tres: la contraseña nunca se commitea, vive en la variable `DEV_USERS_PASSWORD` del entorno y el seed se niega a correr si no está definida; el ambiente desplegado usa una contraseña distinta de la de los entornos locales, de manera que filtrarla en un chat del equipo no da acceso a lo que está publicado; y el formulario está apagado por defecto, así que hay que habilitarlo deliberadamente en cada ambiente. Como efecto lateral, esta decisión saca del repositorio los `password_digest` que `db/seeds.rb` tenía escritos a mano, que eran credenciales commiteadas en un repositorio público.
+
+**Cuándo se elimina.** Es un mecanismo temporal, atado al bloqueo de las cuentas de Google. Se apaga (`DEV_LOGIN_ENABLED=false`) en cuanto el equipo recupere cuentas utilizables para los tres roles, y en todos los casos antes de la entrega final: el ambiente que queda para el cliente no se entrega con el formulario habilitado. El código del formulario se elimina cuando se cierre el ítem que lo motivó, dejando la pantalla de ingreso como está hoy.
+
+El procedimiento (qué variables definir, cómo correr el seed, con qué cuenta entra cada rol y cómo habilitarlo o deshabilitarlo en AWS) está en la [Guía de Trabajo con el Repositorio, sección 1.4](guia-trabajo-repositorio.md#14-entrar-a-la-aplicación-sin-google-usuarios-de-prueba).
+
 ## 6. Herramientas de gestión del proyecto
 
 ### 6.1 Gestión del backlog: ClickUp
@@ -232,3 +250,4 @@ La comunicación entre integrantes del equipo se realiza a través de Slack. Se 
 | v1.0 | 19/08/2026 | Versión inicial del documento. |
 | v2.0 | 29/08/2026 | Se agregan las secciones 2.6 (Verificación automática de la convención de commits), 2.7 (Protección de ramas) y 2.8 (Plantilla de Pull Request). Se corrige la definición de la rama `main` en la sección 2.3.1: se reemplaza «aprobado por el cliente» por una definición que refleja que la aprobación del cliente es posterior al merge y retroalimenta la iteración siguiente, resolviendo la contradicción con el flujo descrito en 2.3.4 y en la sección 4 (Ambientes). El detalle operativo y de configuración (comandos de Git, pasos de configuración en GitHub) se traslada a la Guía de Trabajo con el Repositorio v1.0, dejando en esta guía únicamente el nivel de decisión y una referencia cruzada. Se agrega esta sección de historial de cambios. |
 | v3.0 | 02/09/2026 | Se actualiza la sección 2.1 para reflejar que el equipo creó el repositorio real del proyecto (`pis-gogrow`) a partir del repositorio base del cliente. Se actualiza la sección 3 para reflejar la creación de `Dockerfile.dev` y `docker-compose.yml` para el entorno de desarrollo local. Se agrega una excepción en la sección 5 sobre las credenciales de PostgreSQL en desarrollo. Se documenta la migración del repositorio a una organización de GitHub y la asignación de dos integrantes con rol Admin (sección 2.1). Se confirma la implementación del chequeo de Conventional Commits (sección 2.6). Se detalla que la protección de rama difiere entre `develop` (PR + aprobación + status check) y `main` (restricción de push por rol, sin PR obligatorio) en la sección 2.7. Se confirma la implementación de la plantilla de Pull Request (sección 2.8). |
+| v4.0 | 08/10/2026 | Se agrega la sección 5.1 (Acceso de prueba sin Google): el equipo pierde las cuentas de Google de prueba y se documenta la decisión de reutilizar el login con correo y contraseña detrás de la variable `DEV_LOGIN_ENABLED`, con el procedimiento en la sección 1.4 de la Guía de Trabajo con el Repositorio. |

@@ -162,7 +162,7 @@ RSpec.describe "Elegir la modalidad de entrega como empleado" do
 
     visit provider_order_path(order)
 
-    expect(page).to have_content("Domicilio")
+    expect(page).to have_content("Casa")
     expect(page).to have_content(home_address)
   end
 

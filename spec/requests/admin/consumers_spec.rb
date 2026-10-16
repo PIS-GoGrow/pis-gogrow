@@ -47,6 +47,54 @@ RSpec.describe "Admin::Consumers", type: :request do
           hash_including(id: consumers(:other).id, amount: 150.25, status: "submitted")
         )
       end
+
+      it "opens on the filter the URL asks for, so the home can link to the pending ones" do
+        get admin_consumers_path, params: { filter: "pending" }
+
+        expect(inertia).to have_props(filter: "pending")
+      end
+
+      # El ranking del inicio se calcula con el mes elegido y su chevron trae ese mes.
+      it "summarizes the month the URL asks for" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+
+        get admin_consumers_path, params: { filter: "pending", month: previous.strftime("%Y-%m") }
+
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:one).id, amount: 0.0, status: nil),
+          hash_including(id: consumers(:other).id, amount: 80.0, status: "pending")
+        )
+      end
+
+      it "summarizes the current month with an invalid or future month" do
+        [ "agosto", "2026-13", (Date.current + 2.months).strftime("%Y-%m") ].each do |month|
+          get admin_consumers_path, params: { month: }
+
+          expect(inertia.props[:consumers]).to include(
+            hash_including(id: consumers(:one).id, amount: 950.75, status: "pending")
+          )
+        end
+      end
+
+      it "sends the photo of each employee" do
+        users(:one).update!(avatar_url: "https://foto.example/one.jpg")
+
+        get admin_consumers_path
+
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:one).id, avatar_url: "https://foto.example/one.jpg"),
+          hash_including(id: consumers(:other).id, avatar_url: nil)
+        )
+      end
+
+      it "opens on every employee without a filter or with an unknown one" do
+        get admin_consumers_path
+        expect(inertia).to have_props(filter: "all")
+
+        get admin_consumers_path, params: { filter: "everyone" }
+        expect(inertia).to have_props(filter: "all")
+      end
     end
   end
 
@@ -60,7 +108,7 @@ RSpec.describe "Admin::Consumers", type: :request do
         expect(inertia).to render_component("admin/consumers/show")
         expect(inertia.props[:consumer]).to include(name: "Test User", email: "one@example.com", company_name: "GoGrow")
         expect(inertia.props[:summary]).to include(amount: 950.75, status: "pending", meals_limit: 20)
-        expect(inertia.props[:benefit_percentage]).to eq(50)
+        expect(inertia).to have_props(benefit_summary: { total: 50, base: 50, specials: [] })
       end
 
       it "groups the consumption history by month with its providers and confirmed orders" do
@@ -79,7 +127,29 @@ RSpec.describe "Admin::Consumers", type: :request do
       it "shows the active benefit percentage" do
         get admin_consumer_path(consumers(:one))
 
-        expect(inertia.props[:benefit_percentage]).to eq(50)
+        expect(inertia).to have_props(benefit_summary: { total: 50, base: 50, specials: [] })
+      end
+
+      # IBP-037: la ficha suma los subsidios especiales vigentes al base y los
+      # desglosa con el nombre que les puso RRHH.
+      it "adds the special subsidies in force to the base benefit" do
+        consumers(:one).benefits.create!(
+          benefit_configuration: benefit_configurations(:seniority), description: "Antigüedad (5 años)", percentage: 25
+        )
+
+        get admin_consumer_path(consumers(:one))
+
+        expect(inertia).to have_props(
+          benefit_summary: { total: 75, base: 50, specials: [ { name: "Antigüedad (5 años)", percentage: 25 } ] }
+        )
+      end
+
+      it "sends no benefit summary for an employee without benefits" do
+        consumers(:one).benefits.destroy_all
+
+        get admin_consumer_path(consumers(:one))
+
+        expect(inertia).to have_props(benefit_summary: nil)
       end
 
       it "does not show an employee of another company" do

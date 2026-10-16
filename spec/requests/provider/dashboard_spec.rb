@@ -14,7 +14,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
       it "redirige al usuario a la pantalla de iniciar sesión" do
         get provider_dashboard_path
 
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(provider_sign_in_path)
       end
     end
 
@@ -156,6 +156,41 @@ RSpec.describe "Provider::Dashboard", type: :request do
           average_rating: 5.0
         )
       end
+    end
+  end
+
+  describe "notificaciones" do
+    it "no muestra en la sesión de proveedor las notificaciones de empleado del mismo usuario" do
+      user = users(:one)
+      Provider.create!(user:)
+      configuration = Notification::Configuration.find_or_create_by!(key: "order_updates") do |record|
+        record.roles = %w[consumer]
+      end
+      Notification.create!(
+        notification_configuration: configuration,
+        user:,
+        role: "consumer",
+        event: "order_confirmation",
+        requires_action: false,
+        notifiable: orders(:upcoming_pending_today),
+        title: "Tu pedido fue confirmado",
+        description: "Tu pedido fue confirmado."
+      )
+
+      sign_in user, role: :provider
+      get provider_dashboard_path
+
+      expect(inertia.props[:notifications]).to be_empty
+    end
+
+    it "le muestra al proveedor el aviso cuando un empleado cancela un pedido confirmado" do
+      order = orders(:upcoming_confirmed_future)
+      order.cancel(by: order.consumer.user)
+
+      sign_in provider_user, role: :provider
+      get provider_dashboard_path
+
+      expect(inertia.props[:notifications].pluck(:title)).to eq([ "Un pedido fue cancelado" ])
     end
   end
 end

@@ -159,8 +159,8 @@ RSpec.describe "Orders", type: :request do
 
         expect(inertia.props[:option_groups]).to eq(
           [
-            { "id" => menu_option_groups(:salsa_sorrentinos).id, "name" => "Salsa", "options" => [ "Filetto", "Bolognesa" ], "limit" => 1 },
-            { "id" => menu_option_groups(:relleno_sorrentinos).id, "name" => "Relleno", "options" => [ "Ricota y nuez", "Espinaca y queso" ], "limit" => 1 }
+            { "id" => menu_option_groups(:salsa_sorrentinos).id, "name" => "Salsa", "options" => [ "Filetto", "Bolognesa" ], "limit" => 1, "required" => true },
+            { "id" => menu_option_groups(:relleno_sorrentinos).id, "name" => "Relleno", "options" => [ "Ricota y nuez", "Espinaca y queso" ], "limit" => 1, "required" => true }
           ]
         )
         expect(inertia.props[:order][:selected_options]).to eq(
@@ -168,6 +168,29 @@ RSpec.describe "Orders", type: :request do
             { "group_id" => menu_option_groups(:salsa_sorrentinos).id, "name" => "Salsa", "values" => [ "Filetto" ] },
             { "group_id" => menu_option_groups(:relleno_sorrentinos).id, "name" => "Relleno", "values" => [ "Ricota y nuez" ] }
           ]
+        )
+      end
+
+      it "exposes option groups with required false for optional groups" do
+        menu_option_groups(:salsa_sorrentinos).update!(required: false)
+        order = Order.create!(
+          consumer: consumers(:one),
+          schedule: schedules(:sorrentinos_today),
+          amount: 1,
+          price: 320,
+          discounted_price: 320,
+          address: "18 de Julio 1006",
+          delivery_method: :office,
+          selected_options: [
+            { group_id: menu_option_groups(:relleno_sorrentinos).id, name: "Relleno", values: [ "Ricota y nuez" ] }
+          ]
+        )
+
+        get order_path(order)
+
+        expect(inertia.props[:option_groups]).to include(
+          hash_including("name" => "Salsa", "required" => false),
+          hash_including("name" => "Relleno", "required" => true)
         )
       end
 
@@ -253,9 +276,9 @@ RSpec.describe "Orders", type: :request do
       Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount:, available:)
     end
 
-    def create_schedule_with_options(limit: 1)
+    def create_schedule_with_options(limit: 1, required: true)
       schedule = create_schedule
-      schedule.menu.option_groups.create!(name: "Salsa", options: [ "Filetto", "Puerro" ], limit:)
+      schedule.menu.option_groups.create!(name: "Salsa", options: [ "Filetto", "Puerro" ], limit:, required:)
       schedule
     end
 
@@ -287,7 +310,19 @@ RSpec.describe "Orders", type: :request do
       expect(Order.last.selected_options.first["values"]).to eq([ "Filetto", "Puerro" ])
     end
 
-    it "refuses a cart that leaves a group of the dish unanswered" do
+    it "orders a dish leaving an optional group unanswered" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options(required: false)
+      group = schedule.menu.option_groups.first
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: [] } ])
+      end.to change(Order, :count).by(1)
+
+      expect(Order.last.selected_options).to eq([])
+    end
+
+    it "refuses a cart that leaves a required group of the dish unanswered" do
       _consumer, company = setup_consumer
       schedule = create_schedule_with_options
 
@@ -317,6 +352,65 @@ RSpec.describe "Orders", type: :request do
       expect do
         post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: [ "Filetto", "Puerro" ] } ])
       end.not_to change(Order, :count)
+    end
+
+    it "orders a dish with both required and optional groups when the optional group is completely omitted" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options(required: true)
+      required_group = schedule.menu.option_groups.first
+      schedule.menu.option_groups.create!(name: "Extras", options: [ "Queso", "Bacon" ], limit: 1, required: false)
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [ { group_id: required_group.id, values: [ "Filetto" ] } ])
+      end.to change(Order, :count).by(1)
+
+      expect(Order.last.selected_options).to eq(
+        [ { "group_id" => required_group.id, "name" => "Salsa", "values" => [ "Filetto" ] } ]
+      )
+    end
+
+    it "refuses an option not offered by an optional group" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options(required: false)
+      group = schedule.menu.option_groups.first
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: [ "Inexistente" ] } ])
+      end.not_to change(Order, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.invalid_options") })
+    end
+
+    it "refuses options with invalid non-array data types without crashing" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule_with_options(required: true)
+      group = schedule.menu.option_groups.first
+
+      expect do
+        post orders_path, params: cart_params(company, schedule, options: [ { group_id: group.id, values: "Filetto" } ])
+      end.not_to change(Order, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.invalid_options") })
+    end
+
+    it "redirects visitors without a session when posting an order" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule
+      sign_out
+
+      post orders_path, params: cart_params(company, schedule, options: [])
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "redirects users with provider role when posting an order" do
+      _consumer, company = setup_consumer
+      schedule = create_schedule
+      sign_in users(:provider_user), role: :provider
+
+      post orders_path, params: cart_params(company, schedule, options: [])
+      expect(response).to redirect_to(root_path)
     end
 
     it "creates the cart atomically with server prices, benefit and delivery address" do
@@ -373,7 +467,8 @@ RSpec.describe "Orders", type: :request do
           percentage: 50,
           monthly_limit: 16,
           monthly_used: 2,
-          monthly_remaining: 14
+          monthly_remaining: 14,
+          specials: []
         }
       )
     end
@@ -751,6 +846,65 @@ RSpec.describe "Orders", type: :request do
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.order_deadline_passed") })
     end
 
+    it "rejects an order for a day inside the provider's scheduled closure" do
+      consumer, = setup_consumer
+      schedule = create_schedule
+      schedule.menu.provider.closures.create!(starts_on: Date.current, ends_on: Date.current + 2, reason: "Vacaciones")
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      end.not_to change(Order, :count)
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(schedule.reload.remaining_amount).to eq(5)
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.provider_closed") })
+    end
+
+    it "accepts an order for a day outside the provider's scheduled closure" do
+      consumer, = setup_consumer
+      schedule = create_schedule
+      schedule.menu.provider.closures.create!(starts_on: Date.current + 1, ends_on: Date.current + 3, reason: "Vacaciones")
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
+      end.to change(Order, :count).by(1)
+    end
+
+    it "leaves orders placed before the closure untouched" do
+      consumer, = setup_consumer
+      schedule = create_schedule
+      post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 2 } ] } }
+      order = Order.last
+
+      schedule.menu.provider.closures.create!(starts_on: Date.current, ends_on: Date.current + 2, reason: "Vacaciones")
+      get orders_path
+
+      expect(order.reload).to have_attributes(status: "pending", amount: 2)
+      expect(schedule.reload.remaining_amount).to eq(3)
+    end
+
+    it "does not create a partial cart when one provider is closed" do
+      consumer, = setup_consumer
+      open_schedule = create_schedule
+      closed_provider = Provider.create!(user: users(:consumer_user))
+      closed_menu = Menu.create!(provider: closed_provider, name: "Tarta", description: "De verdura", price: 200)
+      closed_schedule = Schedule.create!(menu: closed_menu, date: Date.current, amount: 5)
+      closed_provider.closures.create!(starts_on: Date.current, ends_on: Date.current, reason: "Feriado")
+
+      expect do
+        post orders_path, params: {
+          order: {
+            address: consumer.address,
+            items: [ { schedule_id: open_schedule.id, quantity: 1 }, { schedule_id: closed_schedule.id, quantity: 1 } ]
+          }
+        }
+      end.not_to change(Order, :count)
+
+      follow_redirect!
+      expect(inertia).to have_props(errors: { order_error: I18n.t("validations.provider_closed") })
+    end
+
     it "rejects past schedules" do
       consumer, = setup_consumer
       schedule = create_schedule
@@ -1091,6 +1245,15 @@ RSpec.describe "Orders", type: :request do
       expect(order.reload.amount).to eq(1)
     end
 
+    it "rejects a session with admin role" do
+      sign_in users(:admin), role: :admin
+
+      patch order_path(order), params: update_params
+
+      expect(response).to redirect_to(root_path)
+      expect(order.reload.amount).to eq(1)
+    end
+
     context "when signed in as an employee" do
       before do
         sign_in users(:one)
@@ -1146,7 +1309,15 @@ RSpec.describe "Orders", type: :request do
           )
         end
 
-        it "refuses to leave a group unanswered and keeps what was chosen" do
+        it "removes the choice of an optional group" do
+          group.update!(required: false)
+
+          patch order_path(order), params: update_params(options: options_params([]))
+
+          expect(order.reload.selected_options.pluck("group_id")).to eq([ other_group.id ])
+        end
+
+        it "refuses to leave a required group unanswered and keeps what was chosen" do
           patch order_path(order), params: update_params(options: [ { group_id: group.id, values: [ "Bolognesa" ] } ])
 
           expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
@@ -1159,7 +1330,35 @@ RSpec.describe "Orders", type: :request do
           patch order_path(order), params: update_params(options: options_params([ "Carbonara" ]))
 
           expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
         end
+
+        it "refuses options that exceed the group limit and preserves database integrity" do
+          patch order_path(order), params: update_params(options: options_params([ "Filetto", "Bolognesa" ]))
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
+        it "refuses options with duplicate values within the same group" do
+          patch order_path(order), params: update_params(options: options_params([ "Filetto", "Filetto" ]))
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
+        it "refuses options with non-existent group_id bypassing the interface" do
+          invalid_options = [ { group_id: 999_999, values: [ "Inexistente" ] }, { group_id: other_group.id, values: [ "Ricota y nuez" ] } ]
+          patch order_path(order), params: update_params(options: invalid_options)
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
 
         # Los pedidos anteriores a esta funcionalidad no tienen elección
         # guardada; el proveedor tiene que poder confirmarlos igual.
@@ -1207,6 +1406,23 @@ RSpec.describe "Orders", type: :request do
         patch order_path(order), params: update_params(quantity: 2)
 
         expect(order.reload).to have_attributes(price: 601.to_d, discounted_price: 300.50.to_d)
+      end
+
+      # IBP-037: al modificar se recalcula con base + especial, y la orden
+      # recupera el uso del especial que ya tenía.
+      it "applies the special subsidy on top of the base one to the new quantity" do
+        travel_to(Time.zone.local(2026, 9, 14, 10)) do
+          order.schedule.update!(date: Date.new(2026, 9, 16))
+          base = Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: Date.new(2026, 9, 30), benefit_configuration: benefit_configurations(:monthly))
+          special = Benefit.create!(consumer: consumers(:one), amount: 2, percentage: 30, description: "Premio", benefit_configuration: benefit_configurations(:gift))
+          order.apply_benefit! special, 1
+
+          patch order_path(order), params: update_params(quantity: 3)
+
+          # 300.50 por vianda: 2 con 80% (60.10 c/u) y 1 solo con el base (150.25).
+          expect(order.reload).to have_attributes(price: 901.50.to_d, discounted_price: 270.45.to_d)
+          expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 3 ], [ special.id, 2 ])
+        end
       end
 
       it "switches to home delivery when the employee picks their own address" do
@@ -1339,6 +1555,36 @@ RSpec.describe "Orders", type: :request do
           follow_redirect!
           expect(inertia).to have_flash(alert: I18n.t("validations.invalid_quantity"))
         end
+      end
+
+      it "accepts updating notes with up to 140 characters" do
+        notes_140 = "a" * 140
+        patch order_path(order), params: update_params(notes: notes_140)
+
+        expect(order.reload.notes).to eq(notes_140)
+        follow_redirect!
+        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+      end
+
+      it "refuses notes exceeding 140 characters and preserves the previous notes" do
+        order.update!(notes: "Nota previa")
+        oversized_notes = "a" * 141
+
+        patch order_path(order), params: update_params(notes: oversized_notes)
+
+        expect(order.reload.notes).to eq("Nota previa")
+        follow_redirect!
+        expect(flash[:alert]).to include("140")
+      end
+
+      it "allows clearing notes by sending an empty string or nil" do
+        order.update!(notes: "Nota previa")
+
+        patch order_path(order), params: update_params(notes: "")
+
+        expect(order.reload.notes).to be_nil
+        follow_redirect!
+        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
       end
     end
   end

@@ -14,6 +14,10 @@ RSpec.configure do |config|
       driver_option.add_argument("--disable-dev-shm-usage")
       driver_option.add_argument("--disable-gpu")
     end
+
+    # screen_size solo se aplica al abrir el navegador, que se reusa entre specs:
+    # sin esto, un spec que achica la ventana deja al siguiente en modo celular.
+    page.current_window.resize_to(1400, 1400)
   end
 end
 

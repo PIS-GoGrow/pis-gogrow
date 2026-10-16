@@ -10,42 +10,57 @@ import EditMenuSheet, {
 import MenuAgendaFields, {
   type AgendaDraft,
   agendaPayload,
+  cwday,
+  firstPublishedDate,
   initialAgenda,
 } from "@/components/menus/menu-agenda-fields"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Field, FieldDescription, FieldLabel } from "@/components/ui/field"
+  Field,
+  FieldContent,
+  FieldDescription,
+  FieldLabel,
+} from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { providerMenus as menusRoutes } from "@/routes"
-import type { Menu, ProviderMenusEdit } from "@/types"
+import { providerMenus as menusRoutes, schedules } from "@/routes"
+import type { Menu, ProviderMenusEdit, ProviderMenusNew } from "@/types"
 
 interface OptionGroupDraft {
   id?: number
   name: string
   options: string
   limit: number
+  required: boolean
 }
 
-const emptyDraft: OptionGroupDraft = { name: "", options: "", limit: 1 }
+const emptyDraft: OptionGroupDraft = {
+  name: "",
+  options: "",
+  limit: 1,
+  required: false,
+}
 
 interface MenuFormProps {
-  formSuccess?: () => void
   menu?: Menu
   edit?: ProviderMenusEdit
+  create?: ProviderMenusNew
+  onCreated?: (publishedDate: string | null) => void
 }
 
 function agendaIsComplete(agenda: AgendaDraft) {
   if (agenda.weekdays.length === 0) return true
-  if (!(Number(agenda.amount) > 0)) return false
   if (agenda.mode === "single") return agenda.date !== ""
   if (agenda.mode === "range")
     return agenda.starts_on !== "" && agenda.ends_on >= agenda.starts_on
@@ -53,8 +68,16 @@ function agendaIsComplete(agenda: AgendaDraft) {
   return agenda.starts_on !== ""
 }
 
-export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
+export default function MenuForm({
+  menu,
+  edit,
+  create,
+  onCreated,
+}: MenuFormProps) {
   const { t } = useTranslation()
+  const key = "pages.provider_menus.form"
+  const calendar = edit ?? create
+
   const [groups, setGroups] = useState<OptionGroupDraft[]>(() =>
     menu
       ? menu.option_groups.map((group) => ({
@@ -62,18 +85,41 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
           name: group.name,
           options: group.options.join(", "),
           limit: group.limit,
+          required: group.required,
         }))
       : [],
   )
 
   const [removedGroupIds, setRemovedGroupIds] = useState<number[]>([])
-  const [groupDialogOpen, setGroupDialogOpen] = useState(false)
+  const [groupSheetOpen, setGroupSheetOpen] = useState(false)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [draft, setDraft] = useState<OptionGroupDraft>(emptyDraft)
   const [saveSheetOpen, setSaveSheetOpen] = useState(false)
   const [saved, setSaved] = useState(false)
   const [agenda, setAgenda] = useState<AgendaDraft | null>(() =>
-    edit ? initialAgenda(edit.agenda) : null,
+    edit
+      ? initialAgenda(edit.agenda)
+      : create
+        ? initialAgenda(
+            create.default_date
+              ? {
+                  mode: "single",
+                  weekdays: [cwday(create.default_date)],
+                  date: create.default_date,
+                  starts_on: null,
+                  ends_on: null,
+                  amount: null,
+                }
+              : {
+                  mode: "none",
+                  weekdays: [],
+                  date: null,
+                  starts_on: null,
+                  ends_on: null,
+                  amount: null,
+                },
+          )
+        : null,
   )
   const [agendaError, setAgendaError] = useState<string | null>(null)
 
@@ -108,16 +154,16 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
   const canSaveDraft =
     draft.name.trim() !== "" && draftOptions.length > 0 && !hasDuplicateOptions
 
-  function openAddGroupDialog() {
+  function openAddGroupSheet() {
     setEditingIndex(null)
     setDraft(emptyDraft)
-    setGroupDialogOpen(true)
+    setGroupSheetOpen(true)
   }
 
-  function openEditGroupDialog(index: number) {
+  function openEditGroupSheet(index: number) {
     setEditingIndex(index)
     setDraft(groups[index])
-    setGroupDialogOpen(true)
+    setGroupSheetOpen(true)
   }
 
   function saveDraft() {
@@ -134,7 +180,7 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
         : prev.map((g, i) => (i === editingIndex ? groupToSave : g)),
     )
 
-    setGroupDialogOpen(false)
+    setGroupSheetOpen(false)
   }
 
   function removeGroup(index: number) {
@@ -150,37 +196,41 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    if (data.name.trim() === "") {
-      setError("name", ["No puede estar vacío."])
-      return
-    }
-
-    if (data.description.trim() === "") {
-      setError("description", ["No puede estar vacío."])
-      return
-    }
-
-    if (data.price.trim() === "") {
-      setError("price", ["No puede estar vacío."])
-      return
-    }
-
-    transform((formData) => ({ menu: menuPayload(formData) }))
-
-    if (edit && agenda) {
-      if (!agendaIsComplete(agenda)) {
-        setAgendaError(t("pages.provider_menus.edit.agenda.incomplete"))
+    for (const field of ["name", "price", "description"] as const) {
+      if (data[field].trim() === "") {
+        setError(field, [t(`${key}.required`)])
         return
       }
+    }
 
-      setAgendaError(null)
+    if (agenda && !agendaIsComplete(agenda)) {
+      setAgendaError(t("pages.provider_menus.edit.agenda.incomplete"))
+      return
+    }
+
+    setAgendaError(null)
+
+    if (edit) {
+      transform((formData) => ({ menu: menuPayload(formData) }))
       setSaved(false)
       setSaveSheetOpen(true)
       return
     }
 
+    transform((formData) => ({
+      menu: menuPayload(formData),
+      ...(agenda ? { agenda: agendaPayload(agenda) } : {}),
+    }))
+
     post(menusRoutes.create().url, {
-      onSuccess: () => formSuccess?.(),
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () =>
+        onCreated?.(
+          agenda && calendar
+            ? firstPublishedDate(agenda, calendar.today)
+            : null,
+        ),
     })
   }
 
@@ -196,6 +246,7 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
             .map((o) => o.trim())
             .filter(Boolean),
           limit: g.limit,
+          required: g.required,
         })),
         ...removedGroupIds.map((id) => ({
           id,
@@ -216,15 +267,13 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
       schedule_id: new URLSearchParams(window.location.search).get(
         "schedule_id",
       ),
+      return_to: new URLSearchParams(window.location.search).get("return_to"),
     }))
 
     patch(menusRoutes.update(edit.saved_menu_id).url, {
       preserveScroll: true,
       preserveState: true,
-      onSuccess: () => {
-        setSaved(true)
-        formSuccess?.()
-      },
+      onSuccess: () => setSaved(true),
       onError: () => {
         setSaveSheetOpen(false)
       },
@@ -240,34 +289,77 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
         onSubmit={handleSubmit}
         className={menu ? "mx-auto w-full max-w-3xl" : undefined}
       >
-        <div className="flex flex-col gap-3">
-          <Field data-invalid={!!errors.name?.length}>
-            <FieldLabel htmlFor="name">
-              Nombre <span className="text-destructive">*</span>
-            </FieldLabel>
-            <Input
-              type="text"
-              name="name"
-              value={data.name}
-              onChange={(e) => {
-                setData("name", e.target.value)
-                clearErrors("name")
-              }}
-            />
-            {!!errors.name?.length && (
-              <FieldDescription>{errors.name}</FieldDescription>
-            )}
-          </Field>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-3">
+            <Field data-invalid={!!errors.name?.length} className="flex-1">
+              <FieldLabel htmlFor="name">
+                <span>
+                  {t(`${key}.name`)}
+                  <span className="text-destructive">*</span>
+                </span>
+              </FieldLabel>
+              <Input
+                id="name"
+                type="text"
+                name="name"
+                placeholder={t(`${key}.name_placeholder`)}
+                value={data.name}
+                onChange={(e) => {
+                  setData("name", e.target.value)
+                  clearErrors("name")
+                }}
+              />
+              {!!errors.name?.length && (
+                <FieldDescription>{errors.name}</FieldDescription>
+              )}
+            </Field>
 
-          <Field
-            data-invalid={!!errors.description?.length}
-            className={menu ? "sm:col-span-2" : undefined}
-          >
+            <Field data-invalid={!!errors.price?.length} className="w-24">
+              <FieldLabel htmlFor="price">
+                <span>
+                  {t(`${key}.price`)}
+                  <span className="text-destructive">*</span>
+                </span>
+              </FieldLabel>
+              <div className="relative">
+                <span
+                  aria-hidden="true"
+                  className="text-muted-foreground pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm"
+                >
+                  $
+                </span>
+                <Input
+                  id="price"
+                  type="number"
+                  inputMode="decimal"
+                  min="0.01"
+                  step="0.01"
+                  name="price"
+                  className="[appearance:textfield] pl-6 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  value={data.price}
+                  onChange={(e) => {
+                    setData("price", e.target.value)
+                    clearErrors("price")
+                  }}
+                />
+              </div>
+              {!!errors.price?.length && (
+                <FieldDescription>{errors.price}</FieldDescription>
+              )}
+            </Field>
+          </div>
+
+          <Field data-invalid={!!errors.description?.length}>
             <FieldLabel htmlFor="description">
-              Descripción <span className="text-destructive">*</span>
+              <span>
+                {t(`${key}.description`)}
+                <span className="text-destructive">*</span>
+              </span>
             </FieldLabel>
             <Textarea
+              id="description"
               name="description"
+              placeholder={t(`${key}.description_placeholder`)}
               value={data.description}
               className="min-h-24 resize-none"
               onChange={(e) => {
@@ -281,52 +373,24 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
             )}
           </Field>
 
-          <Field
-            data-invalid={!!errors.price?.length}
-            className={menu ? "sm:col-start-2 sm:row-start-1" : undefined}
-          >
-            <FieldLabel htmlFor="price">
-              Precio <span className="text-destructive">*</span>
-            </FieldLabel>
-            <Input
-              type="number"
-              min="0.01"
-              step="0.01"
-              name="price"
-              value={data.price}
-              onChange={(e) => {
-                setData("price", e.target.value)
-                clearErrors("price")
-              }}
-            />
-            {!!errors.price?.length && (
-              <FieldDescription>{errors.price}</FieldDescription>
-            )}
-          </Field>
-
-          <div
-            className={
-              menu ? "flex flex-col gap-3 sm:col-span-2" : "flex flex-col gap-2"
-            }
-          >
+          <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <FieldLabel className="text-base font-semibold">
-                Opciones
-              </FieldLabel>
+              <FieldLabel>{t(`${key}.options.title`)}</FieldLabel>
 
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={openAddGroupDialog}
+                className="-mr-2"
+                onClick={openAddGroupSheet}
               >
                 <Plus aria-hidden="true" className="h-4 w-4" />
-                Agregar
+                {t(`${key}.options.add`)}
               </Button>
             </div>
             {groups.length === 0 ? (
-              <p className="text-muted-foreground py-2 text-sm">
-                ¿Tiene sabores para elegir? ¡Agrégalos!
+              <p className="text-muted-foreground text-sm">
+                {t(`${key}.options.empty`)}
               </p>
             ) : (
               <div className="flex flex-col gap-3">
@@ -343,8 +407,10 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          aria-label={`Editar ${group.name}`}
-                          onClick={() => openEditGroupDialog(index)}
+                          aria-label={t(`${key}.options.edit`, {
+                            name: group.name,
+                          })}
+                          onClick={() => openEditGroupSheet(index)}
                         >
                           <Pencil aria-hidden="true" className="h-4 w-4" />
                         </Button>
@@ -353,7 +419,9 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
                           type="button"
                           variant="ghost"
                           size="icon-sm"
-                          aria-label={`Borrar ${group.name}`}
+                          aria-label={t(`${key}.options.remove`, {
+                            name: group.name,
+                          })}
                           onClick={() => removeGroup(index)}
                         >
                           <Trash2 aria-hidden="true" className="h-4 w-4" />
@@ -363,9 +431,17 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
 
                     <Separator className="my-2" />
 
-                    <div className="text-muted-foreground flex items-start justify-between gap-2 text-sm">
+                    <div className="text-muted-foreground flex items-start justify-between gap-2 text-xs">
                       <span>{group.options}</span>
-                      <span className="shrink-0">Límite {group.limit}</span>
+                      <span className="shrink-0">
+                        {t(
+                          group.required
+                            ? `${key}.options.required`
+                            : `${key}.options.optional`,
+                        )}
+                        {" · "}
+                        {t(`${key}.options.limit`, { limit: group.limit })}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -374,7 +450,7 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
           </div>
         </div>
 
-        {edit && agenda && (
+        {calendar && agenda && (
           <div className="mt-6">
             <MenuAgendaFields
               value={agenda}
@@ -382,114 +458,158 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
                 setAgenda(value)
                 setAgendaError(null)
               }}
-              today={edit.today}
-              maximumPublishDate={edit.maximum_publish_date}
+              today={calendar.today}
+              maximumPublishDate={calendar.maximum_publish_date}
               error={agendaError ?? serverAgendaError}
             />
           </div>
         )}
 
-        <Dialog open={groupDialogOpen} onOpenChange={setGroupDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Agregá opciones</DialogTitle>
-            </DialogHeader>
-
-            <div className="flex flex-col gap-3">
-              <Field>
-                <FieldLabel htmlFor="group-name">Nombre del grupo</FieldLabel>
-
-                <Input
-                  id="group-name"
-                  type="text"
-                  placeholder="Ej: Salsa"
-                  value={draft.name}
-                  onChange={(e) =>
-                    setDraft((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                />
-              </Field>
-
-              <Field>
-                <FieldLabel htmlFor="group-options">Opciones</FieldLabel>
-
-                <Textarea
-                  id="group-options"
-                  spellCheck={false}
-                  placeholder="Ej: Boloñesa, Caruso, 4 quesos"
-                  value={draft.options}
-                  onChange={(e) =>
-                    setDraft((prev) => ({ ...prev, options: e.target.value }))
-                  }
-                />
-
-                <FieldDescription>
-                  Ingresá las opciones separadas por coma.
-                </FieldDescription>
-
-                {hasDuplicateOptions && (
-                  <p className="text-destructive text-sm">
-                    No se permiten opciones repetidas.
-                  </p>
-                )}
-              </Field>
-
-              <Field>
-                <FieldLabel>
-                  ¿Cuántas opciones pueden elegir a la vez?
-                </FieldLabel>
-
-                <div>
-                  <QuantityInput
-                    value={Math.min(
-                      draft.limit,
-                      Math.max(draftOptions.length, 1),
-                    )}
-                    max={Math.max(draftOptions.length, 1)}
-                    onChange={(value) =>
-                      setDraft((prev) => ({ ...prev, limit: value }))
-                    }
-                  />
-                </div>
-              </Field>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setGroupDialogOpen(false)}
-              >
-                Cancelar
-              </Button>
-
-              <Button
-                type="button"
-                disabled={!canSaveDraft}
-                onClick={saveDraft}
-              >
-                {editingIndex === null ? "Agregar" : "Guardar"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
         {menu ? (
-          <div className="mt-8 flex justify-end gap-3">
-            <Button type="button" variant="outline" asChild>
-              <Link href={menusRoutes.index().url}>Cancelar</Link>
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            <Button type="button" variant="secondary" className="h-11" asChild>
+              <Link href={edit?.return_to ?? schedules.index().url}>
+                {t(`${key}.cancel`)}
+              </Link>
             </Button>
 
-            <Button type="submit" disabled={processing}>
-              {processing ? "Guardando..." : "Modificar"}
+            <Button type="submit" className="h-11" disabled={processing}>
+              {processing ? t(`${key}.updating`) : t(`${key}.update`)}
             </Button>
           </div>
         ) : (
-          <Button type="submit" className="mt-4 w-full" disabled={processing}>
-            {processing ? "Creando..." : "Crear"}
-          </Button>
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            <Button type="button" variant="secondary" className="h-11" asChild>
+              <Link href={schedules.index().url}>{t(`${key}.cancel`)}</Link>
+            </Button>
+
+            <Button type="submit" className="h-11" disabled={processing}>
+              {processing ? t(`${key}.creating`) : t(`${key}.create`)}
+            </Button>
+          </div>
         )}
       </form>
+
+      <Sheet open={groupSheetOpen} onOpenChange={setGroupSheetOpen}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="mx-auto gap-0 rounded-t-3xl pb-[env(safe-area-inset-bottom)] md:max-w-xl"
+        >
+          <div className="bg-muted-foreground/30 mx-auto mt-3 h-1 w-10 rounded-full" />
+
+          <SheetHeader className="items-start px-6 pt-8 text-left">
+            <SheetTitle className="text-base">
+              {t(`${key}.group.title`)}
+            </SheetTitle>
+            <SheetDescription className="sr-only">
+              {t(`${key}.group.description`)}
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="flex flex-col gap-4 px-6 pt-2">
+            <Field>
+              <FieldLabel htmlFor="group-name">
+                {t(`${key}.group.name`)}
+              </FieldLabel>
+
+              <Input
+                id="group-name"
+                type="text"
+                placeholder={t(`${key}.group.name_placeholder`)}
+                value={draft.name}
+                onChange={(e) =>
+                  setDraft((prev) => ({ ...prev, name: e.target.value }))
+                }
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel htmlFor="group-options">
+                {t(`${key}.group.options`)}
+              </FieldLabel>
+
+              <Textarea
+                id="group-options"
+                spellCheck={false}
+                placeholder={t(`${key}.group.options_placeholder`)}
+                className="min-h-20 resize-none"
+                value={draft.options}
+                onChange={(e) =>
+                  setDraft((prev) => ({ ...prev, options: e.target.value }))
+                }
+              />
+
+              <FieldDescription>
+                {t(`${key}.group.options_hint`)}
+              </FieldDescription>
+
+              {hasDuplicateOptions && (
+                <p className="text-destructive text-sm">
+                  {t(`${key}.group.duplicates`)}
+                </p>
+              )}
+            </Field>
+
+            <Field>
+              <FieldLabel>{t(`${key}.group.limit`)}</FieldLabel>
+
+              <div>
+                <QuantityInput
+                  value={Math.min(
+                    draft.limit,
+                    Math.max(draftOptions.length, 1),
+                  )}
+                  max={Math.max(draftOptions.length, 1)}
+                  onChange={(value) =>
+                    setDraft((prev) => ({ ...prev, limit: value }))
+                  }
+                />
+              </div>
+            </Field>
+
+            <Field orientation="horizontal">
+              <FieldContent>
+                <FieldLabel htmlFor="group-required">
+                  {t(`${key}.group.required`)}
+                </FieldLabel>
+                <FieldDescription>
+                  {t(`${key}.group.required_hint`)}
+                </FieldDescription>
+              </FieldContent>
+              <Switch
+                id="group-required"
+                checked={draft.required}
+                onCheckedChange={(required) =>
+                  setDraft((prev) => ({ ...prev, required }))
+                }
+              />
+            </Field>
+          </div>
+
+          <SheetFooter className="grid grid-cols-2 gap-3 px-6 pt-6 pb-6">
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-11"
+              onClick={() => setGroupSheetOpen(false)}
+            >
+              {t(`${key}.group.cancel`)}
+            </Button>
+
+            <Button
+              type="button"
+              className="h-11"
+              disabled={!canSaveDraft}
+              onClick={saveDraft}
+            >
+              {editingIndex === null
+                ? t(`${key}.group.add`)
+                : t(`${key}.group.modify`)}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
       {edit && agenda && (
         <EditMenuSheet
@@ -500,6 +620,7 @@ export default function MenuForm({ formSuccess, menu, edit }: MenuFormProps) {
           agenda={agendaPayload(agenda)}
           today={edit.today}
           scheduledDays={edit.scheduled_days}
+          returnTo={edit.return_to}
           onApply={applyChanges}
         />
       )}
