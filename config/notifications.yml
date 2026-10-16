@@ -28,6 +28,9 @@ configurations:
   company_payments:
     roles: [admin]
     configurable: true
+  employee_debts:
+    roles: [admin]
+    configurable: true
 
   hr_payment_reminders:
     roles: [consumer]
@@ -87,6 +90,11 @@ events:
   payment_due_soon:
     configuration: automatic_payment_reminders
     role: consumer
+    requires_action: false
+    
+  employee_debt_overdue:
+    configuration: employee_debts
+    role: admin
     requires_action: false
 
   company_payment_upcoming:
