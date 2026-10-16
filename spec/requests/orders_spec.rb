@@ -537,7 +537,7 @@ RSpec.describe "Orders", type: :request do
         }
       end.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       expect(available.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(
@@ -631,7 +631,7 @@ RSpec.describe "Orders", type: :request do
         post orders_path, params: { order: { address: consumer.address, items: [] } }
       end.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.empty_cart") })
     end
@@ -689,7 +689,7 @@ RSpec.describe "Orders", type: :request do
           }
         end.not_to change(Order, :count)
 
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(dashboard_cart_path)
         follow_redirect!
         expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
       end
@@ -707,7 +707,7 @@ RSpec.describe "Orders", type: :request do
           }
         end.not_to change(Order, :count)
 
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(dashboard_cart_path)
         follow_redirect!
         expect(inertia).to have_props(errors: { order_error: I18n.t("validations.invalid_address") })
       end
@@ -724,7 +724,7 @@ RSpec.describe "Orders", type: :request do
           }
         end.not_to change(Order, :count)
 
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(dashboard_cart_path)
         follow_redirect!
         expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
       end
@@ -762,7 +762,7 @@ RSpec.describe "Orders", type: :request do
           }
         end.not_to change(Order, :count)
 
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(dashboard_cart_path)
         follow_redirect!
         expect(inertia).to have_props(errors: { order_error: I18n.t("validations.office_address_required") })
       end
@@ -835,7 +835,7 @@ RSpec.describe "Orders", type: :request do
         post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
       end.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       expect(schedule.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.order_deadline_passed") })
@@ -894,7 +894,7 @@ RSpec.describe "Orders", type: :request do
         post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
       end.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       expect(schedule.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.provider_closed") })
@@ -1030,7 +1030,7 @@ RSpec.describe "Orders", type: :request do
         schedule = create_schedule
 
         post orders_path, params: { order: { address: "Canelones 892", items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
-        get dashboard_path
+        get dashboard_cart_path
 
         expect(inertia.props[:addresses].first(2).pluck(:label)).to eq([ "Oficina", "Flora Café" ])
       end

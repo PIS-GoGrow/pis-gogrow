@@ -36,7 +36,7 @@ RSpec.describe "Delivery addresses", type: :request do
       expect(consumers(:one).saved_addresses.last)
         .to have_attributes(name: "Flora Café", street: "Canelones 892", apartment: "Apto 3")
 
-      follow_redirect!
+      get dashboard_cart_path
       expect(inertia.props[:addresses]).to include(
         a_hash_including(label: "Flora Café", address: "Canelones 892, Apto 3")
       )
