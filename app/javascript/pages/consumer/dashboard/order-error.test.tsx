@@ -32,14 +32,18 @@ describe("OrderError Component", () => {
   it("renderiza el título de error y el icono dentro de la tarjeta", () => {
     render(<OrderError {...defaultProps} />)
 
-    expect(screen.getByRole("heading", { name: "No se pudo procesar el pedido" })).toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: "No se pudo procesar el pedido" }),
+    ).toBeInTheDocument()
   })
 
   it("muestra el mensaje de error predeterminado cuando no se provee la prop error", () => {
     render(<OrderError {...defaultProps} />)
 
     expect(
-      screen.getByText("Hubo un problema al procesar tu pedido. Intentá de nuevo.")
+      screen.getByText(
+        "Hubo un problema al procesar tu pedido. Intentá de nuevo.",
+      ),
     ).toBeInTheDocument()
   })
 
@@ -49,7 +53,9 @@ describe("OrderError Component", () => {
 
     expect(screen.getByText(customError)).toBeInTheDocument()
     expect(
-      screen.queryByText("Hubo un problema al procesar tu pedido. Intentá de nuevo.")
+      screen.queryByText(
+        "Hubo un problema al procesar tu pedido. Intentá de nuevo.",
+      ),
     ).not.toBeInTheDocument()
   })
 
