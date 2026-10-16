@@ -181,7 +181,7 @@ class Consumer::OrdersController < Consumer::InertiaController
     lines = pricing.to_h do |schedule_id, result|
       item = items_by_schedule.fetch(schedule_id)
       quantity = item[:quantity]
-      price = result.price
+      price = result.price.to_f
 
       tiers = result.benefits.map do |benefit, units_used|
         discount = price * units_used * benefit.percentage / 100 / quantity
@@ -190,17 +190,17 @@ class Consumer::OrdersController < Consumer::InertiaController
           name: benefit.benefit_configuration.name,
           percentage: benefit.percentage,
           quantity: units_used,
-          discount:
+          discount: discount.to_f
         }
       end
 
-      discount = price - result.discounted_price
+      discount = price - result.discounted_price.to_f
       [
         schedule_id.to_s,
         {
-          subtotal: price * quantity,
+          subtotal: price,
           discount: discount,
-          total: price * quantity - discount,
+          total: price - discount,
           tiers: tiers
         }
       ]
@@ -228,7 +228,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def reject_order(reason)
-    redirect_to dashboard_error_path, inertia: {
+    redirect_to dashboard_cart_path, inertia: {
       errors: { order_error: t("validations.#{reason}") }
     }, status: :see_other
   end

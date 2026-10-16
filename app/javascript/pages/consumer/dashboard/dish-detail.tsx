@@ -46,20 +46,28 @@ export function DishDetail({
   const [pricing, setPricing] = useState<Pricing | null>(null)
 
   useEffect(() => {
-    const handlePrice = async () => {
-      const result = await priceItems([
-        ...cart.map(cartPricedItem),
-        {
-          schedule_id: item.id,
-          quantity,
-        },
-      ])
+    let cancelled = false
 
-      setPricing(result)
-      setLoading(false)
+    // Debounce: si el usuario toca "+" varias veces seguidas, solo sale la última consulta
+    const timeout = setTimeout(async () => {
+      try {
+        const result = await priceItems([
+          ...cart.map(cartPricedItem),
+          {
+            schedule_id: item.id,
+            quantity,
+          },
+        ])
+        if (!cancelled) setPricing(result)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }, 250)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
     }
-
-    handlePrice()
   }, [cart, item.id, item.date, item.menu.price, quantity])
 
   const line = pricing?.lines[String(item.id)]
