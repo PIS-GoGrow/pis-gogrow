@@ -41,7 +41,10 @@ export default function MenuItem({
             {providerName}
           </span>
           {addedQuantity && (
-            <span className="text-foreground text-xs">• Agregado</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+              <span className="size-1.5 rounded-full bg-blue-500" />
+              {t("pages.consumer_dashboard.index.added", "Agregado")}
+            </span>
           )}
           {ordersClosed && (
             <span className="text-destructive flex items-center gap-1 text-xs">
@@ -57,7 +60,8 @@ export default function MenuItem({
           )}
         </div>
         <p className="text-base font-semibold">
-          {name} <span className="font-normal">| ${price}</span>
+          <span>{name}</span>
+          <span> | ${price}</span>
         </p>
         {description && (
           <p className="text-muted-foreground mt-1 line-clamp-2 text-sm leading-5">

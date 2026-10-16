@@ -47,34 +47,34 @@ export default function CancelOrderSheet({ order }: CancelOrderSheetProps) {
       <AdaptableDialogTrigger asChild>
         <Button
           type="button"
-          variant="outline"
-          className="h-10 w-full gap-1.5 text-sm font-medium"
+          variant="secondary"
+          className="bg-muted hover:bg-muted/80 text-foreground h-10 w-full gap-1.5 rounded-[10px] border-0 text-sm font-medium"
         >
           <X aria-hidden="true" className="size-4" />
           {t("pages.orders.index.cancel")}
         </Button>
       </AdaptableDialogTrigger>
 
-      <AdaptableDialogContent showCloseButton={false} className="p-5">
-        <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
+      <AdaptableDialogContent showCloseButton={false} className="p-6">
+        <AdaptableDialogTitle className="text-foreground text-base leading-6 font-semibold tracking-normal">
           {t("pages.orders.index.cancel_dialog.title")}
         </AdaptableDialogTitle>
-        <AdaptableDialogDescription className="text-base leading-6">
+        <AdaptableDialogDescription className="text-muted-foreground mt-2 mb-5 text-base leading-6">
           {t("pages.orders.index.cancel_dialog.description")}
         </AdaptableDialogDescription>
 
         <div className="grid grid-cols-2 gap-3">
           <Button
             type="button"
-            variant="outline"
-            className="h-12 text-base font-medium"
+            variant="secondary"
+            className="bg-muted hover:bg-muted/80 text-foreground h-10 rounded-[10px] border-0 text-base font-medium"
             onClick={() => setOpen(false)}
           >
             {t("pages.orders.index.cancel_dialog.back")}
           </Button>
           <Button
             type="button"
-            className="h-12 text-base font-medium"
+            className="h-10 rounded-[10px] bg-[#171717] text-base font-medium text-[#fafafa] hover:bg-[#171717]/90 dark:bg-zinc-100 dark:text-zinc-900"
             disabled={processing}
             onClick={handleCancel}
           >

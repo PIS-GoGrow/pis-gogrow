@@ -86,8 +86,8 @@ export default function OrderCard({ order, section }: OrderCardProps) {
             <div className="flex flex-col gap-1">
               <Button
                 type="button"
-                variant="outline"
-                className="h-10 w-full gap-1.5 text-sm font-medium"
+                variant="secondary"
+                className="bg-muted text-foreground h-10 w-full gap-1.5 rounded-[10px] border-0 text-sm font-medium"
                 disabled
               >
                 <X aria-hidden="true" className="size-4" />
@@ -105,8 +105,8 @@ export default function OrderCard({ order, section }: OrderCardProps) {
           {order.modifiable ? (
             <Button
               type="button"
-              variant="outline"
-              className="h-10 w-full gap-1.5 text-sm font-medium"
+              variant="secondary"
+              className="bg-muted hover:bg-muted/80 text-foreground h-10 w-full gap-1.5 rounded-[10px] border-0 text-sm font-medium"
               asChild
             >
               <Link
@@ -120,8 +120,8 @@ export default function OrderCard({ order, section }: OrderCardProps) {
             <div className="flex flex-col gap-1">
               <Button
                 type="button"
-                variant="outline"
-                className="h-10 w-full gap-1.5 text-sm font-medium"
+                variant="secondary"
+                className="bg-muted text-foreground h-10 w-full gap-1.5 rounded-[10px] border-0 text-sm font-medium"
                 disabled
               >
                 <Pencil aria-hidden="true" className="size-4" />

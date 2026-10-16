@@ -229,9 +229,11 @@
           "payments": "Pagos",
           "pending": "Pendientes",
           "pending_payments": "Pagos pendientes",
+          "see_consumption_detail": "Ver detalle del consumo",
           "spending": "Tu consumo",
           "this_month": "Este mes",
-          "total_debt": "Deuda total"
+          "total_debt": "Deuda total",
+          "viandas_consumed": "viandas consumidas"
         },
         "show": {
           "amount": "Cant.",
@@ -551,13 +553,14 @@
       },
       "consumer_dashboard": {
         "confirmation": {
+          "amount_to_pay": "Monto a pagar",
           "close": "Cerrar",
           "delivery": "Entrega",
           "menu": "Menú",
           "subtitle": "Te notificaremos cuando el proveedor confirme tu pedido.",
           "title": "¡Pedido recibido!",
-          "total_paid": "Total pagado",
-          "view_orders": "Ir a Mis Pedidos"
+          "total_paid": "Monto a pagar",
+          "view_orders": "Ir a Mis pedidos"
         },
         "dish_detail": {
           "add": "Agregar",
@@ -567,6 +570,7 @@
           "reviews_title": "Opiniones del plato"
         },
         "index": {
+          "added": "Agregado",
           "closure": {
             "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
             "dismiss": "Cerrar aviso",
@@ -706,7 +710,7 @@
             "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
           },
-          "history_address": "Recibiste en: %{address} (%{delivery_method})",
+          "history_address": "Lo recibiste en: %{address} (%{delivery_method})",
           "history_empty_description": "Tus pedidos completados aparecerán aquí.",
           "history_empty_title": "No tienes pedidos anteriores",
           "history_tab": "Historial",

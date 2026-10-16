@@ -594,6 +594,8 @@ es:
         payments: "Pagos"
         spending: "Tu consumo"
         this_month: "Este mes"
+        see_consumption_detail: "Ver detalle del consumo"
+        viandas_consumed: "viandas consumidas"
         pending_payments: "Pagos pendientes"
         total_debt: "Deuda total"
         pending: "Pendientes"
@@ -652,7 +654,7 @@ es:
         history_empty_description: "Tus pedidos completados aparecerán aquí."
         quantity: "x%{count}"
         upcoming_address: "Lo recibís en: %{address} (%{delivery_method})"
-        history_address: "Recibiste en: %{address} (%{delivery_method})"
+        history_address: "Lo recibiste en: %{address} (%{delivery_method})"
         no_date: "Sin fecha de entrega"
         no_price: "Importe no disponible"
         base_price: "Precio base: %{amount}"
@@ -1305,6 +1307,7 @@ es:
             other_year: "%{from} al %{to}"
     consumer_dashboard:
       index:
+        added: "Agregado"
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
         closure:
           title_now: "%{provider} no está disponible"
@@ -1342,8 +1345,9 @@ es:
         title: "¡Pedido recibido!"
         subtitle: "Te notificaremos cuando el proveedor confirme tu pedido."
         delivery: "Entrega"
-        total_paid: "Total pagado"
-        view_orders: "Ir a Mis Pedidos"
+        amount_to_pay: "Monto a pagar"
+        total_paid: "Monto a pagar"
+        view_orders: "Ir a Mis pedidos"
       order_error:
         title: "¡Ups! Algo salió mal"
         description: "Hubo un problema al procesar tu pedido. Intentá de nuevo."

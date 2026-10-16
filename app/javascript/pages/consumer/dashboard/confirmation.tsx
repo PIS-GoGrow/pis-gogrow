@@ -76,60 +76,68 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
           <Link
             href={consumerDashboard.index()}
             preserveState={false}
-            aria-label={t("pages.consumer_dashboard.confirmation.close")}
+            aria-label={t(
+              "pages.consumer_dashboard.confirmation.close",
+              "Cerrar",
+            )}
             prefetch
           >
             <X aria-hidden="true" className="size-4" />
           </Link>
         </Button>
 
-        <div className="bg-primary text-primary-foreground mx-auto flex size-20 items-center justify-center rounded-full">
+        <div className="mx-auto mt-4 flex size-20 items-center justify-center rounded-full bg-[#171717] text-[#fafafa] dark:bg-zinc-100 dark:text-zinc-900">
           <Check aria-hidden="true" className="size-10" strokeWidth={2.5} />
         </div>
 
-        <h1 className="mt-3 text-center text-2xl font-bold">
+        <h1 className="mt-4 text-center text-2xl font-bold">
           {t("pages.consumer_dashboard.confirmation.title")}
         </h1>
-        <p className="text-muted-foreground text-center text-base leading-6">
+        <p className="text-muted-foreground mt-2 text-center text-base leading-6">
           {t("pages.consumer_dashboard.confirmation.subtitle")}
         </p>
 
-        <div className="border-border bg-muted mt-5 rounded-lg border p-4 text-sm">
-          <p className="text-muted-foreground">
-            {t("pages.consumer_dashboard.confirmation.delivery")}
-          </p>
-          <p className="mt-1 font-semibold capitalize">{deliveryDates[0]}</p>
-          {primaryDelivery && (
-            <p className="mt-1 font-medium">
-              {t(
-                `pages.orders.delivery_methods.${primaryDelivery.deliveryMethod}`,
-              )}{" "}
-              | {primaryDelivery.address}
+        <div className="border-border bg-muted mt-6 rounded-lg border p-4 text-sm">
+          <div>
+            <p className="text-muted-foreground font-medium">
+              {t("pages.consumer_dashboard.confirmation.delivery")}
             </p>
-          )}
+            <p className="text-foreground mt-1 text-base font-medium capitalize">
+              {deliveryDates[0]}
+            </p>
+            {primaryDelivery && (
+              <p className="text-foreground mt-1 text-base font-medium">
+                {t(
+                  `pages.orders.delivery_methods.${primaryDelivery.deliveryMethod}`,
+                )}{" "}
+                | {primaryDelivery.address}
+              </p>
+            )}
+          </div>
 
-          <div className="border-border mt-4 space-y-4 border-t pt-4">
-            {deliveries.map((delivery) => (
+          <div className="border-border mt-3 space-y-3 border-t pt-3">
+            {deliveries.map((delivery, index) => (
               <section
                 key={`${delivery.items[0]?.provider_name}-${delivery.deliveryMethod}-${delivery.address}`}
+                className={index > 0 ? "border-border border-t pt-3" : ""}
               >
-                <p className="text-muted-foreground">
+                <p className="text-muted-foreground font-medium">
                   {delivery.items[0]?.provider_name}
                 </p>
                 <div className="mt-2 space-y-2">
                   {delivery.items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-baseline justify-between gap-3"
+                      className="flex items-center justify-between text-base"
                     >
-                      <p className="min-w-0">
-                        <span className="font-medium">{item.name}</span>
-                        <span className="text-muted-foreground">
+                      <span className="text-foreground font-medium">
+                        <span>{item.name}</span>
+                        <span>
                           {" "}
                           | {money(item.discounted_price / item.quantity)}
                         </span>
-                      </p>
-                      <span className="shrink-0 font-semibold">
+                      </span>
+                      <span className="text-foreground font-semibold">
                         x{item.quantity}
                       </span>
                     </div>
@@ -139,16 +147,21 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
             ))}
           </div>
 
-          <div className="border-border mt-4 border-t pt-4">
-            <p className="text-muted-foreground">
-              {t("pages.consumer_dashboard.confirmation.total_paid")}
+          <div className="border-border mt-3 border-t pt-3">
+            <p className="text-muted-foreground font-medium">
+              {t("pages.consumer_dashboard.confirmation.amount_to_pay")}
             </p>
-            <p className="mt-1 text-lg font-bold">{money(total)}</p>
+            <p className="text-foreground mt-1 text-base font-medium">
+              {money(total)}
+            </p>
           </div>
         </div>
 
         <BottomAction>
-          <Button className="h-12 w-full text-base font-medium" asChild>
+          <Button
+            className="h-12 w-full rounded-[10px] text-base font-medium"
+            asChild
+          >
             <Link href={consumerOrders.index()} prefetch>
               {t("pages.consumer_dashboard.confirmation.view_orders")}
             </Link>

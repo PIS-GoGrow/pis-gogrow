@@ -47,6 +47,10 @@ export default function Index({
 
       <PageContainer
         title={t("pages.provider_orders.index.title")}
+        description={t(
+          "pages.provider_orders.index.description",
+          "Gestión y resumen de la operación diaria",
+        )}
         titleVariant="prominent"
       >
         <div className={cn("grid gap-4", ordersColumns)}>

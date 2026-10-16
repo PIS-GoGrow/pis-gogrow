@@ -78,7 +78,7 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
   end
 
   def open_history
-    visit accounts_path
+    visit_hydrated accounts_path
     open_history_tab
   end
 

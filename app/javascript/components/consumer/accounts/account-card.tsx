@@ -3,16 +3,9 @@ import { useTranslation } from "react-i18next"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
-import { SheetTrigger } from "@/components/ui/sheet"
 import { useFormatters } from "@/hooks/use-formatters"
 import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
+import { cn } from "@/lib/utils"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
 
@@ -28,15 +21,17 @@ interface AccountCardProps {
   account: Account
   setDetail: React.Dispatch<React.SetStateAction<AccountDetail | null>>
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
+  onOpenDetail?: () => void
 }
 
 export default function AccountCard({
   account,
   setDetail,
   setLoading,
+  onOpenDetail,
 }: AccountCardProps) {
   const { t } = useTranslation()
-  const { formatMoney } = useFormatters()
+  const { formatMoneyShort } = useFormatters()
   const payment =
     [...account.payments]
       .sort(
@@ -67,6 +62,7 @@ export default function AccountCard({
 
   async function handleClick() {
     setLoading(true)
+    onOpenDetail?.()
     try {
       const response = await fetch(consumerAccounts.show(account.id).url, {
         headers: { Accept: "application/json" },
@@ -86,87 +82,89 @@ export default function AccountCard({
   }
 
   return (
-    <Card className="bg-zinc-50 dark:bg-zinc-900">
-      <CardHeader className="grid gap-4">
-        <CardDescription className="flex items-center gap-2">
-          {account.month}
-
-          <Badge className={statusBadgeClassName}>{statusLabel}</Badge>
-
-          <Badge
-            variant="ghost"
-            className={
-              account.due_date_passed
-                ? "ml-auto text-red-600 dark:text-red-400"
-                : "ml-auto text-amber-600 dark:text-amber-400"
-            }
-          >
-            <TriangleAlert />
-            {t("pages.accounts.show.due") + account.due_date}
-          </Badge>
-        </CardDescription>
-
-        <Separator />
-
-        <CardTitle className="flex items-center">
-          <span>
-            {formatMoney(account.amount ?? 0)}
-            <span className="text-zinc-500 dark:text-zinc-400">
-              {" | "}
-              {account.orders_amount_sum}{" "}
-              {account.orders_amount_sum == 1
-                ? t("pages.accounts.show.lunch")
-                : t("pages.accounts.show.lunches")}
-            </span>
+    <div className="border-border bg-muted space-y-3 rounded-lg border p-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-muted-foreground text-sm font-medium">
+            {account.month}
           </span>
-          <SheetTrigger asChild>
-            <Button
-              onClick={() => {
-                void handleClick()
-              }}
-              className="ml-auto"
-              variant="ghost"
-            >
-              {" "}
-              <Eye /> {t("pages.accounts.show.see_detail") + " "}
-            </Button>
-          </SheetTrigger>
-        </CardTitle>
-
-        {(payment?.status === "rejected" || showReceiptSection) && (
-          <Separator />
-        )}
-
-        {payment?.status === "rejected" &&
-          (payment.rejection_reason === PARTIAL_PAYMENT_REJECTION_REASON ? (
-            <div className="flex items-start gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-400">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-              <p>{t("pages.accounts.show.partial_payment_warning")}</p>
-            </div>
-          ) : (
-            <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
-              <CircleX className="mt-0.5 size-4 shrink-0" />
-              <p>
-                <span className="font-medium">
-                  {t("pages.accounts.show.status_rejected")}:
-                </span>{" "}
-                {payment.rejection_reason}
-              </p>
-            </div>
-          ))}
-
-        {showReceiptSection && (
-          <PaymentReceiptDialog
-            accountId={account.id}
-            canUpload={!account.current}
-            payments={[...account.payments].sort(
-              (first, second) =>
-                new Date(second.created_at).getTime() -
-                new Date(first.created_at).getTime(),
+          <Badge
+            className={cn(
+              "border-0 px-2.5 py-0.5 text-xs font-medium",
+              statusBadgeClassName,
             )}
-          />
-        )}
-      </CardHeader>
-    </Card>
+          >
+            {statusLabel}
+          </Badge>
+        </div>
+
+        <Badge
+          variant="ghost"
+          className={cn(
+            "ml-auto gap-1 border-0 px-2.5 py-0.5 text-xs font-medium",
+            account.due_date_passed
+              ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300"
+              : "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+          )}
+        >
+          <TriangleAlert className="size-3.5" />
+          {t("pages.accounts.show.due") + account.due_date}
+        </Badge>
+      </div>
+
+      <div className="border-border flex items-center justify-between border-y py-2.5">
+        <span className="text-foreground text-base font-semibold">
+          {formatMoneyShort(account.amount ?? 0)}
+          <span className="text-foreground font-semibold">
+            {" | "}
+            {account.orders_amount_sum}{" "}
+            {account.orders_amount_sum == 1
+              ? t("pages.accounts.show.lunch")
+              : t("pages.accounts.show.lunches")}
+          </span>
+        </span>
+        <Button
+          type="button"
+          onClick={() => {
+            void handleClick()
+          }}
+          className="text-foreground ml-auto h-auto gap-1.5 p-0 text-sm font-semibold hover:bg-transparent hover:underline"
+          variant="ghost"
+        >
+          <Eye aria-hidden="true" className="size-4" />
+          {t("pages.accounts.show.see_detail")}
+        </Button>
+      </div>
+
+      {payment?.status === "rejected" &&
+        (payment.rejection_reason === PARTIAL_PAYMENT_REJECTION_REASON ? (
+          <div className="flex items-start gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+            <p>{t("pages.accounts.show.partial_payment_warning")}</p>
+          </div>
+        ) : (
+          <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
+            <CircleX className="mt-0.5 size-4 shrink-0" />
+            <p>
+              <span className="font-medium">
+                {t("pages.accounts.show.status_rejected")}:
+              </span>{" "}
+              {payment.rejection_reason}
+            </p>
+          </div>
+        ))}
+
+      {showReceiptSection && (
+        <PaymentReceiptDialog
+          accountId={account.id}
+          canUpload={!account.current}
+          payments={[...account.payments].sort(
+            (first, second) =>
+              new Date(second.created_at).getTime() -
+              new Date(first.created_at).getTime(),
+          )}
+        />
+      )}
+    </div>
   )
 }

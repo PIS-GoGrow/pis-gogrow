@@ -46,7 +46,7 @@ RSpec.describe "Acceso a la pantalla de confirmación de pedido", type: :system 
       expect(page).to have_content("¡Pedido recibido!")
       expect(page).to have_content("Te notificaremos cuando el proveedor confirme tu pedido.")
       expect(page).to have_content(own_order.address)
-      expect(page).to have_link("Ver mis pedidos", href: orders_path)
+      expect(page).to have_link(I18n.t("pages.consumer_dashboard.confirmation.view_orders"), href: orders_path)
     end
   end
 end

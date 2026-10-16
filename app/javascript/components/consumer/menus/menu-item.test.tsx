@@ -60,7 +60,7 @@ describe("MenuItem", () => {
   it("shows the quantity already added instead of the add icon", () => {
     render(<MenuItem {...props} soldOut={false} addedQuantity={2} />)
 
-    expect(screen.getByText("• Agregado")).toBeInTheDocument()
+    expect(screen.getByText("Agregado")).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Agregar Milanesa con papas fritas" }),
     ).toHaveTextContent("2")
