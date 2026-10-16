@@ -41,7 +41,14 @@ describe("OrderSummary", () => {
   })
 
   it("shows the price, the benefit and the amount to pay", () => {
-    render(<OrderSummary loading={false} subtotal={640} total={320} tiers={[tier(50, 320)]} />)
+    render(
+      <OrderSummary
+        loading={false}
+        subtotal={640}
+        total={320}
+        tiers={[tier(50, 320)]}
+      />,
+    )
 
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
       "$640",
@@ -53,7 +60,14 @@ describe("OrderSummary", () => {
   })
 
   it("keeps showing the benefit line at zero instead of hiding it", () => {
-    render(<OrderSummary loading={false} subtotal={640} total={640} tiers={[tier(0, 0)]} />)
+    render(
+      <OrderSummary
+        loading={false}
+        subtotal={640}
+        total={640}
+        tiers={[tier(0, 0)]}
+      />,
+    )
 
     expect(screen.getByText("Beneficio GoGrow (0%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
@@ -83,7 +97,12 @@ describe("OrderSummary", () => {
 
   it("rounds the amounts it shows", () => {
     render(
-      <OrderSummary loading={false} subtotal={640.5} total={320.1} tiers={[tier(50, 320.4)]} />,
+      <OrderSummary
+        loading={false}
+        subtotal={640.5}
+        total={320.1}
+        tiers={[tier(50, 320.4)]}
+      />,
     )
 
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(

@@ -2,9 +2,12 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import ConsumerCart from "./cart"
+import { ConsumerCart } from "./consumer-cart"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
 import { cartPricedItem, priceItems } from "./pricing"
+import type { ConsumerDashboardIndex } from "@/types"
+
+type Benefit = ConsumerDashboardIndex["benefit"]
 
 // El formulario de "Agregar una dirección" habla con el servidor; acá solo
 // importa qué direcciones ofrece el carrito y cuándo.
@@ -68,17 +71,28 @@ const benefit: Benefit = {
   specials: [],
 }
 
-function renderCart(
+async function renderCart(
   props: Partial<Parameters<typeof ConsumerCart>[0]> = {},
   benefitProps: Partial<Benefit> = {},
 ) {
   const cart = props.cart ?? [cartItem("Tu Viandita", true)]
+
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(JSON.stringify({ ...benefit, ...benefitProps }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  )
+
+  const result = await priceItems(cart.map(cartPricedItem))
+
   const defaults = {
     monthlyLimit: 20,
     monthlyRemaining: 20,
-    pricing: priceItems(cart.map(cartPricedItem)),
+    pricing: result,
     cart,
     addresses,
+    loading: false,
     address: "Av. 18 de Julio 1006",
     setAddress: vi.fn(),
     onAddAddress: vi.fn(),

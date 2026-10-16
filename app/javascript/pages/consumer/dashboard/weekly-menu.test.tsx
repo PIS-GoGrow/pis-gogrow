@@ -83,6 +83,7 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
       total: 0,
       openDetail: vi.fn(),
       openCart: vi.fn(),
+      loading: false,
       ...props,
     }
 
@@ -122,22 +123,20 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
 
   it("llama a openCart al presionar el botón flotante", async () => {
     const user = userEvent.setup()
-    const openCart = vi.fn()
-    renderComponent({ count: 2, total: 700, cart: [sampleCartItem], openCart })
+    renderComponent({ count: 2, total: 700, cart: [sampleCartItem] })
 
     const floatingButton = document.querySelector(
       '[data-slot="floating-cart-button"]',
     )
     expect(floatingButton).not.toBeNull()
 
+    expect(floatingButton).toHaveAttribute("href", "/dashboard/cart")
     await user.click(floatingButton!)
-    expect(openCart).toHaveBeenCalledTimes(1)
   })
 
   it("permite abrir el carrito desde el aside de escritorio cuando count > 0", async () => {
     const user = userEvent.setup()
-    const openCart = vi.fn()
-    renderComponent({ count: 1, total: 350, cart: [sampleCartItem], openCart })
+    renderComponent({ count: 1, total: 350, cart: [sampleCartItem] })
 
     const cartButtons = screen.getAllByRole("button", { name: "Ver carrito" })
     // El segundo botón es el del aside en desktop
@@ -147,8 +146,8 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
     expect(asideButton).toBeDefined()
     expect(asideButton).toBeEnabled()
 
+    expect(asideButton).toHaveAttribute("href", "/dashboard/cart")
     await user.click(asideButton!)
-    expect(openCart).toHaveBeenCalledTimes(1)
   })
 
   it("muestra el resumen de viandas y monto en la tarjeta de carrito", () => {

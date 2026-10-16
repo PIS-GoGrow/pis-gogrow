@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next"
-import { Spinner } from "@/components/ui/spinner"
 
+import { Spinner } from "@/components/ui/spinner"
 import { cn } from "@/lib/utils"
 
 import { money } from "./formatters"
@@ -32,7 +32,7 @@ export function OrderSummary({
               <span className="text-muted-foreground">
                 {t("pages.cart.subtotal")}
               </span>
-              <span>{money(subtotal || 0)}</span>
+              <span>{money(subtotal ?? 0)}</span>
             </div>
             {tiers.map((tier, index) => (
               <BenefitLine
@@ -49,7 +49,7 @@ export function OrderSummary({
           )}
         >
           <span>{t("pages.cart.total")}</span>
-          <span>{money(total || 0)}</span>
+          <span>{money(total ?? 0)}</span>
         </div>
       </div>
     )

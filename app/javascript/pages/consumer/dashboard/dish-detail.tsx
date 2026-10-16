@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react"
-
 import { ChevronLeft, Star } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
@@ -12,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
-import { Pricing, cartPricedItem, priceItems } from "./pricing"
+import type { Pricing } from "./pricing"
+import { cartPricedItem, priceItems } from "./pricing"
 
 interface Props {
   item: Schedule

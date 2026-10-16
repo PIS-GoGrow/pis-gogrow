@@ -1,5 +1,5 @@
 import { Head, usePage } from "@inertiajs/react"
-import { useMemo, useState, useEffect } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import useSessionStorage from "@/hooks/use-session-storage"
 import AppLayout from "@/layouts/app-layout"
@@ -8,9 +8,9 @@ import type { ConsumerDashboardIndex } from "@/types"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
+import type { Pricing } from "./pricing"
+import { cartPricedItem, priceItems } from "./pricing"
 import { WeeklyMenu, today } from "./weekly-menu"
-
-import { Pricing, cartPricedItem, priceItems } from "./pricing"
 
 type View = "menu" | "detail"
 
@@ -95,35 +95,37 @@ export default function Index({
     setView("menu")
   }
 
-  const [loading, setLoading] = useState<boolean>(true)
-  const [pricing, setPricing] = useState<Pricing | null>(null)
+  const items = useMemo(() => cart.map(cartPricedItem), [cart])
+  const requestKey = useMemo(() => JSON.stringify(items), [items])
+
+  // Guarda el resultado junto con el carrito para el que se calculó
+  const [priced, setPriced] = useState<{
+    key: string
+    pricing: Pricing | null
+  } | null>(null)
 
   useEffect(() => {
-    // No consultar con el carrito vacío (incluye el primer render, antes de cargar el storage)
-    if (cart.length === 0) {
-      setPricing(null)
-      setLoading(false)
-      return
-    }
+    if (items.length === 0) return
 
     let cancelled = false
-    setLoading(true)
 
-    // Debounce: si el usuario toca "+" varias veces seguidas, solo sale la última consulta
-    const timeout = setTimeout(async () => {
-      try {
-        const result = await priceItems(cart.map(cartPricedItem))
-        if (!cancelled) setPricing(result)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }, 250)
+    priceItems(items)
+      .then((pricing) => {
+        if (!cancelled) setPriced({ key: requestKey, pricing })
+      })
+      .catch(() => {
+        // Si falla, marcamos este carrito como resuelto, sin precio, para que loading no quede en true
+        if (!cancelled) setPriced({ key: requestKey, pricing: null })
+      })
 
     return () => {
       cancelled = true
-      clearTimeout(timeout)
     }
-  }, [cart])
+  }, [items, requestKey])
+
+  const isEmpty = items.length === 0
+  const loading = !isEmpty && priced?.key !== requestKey
+  const pricing = isEmpty ? null : (priced?.pricing ?? null)
 
   return (
     <AppLayout
