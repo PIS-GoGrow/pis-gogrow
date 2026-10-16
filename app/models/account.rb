@@ -67,12 +67,11 @@ class Account < ApplicationRecord
     payments.max_by { |payment| [ payment.created_at, payment.id ] }
   end
 
-  # El pago que el proveedor tiene que revisar. Puede haber más de uno en
-  # submitted a la vez (por ej. dos comprobantes enviados sin refrescar entre
-  # pestañas), así que se resuelven de a uno, del más viejo al más nuevo, para
-  # que ninguno quede sin revisión posible.
+  # El pago que el proveedor tiene que revisar. Payment impide que haya más de
+  # uno en submitted por cuenta (validación e índice único), así que a lo sumo
+  # hay uno. Se busca en memoria por lo mismo que last_payment.
   def payment_pending_review
-    payments.select(&:submitted?).min_by { |payment| [ payment.created_at, payment.id ] }
+    payments.detect(&:submitted?)
   end
 
   def latest_invoice
@@ -179,6 +178,7 @@ end
 #  amount      :decimal(10, 2)
 #  month       :date
 #  owner_type  :string           not null
+#  vat_rate    :decimal(3, 2)    default(0.0), not null
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  owner_id    :bigint           not null

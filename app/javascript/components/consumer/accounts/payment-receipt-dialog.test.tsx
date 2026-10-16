@@ -134,6 +134,44 @@ describe("PaymentReceiptDialog", () => {
     expect(screen.queryByText(/comprobante_banco/)).not.toBeInTheDocument()
   })
 
+  it("shows the upload button disabled with an explanation when uploadDisabled is set", () => {
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        payments={[submittedPayment]}
+        uploadDisabled
+      />,
+    )
+
+    const button = screen.getByRole("button", {
+      name: "Subir comprobante de pago",
+    })
+    expect(button).toBeDisabled()
+    expect(button).toHaveAccessibleDescription(
+      "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva.",
+    )
+  })
+
+  it("does not open the upload dialog when clicking the button if uploadDisabled is set", async () => {
+    const user = userEvent.setup()
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        payments={[submittedPayment]}
+        uploadDisabled
+      />,
+    )
+
+    const button = screen.getByRole("button", {
+      name: "Subir comprobante de pago",
+    })
+    await user.click(button)
+
+    expect(
+      screen.queryByRole("dialog", { name: "Subir comprobante" }),
+    ).not.toBeInTheDocument()
+  })
+
   it("renders multiple receipts with filenames, dates, links and status badges", () => {
     render(
       <PaymentReceiptDialog

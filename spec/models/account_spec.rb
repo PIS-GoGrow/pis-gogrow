@@ -333,28 +333,18 @@ RSpec.describe Account, type: :model do
       expect(account.payment_pending_review).to be_nil
     end
 
-    it "picks the oldest submitted payment when two were sent without reviewing either" do
-      older = create_payment(status: :submitted, created_at: 2.days.ago)
-      create_payment(status: :submitted, created_at: 1.day.ago)
+    it "is the submitted payment" do
+      submitted = create_payment(status: :submitted)
 
-      expect(account.payment_pending_review).to eq(older)
+      expect(account.payment_pending_review).to eq(submitted)
     end
 
-    it "still finds the submitted payment even if a newer one was already resolved" do
-      older = create_payment(status: :submitted, created_at: 2.days.ago)
-      create_payment(status: :approved, created_at: 1.day.ago)
+    it "is nil again once the submitted payment is resolved" do
+      submitted = create_payment(status: :submitted)
 
-      expect(account.payment_pending_review).to eq(older)
-    end
+      submitted.update!(status: :rejected, rejection_reason: "El pago es parcial")
 
-    it "advances to the next submitted payment once the older one is resolved" do
-      older = create_payment(status: :submitted, created_at: 2.days.ago)
-      newer = create_payment(status: :submitted, created_at: 1.day.ago)
-
-      expect(account.payment_pending_review).to eq(older)
-
-      older.update!(status: :rejected, rejection_reason: "El pago es parcial")
-      expect(account.reload.payment_pending_review).to eq(newer)
+      expect(account.reload.payment_pending_review).to be_nil
     end
   end
 
@@ -470,6 +460,7 @@ end
 #  amount      :decimal(10, 2)
 #  month       :date
 #  owner_type  :string           not null
+#  vat_rate    :decimal(3, 2)    default(0.0), not null
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  owner_id    :bigint           not null

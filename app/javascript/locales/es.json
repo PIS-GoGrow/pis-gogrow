@@ -273,6 +273,7 @@
           "receipt_success_title": "Comprobante enviado",
           "receipt_title": "Subir comprobante",
           "receipt_unavailable": "Comprobante no disponible",
+          "receipt_under_review_hint": "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva.",
           "receipt_update": "Actualizar comprobante",
           "receipt_uploading": "Subiendo comprobante...",
           "receipt_view_edit": "Ver o editar comprobante",
