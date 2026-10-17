@@ -8,7 +8,7 @@ RSpec.describe "Provider payments", type: :request do
   before { host! "localhost" }
 
   def create_provider(email)
-    Provider.create!(user: User.create!(email:, name: "Provider", password: "password123456"))
+    Provider.create!(user: User.create!(email:, name: "Provider", password: "password123456"), onboarding_completed_at: Time.current)
   end
 
   def setup_submitted_payment

@@ -1169,6 +1169,40 @@
           "title": "Agregar platos"
         }
       },
+      "provider_onboarding": {
+        "back": "Volver al paso anterior",
+        "continue": "Continuar",
+        "done": {
+          "cta": "Ir al Inicio",
+          "description": "Tu cuenta ya está configurada y podés empezar a recibir pedidos.",
+          "title": "¡Todo listo!"
+        },
+        "finish": "Finalizar",
+        "progress": "Paso %{current} de %{total}",
+        "skip": "Omitir por ahora",
+        "steps": {
+          "1": {
+            "description": "Ingresá los datos de la cuenta donde vas a recibir los pagos de tus pedidos.",
+            "title": "Datos de cobro"
+          },
+          "2": {
+            "description": "Definí hasta qué hora recibís pedidos cada día.",
+            "order_deadline": "Hora de cierre",
+            "order_deadline_description": "Después de esta hora no se reciben más pedidos del día.",
+            "title": "Hora de cierre"
+          },
+          "3": {
+            "description": "Elegí si aceptás direcciones de entrega personalizadas además de las oficinas.",
+            "home_delivery": "Direcciones personalizadas",
+            "home_delivery_description": "Aceptás pedidos con direcciones de entrega además de las oficinas.",
+            "title": "Entregas"
+          },
+          "4": {
+            "description": "Elegí qué alertas querés recibir sobre tus pedidos y pagos.",
+            "title": "Notificaciones"
+          }
+        }
+      },
       "provider_operational_settings": {
         "show": {
           "add_closing_time": "Agregar hora de cierre",
