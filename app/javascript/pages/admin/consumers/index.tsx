@@ -7,6 +7,7 @@ import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
 import ListItemCard from "@/components/list-item-card"
 import PageContainer from "@/components/page-container"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
 import { CardContent } from "@/components/ui/card"
 import {
   Empty,
@@ -31,6 +32,10 @@ type Filter = AdminConsumersIndex["filter"]
 
 const page = "pages.admin.consumers.index"
 
+// El control segmentado del diseño, igual a las pestañas de Pagos.
+const segment =
+  "data-[state=on]:bg-background flex-1 rounded-md data-[state=on]:shadow-sm"
+
 export default function Index({
   consumers,
   filter: initialFilter,
@@ -43,20 +48,21 @@ export default function Index({
 
   const term = search.trim().toLowerCase()
 
-  // Completado es un mes cerrado: ya pagó o no tuvo nada que pagar.
-  const completed = (status: AdminConsumerRow["status"]) =>
+  // Pendiente es todo mes que no está saldado: sin pagar, en revisión o
+  // rechazado. Sin consumos o confirmado no deben nada.
+  const settled = (status: AdminConsumerRow["status"]) =>
     !status || status === "approved"
 
-  const shown = consumers.filter((consumer) => {
-    if (filter === "pending" && completed(consumer.status)) return false
-    if (filter === "completed" && !completed(consumer.status)) return false
+  const inTab = consumers.filter(
+    (consumer) => filter === "all" || !settled(consumer.status),
+  )
 
-    return (
+  const shown = inTab.filter(
+    (consumer) =>
       term === "" ||
       consumer.name.toLowerCase().includes(term) ||
-      consumer.email.toLowerCase().includes(term)
-    )
-  })
+      consumer.email.toLowerCase().includes(term),
+  )
 
   const emptyKey = consumers.length === 0 ? "empty" : "no_results"
 
@@ -70,24 +76,27 @@ export default function Index({
 
       <PageContainer
         title={t(`${page}.title`)}
-        description={t(`${page}.count`, { count: shown.length })}
+        badge={
+          <Badge variant="secondary">
+            <span aria-hidden="true">{inTab.length}</span>
+            <span className="sr-only">
+              {t(`${page}.count`, { count: inTab.length })}
+            </span>
+          </Badge>
+        }
       >
         <ToggleGroup
           type="single"
-          variant="outline"
           value={filter}
           // Radix manda "" al destildar la opción activa; el filtro siempre tiene una.
           onValueChange={(value) => value && setFilter(value as Filter)}
           aria-label={t(`${page}.filter_label`)}
-          className="w-full"
+          className="bg-muted w-full rounded-lg p-[3px]"
         >
-          <ToggleGroupItem value="all" className="flex-1">
+          <ToggleGroupItem value="all" className={segment}>
             {t(`${page}.all`)}
           </ToggleGroupItem>
-          <ToggleGroupItem value="completed" className="flex-1">
-            {t(`${page}.completed`)}
-          </ToggleGroupItem>
-          <ToggleGroupItem value="pending" className="flex-1">
+          <ToggleGroupItem value="pending" className={segment}>
             {t(`${page}.pending`)}
           </ToggleGroupItem>
         </ToggleGroup>

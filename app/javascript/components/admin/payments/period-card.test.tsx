@@ -40,6 +40,7 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
     payable_amount: 500,
     orders_amount_sum: 2,
     orders_price_sum: 500,
+    collection_status: "pending",
     payments: [],
     ...overrides,
   }
@@ -56,6 +57,7 @@ function renderCard(account: Account) {
 describe("PeriodCard", () => {
   it("disables uploading another receipt while one is under review", () => {
     const account = makeAccount({
+      collection_status: "submitted",
       payments: [makePayment({ status: "submitted" })],
     })
 
@@ -71,6 +73,7 @@ describe("PeriodCard", () => {
 
   it("enables the upload button when there is no submitted receipt", () => {
     const account = makeAccount({
+      collection_status: "rejected",
       payments: [
         makePayment({
           status: "rejected",
@@ -91,6 +94,7 @@ describe("PeriodCard", () => {
 
   it("keeps the upload button enabled when an earlier receipt was approved", () => {
     const account = makeAccount({
+      collection_status: "approved",
       payments: [makePayment({ status: "approved" })],
     })
 

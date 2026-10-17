@@ -95,6 +95,13 @@ RSpec.describe "Admin::Consumers", type: :request do
         get admin_consumers_path, params: { filter: "everyone" }
         expect(inertia).to have_props(filter: "all")
       end
+
+      # El diseño tiene solo Todos y Pendientes: Completados ya no es una pestaña.
+      it "opens on every employee when the URL asks for the completed ones" do
+        get admin_consumers_path, params: { filter: "completed" }
+
+        expect(inertia).to have_props(filter: "all")
+      end
     end
   end
 

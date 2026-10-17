@@ -765,6 +765,34 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "#subsidized_units_held" do
+    let(:consumer) { consumers(:one) }
+    let(:monthly_benefit) { consumer.benefits.current.monthly.first }
+
+    it "returns 0 when schedule delivery date is not in current month" do
+      order = orders(:upcoming_pending_future)
+      order.schedule.update!(date: Date.current.next_month.beginning_of_month)
+      expect(order.subsidized_units_held).to eq(0)
+    end
+
+    it "returns only the units that actually received the monthly benefit" do
+      order = orders(:upcoming_pending_today)
+      order.update_columns(amount: 3)
+      order.order_benefits.destroy_all
+      order.order_benefits.create!(benefit: monthly_benefit, benefit_used: 1)
+
+      expect(order.subsidized_units_held).to eq(1)
+    end
+
+    it "returns 0 when the order has no monthly benefit applied" do
+      order = orders(:upcoming_pending_today)
+      order.update_columns(amount: 2, discounted_price: order.price)
+      order.order_benefits.destroy_all
+
+      expect(order.subsidized_units_held).to eq(0)
+    end
+  end
+
   describe "#delivery_address_options" do
     let(:consumer) { consumers(:one) }
 

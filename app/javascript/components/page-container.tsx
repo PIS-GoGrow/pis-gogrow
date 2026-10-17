@@ -6,6 +6,7 @@ interface PageContainerProps {
   title: string
   eyebrow?: string
   description?: string
+  badge?: ReactNode
   actions?: ReactNode
   back?: ReactNode
   titleVariant?: "default" | "prominent"
@@ -18,6 +19,7 @@ export default function PageContainer({
   title,
   eyebrow,
   description,
+  badge,
   actions,
   back,
   titleVariant,
@@ -31,6 +33,7 @@ export default function PageContainer({
         title={title}
         eyebrow={eyebrow}
         description={description}
+        badge={badge}
         actions={actions}
         back={back}
         titleVariant={titleVariant}

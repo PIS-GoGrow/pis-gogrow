@@ -46,6 +46,12 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
     "#{whole.reverse.scan(/\d{1,3}/).join('.').reverse},#{cents} UYU"
   end
 
+  # El total de Pagos pendientes va como en el diseño: "$19.500".
+  def short_money(amount)
+    whole, cents = format("%.2f", amount).split(".")
+    "$#{whole.reverse.scan(/\d{1,3}/).join('.').reverse}#{",#{cents}" unless cents == "00"}"
+  end
+
   def month_label(date)
     I18n.l(date, format: :month_year)
   end
@@ -59,11 +65,11 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
     visit admin_payments_path
   end
 
-  # El detalle del período se pide por fetch y se pinta en un panel lateral, así
-  # que hay que esperar a que llegue la tabla, no sólo a que abra el panel.
+  # El detalle del período se pide por fetch y se pinta en un panel, así que
+  # hay que esperar a que llegue el proveedor, no sólo a que abra el panel.
   def open_detail_of_the_period
     click_on "Ver detalle"
-    expect(page).to have_selector("tbody tr", minimum: 1)
+    expect(page).to have_css("[role='dialog']", text: "Provider User: Consumo")
   end
 
   # Un segundo período pendiente, de otro proveedor y de otro mes. Se crea a
@@ -117,26 +123,30 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
   end
 
   describe "criterio 2: el desglose del período" do
-    it "opens the confirmed orders that make up the balance of the period" do
+    it "opens the confirmed orders that make up the balance of the period, day by day" do
       sign_in_as_hr
 
       open_detail_of_the_period
 
-      expect(page).to have_selector("tbody tr", count: 3)
-      # La tabla recorta el nombre del plato a veinte caracteres.
-      expect(page).to have_content("Milanesa con papas f...", count: 3)
+      within(:css, "[role='dialog']") do
+        click_on "Viandas"
+        # Los tres pedidos confirmados caen en dos días: el más nuevo abre solo.
+        expect(page).to have_css("button", text: %r{\ADía: \d{2}/\d{2} \| Viandas: \d+ \| Monto: \$}, count: 2)
+        all("button", text: "Día:").reject { it[:"aria-expanded"] == "true" }.each(&:click)
+        expect(page).to have_selector("tbody tr", count: 3)
+      end
     end
 
-    it "closes the breakdown with the total of the period it belongs to" do
+    it "breaks the period down into subtotal, VAT and total" do
       sign_in_as_hr
 
       open_detail_of_the_period
 
-      # Dentro del panel los importes van sin formatear, así que se compara
-      # contra el número pelado. Que las filas sumen ese total es otro tema:
-      # ver DEFECT-detalle-total-no-coincide-30-09-2026.md.
       within(:css, "[role='dialog']") do
-        expect(page).to have_content(current_period.amount.to_i.to_s)
+        expect(page).to have_content("Subtotal sin IVA")
+        expect(page).to have_content("#{short_money(current_period.amount)} | 4 viandas")
+        expect(page).to have_content("IVA (0%)")
+        expect(page).to have_content("Total pagado")
       end
     end
   end
@@ -190,7 +200,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
         expect(page).to have_content(month_label(period.month))
       end
 
-      expect(page).to have_content(money(periods.sum { it.amount.to_f }))
+      expect(page).to have_content(short_money(periods.sum { it.amount.to_f }))
     end
 
     it "leaves a settled period out of the total it still owes" do
@@ -199,8 +209,8 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
       sign_in_as_hr
 
-      expect(page).to have_content(money(owed))
-      expect(page).to have_no_content(money(owed + settled_period.amount.to_f))
+      expect(page).to have_content(short_money(owed))
+      expect(page).to have_no_content(short_money(owed + settled_period.amount.to_f))
     end
   end
 
@@ -226,13 +236,13 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
       owed = [ current_period, add_older_period ].sum { it.amount.to_f }
 
       sign_in_as_hr
-      expect(page).to have_content(money(owed))
+      expect(page).to have_content(short_money(owed))
       sign_out
 
       sign_in users(:admin), role: :admin
       visit admin_payments_path
 
-      expect(page).to have_content(money(owed))
+      expect(page).to have_content(short_money(owed))
     end
 
     it "owes the provider the same amount the provider is collecting" do
