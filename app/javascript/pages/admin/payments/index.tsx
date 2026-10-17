@@ -125,6 +125,7 @@ export default function Index({
           }
           value={formatMoneyShort(summary.amount)}
           detail={`| ${meals}`}
+          className="lg:max-w-[50%]"
           action={
             <div className="grid w-full gap-4">
               {summary.limit !== null && (
@@ -196,13 +197,15 @@ export default function Index({
                         {t("pages.admin.payments.index.no_debt")}
                       </p>
                     ) : (
-                      periods.map((account) => (
-                        <PeriodCard
-                          key={account.id}
-                          account={account}
-                          onOpenDetail={() => void openDetail(account)}
-                        />
-                      ))
+                      <div className="grid gap-4 lg:grid-cols-2">
+                        {periods.map((account) => (
+                          <PeriodCard
+                            key={account.id}
+                            account={account}
+                            onOpenDetail={() => void openDetail(account)}
+                          />
+                        ))}
+                      </div>
                     )}
                   </CardContent>
                 </Card>
@@ -226,14 +229,16 @@ export default function Index({
                 </EmptyHeader>
               </Empty>
             ) : (
-              history.map((account) => (
-                <PeriodCard
-                  key={account.id}
-                  account={account}
-                  providerName={providerName(account.provider_id)}
-                  onOpenDetail={() => void openDetail(account)}
-                />
-              ))
+              <div className="grid gap-4 lg:grid-cols-2">
+                {history.map((account) => (
+                  <PeriodCard
+                    key={account.id}
+                    account={account}
+                    providerName={providerName(account.provider_id)}
+                    onOpenDetail={() => void openDetail(account)}
+                  />
+                ))}
+              </div>
             )}
           </TabsContent>
         </Tabs>

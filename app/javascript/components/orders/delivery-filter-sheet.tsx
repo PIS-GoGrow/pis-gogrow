@@ -3,41 +3,41 @@ import { HugeiconsIcon } from "@hugeicons/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet"
 import type { DeliveryFilter } from "@/lib/provider-orders"
 
 const options: DeliveryFilter[] = ["all", "office", "home"]
 
-interface DeliveryFilterSheetProps {
+interface DeliveryFilterAdaptableDialogProps {
   value: DeliveryFilter
   onApply: (value: DeliveryFilter) => void
 }
 
-export default function DeliveryFilterSheet({
+export default function DeliveryFilterAdaptableDialog({
   value,
   onApply,
-}: DeliveryFilterSheetProps) {
+}: DeliveryFilterAdaptableDialogProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<DeliveryFilter>(value)
 
   return (
-    <Sheet
+    <AdaptableDialog
       open={open}
       onOpenChange={(nextOpen) => {
         setOpen(nextOpen)
         if (nextOpen) setDraft(value)
       }}
     >
-      <SheetTrigger asChild>
+      <AdaptableDialogTrigger asChild>
         <Button
           type="button"
           variant="outline"
@@ -52,24 +52,18 @@ export default function DeliveryFilterSheet({
             aria-hidden="true"
           />
         </Button>
-      </SheetTrigger>
+      </AdaptableDialogTrigger>
 
-      <SheetContent
-        side="bottom"
+      <AdaptableDialogContent
         showCloseButton={false}
         data-delivery-filter-sheet
         aria-describedby={undefined}
-        className="mx-auto max-h-[90dvh] max-w-md overflow-y-auto rounded-t-xl border-x p-5"
+        className="p-5"
       >
         <div className="flex flex-col gap-5">
-          <div
-            aria-hidden="true"
-            className="bg-muted mx-auto h-1.5 w-14 rounded-full"
-          />
-
-          <SheetTitle className="text-base leading-6 font-semibold tracking-normal">
+          <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
             {t("pages.provider_orders.index.delivery_sheet.title")}
-          </SheetTitle>
+          </AdaptableDialogTitle>
 
           <div className="flex flex-col">
             {options.map((option) => (
@@ -114,7 +108,7 @@ export default function DeliveryFilterSheet({
             </Button>
           </div>
         </div>
-      </SheetContent>
-    </Sheet>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }

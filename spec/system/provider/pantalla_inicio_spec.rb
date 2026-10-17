@@ -28,7 +28,7 @@ RSpec.describe "Pantalla de inicio del proveedor", type: :system do
 
     it "muestra el saludo, la fecha del día y las secciones de resumen" do
       expect(page).to have_content("Hola, #{provider_user.name}")
-      expect(page).to have_content(I18n.l(Date.current, format: "%A, %-d de %B").capitalize)
+      expect(page).to have_content(I18n.l(Date.current, format: "%A %-d de %B").capitalize)
 
       expect(page).to have_content("Pedidos")
       expect(page).to have_content("Confirmados")

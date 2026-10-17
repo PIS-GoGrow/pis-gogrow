@@ -27,7 +27,7 @@ vi.mock("@/layouts/app-layout", () => ({
 
 describe("Provider Dashboard Page", () => {
   const defaultProps = {
-    today: "Jueves, 1 de octubre",
+    today: "Jueves 1 de octubre",
     today_orders_count: 7,
     pending_orders_count: 2,
     office_orders_count: 3,
@@ -48,7 +48,7 @@ describe("Provider Dashboard Page", () => {
     expect(
       screen.getByRole("heading", { name: /Hola, Doña Petrona/ }),
     ).toBeInTheDocument()
-    expect(screen.getByText("Jueves, 1 de octubre")).toBeInTheDocument()
+    expect(screen.getByText("Jueves 1 de octubre")).toBeInTheDocument()
   })
 
   it("muestra el resumen de pedidos de hoy con confirmados, pendientes y modalidades", () => {

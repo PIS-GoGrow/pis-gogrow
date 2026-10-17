@@ -15,7 +15,7 @@ RSpec.describe "Reset del formulario después de agregar un plato", type: :syste
 
   before do
     sign_in provider_user, role: :provider
-    visit new_provider_menu_path(date: publish_date.iso8601)
+    visit_hydrated new_provider_menu_path(date: publish_date.iso8601)
     without_animations
   end
 
@@ -61,7 +61,8 @@ RSpec.describe "Reset del formulario después de agregar un plato", type: :syste
     expect_clean_form(date_label)
     add_new_dish("Ravioles")
 
-    find('[data-slot="sheet-overlay"]').click
+    overlay = find('[data-slot="dialog-overlay"]')
+    page.driver.browser.action.move_to_location(10, 10).pointer_down.pointer_up.perform
 
     expect(page).to have_no_content("¡Plato agregado!")
     expect_clean_form(date_label)

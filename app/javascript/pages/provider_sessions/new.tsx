@@ -2,6 +2,13 @@ import { Form, Head } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+} from "@/components/adaptable-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -10,13 +17,6 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { Spinner } from "@/components/ui/spinner"
 import AuthLayout from "@/layouts/auth-layout"
 import { providerPasswordResets, providerSessions } from "@/routes"
@@ -101,19 +101,16 @@ export default function ProviderSignIn() {
         )}
       </Form>
 
-      <Sheet open={forgotOpen} onOpenChange={setForgotOpen}>
-        <SheetContent
-          side="bottom"
-          className="mx-auto w-full max-w-md rounded-t-3xl p-6"
-        >
-          <SheetHeader className="p-0">
-            <SheetTitle>
+      <AdaptableDialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <AdaptableDialogContent className="p-5">
+          <AdaptableDialogHeader className="p-0">
+            <AdaptableDialogTitle>
               {t("pages.provider_sessions.new.forgot.title")}
-            </SheetTitle>
-            <SheetDescription>
+            </AdaptableDialogTitle>
+            <AdaptableDialogDescription>
               {t("pages.provider_sessions.new.forgot.description")}
-            </SheetDescription>
-          </SheetHeader>
+            </AdaptableDialogDescription>
+          </AdaptableDialogHeader>
 
           <Form
             action={providerPasswordResets.create()}
@@ -153,8 +150,8 @@ export default function ProviderSignIn() {
               </>
             )}
           </Form>
-        </SheetContent>
-      </Sheet>
+        </AdaptableDialogContent>
+      </AdaptableDialog>
     </AuthLayout>
   )
 }

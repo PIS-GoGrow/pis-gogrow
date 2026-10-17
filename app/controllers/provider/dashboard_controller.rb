@@ -14,7 +14,7 @@ class Provider::DashboardController < Provider::InertiaController
            .where(schedules: { date: Date.current.all_month })
            .where.not(status: [ :cancelled, :rejected ])
 
-    @today = I18n.l(Date.current, format: "%A, %-d de %B").capitalize
+    @today = I18n.l(Date.current, format: "%A %-d de %B").capitalize
     @today_orders_count = today_orders.count
     @pending_orders_count = today_orders.pending.count
     @office_orders_count = today_orders.office.count
