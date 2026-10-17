@@ -162,7 +162,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
   describe "notificaciones" do
     it "no muestra en la sesión de proveedor las notificaciones de empleado del mismo usuario" do
       user = users(:one)
-      Provider.create!(user:)
+      Provider.create!(user:, onboarding_completed_at: Time.current)
       configuration = Notification::Configuration.find_or_create_by!(key: "order_updates") do |record|
         record.roles = %w[consumer]
       end

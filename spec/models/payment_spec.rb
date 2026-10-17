@@ -161,9 +161,78 @@ RSpec.describe Payment, type: :model do
     end
   end
 
+  describe "one receipt under review per account" do
+    let(:already_under_review) do
+      I18n.t("activerecord.errors.models.payment.attributes.receipt.already_under_review")
+    end
+
+    it "does not allow a second submitted payment for the same account" do
+      payment_with_receipt.save!
+      second = payment_with_receipt(filename: "comprobante_2.png")
+
+      expect(second).not_to be_valid
+      expect(second.errors[:receipt]).to include(already_under_review)
+    end
+
+    it "is enforced by the database when the validation is skipped" do
+      payment_with_receipt.save!
+      second = payment_with_receipt(filename: "comprobante_2.png")
+
+      expect { second.save!(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+
+    it "allows a new submitted payment once the previous one was resolved" do
+      first = payment_with_receipt
+      first.save!
+      first.reject_with("Comprobante ilegible")
+
+      expect(payment_with_receipt(filename: "comprobante_2.png")).to be_valid
+    end
+
+    it "does not allow resubmitting a rejected payment while another one is under review" do
+      rejected = payment_with_receipt(status: :rejected, rejection_reason: "Comprobante ilegible")
+      rejected.save!
+      payment_with_receipt(filename: "comprobante_2.png").save!
+
+      rejected.status = :submitted
+
+      expect(rejected).not_to be_valid
+      expect(rejected.errors[:receipt]).to include(already_under_review)
+    end
+
+    it "keeps the limit per account" do
+      payment_with_receipt.save!
+      other_account = Account.create!(owner: consumer, provider:, month: Date.current.prev_month, amount: 500)
+      other = other_account.payments.build(provider:, status: :submitted)
+      other.receipt.attach(io: StringIO.new("comprobante"), filename: "otro.png", content_type: "image/png")
+
+      expect(other).to be_valid
+    end
+
+    it "handles validation safely when account_id is nil" do
+      payment = described_class.new(status: :submitted)
+      payment.receipt.attach(io: StringIO.new("comprobante"), filename: "comprobante.png", content_type: "image/png")
+
+      expect { payment.valid? }.not_to raise_error
+      expect(payment.errors[:account]).to be_present
+      expect(payment.errors[:receipt]).not_to include(already_under_review)
+    end
+
+    it "allows multiple payments in non-submitted statuses for the same account" do
+      rejected1 = payment_with_receipt(status: :rejected, rejection_reason: "Comprobante ilegible", filename: "c1.png")
+      rejected1.save!
+      rejected2 = payment_with_receipt(status: :rejected, rejection_reason: "Monto incorrecto", filename: "c2.png")
+      rejected2.save!
+
+      expect(rejected1).to be_persisted
+      expect(rejected2).to be_persisted
+      expect(account.payments.rejected.count).to eq(2)
+    end
+  end
+
   describe "multiple receipts and deletion integrity" do
-    it "allows an account to have multiple payments" do
-      payment1 = payment_with_receipt(filename: "comprobante_1.png")
+    it "allows an account to have multiple payments as long as only one is under review" do
+      payment1 = payment_with_receipt(status: :rejected, rejection_reason: "Comprobante ilegible", filename: "comprobante_1.png")
       payment1.save!
       payment2 = payment_with_receipt(filename: "comprobante_2.png")
       payment2.save!
@@ -173,7 +242,7 @@ RSpec.describe Payment, type: :model do
     end
 
     it "destroys attached receipt and leaves other payments intact when one payment is destroyed" do
-      payment1 = payment_with_receipt(filename: "comprobante_1.png")
+      payment1 = payment_with_receipt(status: :rejected, rejection_reason: "Comprobante ilegible", filename: "comprobante_1.png")
       payment1.save!
       payment2 = payment_with_receipt(filename: "comprobante_2.png")
       payment2.save!
@@ -273,6 +342,41 @@ RSpec.describe Payment, type: :model do
       expect(notification.reload.closed_at).to be_nil
     end
   end
+
+  describe "avisos de deuda de empleados" do
+    before { allow(EmployeeDebtNotifications).to receive(:refresh) }
+
+    it "refresca los avisos cuando el empleado informa un pago" do
+      payment_with_receipt.save!
+
+      expect(EmployeeDebtNotifications).to have_received(:refresh).with(account, renotify: false)
+    end
+
+    it "los refresca de nuevo cuando el proveedor aprueba el pago" do
+      payment = payment_with_receipt
+      payment.save!
+      payment.approve
+
+      expect(EmployeeDebtNotifications).to have_received(:refresh).with(account, renotify: false).twice
+    end
+
+    it "pide avisar de nuevo cuando el proveedor rechaza el pago" do
+      payment = payment_with_receipt
+      payment.save!
+      payment.reject_with("Comprobante ilegible")
+
+      expect(EmployeeDebtNotifications).to have_received(:refresh).with(account, renotify: true)
+    end
+
+    it "no los refresca para pagos de la cuenta de la empresa" do
+      company_account = Account.create!(owner: company, provider:, month: Date.current, amount: 500)
+      payment = company_account.payments.build(provider:, status: :submitted)
+      payment.receipt.attach(io: StringIO.new("comprobante"), filename: "comprobante.png", content_type: "image/png")
+      payment.save!
+
+      expect(EmployeeDebtNotifications).not_to have_received(:refresh)
+    end
+  end
 end
 
 # == Schema Information
@@ -289,8 +393,9 @@ end
 #
 # Indexes
 #
-#  index_payments_on_account_id   (account_id)
-#  index_payments_on_provider_id  (provider_id)
+#  index_payments_on_account_id            (account_id)
+#  index_payments_on_account_id_submitted  (account_id) UNIQUE WHERE (status = 1)
+#  index_payments_on_provider_id           (provider_id)
 #
 # Foreign Keys
 #

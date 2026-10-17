@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import userEvent from "@testing-library/user-event"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { ProviderCollectionPayment } from "@/types"
 
@@ -34,6 +35,10 @@ const withoutReceipt = payment({
   receipt_url: null,
   receipt_filename: null,
   receipt_content_type: null,
+})
+
+afterEach(() => {
+  vi.restoreAllMocks()
 })
 
 describe("CollectionPaymentHistory", () => {
@@ -72,17 +77,18 @@ describe("CollectionPaymentHistory", () => {
     expect(screen.getByText("rechazado.pdf")).toBeInTheDocument()
   })
 
-  it("lists every receipt with its date, status and file alongside the bulk download action", () => {
+  it("lists every receipt and downloads them from the collective button", async () => {
+    const user = userEvent.setup()
+    const downloadClick = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined)
+
     render(
       <CollectionPaymentHistory
         payments={[approved, rejected, withoutReceipt]}
         showDownloadAll
       />,
     )
-
-    expect(
-      screen.getByRole("button", { name: "Descargar comprobantes" }),
-    ).toBeInTheDocument()
 
     const approvedLink = screen.getByRole("link", {
       name: "Descargar aprobado.png",
@@ -103,6 +109,12 @@ describe("CollectionPaymentHistory", () => {
     const rejectedEntry = rejectedLink.closest<HTMLElement>("div.grid")!
     expect(within(rejectedEntry).getByText("30/09/26")).toBeInTheDocument()
     expect(within(rejectedEntry).getByText("Rechazado")).toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole("button", { name: "Descargar comprobantes" }),
+    )
+
+    expect(downloadClick).toHaveBeenCalledTimes(2)
   })
 
   it("shows partial payment badge when rejection reason is partial payment", () => {

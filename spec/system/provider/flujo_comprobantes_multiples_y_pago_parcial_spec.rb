@@ -135,8 +135,10 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     within(history_card) { click_on "Empleados" }
     click_on employee_user.name
 
-    # El historial muestra ambos comprobantes y permite descargarlos juntos.
+    # El historial mantiene la lista visible y permite descargarla completa.
     expect(page).to have_button("Descargar comprobantes")
+
+    # Al desplegarlo muestra ambos comprobantes con botón de descarga individual
     expect(page).to have_content("Pago parcial")
     expect(page).to have_css("a[download]", minimum: 2)
   end

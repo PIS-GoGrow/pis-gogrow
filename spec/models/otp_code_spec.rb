@@ -179,3 +179,26 @@ RSpec.describe OtpCode, type: :model do
     end
   end
 end
+
+# == Schema Information
+#
+# Table name: otp_codes
+#
+#  id         :bigint           not null, primary key
+#  attempts   :integer          default(0), not null
+#  expires_at :datetime         not null
+#  nonce      :string           not null
+#  purpose    :integer          not null
+#  sent_at    :datetime         not null
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#  user_id    :bigint           not null
+#
+# Indexes
+#
+#  index_otp_codes_on_user_id_and_purpose  (user_id,purpose) UNIQUE
+#
+# Foreign Keys
+#
+#  fk_rails_...  (user_id => users.id)
+#

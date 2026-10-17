@@ -1,24 +1,32 @@
 tuviandita:
   user: provider_user
   home_delivery: true
+  onboarding_completed_at: <%= 1.week.ago.to_fs(:db) %>
 
 office_provider:
   user: office_provider_user
   home_delivery: false
+  onboarding_completed_at: <%= 1.week.ago.to_fs(:db) %>
 
 endulzate:
   user: other_provider_user
+  onboarding_completed_at: <%= 1.week.ago.to_fs(:db) %>
 
 # == Schema Information
 #
 # Table name: providers
 #
-#  id             :bigint           not null, primary key
-#  home_delivery  :boolean          default(TRUE), not null
-#  order_deadline :time
-#  created_at     :datetime         not null
-#  updated_at     :datetime         not null
-#  user_id        :bigint
+#  id                  :bigint           not null, primary key
+#  bank_account_holder :string
+#  bank_account_number :string
+#  bank_account_type   :integer
+#  bank_name           :string
+#  home_delivery       :boolean          default(TRUE), not null
+#  order_deadline      :time
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  tax_id              :string
+#  user_id             :bigint
 #
 # Indexes
 #

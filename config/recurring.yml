@@ -25,6 +25,9 @@ production:
   company_payment_reminders:
     class: CompanyPaymentRemindersJob
     schedule: every day at 6am America/Montevideo
+  employee_debt_alerts:
+    class: EmployeeDebtAlertsJob
+    schedule: every day at 6am America/Montevideo
   provider_menu_unpublished_reminders:
     class: ProviderMenuUnpublishedRemindersJob
     schedule: every weekday at 10:00 America/Montevideo
