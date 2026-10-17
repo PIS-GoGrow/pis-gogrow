@@ -20,6 +20,10 @@ class OnboardingBenefit < BenefitRule
     limit
   end
 
+  def benefit_max_price
+    nil
+  end
+
   def benefit_deadline(consumer, date: Date.current)
     consumer&.onboarding_date&.+(deadline_days)
   end

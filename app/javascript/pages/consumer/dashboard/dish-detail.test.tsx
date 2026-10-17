@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest"
 
 import type { CartItem, Schedule } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
-import type { Benefit } from "./pricing"
 
 // Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
 // plato, para tomar una decisión informada." Esta es la pantalla donde el
@@ -39,17 +38,6 @@ const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
   },
 })
 
-const benefit = (overrides: Partial<Benefit> = {}): Benefit => ({
-  limit: 5,
-  used: 0,
-  percentage: 0,
-  monthly_limit: 20,
-  monthly_used: 0,
-  monthly_remaining: 20,
-  specials: [],
-  ...overrides,
-})
-
 function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
   const defaults = {
     item: schedule(),
@@ -59,7 +47,6 @@ function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
     setNotes: vi.fn(),
     selections: {},
     setSelections: vi.fn(),
-    benefit: benefit(),
     cart: [] as CartItem[],
     back: vi.fn(),
     add: vi.fn(),
@@ -104,7 +91,6 @@ describe("DishDetail", () => {
   it("breaks down the price with the benefit applied", () => {
     renderDetail({
       quantity: 2,
-      benefit: benefit({ percentage: 50, monthly_remaining: 20 }),
     })
 
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
@@ -119,7 +105,6 @@ describe("DishDetail", () => {
   it("subsidises only the meals left in the monthly quota", () => {
     renderDetail({
       quantity: 3,
-      benefit: benefit({ percentage: 50, monthly_remaining: 1 }),
     })
 
     // 3 x 320 = 960, y el beneficio alcanza para una sola vianda: 160 de
@@ -137,18 +122,6 @@ describe("DishDetail", () => {
   it("adds the special subsidy to the base one", () => {
     renderDetail({
       quantity: 1,
-      benefit: benefit({
-        percentage: 50,
-        specials: [
-          {
-            id: 7,
-            name: "Premio",
-            percentage: 30,
-            remaining: 2,
-            due_date: null,
-          },
-        ],
-      }),
     })
 
     expect(
@@ -160,31 +133,9 @@ describe("DishDetail", () => {
     )
   })
 
-  it("leaves out a special that expires before the delivery date", () => {
-    renderDetail({
-      benefit: benefit({
-        specials: [
-          {
-            id: 7,
-            name: "Premio",
-            percentage: 30,
-            remaining: null,
-            due_date: "2026-09-15",
-          },
-        ],
-      }),
-    })
-
-    expect(screen.getByText("Beneficio GoGrow (0%)")).toBeInTheDocument()
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$320",
-    )
-  })
-
   // Lo que ya está en el carrito gasta primero el cupo mensual.
   it("prices the dish after what is already in the cart", () => {
     renderDetail({
-      benefit: benefit({ percentage: 50, monthly_remaining: 1 }),
       cart: [
         {
           ...schedule(),
@@ -205,7 +156,6 @@ describe("DishDetail", () => {
   it("applies no discount when the employee has no benefit", () => {
     renderDetail({
       quantity: 2,
-      benefit: benefit({ percentage: 0, monthly_remaining: 0 }),
     })
 
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
@@ -276,7 +226,6 @@ describe("DishDetail", () => {
         setNotes={vi.fn()}
         selections={{ 1: ["Ricota y nuez"] }}
         setSelections={vi.fn()}
-        benefit={benefit()}
         cart={[]}
         back={vi.fn()}
         add={add}

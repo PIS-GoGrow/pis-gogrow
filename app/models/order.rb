@@ -94,8 +94,8 @@ class Order < ApplicationRecord
   after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
   after_create_commit :notify_received
 
-  # Inicializa una orden con el precio que calculó OrderPricing. benefits es
-  # { Benefit => viandas que cubre }; sin discounted_price se cobra el precio de
+  # Inicializa una orden con el precio que calculó OrderPricing. benefits es un arreglo
+  # [[ benefit, viandas que cubre ]]; sin discounted_price se cobra el precio de
   # lista.
   def self.reserve(
     consumer:,
@@ -242,7 +242,7 @@ class Order < ApplicationRecord
             return false
           end
 
-          line = OrderPricing.new(consumer, held_by: self).call([ { schedule:, quantity: } ]).first
+          line = OrderPricing.new(consumer, modifiable_order: self).call([ { schedule:, quantity: } ])[schedule_id]
 
           # El update tiene que ir antes de tocar los beneficios y cortar si
           # falla: si una validación rechaza el cambio, los beneficios no se
@@ -268,8 +268,6 @@ class Order < ApplicationRecord
     end
   end
 
-  # El tope mensual solo mira las entregas del mes en curso, así que una orden
-  # para el mes que viene no tiene unidades que devolver.
   def subsidized_units_held
     return 0 unless schedule&.date&.then { Date.current.all_month.cover?(it) }
 
@@ -280,6 +278,15 @@ class Order < ApplicationRecord
     else
       0
     end
+  end
+
+  # Devuelve la cantidad de beneficio mensual usado para esta orden
+  # El tope mensual solo mira las entregas del mes en curso, así que una orden
+  # para el mes que viene no tiene unidades que devolver.
+  def subsidized_benefit_used
+    order_benefits
+      .where(benefit_id: Benefit.monthly.select(:id))
+      .sum(:benefit_used).to_i
   end
 
   # El lock no es por dinero: evita que un doble envío cancele dos veces y pise
@@ -475,6 +482,7 @@ class Order < ApplicationRecord
     values.is_a?(Array) && (values.any? || !group.required?) && values.size <= group.limit &&
       values.uniq.size == values.size && values.all? { group.options.include?(it) }
   end
+
   def snapshot_menu
     menu = schedule&.menu
     return if menu.nil?

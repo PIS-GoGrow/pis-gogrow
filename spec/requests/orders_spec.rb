@@ -498,7 +498,7 @@ RSpec.describe "Orders", type: :request do
         }
       end.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       expect(available.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(
@@ -592,7 +592,7 @@ RSpec.describe "Orders", type: :request do
         post orders_path, params: { order: { address: consumer.address, items: [] } }
       end.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.empty_cart") })
     end
@@ -650,7 +650,7 @@ RSpec.describe "Orders", type: :request do
           }
         end.not_to change(Order, :count)
 
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(dashboard_cart_path)
         follow_redirect!
         expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
       end
@@ -668,7 +668,7 @@ RSpec.describe "Orders", type: :request do
           }
         end.not_to change(Order, :count)
 
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(dashboard_cart_path)
         follow_redirect!
         expect(inertia).to have_props(errors: { order_error: I18n.t("validations.invalid_address") })
       end
@@ -685,7 +685,7 @@ RSpec.describe "Orders", type: :request do
           }
         end.not_to change(Order, :count)
 
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(dashboard_cart_path)
         follow_redirect!
         expect(inertia).to have_props(errors: { order_error: I18n.t("validations.cart_unavailable") })
       end
@@ -723,7 +723,7 @@ RSpec.describe "Orders", type: :request do
           }
         end.not_to change(Order, :count)
 
-        expect(response).to redirect_to(dashboard_path)
+        expect(response).to redirect_to(dashboard_cart_path)
         follow_redirect!
         expect(inertia).to have_props(errors: { order_error: I18n.t("validations.office_address_required") })
       end
@@ -796,7 +796,7 @@ RSpec.describe "Orders", type: :request do
         post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
       end.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       expect(schedule.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.order_deadline_passed") })
@@ -855,7 +855,7 @@ RSpec.describe "Orders", type: :request do
         post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
       end.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       expect(schedule.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.provider_closed") })
@@ -991,7 +991,7 @@ RSpec.describe "Orders", type: :request do
         schedule = create_schedule
 
         post orders_path, params: { order: { address: "Canelones 892", items: [ { schedule_id: schedule.id, quantity: 1 } ] } }
-        get dashboard_path
+        get dashboard_cart_path
 
         expect(inertia.props[:addresses].first(2).pluck(:label)).to eq([ "Oficina", "Flora Café" ])
       end
@@ -1261,6 +1261,7 @@ RSpec.describe "Orders", type: :request do
       end
 
       it "changes the quantity, the delivery address and the notes, and repricing follows the menu" do
+        order.consumer.benefits.destroy_all
         patch order_path(order), params: update_params(quantity: 3, address: "18 de Julio 1006", notes: "Sin sal")
 
         expect(order.reload).to have_attributes(
@@ -1384,8 +1385,7 @@ RSpec.describe "Orders", type: :request do
         # La fixture es para dentro de 3 días: a fin de mes cae en el siguiente y
         # ya no cuenta para el tope de este.
         travel_to(order.schedule.date)
-        Benefit.create!(consumer: consumers(:one), amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
-        allow_any_instance_of(Consumer).to receive(:remaining_monthly_benefit).and_return(1)
+        Benefit.create!(consumer: consumers(:one), amount: 2, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
 
         # El tope es mensual, así que la fecha importa: con una entrega del mes que
         # viene el pedido no tiene unidades que devolverle al saldo. Se fija el

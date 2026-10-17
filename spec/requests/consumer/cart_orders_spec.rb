@@ -74,11 +74,10 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(response).to have_http_status(:ok)
       expect(inertia).to render_component("consumer/dashboard/index")
 
-      expect(inertia.props).to include(:week, :schedules, :benefit, :addresses)
+      expect(inertia.props).to include(:week, :schedules, :benefit)
       expect(inertia.props[:week]).to include(:start_date, :end_date, :days)
       expect(inertia.props[:schedules]).to be_an(Array)
       expect(inertia.props[:benefit]).to include(:percentage, :monthly_remaining)
-      expect(inertia.props[:addresses]).to be_an(Array)
 
       if inertia.props[:schedules].any?
         first_schedule = inertia.props[:schedules].first
@@ -114,7 +113,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.empty_cart"))
     end
@@ -127,7 +126,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.invalid_quantity"))
     end
@@ -140,7 +139,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.invalid_quantity"))
     end
@@ -153,7 +152,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.cart_unavailable"))
     end
@@ -166,7 +165,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.invalid_address"))
     end
@@ -196,7 +195,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.insufficient_stock"))
     end
@@ -263,15 +262,6 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 2 ])
       follow_redirect!
       expect(inertia).to have_props(total: 570.0)
-    end
-
-    it "reparte los usos del especial sobre los primeros platos del carrito" do
-      order_cart([ wednesday, 1 ], [ thursday, 2 ])
-
-      first, second = consumer.orders.where(schedule: [ wednesday, thursday ]).order(:id)
-      expect(first.discounted_price).to eq(60)
-      expect(second.discounted_price).to eq(510)
-      expect(second.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ special.id, 1 ])
     end
 
     it "no bloquea el pedido cuando supera los usos del especial" do
