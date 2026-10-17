@@ -10,7 +10,7 @@ class WhatsappSenderJob < ApplicationJob
 
     message = @client.messages.create(
       from: 'whatsapp:+14155238886',
-      content_sid: 'HXb5b62575e6e4ff6129ad7c8efe1f983e',
+      content_sid: 'HX806fcc7c9656b3968428a658160ed9f6',
       content_variables: '{"1":"12/1","2":"3pm"}',
       to: 'whatsapp:+59898163754'
     )
