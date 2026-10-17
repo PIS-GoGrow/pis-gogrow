@@ -42,6 +42,7 @@ Rails.application.routes.draw do
   end
 
   namespace :provider do
+    resource :onboarding, only: [ :show, :update ], controller: "onboarding"
     get "account", to: "accounts#show", as: :account
     get "operational_settings", to: "operational_settings#show", as: :operational_settings
     resource :payment_details, only: [ :show, :update ]
@@ -94,6 +95,8 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get "dashboard", to: "dashboard#index", as: :dashboard
+    get "account", to: "accounts#show", as: :account
+    get "preferences", to: "preferences#show", as: :preferences
     resources :benefit_configurations, only: [ :index, :create ]
     resources :special_subsidies, only: [ :create, :update, :destroy ]
 

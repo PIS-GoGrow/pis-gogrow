@@ -26,7 +26,7 @@ class ProviderInvitationsController < InertiaController
     if set_password(user)
       OtpCode.consume(user, :invitation)
       start_provider_session(user)
-      redirect_to provider_dashboard_path, notice: t("flash.signed_in")
+      redirect_to provider_onboarding_path, notice: t("flash.signed_in")
     else
       redirect_to provider_invitation_path, inertia: { errors: user.errors }
     end
