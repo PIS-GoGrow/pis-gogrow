@@ -249,7 +249,6 @@ end
 #
 # Table name: providers
 #
-<<<<<<< HEAD
 #  id                      :bigint           not null, primary key
 #  bank_account_holder     :string
 #  bank_account_number     :string
@@ -262,7 +261,6 @@ end
 #  updated_at              :datetime         not null
 #  tax_id                  :string
 #  user_id                 :bigint
-=======
 #  id                  :bigint           not null, primary key
 #  bank_account_holder :string
 #  bank_account_number :string
@@ -274,7 +272,6 @@ end
 #  updated_at          :datetime         not null
 #  tax_id              :string
 #  user_id             :bigint
->>>>>>> f3410721 (Merge)
 #
 # Indexes
 #
