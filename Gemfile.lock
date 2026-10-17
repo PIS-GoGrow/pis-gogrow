@@ -503,6 +503,10 @@ GEM
     turbo-rails (2.0.23)
       actionpack (>= 7.1.0)
       railties (>= 7.1.0)
+    twilio-ruby (7.12.0)
+      faraday (>= 2.0, < 3.0)
+      jwt (>= 1.5, < 4.0)
+      nokogiri (>= 1.6, < 2.0)
     typelizer (0.13.1)
       benchmark
       railties (>= 6.1.0)
@@ -553,7 +557,6 @@ DEPENDENCIES
   dotenv-rails
   factory_bot_rails
   faker
-  faraday
   i18n-js (~> 4.2)
   inertia_rails (~> 3.21)
   jbuilder
@@ -583,6 +586,7 @@ DEPENDENCIES
   solid_cache
   solid_queue
   thruster
+  twilio-ruby
   typelizer
   tzinfo-data
   web-console
@@ -769,6 +773,7 @@ CHECKSUMS
   timeout (0.6.1) sha256=78f57368a7e7bbadec56971f78a3f5ecbcfb59b7fcbb0a3ed6ddc08a5094accb
   tsort (0.2.0) sha256=9650a793f6859a43b6641671278f79cfead60ac714148aabe4e3f0060480089f
   turbo-rails (2.0.23) sha256=ee0d90733aafff056cf51ff11e803d65e43cae258cc55f6492020ec1f9f9315f
+  twilio-ruby (7.12.0) sha256=0ddcdaacb5ef5dca190638b02a73edc9c1070f9a9fd95b3c67d8ade951a685f0
   typelizer (0.13.1) sha256=4fe386688f38ed30fb5822c06e14e8b13c885b4852b59a32a24a6375df82cf4d
   tzinfo (2.0.6) sha256=8daf828cc77bcf7d63b0e3bdb6caa47e2272dcfaf4fbfe46f8c3a9df087a829b
   unicode-display_width (3.2.0) sha256=0cdd96b5681a5949cdbc2c55e7b420facae74c4aaf9a9815eee1087cb1853c42
