@@ -102,10 +102,10 @@ describe("CollectionAccountPanel", () => {
       screen.queryByRole("button", { name: "Revisar pago" }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole("button", { name: "Aprobar" }),
+      screen.queryByRole("button", { name: "Confirmar" }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole("button", { name: "Rechazar" }),
+      screen.queryByRole("button", { name: "Reportar" }),
     ).not.toBeInTheDocument()
   })
   it.each(["consumer", "company"] as const)(
@@ -137,7 +137,7 @@ describe("CollectionAccountPanel", () => {
         ),
       ).toBeInTheDocument()
       expect(
-        within(dialog).getByRole("button", { name: "Aprobar" }),
+        within(dialog).getByRole("button", { name: "Confirmar" }),
       ).toBeDisabled()
       expect(
         within(dialog).getByRole("link", { name: "Descargar comprobante" }),

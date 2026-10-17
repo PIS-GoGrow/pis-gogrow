@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 class Provider::PaymentsController < Provider::InertiaController
+  REJECTION_REASONS = {
+    "partial_payment" => "El pago es parcial",
+    "incorrect_receipt" => "El comprobante no corresponde"
+  }.freeze
+  MAX_REJECTION_REASON_LENGTH = 500
+
   before_action :set_payment, only: [ :update, :receipt ]
 
   def update
@@ -17,7 +23,12 @@ class Provider::PaymentsController < Provider::InertiaController
     reviewed =
       case params[:status]
       when "approved" then @payment.approve
-      when "rejected" then @payment.reject_with(params[:rejection_reason].to_s.strip)
+      when "rejected"
+        rejection_reason = normalized_rejection_reason
+        return head :unprocessable_entity if rejection_reason.blank? ||
+                                             rejection_reason.length > MAX_REJECTION_REASON_LENGTH
+
+        @payment.reject_with(rejection_reason)
       else return head :unprocessable_entity
       end
 
@@ -53,5 +64,12 @@ class Provider::PaymentsController < Provider::InertiaController
 
   def provider_payments
     Current.user.provider.payments
+  end
+
+  def normalized_rejection_reason
+    reason_key = params[:rejection_reason].to_s
+    return params[:rejection_details].to_s.strip if reason_key == "other"
+
+    REJECTION_REASONS[reason_key]
   end
 end

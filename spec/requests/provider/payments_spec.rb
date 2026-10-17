@@ -122,7 +122,7 @@ RSpec.describe "Provider payments", type: :request do
     patch provider_payment_path(payment),
           params: {
             status: "rejected",
-            rejection_reason: "Comprobante inválido"
+            rejection_reason: "incorrect_receipt"
           }
 
     expect(payment.reload).to be_rejected
@@ -148,7 +148,8 @@ RSpec.describe "Provider payments", type: :request do
     payment.account.update!(month: Date.current.beginning_of_month)
     sign_in(user, role: :provider)
 
-    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: "Imagen borrosa" }
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "incorrect_receipt" }
 
     expect(payment.reload).to be_rejected
   end
@@ -157,10 +158,11 @@ RSpec.describe "Provider payments", type: :request do
     user, payment = setup_submitted_payment
     sign_in(user, role: :provider)
 
-    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: "Imagen borrosa" }
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "incorrect_receipt" }
 
     expect(payment.reload).to be_rejected
-    expect(payment.rejection_reason).to eq("Imagen borrosa")
+    expect(payment.rejection_reason).to eq("El comprobante no corresponde")
   end
 
   it "does not reject without a reason" do
@@ -169,7 +171,60 @@ RSpec.describe "Provider payments", type: :request do
 
     patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: " " }
 
+    expect(response).to have_http_status(:unprocessable_entity)
     expect(payment.reload).to be_submitted
+  end
+
+  it "does not accept a rejection reason outside the offered options" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "<script>alert(1)</script>" }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(payment.reload).to be_submitted
+    expect(payment.rejection_reason).to be_nil
+  end
+
+  it "stores a trimmed custom rejection reason" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: {
+            status: "rejected",
+            rejection_reason: "other",
+            rejection_details: "  El importe no coincide  "
+          }
+
+    expect(response).to redirect_to(provider_collections_path)
+    expect(payment.reload).to be_rejected
+    expect(payment.rejection_reason).to eq("El importe no coincide")
+  end
+
+  it "does not accept an empty custom rejection reason" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "other", rejection_details: "   " }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(payment.reload).to be_submitted
+    expect(payment.rejection_reason).to be_nil
+  end
+
+  it "does not accept an excessively long custom rejection reason" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "other", rejection_details: "a" * 501 }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(payment.reload).to be_submitted
+    expect(payment.rejection_reason).to be_nil
   end
 
   it "does not review a payment that was already reviewed" do
@@ -177,7 +232,7 @@ RSpec.describe "Provider payments", type: :request do
     sign_in(user, role: :provider)
     patch provider_payment_path(payment), params: { status: "approved" }
 
-    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: " otra vez" }
+    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: "other" }
 
     expect(response).to redirect_to(provider_collections_path)
     expect(payment.reload).to be_approved
@@ -274,7 +329,8 @@ RSpec.describe "Provider payments", type: :request do
 
     sign_in(user, role: :provider)
 
-    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: "El pago es parcial" }
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "partial_payment" }
 
     expect(response).to redirect_to(provider_collections_path)
     expect(response).to have_http_status(:see_other)
