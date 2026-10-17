@@ -27,6 +27,31 @@ RSpec.describe "Provider::Invoices", type: :request do
   end
 
   describe "POST /provider/invoices" do
+    it "aprueba la factura posterior al pago solo cuando el cobro vigente está aprobado" do
+      sign_in provider_user, role: :provider
+
+      [ :approved, :rejected, :submitted ].each_with_index do |status, index|
+        settled_account = Account.create!(
+          owner: companies(:gogrow), provider: providers(:tuviandita),
+          month: Date.current.prev_month(index + 2), amount: 601
+        )
+        settled_account.payments.create!(
+          provider: providers(:tuviandita), status: :approved, created_at: 2.days.ago
+        )
+        payment = settled_account.payments.create!(
+          provider: providers(:tuviandita), status: :submitted,
+          receipt: invoice_upload(filename: "comprobante.png"), created_at: 1.day.ago
+        )
+        payment.approve if status == :approved
+        payment.reject_with("Comprobante ilegible") if status == :rejected
+
+        post provider_invoices_path, params: invoice_params(account_id: settled_account.id), headers: collections_headers
+
+        expect(response).to redirect_to(provider_collections_path)
+        expect(settled_account.invoices.sole.status).to eq(status == :approved ? "approved" : "pending")
+      end
+    end
+
     it "conserva el total informado con IVA sin volver a aplicarlo" do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")

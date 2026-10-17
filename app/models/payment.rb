@@ -26,7 +26,15 @@ class Payment < ApplicationRecord
                     if: :should_close_automatic_payment_reminders?
 
   def approve
-    update(status: :approved, rejection_reason: nil)
+    transaction do
+      updated = update(status: :approved, rejection_reason: nil)
+
+      if updated && account.company?
+        account.invoices.pending.first&.approved!
+      end
+
+      updated
+    end
   end
 
   def reject_with(reason)

@@ -51,6 +51,84 @@ RSpec.describe "Provider payments", type: :request do
     expect(admin_user.notifications.active.sole).to have_attributes(event: "company_payment_approved", notifiable: account)
   end
 
+  it "approves the pending invoice when a company payment is approved" do
+    company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+    provider = create_provider("invoice-review-provider@gmail.com")
+    account = Account.create!(
+      owner: company,
+      provider:,
+      month: Date.current.prev_month,
+      amount: 500
+    )
+
+    invoice = account.invoices.build(
+      issued_on: Date.current,
+      total_amount: 500
+    )
+    invoice.file.attach(
+      io: StringIO.new("%PDF-1.4"),
+      filename: "factura.pdf",
+      content_type: "application/pdf"
+    )
+    invoice.save!
+
+    payment = account.payments.build(provider:, status: :submitted)
+    payment.receipt.attach(
+      io: StringIO.new("receipt"),
+      filename: "receipt.png",
+      content_type: "image/png"
+    )
+    payment.save!
+
+    sign_in(provider.user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "approved" }
+
+    expect(payment.reload).to be_approved
+    expect(invoice.reload).to be_approved
+  end
+
+  it "keeps the invoice pending when the company payment is rejected" do
+    company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+    provider = create_provider("invoice-reject-provider@gmail.com")
+    account = Account.create!(
+      owner: company,
+      provider:,
+      month: Date.current.prev_month,
+      amount: 500
+    )
+
+    invoice = account.invoices.build(
+      issued_on: Date.current,
+      total_amount: 500
+    )
+    invoice.file.attach(
+      io: StringIO.new("%PDF-1.4"),
+      filename: "factura.pdf",
+      content_type: "application/pdf"
+    )
+    invoice.save!
+
+    payment = account.payments.build(provider:, status: :submitted)
+    payment.receipt.attach(
+      io: StringIO.new("receipt"),
+      filename: "receipt.png",
+      content_type: "image/png"
+    )
+    payment.save!
+
+    sign_in(provider.user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: {
+            status: "rejected",
+            rejection_reason: "Comprobante inválido"
+          }
+
+    expect(payment.reload).to be_rejected
+    expect(invoice.reload).to be_pending
+  end
+
   it "does not approve a payment of the current month" do
     user, payment = setup_submitted_payment
     payment.account.update!(month: Date.current.beginning_of_month)

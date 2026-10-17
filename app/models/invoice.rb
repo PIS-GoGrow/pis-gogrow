@@ -12,6 +12,8 @@ class Invoice < ApplicationRecord
 
   has_one_attached :file
 
+  before_create :approve_if_account_settled
+
   validates :issued_on, presence: true, comparison: { less_than_or_equal_to: -> { Date.current } }
   validates :total_amount, numericality: { greater_than: 0 }
   validate :account_belongs_to_a_company
@@ -28,6 +30,10 @@ class Invoice < ApplicationRecord
   end
 
   private
+
+  def approve_if_account_settled
+    self.status = :approved if pending? && account.collection_status == "approved"
+  end
 
   def account_belongs_to_a_company
     errors.add(:account, :not_company) if account && !account.company?
