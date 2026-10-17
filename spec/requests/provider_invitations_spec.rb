@@ -135,16 +135,16 @@ RSpec.describe "Provider invitations", type: :request do
     it "sets the password, verifies the account and consumes the invitation" do
       register
 
-      expect(response).to redirect_to(provider_dashboard_path)
+      expect(response).to redirect_to(provider_onboarding_path)
       expect(user.reload.authenticate(strong_password)).to be_truthy
       expect(user).to be_verified
       expect(OtpCode.pending?(user, :invitation)).to be(false)
     end
 
-    it "signs the provider in and sends them to the dashboard" do
+    it "signs the provider in and sends them to the onboarding" do
       register
 
-      expect(response).to redirect_to(provider_dashboard_path)
+      expect(response).to redirect_to(provider_onboarding_path)
       expect(user.sessions.last.role).to eq("provider")
 
       follow_redirect!
@@ -199,7 +199,7 @@ RSpec.describe "Provider invitations", type: :request do
         roles: [ "admin" ]
       }
 
-      expect(response).to redirect_to(provider_dashboard_path)
+      expect(response).to redirect_to(provider_onboarding_path)
       expect(user.reload.email).to eq("ana@proveedor.com")
       expect(user.roles).to eq([ "provider" ])
     end

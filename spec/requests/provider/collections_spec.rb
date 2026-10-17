@@ -269,7 +269,7 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(props[:clients]).to eq([ { id: companies(:gogrow).id, name: "GoGrow" } ])
     end
 
-    it "keeps each total equal to the sum of its accounts" do
+    it "keeps each total equal to the sum of its payable account amounts" do
       sign_in provider_user, role: :provider
 
       get provider_collections_path
@@ -297,7 +297,11 @@ RSpec.describe "Provider::Collections", type: :request do
       get provider_collections_path
 
       expect(inertia).to have_props { |page|
-        page[:history].any? { it[:company]&.slice(:id, :status, :orders) == { "id" => account.id, "status" => "approved", "orders" => [] } }
+        # Historial abre el detalle en la misma pantalla, por eso conserva sus viandas.
+        page[:history].any? do |group|
+          company = group[:company]
+          company && company[:id] == account.id && company[:status] == "approved" && company[:orders].pluck(:id).sort == order_ids.sort
+        end
       }
 
       get provider_collection_path(account)

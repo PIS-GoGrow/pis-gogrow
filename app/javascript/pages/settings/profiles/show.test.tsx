@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import Profile from "./show"
 
 const patchMock = vi.fn()
+let currentRole = "provider"
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -15,7 +16,8 @@ vi.mock("@inertiajs/react", async () => {
     usePage: () => ({
       props: {
         auth: {
-          user: { name: "Proveedor Test" },
+          user: { name: "Proveedor Test", email: "proveedor@example.com" },
+          session: { role: currentRole },
         },
       },
     }),
@@ -65,6 +67,21 @@ describe("Settings Profiles Show Page", () => {
 
   beforeEach(() => {
     patchMock.mockClear()
+    currentRole = "provider"
+  })
+
+  it("shows RRHH email as read-only and hides account deletion", () => {
+    currentRole = "admin"
+
+    render(<Profile provider={null} phone="+59899123456" />)
+
+    expect(screen.getByLabelText("Correo electrónico")).toHaveValue(
+      "proveedor@example.com",
+    )
+    expect(screen.getByLabelText("Correo electrónico")).toHaveAttribute(
+      "readonly",
+    )
+    expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
   })
 
   it("renders the saved phone so it can be edited", () => {

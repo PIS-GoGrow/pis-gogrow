@@ -16,7 +16,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { UserInfo } from "@/components/user-info"
 import { useMobileNavigation } from "@/hooks/use-mobile-navigation"
-import { providerAccount, sessions, settingsProfiles } from "@/routes"
+import {
+  adminAccount,
+  providerAccount,
+  sessions,
+  settingsProfiles,
+} from "@/routes"
 import type { User } from "@/types"
 
 interface UserMenuContentProps {
@@ -75,7 +80,9 @@ export function UserMenuContent({ auth }: UserMenuContentProps) {
             href={
               session.role === "provider"
                 ? providerAccount()
-                : settingsProfiles.show()
+                : session.role === "admin"
+                  ? adminAccount()
+                  : settingsProfiles.show()
             }
             as="button"
             prefetch

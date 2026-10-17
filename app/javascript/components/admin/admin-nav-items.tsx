@@ -10,11 +10,12 @@ import type { ReactElement } from "react"
 import { useTranslation } from "react-i18next"
 
 import {
+  adminAccounts,
   adminBenefitConfigurations,
   adminConsumers,
   adminDashboard,
   adminPayments,
-  settingsProfiles,
+  adminPreferences,
 } from "@/routes"
 import type { NavItem } from "@/types"
 
@@ -68,9 +69,14 @@ export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
     },
     {
       title: t("nav.admin.account"),
-      href: settingsProfiles.show().url,
+      href: adminAccounts.show().url,
       icon: UserRound,
-      mobileActivePaths: ["/settings", adminBenefitConfigurations.index().url],
+      mobileActivePaths: [
+        adminAccounts.show().url,
+        adminPreferences.show().url,
+        "/settings",
+        adminBenefitConfigurations.index().url,
+      ],
       mobileIcon: (
         <HugeiconsIcon
           icon={UserIcon}
