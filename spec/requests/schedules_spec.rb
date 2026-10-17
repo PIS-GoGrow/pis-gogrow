@@ -11,6 +11,14 @@ end
 RSpec.describe "Schedules", type: :request do
   fixtures :users, :providers, :menus, :schedules, :orders, :consumers
 
+  before do
+    original_create = Provider.method(:create!)
+    allow(Provider).to receive(:create!) do |*args, **kwargs, &block|
+      kwargs[:onboarding_completed_at] ||= Time.current
+      original_create.call(*args, **kwargs, &block)
+    end
+  end
+
   def sign_in_with_role(user, role:)
     session = user.sessions.create!(role: role)
     cookies[:session_token] =
