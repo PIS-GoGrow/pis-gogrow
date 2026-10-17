@@ -785,7 +785,7 @@ RSpec.describe Order, type: :model do
 
     it "returns 0 when the order has no monthly benefit applied" do
       order = orders(:upcoming_pending_today)
-      order.update_columns(amount: 2)
+      order.update_columns(amount: 2, discounted_price: order.price)
       order.order_benefits.destroy_all
 
       expect(order.subsidized_units_held).to eq(0)

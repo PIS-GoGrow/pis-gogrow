@@ -15,11 +15,15 @@ vi.mock("@inertiajs/react", async () => {
     }: {
       children: React.ReactNode
       href: string | { url: string }
-    }) => (
-      <a href={typeof href === "string" ? href : href.url} {...props}>
-        {children}
-      </a>
-    ),
+      preserveState?: boolean
+    }) => {
+      delete props.preserveState
+      return (
+        <a href={typeof href === "string" ? href : href.url} {...props}>
+          {children}
+        </a>
+      )
+    },
   }
 })
 
