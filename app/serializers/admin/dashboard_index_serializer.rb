@@ -13,6 +13,9 @@ class Admin::DashboardIndexSerializer < ApplicationSerializer
   typelize summary: "{ meals: number; meals_limit: number | null; participation: number; spending: number; paid: number; pending: number; projected: number }"
   attributes :summary
 
+  typelize consumption: Admin::PaymentsIndexSerializer::CONSUMPTION_DETAIL
+  attributes :consumption
+
   typelize payment_month: :string
   attributes :payment_month
 

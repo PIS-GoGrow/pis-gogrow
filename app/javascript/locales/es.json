@@ -48,6 +48,9 @@
         "title": "Eliminar cuenta",
         "warning": "Advertencia"
       },
+      "month_select": {
+        "this_month": "Este mes"
+      },
       "password_fields": {
         "confirm_label": "Confirmar contraseña",
         "create_label": "Crear contraseña",
@@ -425,7 +428,6 @@
         "consumers": {
           "index": {
             "all": "Todos",
-            "completed": "Completados",
             "count_one": "%{count} empleado",
             "count_other": "%{count} empleados",
             "empty_description": "Todavía no hay empleados en la organización.",
@@ -516,7 +518,6 @@
             "title": "Tus pagos de %{month}",
             "view": "Ver pagos a proveedores"
           },
-          "this_month": "Este mes",
           "title": "Inicio"
         },
         "invoices": {
@@ -540,7 +541,31 @@
         },
         "payments": {
           "index": {
-            "detail_title": "Detalle del período",
+            "bank": {
+              "account_number": "Nº de cuenta: %{number}",
+              "copied": "Número de cuenta copiado",
+              "copy": "Copiar número de cuenta",
+              "copy_failed": "No pudimos copiar el número de cuenta",
+              "holder": "Beneficiario: %{holder}",
+              "missing": "Este proveedor todavía no cargó sus datos de cobro."
+            },
+            "detail": {
+              "company": "GoGrow",
+              "description": "Lo que la empresa le paga al proveedor en el mes y los pedidos confirmados de cada día.",
+              "employee": "Empleado",
+              "empty": "No hay pedidos confirmados de este proveedor en el mes.",
+              "filter_providers": "Filtrar por proveedor",
+              "loading_title": "Detalle del consumo",
+              "meals_tab": "Viandas",
+              "payment_tab": "Pago",
+              "provider": "Proveedor:",
+              "quantity": "Cant.",
+              "subtotal": "Subtotal sin IVA",
+              "title": "%{provider}: Consumo %{month}",
+              "total": "Total pagado",
+              "user": "Usuario",
+              "vat": "IVA (%{rate}%)"
+            },
             "due": "Vence: %{date}",
             "empty_history_description": "Cuando termines de pagar un período, va a aparecer acá.",
             "empty_history_title": "Todavía no hay períodos pagados",
@@ -550,13 +575,15 @@
             "meals_used_one": "%{count} vianda consumida",
             "meals_used_other": "%{count} viandas consumidas",
             "meals_used_with_limit": "%{meals} de %{limit} viandas consumidas",
+            "month_label": "Mes del consumo",
             "no_debt": "¡Sin deudas pendientes con este proveedor!",
+            "pending_meals_one": "(%{count} vianda)",
+            "pending_meals_other": "(%{count} viandas)",
             "pending_payments": "Pagos pendientes",
             "pending_tab": "Pendientes",
             "section": "Pagos",
             "see_detail": "Ver detalle",
             "spending": "Tu consumo",
-            "this_month": "Este mes",
             "title": "Pagos",
             "total_debt": "Deuda total",
             "view_detail": "Ver detalle del consumo"

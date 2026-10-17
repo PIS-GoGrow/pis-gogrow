@@ -57,7 +57,7 @@ RSpec.describe "Admin::Payments", type: :request do
 
         get admin_payments_path
 
-        expect(inertia).to have_props(total_debt: 1577.0, current_month: { amount: 1577.0, meals: 4, limit: 40 })
+        expect(inertia).to have_props(total_debt: 1577.0, summary: { amount: 1577.0, meals: 4, limit: 40 })
         expect(inertia).to have_props { |page|
           page[:accounts].any? { it[:id] == account.id && it[:amount] == 800.0 && it[:vat_amount] == 176.0 && it[:payable_amount] == 976.0 }
         }
@@ -80,10 +80,55 @@ RSpec.describe "Admin::Payments", type: :request do
         expect(inertia.props[:history].pluck(:id)).to contain_exactly(accounts(:gogrow_tuviandita_previous).id)
       end
 
+      # Con un comprobante viejo sin revisar, el período sigue en revisión
+      # aunque haya otro aprobado después: es la regla de Account#collection_status,
+      # la misma que usa el inicio de RR. HH. Desde IBP-019 la app ya no deja
+      # subir otro comprobante mientras haya uno en revisión, pero este estado
+      # puede venir de antes: la migración solo rechazó los duplicados en revisión.
+      it "shows a period with the same status as the home when an older receipt is still under review" do
+        account = accounts(:gogrow_tuviandita_previous)
+        older = account.payments.build(provider: account.provider, status: :submitted, created_at: 1.day.ago)
+        older.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+        older.save!
+
+        get admin_dashboard_path
+        home_status = inertia.props[:payments].sole["status"]
+
+        get admin_payments_path
+        period = inertia.props[:accounts].find { it[:id] == account.id }
+
+        expect(home_status).to eq("submitted")
+        expect(period[:collection_status]).to eq(home_status)
+        expect(inertia.props[:history].pluck(:id)).not_to include(account.id)
+      end
+
       it "counts the subsidy and the meals of the current month" do
         get admin_payments_path
 
-        expect(inertia.props[:current_month]).to eq("amount" => 601.0, "meals" => 4, "limit" => 40)
+        expect(inertia.props[:summary]).to eq("amount" => 601.0, "meals" => 4, "limit" => 40)
+      end
+
+      it "counts the meals of what the company still owes" do
+        get admin_payments_path
+
+        expect(inertia).to have_props(total_debt: 601.0, total_meals: 4)
+      end
+
+      it "sends the payment details each provider loaded, without its tax id" do
+        providers(:endulzate).update!(
+          bank_name: "Banco Itaú", bank_account_type: :checking, bank_account_number: "1951234",
+          bank_account_holder: "Noelia Patricia Pinheiro", tax_id: "211234560019"
+        )
+
+        get admin_payments_path
+
+        endulzate = inertia.props[:providers].find { it[:id] == providers(:endulzate).id }
+        expect(endulzate).to include(
+          bank_name: "Banco Itaú", bank_account_number: "1951234", bank_account_holder: "Noelia Patricia Pinheiro"
+        )
+        expect(endulzate).not_to have_key(:tax_id)
+        expect(inertia.props[:providers].find { it[:id] == providers(:tuviandita).id })
+          .to include(bank_name: nil, bank_account_number: nil, bank_account_holder: nil)
       end
 
       it "lists every provider so the ones without debt also show up" do
@@ -93,41 +138,86 @@ RSpec.describe "Admin::Payments", type: :request do
           .to eq([ "Office Provider User", "Other Provider User", "Provider User" ])
       end
 
-      # El inicio de RR. HH. llega con ?month= desde "Ver detalle del consumo".
-      it "opens the detail of the month the URL asks for on the pending tab" do
+      # ?month= elige el mes de la tarjeta "Tu consumo" y de su detalle.
+      it "sends the detail of the month the URL asks for" do
         get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
 
-        period = inertia.props[:period]
+        period = inertia.props[:consumption]
         expect(period).to include(
-          "month" => I18n.l(Date.current.beginning_of_month, format: :month_year),
-          "amount" => 601.0,
-          "tab" => "pending"
+          "month" => I18n.l(Date.current.beginning_of_month, format: :month_name_year).upcase_first
         )
-        expect(period["orders"].pluck("id")).to contain_exactly(
+        expect(period["providers"].sole).to include(
+          "id" => providers(:tuviandita).id, "name" => "Provider User", "meals" => 4,
+          "subtotal" => 601.0, "vat_rate" => 0.0, "vat_amount" => 0.0, "payable_amount" => 601.0
+        )
+        expect(period["providers"].sole["days"].flat_map { it["orders"] }.pluck("id")).to contain_exactly(
           orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id, orders(:other_consumer_upcoming).id
         )
       end
 
-      it "opens an already paid month on the history tab" do
-        get admin_payments_path, params: { month: 1.month.ago.strftime("%Y-%m") }
+      it "splits what the employee pays from what GoGrow pays in each order" do
+        get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
 
-        expect(inertia.props[:period]).to include("amount" => 900.0, "tab" => "history", "orders" => [])
-      end
-
-      it "sends the detail of the current month for the consumption card" do
-        get admin_payments_path
-
-        expect(inertia.props[:current_period]).to include(
-          "month" => I18n.l(Date.current.beginning_of_month, format: :month_year), "amount" => 601.0
+        rows = inertia.props[:consumption]["providers"].sole["days"].flat_map { it["orders"] }
+        expect(rows.find { it["id"] == orders(:upcoming_confirmed_future).id }).to include(
+          "consumer_name" => users(:one).name, "meals" => 2, "employee_amount" => 300.5, "company_amount" => 300.5
         )
       end
 
-      it "opens nothing without a month, with an invalid one or with one without payments" do
-        [ nil, "agosto", "2020-01" ].each do |month|
-          get admin_payments_path, params: { month: }.compact
+      it "sends one detail per provider of the month, sorted by name" do
+        Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: Date.current, amount: 200)
 
-          expect(inertia.props[:period]).to be_nil
+        get admin_payments_path
+
+        expect(inertia.props[:consumption]["providers"].pluck("name")).to eq([ "Other Provider User", "Provider User" ])
+      end
+
+      it "breaks down the VAT of each provider with its own rate" do
+        allow(ENV).to receive(:[]).and_call_original
+        allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+        Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: Date.current, amount: 800)
+
+        get admin_payments_path
+
+        expect(inertia.props[:consumption]["providers"].find { it["id"] == providers(:endulzate).id }).to include(
+          "subtotal" => 800.0, "vat_rate" => 22.0, "vat_amount" => 176.0, "payable_amount" => 976.0, "days" => []
+        )
+      end
+
+      it "shows a past month in the consumption card" do
+        previous_key = 1.month.ago.strftime("%Y-%m")
+
+        get admin_payments_path, params: { month: previous_key }
+
+        expect(inertia).to have_props(month: previous_key, current_month: Date.current.strftime("%Y-%m"))
+        expect(inertia.props[:summary]).to include("amount" => 900.0, "meals" => 0)
+        expect(inertia.props[:consumption]["providers"].sole).to include("subtotal" => 900.0, "days" => [])
+      end
+
+      it "shows the current month by default, with the months to choose from" do
+        get admin_payments_path
+
+        expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"))
+        expect(inertia.props[:months].pluck("key")).to eq([ Date.current, 1.month.ago ].map { it.strftime("%Y-%m") })
+        expect(inertia.props[:consumption]).to include(
+          "month" => I18n.l(Date.current.beginning_of_month, format: :month_name_year).upcase_first
+        )
+        expect(inertia.props[:consumption]["providers"].sole["subtotal"]).to eq(601.0)
+      end
+
+      it "falls back to the current month with an invalid or future month" do
+        [ "agosto", 1.month.from_now.strftime("%Y-%m") ].each do |month|
+          get admin_payments_path, params: { month: }
+
+          expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"))
         end
+      end
+
+      it "sends no detail for a month without payments" do
+        get admin_payments_path, params: { month: "2020-01" }
+
+        expect(inertia).to have_props(month: "2020-01")
+        expect(inertia.props[:consumption]).to be_nil
       end
 
       it "does not open the period of another company" do
@@ -135,7 +225,7 @@ RSpec.describe "Admin::Payments", type: :request do
 
         get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
 
-        expect(inertia.props[:period]["amount"]).to eq(601.0)
+        expect(inertia.props[:consumption]["providers"].pluck("subtotal")).to eq([ 601.0 ])
       end
     end
   end
@@ -147,16 +237,17 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(response).to redirect_to(sign_in_path)
     end
 
-    it "answers with the confirmed orders that make up the period" do
+    it "answers with the detail of every provider of the period's month" do
+      Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: Date.current, amount: 200)
       sign_in users(:admin), role: :admin
 
       get admin_payment_path(accounts(:gogrow_tuviandita_current))
 
       body = response.parsed_body
 
-      expect(body["month"]).to eq(I18n.l(Date.current, format: :month_year))
-      expect(body["amount"]).to eq(601.0)
-      expect(body["orders"].pluck("id")).to contain_exactly(
+      expect(body["month"]).to eq(I18n.l(Date.current.beginning_of_month, format: :month_name_year).upcase_first)
+      expect(body["providers"].pluck("name", "subtotal")).to eq([ [ "Other Provider User", 200.0 ], [ "Provider User", 601.0 ] ])
+      expect(body["providers"].last["days"].flat_map { it["orders"] }.pluck("id")).to contain_exactly(
         orders(:upcoming_confirmed_future).id,
         orders(:history_confirmed_past).id,
         orders(:other_consumer_upcoming).id

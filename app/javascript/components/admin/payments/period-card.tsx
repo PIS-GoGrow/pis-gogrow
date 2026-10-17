@@ -11,11 +11,10 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card"
-import { SheetTrigger } from "@/components/ui/sheet"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { adminPayments } from "@/routes"
-import type { Account, PaymentStatus } from "@/types"
+import type { Account } from "@/types"
 
 interface PeriodCardProps {
   account: Account
@@ -23,18 +22,6 @@ interface PeriodCardProps {
   // de qué proveedor es.
   providerName?: string
   onOpenDetail: () => void
-}
-
-// Misma regla que el estado de cobro del servidor: manda el último
-// comprobante, y sin comprobantes el período está pendiente.
-function statusOf({ payments }: Account): PaymentStatus {
-  const last = [...payments].sort(
-    (first, second) =>
-      new Date(second.created_at).getTime() -
-      new Date(first.created_at).getTime(),
-  )[0]
-
-  return last?.status ?? "pending"
 }
 
 export default function PeriodCard({
@@ -45,7 +32,7 @@ export default function PeriodCard({
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
 
-  const status = statusOf(account)
+  const status = account.collection_status
 
   return (
     <Card className="bg-muted/50 gap-3 py-4">
@@ -89,12 +76,10 @@ export default function PeriodCard({
             </span>
           )}
 
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="sm" onClick={onOpenDetail}>
-              <Eye aria-hidden="true" />
-              {t("pages.admin.payments.index.see_detail")}
-            </Button>
-          </SheetTrigger>
+          <Button variant="ghost" size="sm" onClick={onOpenDetail}>
+            <Eye aria-hidden="true" />
+            {t("pages.admin.payments.index.see_detail")}
+          </Button>
         </div>
 
         <PaymentReceiptDialog

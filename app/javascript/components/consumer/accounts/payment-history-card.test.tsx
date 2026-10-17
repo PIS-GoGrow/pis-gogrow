@@ -29,6 +29,7 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
     month: "Septiembre 2026",
     due_date: "10/10/26",
     due_date_passed: false,
+    collection_status: "pending",
     amount: 500,
     vat_amount: 0,
     payable_amount: 500,
