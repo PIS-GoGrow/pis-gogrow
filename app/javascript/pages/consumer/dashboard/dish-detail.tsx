@@ -44,6 +44,10 @@ export function DishDetail({
   // primero el cupo y los usos de los beneficios.
   const [line, setLine] = useState<PricedLine | null>(null)
 
+  const inCart =
+    cartPricedItem(cart).find((i) => item.id === i.schedule_id)
+      ?.quantity ?? 0
+
   useEffect(() => {
     let cancelled = false
 
@@ -57,9 +61,6 @@ export function DishDetail({
         if (cancelled) return
 
         const preLine = result.lines[String(item.id)]
-        const inCart =
-          cartPricedItem(cart).find((i) => item.id === i.schedule_id)
-            ?.quantity ?? 0
 
         setLine(
           preLine ? lastUnitsLine(inCart + quantity, quantity, preLine) : null,
@@ -180,7 +181,7 @@ export function DishDetail({
       <BottomAction className="flex">
         <QuantityInput
           value={quantity}
-          max={item.remaining}
+          max={item.remaining - inCart}
           onChange={setQuantity}
         />
         <Button
