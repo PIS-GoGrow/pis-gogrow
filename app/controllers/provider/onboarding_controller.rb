@@ -28,9 +28,7 @@ class Provider::OnboardingController < Provider::InertiaController
   end
 
   def current_step
-    return "done" if provider.onboarded?
-
-    (params[:step].presence_in(%w[1 2 3 4]) || "1")
+    params[:step].presence_in(%w[1 2 3 4 done]) || (provider.onboarded? ? "done" : "1")
   end
 
   def skipping?
@@ -70,7 +68,7 @@ class Provider::OnboardingController < Provider::InertiaController
       true
     elsif value.match?(/\A(?:[01]\d|2[0-3]):[0-5]\d\z/)
       hours, minutes = value.split(":").map(&:to_i)
-      provider.update(order_deadline: Time.zone.local(2000, 1, 1, hours, minutes))
+      save_or_redirect provider.update(order_deadline: Time.zone.local(2000, 1, 1, hours, minutes)), 2
     else
       provider.errors.add(:order_deadline, t("validations.invalid_order_deadline"))
       save_or_redirect false, 2
@@ -78,18 +76,20 @@ class Provider::OnboardingController < Provider::InertiaController
   end
 
   def save_deliveries
-    provider.update(home_delivery: ActiveModel::Type::Boolean.new.cast(params[:home_delivery]))
+    save_or_redirect provider.update(home_delivery: ActiveModel::Type::Boolean.new.cast(params[:home_delivery])), 3
   end
 
   def save_notifications
     subscribed_ids = Array(params[:subscribed_ids]).map(&:to_i)
 
-    provider_notification_configurations.find_each do |config|
-      subscribed = config.notification_configuration_users.exists?(user_id: Current.user.id)
-      if subscribed_ids.include?(config.id) && !subscribed
-        config.users << Current.user
-      elsif !subscribed_ids.include?(config.id) && subscribed
-        config.users.destroy(Current.user)
+    ActiveRecord::Base.transaction do
+      provider_notification_configurations.find_each do |config|
+        subscribed = config.notification_configuration_users.exists?(user_id: Current.user.id)
+        if subscribed_ids.include?(config.id) && !subscribed
+          config.users << Current.user
+        elsif !subscribed_ids.include?(config.id) && subscribed
+          config.users.destroy(Current.user)
+        end
       end
     end
 

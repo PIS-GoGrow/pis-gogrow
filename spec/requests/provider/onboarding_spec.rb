@@ -46,12 +46,20 @@ RSpec.describe "Provider::Onboarding", type: :request do
       end)
     end
 
-    it "muestra el cierre cuando ya está completo" do
+    it "muestra el cierre cuando ya está completo y no se pasa step" do
       provider.update!(onboarding_completed_at: Time.current)
 
-      get provider_onboarding_path(step: 1)
+      get provider_onboarding_path
 
       expect(inertia).to have_props { |props| props["step"] == "done" }
+    end
+
+    it "permite revisitar un paso anterior aunque ya esté completado el onboarding" do
+      provider.update!(onboarding_completed_at: Time.current)
+
+      get provider_onboarding_path(step: 3)
+
+      expect(inertia).to have_props { |props| props["step"] == "3" }
     end
 
     it "entrega las props exactas esperadas por el serializer" do
@@ -176,10 +184,26 @@ RSpec.describe "Provider::Onboarding", type: :request do
       expect(response).to redirect_to(provider_onboarding_path(step: 3))
     end
 
+    it "redirige con errores si provider.update falla en el paso 2" do
+      allow_any_instance_of(Provider).to receive(:update).and_return(false)
+
+      patch provider_onboarding_path, params: { step: 2, commit: "continue", order_deadline: "12:00" }
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+    end
+
     it "castea valores no booleanos en entregas de forma segura en el paso 3" do
       patch provider_onboarding_path, params: { step: 3, commit: "continue", home_delivery: "cualquier_cosa" }
 
       expect(response).to redirect_to(provider_onboarding_path(step: 4))
+    end
+
+    it "redirige con errores si provider.update falla en el paso 3" do
+      allow_any_instance_of(Provider).to receive(:update).and_return(false)
+
+      patch provider_onboarding_path, params: { step: 3, commit: "continue", home_delivery: true }
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 3))
     end
 
     it "ignora IDs de notificación inexistentes o negativos en el paso 4 sin fallar" do
