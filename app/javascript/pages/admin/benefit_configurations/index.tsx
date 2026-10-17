@@ -1,11 +1,12 @@
-import { Head } from "@inertiajs/react"
-import { AlertCircleIcon, PencilIcon } from "lucide-react"
+import { Head, Link } from "@inertiajs/react"
+import { AlertCircleIcon, ArrowLeft, PencilIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import DebtAlertCard from "@/components/benefit-configurations/debt-alert-card"
 import EditBenefitConfigurationForm from "@/components/benefit-configurations/edit-benefit-configuration-form"
 import SpecialSubsidiesSection from "@/components/benefit-configurations/special-subsidies-section"
+import Heading from "@/components/heading"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,7 +18,7 @@ import {
 } from "@/components/ui/card"
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import AppLayout from "@/layouts/app-layout"
-import { adminBenefitConfigurations } from "@/routes"
+import { adminAccount, adminBenefitConfigurations } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 import type { AdminBenefitConfigurationsIndex } from "@/types/serializers"
 
@@ -63,12 +64,22 @@ export default function Index({
       <Head title={title} />
 
       <div className="mx-auto grid w-full max-w-200 gap-6 p-5">
-        <div>
-          <h1 className="text-xl font-bold">{title}</h1>
-          <p className="text-muted-foreground text-sm">
-            {t("pages.admin.benefit_configurations.index.description")}
-          </p>
-        </div>
+        <Heading
+          title={title}
+          description={t(
+            "pages.admin.benefit_configurations.index.description",
+          )}
+          back={
+            <Button variant="ghost" size="icon" asChild>
+              <Link
+                href={adminAccount()}
+                aria-label={t("pages.admin.benefit_configurations.index.back")}
+              >
+                <ArrowLeft aria-hidden="true" />
+              </Link>
+            </Button>
+          }
+        />
 
         <Card>
           <CardHeader>
