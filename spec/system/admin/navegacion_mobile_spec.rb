@@ -58,10 +58,10 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
       end
     end
 
-    it "navega a Cuenta (/settings/profile) y mantiene el estado activo en Subsidios" do
+    it "navega a Cuenta (/admin/account) y mantiene el estado activo en Subsidios" do
       within(mobile_nav) { click_on "Cuenta" }
 
-      expect(page).to have_current_path(settings_profile_path)
+      expect(page).to have_current_path(admin_account_path)
       within(mobile_nav) do
         expect(page).to have_css("a[aria-current='page']", text: "Cuenta")
         expect(page).to have_no_css("a[aria-current='page']", text: "Inicio")
