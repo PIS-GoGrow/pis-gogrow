@@ -1330,7 +1330,35 @@ RSpec.describe "Orders", type: :request do
           patch order_path(order), params: update_params(options: options_params([ "Carbonara" ]))
 
           expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
         end
+
+        it "refuses options that exceed the group limit and preserves database integrity" do
+          patch order_path(order), params: update_params(options: options_params([ "Filetto", "Bolognesa" ]))
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
+        it "refuses options with duplicate values within the same group" do
+          patch order_path(order), params: update_params(options: options_params([ "Filetto", "Filetto" ]))
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
+        it "refuses options with non-existent group_id bypassing the interface" do
+          invalid_options = [ { group_id: 999_999, values: [ "Inexistente" ] }, { group_id: other_group.id, values: [ "Ricota y nuez" ] } ]
+          patch order_path(order), params: update_params(options: invalid_options)
+
+          expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
 
         # Los pedidos anteriores a esta funcionalidad no tienen elección
         # guardada; el proveedor tiene que poder confirmarlos igual.

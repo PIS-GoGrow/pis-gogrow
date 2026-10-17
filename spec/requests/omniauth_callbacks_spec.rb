@@ -149,7 +149,7 @@ RSpec.describe "OmniauthCallbacks", type: :request do
 
     it "accepts a user linked to a provider profile" do
       user = users(:one)
-      Provider.create!(user: user)
+      Provider.create!(user: user, onboarding_completed_at: Time.current)
       sign_in user, role: :provider
 
       get provider_dashboard_path

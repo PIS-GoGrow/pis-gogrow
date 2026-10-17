@@ -162,7 +162,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
   describe "notificaciones" do
     it "no muestra en la sesión de proveedor las notificaciones de empleado del mismo usuario" do
       user = users(:one)
-      Provider.create!(user:)
+      Provider.create!(user:, onboarding_completed_at: Time.current)
       configuration = Notification::Configuration.find_or_create_by!(key: "order_updates") do |record|
         record.roles = %w[consumer]
       end
@@ -181,6 +181,16 @@ RSpec.describe "Provider::Dashboard", type: :request do
       get provider_dashboard_path
 
       expect(inertia.props[:notifications]).to be_empty
+    end
+
+    it "le muestra al proveedor el aviso cuando un empleado cancela un pedido confirmado" do
+      order = orders(:upcoming_confirmed_future)
+      order.cancel(by: order.consumer.user)
+
+      sign_in provider_user, role: :provider
+      get provider_dashboard_path
+
+      expect(inertia.props[:notifications].pluck(:title)).to eq([ "Un pedido fue cancelado" ])
     end
   end
 end

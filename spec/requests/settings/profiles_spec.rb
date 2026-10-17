@@ -152,6 +152,18 @@ RSpec.describe "Settings::Profiles", type: :request do
     end
   end
 
+  describe "PATCH /settings/profile as RRHH" do
+    it "no deja cambiar el email aunque venga en el pedido" do
+      admin = users(:admin)
+      sign_in admin, role: :admin
+
+      patch settings_profile_path, params: { name: "RRHH Nuevo", email: "otro@example.com" }
+
+      expect(response).to redirect_to(settings_profile_path)
+      expect(admin.reload).to have_attributes(name: "RRHH Nuevo", email: "admin@example.com")
+    end
+  end
+
   describe "PATCH /settings/profile phone" do
     let(:user) { providers(:tuviandita).user }
 

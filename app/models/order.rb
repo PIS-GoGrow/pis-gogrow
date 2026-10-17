@@ -78,7 +78,7 @@ class Order < ApplicationRecord
   # particionen las órdenes: sin esto, una orden sin schedule (schedule_id es
   # nullable por el dependent: :nullify) se caería de ambas listas.
   scope :history, -> {
-    where.not(id: upcoming)
+    where.not(id: upcoming.reorder(nil).select(:id))
       .left_joins(:schedule)
       .order(Arel.sql("schedules.date DESC NULLS LAST"))
   }
@@ -273,7 +273,13 @@ class Order < ApplicationRecord
   def subsidized_units_held
     return 0 unless schedule&.date&.then { Date.current.all_month.cover?(it) }
 
-    amount.to_i
+    if order_benefits.any?
+      order_benefits.where(benefit_id: consumer&.monthly_benefits).sum(:benefit_used)
+    elsif discounted_price.to_d < price.to_d
+      amount.to_i
+    else
+      0
+    end
   end
 
   # El lock no es por dinero: evita que un doble envío cancele dos veces y pise
@@ -281,8 +287,10 @@ class Order < ApplicationRecord
   def cancel(by:)
     with_lock do
       return false unless cancellable?
+      return false unless update(status_before_cancellation: status, status: :cancelled, cancelled_at: Time.current, cancelled_by: by)
 
-      update(status_before_cancellation: status, status: :cancelled, cancelled_at: Time.current, cancelled_by: by)
+      notify_cancelled if before_cancellation_confirmed?
+      true
     end
   end
 
@@ -365,6 +373,21 @@ class Order < ApplicationRecord
       description_data: {
         date: I18n.l(schedule.date, format: :short),
         provider: provider.user.name
+      }
+    )
+  end
+
+  def notify_cancelled
+    return unless provider&.user
+
+    Notifier.call(
+      event_key: :order_cancellation,
+      user: provider.user,
+      notifiable: self,
+      description_data: {
+        consumer: consumer.user.name,
+        date: I18n.l(schedule.date, format: "%d/%m"),
+        dish: menu_name
       }
     )
   end

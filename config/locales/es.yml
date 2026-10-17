@@ -58,6 +58,7 @@ es:
     invoice_removed: "Factura eliminada."
     provider_closure_deleted: "Cierre eliminado."
     config_update: "Configuración actualizada"
+    config_update_error: "No pudimos guardar la configuración. Intentá nuevamente."
   validations:
     office_address_required: "No hay una dirección de oficina configurada. Contactá a RR. HH. para confirmar este pedido."
     empty_cart: "Agregá al menos un plato al carrito."
@@ -149,6 +150,14 @@ es:
     company_payment_approved:
       title: "Pago confirmado"
       description: "%{provider} confirmó el pago de %{company} por %{period} (%{amount})."
+    employee_debt_overdue:
+      title: "Hay empleados con pagos pendientes"
+      description:
+        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio."
+        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+    order_cancellation:
+      title: "Un pedido fue cancelado"
+      description: "El pedido de %{consumer} del %{date} de %{dish} fue cancelado."
     provider_menu_unpublished:
       title: "Publicá el menú del día"
       description: "Todavía no publicaste un menú para el %{date}."
@@ -177,6 +186,27 @@ es:
     company_payments:
       title: "Pagos a proveedores"
       description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
+    hr_pending_payments:
+      title: "Pagos pendientes"
+      description: "Avisos relacionados con empleados que tengan pagos pendientes."
+    hr_rejected_receipts:
+      title: "Comprobantes rechazados"
+      description: "Avisos cuando un comprobante de pago sea rechazado."
+    hr_partial_payments:
+      title: "Pagos parciales"
+      description: "Avisos sobre pagos parciales y saldos pendientes."
+    hr_pending_invoices:
+      title: "Facturas pendientes"
+      description: "Avisos cuando un proveedor todavía no haya enviado su factura."
+    hr_subsidy_changes:
+      title: "Cambios en subsidios"
+      description: "Avisos sobre cambios programados en la configuración de subsidios."
+    employee_debts:
+      title: "Deudas de empleados"
+      description: "Avisos cuando empleados de tu empresa acumulan más de un mes de deuda con un proveedor."
+    order_cancellations:
+      title: "Cancelaciones"
+      description: "Recibí una notificación cuando un pedido sea cancelado por el cliente."
     menu_publication_reminders:
       title: "Recordatorios de publicación del menú"
       description: "Avisos cuando falta publicar el menú de un día hábil."
@@ -217,6 +247,7 @@ es:
               required: "debe adjuntarse para enviar el pago"
               invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
               too_large: "no puede superar los 10 MB"
+              already_under_review: "Ya hay un comprobante en revisión para esta cuenta. Esperá a que se resuelva para enviar otro."
             rejection_reason:
               blank: "es obligatorio para rechazar un comprobante"
         invoice:
@@ -353,6 +384,25 @@ es:
       base: "Subsidio Base"
   pages:
     admin:
+      account:
+        title: "Cuenta"
+        sign_out: "Salir"
+        settings: "Configuración"
+        subsidies: "Subsidios"
+        subsidies_description: "Gestioná los subsidios de tu compañía"
+        notifications: "Notificaciones"
+        notifications_description: "Configurá qué alertas querés recibir"
+        more_options: "Más opciones"
+        preferences: "Perfil y Apariencia"
+        preferences_description: "Gestioná tus datos personales y el tema de la aplicación"
+      preferences:
+        title: "Perfil y Apariencia"
+        description: "Gestioná tu información personal y tus preferencias visuales"
+        back: "Volver a Cuenta"
+        profile: "Perfil"
+        profile_description: "Consultá tu correo y editá tus datos autorizados"
+        appearance: "Apariencia"
+        appearance_description: "Elegí entre modo claro, oscuro o automático"
       dashboard:
         title: "Inicio"
         greeting: "Hola, %{name} 👋"
@@ -399,6 +449,7 @@ es:
         index:
           title: "Subsidios"
           description: "Gestioná los subsidios de tu compañía"
+          back: "Volver a Cuenta"
           current:
             title: "Subsidio Base"
             empty: "Todavía no configuraste el beneficio general."
@@ -611,6 +662,7 @@ es:
         receipt_error_title: "No se pudo subir el comprobante"
         receipt_error_description: "Ocurrió un problema al subir el archivo. Intentá nuevamente."
         receipt_error_action: "Entendido"
+        receipt_under_review_hint: "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva."
         receipt_sent_at: "Enviado: %{date}"
         receipt_remove: "Eliminar comprobante"
         receipt_remove_title: "¿Eliminar comprobante?"
@@ -759,6 +811,7 @@ es:
         company: "Empresa"
         due: "Vence: %{date}"
         detail: "Ver detalle"
+        download_receipts: "Descargar comprobantes"
         detail_dialog:
           title: "Historial de consumo: %{month}"
           description: "Detalle del consumo correspondiente a %{name}."
@@ -1225,6 +1278,33 @@ es:
         notifications_description: "Configurá qué alertas querés recibir"
         profile: "Perfil"
         profile_description: "Editá tu nombre, correo, teléfono y contraseña"
+    provider_onboarding:
+      progress: "Paso %{current} de %{total}"
+      back: "Volver al paso anterior"
+      continue: "Continuar"
+      finish: "Finalizar"
+      skip: "Omitir por ahora"
+      steps:
+        1:
+          title: "Datos de cobro"
+          description: "Ingresá los datos de la cuenta donde vas a recibir los pagos de tus pedidos."
+        2:
+          title: "Hora de cierre"
+          description: "Definí hasta qué hora recibís pedidos cada día."
+          order_deadline: "Hora de cierre"
+          order_deadline_description: "Después de esta hora no se reciben más pedidos del día."
+        3:
+          title: "Entregas"
+          description: "Elegí si aceptás direcciones de entrega personalizadas además de las oficinas."
+          home_delivery: "Direcciones personalizadas"
+          home_delivery_description: "Aceptás pedidos con direcciones de entrega además de las oficinas."
+        4:
+          title: "Notificaciones"
+          description: "Elegí qué alertas querés recibir sobre tus pedidos y pagos."
+      done:
+        title: "¡Todo listo!"
+        description: "Tu cuenta ya está configurada y podés empezar a recibir pedidos."
+        cta: "Ir al Inicio"
     provider_payment_details:
       show:
         title: "Datos de cobro"
@@ -1355,6 +1435,7 @@ es:
       appearance:
         title: "Configuración de apariencia"
         description: "Actualiza la configuración de apariencia de tu cuenta"
+        back: "Volver a Perfil y Apariencia"
       profile:
         title: "Configuración del perfil"
         heading: "Información del perfil"
@@ -1362,6 +1443,8 @@ es:
         phone: "Teléfono"
         phone_placeholder: "+59899123456"
         phone_description: "Lo usamos para enviarte notificaciones por WhatsApp."
+        email_description: "Este dato es solo de consulta y no se puede modificar."
+        back: "Volver a Perfil y Apariencia"
         home_delivery:
           heading: "Editar información de pedidos"
           label: "También realizo entregas a domicilio"
@@ -1388,10 +1471,28 @@ es:
         heading: "Notificaciones"
         title: "Notificaciones"
         description: "Configurá qué alertas querés recibir por WhatsApp"
+        preferences_heading: "Preferencias de RRHH"
+        preferences_description: "Activá o desactivá las categorías de avisos que querés recibir."
+        back: "Volver a Cuenta"
   date:
     formats:
       month_year: "%B de %Y"
       month_name_year: "%B %Y"
       day_month: "%-d de %B"
       day_month_year: "%-d de %B de %Y"
-    month_names: [~, Enero, Febrero, Marzo, Abril, Mayo, Junio, Julio, Agosto, Septiembre, Octubre, Noviembre, Diciembre]
+    month_names:
+      [
+        ~,
+        Enero,
+        Febrero,
+        Marzo,
+        Abril,
+        Mayo,
+        Junio,
+        Julio,
+        Agosto,
+        Septiembre,
+        Octubre,
+        Noviembre,
+        Diciembre,
+      ]

@@ -128,8 +128,45 @@ describe("CollectionAccountDetailDialog", () => {
     expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
   })
 
+  it("shows the VAT breakdown for company payment history", async () => {
+    const user = userEvent.setup()
+    const company = {
+      ...baseAccount,
+      id: 2,
+      owner_name: "GoGrow",
+      source: "company",
+      vat_rate: 0.22,
+      vat_amount: 176,
+      payable_amount: 976,
+      status: "approved",
+      payments: [
+        {
+          id: 1,
+          status: "approved",
+          rejection_reason: null,
+          date: "02/10/26",
+          receipt_url: "/receipt.pdf",
+          receipt_filename: "comprobante.pdf",
+          receipt_content_type: "application/pdf",
+        },
+      ],
+    } satisfies ProviderCollectionAccount
+
+    render(<CollectionAccountDetailDialog account={company} settled />)
+    await user.click(screen.getByRole("button", { name: "Ver detalle" }))
+
+    expect(screen.getByText("Subtotal sin IVA")).toBeInTheDocument()
+    expect(screen.getByText("IVA (22 %)")).toBeInTheDocument()
+    expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(
+      screen.queryByRole("link", { name: "Ver historial de pagos" }),
+    ).not.toBeInTheDocument()
+  })
+
   it.each(["consumer", "company"] as const)(
-    "does not show the history link for a %s account",
+    "does not link a %s account with one rejected partial payment to its history",
     async (source) => {
       const user = userEvent.setup()
       const account = {
@@ -169,6 +206,8 @@ describe("CollectionAccountDetailDialog", () => {
       if (source === "company") {
         await user.click(screen.getByRole("tab", { name: "Cobro" }))
         expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+        expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
+        expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
         expect(screen.getByText("Rechazado")).toBeInTheDocument()
       }
     },

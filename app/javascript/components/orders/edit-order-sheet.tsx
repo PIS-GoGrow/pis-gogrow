@@ -94,7 +94,10 @@ export default function EditOrderSheet({
         </Button>
       </AdaptableDialogTrigger>
 
-      <AdaptableDialogContent showCloseButton={false} className="p-5">
+      <AdaptableDialogContent
+        showCloseButton={false}
+        className="max-h-[90dvh] overflow-y-auto p-5"
+      >
         <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-5">
           <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
             {t("pages.orders.show.edit_dialog.title")}

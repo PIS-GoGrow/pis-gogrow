@@ -764,6 +764,34 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "#subsidized_units_held" do
+    let(:consumer) { consumers(:one) }
+    let(:monthly_benefit) { consumer.benefits.current.monthly.first }
+
+    it "returns 0 when schedule delivery date is not in current month" do
+      order = orders(:upcoming_pending_future)
+      order.schedule.update!(date: Date.current.next_month.beginning_of_month)
+      expect(order.subsidized_units_held).to eq(0)
+    end
+
+    it "returns only the units that actually received the monthly benefit" do
+      order = orders(:upcoming_pending_today)
+      order.update_columns(amount: 3)
+      order.order_benefits.destroy_all
+      order.order_benefits.create!(benefit: monthly_benefit, benefit_used: 1)
+
+      expect(order.subsidized_units_held).to eq(1)
+    end
+
+    it "returns 0 when the order has no monthly benefit applied" do
+      order = orders(:upcoming_pending_today)
+      order.update_columns(amount: 2, discounted_price: order.price)
+      order.order_benefits.destroy_all
+
+      expect(order.subsidized_units_held).to eq(0)
+    end
+  end
+
   describe "#delivery_address_options" do
     let(:consumer) { consumers(:one) }
 
@@ -958,6 +986,45 @@ RSpec.describe Order, type: :model do
       expect {
         order.cancel(by: order.consumer.user)
       }.not_to change(Notification, :count)
+    end
+
+    it "notifies the provider when the consumer cancels a confirmed order" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification).to have_attributes(
+        user: order.provider.user,
+        event: "order_cancellation",
+        role: "provider",
+        requires_action: false,
+        notifiable: order,
+        title: "Un pedido fue cancelado"
+      )
+      expect(notification.description).to eq(
+        "El pedido de #{order.consumer.user.name} del #{order.schedule.date.strftime("%d/%m")} " \
+        "de #{order.menu_name} fue cancelado."
+      )
+    end
+
+    it "does not notify the provider when the cancellation is refused" do
+      order = orders(:upcoming_pending_today)
+      order.update_columns(status: Order.statuses[:confirmed])
+
+      expect(order.cancel(by: order.consumer.user)).to be(false)
+      expect(Notification.where(event: "order_cancellation")).to be_empty
+    end
+
+    it "does not notify the provider when the provider cancels the order itself" do
+      order = orders(:upcoming_confirmed_future)
+
+      order.withdraw!(by: order.provider.user)
+
+      expect(Notification.where(event: "order_cancellation")).to be_empty
     end
   end
 
