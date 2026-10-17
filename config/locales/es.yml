@@ -123,9 +123,7 @@ es:
         other: "por el siguiente motivo: %{details}"
         dish_modified: "porque el plato fue modificado"
         dish_deleted: "porque el plato fue eliminado"
-    order_withdrawal:
-      title: "Tu pedido fue cancelado"
-      description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} porque el plato dejó de estar disponible."
+        dish_unpublished: "porque el plato fue retirado del menú de ese día"
     debt_threshold_exceeded:
       title: "Tu deuda superó el monto límite"
       description: "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca."
@@ -960,6 +958,7 @@ es:
         other: "Otro motivo"
         dish_modified: "Plato modificado"
         dish_deleted: "Plato eliminado"
+        dish_unpublished: "Plato retirado del menú"
       statuses:
         pending: "Por revisar"
         confirmed: "Confirmado"

@@ -137,22 +137,22 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
     end
   end
 
-  describe "Paso 3: Cancelación por fuerza mayor por el proveedor" do
+  describe "Paso 3: Rechazo por fuerza mayor por el proveedor" do
     before do
       order_a.update!(status: :confirmed)
     end
 
-    it "cancela el pedido confirmado por causa del proveedor y actualiza la vista del empleado" do
-      order_a.withdraw!(by: provider_user)
+    it "rechaza el pedido confirmado por causa del proveedor y actualiza la vista del empleado" do
+      order_a.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)
 
-      expect(order_a.reload.status).to eq("cancelled")
-      expect(order_a.cancelled_by).to eq(provider_user)
+      expect(order_a.reload.status).to eq("rejected")
+      expect(order_a.rejected_by).to eq(provider_user)
 
       sign_in consumer_user, role: :consumer
       visit orders_path
 
       find("button", text: "Historial").click
-      expect(page).to have_content("Cancelado")
+      expect(page).to have_content("Rechazado")
     end
   end
 

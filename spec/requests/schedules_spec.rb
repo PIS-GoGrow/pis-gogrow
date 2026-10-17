@@ -1143,7 +1143,7 @@ RSpec.describe "Schedules", type: :request do
         expect(other_schedule.reload.amount).to eq(5)
       end
 
-      it "cancela los pedidos pendientes y confirmados del plato quitado" do
+      it "rechaza los pedidos pendientes y confirmados del plato quitado" do
         schedule = menu.schedules.create!(date: target_date, amount: 10)
         pending_order = create_order(schedule, status: :pending)
         confirmed_order = create_order(schedule, status: :confirmed, amount: 2)
@@ -1152,14 +1152,14 @@ RSpec.describe "Schedules", type: :request do
         delete schedule_path(schedule)
 
         expect(pending_order.reload).to have_attributes(
-          status: "cancelled",
-          status_before_cancellation: "pending",
-          cancelled_by: provider_user
+          status: "rejected",
+          rejection_reason: "dish_unpublished",
+          rejected_by: provider_user
         )
         expect(confirmed_order.reload).to have_attributes(
-          status: "cancelled",
-          status_before_cancellation: "confirmed",
-          cancelled_by: provider_user
+          status: "rejected",
+          rejection_reason: "dish_unpublished",
+          rejected_by: provider_user
         )
       end
 

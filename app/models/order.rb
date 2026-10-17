@@ -21,7 +21,8 @@ class Order < ApplicationRecord
     order_error: 3,
     other: 4,
     dish_modified: 5,
-    dish_deleted: 6
+    dish_deleted: 6,
+    dish_unpublished: 7
   }, prefix: :rejection_reason
 
   # Esta línea tiene que estar antes de has_many :order_accounts.
@@ -30,14 +31,15 @@ class Order < ApplicationRecord
   before_destroy :remember_accounts
   # El pedido conserva el plato tal como estaba al pedirlo: editarlo después no
   # tiene que reescribir el historial.
-  before_create :snapshot_menu
+  before_create :snapshot_order_context
 
   belongs_to :consumer
   belongs_to :schedule
+  belongs_to :provider, optional: true
   belongs_to :cancelled_by, class_name: "User", optional: true
   belongs_to :modified_by, class_name: "User", optional: true
+  belongs_to :rejected_by, class_name: "User", optional: true
   has_one :menu, through: :schedule
-  has_one :provider, through: :menu
 
   has_many :order_accounts, dependent: :destroy
   has_many :accounts, through: :order_accounts
@@ -80,7 +82,7 @@ class Order < ApplicationRecord
   scope :history, -> {
     where.not(id: upcoming.reorder(nil).select(:id))
       .left_joins(:schedule)
-      .order(Arel.sql("schedules.date DESC NULLS LAST"))
+      .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC NULLS LAST"))
   }
   after_create :ensure_accounts!
   after_update_commit :sync_accounts,
@@ -191,7 +193,7 @@ class Order < ApplicationRecord
   # confirmados, porque el proveedor puede no poder cumplir lo que aceptó. Un
   # pedido cancelado o ya rechazado no se toca: pisaría la cancelación del
   # empleado. El lock es por el doble envío, igual que en cancel.
-  def decide(status, reason: nil, details: nil)
+  def decide(status, reason: nil, details: nil, by: nil)
     with_lock do
       return false unless pending? || (confirmed? && status.to_s == "rejected")
 
@@ -199,6 +201,8 @@ class Order < ApplicationRecord
       if status.to_s == "rejected"
         attrs[:rejection_reason] = reason
         attrs[:rejection_details] = details
+        attrs[:rejected_at] = Time.current
+        attrs[:rejected_by] = by
       end
 
       update(attrs)
@@ -294,38 +298,20 @@ class Order < ApplicationRecord
     end
   end
 
-  # El proveedor retira el plato de una publicación (p. ej. se quedó sin
-  # insumos y no puede ofrecerlo). A diferencia de #cancel, esto no respeta la
-  # ventana de RN-12/13: esas reglas son sobre cuándo puede cancelar el
-  # consumidor, y acá quien decide es el proveedor, por un motivo distinto.
-  # Solo protegemos contra cancelar dos veces un pedido ya cerrado.
-  # Al retirar el plato también notificamos al consumidor porque su pedido
-  # deja de poder cumplirse.
-  def withdraw!(by:)
+  # Los cambios originados por el proveedor son rechazos, incluso cuando retira
+  # la publicación o elimina el plato. No aplican las ventanas de cancelación
+  # del consumidor, pero tampoco se pisan pedidos que este ya canceló.
+  def reject_for_dish_change!(reason:, by:)
     with_lock do
-      return false if cancelled? || rejected?
+      return false unless pending? || confirmed?
 
-      notification_data = {
-        date: I18n.l(schedule.date, format: :short),
-        dish: menu_name,
-        provider: provider.user.name
-      }
-
+      snapshot_order_context
       update!(
-        status_before_cancellation: status,
-        status: :cancelled,
-        cancelled_at: Time.current,
-        cancelled_by: by
+        status: :rejected,
+        rejection_reason: reason,
+        rejected_at: Time.current,
+        rejected_by: by
       )
-
-      Notifier.call(
-        event_key: :order_withdrawal,
-        user: consumer.user,
-        notifiable: self,
-        description_data: notification_data
-      )
-
-      true
     end
   end
 
@@ -334,17 +320,9 @@ class Order < ApplicationRecord
   def menu_name = super || schedule&.menu&.name
   def menu_description = super || schedule&.menu&.description
   def menu_option_groups = super || schedule&.menu&.option_groups_snapshot || []
-
-  # El proveedor modificó o eliminó el plato de esta programación y eligió no
-  # mantener los pedidos ya confirmados. Igual que #withdraw!, no respeta la
-  # ventana de RN-12/13.
-  def reject_for_dish_change!(reason: :dish_modified)
-    with_lock do
-      return false unless confirmed?
-
-      update!(status: :rejected, rejection_reason: reason)
-    end
-  end
+  def provider = super || schedule&.menu&.provider
+  def provider_name = super || provider&.user&.name
+  def delivery_date = super || schedule&.date
 
   # Asigna la orden a las dos cuentas que le corresponden y las hace recalcular
   # su monto: la del empleado, que paga su parte, y la de su empresa, que paga el
@@ -428,9 +406,9 @@ class Order < ApplicationRecord
   # Guarda los datos necesarios para notificar un rechazo aunque luego se elimine el schedule.
   def capture_rejection_notification_data
     @rejection_notification_data = {
-      date: I18n.l(schedule.date, format: :short),
+      date: I18n.l(delivery_date, format: :short),
       dish: menu_name,
-      provider: provider.user.name
+      provider: provider_name
     }
   end
 
@@ -475,13 +453,16 @@ class Order < ApplicationRecord
     values.is_a?(Array) && (values.any? || !group.required?) && values.size <= group.limit &&
       values.uniq.size == values.size && values.all? { group.options.include?(it) }
   end
-  def snapshot_menu
+  def snapshot_order_context
     menu = schedule&.menu
     return if menu.nil?
 
     self[:menu_name] ||= menu.name
     self[:menu_description] ||= menu.description
     self[:menu_option_groups] ||= menu.option_groups_snapshot
+    self[:provider_id] ||= menu.provider_id
+    self[:provider_name] ||= menu.provider.user&.name
+    self[:delivery_date] ||= schedule.date
   end
 
   # La cuenta de la empresa la comparten todos sus empleados, así que dos pedidos
@@ -516,6 +497,7 @@ end
 #  address                    :string
 #  amount                     :integer
 #  cancelled_at               :datetime
+#  delivery_date              :date
 #  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
 #  menu_description           :string
@@ -524,6 +506,8 @@ end
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  provider_name              :string
+#  rejected_at                :datetime
 #  rejection_details          :string
 #  rejection_reason           :integer
 #  selected_options           :jsonb            not null
@@ -534,6 +518,8 @@ end
 #  cancelled_by_id            :bigint
 #  consumer_id                :bigint           not null
 #  modified_by_id             :bigint
+#  provider_id                :bigint
+#  rejected_by_id             :bigint
 #  schedule_id                :bigint
 #
 # Indexes
@@ -541,6 +527,8 @@ end
 #  index_orders_on_cancelled_by_id  (cancelled_by_id)
 #  index_orders_on_consumer_id      (consumer_id)
 #  index_orders_on_modified_by_id   (modified_by_id)
+#  index_orders_on_provider_id      (provider_id)
+#  index_orders_on_rejected_by_id   (rejected_by_id)
 #  index_orders_on_schedule_id      (schedule_id)
 #
 # Foreign Keys
@@ -548,5 +536,7 @@ end
 #  fk_rails_...  (cancelled_by_id => users.id)
 #  fk_rails_...  (consumer_id => consumers.id)
 #  fk_rails_...  (modified_by_id => users.id)
+#  fk_rails_...  (provider_id => providers.id) ON DELETE => nullify
+#  fk_rails_...  (rejected_by_id => users.id) ON DELETE => nullify
 #  fk_rails_...  (schedule_id => schedules.id)
 #

@@ -3,13 +3,13 @@
 class Consumer::OrdersController < Consumer::InertiaController
   def index
     consumer = Current.user.consumer
-    orders = consumer.orders.preload(schedule: { menu: { provider: :user } })
+    orders = consumer.orders.preload(provider: :user, schedule: { menu: { provider: :user } })
 
     @upcoming_orders = orders.upcoming
     @past_orders = orders.history.where(created_at: (Date.current - 3.months)..)
 
     @providers = (@upcoming_orders + @past_orders)
-      .map { |order| order&.schedule&.menu&.provider }
+      .map(&:provider)
       .compact_blank
       .uniq
   end

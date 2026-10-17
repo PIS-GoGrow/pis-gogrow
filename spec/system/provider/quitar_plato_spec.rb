@@ -63,7 +63,7 @@ RSpec.describe "Quitar un plato del menú publicado", type: :system do
       expect(Schedule.exists?(schedule.id)).to be(true)
     end
 
-    it "cancela los pedidos del plato quitado" do
+    it "rechaza los pedidos del plato quitado" do
       target_date = Date.current.next_week(:monday) + 2.days
       Schedule.where(date: target_date).destroy_all
       schedule = milanesa.schedules.create!(date: target_date, amount: 10)
@@ -86,8 +86,9 @@ RSpec.describe "Quitar un plato del menú publicado", type: :system do
       within("[role=dialog]") { click_button "Quitar" }
 
       expect(page).to have_content("Plato quitado del menú.")
-      expect(order.reload.status).to eq("cancelled")
-      expect(order.cancelled_by).to eq(provider_user)
+      expect(order.reload.status).to eq("rejected")
+      expect(order.rejected_by).to eq(provider_user)
+      expect(order.rejection_reason).to eq("dish_unpublished")
     end
 
     it "no ofrece quitar platos de fechas pasadas" do

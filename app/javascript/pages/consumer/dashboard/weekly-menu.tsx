@@ -149,7 +149,10 @@ export function WeeklyMenu({
                 </span>
               </span>
               <ProviderFilterSheet
-                providers={providers}
+                providers={providers.map((provider) => ({
+                  id: provider,
+                  name: provider,
+                }))}
                 selectedProviders={activeProviders}
                 onApply={setActiveProviders}
               />

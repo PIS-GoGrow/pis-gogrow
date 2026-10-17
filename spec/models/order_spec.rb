@@ -10,7 +10,7 @@ RSpec.describe Order, type: :model do
   it do
     expect(subject).to define_enum_for(:rejection_reason)
       .with_values(out_of_stock: 0, duplicate_order: 1, customer_request: 2, order_error: 3, other: 4, dish_modified: 5,
-                    dish_deleted: 6)
+                    dish_deleted: 6, dish_unpublished: 7)
       .with_prefix(:rejection_reason)
   end
 
@@ -500,56 +500,57 @@ RSpec.describe Order, type: :model do
     end
   end
 
-  describe "#withdraw!" do
+  describe "#reject_for_dish_change!" do
     let(:provider_user) { users(:provider_user) }
 
-    it "cancels a pending order and records provider, time and previous status" do
+    it "rejects a pending order and records the provider, time and reason" do
       order = orders(:upcoming_pending_future)
 
-      expect(order.withdraw!(by: provider_user)).to be(true)
+      expect(order.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)).to be(true)
 
       order.reload
-      expect(order).to be_cancelled
-      expect(order.cancelled_by).to eq(provider_user)
-      expect(order.cancelled_at).to be_present
-      expect(order.status_before_cancellation).to eq("pending")
+      expect(order).to be_rejected
+      expect(order).to be_rejection_reason_dish_unpublished
+      expect(order.rejected_by).to eq(provider_user)
+      expect(order.rejected_at).to be_present
+      expect(order.cancelled_by).to be_nil
+      expect(order.cancelled_at).to be_nil
     end
 
-    it "cancels a confirmed order and records provider, time and previous status" do
+    it "rejects a confirmed order and records the provider, time and reason" do
       order = orders(:upcoming_confirmed_future)
 
-      expect(order.withdraw!(by: provider_user)).to be(true)
+      expect(order.reject_for_dish_change!(reason: :dish_deleted, by: provider_user)).to be(true)
 
       order.reload
-      expect(order).to be_cancelled
-      expect(order.cancelled_by).to eq(provider_user)
-      expect(order.cancelled_at).to be_present
-      expect(order.status_before_cancellation).to eq("confirmed")
+      expect(order).to be_rejected
+      expect(order).to be_rejection_reason_dish_deleted
+      expect(order.rejected_by).to eq(provider_user)
+      expect(order.rejected_at).to be_present
     end
 
-    it "allows withdrawing a confirmed order even on its delivery day" do
+    it "allows rejecting a confirmed order even on its delivery day" do
       order = orders(:upcoming_pending_today)
       order.update!(status: :confirmed)
 
-      expect(order.withdraw!(by: provider_user)).to be(true)
-      expect(order.reload).to be_cancelled
-      expect(order.status_before_cancellation).to eq("confirmed")
+      expect(order.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)).to be(true)
+      expect(order.reload).to be_rejected
     end
 
-    it "ignores withdrawal on an already cancelled order" do
+    it "ignores a provider rejection on an already cancelled order" do
       order = orders(:history_cancelled_future)
       original_cancelled_at = order.cancelled_at
       original_cancelled_by = order.cancelled_by
 
-      expect(order.withdraw!(by: provider_user)).to be(false)
+      expect(order.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)).to be(false)
       expect(order.reload.cancelled_at).to eq(original_cancelled_at)
       expect(order.cancelled_by).to eq(original_cancelled_by)
     end
 
-    it "ignores withdrawal on an already rejected order" do
+    it "ignores a provider rejection on an already rejected order" do
       order = orders(:history_rejected_future)
 
-      expect(order.withdraw!(by: provider_user)).to be(false)
+      expect(order.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)).to be(false)
       expect(order.reload).to be_rejected
     end
   end
@@ -826,31 +827,6 @@ RSpec.describe Order, type: :model do
     end
   end
 
-  describe "#reject_for_dish_change!" do
-    let(:order) { orders(:upcoming_confirmed_future) }
-
-    it "rejects confirmed order with dish_modified reason" do
-      expect(order.reject_for_dish_change!).to be(true)
-      expect(order.reload).to be_rejected
-      expect(order).to be_rejection_reason_dish_modified
-    end
-
-    it "does not reject pending, cancelled or already rejected orders" do
-      pending_order = orders(:upcoming_pending_today)
-      cancelled_order = orders(:history_cancelled_future)
-      rejected_order = orders(:history_rejected_future)
-
-      expect(pending_order.reject_for_dish_change!).to be(false)
-      expect(pending_order.reload).to be_pending
-
-      expect(cancelled_order.reject_for_dish_change!).to be(false)
-      expect(cancelled_order.reload).to be_cancelled
-
-      expect(rejected_order.reject_for_dish_change!).to be(false)
-      expect(rejected_order.reload).to be_rejected
-    end
-  end
-
   describe "menu snapshotting" do
     let(:schedule) { schedules(:future) }
 
@@ -946,7 +922,7 @@ RSpec.describe Order, type: :model do
       order = orders(:upcoming_confirmed_future)
 
       expect {
-        order.reject_for_dish_change!
+        order.reject_for_dish_change!(reason: :dish_modified, by: users(:provider_user))
       }.to change(Notification, :count).by(1)
 
       notification = Notification.order(:created_at).last
@@ -957,26 +933,26 @@ RSpec.describe Order, type: :model do
       expect(notification.description).to include("porque el plato fue modificado")
     end
 
-    it "notifies the consumer when the provider withdraws the dish" do
+    it "notifies the consumer with a rejection when the provider withdraws the dish" do
       order = orders(:upcoming_pending_future)
       provider_user = users(:provider_user)
 
       expect {
-        order.withdraw!(by: provider_user)
+        order.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)
       }.to change(Notification, :count).by(1)
 
       notification = Notification.order(:created_at).last
 
       expect(notification).to have_attributes(
         user: order.consumer.user,
-        event: "order_withdrawal",
+        event: "order_rejection",
         role: "consumer",
         requires_action: false,
         notifiable: order
       )
 
       expect(notification.description).to include(
-        "porque el plato dejó de estar disponible"
+        "porque el plato fue retirado del menú de ese día"
       )
     end
 
@@ -1022,7 +998,7 @@ RSpec.describe Order, type: :model do
     it "does not notify the provider when the provider cancels the order itself" do
       order = orders(:upcoming_confirmed_future)
 
-      order.withdraw!(by: order.provider.user)
+      order.reject_for_dish_change!(reason: :dish_unpublished, by: order.provider.user)
 
       expect(Notification.where(event: "order_cancellation")).to be_empty
     end
@@ -1272,6 +1248,7 @@ end
 #  address                    :string
 #  amount                     :integer
 #  cancelled_at               :datetime
+#  delivery_date              :date
 #  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
 #  menu_description           :string
@@ -1280,6 +1257,8 @@ end
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  provider_name              :string
+#  rejected_at                :datetime
 #  rejection_details          :string
 #  rejection_reason           :integer
 #  selected_options           :jsonb            not null
@@ -1290,6 +1269,8 @@ end
 #  cancelled_by_id            :bigint
 #  consumer_id                :bigint           not null
 #  modified_by_id             :bigint
+#  provider_id                :bigint
+#  rejected_by_id             :bigint
 #  schedule_id                :bigint
 #
 # Indexes
@@ -1297,6 +1278,8 @@ end
 #  index_orders_on_cancelled_by_id  (cancelled_by_id)
 #  index_orders_on_consumer_id      (consumer_id)
 #  index_orders_on_modified_by_id   (modified_by_id)
+#  index_orders_on_provider_id      (provider_id)
+#  index_orders_on_rejected_by_id   (rejected_by_id)
 #  index_orders_on_schedule_id      (schedule_id)
 #
 # Foreign Keys
@@ -1304,5 +1287,7 @@ end
 #  fk_rails_...  (cancelled_by_id => users.id)
 #  fk_rails_...  (consumer_id => consumers.id)
 #  fk_rails_...  (modified_by_id => users.id)
+#  fk_rails_...  (provider_id => providers.id) ON DELETE => nullify
+#  fk_rails_...  (rejected_by_id => users.id) ON DELETE => nullify
 #  fk_rails_...  (schedule_id => schedules.id)
 #

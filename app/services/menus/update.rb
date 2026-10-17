@@ -242,7 +242,9 @@ class Menus::Update
   end
 
   def reject_confirmed(schedules)
-    schedules.flat_map(&:orders).select(&:confirmed?).each(&:reject_for_dish_change!)
+    schedules.flat_map(&:orders).select(&:confirmed?).each do |order|
+      order.reject_for_dish_change!(reason: :dish_modified, by: @by)
+    end
   end
 
   def record_audit(record)

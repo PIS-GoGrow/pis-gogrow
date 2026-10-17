@@ -9,11 +9,11 @@ class Provider::OrdersController < Provider::InertiaController
     # y según cuándo se hicieron. Una orden para hoy que se hizo recién, se muestra
     # primero.
     @upcoming_orders =
-      provider_orders.where(schedules: { date: today.. })
-                     .order("schedules.date ASC, orders.created_at DESC")
+      provider_orders.where("COALESCE(schedules.date, orders.delivery_date) >= ?", today)
+                     .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) ASC, orders.created_at DESC"))
     @past_orders =
-      provider_orders.where(schedules: { date: ...today })
-                     .order("schedules.date DESC, orders.created_at DESC")
+      provider_orders.where("COALESCE(schedules.date, orders.delivery_date) < ?", today)
+                     .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC, orders.created_at DESC"))
   end
 
   # El find va sobre los pedidos del proveedor y no sobre Order: pedir el de
@@ -37,7 +37,7 @@ class Provider::OrdersController < Provider::InertiaController
   def decide(status, reason: nil, details: nil)
     order = provider_orders.find(params[:id])
 
-    if order.decide(status, reason:, details:)
+    if order.decide(status, reason:, details:, by: Current.user)
       redirect_back_or_to provider_orders_path, notice: t("flash.order_#{status}"), status: :see_other
     else
       alert = order.errors.full_messages.to_sentence.presence || t("validations.order_not_pending")
@@ -46,6 +46,6 @@ class Provider::OrdersController < Provider::InertiaController
   end
 
   def provider_orders
-    Current.user.provider.orders.preload(consumer: [ :user, :company ], schedule: :menu)
+    Current.user.provider.orders.left_joins(:schedule).preload(consumer: [ :user, :company ], schedule: :menu)
   end
 end
