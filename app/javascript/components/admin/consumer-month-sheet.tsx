@@ -1,16 +1,16 @@
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogClose,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogFooter,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+} from "@/components/adaptable-dialog"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import {
   Table,
   TableBody,
@@ -22,7 +22,7 @@ import {
 import { useFormatters } from "@/hooks/use-formatters"
 import type { AdminConsumerMonth } from "@/types"
 
-interface ConsumerMonthSheetProps {
+interface ConsumerMonthAdaptableDialogProps {
   month: AdminConsumerMonth | undefined
   companyName: string
   open: boolean
@@ -31,32 +31,32 @@ interface ConsumerMonthSheetProps {
 
 const page = "pages.admin.consumers.show"
 
-export default function ConsumerMonthSheet({
+export default function ConsumerMonthAdaptableDialog({
   month,
   companyName,
   open,
   onClose,
-}: ConsumerMonthSheetProps) {
+}: ConsumerMonthAdaptableDialogProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
 
   return (
-    <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <SheetContent
-        side="bottom"
-        showCloseButton={false}
-        className="mx-auto max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-t-xl"
-      >
+    <AdaptableDialog
+      desktopVariant="sheet"
+      open={open}
+      onOpenChange={(isOpen) => !isOpen && onClose()}
+    >
+      <AdaptableDialogContent className="max-w-xl!" showCloseButton={false}>
         {month && (
           <>
-            <SheetHeader>
-              <SheetTitle>
+            <AdaptableDialogHeader>
+              <AdaptableDialogTitle>
                 {t(`${page}.month_detail`, { month: month.label })}
-              </SheetTitle>
-              <SheetDescription>
+              </AdaptableDialogTitle>
+              <AdaptableDialogDescription>
                 {t(`${page}.month_detail_description`)}
-              </SheetDescription>
-            </SheetHeader>
+              </AdaptableDialogDescription>
+            </AdaptableDialogHeader>
 
             <div className="grid gap-4 px-4">
               {month.orders.length === 0 ? (
@@ -125,14 +125,14 @@ export default function ConsumerMonthSheet({
               </dl>
             </div>
 
-            <SheetFooter>
-              <SheetClose asChild>
+            <AdaptableDialogFooter>
+              <AdaptableDialogClose asChild>
                 <Button className="w-full">{t(`${page}.close`)}</Button>
-              </SheetClose>
-            </SheetFooter>
+              </AdaptableDialogClose>
+            </AdaptableDialogFooter>
           </>
         )}
-      </SheetContent>
-    </Sheet>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }

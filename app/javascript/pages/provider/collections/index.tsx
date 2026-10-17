@@ -126,6 +126,7 @@ export default function Index({
               {t("pages.provider_collections.index.this_month")}
             </Badge>
           }
+          className="lg:max-w-[50%]"
           value={formatMoney(sales.total)}
           detail={`| ${t("pages.provider_collections.index.confirmed_meals", { count: sales.meals })}`}
           action={<SalesDetailDialog detail={salesDetail} />}

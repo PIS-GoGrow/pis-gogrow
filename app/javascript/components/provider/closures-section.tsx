@@ -3,18 +3,18 @@ import { CalendarCog, Pencil, Trash2 } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogFooter,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+} from "@/components/adaptable-dialog"
 import { DateRangePicker } from "@/components/date-picker"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { providerClosures } from "@/routes"
 import type { ProviderClosure } from "@/types/serializers/ProviderClosure"
 
@@ -49,7 +49,7 @@ export default function ClosuresSection({
       closure.starts_on === saved.from && closure.ends_on === saved.to,
   )?.period
 
-  const openSheet = (closure: ProviderClosure | null) => {
+  const openAdaptableDialog = (closure: ProviderClosure | null) => {
     setEditing(closure)
     setRange({ from: closure?.starts_on ?? "", to: closure?.ends_on ?? "" })
     setStage("form")
@@ -98,7 +98,7 @@ export default function ClosuresSection({
                   size="icon-sm"
                   disabled={deletingId !== null}
                   aria-label={t(`${page}.edit`, { reason: closure.reason })}
-                  onClick={() => openSheet(closure)}
+                  onClick={() => openAdaptableDialog(closure)}
                 >
                   <Pencil aria-hidden="true" />
                 </Button>
@@ -120,19 +120,14 @@ export default function ClosuresSection({
         <Button
           type="button"
           className="h-11 w-full"
-          onClick={() => openSheet(null)}
+          onClick={() => openAdaptableDialog(null)}
         >
           {t(`${page}.schedule`)}
         </Button>
       </section>
 
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent
-          side="bottom"
-          showCloseButton={false}
-          className="mx-auto gap-0 rounded-t-3xl pb-[env(safe-area-inset-bottom)] md:max-w-xl"
-        >
-          <div className="bg-muted-foreground/30 mx-auto mt-3 h-1 w-10 rounded-full" />
+      <AdaptableDialog open={open} onOpenChange={setOpen}>
+        <AdaptableDialogContent showCloseButton={false} className="p-0">
           {stage === "form" ? (
             <Form
               key={editing?.id ?? "new"}
@@ -154,14 +149,14 @@ export default function ClosuresSection({
 
                 return (
                   <>
-                    <SheetHeader className="px-6 pt-6 pb-4">
-                      <SheetTitle className="text-xl">
+                    <AdaptableDialogHeader className="px-6 pt-6 pb-4">
+                      <AdaptableDialogTitle className="text-xl">
                         {t(`${page}.${editing ? "edit_title" : "sheet_title"}`)}
-                      </SheetTitle>
-                      <SheetDescription>
+                      </AdaptableDialogTitle>
+                      <AdaptableDialogDescription>
                         {t(`${page}.sheet_description`)}
-                      </SheetDescription>
-                    </SheetHeader>
+                      </AdaptableDialogDescription>
+                    </AdaptableDialogHeader>
                     <div className="flex flex-col gap-4 px-6 pb-6">
                       <input
                         type="hidden"
@@ -205,7 +200,7 @@ export default function ClosuresSection({
                         />
                       </Field>
                     </div>
-                    <SheetFooter className="flex-row gap-3 px-6 pb-6">
+                    <AdaptableDialogFooter className="flex-row gap-3 px-6 pb-6">
                       <Button
                         type="button"
                         variant="secondary"
@@ -221,22 +216,22 @@ export default function ClosuresSection({
                       >
                         {t(`${page}.save`)}
                       </Button>
-                    </SheetFooter>
+                    </AdaptableDialogFooter>
                   </>
                 )
               }}
             </Form>
           ) : (
             <>
-              <SheetHeader className="items-start px-6 pt-8 text-left">
-                <SheetTitle className="text-base">
+              <AdaptableDialogHeader className="items-start px-6 pt-8 text-left">
+                <AdaptableDialogTitle className="text-base">
                   {t(`${page}.${editing ? "updated_title" : "saved_title"}`)}
-                </SheetTitle>
-                <SheetDescription>
+                </AdaptableDialogTitle>
+                <AdaptableDialogDescription>
                   {t(`${page}.saved_description`, { period: savedPeriod })}
-                </SheetDescription>
-              </SheetHeader>
-              <SheetFooter className="px-6 pt-6 pb-6">
+                </AdaptableDialogDescription>
+              </AdaptableDialogHeader>
+              <AdaptableDialogFooter className="px-6 pt-6 pb-6">
                 <Button
                   type="button"
                   className="h-11 w-full"
@@ -244,11 +239,11 @@ export default function ClosuresSection({
                 >
                   {t("pages.provider_operational_settings.show.done")}
                 </Button>
-              </SheetFooter>
+              </AdaptableDialogFooter>
             </>
           )}
-        </SheetContent>
-      </Sheet>
+        </AdaptableDialogContent>
+      </AdaptableDialog>
     </>
   )
 }

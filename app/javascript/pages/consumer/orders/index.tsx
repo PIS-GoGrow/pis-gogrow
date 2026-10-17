@@ -112,9 +112,11 @@ export default function Index({
         <h1 className="text-2xl font-bold">{t("pages.orders.index.title")}</h1>
 
         <div className="flex items-center">
-          <span className="text-muted-foreground min-w-0 truncate text-sm">
+          <span className="text-foreground min-w-0 truncate text-sm font-medium">
             Proveedores:{" "}
-            <span className="text-foreground font-medium">{filterLabel}</span>
+            <span className="text-muted-foreground font-normal">
+              {filterLabel}
+            </span>
           </span>
           <ProviderFilterSheet
             providers={providers}

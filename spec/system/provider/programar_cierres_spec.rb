@@ -24,7 +24,7 @@ RSpec.describe "Programar cierres de recepción de pedidos como proveedor", type
 
     click_button "Programar cierre"
 
-    expect(page).to have_content("Selecciona el rango de fechas y el motivo del cierre.")
+    expect(page).to have_content("Seleccioná el rango de fechas y el motivo del cierre.")
 
     pick_date "#closure-range", target_date
     fill_in "closure-reason", with: "Mantenimiento del local"

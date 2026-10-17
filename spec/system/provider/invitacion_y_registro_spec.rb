@@ -20,8 +20,8 @@ RSpec.describe "Invitación y registro de proveedor", type: :system do
   it "permite al proveedor registrarse con contraseña segura, entrar al panel y no editar su email" do
     visit_hydrated provider_invitation_path(token: token)
 
-    expect(page).to have_content("Regístrese con Email")
-    expect(page).to have_content("Configure su contraseña para completar el registro.")
+    expect(page).to have_content("Registrate con Email")
+    expect(page).to have_content("Configurá tu contraseña para completar el registro.")
 
     # Criterio 2: El email no se puede editar, es al que se le mandó la invitación
     email_field = find_field("email", disabled: true)
