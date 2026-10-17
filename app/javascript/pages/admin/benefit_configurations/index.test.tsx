@@ -100,6 +100,24 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     ).toBeInTheDocument()
   })
 
+  it("offers navigation back to the RRHH account", () => {
+    render(
+      <Index
+        benefit_configurations={[]}
+        special_subsidies={[]}
+        employees={[]}
+        pending_base_subsidies={[]}
+        base_subsidy={null}
+        configurable_month={""}
+        debt_alert_threshold={2000}
+      />,
+    )
+
+    expect(
+      screen.getByRole("link", { name: "Volver a Cuenta" }),
+    ).toHaveAttribute("href", "/admin/account")
+  })
+
   it("renders current benefit configuration details when present", () => {
     render(
       <Index

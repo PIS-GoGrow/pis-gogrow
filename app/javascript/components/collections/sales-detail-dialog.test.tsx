@@ -42,7 +42,7 @@ const detail = {
 }
 
 describe("SalesDetailDialog", () => {
-  it("filtra el desglose del IVA usando los totales recibidos de Rails", async () => {
+  it("filters the consumption detail by client", async () => {
     const user = userEvent.setup()
     render(
       <SalesDetailDialog
@@ -66,6 +66,7 @@ describe("SalesDetailDialog", () => {
                 {
                   ...detail.days[0].orders[0],
                   id: 2,
+                  consumer_name: "María López",
                   client_id: 2,
                   client_name: "Otra empresa",
                   amount: 100,
@@ -79,7 +80,7 @@ describe("SalesDetailDialog", () => {
     await user.click(
       screen.getByRole("button", { name: "Ver detalle del consumo" }),
     )
-    expect(screen.getByText("777,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("Juan Pérez")).toBeInTheDocument()
 
     await user.click(
       screen.getByRole("button", { name: "Filtrar por cliente" }),
@@ -88,9 +89,9 @@ describe("SalesDetailDialog", () => {
       screen.getByRole("menuitemradio", { name: "Otra empresa" }),
     )
 
-    expect(screen.getByText("11,00 UYU")).toBeInTheDocument()
-    expect(screen.getByText("111,00 UYU")).toBeInTheDocument()
-    expect(screen.queryByText("777,00 UYU")).not.toBeInTheDocument()
+    expect(screen.queryByText("Juan Pérez")).not.toBeInTheDocument()
+    expect(screen.getByText("María López")).toBeInTheDocument()
+    expect(screen.getByText(/Día: 09\/10/)).toHaveTextContent("100,00 UYU")
   })
 
   it("opens the monthly detail and shows confirmed orders by day", async () => {
@@ -108,10 +109,11 @@ describe("SalesDetailDialog", () => {
     expect(screen.getByText("Juan Pérez")).toBeInTheDocument()
     expect(screen.getByText(/Día: 09\/10/)).toHaveTextContent("Viandas: 2")
     expect(screen.getByText(/Día: 09\/10/)).toHaveTextContent("600,00 UYU")
-    expect(screen.getByText("Subtotal")).toBeInTheDocument()
-    expect(screen.getByText("IVA sobre subsidios (22 %)")).toBeInTheDocument()
-    expect(screen.getByText("66,00 UYU")).toBeInTheDocument()
-    expect(screen.getByText("666,00 UYU")).toBeInTheDocument()
+    expect(screen.queryByText("Subtotal")).not.toBeInTheDocument()
+    expect(
+      screen.queryByText("IVA sobre subsidios (22 %)"),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText("Total")).not.toBeInTheDocument()
 
     await user.click(screen.getByRole("button", { name: "Cerrar" }))
 

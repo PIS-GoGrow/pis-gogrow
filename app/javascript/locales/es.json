@@ -119,9 +119,29 @@
         "description": "Avisos cuando empleados de tu empresa acumulan más de un mes de deuda con un proveedor.",
         "title": "Deudas de empleados"
       },
+      "hr_partial_payments": {
+        "description": "Avisos sobre pagos parciales y saldos pendientes.",
+        "title": "Pagos parciales"
+      },
       "hr_payment_reminders": {
         "description": "Recordatorios de pagos vencidos enviados por Recursos Humanos.",
         "title": "Recordatorios de pago de Recursos Humanos"
+      },
+      "hr_pending_invoices": {
+        "description": "Avisos cuando un proveedor todavía no haya enviado su factura.",
+        "title": "Facturas pendientes"
+      },
+      "hr_pending_payments": {
+        "description": "Avisos relacionados con empleados que tengan pagos pendientes.",
+        "title": "Pagos pendientes"
+      },
+      "hr_rejected_receipts": {
+        "description": "Avisos cuando un comprobante de pago sea rechazado.",
+        "title": "Comprobantes rechazados"
+      },
+      "hr_subsidy_changes": {
+        "description": "Avisos sobre cambios programados en la configuración de subsidios.",
+        "title": "Cambios en subsidios"
       },
       "menu_publication_reminders": {
         "description": "Avisos cuando falta publicar el menú de un día hábil.",
@@ -285,8 +305,21 @@
         }
       },
       "admin": {
+        "account": {
+          "more_options": "Más opciones",
+          "notifications": "Notificaciones",
+          "notifications_description": "Configurá qué alertas querés recibir",
+          "preferences": "Perfil y Apariencia",
+          "preferences_description": "Gestioná tus datos personales y el tema de la aplicación",
+          "settings": "Configuración",
+          "sign_out": "Salir",
+          "subsidies": "Subsidios",
+          "subsidies_description": "Gestioná los subsidios de tu compañía",
+          "title": "Cuenta"
+        },
         "benefit_configurations": {
           "index": {
+            "back": "Volver a Cuenta",
             "current": {
               "cancel": "Cancelar",
               "edit": "Editar",
@@ -525,6 +558,15 @@
             "total_debt": "Deuda total",
             "view_detail": "Ver detalle del consumo"
           }
+        },
+        "preferences": {
+          "appearance": "Apariencia",
+          "appearance_description": "Elegí entre modo claro, oscuro o automático",
+          "back": "Volver a Cuenta",
+          "description": "Gestioná tu información personal y tus preferencias visuales",
+          "profile": "Perfil",
+          "profile_description": "Consultá tu correo y editá tus datos autorizados",
+          "title": "Perfil y Apariencia"
         }
       },
       "cart": {
@@ -767,6 +809,7 @@
             "total_label": "Total",
             "vat": "IVA (22 %)"
           },
+          "download_receipts": "Descargar comprobantes",
           "due": "Vence: %{date}",
           "employees": "Empleados",
           "rejected_one": "%{count} cobro rechazado",
@@ -1389,6 +1432,7 @@
       },
       "settings": {
         "appearance": {
+          "back": "Volver a Perfil y Apariencia",
           "description": "Actualiza la configuración de apariencia de tu cuenta",
           "title": "Configuración de apariencia"
         },
@@ -1400,8 +1444,11 @@
           "unverified": "Tu dirección de correo no está verificada."
         },
         "notifications": {
+          "back": "Volver a Cuenta",
           "description": "Configurá qué alertas querés recibir por WhatsApp",
           "heading": "Notificaciones",
+          "preferences_description": "Activá o desactivá las categorías de avisos que querés recibir.",
+          "preferences_heading": "Preferencias de RRHH",
           "title": "Notificaciones"
         },
         "password": {
@@ -1412,7 +1459,9 @@
           "title": "Configuración de contraseña"
         },
         "profile": {
+          "back": "Volver a Perfil y Apariencia",
           "description": "Actualiza tu nombre y tu teléfono",
+          "email_description": "Este dato es solo de consulta y no se puede modificar.",
           "heading": "Información del perfil",
           "home_delivery": {
             "heading": "Editar información de pedidos",

@@ -32,6 +32,26 @@ configurations:
     roles: [admin]
     configurable: true
 
+  hr_pending_payments:
+    roles: [admin]
+    configurable: true
+
+  hr_rejected_receipts:
+    roles: [admin]
+    configurable: true
+
+  hr_partial_payments:
+    roles: [admin]
+    configurable: true
+
+  hr_pending_invoices:
+    roles: [admin]
+    configurable: true
+
+  hr_subsidy_changes:
+    roles: [admin]
+    configurable: true
+
   hr_payment_reminders:
     roles: [consumer]
     configurable: false
