@@ -2,10 +2,9 @@ import { Head } from "@inertiajs/react"
 import { useTranslation } from "react-i18next"
 
 import AppearanceTabs from "@/components/appearance-tabs"
-import HeadingSmall from "@/components/heading-small"
 import AppLayout from "@/layouts/app-layout"
-import SettingsLayout from "@/layouts/settings/layout"
-import { settingsAppearance } from "@/routes"
+import SettingsPageLayout from "@/layouts/settings/page-layout"
+import { adminPreferences, settingsAppearance } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 
 export default function Appearance() {
@@ -22,15 +21,14 @@ export default function Appearance() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={breadcrumbs[breadcrumbs.length - 1].title} />
 
-      <SettingsLayout>
-        <div className="space-y-6">
-          <HeadingSmall
-            title={t("pages.settings.appearance.title")}
-            description={t("pages.settings.appearance.description")}
-          />
-          <AppearanceTabs />
-        </div>
-      </SettingsLayout>
+      <SettingsPageLayout
+        title={t("pages.settings.appearance.title")}
+        description={t("pages.settings.appearance.description")}
+        adminBackHref={adminPreferences.show().url}
+        adminBackLabel={t("pages.settings.appearance.back")}
+      >
+        <AppearanceTabs />
+      </SettingsPageLayout>
     </AppLayout>
   )
 }
