@@ -358,6 +358,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
     t.string "bank_name"
     t.datetime "created_at", null: false
     t.boolean "home_delivery", default: true, null: false
+    t.datetime "onboarding_completed_at"
     t.time "order_deadline"
     t.string "tax_id"
     t.datetime "updated_at", null: false

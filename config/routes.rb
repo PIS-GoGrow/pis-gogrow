@@ -42,6 +42,7 @@ Rails.application.routes.draw do
   end
 
   namespace :provider do
+    resource :onboarding, only: [ :show, :update ], controller: "onboarding"
     get "account", to: "accounts#show", as: :account
     get "operational_settings", to: "operational_settings#show", as: :operational_settings
     resource :payment_details, only: [ :show, :update ]

@@ -25,6 +25,10 @@ class Provider < ApplicationRecord
 
   audits :home_delivery, :bank_name, :bank_account_type, :bank_account_number, :bank_account_holder, :tax_id
 
+  def onboarded?
+    onboarding_completed_at.present?
+  end
+
   def delivery_methods
     home_delivery? ? Order.delivery_methods.keys : [ "office" ]
   end
