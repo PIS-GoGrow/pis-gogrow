@@ -10,7 +10,10 @@ import ReceiptSheet from "@/components/payments/receipt-sheet"
 import RejectPaymentDialog from "@/components/payments/reject-payment-dialog"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
+import {
+  PARTIAL_PAYMENT_REJECTION_REASON_KEY,
+  type PaymentRejectionReasonKey,
+} from "@/lib/payment-rejection-reasons"
 import { providerPayments } from "@/routes"
 
 interface PaymentReviewSheetProps {
@@ -38,7 +41,7 @@ export default function PaymentReviewSheet({
   const [processing, setProcessing] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
 
-  function handleApprove() {
+  function handleConfirm() {
     if (!canApprove || processing) return
     setProcessing(true)
 
@@ -57,10 +60,10 @@ export default function PaymentReviewSheet({
     )
   }
 
-  function handleRejected(reason: string) {
+  function handleReported(reason: PaymentRejectionReasonKey) {
     setSheetOpen(false)
     showResult(
-      reason === PARTIAL_PAYMENT_REJECTION_REASON ? "partial" : "rejected",
+      reason === PARTIAL_PAYMENT_REJECTION_REASON_KEY ? "partial" : "rejected",
     )
   }
 
@@ -83,7 +86,7 @@ export default function PaymentReviewSheet({
         <>
           <RejectPaymentDialog
             paymentId={paymentId}
-            onRejected={handleRejected}
+            onRejected={handleReported}
           >
             <AdaptableDialogTrigger asChild>
               <Button
@@ -93,7 +96,7 @@ export default function PaymentReviewSheet({
                 disabled={processing}
               >
                 <X className="mr-2 size-4" />
-                {t("pages.provider_collections.review.reject")}
+                {t("pages.provider_collections.review.report")}
               </Button>
             </AdaptableDialogTrigger>
           </RejectPaymentDialog>
@@ -104,17 +107,17 @@ export default function PaymentReviewSheet({
             disabled={processing || !canApprove}
             aria-describedby={!canApprove ? restrictionId : undefined}
             aria-busy={processing}
-            onClick={handleApprove}
+            onClick={handleConfirm}
           >
             {processing ? (
               <Spinner
-                aria-label={t("pages.provider_collections.review.approving")}
+                aria-label={t("pages.provider_collections.review.confirming")}
               />
             ) : (
               <Check aria-hidden="true" />
             )}
             {t(
-              `pages.provider_collections.review.${processing ? "approving" : "approve"}`,
+              `pages.provider_collections.review.${processing ? "confirming" : "confirm"}`,
             )}
           </Button>
         </>

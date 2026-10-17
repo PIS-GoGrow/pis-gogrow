@@ -59,96 +59,152 @@ describe("PaymentReviewSheet", () => {
 
   it("prevents current-month approval while allowing rejection", async () => {
     const user = await openReview(false)
-    const approve = screen.getByRole("button", { name: "Aprobar" })
-    expect(approve).toBeDisabled()
-    expect(approve).toHaveAccessibleDescription(/mes en curso/)
-    expect(screen.getByRole("button", { name: "Rechazar" })).toBeEnabled()
-    await user.click(approve)
+    const confirm = screen.getByRole("button", { name: "Confirmar" })
+    expect(confirm).toBeDisabled()
+    expect(confirm).toHaveAccessibleDescription(/mes en curso/)
+    expect(screen.getByRole("button", { name: "Reportar" })).toBeEnabled()
+    await user.click(confirm)
     expect(patch).not.toHaveBeenCalled()
   })
 
   it("approves an eligible payment and prevents duplicate actions during processing", async () => {
     const user = await openReview()
-    const approve = screen.getByRole("button", { name: "Aprobar" })
-    expect(approve).toBeEnabled()
-    approve.focus()
-    expect(approve).toHaveFocus()
+    const confirm = screen.getByRole("button", { name: "Confirmar" })
+    expect(confirm).toBeEnabled()
+    confirm.focus()
+    expect(confirm).toHaveFocus()
     await user.keyboard("{Enter}")
     expect(patch).toHaveBeenCalledWith(
       providerPayments.update(17).url,
       { status: "approved" },
       expect.any(Object),
     )
-    expect(screen.getByRole("button", { name: /Aprobando/ })).toBeDisabled()
-    expect(screen.getByRole("button", { name: "Rechazar" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /Confirmando/ })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Reportar" })).toBeDisabled()
     const callbacks = patch.mock.calls[0][2] as {
       onFinish: () => void
       onSuccess: () => void
     }
     act(() => callbacks.onFinish())
-    expect(screen.getByRole("button", { name: "Aprobar" })).toBeEnabled()
+    expect(screen.getByRole("button", { name: "Confirmar" })).toBeEnabled()
     act(() => callbacks.onSuccess())
     expect(showResult).toHaveBeenCalledWith("approved")
   })
 
   it.each([
-    "La imagen está borrosa",
-    "El archivo enviado no corresponde a un comprobante",
-    "El pago es parcial",
-    "Otro",
-  ])("preserves rejection with reason %s", async (reason) => {
-    const user = await openReview()
-    await user.click(screen.getByRole("button", { name: "Rechazar" }))
-    const dialog = screen.getByRole("dialog", { name: "Reportar un problema" })
-    await user.click(within(dialog).getByRole("radio", { name: reason }))
-    const submit = within(dialog).getByRole("button", {
-      name: "Rechazar comprobante",
-    })
-    if (reason === "Otro") {
+    ["El pago es parcial", "partial_payment", "partial"],
+    ["El comprobante no corresponde", "incorrect_receipt", "rejected"],
+  ] as const)(
+    "reports with reason %s only after confirmation",
+    async (label, reason, result) => {
+      const user = await openReview()
+      await user.click(screen.getByRole("button", { name: "Reportar" }))
+      const dialog = screen.getByRole("dialog", {
+        name: "Reportar un problema",
+      })
+      const submit = within(dialog).getByRole("button", { name: "Continuar" })
       expect(submit).toBeDisabled()
-      await user.type(
-        within(dialog).getByRole("textbox", { name: "Motivo" }),
-        "  Motivo de prueba  ",
+
+      await user.click(within(dialog).getByRole("radio", { name: label }))
+      expect(patch).not.toHaveBeenCalled()
+      expect(submit).toBeEnabled()
+
+      await user.click(submit)
+      expect(patch).toHaveBeenCalledWith(
+        providerPayments.update(17).url,
+        {
+          status: "rejected",
+          rejection_reason: reason,
+          rejection_details: null,
+        },
+        expect.any(Object),
       )
-    }
+      expect(
+        within(dialog).getByRole("button", { name: /Continuando/ }),
+      ).toBeDisabled()
+      const callbacks = patch.mock.calls[0][2] as {
+        onFinish: () => void
+        onSuccess: () => void
+      }
+      act(() => callbacks.onSuccess())
+      expect(showResult).toHaveBeenCalledWith(result)
+    },
+  )
+
+  it("requires and sends a description when reporting with another reason", async () => {
+    const user = await openReview()
+    await user.click(screen.getByRole("button", { name: "Reportar" }))
+    const dialog = screen.getByRole("dialog", {
+      name: "Reportar un problema",
+    })
+    await user.click(within(dialog).getByRole("radio", { name: "Otro motivo" }))
+
+    const details = within(dialog).getByRole("textbox", {
+      name: "Describir el motivo",
+    })
+    const submit = within(dialog).getByRole("button", { name: "Continuar" })
+    expect(details).toHaveAttribute("placeholder", "Describir el motivo")
+    expect(details).toHaveAttribute("maxlength", "500")
+    expect(submit).toBeDisabled()
+
+    await user.type(details, "   ")
+    expect(submit).toBeDisabled()
+
+    await user.type(details, "El importe no coincide   ")
+    expect(submit).toBeEnabled()
     await user.click(submit)
+
     expect(patch).toHaveBeenCalledWith(
       providerPayments.update(17).url,
       {
         status: "rejected",
-        rejection_reason: reason === "Otro" ? "Motivo de prueba" : reason,
+        rejection_reason: "other",
+        rejection_details: "El importe no coincide",
       },
       expect.any(Object),
     )
-    expect(
-      within(dialog).getByRole("button", { name: /Rechazando/ }),
-    ).toBeDisabled()
-    const callbacks = patch.mock.calls[0][2] as {
-      onFinish: () => void
-      onSuccess: () => void
-    }
-    act(() => callbacks.onSuccess())
-    expect(showResult).toHaveBeenCalledWith(
-      reason === "El pago es parcial" ? "partial" : "rejected",
+  })
+
+  it("does not show a successful result when reporting does not succeed", async () => {
+    const user = await openReview()
+    await user.click(screen.getByRole("button", { name: "Reportar" }))
+    const dialog = screen.getByRole("dialog", {
+      name: "Reportar un problema",
+    })
+    await user.click(
+      within(dialog).getByRole("radio", {
+        name: "El comprobante no corresponde",
+      }),
     )
+    await user.click(within(dialog).getByRole("button", { name: "Continuar" }))
+
+    const callbacks = patch.mock.calls[0][2] as { onFinish: () => void }
+    act(() => callbacks.onFinish())
+
+    expect(showResult).not.toHaveBeenCalled()
+    expect(
+      within(dialog).getByRole("button", { name: "Continuar" }),
+    ).toBeEnabled()
   })
 
   it("returns from rejection without submitting or closing receipt review", async () => {
     const user = await openReview()
-    await user.click(screen.getByRole("button", { name: "Rechazar" }))
-    await user.click(screen.getByRole("radio", { name: "Otro" }))
-    await user.type(screen.getByRole("textbox", { name: "Motivo" }), "Prueba")
+    await user.click(screen.getByRole("button", { name: "Reportar" }))
+    await user.click(screen.getByRole("radio", { name: "Otro motivo" }))
+    await user.type(
+      screen.getByRole("textbox", { name: "Describir el motivo" }),
+      "Motivo temporal",
+    )
     await user.click(screen.getByRole("button", { name: "Volver" }))
     expect(
       screen.getByRole("dialog", { name: "Comprobante" }),
     ).toBeInTheDocument()
     expect(patch).not.toHaveBeenCalled()
-    await user.click(screen.getByRole("button", { name: "Rechazar" }))
+    await user.click(screen.getByRole("button", { name: "Reportar" }))
+    expect(screen.getByRole("radio", { name: "Otro motivo" })).not.toBeChecked()
     expect(
-      screen.getByRole("radio", { name: "La imagen está borrosa" }),
-    ).toBeChecked()
-    expect(
-      screen.queryByRole("textbox", { name: "Motivo" }),
+      screen.queryByRole("textbox", { name: "Describir el motivo" }),
     ).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled()
   })
 })
