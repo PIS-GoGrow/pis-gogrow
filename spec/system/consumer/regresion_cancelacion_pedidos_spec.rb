@@ -14,6 +14,10 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
   let(:sched_today) { schedules(:today) }
   let(:sched_future) { schedules(:future) }
 
+  around do |example|
+    travel_to(Time.current.change(hour: 12, min: 0, sec: 0)) { example.run }
+  end
+
   before do
     sched_today.update!(amount: 10, available: true)
     sched_future.update!(amount: 10, available: true)
