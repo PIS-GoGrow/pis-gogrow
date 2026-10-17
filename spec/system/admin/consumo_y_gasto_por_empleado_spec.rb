@@ -51,6 +51,21 @@ RSpec.describe "Consumo y gasto mensual de cada empleado", type: :system do
     expect(page).to have_content("Beneficio")
   end
 
+  it "opens the month detail dialog from consumption history and closes it" do
+    visit_hydrated admin_consumer_path(consumer)
+
+    expect(page).to have_content("Historial de consumo")
+    first("button[aria-label^='Ver el detalle de']").click
+
+    expect(page).to have_content("Historial de consumo:")
+    expect(page).to have_content("Pedidos confirmados del mes")
+    expect(page).to have_button("Cerrar")
+
+    click_button "Cerrar"
+
+    expect(page).to have_no_content("Pedidos confirmados del mes")
+  end
+
   # Lo que la home muestra como deuda del empleado y lo que Empleados lista para
   # el mismo mes es el mismo número.
   it "agrees with the debt ranking of the home for the same month" do

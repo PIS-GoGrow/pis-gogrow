@@ -157,6 +157,36 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         expect(response).to have_http_status(:not_found)
       end
+
+      it "returns 404 for an invalid or non-existent consumer id" do
+        get admin_consumer_path(id: "invalid-id")
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    context "when not signed in as HR" do
+      it "redirects visitors without a session to the sign in page" do
+        get admin_consumer_path(consumers(:one))
+
+        expect(response).to redirect_to(sign_in_path)
+      end
+
+      it "redirects consumers to the root page" do
+        sign_in users(:one), role: :consumer
+
+        get admin_consumer_path(consumers(:one))
+
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "redirects providers to the root page" do
+        sign_in users(:provider_user), role: :provider
+
+        get admin_consumer_path(consumers(:one))
+
+        expect(response).to redirect_to(root_path)
+      end
     end
   end
 end
