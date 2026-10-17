@@ -134,7 +134,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | Componente | Importar desde | Usar para |
 |---|---|---|
 | `AppLayout` | `@/layouts/app-layout` | Toda pantalla con sesión iniciada; recibe `breadcrumbs` |
-| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `actions`, `back` y `centered` |
+| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `badge` (al lado del título, como el contador de Empleados), `actions`, `back` y `centered` |
 | `ListItemCard` | `@/components/list-item-card` | Tarjeta compacta para cada ítem de una lista; acepta las mismas partes que `Card` |
 | `Heading` | `@/components/heading` | Encabezado con `eyebrow`, `description` y `actions` opcionales. En las pantallas se usa a través de `PageContainer` |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |

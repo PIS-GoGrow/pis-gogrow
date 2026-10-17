@@ -42,6 +42,11 @@ class AccountSerializer < ApplicationSerializer
     Date.current > account.due_date
   end
 
+  # Sigue el enum de Payment; escrito a mano porque collection_status es un
+  # método y no una columna de la que inferirlo.
+  typelize "'pending' | 'submitted' | 'approved' | 'rejected'"
+  attribute :collection_status, &:collection_status
+
   typelize :number
   attribute :orders_amount_sum do |account|
     params[:orders_sum]&.dig(account.id, :amount) || 0

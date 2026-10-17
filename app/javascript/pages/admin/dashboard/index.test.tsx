@@ -1,4 +1,10 @@
-import { render, screen, waitFor, within } from "@testing-library/react"
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import type React from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -45,6 +51,7 @@ const props: AdminDashboardIndex = {
     pending: 3100,
     projected: 0,
   },
+  consumption: null,
   payment_month: "septiembre",
   payments: [
     { name: "Endulzate by Noe", amount: 2325, status: "approved" },
@@ -90,8 +97,43 @@ describe("Admin Dashboard Page", () => {
       screen.getByRole("combobox", { name: "Mes del resumen" }),
     ).toHaveTextContent("Este mes")
     expect(
-      screen.getByRole("link", { name: "Ver detalle del consumo" }),
-    ).toHaveAttribute("href", "/admin/payments?month=2026-10")
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    ).toBeDisabled()
+  })
+
+  // El panel se abre sobre el Inicio, sin ir a Pagos.
+  it("opens the consumption detail of the selected month over the home", () => {
+    render(
+      <AdminDashboard
+        {...props}
+        consumption={{
+          month: "Octubre 2026",
+          providers: [
+            {
+              id: 1,
+              name: "Tu Viandita",
+              meals: 45,
+              subtotal: 5425,
+              vat_rate: 0,
+              vat_amount: 0,
+              payable_amount: 5425,
+              days: [],
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    )
+
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Tu Viandita: Consumo Octubre 2026",
+    )
+    expect(
+      screen.getByRole("heading", { name: /Hola, Juan/, hidden: true }),
+    ).toBeInTheDocument()
   })
 
   it("shows the meals alone when the month had no benefit configured", () => {
