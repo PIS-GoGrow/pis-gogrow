@@ -122,7 +122,7 @@ RSpec.describe "Provider payments", type: :request do
     patch provider_payment_path(payment),
           params: {
             status: "rejected",
-            rejection_reason: "Comprobante inválido"
+            rejection_reason: "incorrect_receipt"
           }
 
     expect(payment.reload).to be_rejected
