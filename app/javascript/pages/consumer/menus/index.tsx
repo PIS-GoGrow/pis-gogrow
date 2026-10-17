@@ -119,9 +119,9 @@ export default function Index({
         <WeekNav date={date} onChange={handleDateChange} />
 
         <div className="mt-6 mb-3 flex items-center">
-          <span className="text-muted-foreground text-sm">
+          <span className="text-foreground text-sm font-medium">
             Proveedores:{" "}
-            <span className="text-foreground font-medium">{filterLabel}</span>
+            <span className="text-muted-foreground font-normal">{filterLabel}</span>
           </span>
           <Button
             variant="ghost"

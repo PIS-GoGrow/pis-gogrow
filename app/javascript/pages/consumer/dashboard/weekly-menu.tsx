@@ -142,9 +142,9 @@ export function WeeklyMenu({
             )}
 
             <div className="mt-6 mb-3 flex items-center">
-              <span className="text-muted-foreground min-w-0 truncate text-sm">
+              <span className="text-foreground min-w-0 truncate text-sm font-medium">
                 Proveedores:{" "}
-                <span className="text-foreground font-medium">
+                <span className="text-muted-foreground font-normal">
                   {filterLabel}
                 </span>
               </span>

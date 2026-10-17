@@ -717,7 +717,7 @@
             "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
           },
-          "history_address": "Recibiste en: %{address} (%{delivery_method})",
+          "history_address": "Lo recibiste en: %{address} (%{delivery_method})",
           "history_empty_description": "Tus pedidos completados aparecerán aquí.",
           "history_empty_title": "No tenés pedidos anteriores",
           "history_tab": "Historial",

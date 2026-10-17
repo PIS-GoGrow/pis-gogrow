@@ -8,39 +8,39 @@ import type { InvoiceStatus, OrderStatus, PaymentStatus } from "@/types"
 // compilación hasta que alguien decida cómo se ve.
 const orderStyles: Record<OrderStatus, string> = {
   pending:
-    "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500",
+    "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500",
   confirmed:
-    "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300 [&>span]:bg-green-500",
+    "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 [&>span]:bg-green-500",
   cancelled:
-    "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300 [&>span]:bg-red-500",
+    "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 [&>span]:bg-red-500",
   rejected:
-    "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300 [&>span]:bg-red-500",
+    "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 [&>span]:bg-red-500",
 }
 
 const providerOrderStyles: Record<OrderStatus, string> = {
   ...orderStyles,
   pending:
-    "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300 [&>span]:bg-blue-500",
+    "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 [&>span]:bg-blue-500",
 }
 
 const paymentStyles: Record<PaymentStatus, string> = {
   pending:
-    "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500",
+    "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500",
   submitted:
-    "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-300 [&>span]:bg-sky-500",
+    "bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300 [&>span]:bg-sky-500",
   approved:
-    "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300 [&>span]:bg-green-500",
+    "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 [&>span]:bg-green-500",
   rejected:
-    "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300 [&>span]:bg-red-500",
+    "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 [&>span]:bg-red-500",
 }
 
 const invoiceStyles: Record<InvoiceStatus, string> = {
   pending:
-    "border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-900 dark:bg-sky-950 dark:text-sky-300 [&>span]:bg-sky-500",
+    "bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300 [&>span]:bg-sky-500",
   approved:
-    "border-green-200 bg-green-50 text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300 [&>span]:bg-green-500",
+    "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 [&>span]:bg-green-500",
   rejected:
-    "border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950 dark:text-red-300 [&>span]:bg-red-500",
+    "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 [&>span]:bg-red-500",
 }
 
 interface StatusBadgeProps {
@@ -81,7 +81,7 @@ export default function StatusBadge({
     <Badge
       variant="outline"
       data-status={status}
-      className={cn("gap-1.5 px-2.5 py-1", className)}
+      className={cn("border-none gap-1.5 px-2.5 py-1", className)}
     >
       <span className="size-1.5 rounded-full" />
       {label}
