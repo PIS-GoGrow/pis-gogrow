@@ -1,5 +1,5 @@
 import { ChevronLeft, Star } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
@@ -11,8 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
-import type { Pricing } from "./pricing"
-import { cartPricedItem, priceItems } from "./pricing"
+import type { PricedLine } from "./pricing"
+import { cartPricedItem, lastUnitsLine, priceItems } from "./pricing"
 
 interface Props {
   item: Schedule
@@ -42,27 +42,31 @@ export function DishDetail({
   const { t } = useTranslation()
   // El plato se agrega al final del carrito, así que lo que ya está ahí gasta
   // primero el cupo y los usos de los beneficios.
-  const [loading, setLoading] = useState<boolean>(true)
-  const [pricing, setPricing] = useState<Pricing | null>(null)
+  const [line, setLine] = useState<PricedLine | null>(null)
 
   useEffect(() => {
     let cancelled = false
 
-    // Debounce: si el usuario toca "+" varias veces seguidas, solo sale la última consulta
+    // Esperar 200 milisegundos para hacer la request, por si el usuario toca varias veces
+    // seguidas los botones de + o -.
     const timeout = setTimeout(async () => {
       try {
-        const result = await priceItems([
-          ...cart.map(cartPricedItem),
-          {
-            schedule_id: item.id,
-            quantity,
-          },
-        ])
-        if (!cancelled) setPricing(result)
+        const result = await priceItems(
+          cartPricedItem([...cart, { ...item, quantity }]),
+        )
+        if (cancelled) return
+
+        const preLine = result.lines[String(item.id)]
+        const inCart =
+          cartPricedItem(cart).find((i) => item.id === i.schedule_id)
+            ?.quantity ?? 0
+
+        setLine(
+          preLine ? lastUnitsLine(inCart + quantity, quantity, preLine) : null,
+        )
       } finally {
-        if (!cancelled) setLoading(false)
       }
-    }, 250)
+    }, 200)
 
     return () => {
       cancelled = true
@@ -70,7 +74,6 @@ export function DishDetail({
     }
   }, [cart, item.id, item.date, item.menu.price, quantity])
 
-  const line = pricing?.lines[String(item.id)]
   const reviews = item.menu.reviews
   const choicesMissing = item.menu.option_groups.some(
     (group) => group.required && !selections[group.id]?.length,
@@ -169,7 +172,7 @@ export function DishDetail({
         </p>
       </section>
       <OrderSummary
-        loading={loading}
+        loading={false}
         subtotal={line?.subtotal}
         total={line?.total}
         tiers={line?.tiers}

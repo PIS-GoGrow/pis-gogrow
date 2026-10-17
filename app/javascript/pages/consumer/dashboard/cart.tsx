@@ -79,7 +79,7 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
     })
   }
 
-  const items = useMemo(() => cart.map(cartPricedItem), [cart])
+  const items = useMemo(() => cartPricedItem(cart), [cart])
   const requestKey = useMemo(() => JSON.stringify(items), [items])
 
   // Guarda el resultado junto con el carrito para el que se calculó
