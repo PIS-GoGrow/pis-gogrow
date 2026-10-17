@@ -118,21 +118,14 @@ class ProviderCollectionSummary
           payable_amount: client_accounts.sum(&:payable_amount).to_f
         }
       end,
-      days: orders.group_by { it.schedule.date }
-                  .sort_by { |date, _| -date.jd }
-                  .map do |date, day_orders|
+      days: ConsumptionDays.call(orders) do |order|
         {
-          date: date.strftime("%d/%m"),
-          orders: day_orders.sort_by { it.consumer.user.name.downcase }.map do |order|
-            {
-              id: order.id,
-              consumer_name: order.consumer.user.name,
-              client_id: order.consumer.company.id,
-              client_name: order.consumer.company.name,
-              meals: order.amount,
-              amount: order.price.to_f
-            }
-          end
+          id: order.id,
+          consumer_name: order.consumer.user.name,
+          client_id: order.consumer.company.id,
+          client_name: order.consumer.company.name,
+          meals: order.amount,
+          amount: order.price.to_f
         }
       end
     }

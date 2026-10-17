@@ -297,4 +297,47 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
     end
   end
+
+  describe "Casos borde de propagación de error hacia Inertia y rollback atómico" do
+    before do
+      sign_in consumer_user, role: :consumer
+    end
+
+    it "rechaza un payload con schedule_id no numérico y redirige con error cart_unavailable" do
+      post orders_path, params: {
+        order: {
+          address: company_address,
+          items: [ { schedule_id: "invalido", quantity: 1, notes: "", options: [] } ]
+        }
+      }
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(response).to have_http_status(:see_other)
+      follow_redirect!
+      expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.cart_unavailable"))
+    end
+
+    it "rechaza y hace rollback si el proveedor cerró programadamente antes de confirmar" do
+      schedule.update!(date: Calendar.new.allowed_order_dates.begin)
+      schedule.menu.provider.closures.create!(
+        starts_on: schedule.date,
+        ends_on: schedule.date + 1.day,
+        reason: "Feriado"
+      )
+
+      expect {
+        post orders_path, params: {
+          order: {
+            address: company_address,
+            items: [ { schedule_id: schedule.id, quantity: 1, notes: "", options: [] } ]
+          }
+        }
+      }.not_to change(Order, :count)
+
+      expect(response).to redirect_to(dashboard_path)
+      expect(response).to have_http_status(:see_other)
+      follow_redirect!
+      expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.provider_closed"))
+    end
+  end
 end

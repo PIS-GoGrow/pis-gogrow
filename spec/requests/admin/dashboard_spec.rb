@@ -60,6 +60,16 @@ RSpec.describe "Admin::Dashboard", type: :request do
         expect(inertia.props[:months].pluck("key")).to eq([ current_key, previous_key ])
       end
 
+      # "Ver detalle del consumo" abre este detalle sobre el Inicio.
+      it "sends the consumption detail of the selected month" do
+        get admin_dashboard_path, params: { month: previous_key }
+
+        expect(inertia.props[:consumption]).to include(
+          "month" => I18n.l(previous_month, format: :month_name_year).upcase_first
+        )
+        expect(inertia.props[:consumption]["providers"].sole).to include("subtotal" => 900.0, "days" => [])
+      end
+
       it "shows the payments of the month before with their status" do
         get admin_dashboard_path
 

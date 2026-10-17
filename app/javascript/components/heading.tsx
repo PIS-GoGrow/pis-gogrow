@@ -6,6 +6,7 @@ export default function Heading({
   title,
   description,
   eyebrow,
+  badge,
   actions,
   back,
   titleVariant = "default",
@@ -15,6 +16,7 @@ export default function Heading({
   title: string
   description?: string
   eyebrow?: string
+  badge?: ReactNode
   actions?: ReactNode
   back?: ReactNode
   titleVariant?: "default" | "prominent"
@@ -39,16 +41,19 @@ export default function Heading({
               {eyebrow}
             </p>
           )}
-          <h2
-            className={cn(
-              "tracking-tight",
-              titleVariant === "prominent"
-                ? "text-2xl font-bold"
-                : "text-xl font-semibold",
-            )}
-          >
-            {title}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2
+              className={cn(
+                "tracking-tight",
+                titleVariant === "prominent"
+                  ? "text-2xl font-bold"
+                  : "text-xl font-semibold",
+              )}
+            >
+              {title}
+            </h2>
+            {badge}
+          </div>
           {description && (
             <p
               className={cn(

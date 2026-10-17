@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
@@ -38,6 +38,22 @@ const consumers: AdminConsumerRow[] = [
     amount: 2425,
     status: "pending",
   },
+  {
+    id: 3,
+    name: "Carla Review",
+    email: "carla@gogrow.com",
+    avatar_url: null,
+    amount: 150,
+    status: "submitted",
+  },
+  {
+    id: 4,
+    name: "Diego Idle",
+    email: "diego@gogrow.com",
+    avatar_url: null,
+    amount: 0,
+    status: null,
+  },
 ]
 
 describe("Admin Consumers Page", () => {
@@ -57,5 +73,38 @@ describe("Admin Consumers Page", () => {
 
     expect(screen.getByText("Ana Paid")).toBeInTheDocument()
     expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
+  })
+
+  it("has only the two tabs of the design", () => {
+    render(<Index consumers={consumers} filter="all" />)
+
+    expect(screen.getAllByRole("radio").map((tab) => tab.textContent)).toEqual([
+      "Todos",
+      "Pendientes",
+    ])
+  })
+
+  it("lists the pending and under review employees in Pendientes", () => {
+    render(<Index consumers={consumers} filter="pending" />)
+
+    expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
+    expect(screen.getByText("Carla Review")).toBeInTheDocument()
+    expect(screen.queryByText("Diego Idle")).not.toBeInTheDocument()
+  })
+
+  it("counts the employees of the tab next to the title, without the search", () => {
+    render(<Index consumers={consumers} filter="all" />)
+
+    const heading = screen.getByRole("heading", { name: "Empleados" })
+    const title = heading.parentElement
+    expect(title).toHaveTextContent("Empleados44 empleados")
+
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "Ana" },
+    })
+    expect(title).toHaveTextContent("Empleados44 empleados")
+
+    fireEvent.click(screen.getByRole("radio", { name: "Pendientes" }))
+    expect(title).toHaveTextContent("Empleados22 empleados")
   })
 })

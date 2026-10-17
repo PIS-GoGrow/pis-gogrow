@@ -1,4 +1,4 @@
-import { ChevronDown, SlidersHorizontal } from "lucide-react"
+import { SlidersHorizontal } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -12,12 +12,8 @@ import {
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
+import ConsumptionDayList from "@/components/collections/consumption-day-list"
 import { Button } from "@/components/ui/button"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,12 +64,6 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
         .filter((day) => day.orders.length > 0),
     [detail.days, selectedClient],
   )
-
-  const mealsOf = (orders: SalesOrder[]) =>
-    orders.reduce((total, order) => total + order.meals, 0)
-
-  const amountOf = (orders: SalesOrder[]) =>
-    orders.reduce((total, order) => total + order.amount, 0)
 
   return (
     <AdaptableDialog>
@@ -133,79 +123,52 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
         </div>
 
         <div className="max-h-[60dvh] overflow-y-auto px-4">
-          {days.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center text-sm">
-              {t(`${page}.consumption_empty`)}
-            </p>
-          ) : (
-            <div className="divide-y rounded-xl border px-4">
-              {days.map((day, index) => (
-                <Collapsible key={day.date} defaultOpen={index === 0}>
-                  <CollapsibleTrigger asChild>
-                    <button
-                      type="button"
-                      className="group flex w-full items-center justify-between gap-3 py-4 text-left text-sm font-medium"
-                    >
-                      <span>
-                        {t(`${page}.consumption_day`, { date: day.date })} |{" "}
-                        {t(`${page}.consumption_meals`, {
-                          count: mealsOf(day.orders),
-                        })}{" "}
-                        |{" "}
-                        {t(`${page}.consumption_amount`, {
-                          amount: formatMoney(amountOf(day.orders)),
-                        })}
-                      </span>
-                      <ChevronDown
-                        aria-hidden="true"
-                        className="size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180"
-                      />
-                    </button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="pb-2">
-                    <div className="overflow-hidden rounded-xl border">
-                      <Table className="min-w-[35rem] table-fixed">
-                        <TableHeader className="bg-muted/70">
-                          <TableRow>
-                            <TableHead className="w-[34%]">
-                              {t(`${page}.consumption_name`)}
-                            </TableHead>
-                            <TableHead className="w-[28%]">
-                              {t(`${page}.consumption_company`)}
-                            </TableHead>
-                            <TableHead className="w-[16%] text-center">
-                              {t(`${page}.consumption_quantity`)}
-                            </TableHead>
-                            <TableHead className="w-[22%] text-right">
-                              {t(`${page}.consumption_amount_column`)}
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {day.orders.map((order) => (
-                            <TableRow key={order.id}>
-                              <TableCell className="wrap-anywhere whitespace-normal">
-                                {order.consumer_name}
-                              </TableCell>
-                              <TableCell className="wrap-anywhere whitespace-normal">
-                                {order.client_name}
-                              </TableCell>
-                              <TableCell className="text-center">
-                                {order.meals}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                {formatMoney(order.amount)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              ))}
-            </div>
-          )}
+          <ConsumptionDayList
+            days={days}
+            mealsOf={(order: SalesOrder) => order.meals}
+            amountOf={(order: SalesOrder) => order.amount}
+            formatAmount={formatMoney}
+            emptyLabel={t(`${page}.consumption_empty`)}
+          >
+            {(orders) => (
+              <Table className="min-w-[35rem] table-fixed">
+                <TableHeader className="bg-muted/70">
+                  <TableRow>
+                    <TableHead className="w-[34%]">
+                      {t(`${page}.consumption_name`)}
+                    </TableHead>
+                    <TableHead className="w-[28%]">
+                      {t(`${page}.consumption_company`)}
+                    </TableHead>
+                    <TableHead className="w-[16%] text-center">
+                      {t(`${page}.consumption_quantity`)}
+                    </TableHead>
+                    <TableHead className="w-[22%] text-right">
+                      {t(`${page}.consumption_amount_column`)}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="wrap-anywhere whitespace-normal">
+                        {order.consumer_name}
+                      </TableCell>
+                      <TableCell className="wrap-anywhere whitespace-normal">
+                        {order.client_name}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {order.meals}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatMoney(order.amount)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </ConsumptionDayList>
         </div>
 
         <AdaptableDialogFooter className="p-4 sm:flex-col">
