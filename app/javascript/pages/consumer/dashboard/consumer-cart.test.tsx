@@ -85,7 +85,7 @@ async function renderCart(
     }),
   )
 
-  const result = await priceItems(cart.map(cartPricedItem))
+  const result = await priceItems(cartPricedItem(cart))
 
   const defaults = {
     monthlyLimit: 20,

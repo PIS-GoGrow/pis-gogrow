@@ -1,5 +1,5 @@
 import { ChevronLeft, Star } from "lucide-react"
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
@@ -45,8 +45,7 @@ export function DishDetail({
   const [line, setLine] = useState<PricedLine | null>(null)
 
   const inCart =
-    cartPricedItem(cart).find((i) => item.id === i.schedule_id)
-      ?.quantity ?? 0
+    cartPricedItem(cart).find((i) => item.id === i.schedule_id)?.quantity ?? 0
 
   useEffect(() => {
     let cancelled = false
@@ -66,6 +65,7 @@ export function DishDetail({
           preLine ? lastUnitsLine(inCart + quantity, quantity, preLine) : null,
         )
       } finally {
+        // No hacer nada
       }
     }, 200)
 
@@ -73,7 +73,7 @@ export function DishDetail({
       cancelled = true
       clearTimeout(timeout)
     }
-  }, [cart, item.id, item.date, item.menu.price, quantity])
+  }, [cart, item, inCart, item.id, item.date, item.menu.price, quantity])
 
   const reviews = item.menu.reviews
   const choicesMissing = item.menu.option_groups.some(
