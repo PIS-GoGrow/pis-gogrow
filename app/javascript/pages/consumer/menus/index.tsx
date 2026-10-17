@@ -121,7 +121,9 @@ export default function Index({
         <div className="mt-6 mb-3 flex items-center">
           <span className="text-foreground text-sm font-medium">
             Proveedores:{" "}
-            <span className="text-muted-foreground font-normal">{filterLabel}</span>
+            <span className="text-muted-foreground font-normal">
+              {filterLabel}
+            </span>
           </span>
           <Button
             variant="ghost"

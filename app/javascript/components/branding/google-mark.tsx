@@ -1,6 +1,11 @@
 export function GoogleMark({ className }: { className?: string } = {}) {
   return (
-    <svg viewBox="0 0 18 18" aria-hidden="true" className={className} fill="currentColor">
+    <svg
+      viewBox="0 0 18 18"
+      aria-hidden="true"
+      className={className}
+      fill="currentColor"
+    >
       <path
         fill="currentColor"
         d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.797 2.716v2.258h2.909c1.702-1.568 2.684-3.875 2.684-6.615Z"

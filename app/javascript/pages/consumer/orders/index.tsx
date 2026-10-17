@@ -110,7 +110,9 @@ export default function Index({
         <div className="flex items-center">
           <span className="text-foreground min-w-0 truncate text-sm font-medium">
             Proveedores:{" "}
-            <span className="text-muted-foreground font-normal">{filterLabel}</span>
+            <span className="text-muted-foreground font-normal">
+              {filterLabel}
+            </span>
           </span>
           <ProviderFilterSheet
             providers={providersName}

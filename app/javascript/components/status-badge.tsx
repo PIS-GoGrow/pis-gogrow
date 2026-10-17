@@ -81,7 +81,7 @@ export default function StatusBadge({
     <Badge
       variant="outline"
       data-status={status}
-      className={cn("border-none gap-1.5 px-2.5 py-1", className)}
+      className={cn("gap-1.5 border-none px-2.5 py-1", className)}
     >
       <span className="size-1.5 rounded-full" />
       {label}
