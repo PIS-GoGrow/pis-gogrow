@@ -301,7 +301,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       expect(response).to have_http_status(:see_other)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.cart_unavailable"))
@@ -324,7 +324,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       expect(response).to have_http_status(:see_other)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.provider_closed"))

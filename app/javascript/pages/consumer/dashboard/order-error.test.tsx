@@ -89,7 +89,7 @@ describe("OrderError Component", () => {
   })
 
   it("renderiza el enlace Volver a Menú apuntando a la URL configurada", () => {
-    render(<OrderError {...defaultProps} homeUrl="/custom-dashboard" />)
+    render(<OrderError {...defaultProps} />)
 
     const homeLink = screen.getByRole("link", { name: "Volver a Menú" })
     expect(homeLink).toBeInTheDocument()
