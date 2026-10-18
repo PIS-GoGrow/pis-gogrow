@@ -40,8 +40,6 @@ export function DishDetail({
   add,
 }: Props) {
   const { t } = useTranslation()
-  // El plato se agrega al final del carrito, así que lo que ya está ahí gasta
-  // primero el cupo y los usos de los beneficios.
   const [line, setLine] = useState<PricedLine | null>(null)
 
   const inCart =

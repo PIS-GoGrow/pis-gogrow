@@ -221,15 +221,14 @@ export function WeeklyMenu({
               <p className="text-muted-foreground mt-4 text-sm">
                 Agregá platos de distintos días y proveedores.
               </p>
-              <Link href={dashboardCart().url}>
-                <Button
-                  type="button"
-                  disabled={count === 0}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-8 w-full"
-                >
-                  Ver carrito
-                </Button>
-              </Link>
+              <Button
+                type="button"
+                disabled={count === 0}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-8 w-full"
+                asChild
+              >
+                <Link href={dashboardCart().url}>Ver carrito</Link>
+              </Button>
             </div>
           </aside>
         </div>
@@ -254,8 +253,9 @@ export function WeeklyMenu({
           type="button"
           data-slot="floating-cart-button"
           className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed right-5 bottom-24 left-5 z-20 h-12 rounded-lg text-sm shadow-lg md:bottom-6 lg:hidden"
+          asChild
         >
-          Ver carrito
+          <Link href={dashboardCart()}>Ver carrito</Link>
         </Button>
       )}
 

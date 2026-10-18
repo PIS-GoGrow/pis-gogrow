@@ -166,7 +166,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
         expect(page).to have_css("aside button", text: "Ver carrito", visible: true)
       end
 
-      visible_cart_buttons.first.click
+      click_link "Ver carrito"
       expect(page).to have_content("Tu carrito")
       expect(page).to have_content("Milanesa con papas fritas x1")
       expect(page).to have_button("Confirmar pedido", disabled: false)
@@ -181,7 +181,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
     add_milanesa
     expect(page).to have_css("button.fixed", text: "Ver carrito", visible: true)
 
-    find("button.fixed", text: "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
     expect(page).to have_content("Milanesa con papas fritas x1")
 
