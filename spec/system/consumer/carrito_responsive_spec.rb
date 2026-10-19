@@ -32,7 +32,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
   end
 
   def visible_cart_buttons
-    all(:button, "Ver carrito", exact: true, visible: true)
+    all(:a, "Ver carrito", exact: true, visible: true)
   end
 
   def add_milanesa
@@ -189,9 +189,9 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
     expect(page).to have_content("Todavía no agregaste platos.")
 
     find_button("Volver").click
-    expect(page).to have_no_css("button.fixed", text: "Ver carrito", visible: true)
+    expect(page).to have_no_css("a.fixed", text: "Ver carrito", visible: true)
 
     add_milanesa
-    expect(page).to have_css("button.fixed", text: "Ver carrito", visible: true)
+    expect(page).to have_css("a.fixed", text: "Ver carrito", visible: true)
   end
 end

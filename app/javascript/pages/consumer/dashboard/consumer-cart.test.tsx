@@ -24,7 +24,9 @@ vi.mock("@inertiajs/react", () => ({
     transform: vi.fn(),
   }),
   Link: ({ href, children, ...props }: React.ComponentProps<"a">) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }))
 
