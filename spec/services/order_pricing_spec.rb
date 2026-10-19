@@ -4,8 +4,6 @@ require "rails_helper"
 
 # IBP-037 / IBP-006: los beneficios se aplican vianda por vianda, empezando por las
 # más caras y por los beneficios de mayor porcentaje, hasta completar 100% por vianda.
-# Los casos de precio/resumen que se comparten con
-# app/javascript/pages/consumer/dashboard/pricing.test.ts deben mantenerse en sincronía.
 RSpec.describe OrderPricing do
   around do |example|
     travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }

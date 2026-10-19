@@ -66,7 +66,7 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
     expect(find("span", text: "Monto a pagar", exact_text: true).sibling("span")).to have_text("$75")
     click_button "Agregar"
 
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
     expect(find("span", text: "Beneficio GoGrow (50%)", exact_text: true).sibling("span")).to have_text("- $150")
     expect(find("span", text: "Antigüedad (25%)", exact_text: true).sibling("span")).to have_text("- $75")

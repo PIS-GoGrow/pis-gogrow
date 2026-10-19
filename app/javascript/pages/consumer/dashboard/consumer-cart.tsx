@@ -184,7 +184,7 @@ export function ConsumerCart({
                 </span>
                 <span>{money(line)}</span>
               </div>
-              {pricing?.lines[item.id]?.tiers
+              {pricing?.lines?.[item.id]?.tiers
                 .filter((tier) => tier.discount > 0)
                 .map((tier, index) => (
                   <BenefitLine

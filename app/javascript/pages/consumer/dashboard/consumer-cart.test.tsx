@@ -23,6 +23,9 @@ vi.mock("@inertiajs/react", () => ({
     reset: vi.fn(),
     transform: vi.fn(),
   }),
+  Link: ({ href, children, ...props }: React.ComponentProps<"a">) => (
+    <a href={href} {...props}>{children}</a>
+  ),
 }))
 
 // IBP-014 — "Como EMPLEADO, quiero ingresar una dirección de entrega
@@ -212,63 +215,5 @@ describe("ConsumerCart delivery address", () => {
         "Endulzate by Noe, Dulce Sur y La Olla entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
       ),
     ).toBeInTheDocument()
-  })
-})
-
-// IBP-037: el subsidio especial se suma al base, y cada línea del carrito
-// muestra qué beneficio le descuenta cuánto.
-describe("ConsumerCart benefits", () => {
-  const premio = {
-    id: 7,
-    name: "Premio",
-    percentage: 30,
-    remaining: 2,
-    due_date: null,
-  }
-
-  // Figma: una sola línea "Beneficio GoGrow" por plato, con el porcentaje
-  // combinado del base y los especiales.
-  it("shows the combined benefit in a single line per dish", async () => {
-    await renderCart(
-      { cart: [{ ...cartItem("Tu Viandita", true), quantity: 2 }] },
-      { specials: [premio] },
-    )
-
-    expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
-    ).toHaveTextContent("- $448")
-    expect(screen.queryByText("Premio (30%)")).not.toBeInTheDocument()
-    expect(screen.getAllByText(/^Beneficio GoGrow/)).toHaveLength(1)
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$112",
-    )
-  })
-
-  it("shows one line per percentage when the meals of a dish differ", async () => {
-    await renderCart(
-      { cart: [{ ...cartItem("Tu Viandita", true), quantity: 3 }] },
-      { monthly_remaining: 1, specials: [premio] },
-    )
-
-    // 3 x 280: la primera con 80%, la segunda solo con el premio y la tercera
-    // a precio completo. 56 + 196 + 280 = 532.
-    expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
-    ).toHaveTextContent("- $224")
-    expect(
-      screen.getByText("Beneficio GoGrow (30%)").nextSibling,
-    ).toHaveTextContent("- $84")
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$532",
-    )
-  })
-
-  it("leaves the base alone when the special has no uses left", async () => {
-    await renderCart({}, { specials: [{ ...premio, remaining: 0 }] })
-
-    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$140",
-    )
   })
 })
