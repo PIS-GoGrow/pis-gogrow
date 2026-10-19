@@ -41,10 +41,10 @@
         "range_placeholder": "Elegí un rango"
       },
       "delete_account": {
-        "caution": "Procede con precaución, esta acción no se puede deshacer.",
-        "confirm_description": "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente.",
-        "confirm_title": "¿Seguro que quieres eliminar tu cuenta?",
-        "description": "Elimina tu cuenta y todos sus datos",
+        "caution": "Procedé con precaución, esta acción no se puede deshacer.",
+        "confirm_description": "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresá tu contraseña para confirmar que querés eliminar tu cuenta definitivamente.",
+        "confirm_title": "¿Seguro/a que querés eliminar tu cuenta?",
+        "description": "Eliminá tu cuenta y todos tus datos",
         "title": "Eliminar cuenta",
         "warning": "Advertencia"
       },
@@ -62,7 +62,7 @@
         "uppercase": "Al menos una mayúscula"
       },
       "settings_layout": {
-        "description": "Administra tu perfil y la configuración de tu cuenta",
+        "description": "Administrá tu perfil y la configuración de tu cuenta",
         "title": "Configuración"
       }
     },
@@ -1505,9 +1505,9 @@
           "title": "Configuración de apariencia"
         },
         "email": {
-          "description": "Actualiza tu dirección de correo y verifícala",
+          "description": "Actualizá tu dirección de correo y verificala",
           "heading": "Actualizar correo electrónico",
-          "resend": "Haz clic aquí para reenviar el correo de verificación.",
+          "resend": "Hacé clic aquí para reenviar el correo de verificación.",
           "title": "Configuración de correo",
           "unverified": "Tu dirección de correo no está verificada."
         },
@@ -1543,7 +1543,7 @@
         "sessions": {
           "active_since": "Activa desde: %{time}",
           "current": "Actual",
-          "description": "Administra tus sesiones activas en todos los dispositivos",
+          "description": "Administrá tus sesiones activas en todos los dispositivos",
           "ip": "IP: %{address}",
           "log_out": "Cerrar sesión",
           "title": "Sesiones"

@@ -364,14 +364,14 @@ es:
       system: "Sistema"
     settings_layout:
       title: "Configuración"
-      description: "Administra tu perfil y la configuración de tu cuenta"
+      description: "Administrá tu perfil y la configuración de tu cuenta"
     delete_account:
       title: "Eliminar cuenta"
-      description: "Elimina tu cuenta y todos sus datos"
+      description: "Eliminá tu cuenta y todos tus datos"
       warning: "Advertencia"
-      caution: "Procede con precaución, esta acción no se puede deshacer."
-      confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
-      confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
+      caution: "Procedé con precaución, esta acción no se puede deshacer."
+      confirm_title: "¿Seguro/a que querés eliminar tu cuenta?"
+      confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresá tu contraseña para confirmar que querés eliminar tu cuenta definitivamente."
     month_select:
       this_month: "Este mes"
     date_picker:
@@ -1486,12 +1486,12 @@ es:
       email:
         title: "Configuración de correo"
         heading: "Actualizar correo electrónico"
-        description: "Actualiza tu dirección de correo y verifícala"
+        description: "Actualizá tu dirección de correo y verificala"
         unverified: "Tu dirección de correo no está verificada."
-        resend: "Haz clic aquí para reenviar el correo de verificación."
+        resend: "Hacé clic aquí para reenviar el correo de verificación."
       sessions:
         title: "Sesiones"
-        description: "Administra tus sesiones activas en todos los dispositivos"
+        description: "Administrá tus sesiones activas en todos los dispositivos"
         current: "Actual"
         ip: "IP: %{address}"
         active_since: "Activa desde: %{time}"
