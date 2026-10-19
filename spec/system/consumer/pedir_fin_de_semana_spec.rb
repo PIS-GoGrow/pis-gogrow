@@ -29,7 +29,7 @@ RSpec.describe "Pedir durante el fin de semana", type: :system do
       expect(page).to have_content("Notas para este plato")
       click_button "Agregar"
 
-      first(:button, "Ver carrito").click
+      click_link "Ver carrito"
 
       expect(page).to have_content("Tu carrito")
       expect(page).to have_content("Milanesa con papas fritas x1")
@@ -76,7 +76,7 @@ RSpec.describe "Pedir durante el fin de semana", type: :system do
       expect(page).to have_content("Notas para este plato")
       click_button "Agregar"
 
-      first(:button, "Ver carrito").click
+      click_link "Ver carrito"
       expect(page).to have_content("Tu carrito")
 
       click_button "Confirmar pedido"

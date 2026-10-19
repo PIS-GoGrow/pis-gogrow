@@ -151,19 +151,19 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
       expect(visible_cart_buttons.size).to eq(1)
 
       if width < 1024
-        expect(page).to have_css("button.fixed", text: "Ver carrito", visible: true)
+        expect(page).to have_link("Ver carrito", href: dashboard_cart_path, count: 1)
         expect(page.evaluate_script("getComputedStyle(document.querySelector('button.fixed')).position")).to eq("fixed")
 
         if width < 768
           expect(page).to have_css("nav.fixed", visible: true)
-          expect_no_overlap("button.fixed", "nav.fixed")
+          expect_no_overlap("a.fixed", "nav.fixed")
         else
           expect(page).to have_css("[data-sidebar='sidebar']", visible: true)
           expect_tablet_cart_in_both_sidebar_states
         end
       else
-        expect(page).to have_no_css("button.fixed", text: "Ver carrito", visible: true)
-        expect(page).to have_css("aside button", text: "Ver carrito", visible: true)
+        expect(page).to have_no_link("Ver carrito", href: dashboard_cart_path)
+        expect(page).to have_css("aside a", text: "Ver carrito", visible: true)
       end
 
       click_link "Ver carrito"
@@ -176,10 +176,10 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
 
   it "oculta dinámicamente el botón flotante en tablet cuando el carrito queda vacío tras quitar los platos" do
     resize_to(820)
-    expect(page).to have_no_css("button.fixed", text: "Ver carrito", visible: true)
+    expect(page).to have_no_link("Ver carrito", href: dashboard_cart_path)
 
     add_milanesa
-    expect(page).to have_css("button.fixed", text: "Ver carrito", visible: true)
+    expect(page).to have_link("Ver carrito", href: dashboard_cart_path, count: 1)
 
     click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
