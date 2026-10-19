@@ -156,7 +156,7 @@ describe("Admin Dashboard Page", () => {
       name: "Tus pagos de septiembre",
     })
     expect(within(payments).getByText("Endulzate by Noe")).toBeInTheDocument()
-    expect(within(payments).getByText("Confirmado")).toBeInTheDocument()
+    expect(within(payments).getByText("Aprobado")).toBeInTheDocument()
     expect(within(payments).getByText("Pendiente")).toBeInTheDocument()
     expect(
       within(payments).getByRole("link", { name: "Ver pagos a proveedores" }),

@@ -122,7 +122,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     click_on "Revisar pago"
 
     if decision == :approve
-      within(find("[role=dialog]")) { click_on "Confirmar" }
+      within(find("[role=dialog]")) { click_on "Aprobar" }
       expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     else
       within(find("[role=dialog]")) { click_on "Reportar" }
@@ -179,7 +179,7 @@ RSpec.describe "Historial de pagos del proveedor" do
       expect(page).to have_link("Descargar segundo-intento.png", href: receipt_provider_payment_path(approved))
       expect(page).to have_content(rejected.created_at.strftime("%d/%m/%y"))
       expect(page).to have_content("Rechazado")
-      expect(page).to have_content("Confirmado")
+      expect(page).to have_content("Aprobado")
 
       click_on "Empresa"
       expect(page).to have_content(company.created_at.strftime("%d/%m/%y"))
@@ -282,7 +282,7 @@ RSpec.describe "Historial de pagos del proveedor" do
         expect(page).to have_link(href: receipt_provider_payment_path(payment))
       end
       expect(page).to have_content("Rechazado")
-      expect(page).to have_content("Confirmado")
+      expect(page).to have_content("Aprobado")
     end
 
     # Persistencia: el historial sigue igual tras recargar.
@@ -296,7 +296,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     visit accounts_path
     find("[role=tab]", text: "Historial").click
     within(find("[role=tabpanel]")) do
-      expect(page).to have_content("Aceptado")
+      expect(page).to have_content("Aprobado")
       expect(page).to have_content("$300")
     end
   end

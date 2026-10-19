@@ -110,7 +110,7 @@ describe("DishDetail", () => {
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
       "$640",
     )
-    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Subsidio Base (50%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$320",
     )
@@ -133,7 +133,7 @@ describe("DishDetail", () => {
   })
 
   // IBP-037: el subsidio especial se suma al base desde el precio del plato,
-  // en la misma línea "Beneficio GoGrow" con el porcentaje combinado.
+  // en la misma línea "Subsidio Base" con el porcentaje combinado.
   it("adds the special subsidy to the base one", () => {
     renderDetail({
       quantity: 1,
@@ -152,7 +152,7 @@ describe("DishDetail", () => {
     })
 
     expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
+      screen.getByText("Subsidio Base (80%)").nextSibling,
     ).toHaveTextContent("- $256")
     expect(screen.queryByText("Premio (30%)")).not.toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
@@ -175,7 +175,7 @@ describe("DishDetail", () => {
       }),
     })
 
-    expect(screen.getByText("Beneficio GoGrow (0%)")).toBeInTheDocument()
+    expect(screen.getByText("Subsidio Base (0%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$320",
     )

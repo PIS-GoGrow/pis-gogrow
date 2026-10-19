@@ -72,10 +72,10 @@
         "account": "Cuenta",
         "employees": "Empleados",
         "home": "Inicio",
-        "mobile_navigation": "Navegación de RRHH",
+        "mobile_navigation": "Navegación de RR. HH.",
         "payments": "Pagos"
       },
-      "benefit_configurations": "Beneficio general",
+      "benefit_configurations": "Subsidios",
       "change_to": "Cambiar a",
       "collections": "Cobros",
       "consumer": {
@@ -115,7 +115,7 @@
         "title": "Pagos a proveedores"
       },
       "debt_alerts": {
-        "description": "Recibí una notificación cuando tu deuda supere el monto definido por RRHH.",
+        "description": "Recibí una notificación cuando tu deuda supere el monto definido por RR. HH.",
         "title": "Alertas de deuda"
       },
       "employee_debts": {
@@ -173,8 +173,8 @@
     },
     "notifications": {
       "company_payment_approved": {
-        "description": "%{provider} confirmó el pago de %{company} por %{period} (%{amount}).",
-        "title": "Pago confirmado"
+        "description": "%{provider} aprobó el pago de %{company} por %{period} (%{amount}).",
+        "title": "Pago aprobado"
       },
       "company_payment_overdue": {
         "description": "El pago de %{company} a %{provider} por %{period} (%{amount}) venció el %{due_date}. Revisá el detalle en Pagos.",
@@ -193,7 +193,7 @@
         "title": "Recordatorio de pago pendiente"
       },
       "debt_threshold_exceeded": {
-        "description": "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca.",
+        "description": "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca.",
         "title": "Tu deuda superó el monto límite"
       },
       "employee_debt_overdue": {
@@ -300,10 +300,10 @@
           "see_detail": "Ver detalle",
           "see_receipts": "Ver comprobantes",
           "spending": "Consumo",
-          "status_accepted": "Aceptado",
+          "status_accepted": "Aprobado",
           "status_pending": "Pendiente",
           "status_rejected": "Rechazado",
-          "status_submitted": "Enviado",
+          "status_submitted": "En revisión",
           "total": "Total"
         }
       },
@@ -317,7 +317,7 @@
           "settings": "Configuración",
           "sign_out": "Salir",
           "subsidies": "Subsidios",
-          "subsidies_description": "Gestioná los subsidios de tu compañía",
+          "subsidies_description": "Gestioná los subsidios de tu empresa",
           "title": "Cuenta"
         },
         "benefit_configurations": {
@@ -326,7 +326,7 @@
             "current": {
               "cancel": "Cancelar",
               "edit": "Editar",
-              "empty": "Todavía no configuraste el beneficio general.",
+              "empty": "Todavía no configuraste el subsidio base.",
               "max_voucher_price": "Cuando el precio por vianda es",
               "monthly_voucher_limit": "Hasta un límite por empleado de",
               "monthly_voucher_limit_unit": "viandas",
@@ -356,7 +356,7 @@
               "threshold": "Monto límite",
               "title": "Alerta de deuda"
             },
-            "description": "Gestioná los subsidios de tu compañía",
+            "description": "Gestioná los subsidios de tu empresa",
             "special": {
               "add": "Agregar",
               "applies_to": "Aplicado a",
@@ -598,7 +598,7 @@
       },
       "cart": {
         "add_address": "Agregar",
-        "benefit": "Beneficio GoGrow (%{percentage}%)",
+        "benefit": "Subsidio Base (%{percentage}%)",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
         "my_addresses": "Ver mis direcciones",
@@ -784,7 +784,7 @@
           "notes": "Notas",
           "quantity": "Cantidad",
           "rejection_reason": "Motivo de rechazo",
-          "subsidy": "Subsidio aplicado",
+          "subsidy": "Beneficio aplicado",
           "title": "Detalle del pedido",
           "total": "Importe final"
         },
@@ -814,10 +814,10 @@
       },
       "provider_collections": {
         "group": {
-          "awaiting_one": "%{count} cobro pendiente de confirmación",
-          "awaiting_other": "%{count} cobros pendientes de confirmación",
+          "awaiting_one": "%{count} en revisión",
+          "awaiting_other": "%{count} cobros en revisión",
           "company": "Empresa",
-          "confirmed": "%{amount} en cobros confirmados",
+          "confirmed": "%{amount} en cobros aprobados",
           "detail": "Ver detalle",
           "detail_dialog": {
             "amount": "Monto",
@@ -863,7 +863,7 @@
           "delivered_meals_other": "%{count} viandas entregadas",
           "empty_history_all": "Todavía no hay meses cobrados por completo.",
           "empty_history_client": "Todavía no hay meses cobrados por completo de este cliente.",
-          "empty_history_title": "Sin cobros confirmados",
+          "empty_history_title": "Sin cobros aprobados",
           "empty_pending_all": "Por ahora no hay deudas pendientes de ningún cliente seleccionado. Volvé a consultar el mes que viene.",
           "empty_pending_client": "Por ahora no hay deudas pendientes de este cliente. Volvé a consultar el mes que viene.",
           "empty_pending_title": "Sin deudas pendientes",
@@ -904,7 +904,7 @@
           "select_file": "Seleccionar archivo",
           "statuses": {
             "approved": "Aprobada",
-            "pending": "Por revisar",
+            "pending": "En revisión",
             "rejected": "Rechazada"
           },
           "upload": "Subir factura",
@@ -937,15 +937,15 @@
           "trigger": "Recordar pago pendiente"
         },
         "review": {
-          "approved_description": "El cobro fue confirmado correctamente. Se notificará al usuario.",
-          "approved_title": "Cobro confirmado",
+          "approved_description": "El cobro fue aprobado correctamente. Se notificará al usuario.",
+          "approved_title": "Cobro aprobado",
           "back": "Volver",
-          "check_receipt": "Comprobá el importe, la cuenta y el concepto del comprobante antes de confirmar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo.",
-          "confirm": "Confirmar",
-          "confirming": "Confirmando…",
+          "check_receipt": "Comprobá el importe, la cuenta y el concepto del comprobante antes de aprobar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo.",
+          "confirm": "Aprobar",
+          "confirming": "Aprobando…",
           "continue": "Continuar",
           "continuing": "Continuando…",
-          "current_month_restriction": "Todavía no podés confirmar este comprobante porque la cuenta corresponde al mes en curso. Podrás confirmarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo.",
+          "current_month_restriction": "Todavía no podés aprobar este comprobante porque la cuenta corresponde al mes en curso. Podrás aprobarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo.",
           "details_label": "Describir el motivo",
           "details_placeholder": "Describir el motivo",
           "done": "Listo",
@@ -983,7 +983,7 @@
           "title": "Cobro a %{name}"
         },
         "statuses": {
-          "approved": "Confirmado",
+          "approved": "Aprobado",
           "pending": "Pendiente",
           "rejected": "Rechazado",
           "submitted": "En revisión"
@@ -1320,7 +1320,7 @@
           "status_filters": {
             "all": "Todos",
             "confirmed": "Confirmados",
-            "pending": "Por revisar"
+            "pending": "Pendiente"
           },
           "tabs": {
             "history": "Historial",
@@ -1351,14 +1351,14 @@
           "phone_unavailable": "No disponible",
           "rejection_details": "Detalle del rechazo",
           "rejection_reason": "Motivo de rechazo",
-          "subsidy": "Subsidio",
+          "subsidy": "Beneficio aplicado",
           "title": "Pedido %{code}",
           "total": "Total"
         },
         "statuses": {
           "cancelled": "Cancelado",
           "confirmed": "Confirmado",
-          "pending": "Por revisar",
+          "pending": "Pendiente",
           "rejected": "Rechazado"
         }
       },
@@ -1516,7 +1516,7 @@
           "description": "Configurá qué alertas querés recibir por WhatsApp",
           "heading": "Notificaciones",
           "preferences_description": "Activá o desactivá las categorías de avisos que querés recibir.",
-          "preferences_heading": "Preferencias de RRHH",
+          "preferences_heading": "Preferencias de RR. HH.",
           "title": "Notificaciones"
         },
         "password": {

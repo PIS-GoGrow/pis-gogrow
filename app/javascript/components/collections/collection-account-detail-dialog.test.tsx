@@ -159,7 +159,7 @@ describe("CollectionAccountDetailDialog", () => {
     expect(screen.getByText("IVA (22 %)")).toBeInTheDocument()
     expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
     expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
-    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
     ).not.toBeInTheDocument()

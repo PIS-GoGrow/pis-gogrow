@@ -189,7 +189,7 @@ describe("PaymentReceiptDialog", () => {
 
     expect(screen.getByText("En revisión")).toBeInTheDocument()
     expect(screen.getByText("Rechazado")).toBeInTheDocument()
-    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
   })
 
   it("shows delete button for submitted and rejected receipts, but NOT for approved", () => {
@@ -257,14 +257,14 @@ describe("PaymentReceiptDialog", () => {
     ).not.toBeInTheDocument()
     expect(screen.getByText("En revisión")).toBeInTheDocument()
     expect(screen.getByText("Rechazado")).toBeInTheDocument()
-    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
   })
 
   it("keeps uploading available when a receipt is approved", () => {
     render(<PaymentReceiptDialog accountId={42} payments={[approvedPayment]} />)
 
     expect(screen.getByText("comprobante_banco_3.jpg")).toBeInTheDocument()
-    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Subir comprobante de pago" }),
     ).toBeInTheDocument()

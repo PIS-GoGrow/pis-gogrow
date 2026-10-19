@@ -165,7 +165,7 @@ describe("ProviderOrderDays", () => {
   it("muestra el estado y la modalidad de cada pedido", () => {
     renderDays()
 
-    expect(screen.getByText("Por revisar")).toBeInTheDocument()
+    expect(screen.getByText("Pendiente")).toBeInTheDocument()
     expect(screen.getByText("Confirmado")).toBeInTheDocument()
     expect(
       screen.getByText("Enviar a: Av. 18 de Julio 1006 (Oficina)"),

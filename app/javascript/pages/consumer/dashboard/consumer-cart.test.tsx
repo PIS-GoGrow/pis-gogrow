@@ -214,7 +214,7 @@ describe("ConsumerCart benefits", () => {
     due_date: null,
   }
 
-  // Figma: una sola línea "Beneficio GoGrow" por plato, con el porcentaje
+  // Figma: una sola línea "Subsidio Base" por plato, con el porcentaje
   // combinado del base y los especiales.
   it("shows the combined benefit in a single line per dish", () => {
     renderCart(
@@ -223,10 +223,10 @@ describe("ConsumerCart benefits", () => {
     )
 
     expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
+      screen.getByText("Subsidio Base (80%)").nextSibling,
     ).toHaveTextContent("- $448")
     expect(screen.queryByText("Premio (30%)")).not.toBeInTheDocument()
-    expect(screen.getAllByText(/^Beneficio GoGrow/)).toHaveLength(1)
+    expect(screen.getAllByText(/^Subsidio Base/)).toHaveLength(1)
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$112",
     )
@@ -241,10 +241,10 @@ describe("ConsumerCart benefits", () => {
     // 3 x 280: la primera con 80%, la segunda solo con el premio y la tercera
     // a precio completo. 56 + 196 + 280 = 532.
     expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
+      screen.getByText("Subsidio Base (80%)").nextSibling,
     ).toHaveTextContent("- $224")
     expect(
-      screen.getByText("Beneficio GoGrow (30%)").nextSibling,
+      screen.getByText("Subsidio Base (30%)").nextSibling,
     ).toHaveTextContent("- $84")
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$532",
@@ -254,7 +254,7 @@ describe("ConsumerCart benefits", () => {
   it("leaves the base alone when the special has no uses left", () => {
     renderCart({}, { specials: [{ ...premio, remaining: 0 }] })
 
-    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Subsidio Base (50%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$140",
     )

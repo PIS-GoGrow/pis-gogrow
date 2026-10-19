@@ -96,7 +96,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     )
 
     expect(
-      screen.getByText(/todavía no configuraste el beneficio general/i),
+      screen.getByText(/todavía no configuraste el subsidio base/i),
     ).toBeInTheDocument()
   })
 

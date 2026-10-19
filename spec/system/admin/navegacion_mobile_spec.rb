@@ -100,7 +100,7 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
       within(sidebar) do
         expect(page).to have_link("Inicio")
         expect(page).to have_link("Empleados")
-        expect(page).to have_link("Beneficio general")
+        expect(page).to have_link("Subsidios")
       end
     end
   end

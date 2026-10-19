@@ -54,7 +54,7 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
     expect(page).to have_content("Sorrentinos artesanales")
     open_dish(sorrentinos)
 
-    expect(page).to have_content("Beneficio GoGrow (50%)")
+    expect(page).to have_content("Subsidio Base (50%)")
     expect(page).to have_content("Monto a pagar")
     expect(page).to have_content("$160")
 
@@ -103,7 +103,7 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
     expect(page).to have_content("Sorrentinos artesanales")
     open_dish(sorrentinos)
 
-    expect(page).to have_content("Beneficio GoGrow (70%)")
+    expect(page).to have_content("Subsidio Base (70%)")
     expect(page).to have_content("- $224")
     expect(page).to have_content("Monto a pagar")
     expect(page).to have_content("$96")

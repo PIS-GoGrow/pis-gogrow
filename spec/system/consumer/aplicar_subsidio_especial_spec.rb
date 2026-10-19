@@ -61,14 +61,14 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
     click_button "Agregar Milanesa al pan" unless page.has_button?("Volver", wait: 2)
 
     # 300 con 50% base (- $150) y 25% de antigüedad (- $75): paga 75.
-    expect(find("span", text: "Beneficio GoGrow (50%)", exact_text: true).sibling("span")).to have_text("- $150")
+    expect(find("span", text: "Subsidio Base (50%)", exact_text: true).sibling("span")).to have_text("- $150")
     expect(find("span", text: "Antigüedad (25%)", exact_text: true).sibling("span")).to have_text("- $75")
     expect(find("span", text: "Monto a pagar", exact_text: true).sibling("span")).to have_text("$75")
     click_button "Agregar"
 
     first(:button, "Ver carrito").click
     expect(page).to have_content("Tu carrito")
-    expect(find("span", text: "Beneficio GoGrow (50%)", exact_text: true).sibling("span")).to have_text("- $150")
+    expect(find("span", text: "Subsidio Base (50%)", exact_text: true).sibling("span")).to have_text("- $150")
     expect(find("span", text: "Antigüedad (25%)", exact_text: true).sibling("span")).to have_text("- $75")
     expect(find("span", text: "Monto a pagar", exact_text: true).sibling("span")).to have_text("$75")
 
@@ -80,7 +80,7 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
     expect(order.benefits.map(&:description)).to contain_exactly("Antigüedad", benefits(:monthly).description)
 
     visit order_path(order)
-    expect(find("dt", text: "Subsidio aplicado").find(:xpath, "following-sibling::dd")).to have_text("225")
+    expect(find("dt", text: "Beneficio aplicado").find(:xpath, "following-sibling::dd")).to have_text("225")
     expect(find("dt", text: "Importe final").find(:xpath, "following-sibling::dd")).to have_text("75")
 
     visit profile_path

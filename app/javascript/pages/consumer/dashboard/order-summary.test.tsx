@@ -29,10 +29,10 @@ describe("OrderSummary", () => {
     )
 
     expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
+      screen.getByText("Subsidio Base (80%)").nextSibling,
     ).toHaveTextContent("- $256")
     expect(
-      screen.getByText("Beneficio GoGrow (50%)").nextSibling,
+      screen.getByText("Subsidio Base (50%)").nextSibling,
     ).toHaveTextContent("- $320")
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$384",
@@ -45,7 +45,7 @@ describe("OrderSummary", () => {
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
       "$640",
     )
-    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Subsidio Base (50%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$320",
     )
@@ -54,7 +54,7 @@ describe("OrderSummary", () => {
   it("keeps showing the benefit line at zero instead of hiding it", () => {
     render(<OrderSummary subtotal={640} total={640} tiers={[tier(0, 0)]} />)
 
-    expect(screen.getByText("Beneficio GoGrow (0%)")).toBeInTheDocument()
+    expect(screen.getByText("Subsidio Base (0%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$640",
     )
@@ -73,7 +73,7 @@ describe("OrderSummary", () => {
     )
 
     expect(screen.queryByText("Precio vianda")).not.toBeInTheDocument()
-    expect(screen.queryByText("Beneficio GoGrow (50%)")).not.toBeInTheDocument()
+    expect(screen.queryByText("Subsidio Base (50%)")).not.toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$320",
     )

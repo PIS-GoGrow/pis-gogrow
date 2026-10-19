@@ -182,7 +182,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
       click_on "Historial"
 
-      within(:css, "[data-status='approved']") { expect(page).to have_content("Confirmado") }
+      within(:css, "[data-status='approved']") { expect(page).to have_content("Aprobado") }
       expect(page).to have_content(money(settled_period.amount))
       expect(page).to have_no_content("Vence:")
     end
