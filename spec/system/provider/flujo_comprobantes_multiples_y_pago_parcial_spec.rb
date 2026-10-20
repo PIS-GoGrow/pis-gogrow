@@ -46,7 +46,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     end
 
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
 
@@ -92,7 +92,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     end
 
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
 

@@ -151,7 +151,7 @@ RSpec.describe "Historial de pagos del proveedor" do
 
     expect(page).to have_css("[role=dialog]")
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))

@@ -91,7 +91,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     end
 
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
 
@@ -111,7 +111,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     visit accounts_path
     within(find("[role=tabpanel]")) { click_on "Subir comprobante de pago" }
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", Rails.root.join("public/robots.txt"), make_visible: true)
+      attach_file("Comprobante", Rails.root.join("public/robots.txt"), make_visible: true)
       click_on "Subir comprobante de pago"
     end
 

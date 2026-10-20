@@ -54,7 +54,7 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
     end
 
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
 

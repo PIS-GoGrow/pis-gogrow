@@ -48,6 +48,10 @@
         "title": "Eliminar cuenta",
         "warning": "Advertencia"
       },
+      "file_input": {
+        "empty": "Sin archivos seleccionados",
+        "select": "Seleccionar archivo"
+      },
       "month_select": {
         "this_month": "Este mes"
       },
@@ -279,7 +283,7 @@
           "receipt_error_action": "Entendido",
           "receipt_error_description": "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
           "receipt_error_title": "No se pudo subir el comprobante",
-          "receipt_file": "Seleccionar archivo",
+          "receipt_file": "Comprobante",
           "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
           "receipt_preview": "Vista previa del comprobante",
           "receipt_remove": "Eliminar comprobante",
@@ -287,6 +291,7 @@
           "receipt_remove_description": "Esta acción no se puede deshacer. Podés volver a subir el comprobante mientras el pago no esté aprobado.",
           "receipt_remove_title": "¿Eliminar comprobante?",
           "receipt_replace": "Reemplazar archivo",
+          "receipt_required": "Seleccioná el archivo del comprobante.",
           "receipt_sent_at": "Enviado: %{date}",
           "receipt_success_action": "Listo",
           "receipt_success_description": "Tu comprobante fue enviado correctamente y está pendiente de revisión.",
@@ -892,7 +897,6 @@
           "download": "Descargar factura",
           "file_label": "Archivo de la factura",
           "formats": "PDF, JPG o PNG de hasta 10 MB.",
-          "no_file": "Sin archivos seleccionados",
           "preview": "Ver factura %{name}",
           "rejected_hint": "La factura fue rechazada. Podés subir una nueva.",
           "remove": {
@@ -901,7 +905,6 @@
             "title": "¿Eliminar la factura?",
             "trigger": "Eliminar factura"
           },
-          "select_file": "Seleccionar archivo",
           "statuses": {
             "approved": "Aprobada",
             "pending": "Por revisar",
