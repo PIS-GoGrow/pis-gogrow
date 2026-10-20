@@ -32,7 +32,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
   end
 
   def visible_cart_buttons
-    all(:a, "Ver carrito", exact: true, visible: true)
+    all(:link, "Ver carrito", exact: true, visible: true)
   end
 
   def add_milanesa

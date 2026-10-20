@@ -12,12 +12,13 @@ import { OrderError } from "./order-error"
 import type { Pricing } from "./pricing"
 import { cartPricedItem, priceItems } from "./pricing"
 
-type View = "error" | "cart"
-
+// Es un formulario que redirige a ConsumerCart o a OrderError según si el formulario
+// tiene o no errores.
 export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
   const [unsavedAddresses, setUnsavedAddresses] = useState<
     DeliveryAddressOption[]
   >([])
+  const [selectedAddress, setSelectedAddress] = useState<string | null>(null)
 
   const addressOptions = [
     ...addresses,
@@ -26,9 +27,10 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
     ),
   ]
 
-  const [cart, setCart] = useSessionStorage<CartItem[]>("cart", [])
-  const [address, setAddress] = useState(addressOptions[0]?.address ?? "")
-  const [view, setView] = useState<View>("cart")
+  const address =
+    addressOptions.find((o) => o.address === selectedAddress)?.address ??
+    addressOptions[0]?.address ??
+    ""
 
   const form = useForm({
     address: "",
@@ -40,6 +42,7 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
       options: { group_id: number; values: string[] }[]
     }[],
   })
+  const [cart, setCart] = useSessionStorage<CartItem[]>("cart", [])
 
   function addAddress(option: DeliveryAddressOption, saved: boolean) {
     if (!saved) {
@@ -48,7 +51,7 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
         ...items.filter((item) => item.address !== option.address),
       ])
     }
-    setAddress(option.address)
+    setSelectedAddress(option.address)
   }
 
   function remove(cartId: string) {
@@ -75,7 +78,6 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
       preserveState: true,
       preserveScroll: false,
       onSuccess: () => setCart([]),
-      onError: () => setView("error"),
     })
   }
 
@@ -88,6 +90,7 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
     pricing: Pricing | null
   } | null>(null)
 
+  // Cargamos los precios de los ítems del carrito desde el backend
   useEffect(() => {
     if (items.length === 0) return
 
@@ -121,7 +124,18 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
         }
       </style>
       <div className="bg-background text-foreground min-h-svh md:min-h-[calc(100svh-4rem)]">
-        {view === "cart" ? (
+        {form.hasErrors ? (
+          <OrderError
+            retry={() => {
+              form.clearErrors()
+            }}
+            error={
+              Array.isArray(form.errors.order_error)
+                ? form.errors.order_error[0]
+                : form.errors.order_error
+            }
+          />
+        ) : (
           <ConsumerCart
             monthlyLimit={benefit.monthly_limit}
             monthlyRemaining={benefit.monthly_remaining}
@@ -130,24 +144,12 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
             cart={cart}
             addresses={addressOptions}
             address={address}
-            setAddress={setAddress}
+            setAddress={(value: string) => setSelectedAddress(value)}
             onAddAddress={addAddress}
             processing={form.processing}
             error={form.errors.order_error}
             confirm={confirm}
             remove={remove}
-          />
-        ) : (
-          <OrderError
-            retry={() => {
-              form.clearErrors()
-              setView("cart")
-            }}
-            error={
-              Array.isArray(form.errors.order_error)
-                ? form.errors.order_error[0]
-                : form.errors.order_error
-            }
           />
         )}
       </div>
