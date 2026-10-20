@@ -6,9 +6,9 @@ import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { formatMoney } from "@/lib/money"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
-import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
 import { type Benefit, cartPricedItem, priceItems } from "./pricing"
 
@@ -73,7 +73,7 @@ export function DishDetail({
       <p className="text-muted-foreground mt-2 text-xs leading-5">
         {item.menu.description}
       </p>
-      <p className="mt-1 font-bold">{money(item.menu.price)}</p>
+      <p className="mt-1 font-bold">{formatMoney(item.menu.price)}</p>
       {item.orders_closed && (
         <p className="text-destructive mt-3 text-sm">
           {t("pages.consumer_dashboard.index.orders_closed")}

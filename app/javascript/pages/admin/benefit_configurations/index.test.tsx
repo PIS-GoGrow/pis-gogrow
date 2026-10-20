@@ -217,7 +217,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     )
 
     expect(screen.getByText("Alerta de deuda")).toBeInTheDocument()
-    expect(screen.getByText(/2500/)).toBeInTheDocument()
+    expect(screen.getByText("$2.500")).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Editar monto" }),
     ).toBeInTheDocument()

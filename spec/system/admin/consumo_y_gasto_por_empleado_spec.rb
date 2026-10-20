@@ -21,9 +21,9 @@ RSpec.describe "Consumo y gasto mensual de cada empleado", type: :system do
 
     expect(page).to have_content("Empleados")
     expect(page).to have_content("Test User")
-    expect(page).to have_content("950,75 UYU")
+    expect(page).to have_content("$950,75")
     expect(page).to have_content("Other Consumer User")
-    expect(page).to have_content("150,25 UYU")
+    expect(page).to have_content("$150,25")
     expect(page).to have_content("Pendiente")
     expect(page).to have_content("En revisión")
   end
@@ -34,9 +34,9 @@ RSpec.describe "Consumo y gasto mensual de cada empleado", type: :system do
     visit admin_consumers_path(month: previous_key)
 
     expect(page).to have_content("Test User")
-    # El locale "es" no agrupa los miles de cuatro cifras: 2425,00 UYU.
-    expect(page).to have_content("2425,00 UYU")
-    expect(page).to have_no_content("950,75 UYU")
+    # Los miles de cuatro cifras también se agrupan: $2.425.
+    expect(page).to have_content("$2.425")
+    expect(page).to have_no_content("$950,75")
   end
 
   it "opens an employee and shows the month's consumption" do
@@ -77,7 +77,7 @@ RSpec.describe "Consumo y gasto mensual de cada empleado", type: :system do
     end
 
     visit admin_consumers_path
-    expect(page).to have_content("950,75 UYU")
+    expect(page).to have_content("$950,75")
   end
 
   describe "permissions" do

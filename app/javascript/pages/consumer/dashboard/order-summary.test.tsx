@@ -79,16 +79,19 @@ describe("OrderSummary", () => {
     )
   })
 
-  it("rounds the amounts it shows", () => {
+  it("shows the cents only when the amount has them", () => {
     render(
       <OrderSummary subtotal={640.5} total={320.1} tiers={[tier(50, 320.4)]} />,
     )
 
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
-      "$641",
+      "$640,50",
     )
+    expect(
+      screen.getByText("Subsidio Base (50%)").nextSibling,
+    ).toHaveTextContent("- $320,40")
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$320",
+      "$320,10",
     )
   })
 })

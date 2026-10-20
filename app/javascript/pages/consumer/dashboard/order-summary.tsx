@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next"
 
+import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 
-import { money } from "./formatters"
 import type { DiscountTier } from "./pricing"
 
 interface Props {
@@ -28,7 +28,7 @@ export function OrderSummary({
             <span className="text-muted-foreground">
               {t("pages.cart.subtotal")}
             </span>
-            <span>{money(subtotal)}</span>
+            <span>{formatMoney(subtotal)}</span>
           </div>
           {tiers.map((tier, index) => (
             <BenefitLine
@@ -45,7 +45,7 @@ export function OrderSummary({
         )}
       >
         <span>{t("pages.cart.total")}</span>
-        <span>{money(total)}</span>
+        <span>{formatMoney(total)}</span>
       </div>
     </div>
   )
@@ -67,7 +67,7 @@ export function BenefitLine({
   return (
     <div className={cn("flex justify-between", className)}>
       <span className="text-muted-foreground">{label}</span>
-      <span className="text-[#29944c]">- {money(tier.discount)}</span>
+      <span className="text-[#29944c]">- {formatMoney(tier.discount)}</span>
     </div>
   )
 }

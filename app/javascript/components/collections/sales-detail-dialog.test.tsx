@@ -91,7 +91,7 @@ describe("SalesDetailDialog", () => {
 
     expect(screen.queryByText("Juan Pérez")).not.toBeInTheDocument()
     expect(screen.getByText("María López")).toBeInTheDocument()
-    expect(screen.getByText(/Día: 09\/10/)).toHaveTextContent("100,00 UYU")
+    expect(screen.getByText(/Día: 09\/10/)).toHaveTextContent("$100")
   })
 
   it("opens the monthly detail and shows confirmed orders by day", async () => {
@@ -108,7 +108,7 @@ describe("SalesDetailDialog", () => {
     expect(screen.getByText("GoGrow")).toBeInTheDocument()
     expect(screen.getByText("Juan Pérez")).toBeInTheDocument()
     expect(screen.getByText(/Día: 09\/10/)).toHaveTextContent("Viandas: 2")
-    expect(screen.getByText(/Día: 09\/10/)).toHaveTextContent("600,00 UYU")
+    expect(screen.getByText(/Día: 09\/10/)).toHaveTextContent("$600")
     expect(screen.queryByText("Subtotal")).not.toBeInTheDocument()
     expect(
       screen.queryByText("IVA sobre subsidios (22 %)"),

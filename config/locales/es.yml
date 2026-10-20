@@ -126,7 +126,7 @@ es:
         dish_unpublished: "porque el plato fue retirado del menú de ese día"
     debt_threshold_exceeded:
       title: "Tu deuda superó el monto límite"
-      description: "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca."
+      description: "Tu deuda es de %{debt} y superó el límite de %{threshold} definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca."
     debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
@@ -467,7 +467,7 @@ es:
             pending_conflict:
               title: "Ya hay un cambio programado para el %{date}"
               title_alt: "Hay un cambio programado para el %{date}"
-              description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
+              description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
               unexpected: "Error inesperado. Por favor reintentá la operación."

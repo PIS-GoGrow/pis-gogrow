@@ -70,7 +70,7 @@ describe("InvoiceSection", () => {
     await user.click(screen.getByRole("button", { name: "Subir factura" }))
 
     expect(screen.getByLabelText("Monto total")).toHaveValue(36_600)
-    expect(screen.getByText(/36\.600,00 UYU/)).toBeInTheDocument()
+    expect(screen.getByText(/\$36\.600/)).toBeInTheDocument()
   })
 
   it("shows the invoice download in collection history", () => {

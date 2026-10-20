@@ -193,7 +193,7 @@
         "title": "Recordatorio de pago pendiente"
       },
       "debt_threshold_exceeded": {
-        "description": "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca.",
+        "description": "Tu deuda es de %{debt} y superó el límite de %{threshold} definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca.",
         "title": "Tu deuda superó el monto límite"
       },
       "employee_debt_overdue": {
@@ -332,7 +332,7 @@
               "monthly_voucher_limit_unit": "viandas",
               "notice": "Los cambios se aplicarán el %{date}.",
               "pending_conflict": {
-                "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
+                "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
                 "keep": "Mantener el programado",
                 "replace": "Reemplazar por este",
                 "title": "Ya hay un cambio programado para el %{date}",

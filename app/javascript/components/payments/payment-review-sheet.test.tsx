@@ -48,7 +48,7 @@ describe("PaymentReviewSheet", () => {
   it("shows the account amount and downloads the existing protected receipt", async () => {
     await openReview()
     expect(screen.getByText("Importe esperado:")).toBeInTheDocument()
-    expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("$800")).toBeInTheDocument()
     expect(
       screen.getByText(/importe transferido debe verificarse en el archivo/),
     ).toBeInTheDocument()

@@ -73,9 +73,9 @@ describe("CollectionAccountDetailDialog", () => {
 
       await user.click(screen.getByRole("button", { name: "Ver detalle" }))
 
-      expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+      expect(screen.getByText("$800")).toBeInTheDocument()
       expect(screen.queryByText("IVA (22 %)")).not.toBeInTheDocument()
-      expect(screen.queryByText("976,00 UYU")).not.toBeInTheDocument()
+      expect(screen.queryByText("$976")).not.toBeInTheDocument()
     },
   )
 
@@ -89,7 +89,7 @@ describe("CollectionAccountDetailDialog", () => {
       screen.getByText("Historial de consumo: Octubre 2026"),
     ).toBeInTheDocument()
     expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
-    expect(screen.getByText("Total: 800,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("Total: $800")).toBeInTheDocument()
     expect(screen.getByText("En revisión")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
@@ -113,11 +113,11 @@ describe("CollectionAccountDetailDialog", () => {
     await user.click(screen.getByRole("button", { name: "Ver detalle" }))
 
     expect(screen.getByText("Total")).toBeInTheDocument()
-    expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("$800")).toBeInTheDocument()
     expect(screen.getByText("Subtotal sin IVA")).toBeInTheDocument()
     expect(screen.getByText("IVA (22 %)")).toBeInTheDocument()
-    expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
-    expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("$176")).toBeInTheDocument()
+    expect(screen.getByText("$976")).toBeInTheDocument()
     expect(screen.getByText("Pendiente")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
@@ -157,8 +157,8 @@ describe("CollectionAccountDetailDialog", () => {
 
     expect(screen.getByText("Subtotal sin IVA")).toBeInTheDocument()
     expect(screen.getByText("IVA (22 %)")).toBeInTheDocument()
-    expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
-    expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("$176")).toBeInTheDocument()
+    expect(screen.getByText("$976")).toBeInTheDocument()
     expect(screen.getByText("Aprobado")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
@@ -205,9 +205,9 @@ describe("CollectionAccountDetailDialog", () => {
 
       if (source === "company") {
         await user.click(screen.getByRole("tab", { name: "Cobro" }))
-        expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
-        expect(screen.getByText("176,00 UYU")).toBeInTheDocument()
-        expect(screen.getByText("976,00 UYU")).toBeInTheDocument()
+        expect(screen.getByText("$800")).toBeInTheDocument()
+        expect(screen.getByText("$176")).toBeInTheDocument()
+        expect(screen.getByText("$976")).toBeInTheDocument()
         expect(screen.getByText("Rechazado")).toBeInTheDocument()
       }
     },

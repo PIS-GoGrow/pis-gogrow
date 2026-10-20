@@ -63,7 +63,7 @@ function SavedMenuCard({
   onToggle?: () => void
 }) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney } = useFormatters()
 
   return (
     <Card className={cn("w-full", disabled && "opacity-50")}>
@@ -71,7 +71,7 @@ function SavedMenuCard({
         <CardTitle>
           {menu.name}{" "}
           <span className="text-muted-foreground">
-            | {formatMoneyShort(menu.price ?? 0)}
+            | {formatMoney(menu.price ?? 0)}
           </span>
         </CardTitle>
         <CardDescription>{menu.description}</CardDescription>
