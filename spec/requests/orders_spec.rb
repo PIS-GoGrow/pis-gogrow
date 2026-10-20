@@ -1416,6 +1416,20 @@ RSpec.describe "Orders", type: :request do
         end
       end
 
+      it "logs the previous and new values of what changed" do
+        patch order_path(order), params: update_params(quantity: 2, notes: "Sin cebolla")
+
+        log = order.audit_logs.sole
+        expect(log.user).to eq(users(:one))
+        expect(log.changeset).to include("amount" => [ 1, 2 ], "notes" => [ nil, "Sin cebolla" ])
+      end
+
+      it "logs nothing when the modification is rejected" do
+        patch order_path(order), params: update_params(quantity: 0)
+
+        expect(order.audit_logs).to be_empty
+      end
+
       # El saldo del tope mensual ya descuenta la unidad de esta orden, así que al
       # subirla se le devuelve: con 1 de saldo puede subsidiar 2 de las 3, y la
       # tercera se cobra a precio de lista.
