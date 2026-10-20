@@ -40,13 +40,13 @@ RSpec.describe "Programar cierres de recepción de pedidos como proveedor", type
     visit_hydrated schedules_path(week_start: monday.to_s)
     expect(page).to have_content("Menú de la semana")
 
-    # Miércoles 21 está cerrado: no es publicable
-    find("button", text: /\b21\b/).click
+    # Miércoles está cerrado: no es publicable
+    find("button", text: /\b#{target_date.day}\b/).click
     expect(page).to have_content("No se publicó menú para este día.")
     expect(page).to have_no_link("Agregar platos")
 
-    # Lunes 19 está abierto: sí se puede publicar
-    find("button", text: /\b19\b/).click
+    # Lunes está abierto: sí se puede publicar
+    find("button", text: /\b#{monday.day}\b/).click
     expect(page).to have_content("No hay platos publicados para el lunes todavía")
     expect(page).to have_link("Agregar platos")
 

@@ -172,7 +172,7 @@ RSpec.describe "Historial de pagos del proveedor" do
       click_on "Empleados"
       click_on employee.name
       expect(page).to have_content(approved.created_at.strftime("%d/%m/%y"))
-      expect(page).to have_content("300,00")
+      expect(page).to have_content("$300")
 
       expect(page).to have_button("Descargar comprobantes", exact: true)
       expect(page).to have_link("Descargar primer-intento.png", href: receipt_provider_payment_path(rejected))
@@ -183,7 +183,7 @@ RSpec.describe "Historial de pagos del proveedor" do
 
       click_on "Empresa"
       expect(page).to have_content(company.created_at.strftime("%d/%m/%y"))
-      expect(page).to have_content("700,00")
+      expect(page).to have_content("$700")
       expect(page).to have_link("Descargar comprobante", exact: true, href: receipt_provider_payment_path(company))
       expect(page).to have_link("Descargar factura", exact: true, href: file_provider_invoice_path(invoice, download: 1))
     end
@@ -205,7 +205,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     within(find("[role=dialog]")) do
       expect(page).to have_content("Historial de consumo: #{month_name(previous_month)}")
       expect(page).to have_content("Milanesa al pan")
-      expect(page).to have_content("Total: 300,00")
+      expect(page).to have_content("Total: $300")
       click_on "Cerrar"
     end
 
@@ -217,7 +217,7 @@ RSpec.describe "Historial de pagos del proveedor" do
 
     within(find("[role=dialog]")) do
       expect(page).to have_content("Total")
-      expect(page).to have_content("700,00")
+      expect(page).to have_content("$700")
       click_on "Viandas"
       expect(page).to have_content("Milanesa al pan")
     end
