@@ -2,6 +2,7 @@ import { ChevronLeft, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
+import { QuantityInput } from "@/components/quantity-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { RadioGroup } from "@/components/ui/radio-group"
@@ -30,6 +31,7 @@ interface Props {
   back: () => void
   confirm: () => void
   remove: (cartId: string) => void
+  setQuantity: (cartId: string, quantity: number) => void
 }
 
 export function ConsumerCart({
@@ -46,6 +48,7 @@ export function ConsumerCart({
   back,
   confirm,
   remove,
+  setQuantity,
 }: Props) {
   const { t } = useTranslation()
   const office = addresses.find((item) => item.id === "office")
@@ -202,16 +205,23 @@ export function ConsumerCart({
               {item.notes && (
                 <p className="text-muted-foreground mt-2">{item.notes}</p>
               )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={processing}
-                onClick={() => remove(item.cartId)}
-                className="mt-2"
-              >
-                {t("pages.cart.remove", { name: item.menu.name })}
-              </Button>
+              <div className="mt-2">
+                <QuantityInput
+                  size="sm"
+                  value={item.quantity}
+                  max={item.remaining}
+                  disabled={processing}
+                  onChange={(quantity) => setQuantity(item.cartId, quantity)}
+                  onRemove={() => remove(item.cartId)}
+                  decreaseLabel={t("pages.cart.decrease", {
+                    name: item.menu.name,
+                  })}
+                  increaseLabel={t("pages.cart.increase", {
+                    name: item.menu.name,
+                  })}
+                  removeLabel={t("pages.cart.remove", { name: item.menu.name })}
+                />
+              </div>
             </div>
           )
         })}

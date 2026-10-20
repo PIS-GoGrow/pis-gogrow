@@ -89,6 +89,7 @@ function renderCart(
     back: vi.fn(),
     confirm: vi.fn(),
     remove: vi.fn(),
+    setQuantity: vi.fn(),
   }
   return render(<ConsumerCart {...defaults} {...props} />)
 }
@@ -257,5 +258,63 @@ describe("ConsumerCart benefits", () => {
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$140",
     )
+  })
+})
+
+describe("ConsumerCart quantity", () => {
+  const twoDishes = (quantity: number): CartItem[] => [
+    { ...cartItem("Tu Viandita", true, 1), quantity },
+    cartItem("Tu Viandita", true, 2),
+  ]
+
+  it("changes the quantity of the dish whose counter was used", async () => {
+    const setQuantity = vi.fn()
+    renderCart({ cart: twoDishes(3), setQuantity })
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Agregar una unidad de Plato 1" }),
+    )
+    await userEvent.click(
+      screen.getByRole("button", { name: "Quitar una unidad de Plato 1" }),
+    )
+
+    expect(setQuantity).toHaveBeenNthCalledWith(1, "1-", 4)
+    expect(setQuantity).toHaveBeenNthCalledWith(2, "1-", 2)
+  })
+
+  it("turns the minus into a trash that removes the dish at quantity 1", async () => {
+    const remove = vi.fn()
+    const setQuantity = vi.fn()
+    renderCart({ cart: twoDishes(2), remove, setQuantity })
+
+    expect(
+      screen.queryByRole("button", { name: "Quitar Plato 1" }),
+    ).not.toBeInTheDocument()
+    // El plato 2 tiene cantidad 1: ya muestra el tacho.
+    await userEvent.click(
+      screen.getByRole("button", { name: "Quitar Plato 2" }),
+    )
+
+    expect(remove).toHaveBeenCalledWith("2-")
+    expect(setQuantity).not.toHaveBeenCalled()
+  })
+
+  it("does not go above the remaining stock", () => {
+    renderCart({ cart: [{ ...cartItem("Tu Viandita", true), quantity: 5 }] })
+
+    expect(
+      screen.getByRole("button", { name: "Agregar una unidad de Plato 1" }),
+    ).toBeDisabled()
+  })
+
+  it("disables the counters while the order is processing", () => {
+    renderCart({ cart: twoDishes(2), processing: true })
+
+    expect(
+      screen.getByRole("button", { name: "Quitar una unidad de Plato 1" }),
+    ).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: "Quitar Plato 2" }),
+    ).toBeDisabled()
   })
 })

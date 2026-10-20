@@ -599,8 +599,10 @@
       "cart": {
         "add_address": "Agregar",
         "benefit": "Subsidio Base (%{percentage}%)",
+        "decrease": "Quitar una unidad de %{name}",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
+        "increase": "Agregar una unidad de %{name}",
         "my_addresses": "Ver mis direcciones",
         "new_address": {
           "apartment": "Piso / Apartamento (opcional)",

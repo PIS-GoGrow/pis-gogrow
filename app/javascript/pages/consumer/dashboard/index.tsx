@@ -218,6 +218,22 @@ export default function Index({
               setCart((items) => items.filter((item) => item.cartId !== cartId))
               form.clearErrors()
             }}
+            setQuantity={(cartId, quantity) => {
+              setCart((items) =>
+                items.map((item) =>
+                  item.cartId === cartId
+                    ? {
+                        ...item,
+                        quantity: Math.min(
+                          item.remaining,
+                          Math.max(1, quantity),
+                        ),
+                      }
+                    : item,
+                ),
+              )
+              form.clearErrors()
+            }}
           />
         )}
         {view === "error" && (
