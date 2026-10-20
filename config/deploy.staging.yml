@@ -46,7 +46,12 @@ accessories:
     service: pis-gogrow-motoradmin
     image: motoradmin/motoradmin:latest
     host: 18.228.27.215
-    port: "3002:3000"
+    # Detrás del mismo proxy que la app, con su propio nombre y su certificado:
+    # así no hay que abrir otro puerto en el security group.
+    proxy:
+      host: motoradmin.18-228-27-215.sslip.io
+      app_port: 3000
+      ssl: true
     env:
       clear:
         DATABASE_URL: postgres://motoradmin@pis-gogrow-motoradmin-db:5432/motoradmin
