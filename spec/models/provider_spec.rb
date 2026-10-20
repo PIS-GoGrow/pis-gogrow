@@ -3,7 +3,42 @@
 require "rails_helper"
 
 RSpec.describe Provider, type: :model do
-  fixtures :providers
+  fixtures :providers, :users
+
+  describe "secciones de la cuenta" do
+    let(:provider) { providers(:tuviandita) }
+
+    it "marca todas las secciones como incompletas hasta configurarlas" do
+      provider.update_columns(
+        payment_details_configured_at: nil,
+        order_deadline_configured_at: nil,
+        deliveries_configured_at: nil,
+        notifications_configured_at: nil
+      )
+
+      expect(provider.incomplete_sections).to contain_exactly(
+        "payment_details", "operational_settings", "deliveries", "notifications"
+      )
+      expect(provider.completed_sections_count).to eq(0)
+      expect(provider.total_sections_count).to eq(4)
+    end
+
+    it "marca una sección como completa al configurarla, aunque luego se vacíen los datos" do
+      provider.update_column(:deliveries_configured_at, nil)
+      expect(provider.incomplete_sections).to include("deliveries")
+
+      provider.mark_section_configured!(:deliveries)
+
+      expect(provider.incomplete_sections).not_to include("deliveries")
+    end
+
+    it "no re-marca una sección que ya estaba configurada" do
+      provider.update_column(:payment_details_configured_at, 2.days.ago)
+
+      expect { provider.mark_section_configured!(:payment_details) }
+        .not_to(change { provider.reload.payment_details_configured_at })
+    end
+  end
 
   describe "#delivery_methods" do
     it "lists only office for an office-only provider" do
@@ -249,18 +284,22 @@ end
 #
 # Table name: providers
 #
-#  id                      :bigint           not null, primary key
-#  bank_account_holder     :string
-#  bank_account_number     :string
-#  bank_account_type       :integer
-#  bank_name               :string
-#  home_delivery           :boolean          default(TRUE), not null
-#  onboarding_completed_at :datetime
-#  order_deadline          :time
-#  created_at              :datetime         not null
-#  updated_at              :datetime         not null
-#  tax_id                  :string
-#  user_id                 :bigint
+#  id                            :bigint           not null, primary key
+#  bank_account_holder           :string
+#  bank_account_number           :string
+#  bank_account_type             :integer
+#  bank_name                     :string
+#  deliveries_configured_at      :datetime
+#  home_delivery                 :boolean          default(TRUE), not null
+#  notifications_configured_at   :datetime
+#  onboarding_completed_at       :datetime
+#  order_deadline                :time
+#  order_deadline_configured_at  :datetime
+#  payment_details_configured_at :datetime
+#  created_at                    :datetime         not null
+#  updated_at                    :datetime         not null
+#  tax_id                        :string
+#  user_id                       :bigint
 #
 # Indexes
 #

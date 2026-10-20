@@ -62,6 +62,15 @@ RSpec.describe "Provider::Dashboard", type: :request do
         )
       end
 
+      it "expone el progreso de completitud de la cuenta" do
+        get provider_dashboard_path
+
+        expect(inertia).to(have_props do |props|
+          props["sections_total"] == 4 &&
+            props["completed_sections_count"].is_a?(Integer)
+        end)
+      end
+
       context "con la hora de cierre configurada" do
         around do |example|
           travel_to(Time.current.change(hour: 12)) { example.run }

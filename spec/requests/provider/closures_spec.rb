@@ -314,4 +314,27 @@ RSpec.describe "Provider::Closures", type: :request do
       expect(response).to redirect_to(root_path)
     end
   end
+
+  describe "durante el onboarding" do
+    before do
+      provider.update!(onboarding_completed_at: nil)
+      sign_in users(:provider_user), role: :provider
+    end
+
+    it "crea el cierre sin ser desviado por el guard y vuelve al paso 2 del onboarding" do
+      expect do
+        post provider_closures_path, params: params.merge(onboarding: true)
+      end.to change { provider.closures.count }.by(1)
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+    end
+
+    it "elimina un cierre y vuelve al paso 2 del onboarding" do
+      closure = create_closure
+
+      delete provider_closure_path(closure, onboarding: true)
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+    end
+  end
 end
