@@ -90,7 +90,7 @@ describe("OrderConfirmation Page", () => {
 
     const ordersLink = screen.getByRole("link", { name: "Ver mis pedidos" })
     expect(ordersLink).toBeInTheDocument()
-    expect(ordersLink).toHaveAttribute("href", "/orders")
+    expect(ordersLink).toHaveAttribute("href", "/pedidos")
   })
 
   it("renders a close button linking back to the dashboard", () => {
@@ -98,7 +98,7 @@ describe("OrderConfirmation Page", () => {
 
     const closeButton = screen.getByRole("link", { name: "Cerrar" })
     expect(closeButton).toBeInTheDocument()
-    expect(closeButton).toHaveAttribute("href", "/dashboard")
+    expect(closeButton).toHaveAttribute("href", "/menu-semanal")
   })
 
   it("handles orders with different delivery methods and providers", () => {

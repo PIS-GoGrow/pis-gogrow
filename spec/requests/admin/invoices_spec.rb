@@ -26,7 +26,7 @@ RSpec.describe "Admin::Invoices", type: :request do
     Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png", original_filename: name)
   end
 
-  describe "GET /admin/invoices" do
+  describe "GET /admin/facturas" do
     it "redirects visitors to the sign in page" do
       get admin_invoices_path
 
@@ -117,7 +117,7 @@ RSpec.describe "Admin::Invoices", type: :request do
     end
   end
 
-  describe "GET /admin/invoices/:id/file" do
+  describe "GET /admin/facturas/:id/archivo" do
     it "lets HR open the invoice of any provider" do
       sign_in users(:admin), role: :admin
 

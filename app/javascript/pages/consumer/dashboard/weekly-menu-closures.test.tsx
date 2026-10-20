@@ -12,7 +12,7 @@ vi.mock("@inertiajs/react", async () => {
 
   return {
     ...actual,
-    usePage: () => ({ url: "/dashboard", props: { notifications: [] } }),
+    usePage: () => ({ url: "/menu-semanal", props: { notifications: [] } }),
   }
 })
 

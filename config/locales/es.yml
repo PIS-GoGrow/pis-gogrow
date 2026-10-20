@@ -81,7 +81,7 @@ es:
     password_challenge_invalid: "La verificación de contraseña no es válida"
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
-    payment_current_account: "No se puede subir ni confirmar un comprobante mientras el mes siga en curso."
+    payment_current_account: "No se puede subir ni aprobar un comprobante mientras el mes siga en curso."
     payment_not_removable: "Solo podés eliminar comprobantes en revisión o rechazados."
     payment_not_reviewable: "Este comprobante ya fue revisado."
     invoice_not_removable: "Esta factura ya fue revisada y no se puede eliminar."
@@ -126,7 +126,7 @@ es:
         dish_unpublished: "porque el plato fue retirado del menú de ese día"
     debt_threshold_exceeded:
       title: "Tu deuda superó el monto límite"
-      description: "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca."
+      description: "Tu deuda es de %{debt} y superó el límite de %{threshold} definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca."
     debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}."
@@ -146,8 +146,8 @@ es:
       title: "Tu comprobante fue rechazado"
       description: "El comprobante que subiste fue rechazado por %{provider}. Volvé a cargarlo para confirmar tu pago."
     company_payment_approved:
-      title: "Pago confirmado"
-      description: "%{provider} confirmó el pago de %{company} por %{period} (%{amount})."
+      title: "Pago aprobado"
+      description: "%{provider} aprobó el pago de %{company} por %{period} (%{amount})."
     employee_debt_overdue:
       title: "Hay empleados con pagos pendientes"
       description:
@@ -174,7 +174,7 @@ es:
       description: "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado."
     debt_alerts:
       title: "Alertas de deuda"
-      description: "Recibí una notificación cuando tu deuda supere el monto definido por RRHH."
+      description: "Recibí una notificación cuando tu deuda supere el monto definido por RR. HH."
     provider_payment_reminders:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
@@ -317,7 +317,7 @@ es:
     orders: "Mis pedidos"
     account: "Cuenta"
     menu: "Menú de navegación"
-    benefit_configurations: "Beneficio general"
+    benefit_configurations: "Subsidios"
     invoices: "Facturas"
     change_to: "Cambiar a"
     provider:
@@ -333,7 +333,7 @@ es:
       employees: "Empleados"
       payments: "Pagos"
       account: "Cuenta"
-      mobile_navigation: "Navegación de RRHH"
+      mobile_navigation: "Navegación de RR. HH."
     settings:
       profile: "Perfil"
       email: "Correo electrónico"
@@ -364,14 +364,14 @@ es:
       system: "Sistema"
     settings_layout:
       title: "Configuración"
-      description: "Administra tu perfil y la configuración de tu cuenta"
+      description: "Administrá tu perfil y la configuración de tu cuenta"
     delete_account:
       title: "Eliminar cuenta"
-      description: "Elimina tu cuenta y todos sus datos"
+      description: "Eliminá tu cuenta y todos tus datos"
       warning: "Advertencia"
-      caution: "Procede con precaución, esta acción no se puede deshacer."
-      confirm_title: "¿Seguro que quieres eliminar tu cuenta?"
-      confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente."
+      caution: "Procedé con precaución, esta acción no se puede deshacer."
+      confirm_title: "¿Seguro/a que querés eliminar tu cuenta?"
+      confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresá tu contraseña para confirmar que querés eliminar tu cuenta definitivamente."
     month_select:
       this_month: "Este mes"
     date_picker:
@@ -389,7 +389,7 @@ es:
         sign_out: "Salir"
         settings: "Configuración"
         subsidies: "Subsidios"
-        subsidies_description: "Gestioná los subsidios de tu compañía"
+        subsidies_description: "Gestioná los subsidios de tu empresa"
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
         more_options: "Más opciones"
@@ -447,11 +447,11 @@ es:
       benefit_configurations:
         index:
           title: "Subsidios"
-          description: "Gestioná los subsidios de tu compañía"
+          description: "Gestioná los subsidios de tu empresa"
           back: "Volver a Cuenta"
           current:
             title: "Subsidio Base"
-            empty: "Todavía no configuraste el beneficio general."
+            empty: "Todavía no configuraste el subsidio base."
             edit: "Editar"
             subsidy_percentage: "Se descuenta"
             max_voucher_price: "Cuando el precio por vianda es"
@@ -467,7 +467,7 @@ es:
             pending_conflict:
               title: "Ya hay un cambio programado para el %{date}"
               title_alt: "Hay un cambio programado para el %{date}"
-              description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
+              description: "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado."
               keep: "Mantener el programado"
               replace: "Reemplazar por este"
               unexpected: "Error inesperado. Por favor reintentá la operación."
@@ -704,9 +704,9 @@ es:
         download_receipt: "Descargar comprobante de pago"
         see_receipts: "Ver comprobantes"
         status_pending: "Pendiente"
-        status_accepted: "Aceptado"
+        status_accepted: "Aprobado"
         status_rejected: "Rechazado"
-        status_submitted: "Enviado"
+        status_submitted: "En revisión"
         partial_payment_warning: "Falta una parte del pago."
     orders:
       index:
@@ -744,7 +744,7 @@ es:
         address: "Dirección de entrega"
         delivery_method: "Modalidad de entrega"
         base_price: "Precio base"
-        subsidy: "Subsidio aplicado"
+        subsidy: "Beneficio aplicado"
         total: "Importe final"
         notes: "Notas"
         no_notes: "Sin notas"
@@ -781,7 +781,7 @@ es:
       statuses:
         pending: "Pendiente"
         submitted: "En revisión"
-        approved: "Confirmado"
+        approved: "Aprobado"
         rejected: "Rechazado"
       partial_payment_badge: "Pago parcial"
       meals_one: "%{count} vianda"
@@ -819,14 +819,14 @@ es:
         empty_pending_title: "Sin deudas pendientes"
         empty_pending_all: "Por ahora no hay deudas pendientes de ningún cliente seleccionado. Volvé a consultar el mes que viene."
         empty_pending_client: "Por ahora no hay deudas pendientes de este cliente. Volvé a consultar el mes que viene."
-        empty_history_title: "Sin cobros confirmados"
+        empty_history_title: "Sin cobros aprobados"
         empty_history_all: "Todavía no hay meses cobrados por completo."
         empty_history_client: "Todavía no hay meses cobrados por completo de este cliente."
       group:
         total: "Total a cobrar"
-        confirmed: "%{amount} en cobros confirmados"
-        awaiting_one: "%{count} cobro pendiente de confirmación"
-        awaiting_other: "%{count} cobros pendientes de confirmación"
+        confirmed: "%{amount} en cobros aprobados"
+        awaiting_one: "%{count} en revisión"
+        awaiting_other: "%{count} cobros en revisión"
         rejected_one: "%{count} cobro rechazado"
         rejected_other: "%{count} cobros rechazados"
         employees: "Empleados"
@@ -874,10 +874,10 @@ es:
         expected_amount: "Importe esperado:"
         download: "Descargar comprobante"
         open_receipt: "Abrir comprobante completo"
-        check_receipt: "Comprobá el importe, la cuenta y el concepto del comprobante antes de confirmar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo."
-        current_month_restriction: "Todavía no podés confirmar este comprobante porque la cuenta corresponde al mes en curso. Podrás confirmarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo."
-        confirm: "Confirmar"
-        confirming: "Confirmando…"
+        check_receipt: "Comprobá el importe, la cuenta y el concepto del comprobante antes de aprobar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo."
+        current_month_restriction: "Todavía no podés aprobar este comprobante porque la cuenta corresponde al mes en curso. Podrás aprobarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo."
+        confirm: "Aprobar"
+        confirming: "Aprobando…"
         continue: "Continuar"
         continuing: "Continuando…"
         report: "Reportar"
@@ -890,8 +890,8 @@ es:
         details_label: "Describir el motivo"
         details_placeholder: "Describir el motivo"
         back: "Volver"
-        approved_title: "Cobro confirmado"
-        approved_description: "El cobro fue confirmado correctamente. Se notificará al usuario."
+        approved_title: "Cobro aprobado"
+        approved_description: "El cobro fue aprobado correctamente. Se notificará al usuario."
         partial_title: "Pago parcial registrado"
         partial_description: "El comprobante quedó registrado como pago parcial. Se notificará al usuario para que abone el monto restante."
         rejected_title: "Comprobante rechazado"
@@ -899,7 +899,7 @@ es:
         done: "Listo"
       invoice:
         statuses:
-          pending: "Por revisar"
+          pending: "En revisión"
           approved: "Aprobada"
           rejected: "Rechazada"
         select_file: "Seleccionar archivo"
@@ -960,7 +960,7 @@ es:
         dish_deleted: "Plato eliminado"
         dish_unpublished: "Plato retirado del menú"
       statuses:
-        pending: "Por revisar"
+        pending: "Pendiente"
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
@@ -971,7 +971,7 @@ es:
           history: "Historial"
         status_filter_label: "Filtrar pedidos por estado"
         status_filters:
-          pending: "Por revisar"
+          pending: "Pendiente"
           confirmed: "Confirmados"
           all: "Todos"
         delivery_label: "Entregas:"
@@ -1009,7 +1009,7 @@ es:
         notes: "Notas"
         delivery_date: "Entrega"
         total: "Total"
-        subsidy: "Subsidio"
+        subsidy: "Beneficio aplicado"
         charged: "Paga el empleado"
         no_price: "Importe no disponible"
         rejection_reason: "Motivo de rechazo"
@@ -1232,7 +1232,7 @@ es:
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
       remove: "Quitar %{name}"
       delivery: "Entrega: %{date}"
-      benefit: "Beneficio GoGrow (%{percentage}%)"
+      benefit: "Subsidio Base (%{percentage}%)"
       subtotal: "Precio vianda"
       total: "Monto a pagar"
       new_address:
@@ -1486,12 +1486,12 @@ es:
       email:
         title: "Configuración de correo"
         heading: "Actualizar correo electrónico"
-        description: "Actualiza tu dirección de correo y verifícala"
+        description: "Actualizá tu dirección de correo y verificala"
         unverified: "Tu dirección de correo no está verificada."
-        resend: "Haz clic aquí para reenviar el correo de verificación."
+        resend: "Hacé clic aquí para reenviar el correo de verificación."
       sessions:
         title: "Sesiones"
-        description: "Administra tus sesiones activas en todos los dispositivos"
+        description: "Administrá tus sesiones activas en todos los dispositivos"
         current: "Actual"
         ip: "IP: %{address}"
         active_since: "Activa desde: %{time}"
@@ -1500,7 +1500,7 @@ es:
         heading: "Notificaciones"
         title: "Notificaciones"
         description: "Configurá qué alertas querés recibir por WhatsApp"
-        preferences_heading: "Preferencias de RRHH"
+        preferences_heading: "Preferencias de RR. HH."
         preferences_description: "Activá o desactivá las categorías de avisos que querés recibir."
         back: "Volver a Cuenta"
   date:

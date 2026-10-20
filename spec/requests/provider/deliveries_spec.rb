@@ -8,7 +8,7 @@ RSpec.describe "Provider::Deliveries", type: :request do
 
   let(:provider) { providers(:tuviandita) }
 
-  describe "GET /provider/deliveries" do
+  describe "GET /provider/entregas" do
     it "redirects visitors without a session to the sign in page" do
       get provider_deliveries_path
 
@@ -33,7 +33,7 @@ RSpec.describe "Provider::Deliveries", type: :request do
     end
   end
 
-  describe "PATCH /provider/deliveries" do
+  describe "PATCH /provider/entregas" do
     it "redirects to sign in without a session" do
       patch provider_deliveries_path, params: { home_delivery: false }
 

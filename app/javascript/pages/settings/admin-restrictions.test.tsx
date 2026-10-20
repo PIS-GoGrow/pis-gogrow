@@ -35,7 +35,7 @@ describe("RRHH restricted settings", () => {
 
       expect(container).toBeEmptyDOMElement()
       await waitFor(() =>
-        expect(visitMock).toHaveBeenCalledWith("/admin/preferences", {
+        expect(visitMock).toHaveBeenCalledWith("/rrhh/preferencias", {
           replace: true,
         }),
       )

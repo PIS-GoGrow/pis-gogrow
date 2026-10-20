@@ -17,11 +17,11 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import useSessionStorage from "@/hooks/use-session-storage"
+import { formatMoney } from "@/lib/money"
 import type { ConsumerClosure, ConsumerDashboardIndex } from "@/types"
 
 import { BenefitCard } from "./benefit-card"
 import type { CartItem, Schedule } from "./consumer-types"
-import { money } from "./formatters"
 
 interface Props {
   name: string
@@ -212,7 +212,7 @@ export function WeeklyMenu({
             <div className="border-border bg-card rounded-xl border p-5">
               <p className="text-muted-foreground text-sm">Tu carrito</p>
               <h3 className="mt-8 text-lg">
-                {count} platos · {money(total)}
+                {count} platos · {formatMoney(total)}
               </h3>
               <p className="text-muted-foreground mt-4 text-sm">
                 Agregá platos de distintos días y proveedores.

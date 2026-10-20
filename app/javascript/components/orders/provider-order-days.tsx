@@ -44,7 +44,7 @@ export default function ProviderOrderDays({
   filters,
 }: ProviderOrderDaysProps) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney } = useFormatters()
   // undefined: el usuario todavía no eligió; null: cerró el día abierto.
   const [selected, setSelected] = useState<string | null | undefined>(undefined)
 
@@ -122,7 +122,7 @@ export default function ProviderOrderDays({
               {t("pages.provider_orders.index.day_summary", {
                 date: formatDayDate(day.date),
                 meals,
-                amount: formatMoneyShort(total),
+                amount: formatMoney(total),
               })}
               <ChevronDown
                 className="text-muted-foreground size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180 lg:hidden"

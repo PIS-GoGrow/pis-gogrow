@@ -14,7 +14,7 @@ function payment(
     status: "approved",
     rejection_reason: null,
     date: "02/10/26",
-    receipt_url: "/provider/payments/1/receipt",
+    receipt_url: "/provider/comprobantes/1/archivo",
     receipt_filename: "aprobado.png",
     receipt_content_type: "image/png",
     ...overrides,
@@ -26,7 +26,7 @@ const rejected = payment({
   id: 2,
   status: "rejected",
   date: "30/09/26",
-  receipt_url: "/provider/payments/2/receipt",
+  receipt_url: "/provider/comprobantes/2/archivo",
   receipt_filename: "rechazado.pdf",
   receipt_content_type: "application/pdf",
 })
@@ -61,7 +61,7 @@ describe("CollectionPaymentHistory", () => {
 
     const link = screen.getByRole("link", { name: "Descargar comprobante" })
 
-    expect(link).toHaveAttribute("href", "/provider/payments/1/receipt")
+    expect(link).toHaveAttribute("href", "/provider/comprobantes/1/archivo")
     expect(link).toHaveAttribute("download")
     expect(screen.getAllByRole("link")).toHaveLength(1)
   })
@@ -97,14 +97,20 @@ describe("CollectionPaymentHistory", () => {
       name: "Descargar rechazado.pdf",
     })
 
-    expect(approvedLink).toHaveAttribute("href", "/provider/payments/1/receipt")
+    expect(approvedLink).toHaveAttribute(
+      "href",
+      "/provider/comprobantes/1/archivo",
+    )
     expect(approvedLink).toHaveAttribute("download")
-    expect(rejectedLink).toHaveAttribute("href", "/provider/payments/2/receipt")
+    expect(rejectedLink).toHaveAttribute(
+      "href",
+      "/provider/comprobantes/2/archivo",
+    )
     expect(screen.getAllByRole("link")).toHaveLength(2)
 
     const approvedEntry = approvedLink.closest<HTMLElement>("div.grid")!
     expect(within(approvedEntry).getByText("02/10/26")).toBeInTheDocument()
-    expect(within(approvedEntry).getByText("Confirmado")).toBeInTheDocument()
+    expect(within(approvedEntry).getByText("Aprobado")).toBeInTheDocument()
 
     const rejectedEntry = rejectedLink.closest<HTMLElement>("div.grid")!
     expect(within(rejectedEntry).getByText("30/09/26")).toBeInTheDocument()
@@ -123,7 +129,7 @@ describe("CollectionPaymentHistory", () => {
       status: "rejected",
       rejection_reason: "El pago es parcial",
       date: "01/10/26",
-      receipt_url: "/provider/payments/4/receipt",
+      receipt_url: "/provider/comprobantes/4/archivo",
       receipt_filename: "parcial.png",
     })
 

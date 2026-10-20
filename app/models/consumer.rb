@@ -25,7 +25,7 @@ class Consumer < ApplicationRecord
     debt = total_debt
     threshold = company.debt_alert_threshold
     alert = user.notifications.active.find_by(event: "debt_threshold_exceeded", notifiable: self)
-    data = { debt: format_amount(debt), threshold: format_amount(threshold) }
+    data = { debt: Account.format_amount(debt), threshold: Account.format_amount(threshold) }
 
     if debt <= threshold
       alert&.close!
@@ -131,14 +131,6 @@ class Consumer < ApplicationRecord
       { id: "office", label: I18n.t("pages.orders.addresses.office"), address: company.address },
       *custom.partition { it[:address] == last_used }.flatten
     ].select { it[:address].present? }.uniq { it[:address] }
-  end
-
-  private
-
-  def format_amount(amount)
-    ActiveSupport::NumberHelper.number_to_rounded(
-      amount, precision: 2, strip_insignificant_zeros: true, delimiter: ".", separator: ","
-    )
   end
 end
 

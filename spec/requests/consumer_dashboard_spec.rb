@@ -180,7 +180,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   # El día concreto se elige en el browser sobre la semana que devuelve el
   # server, así que acá se verifica la ventana lunes–viernes y la forma de los
   # props; el filtrado por día se cubre en spec/system/consumer.
-  describe "GET /dashboard — consulting the menu by date (IBP-003)" do
+  describe "GET /menu-semanal — consulting the menu by date (IBP-003)" do
     fixtures :users, :consumers, :companies, :providers, :menus
 
     # Un lunes fijo: la pantalla arma la semana desde Date.current, así que sin
@@ -446,7 +446,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   # Acá se verifica que el server entregue cada dato, y que lo ausente viaje
   # como ausente. Cómo se pinta eso en pantalla —y qué se muestra cuando falta—
   # se cubre en app/javascript/pages/consumer/dashboard/dish-detail.test.tsx.
-  describe "GET /dashboard — información de cada plato" do
+  describe "GET /menu-semanal — información de cada plato" do
     fixtures :users, :consumers, :companies, :providers, :menus, :reviews, :benefit_configurations, :benefits
 
     around do |example|
@@ -598,7 +598,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     OmniAuth.config.mock_auth[:google_oauth2] = nil
   end
 
-  describe "GET /dashboard during weekend" do
+  describe "GET /menu-semanal during weekend" do
     let(:consumer_user_record) { consumer_user }
     let(:saturday) { Time.zone.local(2026, 10, 3, 10, 0, 0) }
     let(:next_monday) { Date.new(2026, 10, 5) }
@@ -650,7 +650,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     end
   end
 
-  describe "GET /dashboard/confirmation" do
+  describe "GET /menu-semanal/confirmacion" do
     let(:user) { consumer_user }
     let(:consumer) { user.consumer }
 
@@ -817,7 +817,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
   # IBP-037: el carrito necesita los subsidios especiales vigentes para mostrar
   # el precio con base + especial antes de confirmar.
-  describe "GET /dashboard — subsidios especiales" do
+  describe "GET /menu-semanal — subsidios especiales" do
     around do |example|
       travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
     end

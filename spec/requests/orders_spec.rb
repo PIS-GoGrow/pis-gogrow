@@ -5,7 +5,7 @@ require "inertia_rails/rspec"
 
 RSpec.describe "Orders", type: :request do
   fixtures :orders, :schedules, :menus, :menu_option_groups, :providers, :consumers, :companies, :users, :benefit_configurations, :benefits
-  describe "GET /orders" do
+  describe "GET /pedidos" do
     it "redirects visitors to the sign in page" do
       get orders_path
       expect(response).to redirect_to(sign_in_path)
@@ -115,7 +115,7 @@ RSpec.describe "Orders", type: :request do
     end
   end
 
-  describe "GET /orders/:id" do
+  describe "GET /pedidos/:id" do
     it "redirects visitors to the sign in page" do
       get order_path(orders(:upcoming_confirmed_future))
       expect(response).to redirect_to(sign_in_path)
@@ -296,7 +296,7 @@ RSpec.describe "Orders", type: :request do
     end
   end
 
-  describe "POST /orders" do
+  describe "POST /pedidos" do
     around do |example|
       travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
     end
@@ -1167,7 +1167,7 @@ RSpec.describe "Orders", type: :request do
       end
     end
   end
-  describe "PATCH /orders/:id/cancel" do
+  describe "PATCH /pedidos/:id/cancelar" do
     it "redirects visitors to the sign in page" do
       patch cancel_consumer_order_path(orders(:upcoming_pending_future))
 
@@ -1261,7 +1261,7 @@ RSpec.describe "Orders", type: :request do
     end
   end
 
-  describe "PATCH /orders/:id" do
+  describe "PATCH /pedidos/:id" do
     let(:order) { orders(:upcoming_pending_future) }
 
     def update_params(quantity: 1, address: "18 de Julio 1006", notes: nil, options: [])

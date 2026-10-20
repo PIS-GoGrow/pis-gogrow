@@ -214,38 +214,37 @@ describe("ConsumerCart benefits", () => {
     due_date: null,
   }
 
-  // Figma: una sola línea "Beneficio GoGrow" por plato, con el porcentaje
-  // combinado del base y los especiales.
-  it("shows the combined benefit in a single line per dish", () => {
+  it("shows each benefit in a separate line per dish", () => {
     renderCart(
       { cart: [{ ...cartItem("Tu Viandita", true), quantity: 2 }] },
       { specials: [premio] },
     )
 
     expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
-    ).toHaveTextContent("- $448")
-    expect(screen.queryByText("Premio (30%)")).not.toBeInTheDocument()
-    expect(screen.getAllByText(/^Beneficio GoGrow/)).toHaveLength(1)
+      screen.getByText("Subsidio Base (50%)").nextSibling,
+    ).toHaveTextContent("- $280")
+    expect(screen.getByText("Premio (30%)").nextSibling).toHaveTextContent(
+      "- $168",
+    )
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$112",
     )
   })
 
-  it("shows one line per percentage when the meals of a dish differ", () => {
+  it("shows each active benefit when the meals of a dish differ", () => {
     renderCart(
       { cart: [{ ...cartItem("Tu Viandita", true), quantity: 3 }] },
       { monthly_remaining: 1, specials: [premio] },
     )
 
-    // 3 x 280: la primera con 80%, la segunda solo con el premio y la tercera
+    // 3 x 280: la primera con 50% base + 30% premio, la segunda solo con 30% premio y la tercera
     // a precio completo. 56 + 196 + 280 = 532.
     expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
-    ).toHaveTextContent("- $224")
-    expect(
-      screen.getByText("Beneficio GoGrow (30%)").nextSibling,
-    ).toHaveTextContent("- $84")
+      screen.getByText("Subsidio Base (50%)").nextSibling,
+    ).toHaveTextContent("- $140")
+    expect(screen.getByText("Premio (30%)").nextSibling).toHaveTextContent(
+      "- $168",
+    )
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$532",
     )
@@ -254,7 +253,7 @@ describe("ConsumerCart benefits", () => {
   it("leaves the base alone when the special has no uses left", () => {
     renderCart({}, { specials: [{ ...premio, remaining: 0 }] })
 
-    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Subsidio Base (50%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$140",
     )

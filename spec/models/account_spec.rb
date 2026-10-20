@@ -360,6 +360,20 @@ RSpec.describe Account, type: :model do
     it "formats zero" do
       expect(described_class.format_amount(0)).to eq("$0")
     end
+
+    it "formats negative amounts correctly" do
+      expect(described_class.format_amount(BigDecimal("-1250"))).to eq("-$1.250")
+      expect(described_class.format_amount(BigDecimal("-440.25"))).to eq("-$440,25")
+    end
+
+    it "formats large numbers with multiple thousand separators" do
+      expect(described_class.format_amount(BigDecimal("1234567.89"))).to eq("$1.234.567,89")
+    end
+
+    it "accepts numeric strings and floats" do
+      expect(described_class.format_amount("440.25")).to eq("$440,25")
+      expect(described_class.format_amount(1250.5)).to eq("$1.250,50")
+    end
   end
 
   describe ".amount_and_price_sum" do

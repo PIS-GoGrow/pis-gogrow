@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Settings::Profiles", type: :request do
   fixtures :admins, :companies, :providers, :users
 
-  describe "GET /settings/profile" do
+  describe "GET /configuracion/perfil" do
     it "shows delivery settings only for the authenticated provider" do
       sign_in providers(:tuviandita).user, role: :provider
 
@@ -56,7 +56,7 @@ RSpec.describe "Settings::Profiles", type: :request do
     end
   end
 
-  describe "PATCH /settings/profile" do
+  describe "PATCH /configuracion/perfil" do
     it "updates only the authenticated provider's home delivery setting" do
       provider = providers(:tuviandita)
       other_provider = providers(:endulzate)
@@ -152,7 +152,7 @@ RSpec.describe "Settings::Profiles", type: :request do
     end
   end
 
-  describe "PATCH /settings/profile as RRHH" do
+  describe "PATCH /configuracion/perfil as RRHH" do
     it "no deja cambiar el email aunque venga en el pedido" do
       admin = users(:admin)
       sign_in admin, role: :admin
@@ -164,7 +164,7 @@ RSpec.describe "Settings::Profiles", type: :request do
     end
   end
 
-  describe "PATCH /settings/profile phone" do
+  describe "PATCH /configuracion/perfil phone" do
     let(:user) { providers(:tuviandita).user }
 
     before { sign_in user, role: :provider }

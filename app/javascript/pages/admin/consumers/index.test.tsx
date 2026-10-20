@@ -11,7 +11,7 @@ vi.mock("@inertiajs/react", async () => {
   return {
     ...actual,
     Head: () => null,
-    usePage: () => ({ url: "/admin/consumers", props: { locale: "es" } }),
+    usePage: () => ({ url: "/admin/empleados", props: { locale: "es" } }),
   }
 })
 

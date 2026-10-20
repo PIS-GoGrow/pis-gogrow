@@ -6,7 +6,7 @@ require "inertia_rails/rspec"
 RSpec.describe "Provider::Accounts", type: :request do
   fixtures :users, :providers
 
-  describe "GET /provider/account" do
+  describe "GET /provider/cuenta" do
     it "redirects visitors without a session to the sign in page" do
       get provider_account_path
 

@@ -43,7 +43,7 @@ RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system
 
       expect(page).to have_content("Pedidos")
       expect(page).to have_content("Todos")
-      expect(page).to have_content("Por revisar")
+      expect(page).to have_content("Pendiente")
     end
   end
 
@@ -172,7 +172,7 @@ RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system
 
       visit provider_collection_path(account_p2)
 
-      expect(page).to have_no_content("500,00")
+      expect(page).to have_no_content("$500")
       expect {
         provider_user_p1.provider.accounts.find(account_p2.id)
       }.to raise_error(ActiveRecord::RecordNotFound)

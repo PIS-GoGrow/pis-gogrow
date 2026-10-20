@@ -6,7 +6,7 @@ require "inertia_rails/rspec"
 RSpec.describe "Provider::OperationalSettings", type: :request do
   fixtures :users, :providers
 
-  describe "GET /provider/operational_settings" do
+  describe "GET /provider/configuracion-operativa" do
     it "redirects visitors without a session to the sign in page" do
       get provider_operational_settings_path
 

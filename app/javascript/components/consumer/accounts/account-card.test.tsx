@@ -12,7 +12,7 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
     status: "submitted",
     rejection_reason: null,
     created_at: "2026-10-01T12:00:00Z",
-    receipt_url: "/payments/1/receipt",
+    receipt_url: "/comprobantes/1/archivo",
     receipt_filename: "receipt.png",
     receipt_uploaded_at: "01/10/26",
     ...overrides,
@@ -149,6 +149,8 @@ describe("AccountCard", () => {
       screen.queryByText("Falta una parte del pago."),
     ).not.toBeInTheDocument()
     expect(screen.queryByText(/Rechazado:/)).not.toBeInTheDocument()
-    expect(screen.getByText("Enviado")).toBeInTheDocument()
+    // La tarjeta muestra "En revisión" dos veces: el estado de la cuenta y el
+    // del comprobante enviado.
+    expect(screen.getAllByText("En revisión")).toHaveLength(2)
   })
 })

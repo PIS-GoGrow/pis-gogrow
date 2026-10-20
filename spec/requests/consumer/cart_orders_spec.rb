@@ -13,13 +13,13 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   let(:schedule) { schedules(:today) }
   let(:company_address) { companies(:gogrow).address }
 
-  describe "Control de acceso por rol en /dashboard y POST /orders" do
+  describe "Control de acceso por rol en /dashboard y POST /pedidos" do
     it "redirige al inicio de sesión cuando un visitante no autenticado intenta acceder a /dashboard" do
       get dashboard_path
       expect(response).to redirect_to(sign_in_path)
     end
 
-    it "redirige al inicio de sesión cuando un visitante no autenticado intenta enviar un carrito a POST /orders" do
+    it "redirige al inicio de sesión cuando un visitante no autenticado intenta enviar un carrito a POST /pedidos" do
       post orders_path, params: {
         order: {
           address: company_address,
@@ -35,7 +35,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    it "rechaza POST /orders para usuarios con rol provider redirigiendo a la raíz" do
+    it "rechaza POST /pedidos para usuarios con rol provider redirigiendo a la raíz" do
       sign_in provider_user, role: :provider
       post orders_path, params: {
         order: {
@@ -52,7 +52,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    it "rechaza POST /orders para usuarios con rol admin redirigiendo a la raíz" do
+    it "rechaza POST /pedidos para usuarios con rol admin redirigiendo a la raíz" do
       sign_in admin_user, role: :admin
       post orders_path, params: {
         order: {
@@ -64,7 +64,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
     end
   end
 
-  describe "GET /dashboard props exactas de Inertia" do
+  describe "GET /menu-semanal props exactas de Inertia" do
     before do
       sign_in consumer_user, role: :consumer
     end
@@ -101,7 +101,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
     end
   end
 
-  describe "Bypass de interfaz y tipos de datos inesperados en POST /orders" do
+  describe "Bypass de interfaz y tipos de datos inesperados en POST /pedidos" do
     before do
       sign_in consumer_user, role: :consumer
     end
@@ -224,7 +224,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   end
 
   # IBP-037: el subsidio especial se suma al base al confirmar el carrito.
-  describe "POST /orders con subsidios especiales" do
+  describe "POST /pedidos con subsidios especiales" do
     around do |example|
       travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
     end

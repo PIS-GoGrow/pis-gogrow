@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Consumer::Profiles", type: :request do
   fixtures :users, :companies, :consumers, :providers, :benefit_configurations, :benefit_rules, :benefits
 
-  describe "GET /profile" do
+  describe "GET /cuenta" do
     it "redirects visitors to the sign in page" do
       get profile_path
 
