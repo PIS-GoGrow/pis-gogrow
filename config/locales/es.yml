@@ -539,6 +539,7 @@ es:
           title: "Empleados"
           count_one: "%{count} empleado"
           count_other: "%{count} empleados"
+          month_label: "Mes de los saldos"
           filter_label: "Filtrar empleados"
           all: "Todos"
           pending: "Pendientes"

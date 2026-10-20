@@ -430,6 +430,7 @@
             "empty_description": "Todavía no hay empleados en la organización.",
             "empty_title": "Sin empleados",
             "filter_label": "Filtrar empleados",
+            "month_label": "Mes de los saldos",
             "no_consumption": "Sin consumos",
             "no_results_description": "Probá con otro nombre o correo, o cambiá el filtro.",
             "no_results_title": "No se encontraron empleados",

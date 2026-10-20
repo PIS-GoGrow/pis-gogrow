@@ -56,9 +56,18 @@ const consumers: AdminConsumerRow[] = [
   },
 ]
 
+const monthProps = {
+  month: "2026-10",
+  current_month: "2026-10",
+  months: [
+    { key: "2026-10", label: "octubre 2026" },
+    { key: "2026-09", label: "septiembre 2026" },
+  ],
+}
+
 describe("Admin Consumers Page", () => {
   it("opens on the filter the URL asked for", () => {
-    render(<Index consumers={consumers} filter="pending" />)
+    render(<Index consumers={consumers} filter="pending" {...monthProps} />)
 
     expect(screen.getByRole("radio", { name: "Pendientes" })).toHaveAttribute(
       "aria-checked",
@@ -69,14 +78,14 @@ describe("Admin Consumers Page", () => {
   })
 
   it("shows everyone by default", () => {
-    render(<Index consumers={consumers} filter="all" />)
+    render(<Index consumers={consumers} filter="all" {...monthProps} />)
 
     expect(screen.getByText("Ana Paid")).toBeInTheDocument()
     expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
   })
 
   it("has only the two tabs of the design", () => {
-    render(<Index consumers={consumers} filter="all" />)
+    render(<Index consumers={consumers} filter="all" {...monthProps} />)
 
     expect(screen.getAllByRole("radio").map((tab) => tab.textContent)).toEqual([
       "Todos",
@@ -85,7 +94,7 @@ describe("Admin Consumers Page", () => {
   })
 
   it("lists the pending and under review employees in Pendientes", () => {
-    render(<Index consumers={consumers} filter="pending" />)
+    render(<Index consumers={consumers} filter="pending" {...monthProps} />)
 
     expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
     expect(screen.getByText("Carla Review")).toBeInTheDocument()
@@ -93,7 +102,7 @@ describe("Admin Consumers Page", () => {
   })
 
   it("counts the employees of the tab next to the title, without the search", () => {
-    render(<Index consumers={consumers} filter="all" />)
+    render(<Index consumers={consumers} filter="all" {...monthProps} />)
 
     const heading = screen.getByRole("heading", { name: "Empleados" })
     const title = heading.parentElement
@@ -106,5 +115,28 @@ describe("Admin Consumers Page", () => {
 
     fireEvent.click(screen.getByRole("radio", { name: "Pendientes" }))
     expect(title).toHaveTextContent("Empleados22 empleados")
+  })
+
+  it("shows which month the balances belong to", () => {
+    render(
+      <Index
+        consumers={consumers}
+        filter="all"
+        {...monthProps}
+        month="2026-09"
+      />,
+    )
+
+    expect(
+      screen.getByRole("combobox", { name: "Mes de los saldos" }),
+    ).toHaveTextContent("septiembre 2026")
+  })
+
+  it("reads the current month as Este mes", () => {
+    render(<Index consumers={consumers} filter="all" {...monthProps} />)
+
+    expect(
+      screen.getByRole("combobox", { name: "Mes de los saldos" }),
+    ).toHaveTextContent("Este mes")
   })
 })

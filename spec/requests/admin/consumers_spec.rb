@@ -67,6 +67,22 @@ RSpec.describe "Admin::Consumers", type: :request do
         )
       end
 
+      it "sends the month it summarizes and the months to choose from" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+
+        get admin_consumers_path, params: { month: previous.strftime("%Y-%m") }
+
+        expect(inertia).to have_props(month: previous.strftime("%Y-%m"), current_month: Date.current.strftime("%Y-%m"))
+        expect(inertia.props[:months].pluck(:key)).to include(previous.strftime("%Y-%m"), Date.current.strftime("%Y-%m"))
+      end
+
+      it "sends the current month when the URL asks for none" do
+        get admin_consumers_path
+
+        expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"))
+      end
+
       it "summarizes the current month with an invalid or future month" do
         [ "agosto", "2026-13", (Date.current + 2.months).strftime("%Y-%m") ].each do |month|
           get admin_consumers_path, params: { month: }
