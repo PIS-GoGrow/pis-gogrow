@@ -103,11 +103,15 @@ describe("CollectionPaymentHistory", () => {
     expect(screen.getAllByRole("link")).toHaveLength(2)
 
     const approvedEntry = approvedLink.closest<HTMLElement>("div.grid")!
-    expect(within(approvedEntry).getByText("02/10/26")).toBeInTheDocument()
+    expect(
+      within(approvedEntry).getByText("Comprobante enviado el 02/10/26"),
+    ).toBeInTheDocument()
     expect(within(approvedEntry).getByText("Confirmado")).toBeInTheDocument()
 
     const rejectedEntry = rejectedLink.closest<HTMLElement>("div.grid")!
-    expect(within(rejectedEntry).getByText("30/09/26")).toBeInTheDocument()
+    expect(
+      within(rejectedEntry).getByText("Comprobante enviado el 30/09/26"),
+    ).toBeInTheDocument()
     expect(within(rejectedEntry).getByText("Rechazado")).toBeInTheDocument()
 
     await user.click(

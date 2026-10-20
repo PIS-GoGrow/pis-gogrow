@@ -784,6 +784,7 @@ es:
         approved: "Confirmado"
         rejected: "Rechazado"
       partial_payment_badge: "Pago parcial"
+      receipt_sent_at: "Comprobante enviado el %{date}"
       meals_one: "%{count} vianda"
       meals_other: "%{count} viandas"
       index:
