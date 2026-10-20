@@ -199,6 +199,19 @@ RSpec.describe "Admin::Consumers", type: :request do
         )
       end
 
+      # Sin publicación, el pedido conserva su fecha de entrega: no se muestra el
+      # día en que se hizo, que es lo que veía antes RR. HH. y no coincidía con Cobros.
+      it "dates each order by its delivery even without its publication" do
+        order = orders(:history_confirmed_past)
+        delivery = order.schedule.date
+        order.update_columns(schedule_id: nil, delivery_date: delivery, created_at: delivery - 2.days)
+
+        get admin_consumer_path(consumers(:one))
+
+        dates = inertia.props[:months].sole[:orders].to_h { [ it[:id], it[:date] ] }
+        expect(dates[order.id]).to eq(delivery.strftime("%-d/%-m"))
+      end
+
       it "shows the active benefit percentage" do
         get admin_consumer_path(consumers(:one))
 
