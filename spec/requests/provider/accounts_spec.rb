@@ -28,5 +28,18 @@ RSpec.describe "Provider::Accounts", type: :request do
 
       expect(inertia).to render_component("provider/accounts/show")
     end
+
+    it "expone las secciones incompletas en las props" do
+      sign_in users(:provider_user), role: :provider
+      providers(:tuviandita).update_columns(payment_details_configured_at: nil)
+
+      get provider_account_path
+
+      expect(inertia).to(have_props do |props|
+        props["incomplete_sections"].is_a?(Array) &&
+          props["incomplete_sections"].include?("payment_details") &&
+          !props["incomplete_sections"].include?("deliveries")
+      end)
+    end
   end
 end

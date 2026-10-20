@@ -168,4 +168,20 @@ RSpec.describe "Settings::Notifications", type: :request do
       expect(pending_invoices.reload.users).to be_empty
     end
   end
+
+  describe "PATCH /settings/notifications/:id como proveedor" do
+    let(:provider) { providers(:tuviandita) }
+    let(:provider_config) { Notification::Configuration.find_by!(key: "provider_orders") }
+
+    before do
+      provider.update_column(:notifications_configured_at, nil)
+      sign_in users(:provider_user), role: :provider
+    end
+
+    it "marca las notificaciones como configuradas al togglear, incluso al apagarlas" do
+      patch settings_notification_path(provider_config), params: { subscribe: false }, as: :json
+
+      expect(provider.reload.notifications_configured_at).to be_present
+    end
+  end
 end

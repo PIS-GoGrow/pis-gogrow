@@ -82,6 +82,17 @@ RSpec.describe "Provider::OrderDeadlines", type: :request do
           expect(inertia).to have_props(errors: { order_deadline: [ I18n.t("validations.invalid_order_deadline") ] })
         end
       end
+
+      context "durante el onboarding" do
+        before { provider.update!(onboarding_completed_at: nil) }
+
+        it "guarda la hora sin ser desviado por el guard y vuelve al paso 2 del onboarding" do
+          patch provider_order_deadline_path, params: { order_deadline: "18:30", onboarding: true }
+
+          expect(response).to redirect_to(provider_onboarding_path(step: 2))
+          expect(deadline_of(provider)).to eq("18:30")
+        end
+      end
     end
   end
 end
