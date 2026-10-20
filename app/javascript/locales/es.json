@@ -1164,6 +1164,7 @@
             "title": "Opciones"
           },
           "price": "Precio",
+          "price_positive": "Tiene que ser mayor que 0.",
           "required": "No puede estar vacío.",
           "update": "Modificar",
           "updating": "Guardando..."

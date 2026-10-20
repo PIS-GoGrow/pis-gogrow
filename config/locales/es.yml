@@ -1140,6 +1140,7 @@ es:
         description: "Descripción"
         description_placeholder: "Descripción del plato..."
         required: "No puede estar vacío."
+        price_positive: "Tiene que ser mayor que 0."
         options:
           title: "Opciones"
           add: "Agregar"

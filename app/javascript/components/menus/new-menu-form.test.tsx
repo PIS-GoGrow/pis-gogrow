@@ -14,4 +14,17 @@ describe("MenuForm", () => {
 
     expect(screen.getAllByText("No puede estar vacío.")).toHaveLength(3)
   })
+
+  it("rejects a price that is not above zero before submitting", async () => {
+    const user = userEvent.setup()
+    render(<MenuForm />)
+
+    await user.type(screen.getByLabelText(/Nombre del plato/), "Wok")
+    await user.type(screen.getByLabelText(/Descripción/), "Salteado")
+    await user.type(screen.getByLabelText(/Precio/), "0")
+    const [, submit] = screen.getAllByRole("button", { name: "Agregar" })
+    await user.click(submit)
+
+    expect(screen.getByText("Tiene que ser mayor que 0.")).toBeInTheDocument()
+  })
 })

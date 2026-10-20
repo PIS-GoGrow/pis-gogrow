@@ -202,6 +202,10 @@ export default function MenuForm({
     )
     emptyFields.forEach((field) => setError(field, [t(`${key}.required`)]))
 
+    const priceNotPositive =
+      data.price.trim() !== "" && !(Number(data.price) > 0)
+    if (priceNotPositive) setError("price", [t(`${key}.price_positive`)])
+
     const agendaIncomplete = agenda !== null && !agendaIsComplete(agenda)
     setAgendaError(
       agendaIncomplete
@@ -209,7 +213,7 @@ export default function MenuForm({
         : null,
     )
 
-    if (emptyFields.length > 0 || agendaIncomplete) return
+    if (emptyFields.length > 0 || priceNotPositive || agendaIncomplete) return
 
     if (edit) {
       transform((formData) => ({ menu: menuPayload(formData) }))
