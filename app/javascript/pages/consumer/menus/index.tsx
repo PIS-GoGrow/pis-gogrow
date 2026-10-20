@@ -3,17 +3,17 @@ import { Head } from "@inertiajs/react"
 import { SlidersHorizontal, UtensilsCrossed } from "lucide-react"
 import { useState } from "react"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogFooter,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+} from "@/components/adaptable-dialog"
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import {
   Empty,
   EmptyDescription,
@@ -166,11 +166,11 @@ export default function Index({
         )}
       </div>
 
-      <Dialog open={filterOpen} onOpenChange={setFilterOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Filtrar por Proveedores</DialogTitle>
-          </DialogHeader>
+      <AdaptableDialog open={filterOpen} onOpenChange={setFilterOpen}>
+        <AdaptableDialogContent showCloseButton={false} className="p-5 md:p-6">
+          <AdaptableDialogHeader className="p-0">
+            <AdaptableDialogTitle>Filtrar por Proveedores</AdaptableDialogTitle>
+          </AdaptableDialogHeader>
           <div className="flex flex-col gap-3 py-2">
             <div className="flex items-center gap-2">
               <Checkbox
@@ -191,14 +191,20 @@ export default function Index({
               </div>
             ))}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setFilterOpen(false)}>
+          <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setFilterOpen(false)}
+              className="max-md:flex-1"
+            >
               Cancelar
             </Button>
-            <Button onClick={handleFilterApply}>Aplicar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <Button onClick={handleFilterApply} className="max-md:flex-1">
+              Aplicar
+            </Button>
+          </AdaptableDialogFooter>
+        </AdaptableDialogContent>
+      </AdaptableDialog>
     </AppLayout>
   )
 }

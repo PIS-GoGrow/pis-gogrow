@@ -2,16 +2,16 @@ import { router } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  AdaptableDialog,
+  AdaptableDialogClose,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogFooter,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+} from "@/components/adaptable-dialog"
+import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { adminSpecialSubsidies } from "@/routes"
 import type { SpecialSubsidy } from "@/types/serializers"
@@ -40,31 +40,32 @@ export default function DeleteSpecialSubsidyDialog({
   }
 
   return (
-    <Dialog open={subsidy !== null} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
+    <AdaptableDialog open={subsidy !== null} onOpenChange={onOpenChange}>
+      <AdaptableDialogContent showCloseButton={false} className="p-5 md:p-6">
+        <AdaptableDialogHeader className="p-0">
+          <AdaptableDialogTitle>
             {t(
               "pages.admin.benefit_configurations.index.special.delete_dialog.title",
               { name: subsidy?.name },
             )}
-          </DialogTitle>
-          <DialogDescription>
+          </AdaptableDialogTitle>
+          <AdaptableDialogDescription>
             {t(
               "pages.admin.benefit_configurations.index.special.delete_dialog.description",
             )}
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">
+          </AdaptableDialogDescription>
+        </AdaptableDialogHeader>
+        <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
+          <AdaptableDialogClose asChild>
+            <Button variant="outline" className="max-md:flex-1">
               {t(
                 "pages.admin.benefit_configurations.index.special.delete_dialog.cancel",
               )}
             </Button>
-          </DialogClose>
+          </AdaptableDialogClose>
           <Button
             variant="destructive"
+            className="max-md:flex-1"
             disabled={processing}
             onClick={handleDelete}
           >
@@ -73,8 +74,8 @@ export default function DeleteSpecialSubsidyDialog({
               "pages.admin.benefit_configurations.index.special.delete_dialog.confirm",
             )}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AdaptableDialogFooter>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }

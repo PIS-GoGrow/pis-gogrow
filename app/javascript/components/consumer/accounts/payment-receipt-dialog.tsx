@@ -6,24 +6,16 @@ import { useTranslation } from "react-i18next"
 
 import {
   AdaptableDialog,
+  AdaptableDialogClose,
   AdaptableDialogContent,
   AdaptableDialogDescription,
+  AdaptableDialogFooter,
   AdaptableDialogHeader,
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import {
   Field,
   FieldDescription,
@@ -128,8 +120,8 @@ export default function PaymentReceiptDialog({
             {allowDelete &&
               (payment.status === "submitted" ||
                 payment.status === "rejected") && (
-                <Dialog>
-                  <DialogTrigger asChild>
+                <AdaptableDialog>
+                  <AdaptableDialogTrigger asChild>
                     <Button
                       aria-label={t("pages.accounts.show.receipt_remove")}
                       size="icon-sm"
@@ -137,26 +129,34 @@ export default function PaymentReceiptDialog({
                     >
                       <Trash2 aria-hidden="true" />
                     </Button>
-                  </DialogTrigger>
+                  </AdaptableDialogTrigger>
 
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>
+                  <AdaptableDialogContent
+                    showCloseButton={false}
+                    className="p-5 md:p-6"
+                  >
+                    <AdaptableDialogHeader className="p-0">
+                      <AdaptableDialogTitle>
                         {t("pages.accounts.show.receipt_remove_title")}
-                      </DialogTitle>
-                      <DialogDescription>
+                      </AdaptableDialogTitle>
+                      <AdaptableDialogDescription>
                         {t("pages.accounts.show.receipt_remove_description")}
-                      </DialogDescription>
-                    </DialogHeader>
+                      </AdaptableDialogDescription>
+                    </AdaptableDialogHeader>
 
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button type="button" variant="outline">
+                    <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
+                      <AdaptableDialogClose asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="max-md:flex-1"
+                        >
                           {t("common.cancel")}
                         </Button>
-                      </DialogClose>
+                      </AdaptableDialogClose>
                       <Form
                         action={destroyAction(payment.id)}
+                        className="max-md:flex-1"
                         method="delete"
                         options={{ preserveScroll: true }}
                       >
@@ -165,15 +165,16 @@ export default function PaymentReceiptDialog({
                             disabled={processing}
                             type="submit"
                             variant="destructive"
+                            className="max-md:w-full"
                           >
                             {processing && <Spinner />}
                             {t("pages.accounts.show.receipt_remove_confirm")}
                           </Button>
                         )}
                       </Form>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                    </AdaptableDialogFooter>
+                  </AdaptableDialogContent>
+                </AdaptableDialog>
               )}
           </div>
         </div>

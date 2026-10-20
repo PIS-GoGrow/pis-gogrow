@@ -3,17 +3,17 @@ import { Download, FileText, Trash2 } from "lucide-react"
 import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { Button, buttonVariants } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  AdaptableDialog,
+  AdaptableDialogClose,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogFooter,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
+import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Field,
   FieldDescription,
@@ -86,8 +86,8 @@ function RemoveInvoiceDialog({ invoice }: { invoice: ProviderInvoice }) {
   }
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <AdaptableDialog>
+      <AdaptableDialogTrigger asChild>
         <Button
           variant="ghost"
           size="icon"
@@ -96,29 +96,38 @@ function RemoveInvoiceDialog({ invoice }: { invoice: ProviderInvoice }) {
         >
           <Trash2 aria-hidden="true" />
         </Button>
-      </DialogTrigger>
+      </AdaptableDialogTrigger>
 
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>
+      <AdaptableDialogContent
+        showCloseButton={false}
+        className="p-5 md:max-w-sm md:p-6"
+      >
+        <AdaptableDialogHeader className="p-0">
+          <AdaptableDialogTitle>
             {t("pages.provider_collections.invoice.remove.title")}
-          </DialogTitle>
-          <DialogDescription>
+          </AdaptableDialogTitle>
+          <AdaptableDialogDescription>
             {t("pages.provider_collections.invoice.remove.description")}
-          </DialogDescription>
-        </DialogHeader>
+          </AdaptableDialogDescription>
+        </AdaptableDialogHeader>
 
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">{t("common.cancel")}</Button>
-          </DialogClose>
-          <Button disabled={processing} onClick={handleRemove}>
+        <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
+          <AdaptableDialogClose asChild>
+            <Button variant="outline" className="max-md:flex-1">
+              {t("common.cancel")}
+            </Button>
+          </AdaptableDialogClose>
+          <Button
+            disabled={processing}
+            onClick={handleRemove}
+            className="max-md:flex-1"
+          >
             {processing && <Spinner />}
             {t("pages.provider_collections.invoice.remove.confirm")}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AdaptableDialogFooter>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }
 
@@ -200,24 +209,27 @@ function UploadInvoice({ account }: { account: ProviderCollectionAccount }) {
         />
       </label>
 
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogTrigger asChild>
+      <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
+        <AdaptableDialogTrigger asChild>
           <Button className="w-full" disabled={!data.file}>
             {t("pages.provider_collections.invoice.upload")}
           </Button>
-        </DialogTrigger>
+        </AdaptableDialogTrigger>
 
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
+        <AdaptableDialogContent
+          showCloseButton={false}
+          className="p-5 md:max-w-md md:p-6"
+        >
+          <AdaptableDialogHeader className="p-0">
+            <AdaptableDialogTitle>
               {t("pages.provider_collections.invoice.dialog.title")}
-            </DialogTitle>
-            <DialogDescription>
+            </AdaptableDialogTitle>
+            <AdaptableDialogDescription>
               {t("pages.provider_collections.invoice.dialog.description", {
                 month: account.month,
               })}
-            </DialogDescription>
-          </DialogHeader>
+            </AdaptableDialogDescription>
+          </AdaptableDialogHeader>
 
           <form onSubmit={handleSubmit} className="grid min-w-0 gap-4">
             <Field data-invalid={Boolean(errors.issued_on)}>
@@ -282,22 +294,30 @@ function UploadInvoice({ account }: { account: ProviderCollectionAccount }) {
 
             {progress && <Progress value={progress.percentage} />}
 
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="outline">
+            <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
+              <AdaptableDialogClose asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="max-md:flex-1"
+                >
                   {t("common.cancel")}
                 </Button>
-              </DialogClose>
-              <Button type="submit" disabled={processing}>
+              </AdaptableDialogClose>
+              <Button
+                type="submit"
+                disabled={processing}
+                className="max-md:flex-1"
+              >
                 {processing && <Spinner />}
                 {processing
                   ? t("pages.provider_collections.invoice.uploading")
                   : t("pages.provider_collections.invoice.upload")}
               </Button>
-            </DialogFooter>
+            </AdaptableDialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </AdaptableDialogContent>
+      </AdaptableDialog>
     </div>
   )
 }
