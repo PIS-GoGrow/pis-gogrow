@@ -37,7 +37,7 @@ RSpec.describe "Ver la notificación de pedido cancelado", type: :system do
 
     expect(page).to have_content(title)
     expect(page).to have_content(
-      "El pedido de #{users(:one).name} del #{order.schedule.date.strftime("%d/%m")} de #{order.menu_name} fue cancelado."
+      "El pedido de #{users(:one).name} del #{DateFormat.long(order.schedule.date, inline: true)} de #{order.menu_name} fue cancelado."
     )
 
     click_button "Cerrar notificación"

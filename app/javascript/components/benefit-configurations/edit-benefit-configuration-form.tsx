@@ -13,6 +13,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { formatLongDateInline } from "@/lib/dates"
 import { adminBenefitConfigurations } from "@/routes"
 
 interface EditBenefitConfigurationFormProps {
@@ -249,7 +250,7 @@ export default function EditBenefitConfigurationForm({
               <AlertTitle className="font-bold">
                 {t(
                   "pages.admin.benefit_configurations.index.current.pending_conflict.title",
-                  { date: configurableMonth },
+                  { date: formatLongDateInline(configurableMonth) },
                 )}
               </AlertTitle>
               <AlertDescription>
@@ -294,7 +295,7 @@ export default function EditBenefitConfigurationForm({
               <TriangleAlert className="size-4 shrink-0" />
               <span>
                 {t("pages.admin.benefit_configurations.index.current.notice", {
-                  date: configurableMonth,
+                  date: formatLongDateInline(configurableMonth),
                 })}
               </span>
             </div>

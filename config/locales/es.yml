@@ -1396,11 +1396,6 @@ es:
           saved_description: "No recibirás pedidos del %{period}."
           edit: "Editar cierre %{reason}"
           delete: "Eliminar cierre %{reason}"
-          period:
-            single: "%{date}"
-            same_month: "%{from_day} al %{to_day_month} de %{year}"
-            same_year: "%{from_day_month} al %{to_day_month} de %{year}"
-            other_year: "%{from} al %{to}"
     consumer_dashboard:
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
@@ -1507,10 +1502,11 @@ es:
         back: "Volver a Cuenta"
   date:
     formats:
+      default: "%d/%m/%y"
+      short: "%d/%m/%y"
+      long: "%A %-d de %B"
       month_year: "%B %Y"
       month_name_year: "%B %Y"
-      day_month: "%-d de %B"
-      day_month_year: "%-d de %B de %Y"
     month_names:
       [
         ~,

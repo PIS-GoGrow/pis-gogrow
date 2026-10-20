@@ -8,7 +8,7 @@ class Admin::ConsumerOrderSerializer < ApplicationSerializer
   # Formateada en el servidor: el SSR corre en UTC y el cliente no.
   typelize :string
   attribute :date do |order|
-    (order.schedule&.date || order.created_at.to_date).strftime("%-d/%-m")
+    DateFormat.short(order.schedule&.date || order.created_at)
   end
 
   typelize :string?

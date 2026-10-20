@@ -107,7 +107,7 @@ RSpec.describe "Provider::Collections", type: :request do
             )
             expect(detail_orders.sum { it[:meals] }).to eq(4)
             expect(detail_orders.sum { it[:amount] }).to eq(1202.0)
-            expect(detail[:days].pluck(:date)).to eq([ dates.last, dates.first ].map { it.strftime("%d/%m") })
+            expect(detail[:days].pluck(:date)).to eq([ dates.last, dates.first ].map { DateFormat.short(it) })
             true
           }
         end

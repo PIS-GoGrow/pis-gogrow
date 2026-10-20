@@ -46,7 +46,7 @@ const closure = (
   reason: "Vacaciones",
   starts_on: "2027-06-09",
   ends_on: "2027-06-27",
-  period: "9 al 27 de junio de 2027",
+  period: "09/06/27 al 27/06/27",
   ...overrides,
 })
 
@@ -102,7 +102,7 @@ describe("WeeklyMenu closures", () => {
     ).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Sus viandas no estarán disponibles del 9 al 27 de junio de 2027. Motivo: Vacaciones",
+        "Sus viandas no estarán disponibles del 09/06/27 al 27/06/27. Motivo: Vacaciones",
       ),
     ).toBeInTheDocument()
     expect(screen.getByText("Wok de verduras + arroz")).toBeInTheDocument()
@@ -205,7 +205,7 @@ describe("WeeklyMenu closures", () => {
 
     expect(
       screen.getByText(
-        "Tu Viandita no recibirá pedidos del 9 al 27 de junio de 2027.",
+        "Tu Viandita no recibirá pedidos del 09/06/27 al 27/06/27.",
       ),
     ).toBeInTheDocument()
   })
@@ -249,7 +249,7 @@ describe("WeeklyMenu closures", () => {
     expect(screen.getByText("Menú no disponible")).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Tu Viandita no recibirá pedidos del 9 al 27 de junio de 2027.",
+        "Tu Viandita no recibirá pedidos del 09/06/27 al 27/06/27.",
       ),
     ).toBeInTheDocument()
   })

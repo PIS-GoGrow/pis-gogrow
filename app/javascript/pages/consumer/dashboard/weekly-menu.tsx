@@ -17,6 +17,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import useSessionStorage from "@/hooks/use-session-storage"
+import { formatLongDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
 import type { ConsumerClosure, ConsumerDashboardIndex } from "@/types"
 
@@ -100,12 +101,8 @@ export function WeeklyMenu({
       <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-24 lg:pb-10">
         <header className="mb-4">
           <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
-          <p className="text-muted-foreground text-sm capitalize">
-            {new Date(`${currentDate}T00:00:00`).toLocaleDateString("es-UY", {
-              weekday: "long",
-              day: "numeric",
-              month: "long",
-            })}
+          <p className="text-muted-foreground text-sm">
+            {formatLongDate(currentDate)}
           </p>
         </header>
 

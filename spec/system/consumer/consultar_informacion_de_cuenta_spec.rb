@@ -28,7 +28,7 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
   # El beneficio mensual de benefits.yml vence dos días después de hoy, así que la
   # fecha que muestra la pantalla se arma acá y no hardcodeada: si el fixture se
   # mueve, el ejemplo sigue siendo cierto.
-  let(:due_date_label) { I18n.l(benefit.due_date, format: "%d/%m/%Y") }
+  let(:due_date_label) { DateFormat.short(benefit.due_date) }
   let(:initials) { employee.name.split.map { |part| part[0] }.join.upcase }
 
   # Criterio 1 -- nombre, email y foto. El Avatar cae a iniciales porque el

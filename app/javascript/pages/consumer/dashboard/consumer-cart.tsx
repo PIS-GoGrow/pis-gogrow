@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { RadioGroup } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
+import { formatLongDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 
@@ -168,14 +169,7 @@ export function ConsumerCart({
             >
               <p className="text-muted-foreground mb-2">
                 {t("pages.cart.delivery", {
-                  date: new Date(`${item.date}T12:00:00`).toLocaleDateString(
-                    "es-UY",
-                    {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                    },
-                  ),
+                  date: formatLongDate(item.date),
                 })}
               </p>
               <div className="flex justify-between">

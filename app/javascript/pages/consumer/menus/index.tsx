@@ -23,18 +23,9 @@ import {
 } from "@/components/ui/empty"
 import { Label } from "@/components/ui/label"
 import AppLayout from "@/layouts/app-layout"
+import { formatLongDate } from "@/lib/dates"
 import { consumerMenus } from "@/routes"
 import type { BreadcrumbItem, ConsumerMenusIndex, SharedProps } from "@/types"
-
-function formatDateHeading(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00")
-  const str = d.toLocaleDateString("es-AR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  })
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
 
 function todayStr(): string {
   const d = new Date()
@@ -112,7 +103,7 @@ export default function Index({
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Hola, {firstName} 👋</h1>
           <p className="text-muted-foreground text-sm">
-            {formatDateHeading(date)}
+            {formatLongDate(date)}
           </p>
         </div>
 

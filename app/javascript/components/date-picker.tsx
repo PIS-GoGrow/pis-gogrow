@@ -12,13 +12,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { formatLongDate, formatShortDate } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 
 const toDate = (iso: string) => (iso ? parseISO(iso) : undefined)
 const toIso = (date: Date) => format(date, "yyyy-MM-dd")
-
-const capitalize = (text: string) =>
-  text.replace(/(^|\s)\p{L}/gu, (letter) => letter.toUpperCase())
 
 const calendarFormatters = {
   formatMonthDropdown: (date: Date) => format(date, "MMM", { locale: enUS }),
@@ -65,7 +63,7 @@ export function DatePicker({
             className="w-fit min-w-44 justify-between font-normal"
           >
             {selected
-              ? capitalize(format(selected, "MMMM d, yyyy", { locale: es }))
+              ? formatLongDate(value)
               : t("components.date_picker.placeholder")}
             <ChevronDown aria-hidden="true" className="text-muted-foreground" />
           </Button>
@@ -100,16 +98,12 @@ interface DateRangePickerProps {
   className?: string
 }
 
-// "9 junio – 27 junio 2027": el año va una sola vez, salvo que el rango cruce
-// de año.
+// "09/06/27 – 27/06/27": un rango se muestra con fechas cortas.
 function rangeLabel(start: Date, end?: Date) {
-  const day = (date: Date) => format(date, "d MMMM", { locale: es })
-  const dayYear = (date: Date) => format(date, "d MMMM yyyy", { locale: es })
+  const short = (date: Date) => formatShortDate(toIso(date))
 
-  if (!end || isSameDay(start, end)) return dayYear(start)
-  if (start.getFullYear() !== end.getFullYear())
-    return `${dayYear(start)} – ${dayYear(end)}`
-  return `${day(start)} – ${dayYear(end)}`
+  if (!end || isSameDay(start, end)) return short(start)
+  return `${short(start)} – ${short(end)}`
 }
 
 export function DateRangePicker({

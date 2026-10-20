@@ -1250,12 +1250,6 @@
             "description": "Días en los que no recibís pedidos.",
             "edit": "Editar cierre %{reason}",
             "edit_title": "Editar cierre",
-            "period": {
-              "other_year": "%{from} al %{to}",
-              "same_month": "%{from_day} al %{to_day_month} de %{year}",
-              "same_year": "%{from_day_month} al %{to_day_month} de %{year}",
-              "single": "%{date}"
-            },
             "reason": "Motivo",
             "reason_placeholder": "Vacaciones",
             "save": "Guardar cambios",

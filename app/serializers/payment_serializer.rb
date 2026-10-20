@@ -6,7 +6,7 @@ class PaymentSerializer < ApplicationSerializer
 
   typelize :string
   attribute :receipt_uploaded_at do |payment|
-    I18n.l(payment.created_at.to_date)
+    DateFormat.short(payment.created_at)
   end
 
   typelize :string?

@@ -56,7 +56,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
         get provider_dashboard_path
 
         expect(inertia).to have_props(
-          today: I18n.l(Date.current, format: "%A %-d de %B").capitalize,
+          today: DateFormat.long(Date.current),
           order_deadline: "11:30",
           provider: { order_deadline: "11:30" }
         )

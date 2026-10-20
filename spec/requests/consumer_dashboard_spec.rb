@@ -336,9 +336,9 @@ RSpec.describe "Consumer dashboard", type: :request do
 
         expect(inertia.props[:closures]).to contain_exactly(
           a_hash_including(provider_name: users(:provider_user).name, reason: "Vacaciones",
-                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21 de septiembre al 2 de octubre de 2026"),
+                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21/09/26 al 02/10/26"),
           a_hash_including(provider_name: users(:other_provider_user).name, reason: "Feriado",
-                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14 de septiembre de 2026")
+                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14/09/26")
         )
       end
 
