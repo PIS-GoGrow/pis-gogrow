@@ -114,7 +114,7 @@ describe("SpecialSubsidyForm", () => {
     await user.click(screen.getByRole("button", { name: "Modificar" }))
 
     expect(patchMock).toHaveBeenCalledWith(
-      "/admin/subsidios-especiales/7",
+      "/rrhh/subsidios-especiales/7",
       expect.anything(),
     )
 

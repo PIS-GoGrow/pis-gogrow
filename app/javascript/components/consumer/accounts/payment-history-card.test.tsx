@@ -53,6 +53,13 @@ function renderCard(account: Account) {
 }
 
 describe("PaymentHistoryCard", () => {
+  it("renders the orders price sum formatted with formatMoney", () => {
+    const account = makeAccount({ orders_price_sum: 150.5 })
+    renderCard(account)
+
+    expect(screen.getByText("$150,50")).toBeInTheDocument()
+  })
+
   it("renders a disabled download button when there are no receipts", () => {
     const account = makeAccount({ payments: [] })
 

@@ -78,6 +78,6 @@ describe("InvoiceSection", () => {
 
     expect(
       screen.getByRole("link", { name: "Descargar factura" }),
-    ).toHaveAttribute("href", "/provider/facturas/42/archivo?download=1")
+    ).toHaveAttribute("href", "/proveedor/facturas/42/archivo?download=1")
   })
 })

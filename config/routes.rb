@@ -2,18 +2,23 @@
 
 # Los paths están en español y llevan el nombre de la pantalla que abren; los
 # nombres de las rutas (helpers) siguen en inglés para no tocar el código. Los
-# prefijos /provider y /admin se mantienen sin traducir.
+# prefijos /proveedor y /rrhh están traducidos para unificar toda la app.
 Rails.application.routes.draw do
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
   get  "iniciar-sesion", to: "sessions#new", as: :sign_in
   post "iniciar-sesion", to: "sessions#create", as: nil
 
-  get  "provider", to: "provider_sessions#new", as: :provider_sign_in
-  post "provider", to: "provider_sessions#create"
-  resource :provider_invitation, path: "provider/invitacion", only: [ :show, :update ]
-  resource :provider_password_reset, path: "provider/contrasena", only: [ :create, :edit, :update ], path_names: { edit: "nueva" }
-  resource :provider_password_reset_code, path: "provider/contrasena/codigo", only: [ :show, :create ]
+  get  "proveedor", to: "provider_sessions#new", as: :provider_sign_in
+  post "proveedor", to: "provider_sessions#create"
+  resource :provider_invitation, path: "proveedor/invitacion", only: [ :show, :update ]
+  resource :provider_password_reset, path: "proveedor/contrasena", only: [ :create, :edit, :update ], path_names: { edit: "nueva" }
+  resource :provider_password_reset_code, path: "proveedor/contrasena/codigo", only: [ :show, :create ]
+
+  get "provider", to: redirect("/proveedor"), as: :provider_welcome
+  get "provider/*path", to: redirect("/proveedor/%{path}")
+  get "admin", to: redirect("/rrhh")
+  get "admin/*path", to: redirect("/rrhh/%{path}")
 
   namespace :internal do
     resources :provider_invitations, only: [ :create ]
@@ -47,7 +52,7 @@ Rails.application.routes.draw do
     inertia "apariencia" => "settings/appearance", as: :settings_appearance
   end
 
-  namespace :provider do
+  namespace :provider, path: "proveedor" do
     resource :onboarding, path: "primeros-pasos", only: [ :show, :update ], controller: "onboarding"
     get "cuenta", to: "accounts#show", as: :account
     get "configuracion-operativa", to: "operational_settings#show", as: :operational_settings
@@ -99,7 +104,7 @@ Rails.application.routes.draw do
     resources :accounts, path: "pagos", only: [ :index, :show ]
   end
 
-  namespace :admin do
+  namespace :admin, path: "rrhh" do
     get "inicio", to: "dashboard#index", as: :dashboard
     get "cuenta", to: "accounts#show", as: :account
     get "preferencias", to: "preferences#show", as: :preferences
@@ -120,7 +125,6 @@ Rails.application.routes.draw do
   end
 
   root "home#index"
-  get "proveedor", to: redirect("/provider"), as: :provider_welcome
   get "rrhh", to: "home#admin", as: :admin_welcome
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

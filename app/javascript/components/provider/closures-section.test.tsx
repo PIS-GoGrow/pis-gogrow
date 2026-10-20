@@ -128,7 +128,7 @@ describe("ClosuresSection", () => {
     fireEvent.click(deleteButtons[0])
 
     expect(routerDeleteMock).toHaveBeenCalledWith(
-      expect.stringContaining("/provider/cierres/1"),
+      expect.stringContaining("/proveedor/cierres/1"),
       expect.objectContaining({ preserveScroll: true }),
     )
 

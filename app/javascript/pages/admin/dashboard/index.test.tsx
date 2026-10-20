@@ -18,7 +18,7 @@ vi.mock("@inertiajs/react", async () => {
     ...actual,
     Head: () => null,
     usePage: () => ({
-      url: "/admin/inicio",
+      url: "/rrhh/inicio",
       props: { locale: "es", auth: { user: { name: "Juan Pérez" } } },
     }),
   }
@@ -160,7 +160,7 @@ describe("Admin Dashboard Page", () => {
     expect(within(payments).getByText("Pendiente")).toBeInTheDocument()
     expect(
       within(payments).getByRole("link", { name: "Ver pagos a proveedores" }),
-    ).toHaveAttribute("href", "/admin/pagos")
+    ).toHaveAttribute("href", "/rrhh/pagos")
   })
 
   it("links the debt ranking to each employee and to the pending ones", () => {
@@ -171,12 +171,12 @@ describe("Admin Dashboard Page", () => {
     })
     expect(
       within(debts).getByRole("link", { name: "Martín Bonnet" }),
-    ).toHaveAttribute("href", "/admin/empleados/7")
+    ).toHaveAttribute("href", "/rrhh/empleados/7")
     expect(
       within(debts).getByRole("link", {
         name: "Ver empleados con saldos pendientes",
       }),
-    ).toHaveAttribute("href", "/admin/empleados?filter=pending")
+    ).toHaveAttribute("href", "/rrhh/empleados?filter=pending")
   })
 
   it("keeps the selected month when it opens the pending employees", () => {
@@ -186,7 +186,7 @@ describe("Admin Dashboard Page", () => {
       screen.getByRole("link", {
         name: "Ver empleados con saldos pendientes",
       }),
-    ).toHaveAttribute("href", "/admin/empleados?filter=pending&month=2026-09")
+    ).toHaveAttribute("href", "/rrhh/empleados?filter=pending&month=2026-09")
   })
 
   describe("photos in the debt ranking", () => {

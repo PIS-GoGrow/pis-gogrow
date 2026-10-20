@@ -36,6 +36,6 @@ describe("Admin preferences page", () => {
 
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/admin/cuenta")
+    ).toHaveAttribute("href", "/rrhh/cuenta")
   })
 })

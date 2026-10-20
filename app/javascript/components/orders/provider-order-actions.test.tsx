@@ -115,7 +115,7 @@ describe("ProviderOrderActions", () => {
     await user.click(screen.getByRole("button", { name: /confirmar/i }))
 
     expect(patchMock).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/provider/pedidos/42/confirmar" }),
+      expect.objectContaining({ url: "/proveedor/pedidos/42/confirmar" }),
       {},
       expect.objectContaining({ preserveScroll: true }),
     )
@@ -159,7 +159,7 @@ describe("ProviderOrderActions", () => {
     await user.click(confirmRejectBtn)
 
     expect(patchMock).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/provider/pedidos/42/rechazar" }),
+      expect.objectContaining({ url: "/proveedor/pedidos/42/rechazar" }),
       {
         reason: "out_of_stock",
         details: null,
@@ -195,7 +195,7 @@ describe("ProviderOrderActions", () => {
     await user.click(confirmRejectBtn)
 
     expect(patchMock).toHaveBeenCalledWith(
-      expect.objectContaining({ url: "/provider/pedidos/42/rechazar" }),
+      expect.objectContaining({ url: "/proveedor/pedidos/42/rechazar" }),
       {
         reason: "other",
         details: "Cocina cerrada por reformas",

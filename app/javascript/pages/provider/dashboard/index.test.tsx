@@ -10,7 +10,7 @@ vi.mock("@inertiajs/react", async () => {
     ...actual,
     Head: () => null,
     usePage: () => ({
-      url: "/provider/inicio",
+      url: "/proveedor/inicio",
       props: { auth: { user: { name: "Doña Petrona" } } },
     }),
     Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
@@ -68,7 +68,7 @@ describe("Provider Dashboard Page", () => {
     expect(screen.getByText("1")).toBeInTheDocument()
 
     const viewOrdersLink = screen.getByRole("link", { name: "Ver pedidos" })
-    expect(viewOrdersLink).toHaveAttribute("href", "/provider/pedidos")
+    expect(viewOrdersLink).toHaveAttribute("href", "/proveedor/pedidos")
   })
 
   it("muestra la hora de cierre si está configurada", () => {
@@ -101,7 +101,7 @@ describe("Provider Dashboard Page", () => {
 
     expect(
       screen.getByRole("link", { name: "Recibiendo pedidos hasta 11:30" }),
-    ).toHaveAttribute("href", "/provider/configuracion-operativa")
+    ).toHaveAttribute("href", "/proveedor/configuracion-operativa")
   })
 
   it("muestra los hallazgos del mes con pedidos, platos y valoración", () => {
@@ -125,6 +125,6 @@ describe("Provider Dashboard Page", () => {
     const paymentsLink = screen.getByRole("link", {
       name: "Resumen de cobros",
     })
-    expect(paymentsLink).toHaveAttribute("href", "/provider/cobros")
+    expect(paymentsLink).toHaveAttribute("href", "/proveedor/cobros")
   })
 })

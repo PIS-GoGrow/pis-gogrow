@@ -8,7 +8,8 @@ import { formatMoney as formatMoneyValue } from "@/lib/money"
 export const useFormatters = () => {
   const { locale } = usePage().props
 
-  const formatMoney = (amount: number) => formatMoneyValue(amount, locale)
+  const formatMoney = (amount: number | string) =>
+    formatMoneyValue(amount, locale)
 
   const formatDeliveryDate = (date: string) => {
     const formatted = new Intl.DateTimeFormat(locale, {

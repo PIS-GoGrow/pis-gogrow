@@ -175,7 +175,7 @@ describe("Provider Onboarding Show Page", () => {
       await user.click(backButton)
 
       expect(getMock).toHaveBeenCalledWith(
-        "/provider/primeros-pasos",
+        "/proveedor/primeros-pasos",
         { step: 1 },
         { preserveScroll: true },
       )
@@ -202,7 +202,7 @@ describe("Provider Onboarding Show Page", () => {
       await user.click(continueBtn)
 
       expect(patchMock).toHaveBeenCalledWith(
-        "/provider/primeros-pasos",
+        "/proveedor/primeros-pasos",
         { step: 3, commit: "continue", home_delivery: false },
         expect.objectContaining({ preserveScroll: true }),
       )
@@ -236,7 +236,7 @@ describe("Provider Onboarding Show Page", () => {
       await user.click(finishBtn)
 
       expect(patchMock).toHaveBeenCalledWith(
-        "/provider/primeros-pasos",
+        "/proveedor/primeros-pasos",
         { step: 4, commit: "continue", subscribed_ids: [10, 20] },
         expect.objectContaining({ preserveScroll: true }),
       )
@@ -256,7 +256,7 @@ describe("Provider Onboarding Show Page", () => {
 
       const ctaLink = screen.getByRole("link", { name: "Ir al Inicio" })
       expect(ctaLink).toBeInTheDocument()
-      expect(ctaLink).toHaveAttribute("href", "/provider/inicio")
+      expect(ctaLink).toHaveAttribute("href", "/proveedor/inicio")
     })
   })
 
@@ -270,7 +270,7 @@ describe("Provider Onboarding Show Page", () => {
       await user.click(skipButtons[1]) // footer button
 
       expect(patchMock).toHaveBeenCalledWith(
-        "/provider/primeros-pasos",
+        "/proveedor/primeros-pasos",
         { step: 1, commit: "skip" },
         { preserveScroll: true },
       )

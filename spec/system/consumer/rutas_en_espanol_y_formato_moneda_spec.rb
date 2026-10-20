@@ -20,11 +20,11 @@ RSpec.describe "Rutas en español y formato de moneda unificado", type: :system 
       expect(page).to have_content(/\$\d+/)
     end
 
-    it "RRHH navega a /admin/pagos y visualiza la pantalla con importes formateados" do
+    it "RRHH navega a /rrhh/pagos y visualiza la pantalla con importes formateados" do
       sign_in admin_user, role: :admin
       visit admin_payments_path
 
-      expect(page).to have_current_path("/admin/pagos")
+      expect(page).to have_current_path("/rrhh/pagos")
       expect(page).to have_content("Pagos")
       expect(page).to have_content("Deuda total")
       expect(page).to have_content("$601")

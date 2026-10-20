@@ -46,28 +46,28 @@ RSpec.describe "Rutas en español, control de acceso y casos borde", type: :requ
       expect(inertia.props[:schedules]).to be_present
     end
 
-    it "GET /admin/pagos resuelve en el path en español y entrega props para admin" do
+    it "GET /rrhh/pagos resuelve en el path en español y entrega props para admin" do
       sign_in admin_user, role: :admin
       get admin_payments_path
 
       expect(response).to have_http_status(:ok)
       expect(inertia).to render_component("admin/payments/index")
-      expect(request.path).to eq("/admin/pagos")
+      expect(request.path).to eq("/rrhh/pagos")
       expect(inertia.props[:accounts]).to be_present
     end
 
-    it "GET /provider/inicio resuelve y entrega props para el proveedor" do
+    it "GET /proveedor/inicio resuelve y entrega props para el proveedor" do
       sign_in provider_user, role: :provider
       get provider_dashboard_path
 
       expect(response).to have_http_status(:ok)
       expect(inertia).to render_component("provider/dashboard/index")
-      expect(request.path).to eq("/provider/inicio")
+      expect(request.path).to eq("/proveedor/inicio")
     end
   end
 
   describe "2. Control de acceso por rol (RBAC)" do
-    it "consumidor intentando acceder a /admin/pagos es redirigido a la raíz con alerta" do
+    it "consumidor intentando acceder a /rrhh/pagos es redirigido a la raíz con alerta" do
       sign_in consumer_user, role: :consumer
       get admin_payments_path
 
@@ -83,7 +83,7 @@ RSpec.describe "Rutas en español, control de acceso y casos borde", type: :requ
       expect(flash[:alert]).to eq("No tenés permiso para acceder a este recurso.")
     end
 
-    it "empleado intentando acceder a /provider/inicio es redirigido a la raíz con alerta" do
+    it "empleado intentando acceder a /proveedor/inicio es redirigido a la raíz con alerta" do
       sign_in consumer_user, role: :consumer
       get provider_dashboard_path
 
@@ -93,7 +93,7 @@ RSpec.describe "Rutas en español, control de acceso y casos borde", type: :requ
   end
 
   describe "3. Bypass de interfaz y tipos de datos inesperados" do
-    it "POST /admin/pagos con ID inexistente devuelve 404 not found" do
+    it "POST /rrhh/pagos con ID inexistente devuelve 404 not found" do
       sign_in admin_user, role: :admin
       post admin_payments_path, params: {
         payment: { account_id: 999_999, receipt: receipt_upload }
@@ -102,7 +102,7 @@ RSpec.describe "Rutas en español, control de acceso y casos borde", type: :requ
       expect(response).to have_http_status(:not_found)
     end
 
-    it "POST /admin/pagos con tipo de dato no numérico para account_id maneja el error con 404" do
+    it "POST /rrhh/pagos con tipo de dato no numérico para account_id maneja el error con 404" do
       sign_in admin_user, role: :admin
       post admin_payments_path, params: {
         payment: { account_id: "invalido_string", receipt: receipt_upload }
@@ -119,7 +119,7 @@ RSpec.describe "Rutas en español, control de acceso y casos borde", type: :requ
   end
 
   describe "4. Validación de 422 y de integridad en la base de datos" do
-    it "POST /admin/pagos sin comprobante rechaza con 422 y preserva los errores de validación" do
+    it "POST /rrhh/pagos sin comprobante rechaza con 422 y preserva los errores de validación" do
       sign_in admin_user, role: :admin
       post admin_payments_path, params: { payment: { account_id: company_account.id } }
 

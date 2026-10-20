@@ -5,10 +5,13 @@
 //   1250.5   -> "$1.250,50"
 //   440.25   -> "$440,25"
 // El servidor arma los textos con el mismo criterio (Account.format_amount).
-export function formatMoney(amount: number, locale = "es-UY"): string {
-  const cents = Math.round(Math.abs(amount) * 100)
+export function formatMoney(amount: number | string, locale = "es-UY"): string {
+  const numericAmount = typeof amount === "string" ? Number(amount) : amount
+  if (isNaN(numericAmount)) return "$0"
+
+  const cents = Math.round(Math.abs(numericAmount) * 100)
   const decimals = cents % 100 === 0 ? 0 : 2
-  const sign = amount < 0 && cents > 0 ? "-" : ""
+  const sign = numericAmount < 0 && cents > 0 ? "-" : ""
 
   const number = new Intl.NumberFormat(locale, {
     minimumFractionDigits: decimals,
