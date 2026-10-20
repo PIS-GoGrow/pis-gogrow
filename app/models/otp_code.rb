@@ -45,6 +45,10 @@ class OtpCode < ApplicationRecord
     find_by(user: user, purpose: purpose)&.expired? == false
   end
 
+  def self.sent_at(user, purpose)
+    find_by(user: user, purpose: purpose)&.sent_at
+  end
+
   def self.consume(user, purpose)
     where(user: user, purpose: purpose).delete_all
   end

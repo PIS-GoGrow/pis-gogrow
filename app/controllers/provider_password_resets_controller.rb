@@ -16,6 +16,15 @@ class ProviderPasswordResetsController < InertiaController
     return redirect_back_or_to(provider_sign_in_path, inertia: { errors: { email: [ t("validations.invalid_email") ] } }) unless email.match?(URI::MailTo::EMAIL_REGEXP)
 
     user = User.find_by(email: email)
+
+    # Si el usuario ya pidió un código OTP, no le dejamos pedir otro
+    if (sent_at = OtpCode.sent_at(user, :password_reset))
+      session[:password_reset] = { "email" => email, "sent_at" => sent_at.to_i }
+      redirect_to provider_password_reset_code_path, alert: "Ya se envió un código. Esperá para enviar el siguiente."
+
+      return
+    end
+
     if user&.provider? && (otp = OtpCode.issue(user, :password_reset))
       UserMailer.with(otp_code: otp).password_reset_code.deliver_later
     end
