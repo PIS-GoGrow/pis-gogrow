@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, it, vi } from "vitest"
+import { describe, expect, beforeEach, it, vi } from "vitest"
 
 import type { CartItem, Schedule } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
@@ -53,6 +53,18 @@ function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
   }
   return render(<DishDetail {...defaults} {...props} />)
 }
+
+const mocks = vi.hoisted(() => ({ priceItems: vi.fn() }))
+
+vi.mock("@/pages/consumer/dashboard/pricing", () => ({
+  priceItems: mocks.priceItems,
+  cartPricedItem: (cart: { id: number; quantity: number }[]) =>
+    cart.map((item) => ({ id: item.id, quantity: item.quantity })),
+}))
+
+beforeEach(() => {
+  mocks.priceItems.mockResolvedValue(null) // o un fixture de Pricing
+})
 
 describe("DishDetail", () => {
   // Criterio 1

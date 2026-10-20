@@ -35,7 +35,7 @@ vi.mock("@/layouts/app-layout", () => ({
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
 }))
 
-vi.mock("@/lib/cart-pricing", () => ({
+vi.mock("@/pages/consumer/dashboard/pricing", () => ({
   priceItems: mocks.priceItems,
   cartPricedItem: (cart: { id: number; quantity: number }[]) =>
     cart.map((item) => ({ id: item.id, quantity: item.quantity })),
