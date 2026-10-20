@@ -223,9 +223,9 @@ describe("ConsumerCart benefits", () => {
     expect(
       screen.getByText("Subsidio Base (50%)").nextSibling,
     ).toHaveTextContent("- $280")
-    expect(
-      screen.getByText("Premio (30%)").nextSibling,
-    ).toHaveTextContent("- $168")
+    expect(screen.getByText("Premio (30%)").nextSibling).toHaveTextContent(
+      "- $168",
+    )
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$112",
     )
@@ -242,9 +242,9 @@ describe("ConsumerCart benefits", () => {
     expect(
       screen.getByText("Subsidio Base (50%)").nextSibling,
     ).toHaveTextContent("- $140")
-    expect(
-      screen.getByText("Premio (30%)").nextSibling,
-    ).toHaveTextContent("- $168")
+    expect(screen.getByText("Premio (30%)").nextSibling).toHaveTextContent(
+      "- $168",
+    )
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$532",
     )
