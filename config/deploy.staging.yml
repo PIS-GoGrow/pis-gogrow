@@ -24,3 +24,31 @@ accessories:
         - POSTGRES_PASSWORD
     volumes:
       - pis_gogrow_staging_postgres:/var/lib/postgresql/data
+
+  # Panel de administración, en el mismo servidor que la app. Guarda su
+  # configuración en una base propia: no toca la de la aplicación, a la que se
+  # conecta desde su propia pantalla de ajustes.
+  motoradmin-db:
+    service: pis-gogrow-motoradmin-db
+    image: postgres:17
+    host: 18.228.27.215
+    env:
+      clear:
+        POSTGRES_USER: motoradmin
+        POSTGRES_DB: motoradmin
+        # Sin contraseña a propósito: no publica ningún puerto, así que solo se
+        # llega desde la red interna de Kamal.
+        POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - pis_gogrow_motoradmin_postgres:/var/lib/postgresql/data
+
+  motoradmin:
+    service: pis-gogrow-motoradmin
+    image: motoradmin/motoradmin:latest
+    host: 18.228.27.215
+    port: "3002:3000"
+    env:
+      clear:
+        DATABASE_URL: postgres://motoradmin@pis-gogrow-motoradmin-db:5432/motoradmin
+      secret:
+        - SECRET_KEY_BASE

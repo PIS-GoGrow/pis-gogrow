@@ -33,6 +33,8 @@ env:
     - SMTP_USER
     - SMTP_PASSWORD
     - SMTP_FROM
+    # Lo usa el panel de administración para invitar proveedores.
+    - MOTOR_ADMIN_API_TOKEN
   clear:
     COMPANY_ACCOUNT_VAT_ENABLED: true
     # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
