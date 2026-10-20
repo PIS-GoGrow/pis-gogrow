@@ -34,7 +34,7 @@ describe("OptionChoices", () => {
       />,
     )
 
-    expect(screen.getByText("Elegí tu Salsa")).toBeInTheDocument()
+    expect(screen.getByText("Elegí: Salsa")).toBeInTheDocument()
     expect(screen.getByText("Obligatorio")).toBeInTheDocument()
   })
 
@@ -47,7 +47,7 @@ describe("OptionChoices", () => {
       />,
     )
 
-    expect(screen.getByText("Elegí tu Extras")).toBeInTheDocument()
+    expect(screen.getByText("Elegí: Extras")).toBeInTheDocument()
     expect(screen.getByText("Opcional")).toBeInTheDocument()
   })
 

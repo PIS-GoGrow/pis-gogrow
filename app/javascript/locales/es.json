@@ -640,7 +640,7 @@
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
         },
         "options": {
-          "choose": "Elegí tu %{name}",
+          "choose": "Elegí: %{name}",
           "limit": "Podés elegir hasta %{count}",
           "optional": "Opcional",
           "required": "Obligatorio"
