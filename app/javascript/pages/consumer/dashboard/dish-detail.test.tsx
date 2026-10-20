@@ -152,9 +152,11 @@ describe("DishDetail", () => {
     })
 
     expect(
-      screen.getByText("Subsidio Base (80%)").nextSibling,
-    ).toHaveTextContent("- $256")
-    expect(screen.queryByText("Premio (30%)")).not.toBeInTheDocument()
+      screen.getByText("Subsidio Base (50%)").nextSibling,
+    ).toHaveTextContent("- $160")
+    expect(screen.getByText("Premio (30%)").nextSibling).toHaveTextContent(
+      "- $96",
+    )
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$64",
     )

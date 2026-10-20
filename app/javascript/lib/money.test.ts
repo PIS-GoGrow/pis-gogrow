@@ -23,7 +23,10 @@ describe("formatMoney", () => {
 
   it("pone el signo antes del símbolo en los importes negativos", () => {
     expect(formatMoney(-1250)).toBe("-$1.250")
+    expect(formatMoney(-440.25)).toBe("-$440,25")
     expect(formatMoney(-0.001)).toBe("$0")
+    expect(formatMoney(0)).toBe("$0")
+    expect(formatMoney(-0)).toBe("$0")
   })
 
   it("no depende del locale de la página", () => {
