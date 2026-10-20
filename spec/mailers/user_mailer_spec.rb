@@ -32,7 +32,7 @@ RSpec.describe UserMailer, type: :mailer do
 
       expect(body).to include("Hola Ana Proveedora,")
       expect(body).to include("Recibiste una invitación de GoGrow para unirte como proveedor de viandas")
-      expect(body).to include("/provider/invitation?token=#{user.id}.#{otp_code.code}")
+      expect(body).to include("/provider/invitacion?token=#{user.id}.#{otp_code.code}")
       expect(body).to include("/provider")
     end
   end

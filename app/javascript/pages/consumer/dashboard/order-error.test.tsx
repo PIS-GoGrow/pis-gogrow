@@ -30,7 +30,7 @@ vi.mock("@inertiajs/react", async () => {
 describe("OrderError Component", () => {
   const defaultProps = {
     retry: vi.fn(),
-    homeUrl: "/dashboard",
+    homeUrl: "/menu-semanal",
   }
 
   it("renderiza el título de error y el icono dentro de la tarjeta", () => {

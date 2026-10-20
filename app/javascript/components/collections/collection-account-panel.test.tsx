@@ -87,7 +87,7 @@ describe("CollectionAccountPanel", () => {
               status: "rejected",
               rejection_reason: "El pago es parcial",
               date: "09/10/26",
-              receipt_url: "/provider/payments/17/receipt",
+              receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "parcial.png",
               receipt_content_type: "image/png",
             },
@@ -97,7 +97,7 @@ describe("CollectionAccountPanel", () => {
     )
     expect(
       screen.getByRole("link", { name: "Descargar comprobante" }),
-    ).toHaveAttribute("href", "/provider/payments/17/receipt")
+    ).toHaveAttribute("href", "/provider/comprobantes/17/archivo")
     expect(
       screen.queryByRole("button", { name: "Revisar pago" }),
     ).not.toBeInTheDocument()
@@ -123,7 +123,7 @@ describe("CollectionAccountPanel", () => {
               payable_amount: source === "company" ? 976 : 800,
               status: "submitted",
               payment_id: 17,
-              receipt_url: "/provider/payments/17/receipt",
+              receipt_url: "/provider/comprobantes/17/archivo",
               receipt_content_type: "image/png",
             }}
           />
@@ -141,7 +141,7 @@ describe("CollectionAccountPanel", () => {
       ).toBeDisabled()
       expect(
         within(dialog).getByRole("link", { name: "Descargar comprobante" }),
-      ).toHaveAttribute("href", "/provider/payments/17/receipt")
+      ).toHaveAttribute("href", "/provider/comprobantes/17/archivo")
     },
   )
   it("shows a neutral due date for a pending account that is not overdue", () => {

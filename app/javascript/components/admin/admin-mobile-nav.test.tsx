@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest"
 
 import { AdminMobileNav } from "./admin-mobile-nav"
 
-let currentUrl = "/admin/dashboard"
+let currentUrl = "/admin/inicio"
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -31,7 +31,7 @@ describe("AdminMobileNav", () => {
   function nav() {
     render(<AdminMobileNav />)
     return within(
-      screen.getByRole("navigation", { name: "Navegación de RRHH" }),
+      screen.getByRole("navigation", { name: "Navegación de RR. HH." }),
     )
   }
 
@@ -40,16 +40,16 @@ describe("AdminMobileNav", () => {
 
     expect(menu.getByRole("link", { name: "Inicio" })).toHaveAttribute(
       "href",
-      "/admin/dashboard",
+      "/admin/inicio",
     )
     expect(menu.getByRole("link", { name: "Cuenta" })).toBeInTheDocument()
     expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
       "href",
-      "/admin/account",
+      "/admin/cuenta",
     )
     expect(menu.getByRole("link", { name: "Empleados" })).toHaveAttribute(
       "href",
-      "/admin/consumers",
+      "/admin/empleados",
     )
   })
 
@@ -58,7 +58,7 @@ describe("AdminMobileNav", () => {
 
     expect(menu.getByRole("link", { name: "Pagos" })).toHaveAttribute(
       "href",
-      "/admin/payments",
+      "/admin/pagos",
     )
   })
 
@@ -75,7 +75,7 @@ describe("AdminMobileNav", () => {
   })
 
   it("mantiene Empleados activo al ver el detalle de un empleado", () => {
-    currentUrl = "/admin/consumers/42"
+    currentUrl = "/admin/empleados/42"
     const menu = nav()
 
     expect(menu.getByRole("link", { name: "Empleados" })).toHaveAttribute(
@@ -88,7 +88,7 @@ describe("AdminMobileNav", () => {
   })
 
   it("mantiene Empleados activo cuando la URL contiene parámetros de búsqueda", () => {
-    currentUrl = "/admin/consumers?search=juan&page=2"
+    currentUrl = "/admin/empleados?search=juan&page=2"
     const menu = nav()
 
     expect(menu.getByRole("link", { name: "Empleados" })).toHaveAttribute(
@@ -97,8 +97,8 @@ describe("AdminMobileNav", () => {
     )
   })
 
-  it("marca Cuenta como activo en /settings/profile", () => {
-    currentUrl = "/settings/profile"
+  it("marca Cuenta como activo en /configuracion/perfil", () => {
+    currentUrl = "/configuracion/perfil"
     const menu = nav()
 
     expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
@@ -110,8 +110,8 @@ describe("AdminMobileNav", () => {
     )
   })
 
-  it("marca Cuenta como activo en /admin/account", () => {
-    currentUrl = "/admin/account"
+  it("marca Cuenta como activo en /admin/cuenta", () => {
+    currentUrl = "/admin/cuenta"
     const menu = nav()
 
     expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
@@ -120,8 +120,8 @@ describe("AdminMobileNav", () => {
     )
   })
 
-  it("marca Cuenta como activo en /admin/preferences", () => {
-    currentUrl = "/admin/preferences"
+  it("marca Cuenta como activo en /admin/preferencias", () => {
+    currentUrl = "/admin/preferencias"
     const menu = nav()
 
     expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
@@ -130,8 +130,8 @@ describe("AdminMobileNav", () => {
     )
   })
 
-  it("marca Cuenta como activo en Subsidios (/admin/benefit_configurations)", () => {
-    currentUrl = "/admin/benefit_configurations"
+  it("marca Cuenta como activo en Subsidios (/admin/subsidios)", () => {
+    currentUrl = "/admin/subsidios"
     const menu = nav()
 
     expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
@@ -143,8 +143,8 @@ describe("AdminMobileNav", () => {
     )
   })
 
-  it("mantiene Pagos inactivo en facturas (/admin/invoices)", () => {
-    currentUrl = "/admin/invoices"
+  it("mantiene Pagos inactivo en facturas (/admin/facturas)", () => {
+    currentUrl = "/admin/facturas"
     const menu = nav()
 
     const pagosLink = menu.getByRole("link", { name: "Pagos" })

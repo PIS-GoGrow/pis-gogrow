@@ -39,7 +39,7 @@ describe("SettingsPageLayout", () => {
     ).not.toBeInTheDocument()
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/admin/account")
+    ).toHaveAttribute("href", "/admin/cuenta")
   })
 
   it("preserves the existing settings layout for other roles", () => {

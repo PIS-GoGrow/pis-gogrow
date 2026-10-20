@@ -115,7 +115,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
 
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/admin/account")
+    ).toHaveAttribute("href", "/admin/cuenta")
   })
 
   it("renders current benefit configuration details when present", () => {

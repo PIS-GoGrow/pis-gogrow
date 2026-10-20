@@ -33,7 +33,7 @@ describe("RRHH notification preferences", () => {
   it("shows the existing and newly approved categories", () => {
     render(<Notifications {...props()} />)
 
-    expect(screen.getByText("Preferencias de RRHH")).toBeInTheDocument()
+    expect(screen.getByText("Preferencias de RR. HH.")).toBeInTheDocument()
     for (const title of [
       "Pagos a proveedores",
       "Pagos pendientes",
@@ -53,7 +53,7 @@ describe("RRHH notification preferences", () => {
     await user.click(screen.getByRole("switch", { name: "Pagos pendientes" }))
 
     expect(patchMock).toHaveBeenCalledWith(
-      "/settings/notifications/2",
+      "/configuracion/notificaciones/2",
       { subscribe: true },
       expect.objectContaining({ preserveScroll: true, preserveState: true }),
     )

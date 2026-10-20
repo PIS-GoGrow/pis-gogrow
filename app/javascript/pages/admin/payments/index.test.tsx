@@ -11,7 +11,7 @@ vi.mock("@inertiajs/react", async () => {
   return {
     ...actual,
     Head: () => null,
-    usePage: () => ({ url: "/admin/payments", props: { locale: "es" } }),
+    usePage: () => ({ url: "/admin/pagos", props: { locale: "es" } }),
   }
 })
 
@@ -151,7 +151,7 @@ describe("Admin Payments Page", () => {
         "Tu Viandita: Consumo Agosto 2026",
       ),
     )
-    expect(fetch).toHaveBeenCalledWith("/admin/payments/7", expect.anything())
+    expect(fetch).toHaveBeenCalledWith("/admin/pagos/7", expect.anything())
 
     vi.unstubAllGlobals()
   })

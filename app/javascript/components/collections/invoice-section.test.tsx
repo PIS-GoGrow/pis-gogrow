@@ -37,7 +37,7 @@ const historicalCompanyAccount = {
   due_date: "05/10/26",
   paid_on: "05/09/26",
   payment_id: 10,
-  receipt_url: "/provider/payments/10/receipt",
+  receipt_url: "/provider/comprobantes/10/archivo",
   receipt_content_type: "application/pdf",
   invoice: {
     id: 42,
@@ -78,6 +78,6 @@ describe("InvoiceSection", () => {
 
     expect(
       screen.getByRole("link", { name: "Descargar factura" }),
-    ).toHaveAttribute("href", "/provider/invoices/42/file?download=1")
+    ).toHaveAttribute("href", "/provider/facturas/42/archivo?download=1")
   })
 })

@@ -14,7 +14,7 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
     status: "approved",
     rejection_reason: null,
     created_at: "2026-10-01T12:00:00Z",
-    receipt_url: "/payments/1/receipt",
+    receipt_url: "/comprobantes/1/archivo",
     receipt_filename: "receipt.png",
     receipt_uploaded_at: "01/10/26",
     ...overrides,
@@ -66,7 +66,7 @@ describe("PaymentHistoryCard", () => {
 
   it("renders a single download link when there is exactly one receipt", () => {
     const payment = makePayment({
-      receipt_url: "/payments/1/receipt",
+      receipt_url: "/comprobantes/1/archivo",
       receipt_filename: "comprobante_unico.pdf",
     })
     const account = makeAccount({ payments: [payment] })
@@ -76,7 +76,7 @@ describe("PaymentHistoryCard", () => {
     const link = screen.getByRole("link", {
       name: /Descargar comprobante de pago/i,
     })
-    expect(link).toHaveAttribute("href", "/payments/1/receipt")
+    expect(link).toHaveAttribute("href", "/comprobantes/1/archivo")
     expect(link).toHaveAttribute("download")
   })
 
@@ -87,7 +87,7 @@ describe("PaymentHistoryCard", () => {
       status: "rejected",
       rejection_reason: PARTIAL_PAYMENT_REJECTION_REASON,
       created_at: "2026-09-15T10:00:00Z",
-      receipt_url: "/payments/1/receipt",
+      receipt_url: "/comprobantes/1/archivo",
       receipt_filename: "comprobante_parcial.png",
       receipt_uploaded_at: "15/09/26",
     })
@@ -96,7 +96,7 @@ describe("PaymentHistoryCard", () => {
       status: "approved",
       rejection_reason: null,
       created_at: "2026-09-20T10:00:00Z",
-      receipt_url: "/payments/2/receipt",
+      receipt_url: "/comprobantes/2/archivo",
       receipt_filename: "comprobante_final.png",
       receipt_uploaded_at: "20/09/26",
     })

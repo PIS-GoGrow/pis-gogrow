@@ -30,7 +30,10 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
     sign_in user, role: :admin
     visit admin_account_path
     click_link "Perfil y Apariencia"
-    click_link "Perfil"
+    # Esperar a que cargue la pantalla de preferencias: mientras tanto, en Cuenta
+    # "Perfil" matchea (por substring) el propio link "Perfil y Apariencia".
+    expect(page).to have_current_path(admin_preferences_path)
+    click_link href: settings_profile_path
     expect(page).to have_content("Información del perfil")
   end
 
@@ -73,7 +76,7 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
       visit admin_account_path
       click_link "Notificaciones"
 
-      expect(page).to have_content("Preferencias de RRHH")
+      expect(page).to have_content("Preferencias de RR. HH.")
       hr_notification_titles.each { expect_switch(it, on: false) }
       expect(page).to have_no_content("Actualizaciones de pedidos")
       expect(page).to have_no_content("Recordatorios de pago de Recursos Humanos")
@@ -118,6 +121,11 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
 
       save_profile(phone: "123456789012345")
       expect(page).to have_field("Teléfono", with: "123456789012345")
+      # El campo ya tiene el valor tipeado antes de que termine el PATCH: hay que
+      # esperar a que se persista, no leer la base de inmediato.
+      page.document.synchronize do
+        raise Capybara::ExpectationNotMet, "el teléfono todavía no se guardó" unless admin_user.reload.phone == "123456789012345"
+      end
       expect(admin_user.reload.phone).to eq("123456789012345")
     end
 

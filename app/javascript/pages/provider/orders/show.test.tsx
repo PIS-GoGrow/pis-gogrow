@@ -276,9 +276,9 @@ describe("Provider::Orders Show Page", () => {
     expect(
       screen.getByText("Paga el empleado").parentElement,
     ).toHaveTextContent("$234,56")
-    expect(screen.getByText("Beneficio aplicado").parentElement).toHaveTextContent(
-      "-$1.000",
-    )
+    expect(
+      screen.getByText("Beneficio aplicado").parentElement,
+    ).toHaveTextContent("-$1.000")
     expect(screen.queryByText("$3.703,68")).not.toBeInTheDocument()
   })
   it("rotula solo «Empleado» cuando no hay empresa", () => {

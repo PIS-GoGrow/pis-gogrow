@@ -7,7 +7,7 @@ require "rails_helper"
 #
 # Criterio 3: "Los cambios de estado realizados por el proveedor se reflejan sin
 # alterar el historial anterior". El estado de un pago lo cambia el proveedor
-# desde /provider/collections, así que este archivo recorre el circuito completo --
+# desde /provider/cobros, así que este archivo recorre el circuito completo --
 # el empleado sube el comprobante, el proveedor lo aprueba o lo rechaza, y el
 # empleado vuelve a su historial en /accounts -- en vez de dar por hecho el
 # estado final con datos armados a mano.

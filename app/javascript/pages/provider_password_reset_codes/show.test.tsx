@@ -79,7 +79,7 @@ describe("Provider password reset code page", () => {
 
     fireEvent.click(resend)
     expect(post).toHaveBeenCalledWith(
-      { url: "/provider/password", method: "post" },
+      { url: "/provider/contrasena", method: "post" },
       { email: "ana@proveedor.com" },
     )
   })

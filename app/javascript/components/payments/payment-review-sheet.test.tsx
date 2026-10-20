@@ -25,7 +25,7 @@ async function openReview(canApprove = true) {
     <PaymentReviewResultProvider value={showResult}>
       <PaymentReviewSheet
         paymentId={17}
-        receiptUrl="/provider/payments/17/receipt"
+        receiptUrl="/provider/comprobantes/17/archivo"
         contentType="image/png"
         filename="Empleado de prueba"
         expectedAmount={800}
@@ -53,7 +53,10 @@ describe("PaymentReviewSheet", () => {
       screen.getByText(/importe transferido debe verificarse en el archivo/),
     ).toBeInTheDocument()
     const download = screen.getByRole("link", { name: "Descargar comprobante" })
-    expect(download).toHaveAttribute("href", "/provider/payments/17/receipt")
+    expect(download).toHaveAttribute(
+      "href",
+      "/provider/comprobantes/17/archivo",
+    )
     expect(download).toHaveAttribute("download")
   })
 

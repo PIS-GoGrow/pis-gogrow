@@ -68,11 +68,11 @@ describe("Admin::Invoices Index Page", () => {
 
     expect(screen.getByRole("link", { name: "Ver" })).toHaveAttribute(
       "href",
-      "/admin/invoices/7/file",
+      "/admin/facturas/7/archivo",
     )
     expect(
       screen.getByRole("link", { name: "Descargar factura.pdf" }),
-    ).toHaveAttribute("href", "/admin/invoices/7/file?download=1")
+    ).toHaveAttribute("href", "/admin/facturas/7/archivo?download=1")
   })
 
   it("explains the empty state instead of showing an empty table", () => {

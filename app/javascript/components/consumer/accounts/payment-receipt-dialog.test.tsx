@@ -46,7 +46,8 @@ vi.mock("@inertiajs/react", async () => {
 
       if (
         actionUrl &&
-        (actionUrl === "/payments" || actionUrl.endsWith("/payments")) &&
+        (actionUrl === "/comprobantes" ||
+          actionUrl.endsWith("/comprobantes")) &&
         method !== "delete"
       ) {
         triggerSuccess = onSuccess
@@ -209,14 +210,14 @@ describe("PaymentReceiptDialog", () => {
   it("asks for confirmation before deleting a receipt", async () => {
     const user = userEvent.setup()
     const destroyAction = vi.fn((paymentId: number) => ({
-      url: `/admin/payments/${paymentId}`,
+      url: `/admin/pagos/${paymentId}`,
       method: "delete" as const,
     }))
 
     render(
       <PaymentReceiptDialog
         accountId={42}
-        createAction={{ url: "/admin/payments", method: "post" }}
+        createAction={{ url: "/admin/pagos", method: "post" }}
         destroyAction={destroyAction}
         payments={[submittedPayment, rejectedPayment, approvedPayment]}
       />,

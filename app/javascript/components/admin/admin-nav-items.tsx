@@ -74,7 +74,7 @@ export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
       mobileActivePaths: [
         adminAccounts.show().url,
         adminPreferences.show().url,
-        "/settings",
+        "/configuracion",
         adminBenefitConfigurations.index().url,
       ],
       mobileIcon: (

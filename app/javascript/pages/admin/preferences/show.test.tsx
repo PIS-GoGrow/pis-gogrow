@@ -21,11 +21,11 @@ describe("Admin preferences page", () => {
 
     expect(screen.getByRole("link", { name: /^Perfil/ })).toHaveAttribute(
       "href",
-      "/settings/profile",
+      "/configuracion/perfil",
     )
     expect(screen.getByRole("link", { name: /^Apariencia/ })).toHaveAttribute(
       "href",
-      "/settings/appearance",
+      "/configuracion/apariencia",
     )
     expect(screen.queryByText("Contraseña")).not.toBeInTheDocument()
     expect(screen.queryByText("Eliminar cuenta")).not.toBeInTheDocument()
@@ -36,6 +36,6 @@ describe("Admin preferences page", () => {
 
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/admin/account")
+    ).toHaveAttribute("href", "/admin/cuenta")
   })
 })
