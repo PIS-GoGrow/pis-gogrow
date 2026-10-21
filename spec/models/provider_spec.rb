@@ -38,6 +38,77 @@ RSpec.describe Provider, type: :model do
       expect { provider.mark_section_configured!(:payment_details) }
         .not_to(change { provider.reload.payment_details_configured_at })
     end
+
+    it "actualiza el timestamp correspondiente a cada una de las 4 secciones" do
+      provider.update_columns(
+        payment_details_configured_at: nil,
+        order_deadline_configured_at: nil,
+        deliveries_configured_at: nil,
+        notifications_configured_at: nil
+      )
+
+      expect { provider.mark_section_configured!(:payment_details) }
+        .to change { provider.reload.payment_details_configured_at }.from(nil)
+      expect { provider.mark_section_configured!(:operational_settings) }
+        .to change { provider.reload.order_deadline_configured_at }.from(nil)
+      expect { provider.mark_section_configured!(:deliveries) }
+        .to change { provider.reload.deliveries_configured_at }.from(nil)
+      expect { provider.mark_section_configured!(:notifications) }
+        .to change { provider.reload.notifications_configured_at }.from(nil)
+    end
+
+    it "es idempotente en las 4 secciones y preserva los timestamps originales" do
+      timestamps = {
+        payment_details_configured_at: 4.days.ago.change(usec: 0),
+        order_deadline_configured_at: 3.days.ago.change(usec: 0),
+        deliveries_configured_at: 2.days.ago.change(usec: 0),
+        notifications_configured_at: 1.day.ago.change(usec: 0)
+      }
+      provider.update_columns(timestamps)
+
+      Provider::CONFIGURABLE_SECTIONS.each_key do |section|
+        provider.mark_section_configured!(section)
+      end
+
+      provider.reload
+      expect(provider.payment_details_configured_at).to eq(timestamps[:payment_details_configured_at])
+      expect(provider.order_deadline_configured_at).to eq(timestamps[:order_deadline_configured_at])
+      expect(provider.deliveries_configured_at).to eq(timestamps[:deliveries_configured_at])
+      expect(provider.notifications_configured_at).to eq(timestamps[:notifications_configured_at])
+    end
+
+    it "lanza KeyError al recibir una clave de sección desconocida o inválida" do
+      expect { provider.mark_section_configured!(:desconocida) }.to raise_error(KeyError)
+      expect { provider.mark_section_configured!(:billing) }.to raise_error(KeyError)
+      expect { provider.mark_section_configured!("desconocida") }.to raise_error(KeyError)
+    end
+
+    it "refleja el avance progresivo de 0/4 a 4/4 y vacía incomplete_sections al completar todas" do
+      provider.update_columns(
+        payment_details_configured_at: nil,
+        order_deadline_configured_at: nil,
+        deliveries_configured_at: nil,
+        notifications_configured_at: nil
+      )
+
+      expect(provider.completed_sections_count).to eq(0)
+      expect(provider.incomplete_sections).to contain_exactly(
+        "payment_details", "operational_settings", "deliveries", "notifications"
+      )
+
+      provider.mark_section_configured!(:payment_details)
+      expect(provider.completed_sections_count).to eq(1)
+
+      provider.mark_section_configured!(:operational_settings)
+      expect(provider.completed_sections_count).to eq(2)
+
+      provider.mark_section_configured!(:deliveries)
+      expect(provider.completed_sections_count).to eq(3)
+
+      provider.mark_section_configured!(:notifications)
+      expect(provider.completed_sections_count).to eq(4)
+      expect(provider.incomplete_sections).to eq([])
+    end
   end
 
   describe "#delivery_methods" do

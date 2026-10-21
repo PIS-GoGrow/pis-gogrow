@@ -130,6 +130,15 @@ RSpec.describe "Settings::Notifications", type: :request do
       expect(response).to redirect_to(settings_notifications_path)
       expect(flash[:alert]).to eq(I18n.t("flash.config_update_error"))
     end
+
+    it "no llama a mark_section_configured! ni da error al actualizar las notificaciones del consumidor" do
+      expect(employee.provider).to be_nil
+
+      patch settings_notification_path(order_updates), params: { subscribe: true }, as: :json
+
+      expect(response).to redirect_to(settings_notifications_path)
+      expect(flash[:notice]).to eq(I18n.t("flash.config_update"))
+    end
   end
 
   describe "PATCH /settings/notifications/:id as RRHH" do
@@ -148,6 +157,15 @@ RSpec.describe "Settings::Notifications", type: :request do
       get settings_notifications_path
 
       expect(inertia).to have_props { |props| props[:subscribed_keys].include?("hr_pending_invoices") }
+    end
+
+    it "no llama a mark_section_configured! ni da error al actualizar las notificaciones de RRHH" do
+      expect(admin.provider).to be_nil
+
+      patch settings_notification_path(pending_invoices), params: { subscribe: true }, as: :json
+
+      expect(response).to redirect_to(settings_notifications_path)
+      expect(flash[:notice]).to eq(I18n.t("flash.config_update"))
     end
 
     it "no lo suscribe a una configuración que existe pero es de otro rol" do
@@ -182,6 +200,15 @@ RSpec.describe "Settings::Notifications", type: :request do
       patch settings_notification_path(provider_config), params: { subscribe: false }, as: :json
 
       expect(provider.reload.notifications_configured_at).to be_present
+    end
+
+    it "preserva el timestamp original si las notificaciones ya estaban configuradas (idempotente)" do
+      existing_timestamp = 3.days.ago.change(usec: 0)
+      provider.update_column(:notifications_configured_at, existing_timestamp)
+
+      patch settings_notification_path(provider_config), params: { subscribe: true }, as: :json
+
+      expect(provider.reload.notifications_configured_at).to eq(existing_timestamp)
     end
   end
 end
