@@ -68,6 +68,18 @@ RSpec.describe "Admin::OrderEvents", type: :request do
         )
       end
 
+      # IBP-038 CA1/CA2: la hora es la de Montevideo, no la UTC del servidor.
+      it "shows the exact date and time of the change in Montevideo time" do
+        travel_to Time.zone.local(2026, 10, 21, 22, 30, 15) do
+          orders(:upcoming_pending_future).update!(notes: "Sin sal")
+        end
+        sign_in users(:admin), role: :admin
+
+        get admin_order_events_path
+
+        expect(inertia.props[:events].sole[:occurred_at]).to eq("21/10/2026 22:30:15")
+      end
+
       it "leaves out the events of other companies" do
         other_company = Company.create!(name: "Otra", address: "Rivera 1234")
         OrderEvent.create!(order_id: 0, company: other_company, action: :created)

@@ -70,6 +70,52 @@ RSpec.describe OrderEvent, type: :model do
     expect { event.destroy! }.to raise_error(ActiveRecord::ReadOnlyRecord)
   end
 
+  # IBP-038 CA1: la creación queda a nombre del empleado que pidió.
+  it "records the creation under the employee who placed the order" do
+    Current.session = users(:one).sessions.create!(role: :consumer)
+
+    created = Order.create!(consumer: consumers(:one), schedule: schedules(:future), amount: 1, price: 300, delivery_method: :office)
+
+    expect(created.events.sole).to have_attributes(action: "created", user: users(:one), role: "consumer")
+  end
+
+  # IBP-038 CA3: una disputa "pedí 1, no 2" se resuelve con la cantidad y los
+  # dos precios, anteriores y nuevos, en el mismo evento.
+  it "records an employee's modification with the quantity and both prices before and after" do
+    Current.session = users(:one).sessions.create!(role: :consumer)
+
+    expect(order.modify(by: users(:one), quantity: 2, notes: nil, delivery: { delivery_method: "home", address: order.address })).to be(true)
+
+    event = order.events.sole
+    expect(event).to have_attributes(action: "modified", user: users(:one), role: "consumer")
+    expect(event.changeset["amount"]).to eq([ 1, 2 ])
+    expect(event.changeset["price"].map(&:to_d)).to eq([ 300.5.to_d, order.price ])
+    expect(event.changeset["discounted_price"].map(&:to_d)).to eq([ 150.25.to_d, order.discounted_price ])
+  end
+
+  # IBP-038 CA3, eje quién dispara: lo que hace el proveedor no queda a nombre
+  # del empleado dueño del pedido.
+  it "records a provider's rejection under the provider, with the reason" do
+    Current.session = users(:provider_user).sessions.create!(role: :provider)
+
+    order.decide(:rejected, reason: :out_of_stock, details: "Sin pan", by: users(:provider_user))
+
+    expect(order.events.sole).to have_attributes(
+      action: "rejected",
+      user: users(:provider_user),
+      role: "provider",
+      changeset: a_hash_including("status" => %w[pending rejected], "rejection_reason" => [ nil, "out_of_stock" ], "rejection_details" => [ nil, "Sin pan" ])
+    )
+  end
+
+  it "records the rejection caused by a dish change under the provider" do
+    Current.session = users(:provider_user).sessions.create!(role: :provider)
+
+    order.reject_for_dish_change!(reason: :dish_unpublished, by: users(:provider_user))
+
+    expect(order.events.sole).to have_attributes(action: "rejected", user: users(:provider_user), role: "provider")
+  end
+
   it "outlives the order" do
     order.update!(notes: "Sin sal")
 
