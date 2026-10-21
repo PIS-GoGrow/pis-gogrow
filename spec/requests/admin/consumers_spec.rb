@@ -212,6 +212,44 @@ RSpec.describe "Admin::Consumers", type: :request do
         expect(dates[order.id]).to eq(delivery.strftime("%-d/%-m"))
       end
 
+      it "sorts confirmed orders in consumption history chronologically by delivery_date ascending" do
+        earlier = orders(:history_confirmed_past)
+        later = orders(:upcoming_confirmed_future)
+
+        earlier.update_columns(created_at: Time.current)
+        later.update_columns(created_at: 10.days.ago)
+
+        get admin_consumer_path(consumers(:one))
+
+        orders_in_month = inertia.props[:months].sole[:orders]
+        expect(orders_in_month.pluck(:id)).to eq([ earlier.id, later.id ])
+      end
+
+      it "handles orders with nil delivery dates without 500 exceptions" do
+        order = orders(:history_confirmed_past)
+        order.update_columns(delivery_date: nil, schedule_id: nil)
+
+        get admin_consumer_path(consumers(:one))
+
+        expect(response).to have_http_status(:ok)
+        order_prop = inertia.props[:months].sole[:orders].find { it[:id] == order.id }
+        expect(order_prop[:date]).to be_nil
+      end
+
+      it "retains and renders delivery_date even after the associated schedule is destroyed" do
+        order = orders(:history_confirmed_past)
+        delivery = order.delivery_date
+        schedule = order.schedule
+
+        schedule.destroy!
+        expect(order.reload.schedule_id).to be_nil
+        expect(order.delivery_date).to eq(delivery)
+
+        get admin_consumer_path(consumers(:one))
+
+        dates = inertia.props[:months].sole[:orders].to_h { [ it[:id], it[:date] ] }
+        expect(dates[order.id]).to eq(delivery.strftime("%-d/%-m"))
+      end
       it "shows the active benefit percentage" do
         get admin_consumer_path(consumers(:one))
 
@@ -248,6 +286,12 @@ RSpec.describe "Admin::Consumers", type: :request do
 
       it "returns 404 for an invalid or non-existent consumer id" do
         get admin_consumer_path(id: "invalid-id")
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "returns 404 for a malicious non-numeric consumer id" do
+        get admin_consumer_path(id: "malicious")
 
         expect(response).to have_http_status(:not_found)
       end
