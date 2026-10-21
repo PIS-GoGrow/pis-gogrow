@@ -90,6 +90,22 @@ RSpec.describe "Provider::Orders", type: :request do
       )
     end
 
+    it "flags which orders the provider can still reject" do
+      sign_in users(:provider_user), role: :provider
+
+      get provider_orders_path
+
+      props = inertia.props.deep_symbolize_keys
+      upcoming = props[:upcoming_orders].index_by { it[:id] }
+      past = props[:past_orders].index_by { it[:id] }
+
+      expect(upcoming[orders(:upcoming_pending_today).id]).to include(rejectable: true)
+      expect(upcoming[orders(:upcoming_confirmed_future).id]).to include(rejectable: true)
+      expect(upcoming[orders(:history_cancelled_future).id]).to include(rejectable: false)
+      expect(past[orders(:history_pending_past).id]).to include(rejectable: true)
+      expect(past[orders(:history_confirmed_past).id]).to include(rejectable: false)
+    end
+
     it "lists the past orders of the signed-in provider, most recent delivery first" do
       other_provider_order
       older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10, amount: 5)
@@ -595,6 +611,19 @@ RSpec.describe "Provider::Orders", type: :request do
 
       expect(order.reload).to be_rejected
       expect(order.rejection_reason).to eq("out_of_stock")
+    end
+
+    it "leaves a confirmed order whose delivery date has passed as it was" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_confirmed_past)
+
+      patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+
+      expect(order.reload).to be_confirmed
+      expect(order.rejected_at).to be_nil
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_not_rejectable"))
     end
 
     it "leaves an order that is no longer pending as it was" do
