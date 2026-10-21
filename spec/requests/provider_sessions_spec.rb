@@ -96,7 +96,7 @@ RSpec.describe "ProviderSessions", type: :request do
     end
   end
 
-  describe "DELETE /sessions/:id" do
+  describe "DELETE /sesiones/:id" do
     it "redirects a provider back to /provider upon logout" do
       sign_in provider, role: :provider
       session = provider.sessions.last

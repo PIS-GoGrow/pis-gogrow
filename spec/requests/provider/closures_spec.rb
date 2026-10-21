@@ -20,7 +20,7 @@ RSpec.describe "Provider::Closures", type: :request do
     I18n.t("activerecord.errors.models.provider_closure.attributes.#{attribute}.#{key}", **options)
   end
 
-  describe "POST /provider/closures" do
+  describe "POST /provider/cierres" do
     it "redirects to sign in without a session" do
       expect { post provider_closures_path, params: }.not_to change(ProviderClosure, :count)
 
@@ -157,7 +157,7 @@ RSpec.describe "Provider::Closures", type: :request do
     end
   end
 
-  describe "PATCH /provider/closures/:id" do
+  describe "PATCH /provider/cierres/:id" do
     let!(:closure) { create_closure }
 
     it "redirects an admin to the home page and keeps the closure" do
@@ -262,7 +262,7 @@ RSpec.describe "Provider::Closures", type: :request do
     end
   end
 
-  describe "DELETE /provider/closures/:id" do
+  describe "DELETE /provider/cierres/:id" do
     let!(:closure) { create_closure }
 
     it "redirects an admin to the home page and keeps the closure" do

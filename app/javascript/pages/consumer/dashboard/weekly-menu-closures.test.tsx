@@ -12,7 +12,7 @@ vi.mock("@inertiajs/react", async () => {
 
   return {
     ...actual,
-    usePage: () => ({ url: "/dashboard", props: { notifications: [] } }),
+    usePage: () => ({ url: "/menu-semanal", props: { notifications: [] } }),
   }
 })
 
@@ -74,8 +74,8 @@ function renderMenu(
       cart={[]}
       count={0}
       total={0}
+      loading={false}
       openDetail={vi.fn()}
-      openCart={vi.fn()}
       {...props}
     />,
   )

@@ -46,7 +46,8 @@ vi.mock("@inertiajs/react", async () => {
 
       if (
         actionUrl &&
-        (actionUrl === "/payments" || actionUrl.endsWith("/payments")) &&
+        (actionUrl === "/comprobantes" ||
+          actionUrl.endsWith("/comprobantes")) &&
         method !== "delete"
       ) {
         triggerSuccess = onSuccess
@@ -189,7 +190,7 @@ describe("PaymentReceiptDialog", () => {
 
     expect(screen.getByText("En revisión")).toBeInTheDocument()
     expect(screen.getByText("Rechazado")).toBeInTheDocument()
-    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
   })
 
   it("shows delete button for submitted and rejected receipts, but NOT for approved", () => {
@@ -209,14 +210,14 @@ describe("PaymentReceiptDialog", () => {
   it("asks for confirmation before deleting a receipt", async () => {
     const user = userEvent.setup()
     const destroyAction = vi.fn((paymentId: number) => ({
-      url: `/admin/payments/${paymentId}`,
+      url: `/admin/pagos/${paymentId}`,
       method: "delete" as const,
     }))
 
     render(
       <PaymentReceiptDialog
         accountId={42}
-        createAction={{ url: "/admin/payments", method: "post" }}
+        createAction={{ url: "/admin/pagos", method: "post" }}
         destroyAction={destroyAction}
         payments={[submittedPayment, rejectedPayment, approvedPayment]}
       />,
@@ -257,14 +258,14 @@ describe("PaymentReceiptDialog", () => {
     ).not.toBeInTheDocument()
     expect(screen.getByText("En revisión")).toBeInTheDocument()
     expect(screen.getByText("Rechazado")).toBeInTheDocument()
-    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
   })
 
   it("keeps uploading available when a receipt is approved", () => {
     render(<PaymentReceiptDialog accountId={42} payments={[approvedPayment]} />)
 
     expect(screen.getByText("comprobante_banco_3.jpg")).toBeInTheDocument()
-    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Subir comprobante de pago" }),
     ).toBeInTheDocument()

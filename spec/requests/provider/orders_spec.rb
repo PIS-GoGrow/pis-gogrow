@@ -28,7 +28,7 @@ RSpec.describe "Provider::Orders", type: :request do
     )
   end
 
-  describe "GET /provider/orders" do
+  describe "GET /provider/pedidos" do
     it "redirects to sign in without a session" do
       get provider_orders_path
 
@@ -191,7 +191,7 @@ RSpec.describe "Provider::Orders", type: :request do
     end
   end
 
-  describe "GET /provider/orders/:id" do
+  describe "GET /provider/pedidos/:id" do
     it "redirects to sign in without a session" do
       get provider_order_path(orders(:upcoming_pending_today))
 
@@ -381,7 +381,7 @@ RSpec.describe "Provider::Orders", type: :request do
     end
   end
 
-  describe "PATCH /provider/orders/:id/confirm" do
+  describe "PATCH /provider/pedidos/:id/confirmar" do
     it "redirects to sign in without a session" do
       patch confirm_provider_order_path(orders(:upcoming_pending_today))
 
@@ -482,7 +482,7 @@ RSpec.describe "Provider::Orders", type: :request do
     end
   end
 
-  describe "PATCH /provider/orders/:id/reject" do
+  describe "PATCH /provider/pedidos/:id/rechazar" do
     it "redirects to sign in without a session" do
       patch reject_provider_order_path(orders(:upcoming_pending_today))
 

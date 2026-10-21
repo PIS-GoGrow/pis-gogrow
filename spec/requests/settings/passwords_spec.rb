@@ -7,14 +7,14 @@ RSpec.describe "Settings::Passwords", type: :request do
 
   before { sign_in users(:one) }
 
-  describe "GET /settings/password" do
+  describe "GET /configuracion/contrasena" do
     it "renders the password settings page" do
       get settings_password_path
       expect(response).to have_http_status(:success)
     end
   end
 
-  describe "PATCH /settings/password" do
+  describe "PATCH /configuracion/contrasena" do
     context "with valid password challenge" do
       it "updates the password" do
         patch settings_password_path, params: {
@@ -40,7 +40,7 @@ RSpec.describe "Settings::Passwords", type: :request do
     end
   end
 
-  describe "PATCH /settings/password as a provider" do
+  describe "PATCH /configuracion/contrasena as a provider" do
     let(:provider) { users(:provider_user) }
 
     before { sign_in provider }

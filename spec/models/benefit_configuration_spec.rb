@@ -230,6 +230,7 @@ RSpec.describe BenefitConfiguration, type: :model do
       expect(consumers(:one).benefits.count).to eq(1)
       expect(consumers(:one).benefits.first.percentage).to eq(50)
       expect(consumers(:one).benefits.first.amount).to eq(20)
+      expect(consumers(:one).benefits.first.max_price).to eq(300)
       expect(consumers(:one).benefits.first.due_date).to eq(Date.current.end_of_month)
     end
 
@@ -288,6 +289,20 @@ RSpec.describe BenefitConfiguration, type: :model do
 
       benefit_configuration.apply_to_all_consumers
       expect(consumers(:one).benefits.count).to eq(0)
+    end
+  end
+
+  describe "#benefit_max_price" do
+    it "devuelve el max_price mínimo entre las reglas que lo definen" do
+      benefit_configurations(:monthly).destroy
+      config = build_base_subsidy(max_price: 350)
+
+      expect(config.send(:benefit_max_price)).to eq(350)
+    end
+
+    it "devuelve nil cuando ninguna regla define un precio máximo" do
+      config = build_configuration
+      expect(config.send(:benefit_max_price)).to be_nil
     end
   end
 end

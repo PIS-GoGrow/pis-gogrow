@@ -6,7 +6,7 @@ require "inertia_rails/rspec"
 RSpec.describe "Admin::Accounts", type: :request do
   fixtures :users, :companies, :admins, :providers, :consumers
 
-  describe "GET /admin/account" do
+  describe "GET /admin/cuenta" do
     it "redirects visitors without a session to sign in" do
       get admin_account_path
 

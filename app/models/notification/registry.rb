@@ -4,7 +4,7 @@
 # Se encarga de cargar este archivo y determinar los eventos y configuraciones que
 # ahí se definieron para poder ser usados en el resto del código.
 class Notification::Registry
-  PATH = Rails.root.join("config/notifications.yml")
+  PATH = Rails.root.join("config/notifications.yml").freeze
 
   Configuration = Data.define(:key, :roles, :configurable)
   Event = Data.define(:key, :configuration_key, :role, :requires_action)
@@ -87,7 +87,7 @@ class Notification::Registry
         [ key, Event.new(key:, configuration_key:, role:, requires_action:) ]
       end
 
-      [ configurations.freeze, events.freeze ]
+      [ configurations.freeze, events.freeze ].freeze
     end
 
     def parse_roles(key, roles)

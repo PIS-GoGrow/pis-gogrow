@@ -25,7 +25,7 @@ class Consumer < ApplicationRecord
     debt = total_debt
     threshold = company.debt_alert_threshold
     alert = user.notifications.active.find_by(event: "debt_threshold_exceeded", notifiable: self)
-    data = { debt: format_amount(debt), threshold: format_amount(threshold) }
+    data = { debt: Account.format_amount(debt), threshold: Account.format_amount(threshold) }
 
     if debt <= threshold
       alert&.close!
@@ -50,6 +50,19 @@ class Consumer < ApplicationRecord
     benefits.current.monthly.first
   end
 
+  # Devuelve el porcentaje del beneficio mensual actual
+  def monthly_benefit_percentage
+    current_monthly_benefit&.percentage || 0
+  end
+
+  def special_benefits
+    benefits.current
+      .where(benefit_configuration: BenefitConfiguration.special.active)
+  end
+
+  # Devuelve la cantidad del beneficio mensual actual.
+  # No tiene en cuenta las órdenes que ya se hicieron: para eso consultar
+  # remaining_monthly_benefit
   def monthly_benefit_available
     current_monthly_benefit&.amount || 0
   end
@@ -131,14 +144,6 @@ class Consumer < ApplicationRecord
       { id: "office", label: I18n.t("pages.orders.addresses.office"), address: company.address },
       *custom.partition { it[:address] == last_used }.flatten
     ].select { it[:address].present? }.uniq { it[:address] }
-  end
-
-  private
-
-  def format_amount(amount)
-    ActiveSupport::NumberHelper.number_to_rounded(
-      amount, precision: 2, strip_insignificant_zeros: true, delimiter: ".", separator: ","
-    )
   end
 end
 

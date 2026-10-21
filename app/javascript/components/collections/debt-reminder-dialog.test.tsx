@@ -23,7 +23,7 @@ vi.mock("@inertiajs/react", async () => {
 
 describe("DebtReminderDialog", () => {
   const defaultProps = {
-    action: "/provider/collections/42/debt_reminders",
+    action: "/provider/cobros/42/recordatorios-de-deuda",
     eligible: true,
     employeeName: "Juan Pérez",
     month: "Octubre 2026",
@@ -101,7 +101,7 @@ describe("DebtReminderDialog", () => {
     )
 
     expect(postMock).toHaveBeenCalledWith(
-      "/provider/collections/42/debt_reminders",
+      "/provider/cobros/42/recordatorios-de-deuda",
       {},
       expect.objectContaining({
         preserveScroll: true,

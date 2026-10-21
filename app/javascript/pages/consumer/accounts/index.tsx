@@ -26,6 +26,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
+import { formatMoney } from "@/lib/money"
 import { consumerAccounts } from "@/routes"
 import type {
   Account,
@@ -129,7 +130,7 @@ export default function Index({
               </Badge>
             </CardDescription>
             <CardTitle>
-              ${current_month_debt}
+              {formatMoney(current_month_debt)}
               <span className="text-zinc-500 dark:text-zinc-400">
                 {" | "}
                 {current_month_ordered}
@@ -170,7 +171,7 @@ export default function Index({
                       {t("pages.accounts.index.total_debt")}
                     </Badge>
                   </CardDescription>
-                  <CardTitle>${total_debt}</CardTitle>
+                  <CardTitle>{formatMoney(total_debt)}</CardTitle>
                 </CardHeader>
               </Card>
 

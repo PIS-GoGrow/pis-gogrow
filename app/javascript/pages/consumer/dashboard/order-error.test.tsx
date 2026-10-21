@@ -30,7 +30,7 @@ vi.mock("@inertiajs/react", async () => {
 describe("OrderError Component", () => {
   const defaultProps = {
     retry: vi.fn(),
-    homeUrl: "/dashboard",
+    homeUrl: "/menu-semanal",
   }
 
   it("renderiza el título de error y el icono dentro de la tarjeta", () => {
@@ -89,10 +89,10 @@ describe("OrderError Component", () => {
   })
 
   it("renderiza el enlace Volver a Menú apuntando a la URL configurada", () => {
-    render(<OrderError {...defaultProps} homeUrl="/custom-dashboard" />)
+    render(<OrderError {...defaultProps} />)
 
     const homeLink = screen.getByRole("link", { name: "Volver a Menú" })
     expect(homeLink).toBeInTheDocument()
-    expect(homeLink).toHaveAttribute("href", "/custom-dashboard")
+    expect(homeLink).toHaveAttribute("href", defaultProps.homeUrl)
   })
 })

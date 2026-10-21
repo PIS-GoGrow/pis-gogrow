@@ -7,7 +7,7 @@ RSpec.describe "Settings::Sessions", type: :request do
 
   before { sign_in users(:one) }
 
-  describe "GET /settings/sessions" do
+  describe "GET /configuracion/sesiones" do
     it "renders the sessions index" do
       get settings_sessions_path
       expect(response).to have_http_status(:success)

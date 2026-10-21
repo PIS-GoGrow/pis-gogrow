@@ -19,7 +19,7 @@ RSpec.describe "Settings::Notifications", type: :request do
   let(:other_employee) { users(:other_consumer_user) }
   let(:order_updates) { Notification::Configuration.find_by!(key: "order_updates") }
 
-  describe "GET /settings/notifications" do
+  describe "GET /configuracion/notificaciones" do
     it "le muestra al empleado solo los grupos configurables de su rol, apagados al principio" do
       sign_in employee, role: :consumer
 
@@ -87,7 +87,7 @@ RSpec.describe "Settings::Notifications", type: :request do
     end
   end
 
-  describe "PATCH /settings/notifications/:id" do
+  describe "PATCH /configuracion/notificaciones/:id" do
     before { sign_in employee, role: :consumer }
 
     it "prender suscribe al empleado en sesión" do
@@ -132,7 +132,7 @@ RSpec.describe "Settings::Notifications", type: :request do
     end
   end
 
-  describe "PATCH /settings/notifications/:id as RRHH" do
+  describe "PATCH /configuracion/notificaciones/:id as RRHH" do
     let(:admin) { users(:admin) }
     let(:pending_invoices) { Notification::Configuration.find_by!(key: "hr_pending_invoices") }
 

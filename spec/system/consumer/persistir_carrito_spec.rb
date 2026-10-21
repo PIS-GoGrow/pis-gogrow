@@ -32,7 +32,7 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     expect(page).to have_content("Notas para este plato")
     click_button "Agregar"
 
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
     expect(page).to have_content("Milanesa con papas fritas x1")
   end
@@ -44,7 +44,7 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     visit dashboard_path
 
     # El carrito en sessionStorage debe conservar la selección
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
     expect(page).to have_content("Milanesa con papas fritas x1")
 
@@ -63,7 +63,7 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     # Regresamos al menú del día / dashboard
     visit dashboard_path
 
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
     expect(page).to have_content("Milanesa con papas fritas x1")
   end

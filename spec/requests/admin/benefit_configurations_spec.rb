@@ -10,7 +10,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
 
   before { sign_in admin_user, role: :admin }
 
-  describe "GET /admin/benefit_configurations" do
+  describe "GET /admin/subsidios" do
     it "renders the page with no configuration yet" do
       BenefitConfiguration.destroy_all
 
@@ -79,7 +79,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
     end
   end
 
-  describe "POST /admin/benefit_configurations" do
+  describe "POST /admin/subsidios" do
     before do
       BenefitConfiguration.destroy_all
     end

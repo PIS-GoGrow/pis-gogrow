@@ -14,7 +14,7 @@ RSpec.describe "Admin::Consumers", type: :request do
     Consumer.create!(user:, company:, address: "Rivera 2001")
   end
 
-  describe "GET /admin/consumers" do
+  describe "GET /admin/empleados" do
     it "redirects visitors to the sign in page" do
       get admin_consumers_path
       expect(response).to redirect_to(sign_in_path)
@@ -121,7 +121,7 @@ RSpec.describe "Admin::Consumers", type: :request do
     end
   end
 
-  describe "GET /admin/consumers/:id" do
+  describe "GET /admin/empleados/:id" do
     context "when signed in as HR" do
       before { sign_in users(:admin), role: :admin }
 

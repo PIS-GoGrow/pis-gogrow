@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/collapsible"
 import { Separator } from "@/components/ui/separator"
 import { SheetTrigger } from "@/components/ui/sheet"
+import { formatMoney } from "@/lib/money"
 import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
@@ -78,7 +79,7 @@ export default function PaymentHistoryCard({
 
         <CardTitle className="flex items-center">
           <span>
-            ${account.orders_price_sum}
+            {formatMoney(account.orders_price_sum ?? 0)}
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
               {account.orders_amount_sum}{" "}

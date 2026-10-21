@@ -41,16 +41,12 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
   after { Capybara.default_max_wait_time = 2 }
 
+  # Formato único de importes de la app: "$19.500", y "$950,75" con centésimos.
   def money(amount)
-    whole, cents = format("%.2f", amount).split(".")
-    "#{whole.reverse.scan(/\d{1,3}/).join('.').reverse},#{cents} UYU"
-  end
-
-  # El total de Pagos pendientes va como en el diseño: "$19.500".
-  def short_money(amount)
     whole, cents = format("%.2f", amount).split(".")
     "$#{whole.reverse.scan(/\d{1,3}/).join('.').reverse}#{",#{cents}" unless cents == "00"}"
   end
+  alias_method :short_money, :money
 
   def month_label(date)
     I18n.l(date, format: :month_year)
@@ -182,7 +178,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
       click_on "Historial"
 
-      within(:css, "[data-status='approved']") { expect(page).to have_content("Confirmado") }
+      within(:css, "[data-status='approved']") { expect(page).to have_content("Aprobado") }
       expect(page).to have_content(money(settled_period.amount))
       expect(page).to have_no_content("Vence:")
     end

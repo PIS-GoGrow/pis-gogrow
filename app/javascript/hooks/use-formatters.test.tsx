@@ -8,21 +8,22 @@ vi.mock("@inertiajs/react", () => ({
 }))
 
 describe("useFormatters", () => {
-  describe("formatMoneyShort", () => {
-    const { formatMoneyShort } = renderHook(() => useFormatters()).result
-      .current
+  describe("formatMoney", () => {
+    const { formatMoney } = renderHook(() => useFormatters()).result.current
 
     it("pega el símbolo y agrupa los miles aunque sean cuatro cifras", () => {
-      expect(formatMoneyShort(2400)).toBe("$2.400")
-      expect(formatMoneyShort(12400)).toBe("$12.400")
+      expect(formatMoney(2400)).toBe("$2.400")
+      expect(formatMoney(12400)).toBe("$12.400")
     })
 
     it("no agrega decimales a un monto entero", () => {
-      expect(formatMoneyShort(0)).toBe("$0")
+      expect(formatMoney(0)).toBe("$0")
+      expect(formatMoney(1250)).toBe("$1.250")
     })
 
     it("conserva los centavos cuando los hay", () => {
-      expect(formatMoneyShort(300.5)).toBe("$300,50")
+      expect(formatMoney(300.5)).toBe("$300,50")
+      expect(formatMoney(440.25)).toBe("$440,25")
     })
   })
 
