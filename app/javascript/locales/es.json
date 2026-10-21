@@ -739,6 +739,7 @@
           "cannot_cancel": {
             "already_closed": "Este pedido ya está cerrado.",
             "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",
+            "order_deadline_passed": "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
           },
           "history_address": "Lo recibiste en: %{address} (%{delivery_method})",

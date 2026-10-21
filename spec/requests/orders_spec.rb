@@ -1221,6 +1221,20 @@ RSpec.describe "Orders", type: :request do
         expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
       end
 
+      it "refuses a direct request against a pending order after the provider's deadline on its delivery day" do
+        order = orders(:upcoming_pending_today)
+        order.schedule.menu.provider.update!(order_deadline: "12:00")
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          patch cancel_consumer_order_path(order)
+        end
+
+        expect(order.reload).to be_pending
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
+      end
+
       it "refuses a direct request against a pending order whose delivery day already passed" do
         order = orders(:history_pending_past)
 

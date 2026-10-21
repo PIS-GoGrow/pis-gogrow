@@ -410,6 +410,46 @@ RSpec.describe Order, type: :model do
       expect(orders(:upcoming_pending_today)).to be_cancellable
     end
 
+    context "when the provider's order deadline is set" do
+      let(:order) { orders(:upcoming_pending_today) }
+
+      before { order.schedule.menu.provider.update!(order_deadline: "12:00") }
+
+      it "lets a pending order be cancelled on its delivery day before the deadline" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 11, min: 59)) do
+          expect(order).to be_cancellable
+        end
+      end
+
+      it "blocks a pending order on its delivery day once the deadline passed" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 12)) do
+          expect(order).not_to be_cancellable
+          expect(order.cancellation_block_reason).to eq("order_deadline_passed")
+        end
+      end
+
+      it "does not cancel a pending order on its delivery day once the deadline passed" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(order.cancel(by: users(:one))).to be(false)
+          expect(order.reload).to be_pending
+        end
+      end
+
+      it "keeps the confirmed reason for a confirmed order after the deadline" do
+        order.update!(status: :confirmed)
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(order.cancellation_block_reason).to eq("confirmed_for_today")
+        end
+      end
+
+      it "still lets an order for a later day be cancelled after today's deadline" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(orders(:upcoming_pending_future)).to be_cancellable
+        end
+      end
+    end
+
     it "lets a confirmed order be cancelled while its delivery day is still ahead" do
       expect(orders(:upcoming_confirmed_future)).to be_cancellable
     end
