@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
+import { settingsNotifications } from "@/routes"
+
 import Show from "./show"
 
 const auth = {
@@ -112,5 +114,13 @@ describe("Consumer account page", () => {
     expect(screen.getByRole("navigation")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Menú" })).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Cuenta" })).toBeInTheDocument()
+  })
+
+  it("links to notification settings", () => {
+    render(<Show benefit={benefit} benefit_summary={summary} />)
+
+  expect(
+    screen.getByRole("link", { name: /Notificaciones/ }),
+  ).toHaveAttribute("href", settingsNotifications.index().url)
   })
 })
