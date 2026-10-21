@@ -14,6 +14,7 @@ import {
   adminBenefitConfigurations,
   adminConsumers,
   adminDashboard,
+  adminOrderEvents,
   adminPayments,
   adminPreferences,
 } from "@/routes"
@@ -76,6 +77,7 @@ export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
         adminPreferences.show().url,
         "/configuracion",
         adminBenefitConfigurations.index().url,
+        adminOrderEvents.index().url,
       ],
       mobileIcon: (
         <HugeiconsIcon

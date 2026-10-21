@@ -47,6 +47,9 @@ class Order < ApplicationRecord
   has_many :order_benefits, dependent: :destroy
   has_many :benefits, through: :order_benefits
 
+  # Sin dependent: la auditoría se conserva aunque se borre el pedido.
+  has_many :events, class_name: "OrderEvent"
+
   # El mensaje de aclaraciones es opcional: la pantalla manda "" cuando el
   # empleado no escribe nada, y sin esto el pedido queda con un string vacío que
   # las vistas no distinguen de un nil (muestran "Notas" en vez de "Sin notas").
@@ -85,6 +88,7 @@ class Order < ApplicationRecord
       .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC NULLS LAST"))
   }
   after_create :ensure_accounts!
+  after_save :record_event
   after_update_commit :sync_accounts,
     if: -> { saved_change_to_status? || saved_change_to_price? || saved_change_to_discounted_price? }
   after_destroy_commit -> { @accounts_to_sync.each(&:sync_amount!) }
@@ -490,6 +494,33 @@ class Order < ApplicationRecord
 
   def sync_accounts
     accounts.each(&:sync_amount!)
+  end
+
+  # Corre dentro de la transacción del guardado: un cambio no queda sin su
+  # registro, ni un registro de un cambio que se revirtió.
+  def record_event
+    changeset = saved_changes.slice(
+      "status", "amount", "price", "discounted_price", "delivery_method", "address",
+      "notes", "selected_options", "rejection_reason", "rejection_details"
+    )
+    return if changeset.empty?
+
+    OrderEvent.create!(
+      order_id: id,
+      company_id: consumer.company_id,
+      user: Current.user,
+      actor_name: Current.user&.name,
+      role: Current.session&.role,
+      action: event_action(changeset),
+      changeset:
+    )
+  end
+
+  def event_action(changeset)
+    return :created if previously_new_record?
+    return status if changeset.key?("status")
+
+    (changeset.keys - %w[price discounted_price]).empty? ? :price_changed : :modified
   end
 
   def remember_accounts
