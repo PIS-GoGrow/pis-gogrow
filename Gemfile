@@ -113,5 +113,9 @@ gem "omniauth"
 gem "omniauth-google-oauth2"
 gem "omniauth-rails_csrf_protection"
 
+# Lee las planillas que el proveedor importa: cubre xlsx, ods y csv con la
+# misma interfaz (ver docs/importar-menu.md).
+gem "roo", "~> 3.0"
+
 gem "sentry-ruby", "~> 6.5"
 gem "sentry-rails", "~> 6.5"
