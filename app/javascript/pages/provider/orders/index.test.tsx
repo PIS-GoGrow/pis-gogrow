@@ -88,7 +88,7 @@ describe("Provider orders page", () => {
     expect(screen.getByRole("heading", { name: "Pedidos" })).toBeInTheDocument()
     expect(screen.getByRole("tab", { name: "Próximos" })).toBeInTheDocument()
     expect(screen.getByRole("tab", { name: "Historial" })).toBeInTheDocument()
-    expect(screen.getByRole("tab", { name: "Por revisar" })).toBeInTheDocument()
+    expect(screen.getByRole("tab", { name: "Pendiente" })).toBeInTheDocument()
     expect(screen.getByRole("tab", { name: "Confirmados" })).toBeInTheDocument()
     expect(screen.getByRole("tab", { name: "Todos" })).toHaveAttribute(
       "aria-selected",
@@ -114,7 +114,7 @@ describe("Provider orders page", () => {
     const user = userEvent.setup()
     renderPage()
 
-    await user.click(screen.getByRole("tab", { name: "Por revisar" }))
+    await user.click(screen.getByRole("tab", { name: "Pendiente" }))
 
     expect(screen.getByText("Bruno Pérez - GoGrow")).toBeInTheDocument()
     expect(

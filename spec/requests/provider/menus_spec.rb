@@ -11,7 +11,7 @@ RSpec.describe "Provider::Menus", type: :request do
   let(:other_provider_user) { users(:other_provider_user) }
   let(:other_provider) { providers(:endulzate) }
 
-  describe "GET /provider/menus/new" do
+  describe "GET /provider/platos/nuevo" do
     it "renders the new dish page with the publication dates" do
       travel_to Date.new(2030, 1, 9)
       sign_in provider_user, role: :provider
@@ -44,7 +44,7 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
-  describe "POST /provider/menus" do
+  describe "POST /provider/platos" do
     before { sign_in provider_user, role: :provider }
 
     it "redirects visitors without a session to the sign in page" do
@@ -283,7 +283,7 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
-  describe "GET /provider/menus/:id/edit" do
+  describe "GET /provider/platos/:id/editar" do
     it "redirects visitors without a session to the sign in page" do
       get edit_provider_menu_path(menus(:milanesa))
 
@@ -361,7 +361,7 @@ RSpec.describe "Provider::Menus", type: :request do
       it "goes back to the page the dish was opened from" do
         get edit_provider_menu_path(menus(:milanesa), return_to: schedules_path(tab: "saved"))
 
-        expect(inertia.props[:return_to]).to eq("/schedules?tab=saved")
+        expect(inertia.props[:return_to]).to eq("/publicar-menu?tab=saved")
       end
 
       it "ignores a return_to that points outside the app" do
@@ -468,7 +468,7 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
-  describe "PATCH /provider/menus/:id" do
+  describe "PATCH /provider/platos/:id" do
     it "redirects visitors without a session to the sign in page" do
       patch provider_menu_path(menus(:milanesa)), params: { menu: { name: "Nuevo" } }
 
@@ -603,7 +603,7 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
-  describe "PATCH /provider/menus/:id from a programmed day" do
+  describe "PATCH /provider/platos/:id from a programmed day" do
     before { sign_in provider_user, role: :provider }
 
     let(:schedule) { schedules(:future) }
@@ -628,10 +628,10 @@ RSpec.describe "Provider::Menus", type: :request do
     end
 
     it "keeps the page the dish was opened from after saving" do
-      patch provider_menu_path(menus(:milanesa)), params: params.merge(return_to: "/schedules?tab=saved")
+      patch provider_menu_path(menus(:milanesa)), params: params.merge(return_to: "/publicar-menu?tab=saved")
 
       expect(response).to redirect_to(
-        edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id, return_to: "/schedules?tab=saved")
+        edit_provider_menu_path(menus(:milanesa), schedule_id: schedule.id, return_to: "/publicar-menu?tab=saved")
       )
     end
 
@@ -757,7 +757,7 @@ RSpec.describe "Provider::Menus", type: :request do
     end
   end
 
-  describe "DELETE /provider/menus/:id" do
+  describe "DELETE /provider/platos/:id" do
     before { sign_in provider_user, role: :provider }
 
     it "removes the dish from the saved dishes and redirects to that tab" do
@@ -830,7 +830,7 @@ RSpec.describe "Provider::Menus", type: :request do
   end
 
   # IBP-051 CA3: es el camino que usa "Agregar platos → Platos guardados".
-  describe "POST /provider/menus/publish" do
+  describe "POST /provider/platos/publicar" do
     let(:milanesa) { menus(:milanesa) }
 
     before do

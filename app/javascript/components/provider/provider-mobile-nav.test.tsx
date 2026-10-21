@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { ProviderMobileNav } from "./provider-mobile-nav"
 
 const page = vi.hoisted(() => ({
-  url: "/provider/dashboard",
+  url: "/proveedor/inicio",
   component: "provider/dashboard/index",
 }))
 
@@ -32,7 +32,7 @@ vi.mock("@inertiajs/react", async () => {
 
 describe("ProviderMobileNav", () => {
   afterEach(() => {
-    page.url = "/provider/dashboard"
+    page.url = "/proveedor/inicio"
     page.component = "provider/dashboard/index"
   })
 
@@ -48,23 +48,23 @@ describe("ProviderMobileNav", () => {
 
     expect(menu.getByRole("link", { name: "Inicio" })).toHaveAttribute(
       "href",
-      "/provider/dashboard",
+      "/proveedor/inicio",
     )
     expect(menu.getByRole("link", { name: "Menú" })).toHaveAttribute(
       "href",
-      "/schedules",
+      "/publicar-menu",
     )
     expect(menu.getByRole("link", { name: "Pedidos" })).toHaveAttribute(
       "href",
-      "/provider/orders",
+      "/proveedor/pedidos",
     )
     expect(menu.getByRole("link", { name: "Cobros" })).toHaveAttribute(
       "href",
-      "/provider/collections",
+      "/proveedor/cobros",
     )
     expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
       "href",
-      "/provider/account",
+      "/proveedor/cuenta",
     )
   })
 
@@ -81,7 +81,7 @@ describe("ProviderMobileNav", () => {
   })
 
   it("marca Menú como la página actual al editar un plato", () => {
-    page.url = "/provider/menus/1/edit"
+    page.url = "/proveedor/platos/1/editar"
     page.component = "provider/menus/edit"
 
     const menu = nav()
@@ -93,7 +93,7 @@ describe("ProviderMobileNav", () => {
   })
 
   it("marca Cuenta como la página actual en Entregas", () => {
-    page.url = "/provider/deliveries"
+    page.url = "/proveedor/entregas"
     page.component = "provider/deliveries/show"
 
     const menu = nav()

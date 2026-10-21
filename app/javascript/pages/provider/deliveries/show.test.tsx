@@ -101,7 +101,7 @@ describe("Provider Deliveries Show Page", () => {
 
     expect(patchMock).toHaveBeenCalledTimes(1)
     expect(patchMock).toHaveBeenCalledWith(
-      "/provider/deliveries",
+      "/proveedor/entregas",
       { home_delivery: false },
       expect.objectContaining({ preserveScroll: true }),
     )
@@ -117,7 +117,7 @@ describe("Provider Deliveries Show Page", () => {
     )
 
     expect(patchMock).toHaveBeenCalledWith(
-      "/provider/deliveries",
+      "/proveedor/entregas",
       { home_delivery: true },
       expect.anything(),
     )

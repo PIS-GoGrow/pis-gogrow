@@ -16,7 +16,7 @@ RSpec.describe "Provider::Collections", type: :request do
     props[tab].find { it[:month] == I18n.l(month, format: :month_name_year) }
   end
 
-  describe "GET /provider/collections" do
+  describe "GET /provider/cobros" do
     it "mantiene el subtotal y aplica IVA una sola vez en detalle, deuda e historial" do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
@@ -283,7 +283,7 @@ RSpec.describe "Provider::Collections", type: :request do
     end
   end
 
-  describe "GET /provider/collections/:id" do
+  describe "GET /provider/cobros/:id" do
     it "keeps the individual orders available after the group is settled" do
       current_accounts = providers(:tuviandita).accounts.current
       current_accounts.each do |account|

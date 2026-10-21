@@ -25,7 +25,7 @@ async function openReview(canApprove = true) {
     <PaymentReviewResultProvider value={showResult}>
       <PaymentReviewSheet
         paymentId={17}
-        receiptUrl="/provider/payments/17/receipt"
+        receiptUrl="/provider/comprobantes/17/archivo"
         contentType="image/png"
         filename="Empleado de prueba"
         expectedAmount={800}
@@ -48,18 +48,21 @@ describe("PaymentReviewSheet", () => {
   it("shows the account amount and downloads the existing protected receipt", async () => {
     await openReview()
     expect(screen.getByText("Importe esperado:")).toBeInTheDocument()
-    expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("$800")).toBeInTheDocument()
     expect(
       screen.getByText(/importe transferido debe verificarse en el archivo/),
     ).toBeInTheDocument()
     const download = screen.getByRole("link", { name: "Descargar comprobante" })
-    expect(download).toHaveAttribute("href", "/provider/payments/17/receipt")
+    expect(download).toHaveAttribute(
+      "href",
+      "/provider/comprobantes/17/archivo",
+    )
     expect(download).toHaveAttribute("download")
   })
 
   it("prevents current-month approval while allowing rejection", async () => {
     const user = await openReview(false)
-    const confirm = screen.getByRole("button", { name: "Confirmar" })
+    const confirm = screen.getByRole("button", { name: "Aprobar" })
     expect(confirm).toBeDisabled()
     expect(confirm).toHaveAccessibleDescription(/mes en curso/)
     expect(screen.getByRole("button", { name: "Reportar" })).toBeEnabled()
@@ -69,7 +72,7 @@ describe("PaymentReviewSheet", () => {
 
   it("approves an eligible payment and prevents duplicate actions during processing", async () => {
     const user = await openReview()
-    const confirm = screen.getByRole("button", { name: "Confirmar" })
+    const confirm = screen.getByRole("button", { name: "Aprobar" })
     expect(confirm).toBeEnabled()
     confirm.focus()
     expect(confirm).toHaveFocus()
@@ -79,14 +82,14 @@ describe("PaymentReviewSheet", () => {
       { status: "approved" },
       expect.any(Object),
     )
-    expect(screen.getByRole("button", { name: /Confirmando/ })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /Aprobando/ })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Reportar" })).toBeDisabled()
     const callbacks = patch.mock.calls[0][2] as {
       onFinish: () => void
       onSuccess: () => void
     }
     act(() => callbacks.onFinish())
-    expect(screen.getByRole("button", { name: "Confirmar" })).toBeEnabled()
+    expect(screen.getByRole("button", { name: "Aprobar" })).toBeEnabled()
     act(() => callbacks.onSuccess())
     expect(showResult).toHaveBeenCalledWith("approved")
   })

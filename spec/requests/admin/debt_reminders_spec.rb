@@ -15,7 +15,7 @@ RSpec.describe "Admin::DebtReminders", type: :request do
     end
   end
 
-  describe "POST /admin/consumers/:consumer_id/debt_reminders" do
+  describe "POST /admin/empleados/:consumer_id/recordatorios-de-deuda" do
     it "redirige al inicio de sesión cuando no hay sesión activa" do
       post admin_consumer_debt_reminders_path(consumer)
 
@@ -102,7 +102,7 @@ RSpec.describe "Admin::DebtReminders", type: :request do
     end
   end
 
-  describe "GET /admin/consumers/:id" do
+  describe "GET /admin/empleados/:id" do
     before { sign_in admin_user, role: :admin }
 
     it "manda el botón habilitado cuando hay deuda vencida" do

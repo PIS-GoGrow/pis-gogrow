@@ -138,7 +138,7 @@ RSpec.describe "OmniauthCallbacks", type: :request do
     end
   end
 
-  describe "GET /provider/dashboard" do
+  describe "GET /provider/inicio" do
     it "rejects a signed-in user with no linked provider" do
       sign_in users(:one), role: :consumer
 
