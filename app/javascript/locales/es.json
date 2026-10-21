@@ -671,6 +671,9 @@
           "monthly_limit": "Viandas subsidiadas por mes",
           "monthly_remaining": "Te quedan este mes",
           "no_benefit": "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa.",
+          "notifications": "Notificaciones",
+          "notifications_description": "Configurá qué alertas querés recibir",
+          "settings": "Configuración",
           "sign_out": "Salir",
           "title": "Mi cuenta"
         }
@@ -1529,6 +1532,7 @@
         },
         "notifications": {
           "back": "Volver a Cuenta",
+          "back_to_account": "Volver a Mi cuenta",
           "description": "Configurá qué alertas querés recibir por WhatsApp",
           "heading": "Notificaciones",
           "preferences_description": "Activá o desactivá las categorías de avisos que querés recibir.",

@@ -1306,6 +1306,9 @@ es:
         meals_one: "%{count} vianda"
         meals_other: "%{count} viandas"
         no_benefit: "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa."
+        settings: "Configuración"
+        notifications: "Notificaciones"
+        notifications_description: "Configurá qué alertas querés recibir"
     provider_accounts:
       show:
         title: "Cuenta"
@@ -1517,6 +1520,7 @@ es:
         preferences_heading: "Preferencias de RR. HH."
         preferences_description: "Activá o desactivá las categorías de avisos que querés recibir."
         back: "Volver a Cuenta"
+        back_to_account: "Volver a Mi cuenta"
   date:
     formats:
       month_year: "%B %Y"
