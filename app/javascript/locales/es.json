@@ -736,6 +736,7 @@
             "description": "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras.",
             "title": "¿Cancelar pedido?"
           },
+          "cancelled_address": "Lo pediste para: %{address} (%{delivery_method})",
           "cannot_cancel": {
             "already_closed": "Este pedido ya está cerrado.",
             "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",
@@ -778,7 +779,6 @@
             "notes": "Notas",
             "notes_placeholder": "Sin salsa, sin cebolla…",
             "quantity": "Cantidad",
-            "remaining": "Quedan %{count} disponibles para esta fecha",
             "title": "Modificar pedido"
           },
           "no_notes": "Sin notas",
