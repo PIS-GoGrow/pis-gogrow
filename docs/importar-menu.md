@@ -48,10 +48,14 @@ orden no importa. Las filas que empiezan con `#` son ayuda y no se importan.
 | `precio` | sí | Número mayor que cero, sin símbolo de moneda |
 | `cupo` | sí | Porciones disponibles por día |
 | `lunes` … `viernes` | al menos una | `x` en los días en que se ofrece |
-| `desde` | no | Primer día que se programa (`AAAA-MM-DD`). Por defecto, el lunes de la semana próxima |
+| `desde` | no | Primer día que se programa (`AAAA-MM-DD`), de hoy en adelante. Por defecto, el lunes de la semana próxima |
 | `hasta` | no | Último día que se programa. Vacío significa sin fecha de fin |
 | `limite` | no | Cuántas opciones puede elegir el empleado en cada grupo. Vacío es 1 |
 | `opciones_1` … `opciones_10` | no | Un grupo de opciones por columna |
+
+Las columnas `nombre`, `descripcion`, `precio` y `cupo` tienen que estar: si falta
+alguna, la planilla no se lee. Dos filas con el mismo nombre de plato también
+son un error, porque la planilla diría dos cosas del mismo plato.
 
 La plantilla está en [`public/plantillas/menu.csv`](../public/plantillas/menu.csv)
 y se abre con Excel, Google Sheets o LibreOffice.
@@ -95,14 +99,31 @@ validaciones, el archivado de platos y la programación sin duplicar nada.
 | `opciones_N` | Un `MenuOptionGroup` por columna (`name`, `options`, `required`, `limit`) |
 | Días marcados, `cupo`, `desde`, `hasta` | La agenda: `weekly` sin `hasta`, `range` con `hasta` |
 
-# Notas para quien lo implemente
+# Las piezas
+
+| Clase | Qué hace |
+|---|---|
+| [`Menus::Import::Sheet`](../app/services/menus/import/sheet.rb) | Abre el archivo con roo y devuelve una fila por plato, con el número de línea |
+| [`Menus::Import::Row`](../app/services/menus/import/row.rb) | Traduce la fila a los atributos y la agenda, y valida lo que se explica con la fila a la vista |
+| [`Menus::Import::Plan`](../app/services/menus/import/plan.rb) | Decide qué fila crea y cuál actualiza, y junta los errores de las filas y del archivo |
+| [`Menus::Import::Save`](../app/services/menus/import/save.rb) | Guarda el plan en una transacción, fila por fila, con `Menus::Create` o `Menus::Update` |
+
+La vista previa muestra un `Plan`. Confirmar lo vuelve a armar con el archivo
+que el navegador manda de nuevo y se lo pasa a `Save`: el archivo no queda
+guardado en el servidor entre los dos pasos.
+
+Al actualizar, los grupos de opciones se cruzan por nombre con los que el plato
+ya tenía. El que coincide conserva su id —los pedidos ya hechos cruzan con ese
+id la opción que eligió el empleado— y el que la planilla no trae se borra.
+
+# Notas de la implementación
 
 **`roo` descarta la primera fila si se usa `parse` sin argumentos**, porque la
-toma como encabezado. Comprobado: un archivo de tres líneas devuelve dos. Hay
-que leer fila por fila sobre `first_row..last_row` con `row(i)`, descartar las
-vacías y las que empiezan con `#`, y recién ahí tomar la primera fila restante
-como encabezado. Así el archivo tolera filas de ayuda, títulos y líneas en
-blanco arriba.
+toma como encabezado. Comprobado: un archivo de tres líneas devuelve dos. Por
+eso `Sheet` lee fila por fila sobre `first_row..last_row`, descarta las vacías y
+las que empiezan con `#`, y recién ahí toma la primera fila restante como
+encabezado. Así el archivo tolera filas de ayuda, títulos y líneas en blanco
+arriba.
 
 **Las filas de ayuda van entre comillas, y sin comillas adentro.** Se descartan
 después de parsear, así que afectan la lectura dos veces: una comilla doble
@@ -120,5 +141,7 @@ editor de texto.
   de instrucciones y listas desplegables hace falta `caxlsx` y un endpoint que
   lo genere.
 - **Límites distintos por grupo en un mismo plato** no se pueden expresar.
-- **Las variantes de un plato** (el mismo plato con otro precio para ciertas
-  fechas) tampoco: la importación crea o actualiza el plato guardado.
+- **Las variantes de un plato** se expresan de una sola forma: una fila con
+  `hasta` sobre un plato que ya existe se guarda como un cambio por rango,
+  igual que en el formulario de editar, o sea una variante para esas fechas. No
+  hay forma de importar el plato guardado y su variante en la misma planilla.
