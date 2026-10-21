@@ -19,6 +19,9 @@ es:
     consumer: "Consumidor"
     admin: "Admin"
   flash:
+    menu_imported:
+      one: "Importamos 1 plato de la planilla."
+      other: "Importamos %{count} platos de la planilla."
     cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
     order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
@@ -1313,6 +1316,30 @@ es:
         meals_one: "%{count} vianda"
         meals_other: "%{count} viandas"
         no_benefit: "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa."
+    provider_menu_imports:
+      new:
+        title: "Importar platos"
+        back: "Volver al menú"
+        steps:
+          title: "Cómo importar tu menú"
+          download: "Descargá la plantilla y abrila con Excel, Google Sheets o LibreOffice."
+          fill: "Una fila por plato: marcá con una x los días en que se ofrece y poné el cupo por día."
+          upload: "Subí la planilla y revisá la vista previa antes de confirmar."
+        limits: "Hasta %{rows} platos por planilla y %{size} MB por archivo. Se aceptan .xlsx, .csv y .ods."
+        template: "Descargar plantilla"
+        file_label: "Tu planilla"
+        preview_button: "Ver qué se va a importar"
+        file_error: "No se pudo leer la planilla"
+        preview:
+          title: "Vista previa"
+          counts: "%{create} para crear · %{update} para actualizar"
+          create: "Nuevo"
+          update: "Actualiza"
+          row: "Fila %{number}"
+          unnamed: "Sin nombre"
+          errors_title: "Hay que corregir la planilla"
+          errors_description: "No se importa ningún plato hasta que todas las filas estén bien."
+          confirm: "Confirmar importación"
     provider_accounts:
       show:
         title: "Cuenta"

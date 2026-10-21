@@ -107,10 +107,16 @@ validaciones, el archivado de platos y la programación sin duplicar nada.
 | [`Menus::Import::Row`](../app/services/menus/import/row.rb) | Traduce la fila a los atributos y la agenda, y valida lo que se explica con la fila a la vista |
 | [`Menus::Import::Plan`](../app/services/menus/import/plan.rb) | Decide qué fila crea y cuál actualiza, y junta los errores de las filas y del archivo |
 | [`Menus::Import::Save`](../app/services/menus/import/save.rb) | Guarda el plan en una transacción, fila por fila, con `Menus::Create` o `Menus::Update` |
+| [`Provider::MenuImportsController`](../app/controllers/provider/menu_imports_controller.rb) | Los dos pasos: `new` las instrucciones, `create` la vista previa y `confirm` la importación |
+| [`menu_imports/new.tsx`](../app/javascript/pages/provider/menu_imports/new.tsx) | La pantalla: descargar la plantilla, subirla, revisar y confirmar |
 
-La vista previa muestra un `Plan`. Confirmar lo vuelve a armar con el archivo
-que el navegador manda de nuevo y se lo pasa a `Save`: el archivo no queda
-guardado en el servidor entre los dos pasos.
+Se entra desde «Importar platos», en Publicar menú. La vista previa muestra un
+`Plan`. Confirmar lo vuelve a armar con el archivo que el navegador manda de
+nuevo —la planilla queda elegida en el formulario porque el pedido va con
+`preserveState`— y se lo pasa a `Save`: el archivo no queda guardado en el
+servidor entre los dos pasos. Si el proveedor elige otra planilla, la vista
+previa anterior se esconde: habla de un archivo que ya no es el que se va a
+importar.
 
 Al actualizar, los grupos de opciones se cruzan por nombre con los que el plato
 ya tenía. El que coincide conserva su id —los pedidos ya hechos cruzan con ese

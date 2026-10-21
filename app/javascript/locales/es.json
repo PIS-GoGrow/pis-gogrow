@@ -1057,6 +1057,34 @@
           "title": "Registro de proveedor"
         }
       },
+      "provider_menu_imports": {
+        "new": {
+          "back": "Volver al menú",
+          "file_error": "No se pudo leer la planilla",
+          "file_label": "Tu planilla",
+          "limits": "Hasta %{rows} platos por planilla y %{size} MB por archivo. Se aceptan .xlsx, .csv y .ods.",
+          "preview": {
+            "confirm": "Confirmar importación",
+            "counts": "%{create} para crear · %{update} para actualizar",
+            "create": "Nuevo",
+            "errors_description": "No se importa ningún plato hasta que todas las filas estén bien.",
+            "errors_title": "Hay que corregir la planilla",
+            "row": "Fila %{number}",
+            "title": "Vista previa",
+            "unnamed": "Sin nombre",
+            "update": "Actualiza"
+          },
+          "preview_button": "Ver qué se va a importar",
+          "steps": {
+            "download": "Descargá la plantilla y abrila con Excel, Google Sheets o LibreOffice.",
+            "fill": "Una fila por plato: marcá con una x los días en que se ofrece y poné el cupo por día.",
+            "title": "Cómo importar tu menú",
+            "upload": "Subí la planilla y revisá la vista previa antes de confirmar."
+          },
+          "template": "Descargar plantilla",
+          "title": "Importar platos"
+        }
+      },
       "provider_menus": {
         "edit": {
           "agenda": {
