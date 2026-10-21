@@ -18,7 +18,7 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
     }
   end
 
-  describe "GET /provider/payment_details" do
+  describe "GET /provider/datos-de-cobro" do
     it "muestra los datos de cobro del proveedor" do
       provider.update!(bank_name: "Itaú", bank_account_type: :checking)
       sign_in provider.user, role: :provider
@@ -44,7 +44,7 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
     end
   end
 
-  describe "PATCH /provider/payment_details" do
+  describe "PATCH /provider/datos-de-cobro" do
     before { sign_in provider.user, role: :provider }
 
     it "guarda los datos y persisten al volver a entrar" do
@@ -104,7 +104,7 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
     end
   end
 
-  describe "PATCH /provider/payment_details con otro rol" do
+  describe "PATCH /provider/datos-de-cobro con otro rol" do
     it "no deja que RRHH cambie los datos" do
       sign_in users(:admin), role: :admin
 

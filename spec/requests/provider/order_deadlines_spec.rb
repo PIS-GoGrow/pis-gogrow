@@ -14,7 +14,7 @@ RSpec.describe "Provider::OrderDeadlines", type: :request do
     provider.reload.order_deadline&.strftime("%H:%M")
   end
 
-  describe "PATCH /provider/order_deadline" do
+  describe "PATCH /provider/limite-de-pedidos" do
     it "redirects to sign in without a session" do
       patch provider_order_deadline_path, params: { order_deadline: "18:30" }
 

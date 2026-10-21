@@ -107,7 +107,7 @@ RSpec.describe "Consultar la información de un plato" do
     visit dashboard_path
     open_dish(menus(:sorrentinos))
 
-    expect(page).to have_content("Beneficio GoGrow (50%)")
+    expect(page).to have_content("Subsidio Base (50%)")
     expect(page).to have_content("Monto a pagar")
     expect(page).to have_content("$160")
   end

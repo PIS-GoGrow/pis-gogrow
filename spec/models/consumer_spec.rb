@@ -187,7 +187,7 @@ RSpec.describe Consumer, type: :model do
 
       expect(alerts.active.sole).to have_attributes(
         requires_action: true,
-        description: "Tu deuda es de $2.500 y superó el límite de $2.000 definido por RRHH. Regularizá tus pagos para que este aviso desaparezca."
+        description: "Tu deuda es de $2.500 y superó el límite de $2.000 definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca."
       )
     end
 

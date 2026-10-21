@@ -26,7 +26,7 @@ RSpec.describe "Provider::Invoices", type: :request do
     Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: Date.current, amount: 300)
   end
 
-  describe "POST /provider/invoices" do
+  describe "POST /provider/facturas" do
     it "aprueba la factura posterior al pago solo cuando el cobro vigente está aprobado" do
       sign_in provider_user, role: :provider
 
@@ -156,7 +156,7 @@ RSpec.describe "Provider::Invoices", type: :request do
     end
   end
 
-  describe "DELETE /provider/invoices/:id" do
+  describe "DELETE /provider/facturas/:id" do
     it "removes a pending invoice" do
       invoice = create_invoice
       sign_in provider_user, role: :provider
@@ -194,7 +194,7 @@ RSpec.describe "Provider::Invoices", type: :request do
     end
   end
 
-  describe "GET /provider/invoices/:id/file" do
+  describe "GET /provider/facturas/:id/archivo" do
     it "shows the file inline to preview it" do
       invoice = create_invoice
       sign_in provider_user, role: :provider

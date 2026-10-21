@@ -16,7 +16,7 @@ RSpec.describe "Provider invitations", type: :request do
     patch provider_invitation_path, params: { password: password, password_confirmation: confirmation }
   end
 
-  describe "GET /provider/invitation?token=" do
+  describe "GET /provider/invitacion?token=" do
     it "accepts the link and moves to a clean URL with the registration form" do
       open_invitation
 
@@ -85,7 +85,7 @@ RSpec.describe "Provider invitations", type: :request do
     end
   end
 
-  describe "GET /provider/invitation" do
+  describe "GET /provider/invitacion" do
     it "is closed without an accepted link" do
       get provider_invitation_path
 
@@ -129,7 +129,7 @@ RSpec.describe "Provider invitations", type: :request do
     end
   end
 
-  describe "PATCH /provider/invitation" do
+  describe "PATCH /provider/invitacion" do
     before { open_invitation }
 
     it "sets the password, verifies the account and consumes the invitation" do

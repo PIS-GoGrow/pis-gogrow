@@ -13,7 +13,7 @@ RSpec.describe "Admins", type: :request do
     user
   end
 
-  describe "GET /admin/dashboard" do
+  describe "GET /admin/inicio" do
     it "redirects visitors without a session to the sign in page" do
       get admin_dashboard_path
 

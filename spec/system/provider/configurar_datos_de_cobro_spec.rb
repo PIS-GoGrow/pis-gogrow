@@ -6,7 +6,7 @@ require "rails_helper"
 # preferencias de notificación de mi perfil para gestionar mi cuenta."
 #
 # Criterio 1 (datos de cobro), criterio 3 (validación y persistencia) y criterio 4
-# (auditoría y restricción de rol) sobre /provider/payment_details.
+# (auditoría y restricción de rol) sobre /provider/datos-de-cobro.
 #
 # La validación por campo y los valores límite del formato de tax_id también están
 # cubiertos a nivel request en spec/requests/provider/payment_details_spec.rb; acá

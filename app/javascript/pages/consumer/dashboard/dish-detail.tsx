@@ -1,4 +1,5 @@
 import { ChevronLeft, Star } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
@@ -6,11 +7,12 @@ import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { formatMoney } from "@/lib/money"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
-import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
-import { type Benefit, cartPricedItem, priceItems } from "./pricing"
+import type { PricedLine } from "./pricing"
+import { cartPricedItem, lastUnitsLine, priceItems } from "./pricing"
 
 interface Props {
   item: Schedule
@@ -20,7 +22,6 @@ interface Props {
   setNotes: (value: string) => void
   selections: Selections
   setSelections: (value: Selections) => void
-  benefit: Benefit
   cart: CartItem[]
   back: () => void
   add: () => void
@@ -34,22 +35,44 @@ export function DishDetail({
   setNotes,
   selections,
   setSelections,
-  benefit,
   cart,
   back,
   add,
 }: Props) {
   const { t } = useTranslation()
-  // El plato se agrega al final del carrito, así que lo que ya está ahí gasta
-  // primero el cupo y los usos de los beneficios.
-  const pricing = priceItems(
-    [
-      ...cart.map(cartPricedItem),
-      { key: "", date: item.date, price: item.menu.price, quantity },
-    ],
-    benefit,
-  )
-  const line = pricing.lines[""]
+  const [line, setLine] = useState<PricedLine | null>(null)
+
+  const inCart =
+    cartPricedItem(cart).find((i) => item.id === i.schedule_id)?.quantity ?? 0
+
+  useEffect(() => {
+    let cancelled = false
+
+    // Esperar 200 milisegundos para hacer la request, por si el usuario toca varias veces
+    // seguidas los botones de + o -.
+    const timeout = setTimeout(async () => {
+      try {
+        const result = await priceItems(
+          cartPricedItem([...cart, { ...item, quantity }]),
+        )
+        if (cancelled) return
+
+        const preLine = result.lines[String(item.id)]
+
+        setLine(
+          preLine ? lastUnitsLine(inCart + quantity, quantity, preLine) : null,
+        )
+      } finally {
+        // No hacer nada
+      }
+    }, 200)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
+    }
+  }, [cart, item, inCart, item.id, item.date, item.menu.price, quantity])
+
   const reviews = item.menu.reviews
   const choicesMissing = item.menu.option_groups.some(
     (group) => group.required && !selections[group.id]?.length,
@@ -73,7 +96,7 @@ export function DishDetail({
       <p className="text-muted-foreground mt-2 text-xs leading-5">
         {item.menu.description}
       </p>
-      <p className="mt-1 font-bold">{money(item.menu.price)}</p>
+      <p className="mt-1 font-bold">{formatMoney(item.menu.price)}</p>
       {item.orders_closed && (
         <p className="text-destructive mt-3 text-sm">
           {t("pages.consumer_dashboard.index.orders_closed")}
@@ -140,7 +163,7 @@ export function DishDetail({
           maxLength={140}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
-          placeholder="Escribe las notas que necesites..."
+          placeholder="Escribí las notas que necesites..."
           className="mt-3 field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-xs"
         />
         <p className="text-muted-foreground text-right text-[10px]">
@@ -148,14 +171,15 @@ export function DishDetail({
         </p>
       </section>
       <OrderSummary
-        subtotal={line.subtotal}
-        total={line.total}
-        tiers={line.tiers}
+        loading={false}
+        subtotal={line?.subtotal}
+        total={line?.total}
+        tiers={line?.tiers}
       />
       <BottomAction className="flex">
         <QuantityInput
           value={quantity}
-          max={item.remaining}
+          max={item.remaining - inCart}
           onChange={setQuantity}
         />
         <Button

@@ -30,7 +30,7 @@ RSpec.describe "Schedules", type: :request do
     JSON.parse(document.at_css('script[data-page="app"]').text)
   end
 
-  describe "GET /schedules" do
+  describe "GET /publicar-menu" do
     it "returns the current week for the provider" do
       user = users(:one)
       Provider.create!(user: user)
@@ -344,7 +344,7 @@ RSpec.describe "Schedules", type: :request do
     end
   end
 
-  describe "POST /schedules" do
+  describe "POST /publicar-menu" do
     it "publishes multiple menus for the selected date" do
       user = users(:one)
       provider = Provider.create!(user: user)
@@ -970,7 +970,7 @@ RSpec.describe "Schedules", type: :request do
     end
   end
 
-  describe "PATCH /schedules/:id/availability" do
+  describe "PATCH /publicar-menu/:id/disponibilidad" do
     it "marks the publication as sold out and records who and when" do
       user = users(:one)
       provider = Provider.create!(user: user)
@@ -1043,7 +1043,7 @@ RSpec.describe "Schedules", type: :request do
     end
   end
 
-  describe "DELETE /schedules/:id" do
+  describe "DELETE /publicar-menu/:id" do
     let(:provider_user) { users(:provider_user) }
     let(:provider) { providers(:tuviandita) }
     let(:menu) { menus(:milanesa) }

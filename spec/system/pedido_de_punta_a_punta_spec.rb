@@ -80,7 +80,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   end
 
   def open_cart
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
   end
 
@@ -115,9 +115,9 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     expect(page).to have_no_content(instead_of)
   end
 
-  # La confirmación redondea a pesos; las demás vistas usan el formato de moneda.
-  def confirmation_money(amount) = "$#{amount.round}"
-  def uyu(amount) = /#{amount.to_i},00/
+  # Formato único de moneda de toda la app (Account.format_amount / formatMoney).
+  def confirmation_money(amount) = Account.format_amount(amount)
+  def uyu(amount) = Account.format_amount(amount)
 
   describe "Pasos: P1 publica y edita, E1 pide y edita, P1 consulta" do
     it "deja el mismo pedido, importe, datos y estado en la confirmación, el historial y el proveedor" do
@@ -187,7 +187,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       expect(page).to have_content("Sin sal, con limón")
       expect_chosen_garnish("Papas", instead_of: "Puré")
       expect(page).to have_content("Colonia 1370")
-      expect(page).to have_content("Por revisar")
+      expect(page).to have_content("Pendiente")
       expect(page).to have_content(confirmation_money(edited.price))
       expect(page).to have_content(confirmation_money(edited.discounted_price))
       sign_out
@@ -243,7 +243,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       expect(e2_order.reload).to be_pending
       visit provider_order_path(e2_order)
-      expect(page).to have_content("Por revisar")
+      expect(page).to have_content("Pendiente")
       expect(page).to have_button("Confirmar")
       expect(page).to have_button("Rechazar")
     end

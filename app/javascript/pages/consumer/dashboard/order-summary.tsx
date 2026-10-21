@@ -1,18 +1,21 @@
 import { useTranslation } from "react-i18next"
 
+import { Spinner } from "@/components/ui/spinner"
+import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 
-import { money } from "./formatters"
 import type { DiscountTier } from "./pricing"
 
 interface Props {
-  subtotal: number
-  total: number
+  loading: boolean
+  subtotal?: number
+  total?: number
   tiers?: DiscountTier[]
   compact?: boolean
 }
 
 export function OrderSummary({
+  loading,
   subtotal,
   total,
   tiers = [],
@@ -20,35 +23,39 @@ export function OrderSummary({
 }: Props) {
   const { t } = useTranslation()
 
-  return (
-    <div className={cn("pt-4 text-sm", !compact && "space-y-3")}>
-      {!compact && (
-        <>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">
-              {t("pages.cart.subtotal")}
-            </span>
-            <span>{money(subtotal)}</span>
-          </div>
-          {tiers.map((tier, index) => (
-            <BenefitLine
-              key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
-              tier={tier}
-            />
-          ))}
-        </>
-      )}
-      <div
-        className={cn(
-          "flex justify-between text-xl font-bold",
-          !compact && "border-border border-t pt-3",
+  if (!loading) {
+    return (
+      <div className={cn("pt-4 text-sm", !compact && "space-y-3")}>
+        {!compact && (
+          <>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">
+                {t("pages.cart.subtotal")}
+              </span>
+              <span>{formatMoney(subtotal ?? 0)}</span>
+            </div>
+            {tiers.map((tier, index) => (
+              <BenefitLine
+                key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
+                tier={tier}
+              />
+            ))}
+          </>
         )}
-      >
-        <span>{t("pages.cart.total")}</span>
-        <span>{money(total)}</span>
+        <div
+          className={cn(
+            "flex justify-between text-xl font-bold",
+            !compact && "border-border border-t pt-3",
+          )}
+        >
+          <span>{t("pages.cart.total")}</span>
+          <span>{formatMoney(total ?? 0)}</span>
+        </div>
       </div>
-    </div>
-  )
+    )
+  } else {
+    return <Spinner className="mx-auto my-4" />
+  }
 }
 
 export function BenefitLine({
@@ -67,7 +74,7 @@ export function BenefitLine({
   return (
     <div className={cn("flex justify-between", className)}>
       <span className="text-muted-foreground">{label}</span>
-      <span className="text-[#29944c]">- {money(tier.discount)}</span>
+      <span className="text-[#29944c]">- {formatMoney(tier.discount)}</span>
     </div>
   )
 }

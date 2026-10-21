@@ -60,6 +60,10 @@ class Schedule < ApplicationRecord
     update(available:, availability_changed_at: Time.current, availability_changed_by: by)
   end
 
+  def price
+    menu.price
+  end
+
   private
 
   def close_missing_publication_notification

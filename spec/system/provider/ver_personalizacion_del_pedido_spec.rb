@@ -105,7 +105,7 @@ RSpec.describe "Ver la personalización del pedido", type: :system do
     find("section", text: "Elegí tu Salsa").find("label", text: "Bolognesa").click
     find("section", text: "Elegí tu Relleno").find("label", text: "Espinaca y queso").click
     click_button "Agregar"
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
     click_button "Confirmar pedido"
     expect(page).to have_content("¡Pedido recibido!")

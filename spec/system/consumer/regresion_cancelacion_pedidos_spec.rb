@@ -90,7 +90,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       visit provider_orders_path
       sleep 1.5
 
-      find("[role='tab']", text: "Por revisar").click
+      find("[role='tab']", text: "Pendiente").click
       expect(page).to have_no_content("PED-#{order_1.id}")
 
       find("[role='tab']", text: "Todos").click

@@ -16,10 +16,10 @@ describe("PaymentReviewResultDialog", () => {
   it("renders approved title and description when result is approved", () => {
     render(<PaymentReviewResultDialog result="approved" onClose={vi.fn()} />)
 
-    expect(screen.getByText("Cobro confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Cobro aprobado")).toBeInTheDocument()
     expect(
       screen.getByText(
-        "El cobro fue confirmado correctamente. Se notificará al usuario.",
+        "El cobro fue aprobado correctamente. Se notificará al usuario.",
       ),
     ).toBeInTheDocument()
     expect(

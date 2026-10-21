@@ -10,7 +10,7 @@ require "rails_helper"
 # (IBP-068, cubierto en configurar_modalidad_de_entrega_spec.rb). Acá se ejercita
 # sólo nombre y teléfono, que es lo que este cambio agregó a esa pantalla.
 #
-# El correo electrónico se edita en otra pantalla (/settings/email) y tiene su
+# El correo electrónico se edita en otra pantalla (/configuracion/correo-electronico) y tiene su
 # propio spec: editar_correo_proveedor_spec.rb. La foto no es editable todavía:
 # ver el TODO(integración) en consultar_cuenta_proveedor_spec.rb.
 RSpec.describe "Editar los datos personales del proveedor" do

@@ -3,7 +3,16 @@
 class MenuSerializer < ApplicationSerializer
   typelize_from Menu
 
-  attributes :id, :name, :description, :price, :created_at, :updated_at
+  attributes :id, :name, :description
+
+  # to_f y no el decimal crudo: Alba serializa BigDecimal como string ("300.0") y
+  # el tipo generado diría number.
+  typelize "number | null"
+  attribute :price do |menu|
+    menu.price&.to_f
+  end
+
+  attributes :created_at, :updated_at
 
   typelize "{ id: number; name: string; options: string[]; limit: number; required: boolean }[]"
   attribute :option_groups do |menu|

@@ -52,6 +52,16 @@ class BenefitRule < ApplicationRecord
     benefit_deadline consumer, date
   end
 
+  # Devuelve cuál es el precio máximo que acepta la regla
+  def benefit_max_price(consumer, date: Date.current)
+    raise NotImplementedError, "#{self.class} debe implementar benefit_max_price"
+  end
+
+  # Devuelve cuál es el precio máximo que acepta la regla
+  def benefit_max_price(consumer, date: Date.current)
+    raise NotImplementedError, "#{self.class} debe implementar benefit_max_price"
+  end
+
   private
 
   def monthly_benefit_exclusivity

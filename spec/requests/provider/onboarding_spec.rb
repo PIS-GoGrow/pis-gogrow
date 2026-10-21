@@ -28,7 +28,7 @@ RSpec.describe "Provider::Onboarding", type: :request do
     end
   end
 
-  describe "GET /provider/onboarding" do
+  describe "GET /provider/primeros-pasos" do
     before { sign_in provider.user, role: :provider }
 
     it "arranca en el primer paso" do
@@ -88,7 +88,7 @@ RSpec.describe "Provider::Onboarding", type: :request do
     end
   end
 
-  describe "PATCH /provider/onboarding" do
+  describe "PATCH /provider/primeros-pasos" do
     before { sign_in provider.user, role: :provider }
 
     let(:payment_params) do
@@ -285,7 +285,7 @@ RSpec.describe "Provider::Onboarding", type: :request do
       expect(response).to redirect_to(provider_onboarding_path(step: "done"))
       expect(provider.reload).to be_onboarded
 
-      # A. Pantalla de datos de cobro (/provider/payment_details)
+      # A. Pantalla de datos de cobro (/provider/datos-de-cobro)
       get provider_payment_details_path
       expect(response).to have_http_status(:ok)
       expect(inertia).to render_component("provider/payment_details/show")
@@ -297,7 +297,7 @@ RSpec.describe "Provider::Onboarding", type: :request do
         expect(props.dig("provider", "tax_id")).to eq("219876540019")
       end)
 
-      # B. Pantalla de configuración operativa (/provider/operational_settings)
+      # B. Pantalla de configuración operativa (/provider/configuracion-operativa)
       get provider_operational_settings_path
       expect(response).to have_http_status(:ok)
       expect(inertia).to render_component("provider/operational_settings/show")
@@ -305,7 +305,7 @@ RSpec.describe "Provider::Onboarding", type: :request do
         expect(props.dig(:provider, :order_deadline)).to eq("14:45")
       end)
 
-      # C. Pantalla de entregas (/provider/deliveries)
+      # C. Pantalla de entregas (/provider/entregas)
       get provider_deliveries_path
       expect(response).to have_http_status(:ok)
       expect(inertia).to render_component("provider/deliveries/show")
@@ -313,7 +313,7 @@ RSpec.describe "Provider::Onboarding", type: :request do
         expect(props.dig("provider", "home_delivery")).to be(false)
       end)
 
-      # D. Pantalla de notificaciones (/settings/notifications)
+      # D. Pantalla de notificaciones (/configuracion/notificaciones)
       if config
         get settings_notifications_path
         expect(response).to have_http_status(:ok)

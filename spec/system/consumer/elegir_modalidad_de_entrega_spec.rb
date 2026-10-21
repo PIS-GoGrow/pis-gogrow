@@ -68,7 +68,7 @@ RSpec.describe "Elegir la modalidad de entrega como empleado" do
     find_button("Agregar", exact: true).click
     # "Ver carrito" recién se habilita cuando el estado de React corrió, así que
     # se espera a que esté habilitado antes de clickearlo.
-    find_button("Ver carrito", exact: true, wait: Capybara.default_max_wait_time).click
+    click_link "Ver carrito"
     expect(page).to have_content("Dirección de entrega")
   end
 

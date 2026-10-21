@@ -5,7 +5,7 @@ require "rails_helper"
 # Historia IBP-048: "Como PROVEEDOR, quiero consultar y configurar los datos y
 # preferencias de notificación de mi perfil para gestionar mi cuenta."
 #
-# Criterio 1, la mitad "consultar": /provider/account es el índice del perfil del
+# Criterio 1, la mitad "consultar": /provider/cuenta es el índice del perfil del
 # proveedor, a donde manda el menú de usuario ("Configuración") cuando el rol
 # activo es proveedor (app/javascript/components/user-menu-content.tsx). Desde acá
 # se entra a Perfil, Datos de cobro, Configuración operativa, Entregas y
