@@ -80,6 +80,18 @@ describe("ProviderMobileNav", () => {
     )
   })
 
+  it("marca Inicio como la página actual en Hallazgos", () => {
+    page.url = "/proveedor/inicio/hallazgos?period=2026-09"
+    page.component = "provider/insights/index"
+
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Inicio" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+  })
+
   it("marca Menú como la página actual al editar un plato", () => {
     page.url = "/proveedor/platos/1/editar"
     page.component = "provider/menus/edit"

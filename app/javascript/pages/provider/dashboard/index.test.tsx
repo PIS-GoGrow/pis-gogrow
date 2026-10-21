@@ -121,7 +121,7 @@ describe("Provider Dashboard Page", () => {
 
     expect(
       screen.getByRole("link", { name: "Hallazgos del mes" }),
-    ).toHaveAttribute("href", "/proveedor/hallazgos")
+    ).toHaveAttribute("href", "/proveedor/inicio/hallazgos")
   })
 
   it("muestra un guión cuando el proveedor aún no tiene valoraciones", () => {
