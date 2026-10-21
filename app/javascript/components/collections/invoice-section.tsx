@@ -3,6 +3,7 @@ import { Download, FileText, Trash2 } from "lucide-react"
 import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { FileInput } from "@/components/file-input"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Dialog,
@@ -183,22 +184,13 @@ function UploadInvoice({ account }: { account: ProviderCollectionAccount }) {
 
   return (
     <div className="grid min-w-0 gap-2">
-      <label className="bg-background focus-within:border-ring focus-within:ring-ring/50 flex h-10 min-w-0 cursor-pointer items-center gap-3 rounded-md border px-3 text-sm focus-within:ring-[3px]">
-        <span className="shrink-0 font-medium">
-          {t("pages.provider_collections.invoice.select_file")}
-        </span>
-        <span className="text-muted-foreground min-w-0 truncate">
-          {data.file?.name ?? t("pages.provider_collections.invoice.no_file")}
-        </span>
-        <input
-          ref={fileInput}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-          aria-label={t("pages.provider_collections.invoice.file_label")}
-          className="sr-only"
-          onChange={handleFileChange}
-        />
-      </label>
+      <FileInput
+        ref={fileInput}
+        accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+        aria-label={t("pages.provider_collections.invoice.file_label")}
+        fileName={data.file?.name}
+        onChange={handleFileChange}
+      />
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
@@ -219,7 +211,11 @@ function UploadInvoice({ account }: { account: ProviderCollectionAccount }) {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="grid min-w-0 gap-4">
+          <form
+            onSubmit={handleSubmit}
+            noValidate
+            className="grid min-w-0 gap-4"
+          >
             <Field data-invalid={Boolean(errors.issued_on)}>
               <FieldLabel htmlFor={`invoice-issued-on-${account.id}`}>
                 {t("pages.provider_collections.invoice.dialog.issued_on")}
@@ -227,7 +223,6 @@ function UploadInvoice({ account }: { account: ProviderCollectionAccount }) {
               <Input
                 id={`invoice-issued-on-${account.id}`}
                 type="date"
-                required
                 max={maxDate}
                 value={data.issued_on}
                 aria-invalid={Boolean(errors.issued_on)}
@@ -248,7 +243,6 @@ function UploadInvoice({ account }: { account: ProviderCollectionAccount }) {
                 inputMode="decimal"
                 min="0.01"
                 step="0.01"
-                required
                 value={data.total_amount}
                 aria-invalid={Boolean(errors.total_amount)}
                 onChange={(event) =>
