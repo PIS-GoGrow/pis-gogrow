@@ -85,7 +85,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   end
 
   def open_cart
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
   end
 

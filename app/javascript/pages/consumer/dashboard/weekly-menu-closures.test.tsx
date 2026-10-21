@@ -74,8 +74,8 @@ function renderMenu(
       cart={[]}
       count={0}
       total={0}
+      loading={false}
       openDetail={vi.fn()}
-      openCart={vi.fn()}
       {...props}
     />,
   )
