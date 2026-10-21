@@ -21,6 +21,9 @@
       "sign_up": "Registrarse"
     },
     "components": {
+      "ai_insight_card": {
+        "generated": "Generado por IA"
+      },
       "appearance": {
         "dark": "Oscuro",
         "light": "Claro",
@@ -51,6 +54,11 @@
       "file_input": {
         "empty": "Sin archivos seleccionados",
         "select": "Seleccionar archivo"
+      },
+      "insights_metrics": {
+        "dishes": "Platos",
+        "orders": "Pedidos",
+        "rating": "Valoración"
       },
       "month_select": {
         "this_month": "Este mes"
@@ -1142,10 +1150,6 @@
           "greeting": "Hola, %{name} 👋",
           "insights": {
             "description": "Los hallazgos basados en las valoraciones estarán disponibles próximamente.",
-            "dishes": "Platos",
-            "generated": "Generado por IA",
-            "orders": "Pedidos",
-            "rating": "Valoración",
             "title": "Hallazgos del mes"
           },
           "order_deadline": {
@@ -1192,6 +1196,18 @@
             "title": "Solo Oficinas"
           },
           "title": "Entregas"
+        }
+      },
+      "provider_insights": {
+        "index": {
+          "back": "Volver al inicio",
+          "empty_orders": "Todavía no hay pedidos en este período",
+          "empty_reviews": "Todavía no hay reseñas en este período",
+          "orders_count": "x%{count}",
+          "period": "Período",
+          "title": "Hallazgos",
+          "top_dishes": "Platos más pedidos",
+          "top_rated_dishes": "Mejor valorados"
         }
       },
       "provider_invitations": {
