@@ -156,6 +156,37 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(inertia.props[:errors][:benefit_configuration]).to have_key(:subsidy_percentage)
     end
 
+    it "rejects subsidy_percentage greater than 100 or non-numeric via parameter bypass" do
+      [ 150, "cien" ].each do |invalid_percentage|
+        expect {
+          post admin_benefit_configurations_path, params: {
+            benefit_configuration: { subsidy_percentage: invalid_percentage, max_voucher_price: 150, monthly_voucher_limit: 20 }
+          }
+        }.not_to change(BenefitConfiguration, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors][:benefit_configuration]).to have_key(:subsidy_percentage)
+      end
+    end
+
+    it "redirects unauthorized roles when attempting to post a configuration" do
+      sign_in users(:one), role: :consumer
+      expect {
+        post admin_benefit_configurations_path, params: {
+          benefit_configuration: { subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20 }
+        }
+      }.not_to change(BenefitConfiguration, :count)
+      expect(response).to redirect_to(root_path)
+
+      sign_in users(:provider_user), role: :provider
+      expect {
+        post admin_benefit_configurations_path, params: {
+          benefit_configuration: { subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20 }
+        }
+      }.not_to change(BenefitConfiguration, :count)
+      expect(response).to redirect_to(root_path)
+    end
+
     it "rejects a missing max_voucher_price" do
       expect {
         post admin_benefit_configurations_path, params: {

@@ -357,6 +357,9 @@ es:
       mismatch: "La contraseña no coincide."
     completed_sheet:
       done: "Listo"
+    file_input:
+      select: "Seleccionar archivo"
+      empty: "Sin archivos seleccionados"
     appearance:
       toggle_theme: "Cambiar tema"
       light: "Claro"
@@ -539,6 +542,7 @@ es:
           title: "Empleados"
           count_one: "%{count} empleado"
           count_other: "%{count} empleados"
+          month_label: "Mes de los saldos"
           filter_label: "Filtrar empleados"
           all: "Todos"
           pending: "Pendientes"
@@ -675,7 +679,8 @@ es:
         receipt: "Subir comprobante de pago"
         receipt_title: "Subir comprobante"
         receipt_description: "Adjuntá el comprobante correspondiente a este pago."
-        receipt_file: "Seleccionar archivo"
+        receipt_file: "Comprobante"
+        receipt_required: "Seleccioná el archivo del comprobante."
         receipt_formats: "PDF, JPG o PNG. Tamaño máximo: 10 MB."
         receipt_uploading: "Subiendo comprobante..."
         receipt_success_title: "Comprobante enviado"
@@ -902,8 +907,6 @@ es:
           pending: "En revisión"
           approved: "Aprobada"
           rejected: "Rechazada"
-        select_file: "Seleccionar archivo"
-        no_file: "Sin archivos seleccionados"
         file_label: "Archivo de la factura"
         formats: "PDF, JPG o PNG de hasta 10 MB."
         upload: "Subir factura"
@@ -1138,6 +1141,7 @@ es:
         description: "Descripción"
         description_placeholder: "Descripción del plato..."
         required: "No puede estar vacío."
+        price_positive: "Tiene que ser mayor que 0."
         options:
           title: "Opciones"
           add: "Agregar"
