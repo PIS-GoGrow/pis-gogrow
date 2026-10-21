@@ -91,7 +91,7 @@
         "account": "Cuenta",
         "home": "Inicio",
         "menu": "Menú",
-        "menus": "Menús",
+        "menus": "Gestión de Menú",
         "mobile_navigation": "Navegación del proveedor",
         "orders": "Pedidos",
         "payments": "Cobros"
@@ -1084,7 +1084,8 @@
               "4": "J",
               "5": "V"
             },
-            "weekdays_label": "Días de la semana"
+            "weekdays_label": "Días de la semana",
+            "weekdays_required": "Elegí al menos un día de lunes a viernes."
           },
           "back": "Volver",
           "sheet": {
@@ -1437,6 +1438,7 @@
             "title": "No se encontraron resultados"
           },
           "previous_week": "Semana anterior",
+          "published": "Publicado",
           "remove": {
             "button": "Quitar",
             "cancel": "Cancelar",

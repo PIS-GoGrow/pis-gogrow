@@ -18,6 +18,7 @@ import EditMenuAdaptableDialog, {
 import MenuAgendaFields, {
   type AgendaDraft,
   agendaPayload,
+  agendaProblem,
   cwday,
   firstPublishedDate,
   initialAgenda,
@@ -57,15 +58,6 @@ interface MenuFormProps {
   edit?: ProviderMenusEdit
   create?: ProviderMenusNew
   onCreated?: (publishedDate: string | null) => void
-}
-
-function agendaIsComplete(agenda: AgendaDraft) {
-  if (agenda.weekdays.length === 0) return true
-  if (agenda.mode === "single") return agenda.date !== ""
-  if (agenda.mode === "range")
-    return agenda.starts_on !== "" && agenda.ends_on >= agenda.starts_on
-
-  return agenda.starts_on !== ""
 }
 
 export default function MenuForm({
@@ -204,8 +196,9 @@ export default function MenuForm({
       }
     }
 
-    if (agenda && !agendaIsComplete(agenda)) {
-      setAgendaError(t("pages.provider_menus.edit.agenda.incomplete"))
+    const problem = agenda ? agendaProblem(agenda) : null
+    if (problem) {
+      setAgendaError(t(`pages.provider_menus.edit.agenda.${problem}`))
       return
     }
 
