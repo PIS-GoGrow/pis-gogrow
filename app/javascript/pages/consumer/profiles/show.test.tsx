@@ -119,8 +119,8 @@ describe("Consumer account page", () => {
   it("links to notification settings", () => {
     render(<Show benefit={benefit} benefit_summary={summary} />)
 
-  expect(
-    screen.getByRole("link", { name: /Notificaciones/ }),
-  ).toHaveAttribute("href", settingsNotifications.index().url)
+    expect(
+      screen.getByRole("link", { name: /Notificaciones/ }),
+    ).toHaveAttribute("href", settingsNotifications.index().url)
   })
 })

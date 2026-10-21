@@ -7,7 +7,6 @@ import { consumerProfiles } from "@/routes"
 
 import Notifications from "./index"
 
-
 const { patchMock, roleMock } = vi.hoisted(() => ({
   patchMock: vi.fn(),
   roleMock: { value: "admin" },
