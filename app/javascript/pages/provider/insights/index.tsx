@@ -165,7 +165,7 @@ function InsightsSection({
 }) {
   return (
     <section className="space-y-3" aria-labelledby={id}>
-      <h3 id={id} className="text-base font-semibold">
+      <h3 id={id} className="text-lg font-semibold">
         {title}
       </h3>
       {rows.length === 0 ? (

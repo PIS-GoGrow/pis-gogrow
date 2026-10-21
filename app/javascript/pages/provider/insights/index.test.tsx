@@ -142,7 +142,7 @@ describe("Provider Insights Page", () => {
     await user.click(screen.getByRole("option", { name: "Agosto 2026" }))
 
     expect(routerGet).toHaveBeenCalledWith(
-      "/proveedor/hallazgos?period=2026-08",
+      "/proveedor/inicio/hallazgos?period=2026-08",
       {},
       { preserveScroll: true },
     )
@@ -156,7 +156,7 @@ describe("Provider Insights Page", () => {
     await user.click(screen.getByRole("option", { name: "Octubre 2026" }))
 
     expect(routerGet).toHaveBeenCalledWith(
-      "/proveedor/hallazgos",
+      "/proveedor/inicio/hallazgos",
       {},
       { preserveScroll: true },
     )

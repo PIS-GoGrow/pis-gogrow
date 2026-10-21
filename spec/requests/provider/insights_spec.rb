@@ -28,7 +28,7 @@ RSpec.describe "Provider::Insights", type: :request do
     )
   end
 
-  describe "GET /proveedor/hallazgos" do
+  describe "GET /proveedor/inicio/hallazgos" do
     it "manda a iniciar sesión sin sesión iniciada" do
       get provider_insights_path
 
