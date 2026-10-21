@@ -291,6 +291,13 @@ RSpec.describe OrderPricing do
         expect(result[schedule.id].discounted_price).to eq(300)
         expect(result[cheap_schedule.id]).to have_attributes(discounted_price: 70, benefits: { special => 1 })
       end
+
+      it "evaluates max_price against the total price for the item quantity" do
+        special = special!(max_price: 150)
+
+        expect(price(1, on: cheap_schedule)).to have_attributes(discounted_price: 70, benefits: { special => 1 })
+        expect(price(2, on: cheap_schedule)).to have_attributes(discounted_price: 200, benefits: {})
+      end
     end
 
     describe "validity" do

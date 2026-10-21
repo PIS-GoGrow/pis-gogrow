@@ -61,7 +61,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
   def expect_cart_within_sidebar_inset
     bounds = page.evaluate_script(<<~JS)
       (() => {
-        const button = document.querySelector("button.fixed");
+        const button = document.querySelector('[data-slot="floating-cart-button"]');
         const inset = document.querySelector('[data-slot="sidebar-inset"]');
         const menu = document.querySelector("div.max-w-300");
         const sidebar = document.querySelector('[data-slot="sidebar-container"]');
@@ -123,13 +123,13 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
     expect(page).to have_css("[data-slot='sidebar'][data-state='collapsed']")
     wait_for_sidebar_transition
     expect_cart_within_sidebar_inset
-    expect_no_overlap("button.fixed", "[data-sidebar='sidebar']")
+    expect_no_overlap("[data-slot='floating-cart-button']", "[data-sidebar='sidebar']")
 
     find("[data-sidebar='trigger']").click
     expect(page).to have_css("[data-slot='sidebar'][data-state='expanded']")
     wait_for_sidebar_transition
     expect_cart_within_sidebar_inset
-    expect_no_overlap("button.fixed", "[data-sidebar='sidebar']")
+    expect_no_overlap("[data-slot='floating-cart-button']", "[data-sidebar='sidebar']")
 
     find("[data-sidebar='trigger']").click
     expect(page).to have_css("[data-slot='sidebar'][data-state='collapsed']")
@@ -139,7 +139,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
   it "mantiene un único acceso funcional al carrito en todos los breakpoints" do
     [ 375, 820, 1000, 1024, 1400 ].each do |width|
       resize_to(width)
-      expect(page).to have_no_css("button.fixed", text: "Ver carrito", visible: true)
+      expect(page).to have_no_css("[data-slot='floating-cart-button']", text: "Ver carrito", visible: true)
     end
 
     resize_to(375)
@@ -152,7 +152,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
 
       if width < 1024
         expect(page).to have_link("Ver carrito", href: dashboard_cart_path, count: 1)
-        expect(page.evaluate_script("getComputedStyle(document.querySelector('button.fixed')).position")).to eq("fixed")
+        expect(page.evaluate_script("getComputedStyle(document.querySelector('[data-slot=\"floating-cart-button\"]')).position")).to eq("fixed")
 
         if width < 768
           expect(page).to have_css("nav.fixed", visible: true)
@@ -162,7 +162,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
           expect_tablet_cart_in_both_sidebar_states
         end
       else
-        expect(page).to have_no_link("Ver carrito", href: dashboard_cart_path)
+        expect(page).to have_no_css("[data-slot='floating-cart-button']", visible: true)
         expect(page).to have_css("aside a", text: "Ver carrito", visible: true)
       end
 
