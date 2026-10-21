@@ -18,11 +18,23 @@ RSpec.describe "Admin::Consumers", type: :request do
     it "redirects visitors to the sign in page" do
       get admin_consumers_path
       expect(response).to redirect_to(sign_in_path)
+
+      get admin_consumers_path, params: { month: "2026-09", filter: "pending" }
+      expect(response).to redirect_to(sign_in_path)
     end
 
     it "redirects users without an admin profile" do
       sign_in users(:one)
       get admin_consumers_path
+      expect(response).to redirect_to(root_path)
+
+      get admin_consumers_path, params: { month: "2026-09", filter: "pending" }
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects providers even when month parameters are supplied" do
+      sign_in users(:provider_user), role: :provider
+      get admin_consumers_path, params: { month: "2026-09", filter: "pending" }
       expect(response).to redirect_to(root_path)
     end
 
@@ -67,14 +79,70 @@ RSpec.describe "Admin::Consumers", type: :request do
         )
       end
 
+      it "sends the month it summarizes and the months to choose from" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+
+        get admin_consumers_path, params: { month: previous.strftime("%Y-%m") }
+
+        expect(inertia).to have_props(month: previous.strftime("%Y-%m"), current_month: Date.current.strftime("%Y-%m"))
+        expect(inertia.props[:months].pluck(:key)).to include(previous.strftime("%Y-%m"), Date.current.strftime("%Y-%m"))
+      end
+
+      it "sends the current month when the URL asks for none" do
+        get admin_consumers_path
+
+        expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"))
+      end
+
       it "summarizes the current month with an invalid or future month" do
         [ "agosto", "2026-13", (Date.current + 2.months).strftime("%Y-%m") ].each do |month|
           get admin_consumers_path, params: { month: }
 
+          expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"), current_month: Date.current.strftime("%Y-%m"))
           expect(inertia.props[:consumers]).to include(
             hash_including(id: consumers(:one).id, amount: 950.75, status: "pending")
           )
         end
+      end
+
+      it "falls back to the current month when given an empty or whitespace month" do
+        [ "", "   " ].each do |month|
+          get admin_consumers_path, params: { month: }
+
+          expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"))
+        end
+      end
+
+      it "formats all month options with year-month keys and localized labels" do
+        get admin_consumers_path
+
+        months = inertia.props[:months]
+        expect(months).not_to be_empty
+        expect(months).to all(
+          match(
+            key: a_string_matching(/\A\d{4}-\d{2}\z/),
+            label: a_string_matching(/\A[a-zñáéíóú]+\s+\d{4}\z/i)
+          )
+        )
+      end
+
+      it "keeps the filter and month synchronized when both are requested" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+
+        get admin_consumers_path, params: { filter: "pending", month: previous.strftime("%Y-%m") }
+
+        expect(inertia).to have_props(filter: "pending", month: previous.strftime("%Y-%m"))
+      end
+
+      it "never includes consumers of another company when querying a previous month" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: outsider, provider: providers(:tuviandita), month: previous, amount: 500)
+
+        get admin_consumers_path, params: { month: previous.strftime("%Y-%m") }
+
+        expect(inertia.props[:consumers].pluck(:id)).not_to include(outsider.id)
       end
 
       it "sends the photo of each employee" do
