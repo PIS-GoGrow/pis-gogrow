@@ -607,6 +607,16 @@
         "benefit": "Subsidio Base (%{percentage}%)",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
+        "monthly": {
+          "full_price_one": "La vianda de este pedido se cobra a precio completo.",
+          "full_price_other": "Las %{count} viandas de este pedido se cobran a precio completo.",
+          "no_benefit": "No tenés un beneficio asignado.",
+          "remaining_one": "Te queda 1 vianda subsidiada este mes.",
+          "remaining_other": "Te quedan %{count} viandas subsidiadas este mes.",
+          "split": "De este pedido, %{subsidized} con beneficio y %{full} a precio completo.",
+          "used_up_one": "Ya utilizaste la vianda subsidiada de este mes.",
+          "used_up_other": "Ya utilizaste las %{count} viandas subsidiadas de este mes."
+        },
         "my_addresses": "Ver mis direcciones",
         "new_address": {
           "apartment": "Piso / Apartamento (opcional)",
@@ -619,6 +629,7 @@
           "submit": "Agregar",
           "title": "Agregar una dirección"
         },
+        "no_benefit": "Subsidio GoGrow",
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
         "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
