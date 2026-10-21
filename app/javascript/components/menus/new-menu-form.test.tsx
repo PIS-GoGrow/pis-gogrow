@@ -27,4 +27,24 @@ describe("MenuForm", () => {
 
     expect(screen.getByText("Tiene que ser mayor que 0.")).toBeInTheDocument()
   })
+
+  it("rejects a negative price before submitting", async () => {
+    const user = userEvent.setup()
+    render(<MenuForm />)
+
+    await user.type(screen.getByLabelText(/Nombre del plato/), "Wok")
+    await user.type(screen.getByLabelText(/Descripción/), "Salteado")
+    await user.type(screen.getByLabelText(/Precio/), "-10")
+    const [, submit] = screen.getAllByRole("button", { name: "Agregar" })
+    await user.click(submit)
+
+    expect(screen.getByText("Tiene que ser mayor que 0.")).toBeInTheDocument()
+  })
+
+  it("renders form with noValidate to bypass native browser tooltips", () => {
+    const { container } = render(<MenuForm />)
+    const form = container.querySelector("form")
+
+    expect(form).toHaveAttribute("noValidate")
+  })
 })
