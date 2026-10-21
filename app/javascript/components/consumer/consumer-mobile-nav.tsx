@@ -13,6 +13,7 @@ import {
   consumerDashboard,
   consumerOrders,
   consumerProfiles,
+  settingsNotifications,
 } from "@/routes"
 
 const links = [
@@ -20,25 +21,28 @@ const links = [
     label: "Menú",
     icon: Dish02Icon,
     href: consumerDashboard.index().url,
-    activePrefix: consumerDashboard.index().url,
+    activePrefixes: [consumerDashboard.index().url],
   },
   {
     label: "Pedidos",
     icon: ShoppingBasket01Icon,
     href: consumerOrders.index().url,
-    activePrefix: consumerOrders.index().url,
+    activePrefixes: [consumerOrders.index().url],
   },
   {
     label: "Pagos",
     icon: CreditCardPosIcon,
     href: consumerAccounts.index().url,
-    activePrefix: consumerAccounts.index().url,
+    activePrefixes: [consumerAccounts.index().url],
   },
   {
     label: "Cuenta",
     icon: UserIcon,
     href: consumerProfiles.show().url,
-    activePrefix: consumerProfiles.show().url,
+    activePrefixes: [
+      consumerProfiles.show().url,
+      settingsNotifications.index().url,
+    ],
   },
 ]
 
@@ -47,8 +51,8 @@ export function ConsumerMobileNav() {
 
   return (
     <nav className="fixed bottom-4 left-1/2 z-30 flex h-[60px] w-[354px] max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center justify-center rounded-full border-y border-white bg-white/80 p-1 shadow-[0px_0px_24px_rgba(10,10,10,0.1),inset_0px_6px_6px_rgba(255,255,255,0.3)] backdrop-blur-[5px] md:hidden dark:border-white/10 dark:bg-neutral-900/80 dark:shadow-[0px_0px_24px_rgba(0,0,0,0.4),inset_0px_1px_1px_rgba(255,255,255,0.1)]">
-      {links.map(({ label, icon, href, activePrefix }) => {
-        const isActive = url.startsWith(activePrefix)
+      {links.map(({ label, icon, href, activePrefixes }) => {
+        const isActive = activePrefixes.some((prefix) => url.startsWith(prefix))
 
         return (
           <Link
