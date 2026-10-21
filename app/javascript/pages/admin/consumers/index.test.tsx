@@ -170,9 +170,7 @@ describe("Admin Consumers Page", () => {
 
     expect(screen.getByText("No se encontraron empleados")).toBeInTheDocument()
     expect(
-      screen.getByText(
-        "Probá con otro nombre o correo, o cambiá el filtro.",
-      ),
+      screen.getByText("Probá con otro nombre o correo, o cambiá el filtro."),
     ).toBeInTheDocument()
   })
 
