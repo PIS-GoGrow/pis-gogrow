@@ -47,6 +47,7 @@ export default function Profile({ provider, phone }: SettingsProfilesShow) {
           options={{
             preserveScroll: true,
           }}
+          noValidate
           className="space-y-8"
         >
           {({ errors, processing, recentlySuccessful }) => (
