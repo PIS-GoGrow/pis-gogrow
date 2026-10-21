@@ -261,17 +261,6 @@ end
 #  updated_at              :datetime         not null
 #  tax_id                  :string
 #  user_id                 :bigint
-#  id                  :bigint           not null, primary key
-#  bank_account_holder :string
-#  bank_account_number :string
-#  bank_account_type   :integer
-#  bank_name           :string
-#  home_delivery       :boolean          default(TRUE), not null
-#  order_deadline      :time
-#  created_at          :datetime         not null
-#  updated_at          :datetime         not null
-#  tax_id              :string
-#  user_id             :bigint
 #
 # Indexes
 #
