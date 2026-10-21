@@ -33,12 +33,13 @@ describe("FileInput", () => {
       />,
     )
 
-    const input = document.querySelector('input[type="file"]')!
+    const input =
+      document.querySelector<HTMLInputElement>('input[type="file"]')!
     expect(input).toBeInTheDocument()
-    expect(input.id).toBe("test-file-input")
-    expect(input.name).toBe("payment[receipt]")
-    expect(input.accept).toBe(".pdf,.png")
-    expect(input.disabled).toBe(true)
+    expect(input).toHaveAttribute("id", "test-file-input")
+    expect(input).toHaveAttribute("name", "payment[receipt]")
+    expect(input).toHaveAttribute("accept", ".pdf,.png")
+    expect(input).toBeDisabled()
   })
 
   it("triggers onChange when a file is selected", async () => {
