@@ -1193,6 +1193,7 @@ es:
           starts_on: "Desde"
           ends_on: "Hasta"
           incomplete: "Completá las fechas."
+          weekdays_required: "Elegí al menos un día de lunes a viernes."
         sheet:
           back: "Volver"
           apply: "Aplicar cambios"

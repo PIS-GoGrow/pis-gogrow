@@ -14,7 +14,7 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
   end
 
   it "permite configurar un plato para repetir todas las semanas y persiste la agenda semanal sin errores" do
-    visit edit_provider_menu_path(milanesa)
+    visit_hydrated edit_provider_menu_path(milanesa)
 
     expect(page).to have_field("name", with: milanesa.name)
 
@@ -49,5 +49,21 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
 
     expect(page).to have_field("name", with: milanesa.name)
     expect(page).to have_selector("#agenda-mode-weekly[data-state='checked']")
+  end
+
+  it "exige elegir al menos un día para repetir todas las semanas" do
+    visit_hydrated edit_provider_menu_path(milanesa)
+
+    expect(page).to have_field("name", with: milanesa.name)
+
+    find("label", text: "Repetir todas las semanas").click
+    expect(page).to have_selector("#agenda-mode-weekly[data-state='checked']")
+    click_button "Modificar"
+
+    expect(page).to have_content("Elegí al menos un día de lunes a viernes.")
+    expect(page).to have_no_content("¿Aplicar cambios desde esta fecha?")
+
+    find("button[aria-label='Lunes']").click
+    expect(page).to have_no_content("Elegí al menos un día de lunes a viernes.")
   end
 end

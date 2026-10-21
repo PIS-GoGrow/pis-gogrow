@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import MenuAgendaFields, {
   type AgendaDraft,
   agendaPayload,
+  agendaProblem,
   cwday,
   initialAgenda,
 } from "./menu-agenda-fields"
@@ -46,6 +47,54 @@ describe("MenuAgendaFields helpers", () => {
     expect(draftFromWeekly.mode).toBe("weekly")
     expect(draftFromWeekly.weekdays).toEqual([1, 5])
     expect(draftFromWeekly).not.toHaveProperty("amount")
+  })
+
+  describe("agendaProblem", () => {
+    const draft = (overrides: Partial<AgendaDraft>): AgendaDraft => ({
+      mode: "single",
+      weekdays: [],
+      date: "",
+      starts_on: "2030-01-09",
+      ends_on: "",
+      ...overrides,
+    })
+
+    it("pide al menos un día al repetir todas las semanas", () => {
+      expect(agendaProblem(draft({ mode: "weekly" }))).toBe("weekdays_required")
+    })
+
+    it("pide al menos un día al repetir en un rango", () => {
+      expect(
+        agendaProblem(draft({ mode: "range", ends_on: "2030-01-15" })),
+      ).toBe("weekdays_required")
+    })
+
+    it("deja guardar sin días cuando no se repite", () => {
+      expect(agendaProblem(draft({ mode: "single" }))).toBeNull()
+    })
+
+    it("acepta repetir todas las semanas con un día elegido", () => {
+      expect(agendaProblem(draft({ mode: "weekly", weekdays: [3] }))).toBeNull()
+    })
+
+    it("pide las fechas cuando faltan teniendo días", () => {
+      expect(
+        agendaProblem(draft({ mode: "weekly", weekdays: [3], starts_on: "" })),
+      ).toBe("incomplete")
+      expect(
+        agendaProblem(draft({ mode: "single", weekdays: [3], date: "" })),
+      ).toBe("incomplete")
+      expect(
+        agendaProblem(
+          draft({
+            mode: "range",
+            weekdays: [3],
+            starts_on: "2030-01-15",
+            ends_on: "2030-01-10",
+          }),
+        ),
+      ).toBe("incomplete")
+    })
   })
 
   it("returns mode none in agendaPayload when weekdays is empty", () => {

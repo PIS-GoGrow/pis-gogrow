@@ -1084,7 +1084,8 @@
               "4": "J",
               "5": "V"
             },
-            "weekdays_label": "Días de la semana"
+            "weekdays_label": "Días de la semana",
+            "weekdays_required": "Elegí al menos un día de lunes a viernes."
           },
           "back": "Volver",
           "sheet": {
