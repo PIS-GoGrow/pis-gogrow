@@ -34,7 +34,7 @@ RSpec.describe "Consumer Accounts", type: :request do
     )
   end
 
-  describe "GET /accounts" do
+  describe "GET /pagos" do
     it "redirects unauthenticated users to sign in" do
       get accounts_path
 
@@ -213,7 +213,7 @@ RSpec.describe "Consumer Accounts", type: :request do
     end
   end
 
-  describe "GET /accounts/:id" do
+  describe "GET /pagos/:id" do
     it "returns JSON with order details and amount for the specified account" do
       user, consumer, = setup_consumer
       provider = setup_provider

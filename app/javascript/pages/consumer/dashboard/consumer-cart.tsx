@@ -7,13 +7,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { RadioGroup } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
+import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 import { consumerDashboard } from "@/routes"
 
 import { AddAddressSheet } from "./add-address-sheet"
 import { AddressOption } from "./address-option"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
-import { money } from "./formatters"
 import { BenefitLine, OrderSummary } from "./order-summary"
 import type { Pricing } from "./pricing"
 import { SavedAddressesSheet } from "./saved-addresses-sheet"
@@ -182,7 +182,7 @@ export function ConsumerCart({
                 <span className="text-muted-foreground">
                   {item.menu.name} x{item.quantity}
                 </span>
-                <span>{money(line)}</span>
+                <span>{formatMoney(line)}</span>
               </div>
               {pricing?.lines?.[item.id]?.tiers
                 .filter((tier) => tier.discount > 0)

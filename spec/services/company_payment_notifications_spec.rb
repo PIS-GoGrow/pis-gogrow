@@ -139,8 +139,8 @@ RSpec.describe CompanyPaymentNotifications do
       expect(notification).to have_attributes(
         event: "company_payment_approved",
         requires_action: false,
-        title: "Pago confirmado",
-        description: "Other Provider User confirmó el pago de GoGrow por agosto 2026 ($4.500)."
+        title: "Pago aprobado",
+        description: "Other Provider User aprobó el pago de GoGrow por agosto 2026 ($4.500)."
       )
     end
 

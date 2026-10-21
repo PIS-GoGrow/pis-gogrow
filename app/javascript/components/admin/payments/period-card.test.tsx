@@ -10,7 +10,7 @@ vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
-    usePage: () => ({ url: "/admin/payments", props: { locale: "es" } }),
+    usePage: () => ({ url: "/admin/pagos", props: { locale: "es" } }),
   }
 })
 
@@ -20,7 +20,7 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
     status: "submitted",
     rejection_reason: null,
     created_at: "2026-10-01T12:00:00Z",
-    receipt_url: "/admin/payments/1/receipt",
+    receipt_url: "/admin/pagos/1/archivo",
     receipt_filename: "receipt.png",
     receipt_uploaded_at: "01/10/26",
     ...overrides,

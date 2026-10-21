@@ -7,9 +7,9 @@ import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { formatMoney } from "@/lib/money"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
-import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
 import type { PricedLine } from "./pricing"
 import { cartPricedItem, lastUnitsLine, priceItems } from "./pricing"
@@ -96,7 +96,7 @@ export function DishDetail({
       <p className="text-muted-foreground mt-2 text-xs leading-5">
         {item.menu.description}
       </p>
-      <p className="mt-1 font-bold">{money(item.menu.price)}</p>
+      <p className="mt-1 font-bold">{formatMoney(item.menu.price)}</p>
       {item.orders_closed && (
         <p className="text-destructive mt-3 text-sm">
           {t("pages.consumer_dashboard.index.orders_closed")}
@@ -163,7 +163,7 @@ export function DishDetail({
           maxLength={140}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
-          placeholder="Escribe las notas que necesites..."
+          placeholder="Escribí las notas que necesites..."
           className="mt-3 field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-xs"
         />
         <p className="text-muted-foreground text-right text-[10px]">

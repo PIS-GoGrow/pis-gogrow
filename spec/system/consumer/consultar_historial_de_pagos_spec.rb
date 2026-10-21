@@ -113,7 +113,7 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
       expect(page).to have_content(previous_month_label)
       expect(page).to have_content("$300")
       expect(page).to have_content("2 viandas")
-      expect(page).to have_content("Aceptado")
+      expect(page).to have_content("Aprobado")
     end
   end
 

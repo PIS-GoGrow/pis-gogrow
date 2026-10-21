@@ -138,7 +138,8 @@ class Account < ApplicationRecord
     end
   end
 
-  # Mismo formato que formatMoney en el frontend, para los textos que arma el servidor.
+  # Formato único de importes de la app, el mismo que formatMoney (lib/money.ts)
+  # en el frontend: $1.250 y $440,25, con centésimos solo si los hay.
   def self.format_amount(value)
     amount = value.to_d
 

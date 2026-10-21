@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next"
 
 import { Spinner } from "@/components/ui/spinner"
+import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 
-import { money } from "./formatters"
 import type { DiscountTier } from "./pricing"
 
 interface Props {
@@ -32,7 +32,7 @@ export function OrderSummary({
               <span className="text-muted-foreground">
                 {t("pages.cart.subtotal")}
               </span>
-              <span>{money(subtotal ?? 0)}</span>
+              <span>{formatMoney(subtotal ?? 0)}</span>
             </div>
             {tiers.map((tier, index) => (
               <BenefitLine
@@ -49,7 +49,7 @@ export function OrderSummary({
           )}
         >
           <span>{t("pages.cart.total")}</span>
-          <span>{money(total ?? 0)}</span>
+          <span>{formatMoney(total ?? 0)}</span>
         </div>
       </div>
     )
@@ -74,7 +74,7 @@ export function BenefitLine({
   return (
     <div className={cn("flex justify-between", className)}>
       <span className="text-muted-foreground">{label}</span>
-      <span className="text-[#29944c]">- {money(tier.discount)}</span>
+      <span className="text-[#29944c]">- {formatMoney(tier.discount)}</span>
     </div>
   )
 }

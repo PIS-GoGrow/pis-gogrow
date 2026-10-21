@@ -9,7 +9,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
   let(:provider_user) { users(:provider_user) }
   let(:provider) { providers(:tuviandita) }
 
-  describe "GET /provider/dashboard" do
+  describe "GET /provider/inicio" do
     context "sin sesión iniciada" do
       it "redirige al usuario a la pantalla de iniciar sesión" do
         get provider_dashboard_path

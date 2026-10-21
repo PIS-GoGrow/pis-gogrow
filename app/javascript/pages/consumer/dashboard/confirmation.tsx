@@ -6,10 +6,9 @@ import { useTranslation } from "react-i18next"
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Button } from "@/components/ui/button"
 import AppLayout from "@/layouts/app-layout"
+import { formatMoney } from "@/lib/money"
 import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardConfirmation } from "@/types"
-
-import { money } from "./formatters"
 
 type Confirmation = ConsumerDashboardConfirmation
 
@@ -119,7 +118,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
                         <span className="font-medium">{item.name}</span>
                         <span className="text-muted-foreground">
                           {" "}
-                          | {money(item.discounted_price / item.quantity)}
+                          | {formatMoney(item.discounted_price / item.quantity)}
                         </span>
                       </p>
                       <span className="shrink-0 font-semibold">
@@ -134,7 +133,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
 
           <div className="border-border mt-4 border-t pt-4">
             <p className="text-muted-foreground">Monto a pagar</p>
-            <p className="mt-1 text-lg font-bold">{money(total)}</p>
+            <p className="mt-1 text-lg font-bold">{formatMoney(total)}</p>
           </div>
         </div>
 

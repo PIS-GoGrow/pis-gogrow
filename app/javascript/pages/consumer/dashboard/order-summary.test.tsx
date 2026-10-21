@@ -30,10 +30,10 @@ describe("OrderSummary", () => {
     )
 
     expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
+      screen.getByText("Subsidio Base (80%)").nextSibling,
     ).toHaveTextContent("- $256")
     expect(
-      screen.getByText("Beneficio GoGrow (50%)").nextSibling,
+      screen.getByText("Subsidio Base (50%)").nextSibling,
     ).toHaveTextContent("- $320")
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$384",
@@ -53,7 +53,7 @@ describe("OrderSummary", () => {
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
       "$640",
     )
-    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Subsidio Base (50%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$320",
     )
@@ -69,7 +69,7 @@ describe("OrderSummary", () => {
       />,
     )
 
-    expect(screen.getByText("Beneficio GoGrow (0%)")).toBeInTheDocument()
+    expect(screen.getByText("Subsidio Base (0%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$640",
     )
@@ -89,13 +89,13 @@ describe("OrderSummary", () => {
     )
 
     expect(screen.queryByText("Precio vianda")).not.toBeInTheDocument()
-    expect(screen.queryByText("Beneficio GoGrow (50%)")).not.toBeInTheDocument()
+    expect(screen.queryByText("Subsidio Base (50%)")).not.toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$320",
     )
   })
 
-  it("rounds the amounts it shows", () => {
+  it("shows the cents only when the amount has them", () => {
     render(
       <OrderSummary
         loading={false}
@@ -106,10 +106,13 @@ describe("OrderSummary", () => {
     )
 
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
-      "$641",
+      "$640,50",
     )
+    expect(
+      screen.getByText("Subsidio Base (50%)").nextSibling,
+    ).toHaveTextContent("- $320,40")
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$320",
+      "$320,10",
     )
   })
 })

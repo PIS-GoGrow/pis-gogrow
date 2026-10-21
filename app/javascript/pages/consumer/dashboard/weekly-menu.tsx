@@ -19,12 +19,12 @@ import {
 } from "@/components/ui/empty"
 import { Spinner } from "@/components/ui/spinner"
 import useSessionStorage from "@/hooks/use-session-storage"
+import { formatMoney } from "@/lib/money"
 import { dashboardCart } from "@/routes"
 import type { ConsumerClosure, ConsumerDashboardIndex } from "@/types"
 
 import { BenefitCard } from "./benefit-card"
 import type { CartItem, Schedule } from "./consumer-types"
-import { money } from "./formatters"
 
 interface Props {
   name: string
@@ -216,7 +216,7 @@ export function WeeklyMenu({
               <p className="text-muted-foreground text-sm">Tu carrito</p>
               <h3 className="mt-8 text-lg">
                 {count} platos ·{" "}
-                {!loading ? money(total ?? 0) : <Spinner className="inline" />}
+                {!loading ? formatMoney(total ?? 0) : <Spinner className="inline" />}
               </h3>
               <p className="text-muted-foreground mt-4 text-sm">
                 Agregá platos de distintos días y proveedores.

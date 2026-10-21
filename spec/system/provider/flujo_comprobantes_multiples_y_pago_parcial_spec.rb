@@ -52,7 +52,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
 
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     within("[role=tabpanel]") do
-      expect(page).to have_content("Enviado")
+      expect(page).to have_content("En revisión")
     end
 
     # 2. El proveedor revisa el primer comprobante y lo rechaza con 'El pago es parcial'
@@ -98,7 +98,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
 
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     within("[role=tabpanel]") do
-      expect(page).to have_content("Enviado")
+      expect(page).to have_content("En revisión")
       expect(page).to have_no_content(I18n.t("pages.accounts.show.partial_payment_warning"))
     end
 
@@ -117,8 +117,8 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
 
     # 6. El proveedor revisa y aprueba el segundo comprobante
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Confirmar" }
-    expect(page).to have_content("Cobro confirmado")
+    within(find("[role=dialog]")) { click_on "Aprobar" }
+    expect(page).to have_content("Cobro aprobado")
     click_on "Listo"
 
     # Para que el período completo pase a Historial, la cuenta de la empresa debe estar saldada

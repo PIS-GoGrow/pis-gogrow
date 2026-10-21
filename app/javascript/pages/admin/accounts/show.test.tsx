@@ -43,11 +43,11 @@ describe("Admin account page", () => {
 
     expect(screen.getByRole("link", { name: /Subsidios/ })).toHaveAttribute(
       "href",
-      "/admin/benefit_configurations",
+      "/rrhh/subsidios",
     )
     expect(
       screen.getByRole("link", { name: /Notificaciones/ }),
-    ).toHaveAttribute("href", "/settings/notifications")
+    ).toHaveAttribute("href", "/configuracion/notificaciones")
   })
 
   it("links to profile and appearance without security options", () => {
@@ -55,7 +55,7 @@ describe("Admin account page", () => {
 
     expect(
       screen.getByRole("link", { name: /^Perfil y Apariencia/ }),
-    ).toHaveAttribute("href", "/admin/preferences")
+    ).toHaveAttribute("href", "/rrhh/preferencias")
     expect(screen.queryByText("Seguridad")).not.toBeInTheDocument()
     expect(screen.queryByText("Cambiar contraseña")).not.toBeInTheDocument()
     expect(screen.queryByText("Eliminar cuenta")).not.toBeInTheDocument()

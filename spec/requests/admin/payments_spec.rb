@@ -32,7 +32,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "GET /admin/payments" do
+  describe "GET /admin/pagos" do
     it "redirects to sign in without a session" do
       get admin_payments_path
 
@@ -230,7 +230,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "GET /admin/payments/:id" do
+  describe "GET /admin/pagos/:id" do
     it "redirects to sign in without a session" do
       get admin_payment_path(accounts(:gogrow_tuviandita_current))
 
@@ -263,7 +263,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "POST /admin/payments" do
+  describe "POST /admin/pagos" do
     let(:account) { accounts(:gogrow_tuviandita_current) }
 
     it "creates a submitted payment with a receipt for the company account" do
@@ -450,7 +450,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "GET /admin/payments/:id/receipt" do
+  describe "GET /admin/pagos/:id/archivo" do
     let(:account) { accounts(:gogrow_tuviandita_current) }
 
     it "allows HR to access a receipt from its company account" do
@@ -501,7 +501,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "DELETE /admin/payments/:id" do
+  describe "DELETE /admin/pagos/:id" do
     let(:account) { accounts(:gogrow_tuviandita_current) }
 
     def payment_with_receipt(status:, rejection_reason: nil)

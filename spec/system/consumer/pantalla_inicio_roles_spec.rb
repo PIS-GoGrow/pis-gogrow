@@ -18,7 +18,7 @@ RSpec.describe "Flujo de navegación y pantalla de inicio para roles", type: :sy
       expect(page).to have_button("Iniciar sesión con Google")
     end
 
-    it "redirige /proveedor a /provider" do
+    it "redirige /provider a /proveedor" do
       visit provider_welcome_path
 
       expect(page).to have_current_path(provider_sign_in_path)

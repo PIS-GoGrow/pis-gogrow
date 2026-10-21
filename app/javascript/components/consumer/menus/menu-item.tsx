@@ -2,6 +2,7 @@ import { Plus } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
+import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 
 export default function MenuItem({
@@ -55,7 +56,7 @@ export default function MenuItem({
           )}
         </div>
         <p className="font-semibold">
-          {name} <span className="font-normal">| ${price}</span>
+          {name} <span className="font-normal">| {formatMoney(price)}</span>
         </p>
         {description && (
           <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">

@@ -96,7 +96,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     )
 
     expect(
-      screen.getByText(/todavía no configuraste el beneficio general/i),
+      screen.getByText(/todavía no configuraste el subsidio base/i),
     ).toBeInTheDocument()
   })
 
@@ -115,7 +115,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
 
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/admin/account")
+    ).toHaveAttribute("href", "/rrhh/cuenta")
   })
 
   it("renders current benefit configuration details when present", () => {
@@ -217,7 +217,7 @@ describe("Admin::BenefitConfigurations Index Page", () => {
     )
 
     expect(screen.getByText("Alerta de deuda")).toBeInTheDocument()
-    expect(screen.getByText(/2500/)).toBeInTheDocument()
+    expect(screen.getByText("$2.500")).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Editar monto" }),
     ).toBeInTheDocument()
