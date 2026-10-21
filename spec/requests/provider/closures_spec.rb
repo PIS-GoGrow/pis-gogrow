@@ -329,6 +329,47 @@ RSpec.describe "Provider::Closures", type: :request do
       expect(response).to redirect_to(provider_onboarding_path(step: 2))
     end
 
+    it "redirecciona al paso 2 con errores de validación sin crear el cierre si las fechas son inválidas" do
+      expect do
+        post provider_closures_path, params: params.merge(ends_on: (today + 5).iso8601, onboarding: true)
+      end.not_to change(ProviderClosure, :count)
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+      follow_redirect!
+      expect(inertia).to have_props(errors: { ends_on: [ error_message(:ends_on, :greater_than_or_equal_to) ] })
+    end
+
+    it "redirecciona al paso 2 con errores de validación sin crear el cierre si el motivo está vacío" do
+      expect do
+        post provider_closures_path, params: params.merge(reason: "", onboarding: true)
+      end.not_to change(ProviderClosure, :count)
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+      follow_redirect!
+      expect(inertia).to have_props(errors: { reason: [ error_message(:reason, :blank) ] })
+    end
+
+    it "redirecciona al paso 2 con errores si la fecha de inicio es anterior a hoy" do
+      expect do
+        post provider_closures_path, params: params.merge(starts_on: (today - 1).iso8601, onboarding: true)
+      end.not_to change(ProviderClosure, :count)
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+      follow_redirect!
+      expect(inertia).to have_props(errors: { starts_on: [ error_message(:starts_on, :greater_than_or_equal_to) ] })
+    end
+
+    it "redirecciona al paso 2 con errores al intentar actualizar con fechas inválidas" do
+      closure = create_closure
+
+      patch provider_closure_path(closure), params: { ends_on: (closure.starts_on - 1.day).iso8601, onboarding: true }
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 2))
+      expect(closure.reload.ends_on).to eq(today + 9)
+      follow_redirect!
+      expect(inertia).to have_props(errors: { ends_on: [ error_message(:ends_on, :greater_than_or_equal_to) ] })
+    end
+
     it "elimina un cierre y vuelve al paso 2 del onboarding" do
       closure = create_closure
 
