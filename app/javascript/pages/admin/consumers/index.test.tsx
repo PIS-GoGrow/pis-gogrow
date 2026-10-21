@@ -139,4 +139,56 @@ describe("Admin Consumers Page", () => {
       screen.getByRole("combobox", { name: "Mes de los saldos" }),
     ).toHaveTextContent("Este mes")
   })
+
+  it("filters employees by search term while displaying the chosen month", () => {
+    render(
+      <Index
+        consumers={consumers}
+        filter="all"
+        {...monthProps}
+        month="2026-09"
+      />,
+    )
+
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "bruno" },
+    })
+
+    expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
+    expect(screen.queryByText("Ana Paid")).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("combobox", { name: "Mes de los saldos" }),
+    ).toHaveTextContent("septiembre 2026")
+  })
+
+  it("shows an empty state when search finds no matches", () => {
+    render(<Index consumers={consumers} filter="all" {...monthProps} />)
+
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "inexistente" },
+    })
+
+    expect(screen.getByText("No se encontraron empleados")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Probá con otro nombre o correo, o cambiá el filtro.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("filters by pending employees during a previous month", () => {
+    render(
+      <Index
+        consumers={consumers}
+        filter="pending"
+        {...monthProps}
+        month="2026-09"
+      />,
+    )
+
+    expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
+    expect(screen.getByText("Carla Review")).toBeInTheDocument()
+    expect(screen.queryByText("Ana Paid")).not.toBeInTheDocument()
+    expect(screen.queryByText("Diego Idle")).not.toBeInTheDocument()
+  })
 })
