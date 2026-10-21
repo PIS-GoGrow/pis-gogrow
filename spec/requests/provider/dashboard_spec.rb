@@ -143,7 +143,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
         # tuviandita solo tiene el menú milanesa en fixtures (sin reseñas)
         expect(inertia).to have_props(
-          month_dishes_count: provider.menus.count,
+          month_dishes_count: 1,
           average_rating: nil
         )
 
@@ -155,6 +155,25 @@ RSpec.describe "Provider::Dashboard", type: :request do
         expect(inertia).to have_props(
           average_rating: 5.0
         )
+      end
+
+      it "cuenta en los hallazgos del mes solo los platos pedidos y las reseñas escritas en el mes" do
+        Menu.create!(provider:, name: "Wok de verduras", description: "Sin pedidos", price: 300)
+        Review.create!(menu: menus(:milanesa), rating: 1, created_at: Date.current.prev_month.in_time_zone)
+        Review.create!(menu: menus(:milanesa), rating: 4, created_at: Time.current)
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(month_dishes_count: 1, average_rating: 4.0)
+      end
+
+      it "muestra en los hallazgos del mes los mismos números que Hallazgos para el mes actual" do
+        get provider_insights_path
+        insights = inertia.props.slice(:orders_count, :dishes_count, :average_rating)
+
+        get provider_dashboard_path
+
+        expect(inertia.props.slice(:month_orders_count, :month_dishes_count, :average_rating).values).to eq(insights.values)
       end
     end
   end
