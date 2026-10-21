@@ -37,7 +37,7 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
 
   def open_cart
     click_link "Ver carrito"
-    expect(page).to have_current_path(/cart/)
+    expect(page).to have_current_path(dashboard_cart_path)
     expect(page).to have_content("Tu carrito")
   end
 

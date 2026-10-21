@@ -297,12 +297,12 @@ RSpec.describe BenefitConfiguration, type: :model do
       benefit_configurations(:monthly).destroy
       config = build_base_subsidy(max_price: 350)
 
-      expect(config.benefit_max_price).to eq(350)
+      expect(config.send(:benefit_max_price)).to eq(350)
     end
 
     it "devuelve nil cuando ninguna regla define un precio máximo" do
       config = build_configuration
-      expect(config.benefit_max_price).to be_nil
+      expect(config.send(:benefit_max_price)).to be_nil
     end
   end
 end
