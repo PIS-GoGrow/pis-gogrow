@@ -3,6 +3,8 @@ import type { ReactNode } from "react"
 import type { ComponentProps } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { consumerOrders } from "@/routes"
+
 // AJUSTAR: ruta real del componente
 import Cart from "./cart"
 
@@ -415,7 +417,7 @@ describe("confirm", () => {
 
     expect(mocks.form.post).toHaveBeenCalledTimes(1)
     expect(mocks.form.post).toHaveBeenCalledWith(
-      "/orders",
+      consumerOrders.create().url,
       expect.objectContaining({
         preserveState: true,
         preserveScroll: false,

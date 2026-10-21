@@ -93,6 +93,6 @@ describe("OrderError Component", () => {
 
     const homeLink = screen.getByRole("link", { name: "Volver a Menú" })
     expect(homeLink).toBeInTheDocument()
-    expect(homeLink).toHaveAttribute("href", "/dashboard")
+    expect(homeLink).toHaveAttribute("href", defaultProps.homeUrl)
   })
 })

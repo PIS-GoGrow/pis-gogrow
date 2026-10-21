@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
+import { dashboardCart } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
 
 import type { CartItem, Schedule } from "./consumer-types"
@@ -130,7 +131,7 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
     )
     expect(floatingButton).not.toBeNull()
 
-    expect(floatingButton).toHaveAttribute("href", "/dashboard/cart")
+    expect(floatingButton).toHaveAttribute("href", dashboardCart().url)
   })
 
   it("permite abrir el carrito desde el aside de escritorio cuando count > 0", () => {
@@ -144,7 +145,7 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
     expect(asideButton).toBeDefined()
     expect(asideButton).toBeEnabled()
 
-    expect(asideButton).toHaveAttribute("href", "/dashboard/cart")
+    expect(asideButton).toHaveAttribute("href", dashboardCart().url)
   })
 
   it("muestra el resumen de viandas y monto en la tarjeta de carrito", () => {
