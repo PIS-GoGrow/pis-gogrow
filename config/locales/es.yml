@@ -322,7 +322,7 @@ es:
     change_to: "Cambiar a"
     provider:
       home: "Inicio"
-      menus: "Menús"
+      menus: "Gestión de Menú"
       menu: "Menú"
       orders: "Pedidos"
       payments: "Cobros"
@@ -1057,6 +1057,7 @@ es:
         title: "Gestión de Menú"
         week_range: "%{from} - %{to}, %{month}"
         previous_week: "Semana anterior"
+        published: "Publicado"
         next_week: "Semana siguiente"
         availability:
           toggle_label: "En stock"
