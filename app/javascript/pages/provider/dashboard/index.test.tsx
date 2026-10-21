@@ -111,6 +111,15 @@ describe("Provider Dashboard Page", () => {
     expect(screen.getByText("42")).toBeInTheDocument()
     expect(screen.getByText("8")).toBeInTheDocument()
     expect(screen.getByText("4.8")).toBeInTheDocument()
+    expect(screen.getByText("Generado por IA")).toBeInTheDocument()
+  })
+
+  it("lleva a Hallazgos desde el encabezado de los hallazgos del mes", () => {
+    render(<ProviderDashboard {...defaultProps} />)
+
+    expect(
+      screen.getByRole("link", { name: "Hallazgos del mes" }),
+    ).toHaveAttribute("href", "/proveedor/hallazgos")
   })
 
   it("muestra un guión cuando el proveedor aún no tiene valoraciones", () => {
