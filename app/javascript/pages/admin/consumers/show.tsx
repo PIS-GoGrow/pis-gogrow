@@ -283,6 +283,7 @@ export default function Show({
         )}
 
         <ConsumerMonthSheet
+          key={selectedMonth?.key ?? "closed"}
           month={selectedMonth}
           companyName={consumer.company_name}
           open={sheetOpen}

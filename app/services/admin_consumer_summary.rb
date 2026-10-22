@@ -14,7 +14,7 @@ class AdminConsumerSummary
     def avatar_url = consumer.user.avatar_url
   end
 
-  ProviderRow = Data.define(:name, :amount, :status)
+  ProviderRow = Data.define(:id, :name, :amount, :status)
 
   MonthRow = Data.define(:month, :accounts) do
     def key = month.strftime("%Y-%m")
@@ -33,7 +33,14 @@ class AdminConsumerSummary
 
     def providers
       accounts
-        .map { ProviderRow.new(name: it.provider.user.name, amount: it.amount.to_f, status: it.collection_status) }
+        .map do |account|
+          ProviderRow.new(
+            id: account.provider_id,
+            name: account.provider.user.name,
+            amount: account.amount.to_f,
+            status: account.collection_status
+          )
+        end
         .sort_by(&:name)
     end
   end

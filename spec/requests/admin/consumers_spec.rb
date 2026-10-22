@@ -191,12 +191,14 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         month = inertia.props[:months].sole
         expect(month).to include(amount: 950.75, status: "pending")
+        expect(month[:providers].pluck(:id)).to contain_exactly(providers(:tuviandita).id, providers(:endulzate).id)
         expect(month[:providers].pluck(:name, :status)).to contain_exactly(
           [ "Provider User", "rejected" ], [ "Other Provider User", "pending" ]
         )
         expect(month[:orders].pluck(:id)).to contain_exactly(
           orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id
         )
+        expect(month[:orders].pluck(:provider_id)).to contain_exactly(providers(:tuviandita).id, providers(:tuviandita).id)
       end
 
       # Sin publicación, el pedido conserva su fecha de entrega: no se muestra el
