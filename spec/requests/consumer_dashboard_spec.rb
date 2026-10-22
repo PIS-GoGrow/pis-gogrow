@@ -50,10 +50,26 @@ RSpec.describe "Consumer dashboard", type: :request do
     expect(inertia).to have_props { |props|
       props[:schedules].one? &&
         props[:schedules].first[:id] == schedule.id &&
-        props.dig(:benefit, :percentage) == 50 &&
-        props[:addresses].pluck(:label) == [ "Oficina", "Casa" ]
+        props.dig(:benefit, :percentage) == 50
     }
   end
+  it "renders the cart with its server props" do
+      travel_to(Time.zone.local(2026, 9, 14, 10))
+      Order.destroy_all
+      Schedule.delete_all
+      user = consumer_user
+      schedule = create_schedule
+      sign_in_as_consumer(user)
+
+      get dashboard_cart_path
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to render_component("consumer/dashboard/cart")
+      expect(inertia).to have_props { |props|
+        props.dig(:benefit, :percentage) == 50 &&
+          props[:addresses].pluck(:label) == [ "Oficina", "Casa" ]
+      }
+    end
 
   it "reports the five meal weekly allowance using delivery dates" do
     # A fin de mes la semana siguiente cae en otro mes y sale del tope mensual.
@@ -399,7 +415,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       publish(menus(:milanesa), monday)
       sign_in users(:one)
 
-      get dashboard_path
+      get dashboard_cart_path
 
       expect(inertia.props[:addresses].pluck(:id)).to eq([ "office" ])
     end

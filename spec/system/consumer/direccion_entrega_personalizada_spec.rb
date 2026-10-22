@@ -41,7 +41,7 @@ RSpec.describe "Dirección de entrega personalizada" do
       expect(page).to have_content("Notas para este plato")
       click_button "Agregar"
     end
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
   end
 

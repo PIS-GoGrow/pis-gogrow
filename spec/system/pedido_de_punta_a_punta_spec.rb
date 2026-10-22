@@ -80,7 +80,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   end
 
   def open_cart
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
   end
 

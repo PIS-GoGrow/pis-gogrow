@@ -32,7 +32,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
   end
 
   def visible_cart_buttons
-    all(:button, "Ver carrito", exact: true, visible: true)
+    all(:link, "Ver carrito", exact: true, visible: true)
   end
 
   def add_milanesa
@@ -61,7 +61,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
   def expect_cart_within_sidebar_inset
     bounds = page.evaluate_script(<<~JS)
       (() => {
-        const button = document.querySelector("button.fixed");
+        const button = document.querySelector('[data-slot="floating-cart-button"]');
         const inset = document.querySelector('[data-slot="sidebar-inset"]');
         const menu = document.querySelector("div.max-w-300");
         const sidebar = document.querySelector('[data-slot="sidebar-container"]');
@@ -123,13 +123,13 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
     expect(page).to have_css("[data-slot='sidebar'][data-state='collapsed']")
     wait_for_sidebar_transition
     expect_cart_within_sidebar_inset
-    expect_no_overlap("button.fixed", "[data-sidebar='sidebar']")
+    expect_no_overlap("[data-slot='floating-cart-button']", "[data-sidebar='sidebar']")
 
     find("[data-sidebar='trigger']").click
     expect(page).to have_css("[data-slot='sidebar'][data-state='expanded']")
     wait_for_sidebar_transition
     expect_cart_within_sidebar_inset
-    expect_no_overlap("button.fixed", "[data-sidebar='sidebar']")
+    expect_no_overlap("[data-slot='floating-cart-button']", "[data-sidebar='sidebar']")
 
     find("[data-sidebar='trigger']").click
     expect(page).to have_css("[data-slot='sidebar'][data-state='collapsed']")
@@ -139,7 +139,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
   it "mantiene un único acceso funcional al carrito en todos los breakpoints" do
     [ 375, 820, 1000, 1024, 1400 ].each do |width|
       resize_to(width)
-      expect(page).to have_no_css("button.fixed", text: "Ver carrito", visible: true)
+      expect(page).to have_no_css("[data-slot='floating-cart-button']", text: "Ver carrito", visible: true)
     end
 
     resize_to(375)
@@ -151,22 +151,22 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
       expect(visible_cart_buttons.size).to eq(1)
 
       if width < 1024
-        expect(page).to have_css("button.fixed", text: "Ver carrito", visible: true)
-        expect(page.evaluate_script("getComputedStyle(document.querySelector('button.fixed')).position")).to eq("fixed")
+        expect(page).to have_link("Ver carrito", href: dashboard_cart_path, count: 1)
+        expect(page.evaluate_script("getComputedStyle(document.querySelector('[data-slot=\"floating-cart-button\"]')).position")).to eq("fixed")
 
         if width < 768
           expect(page).to have_css("nav.fixed", visible: true)
-          expect_no_overlap("button.fixed", "nav.fixed")
+          expect_no_overlap("a.fixed", "nav.fixed")
         else
           expect(page).to have_css("[data-sidebar='sidebar']", visible: true)
           expect_tablet_cart_in_both_sidebar_states
         end
       else
-        expect(page).to have_no_css("button.fixed", text: "Ver carrito", visible: true)
-        expect(page).to have_css("aside button", text: "Ver carrito", visible: true)
+        expect(page).to have_no_css("[data-slot='floating-cart-button']", visible: true)
+        expect(page).to have_css("aside a", text: "Ver carrito", visible: true)
       end
 
-      visible_cart_buttons.first.click
+      click_link "Ver carrito"
       expect(page).to have_content("Tu carrito")
       expect(page).to have_content("Milanesa con papas fritas x1")
       expect(page).to have_button("Confirmar pedido", disabled: false)
@@ -176,12 +176,12 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
 
   it "oculta dinámicamente el botón flotante en tablet cuando el carrito queda vacío tras quitar los platos" do
     resize_to(820)
-    expect(page).to have_no_css("button.fixed", text: "Ver carrito", visible: true)
+    expect(page).to have_no_link("Ver carrito", href: dashboard_cart_path)
 
     add_milanesa
-    expect(page).to have_css("button.fixed", text: "Ver carrito", visible: true)
+    expect(page).to have_link("Ver carrito", href: dashboard_cart_path, count: 1)
 
-    find("button.fixed", text: "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
     expect(page).to have_content("Milanesa con papas fritas x1")
 
@@ -189,9 +189,9 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
     expect(page).to have_content("Todavía no agregaste platos.")
 
     find_button("Volver").click
-    expect(page).to have_no_css("button.fixed", text: "Ver carrito", visible: true)
+    expect(page).to have_no_css("a.fixed", text: "Ver carrito", visible: true)
 
     add_milanesa
-    expect(page).to have_css("button.fixed", text: "Ver carrito", visible: true)
+    expect(page).to have_css("a.fixed", text: "Ver carrito", visible: true)
   end
 end

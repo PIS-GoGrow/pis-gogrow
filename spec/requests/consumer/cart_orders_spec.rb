@@ -74,11 +74,10 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(response).to have_http_status(:ok)
       expect(inertia).to render_component("consumer/dashboard/index")
 
-      expect(inertia.props).to include(:week, :schedules, :benefit, :addresses)
+      expect(inertia.props).to include(:week, :schedules, :benefit)
       expect(inertia.props[:week]).to include(:start_date, :end_date, :days)
       expect(inertia.props[:schedules]).to be_an(Array)
       expect(inertia.props[:benefit]).to include(:percentage, :monthly_remaining)
-      expect(inertia.props[:addresses]).to be_an(Array)
 
       if inertia.props[:schedules].any?
         first_schedule = inertia.props[:schedules].first
@@ -114,7 +113,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.empty_cart"))
     end
@@ -127,7 +126,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.invalid_quantity"))
     end
@@ -140,7 +139,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.invalid_quantity"))
     end
@@ -153,7 +152,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.cart_unavailable"))
     end
@@ -166,7 +165,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.invalid_address"))
     end
@@ -196,7 +195,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.insufficient_stock"))
     end
@@ -265,15 +264,6 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(inertia).to have_props(total: 570.0)
     end
 
-    it "reparte los usos del especial sobre los primeros platos del carrito" do
-      order_cart([ wednesday, 1 ], [ thursday, 2 ])
-
-      first, second = consumer.orders.where(schedule: [ wednesday, thursday ]).order(:id)
-      expect(first.discounted_price).to eq(60)
-      expect(second.discounted_price).to eq(510)
-      expect(second.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ special.id, 1 ])
-    end
-
     it "no bloquea el pedido cuando supera los usos del especial" do
       special.update!(amount: 1)
       OrderBenefit.create!(order: orders(:upcoming_pending_future), benefit: special, benefit_used: 1)
@@ -311,7 +301,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       expect(response).to have_http_status(:see_other)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.cart_unavailable"))
@@ -334,10 +324,176 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       }.not_to change(Order, :count)
 
-      expect(response).to redirect_to(dashboard_path)
+      expect(response).to redirect_to(dashboard_cart_path)
       expect(response).to have_http_status(:see_other)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.provider_closed"))
+    end
+  end
+
+  describe "GET /dashboard/cart y POST /orders/pricing - Control de acceso y props" do
+    it "redirige al inicio de sesión cuando un visitante no autenticado accede a /dashboard/cart" do
+      get dashboard_cart_path
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "redirige a la raíz cuando un provider accede a /dashboard/cart" do
+      sign_in provider_user, role: :provider
+      get dashboard_cart_path
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirige a la raíz cuando un admin accede a /dashboard/cart" do
+      sign_in admin_user, role: :admin
+      get dashboard_cart_path
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "renderiza el componente consumer/dashboard/cart con sus props exactas para el consumidor" do
+      sign_in consumer_user, role: :consumer
+      get dashboard_cart_path
+
+      expect(response).to have_http_status(:ok)
+      expect(inertia).to render_component("consumer/dashboard/cart")
+      expect(inertia.props).to include(:benefit, :addresses)
+      expect(inertia.props[:benefit]).to include(
+        :limit, :used, :percentage, :monthly_limit, :monthly_used, :monthly_remaining, :specials
+      )
+      expect(inertia.props[:addresses]).to be_an(Array)
+    end
+
+    it "redirige al inicio de sesión cuando un visitante no autenticado consulta POST /orders/pricing" do
+      post pricing_orders_path, params: { items: [ { schedule_id: schedule.id, quantity: 1 } ] }
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "redirige a la raíz cuando un provider consulta POST /orders/pricing" do
+      sign_in provider_user, role: :provider
+      post pricing_orders_path, params: { items: [ { schedule_id: schedule.id, quantity: 1 } ] }
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirige a la raíz cuando un admin consulta POST /orders/pricing" do
+      sign_in admin_user, role: :admin
+      post pricing_orders_path, params: { items: [ { schedule_id: schedule.id, quantity: 1 } ] }
+      expect(response).to redirect_to(root_path)
+    end
+  end
+
+  describe "POST /orders/pricing: cálculo y casos borde de payload" do
+    before do
+      schedule.update!(date: Calendar.new.allowed_order_dates.begin)
+      sign_in consumer_user, role: :consumer
+    end
+
+    it "devuelve 400 Bad Request cuando el payload no incluye la clave items" do
+      post pricing_orders_path, params: {}
+      expect(response).to have_http_status(:bad_request)
+    end
+
+    it "devuelve 400 Bad Request cuando items es un arreglo vacío" do
+      post pricing_orders_path, params: { items: [] }
+      expect(response).to have_http_status(:bad_request)
+    end
+
+    it "ignora schedules inexistentes o fuera de fechas permitidas sin romper el cálculo" do
+      post pricing_orders_path, params: {
+        items: [
+          { schedule_id: 999_999, quantity: 1 },
+          { schedule_id: schedule.id, quantity: 1 }
+        ]
+      }
+
+      expect(response).to have_http_status(:ok)
+      json = response.parsed_body
+      expect(json["lines"]).to have_key(schedule.id.to_s)
+      expect(json["lines"]).not_to have_key("999999")
+    end
+
+    it "no aplica descuento cuando el plato supera el max_price del beneficio" do
+      consumer_user.consumer.benefits.destroy_all
+      consumer_user.consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly),
+        percentage: 50,
+        amount: 10,
+        max_price: schedule.menu.price - 10,
+        due_date: Date.current.end_of_month,
+        status: :current
+      )
+
+      post pricing_orders_path, params: {
+        items: [ { schedule_id: schedule.id, quantity: 1 } ]
+      }
+
+      expect(response).to have_http_status(:ok)
+      json = response.parsed_body
+      expect(json["subtotal"]).to eq(schedule.menu.price.to_f)
+      expect(json["discount"]).to eq(0)
+      expect(json["total"]).to eq(schedule.menu.price.to_f)
+      expect(json["subsidizedQuantity"]).to eq(0)
+      expect(json["fullPriceQuantity"]).to eq(1)
+      expect(json.dig("lines", schedule.id.to_s, "tiers")).to be_empty
+    end
+
+    it "aplica el descuento correctamente cuando el precio está dentro del max_price" do
+      consumer_user.consumer.benefits.destroy_all
+      consumer_user.consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly),
+        percentage: 50,
+        amount: 10,
+        max_price: schedule.menu.price + 50,
+        due_date: Date.current.end_of_month,
+        status: :current
+      )
+
+      post pricing_orders_path, params: {
+        items: [ { schedule_id: schedule.id, quantity: 1 } ]
+      }
+
+      expect(response).to have_http_status(:ok)
+      json = response.parsed_body
+      expected_discount = schedule.menu.price.to_f * 0.5
+      expect(json["subtotal"]).to eq(schedule.menu.price.to_f)
+      expect(json["discount"]).to eq(expected_discount)
+      expect(json["total"]).to eq(schedule.menu.price.to_f - expected_discount)
+      expect(json["subsidizedQuantity"]).to eq(1)
+      expect(json["fullPriceQuantity"]).to eq(0)
+      expect(json.dig("lines", schedule.id.to_s, "tiers").first["percentage"]).to eq(50)
+    end
+  end
+
+  describe "POST /orders con restricción de max_price" do
+    before do
+      schedule.update!(date: Calendar.new.allowed_order_dates.begin)
+      sign_in consumer_user, role: :consumer
+    end
+
+    it "cobra el precio completo y no crea order_benefits cuando el plato supera max_price" do
+      consumer = consumer_user.consumer
+      consumer.benefits.destroy_all
+      consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly),
+        percentage: 50,
+        amount: 10,
+        max_price: schedule.menu.price - 10,
+        due_date: Date.current.end_of_month,
+        status: :current
+      )
+
+      expect {
+        post orders_path, params: {
+          order: {
+            address: company_address,
+            items: [ { schedule_id: schedule.id, quantity: 1, notes: "", options: [] } ]
+          }
+        }
+      }.to change(Order, :count).by(1)
+
+      order = Order.last
+      expect(order.price).to eq(schedule.menu.price)
+      expect(order.discounted_price).to eq(schedule.menu.price)
+      expect(order.order_benefits).to be_empty
+      expect(consumer.remaining_monthly_benefit).to eq(10)
     end
   end
 end

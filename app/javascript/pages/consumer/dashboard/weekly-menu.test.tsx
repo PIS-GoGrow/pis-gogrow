@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
+import { dashboardCart } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
 
 import type { CartItem, Schedule } from "./consumer-types"
@@ -19,8 +19,10 @@ vi.mock("@inertiajs/react", async () => {
         notifications: [],
       },
     }),
-    Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
-      <a href={href}>{children}</a>
+    Link: ({ href, children, ...props }: React.ComponentProps<"a">) => (
+      <a href={href} {...props}>
+        {children}
+      </a>
     ),
   }
 })
@@ -83,6 +85,7 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
       total: 0,
       openDetail: vi.fn(),
       openCart: vi.fn(),
+      loading: false,
       ...props,
     }
 
@@ -100,8 +103,8 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
     )
     expect(floatingButton).toBeNull()
 
-    const asideCartButton = screen.getByRole("button", { name: "Ver carrito" })
-    expect(asideCartButton).toBeDisabled()
+    const asideCartButton = screen.getByRole("link", { name: "Ver carrito" })
+    expect(asideCartButton).toBeVisible()
   })
 
   it("renderiza el botón flotante con data-slot y clases responsive para mobile y tablet cuando count > 0", () => {
@@ -120,26 +123,21 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
     expect(floatingButton?.className).toContain("lg:hidden")
   })
 
-  it("llama a openCart al presionar el botón flotante", async () => {
-    const user = userEvent.setup()
-    const openCart = vi.fn()
-    renderComponent({ count: 2, total: 700, cart: [sampleCartItem], openCart })
+  it("navega al carrito al presionar el botón flotante", () => {
+    renderComponent({ count: 2, total: 700, cart: [sampleCartItem] })
 
     const floatingButton = document.querySelector(
       '[data-slot="floating-cart-button"]',
     )
     expect(floatingButton).not.toBeNull()
 
-    await user.click(floatingButton!)
-    expect(openCart).toHaveBeenCalledTimes(1)
+    expect(floatingButton).toHaveAttribute("href", dashboardCart().url)
   })
 
-  it("permite abrir el carrito desde el aside de escritorio cuando count > 0", async () => {
-    const user = userEvent.setup()
-    const openCart = vi.fn()
-    renderComponent({ count: 1, total: 350, cart: [sampleCartItem], openCart })
+  it("permite abrir el carrito desde el aside de escritorio cuando count > 0", () => {
+    renderComponent({ count: 1, total: 350, cart: [sampleCartItem] })
 
-    const cartButtons = screen.getAllByRole("button", { name: "Ver carrito" })
+    const cartButtons = screen.getAllByRole("link", { name: "Ver carrito" })
     // El segundo botón es el del aside en desktop
     const asideButton = cartButtons.find(
       (btn) => btn.getAttribute("data-slot") !== "floating-cart-button",
@@ -147,8 +145,7 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
     expect(asideButton).toBeDefined()
     expect(asideButton).toBeEnabled()
 
-    await user.click(asideButton!)
-    expect(openCart).toHaveBeenCalledTimes(1)
+    expect(asideButton).toHaveAttribute("href", dashboardCart().url)
   })
 
   it("muestra el resumen de viandas y monto en la tarjeta de carrito", () => {

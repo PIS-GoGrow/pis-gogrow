@@ -48,6 +48,10 @@
         "title": "Eliminar cuenta",
         "warning": "Advertencia"
       },
+      "file_input": {
+        "empty": "Sin archivos seleccionados",
+        "select": "Seleccionar archivo"
+      },
       "month_select": {
         "this_month": "Este mes"
       },
@@ -279,7 +283,7 @@
           "receipt_error_action": "Entendido",
           "receipt_error_description": "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
           "receipt_error_title": "No se pudo subir el comprobante",
-          "receipt_file": "Seleccionar archivo",
+          "receipt_file": "Comprobante",
           "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
           "receipt_preview": "Vista previa del comprobante",
           "receipt_remove": "Eliminar comprobante",
@@ -287,6 +291,7 @@
           "receipt_remove_description": "Esta acción no se puede deshacer. Podés volver a subir el comprobante mientras el pago no esté aprobado.",
           "receipt_remove_title": "¿Eliminar comprobante?",
           "receipt_replace": "Reemplazar archivo",
+          "receipt_required": "Seleccioná el archivo del comprobante.",
           "receipt_sent_at": "Enviado: %{date}",
           "receipt_success_action": "Listo",
           "receipt_success_description": "Tu comprobante fue enviado correctamente y está pendiente de revisión.",
@@ -430,6 +435,7 @@
             "empty_description": "Todavía no hay empleados en la organización.",
             "empty_title": "Sin empleados",
             "filter_label": "Filtrar empleados",
+            "month_label": "Mes de los saldos",
             "no_consumption": "Sin consumos",
             "no_results_description": "Probá con otro nombre o correo, o cambiá el filtro.",
             "no_results_title": "No se encontraron empleados",
@@ -601,6 +607,16 @@
         "benefit": "Subsidio Base (%{percentage}%)",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
+        "monthly": {
+          "full_price_one": "La vianda de este pedido se cobra a precio completo.",
+          "full_price_other": "Las %{count} viandas de este pedido se cobran a precio completo.",
+          "no_benefit": "No tenés un beneficio asignado.",
+          "remaining_one": "Te queda 1 vianda subsidiada este mes.",
+          "remaining_other": "Te quedan %{count} viandas subsidiadas este mes.",
+          "split": "De este pedido, %{subsidized} con beneficio y %{full} a precio completo.",
+          "used_up_one": "Ya utilizaste la vianda subsidiada de este mes.",
+          "used_up_other": "Ya utilizaste las %{count} viandas subsidiadas de este mes."
+        },
         "my_addresses": "Ver mis direcciones",
         "new_address": {
           "apartment": "Piso / Apartamento (opcional)",
@@ -613,6 +629,7 @@
           "submit": "Agregar",
           "title": "Agregar una dirección"
         },
+        "no_benefit": "Subsidio GoGrow",
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
         "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
@@ -654,6 +671,9 @@
           "monthly_limit": "Viandas subsidiadas por mes",
           "monthly_remaining": "Te quedan este mes",
           "no_benefit": "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa.",
+          "notifications": "Notificaciones",
+          "notifications_description": "Configurá qué alertas querés recibir",
+          "settings": "Configuración",
           "sign_out": "Salir",
           "title": "Mi cuenta"
         }
@@ -892,7 +912,6 @@
           "download": "Descargar factura",
           "file_label": "Archivo de la factura",
           "formats": "PDF, JPG o PNG de hasta 10 MB.",
-          "no_file": "Sin archivos seleccionados",
           "preview": "Ver factura %{name}",
           "rejected_hint": "La factura fue rechazada. Podés subir una nueva.",
           "remove": {
@@ -901,7 +920,6 @@
             "title": "¿Eliminar la factura?",
             "trigger": "Eliminar factura"
           },
-          "select_file": "Seleccionar archivo",
           "statuses": {
             "approved": "Aprobada",
             "pending": "En revisión",
@@ -913,6 +931,7 @@
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
         "partial_payment_badge": "Pago parcial",
+        "receipt_sent_at": "Comprobante enviado el %{date}",
         "reminder": {
           "back": "Volver",
           "confirm": {
@@ -1161,6 +1180,7 @@
             "title": "Opciones"
           },
           "price": "Precio",
+          "price_positive": "Tiene que ser mayor que 0.",
           "required": "No puede estar vacío.",
           "update": "Modificar",
           "updating": "Guardando..."
@@ -1513,6 +1533,7 @@
         },
         "notifications": {
           "back": "Volver a Cuenta",
+          "back_to_account": "Volver a Mi cuenta",
           "description": "Configurá qué alertas querés recibir por WhatsApp",
           "heading": "Notificaciones",
           "preferences_description": "Activá o desactivá las categorías de avisos que querés recibir.",

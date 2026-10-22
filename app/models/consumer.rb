@@ -50,6 +50,19 @@ class Consumer < ApplicationRecord
     benefits.current.monthly.first
   end
 
+  # Devuelve el porcentaje del beneficio mensual actual
+  def monthly_benefit_percentage
+    current_monthly_benefit&.percentage || 0
+  end
+
+  def special_benefits
+    benefits.current
+      .where(benefit_configuration: BenefitConfiguration.special.active)
+  end
+
+  # Devuelve la cantidad del beneficio mensual actual.
+  # No tiene en cuenta las órdenes que ya se hicieron: para eso consultar
+  # remaining_monthly_benefit
   def monthly_benefit_available
     current_monthly_benefit&.amount || 0
   end

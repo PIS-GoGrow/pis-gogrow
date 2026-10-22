@@ -18,11 +18,23 @@ RSpec.describe "Admin::Consumers", type: :request do
     it "redirects visitors to the sign in page" do
       get admin_consumers_path
       expect(response).to redirect_to(sign_in_path)
+
+      get admin_consumers_path, params: { month: "2026-09", filter: "pending" }
+      expect(response).to redirect_to(sign_in_path)
     end
 
     it "redirects users without an admin profile" do
       sign_in users(:one)
       get admin_consumers_path
+      expect(response).to redirect_to(root_path)
+
+      get admin_consumers_path, params: { month: "2026-09", filter: "pending" }
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects providers even when month parameters are supplied" do
+      sign_in users(:provider_user), role: :provider
+      get admin_consumers_path, params: { month: "2026-09", filter: "pending" }
       expect(response).to redirect_to(root_path)
     end
 
@@ -67,14 +79,70 @@ RSpec.describe "Admin::Consumers", type: :request do
         )
       end
 
+      it "sends the month it summarizes and the months to choose from" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+
+        get admin_consumers_path, params: { month: previous.strftime("%Y-%m") }
+
+        expect(inertia).to have_props(month: previous.strftime("%Y-%m"), current_month: Date.current.strftime("%Y-%m"))
+        expect(inertia.props[:months].pluck(:key)).to include(previous.strftime("%Y-%m"), Date.current.strftime("%Y-%m"))
+      end
+
+      it "sends the current month when the URL asks for none" do
+        get admin_consumers_path
+
+        expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"))
+      end
+
       it "summarizes the current month with an invalid or future month" do
         [ "agosto", "2026-13", (Date.current + 2.months).strftime("%Y-%m") ].each do |month|
           get admin_consumers_path, params: { month: }
 
+          expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"), current_month: Date.current.strftime("%Y-%m"))
           expect(inertia.props[:consumers]).to include(
             hash_including(id: consumers(:one).id, amount: 950.75, status: "pending")
           )
         end
+      end
+
+      it "falls back to the current month when given an empty or whitespace month" do
+        [ "", "   " ].each do |month|
+          get admin_consumers_path, params: { month: }
+
+          expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"))
+        end
+      end
+
+      it "formats all month options with year-month keys and localized labels" do
+        get admin_consumers_path
+
+        months = inertia.props[:months]
+        expect(months).not_to be_empty
+        expect(months).to all(
+          match(
+            key: a_string_matching(/\A\d{4}-\d{2}\z/),
+            label: a_string_matching(/\A[a-zñáéíóú]+\s+\d{4}\z/i)
+          )
+        )
+      end
+
+      it "keeps the filter and month synchronized when both are requested" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+
+        get admin_consumers_path, params: { filter: "pending", month: previous.strftime("%Y-%m") }
+
+        expect(inertia).to have_props(filter: "pending", month: previous.strftime("%Y-%m"))
+      end
+
+      it "never includes consumers of another company when querying a previous month" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: outsider, provider: providers(:tuviandita), month: previous, amount: 500)
+
+        get admin_consumers_path, params: { month: previous.strftime("%Y-%m") }
+
+        expect(inertia.props[:consumers].pluck(:id)).not_to include(outsider.id)
       end
 
       it "sends the photo of each employee" do
@@ -131,6 +199,57 @@ RSpec.describe "Admin::Consumers", type: :request do
         )
       end
 
+      # Sin publicación, el pedido conserva su fecha de entrega: no se muestra el
+      # día en que se hizo, que es lo que veía antes RR. HH. y no coincidía con Cobros.
+      it "dates each order by its delivery even without its publication" do
+        order = orders(:history_confirmed_past)
+        delivery = order.schedule.date
+        order.update_columns(schedule_id: nil, delivery_date: delivery, created_at: delivery - 2.days)
+
+        get admin_consumer_path(consumers(:one))
+
+        dates = inertia.props[:months].sole[:orders].to_h { [ it[:id], it[:date] ] }
+        expect(dates[order.id]).to eq(delivery.strftime("%-d/%-m"))
+      end
+
+      it "sorts confirmed orders in consumption history chronologically by delivery_date ascending" do
+        earlier = orders(:history_confirmed_past)
+        later = orders(:upcoming_confirmed_future)
+
+        earlier.update_columns(created_at: Time.current)
+        later.update_columns(created_at: 10.days.ago)
+
+        get admin_consumer_path(consumers(:one))
+
+        orders_in_month = inertia.props[:months].sole[:orders]
+        expect(orders_in_month.pluck(:id)).to eq([ earlier.id, later.id ])
+      end
+
+      it "handles orders with nil delivery dates without 500 exceptions" do
+        order = orders(:history_confirmed_past)
+        order.update_columns(delivery_date: nil, schedule_id: nil)
+
+        get admin_consumer_path(consumers(:one))
+
+        expect(response).to have_http_status(:ok)
+        order_prop = inertia.props[:months].sole[:orders].find { it[:id] == order.id }
+        expect(order_prop[:date]).to be_nil
+      end
+
+      it "retains and renders delivery_date even after the associated schedule is destroyed" do
+        order = orders(:history_confirmed_past)
+        delivery = order.delivery_date
+        schedule = order.schedule
+
+        schedule.destroy!
+        expect(order.reload.schedule_id).to be_nil
+        expect(order.delivery_date).to eq(delivery)
+
+        get admin_consumer_path(consumers(:one))
+
+        dates = inertia.props[:months].sole[:orders].to_h { [ it[:id], it[:date] ] }
+        expect(dates[order.id]).to eq(delivery.strftime("%-d/%-m"))
+      end
       it "shows the active benefit percentage" do
         get admin_consumer_path(consumers(:one))
 
@@ -167,6 +286,12 @@ RSpec.describe "Admin::Consumers", type: :request do
 
       it "returns 404 for an invalid or non-existent consumer id" do
         get admin_consumer_path(id: "invalid-id")
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "returns 404 for a malicious non-numeric consumer id" do
+        get admin_consumer_path(id: "malicious")
 
         expect(response).to have_http_status(:not_found)
       end

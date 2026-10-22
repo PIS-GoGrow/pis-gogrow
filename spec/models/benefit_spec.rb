@@ -245,6 +245,52 @@ RSpec.describe Benefit, type: :model do
       expect(invalid_high).not_to be_valid
     end
   end
+
+  describe "#valid_on?" do
+    let(:consumer) { consumers(:one) }
+    let(:configuration) { benefit_configurations(:monthly) }
+
+    before { Benefit.delete_all }
+
+    it "es válido para un beneficio current si la fecha es igual o anterior a due_date" do
+      benefit = Benefit.create!(
+        consumer:, benefit_configuration: configuration,
+        status: :current, due_date: Date.new(2026, 10, 31),
+        percentage: 50, amount: 10, max_price: 300
+      )
+
+      expect(benefit.valid_on?(Date.new(2026, 10, 15))).to be true
+      expect(benefit.valid_on?(Date.new(2026, 10, 31))).to be true
+      expect(benefit.valid_on?(Date.new(2026, 11, 1))).to be false
+    end
+
+    it "es válido si no tiene due_date" do
+      benefit = Benefit.create!(
+        consumer:, benefit_configuration: configuration,
+        status: :current, due_date: nil,
+        percentage: 50, amount: 10
+      )
+
+      expect(benefit.valid_on?(Date.new(2026, 10, 15))).to be true
+    end
+
+    it "verifica beneficios competidores para beneficios future" do
+      Benefit.create!(
+        consumer:, benefit_configuration: configuration,
+        status: :current, due_date: Date.new(2026, 10, 31),
+        percentage: 50, amount: 10
+      )
+      future_benefit = Benefit.create!(
+        consumer:, benefit_configuration: configuration,
+        status: :future, due_date: Date.new(2026, 11, 30),
+        percentage: 50, amount: 10
+      )
+
+      expect(future_benefit.valid_on?(Date.new(2026, 10, 15))).to be false
+      expect(future_benefit.valid_on?(Date.new(2026, 11, 15))).to be true
+      expect(future_benefit.valid_on?(Date.new(2026, 12, 1))).to be false
+    end
+  end
 end
 
 # == Schema Information
@@ -255,6 +301,7 @@ end
 #  amount                   :integer
 #  description              :string
 #  due_date                 :date
+#  max_price                :decimal(10, 2)
 #  percentage               :integer
 #  status                   :integer
 #  created_at               :datetime         not null

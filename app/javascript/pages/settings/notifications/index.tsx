@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Switch } from "@/components/ui/switch"
 import AppLayout from "@/layouts/app-layout"
 import SettingsPageLayout from "@/layouts/settings/page-layout"
-import { settingsNotifications } from "@/routes"
+import { consumerProfiles, settingsNotifications } from "@/routes"
 import type { BreadcrumbItem, SettingsNotificationsIndex } from "@/types"
 
 export default function Notifications({
@@ -45,6 +45,14 @@ export default function Notifications({
         title={t("pages.settings.notifications.heading")}
         description={t("pages.settings.notifications.description")}
         adminBackLabel={t("pages.settings.notifications.back")}
+        consumerMobileBackHref={
+          auth.session.role === "consumer"
+            ? consumerProfiles.show().url
+            : undefined
+        }
+        consumerMobileBackLabel={t(
+          "pages.settings.notifications.back_to_account",
+        )}
       >
         {auth.session.role === "admin" && (
           <div className="space-y-1">

@@ -1092,7 +1092,7 @@ RSpec.describe Order, type: :model do
     end
 
     def place(quantity)
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: } ]).first
+      line = OrderPricing.new(consumer).call([ { schedule:, quantity: } ])[schedule.id]
       Order.reserve(
         consumer:, schedule:, quantity:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1171,7 +1171,7 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 1)
     end
     let(:order) do
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ]).first
+      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ])[schedule.id]
       Order.reserve(
         consumer:, schedule:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1212,7 +1212,7 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
     end
     let(:order) do
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ]).first
+      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ])[schedule.id]
       Order.reserve(
         consumer:, schedule:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
