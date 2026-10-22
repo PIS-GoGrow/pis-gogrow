@@ -644,6 +644,12 @@
         "total": "Monto a pagar"
       },
       "consumer_dashboard": {
+        "benefit_card": {
+          "period": "Este mes",
+          "title": "Tu consumo",
+          "unit": "viandas subsidiadas",
+          "used": "%{used} de %{limit}"
+        },
         "index": {
           "closure": {
             "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
