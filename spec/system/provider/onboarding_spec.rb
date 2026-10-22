@@ -37,8 +37,11 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     expect(find_by_id("bank_account_type")).to have_text(label)
   end
 
+  # Funciona con ambos footers: `Footer` (paso 1, type="submit") y
+  # `ControlledFooter` (pasos 2 a 4, type="button"). Capybara ignora los
+  # botones deshabilitados, así que espera a que `canContinue` se habilite.
   def continue_onboarding
-    button = find("button[type='submit'][value='continue']", text: "Continuar", visible: true)
+    button = find_button("Continuar", visible: true)
     page.execute_script("arguments[0].scrollIntoView({ behavior: 'instant', block: 'center' });", button)
     button.click
   end
@@ -72,12 +75,13 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     click_button "Guardar cambios"
     continue_onboarding
 
-    # Paso 3: Entregas
+    # Paso 3: Entregas (RadioGroup: oficina / domicilio)
     expect(page).to have_content("Paso 3 de 4")
     expect(page).to have_content("Entregas")
 
-    # Toggle switch de entregas a domicilio
-    find("button[role='switch']").click
+    # "Continuar" está deshabilitado hasta elegir una opción
+    find("label[for='delivery-office']").click
+    expect(page).to have_css("#delivery-office[data-state='checked']")
     continue_onboarding
 
     # Paso 4: Notificaciones
