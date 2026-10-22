@@ -123,6 +123,7 @@ Rails.application.routes.draw do
     resources :invoices, path: "facturas", only: [ :index ] do
       get :file, on: :member, path: "archivo"
     end
+    resources :order_events, path: "auditoria", only: [ :index ]
     resources :payments, path: "pagos", only: [ :index, :show, :create, :destroy ] do
       get :receipt, on: :member, path: "archivo"
     end
