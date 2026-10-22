@@ -2,11 +2,13 @@
 
 class Consumer::ReviewsController < Consumer::InertiaController
   def new
-    @order = reviewable_order
+    @order = find_order
+    redirect_to_orders_unavailable unless @order.reviewable?
   end
 
   def create
-    order = reviewable_order
+    order = find_order
+    return redirect_to_orders_unavailable unless order.reviewable?
 
     review = order.build_review(
       consumer: order.consumer,
@@ -27,14 +29,16 @@ class Consumer::ReviewsController < Consumer::InertiaController
 
   private
 
-  # El find va sobre los pedidos del empleado y pedir calificar uno que no es
-  # elegible (ajeno, no confirmado, futuro o ya calificado) es un 404: esconder el
-  # botón no alcanza como guarda del endpoint.
-  def reviewable_order
-    order = Current.user.consumer.orders.preload(schedule: :menu).find(params[:order_id])
-    raise ActiveRecord::RecordNotFound unless order.reviewable?
+  # El find va sobre los pedidos del empleado: pedir uno ajeno o inexistente es un
+  # 404. Uno propio que ya no es calificable (ya calificado, cancelado, futuro)
+  # vuelve a la lista con un aviso en vez de romper: la lista puede haber quedado
+  # con el botón viejo, y el redirect la recarga con el estado real.
+  def find_order
+    Current.user.consumer.orders.preload(schedule: :menu).find(params[:order_id])
+  end
 
-    order
+  def redirect_to_orders_unavailable
+    redirect_to orders_path, alert: t("flash.review_unavailable"), status: :see_other
   end
 
   def review_params

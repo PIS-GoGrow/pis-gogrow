@@ -25,22 +25,23 @@ RSpec.describe "Consumer reviews", type: :request do
       expect(response).to redirect_to(sign_in_path)
     end
 
-    it "devuelve 404 para un pedido pendiente" do
+    it "redirige a la lista con un aviso para un pedido pendiente" do
       sign_in consumer_user, role: :consumer
       get new_order_review_path(orders(:history_pending_past))
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(orders_path)
+      expect(flash[:alert]).to eq(I18n.t("flash.review_unavailable"))
     end
 
-    it "devuelve 404 para un pedido confirmado cuya entrega aún no pasó" do
+    it "redirige a la lista para un pedido confirmado cuya entrega aún no pasó" do
       sign_in consumer_user, role: :consumer
       get new_order_review_path(orders(:upcoming_confirmed_future))
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(orders_path)
     end
 
-    it "devuelve 404 para un pedido cancelado" do
+    it "redirige a la lista para un pedido cancelado" do
       sign_in consumer_user, role: :consumer
       get new_order_review_path(orders(:history_cancelled_future))
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(orders_path)
     end
 
     it "devuelve 404 para un pedido de otro empleado" do
@@ -97,20 +98,21 @@ RSpec.describe "Consumer reviews", type: :request do
       expect(inertia.props[:errors][:description]).to be_present
     end
 
-    it "devuelve 404 al intentar calificar dos veces el mismo pedido" do
+    it "no permite calificar dos veces el mismo pedido y redirige con un aviso" do
       post order_review_path(reviewable), params: { rating: 5 }
 
       expect {
         post order_review_path(reviewable), params: { rating: 1 }
       }.not_to change(Review, :count)
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(orders_path)
+      expect(flash[:alert]).to eq(I18n.t("flash.review_unavailable"))
     end
 
-    it "devuelve 404 para un pedido no calificable" do
+    it "redirige con un aviso para un pedido no calificable" do
       expect {
         post order_review_path(orders(:history_cancelled_future)), params: { rating: 5 }
       }.not_to change(Review, :count)
-      expect(response).to have_http_status(:not_found)
+      expect(response).to redirect_to(orders_path)
     end
   end
 end

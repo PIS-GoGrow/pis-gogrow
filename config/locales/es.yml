@@ -25,6 +25,7 @@ es:
     order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
     order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     order_updated: "Pedido actualizado."
+    review_unavailable: "Este pedido ya no se puede calificar."
     already_signed_in: "Ya iniciaste sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
     debt_alert_updated: "Monto de alerta de deuda actualizado"
