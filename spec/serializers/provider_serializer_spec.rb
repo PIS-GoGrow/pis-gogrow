@@ -29,6 +29,7 @@ end
 # == Schema Information
 #
 # Table name: providers
+#
 #  id                            :bigint           not null, primary key
 #  bank_account_holder           :string
 #  bank_account_number           :string
