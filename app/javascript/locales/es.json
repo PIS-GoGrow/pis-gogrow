@@ -88,6 +88,7 @@
       "dashboard": "Panel",
       "invoices": "Facturas",
       "menu": "Menú de navegación",
+      "order_events": "Auditoría",
       "orders": "Mis pedidos",
       "payments": "Pagos",
       "platform": "Plataforma",
@@ -317,6 +318,8 @@
           "more_options": "Más opciones",
           "notifications": "Notificaciones",
           "notifications_description": "Configurá qué alertas querés recibir",
+          "order_events": "Auditoría de pedidos",
+          "order_events_description": "Consultá quién creó o cambió cada pedido",
           "preferences": "Perfil y Apariencia",
           "preferences_description": "Gestioná tus datos personales y el tema de la aplicación",
           "settings": "Configuración",
@@ -540,6 +543,63 @@
             "title": "Facturas de proveedores",
             "total_amount": "Facturado",
             "view": "Ver"
+          }
+        },
+        "order_events": {
+          "index": {
+            "action": "Acción",
+            "actions": {
+              "cancelled": "Cancelación",
+              "confirmed": "Confirmación",
+              "created": "Creación",
+              "modified": "Modificación",
+              "price_changed": "Cambio económico",
+              "rejected": "Rechazo"
+            },
+            "actor": "Actor",
+            "after": "Nuevo",
+            "before": "Anterior",
+            "changes": "Cambio",
+            "description": "Cada creación y cambio de un pedido, con quién lo hizo. El registro no se puede editar ni borrar.",
+            "empty_description": "Cuando se cree o cambie un pedido, va a quedar registrado acá.",
+            "empty_title": "No hay eventos",
+            "empty_value": "—",
+            "fields": {
+              "address": "Dirección",
+              "amount": "Cantidad",
+              "delivery_method": "Entrega",
+              "discounted_price": "Precio a cobrar",
+              "notes": "Notas",
+              "price": "Precio de lista",
+              "rejection_details": "Detalle del rechazo",
+              "rejection_reason": "Motivo de rechazo",
+              "selected_options": "Opciones",
+              "status": "Estado"
+            },
+            "filters": {
+              "action": "Acción",
+              "actor": "Actor",
+              "actor_placeholder": "Nombre",
+              "all": "Todas",
+              "all_roles": "Todos",
+              "apply": "Filtrar",
+              "clear": "Limpiar",
+              "dates": "Fechas",
+              "order": "Pedido",
+              "order_placeholder": "PED-123",
+              "role": "Rol"
+            },
+            "occurred_at": "Fecha y hora",
+            "order": "Pedido",
+            "role": "Rol",
+            "roles": {
+              "admin": "RR. HH.",
+              "consumer": "Empleado",
+              "provider": "Proveedor"
+            },
+            "system": "Sistema",
+            "title": "Auditoría de pedidos",
+            "truncated": "Se muestran los %{shown} eventos más recientes de %{total}. Usá los filtros para acotar la búsqueda."
           }
         },
         "payments": {
