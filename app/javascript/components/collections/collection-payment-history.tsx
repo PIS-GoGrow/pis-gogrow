@@ -43,7 +43,9 @@ export default function CollectionPaymentHistory({
         >
           <div className="flex items-center justify-between gap-2">
             <span className="text-muted-foreground text-xs">
-              {payment.date}
+              {t("pages.provider_collections.receipt_sent_at", {
+                date: payment.date,
+              })}
             </span>
             <div className="flex items-center gap-1.5">
               {payment.rejection_reason ===

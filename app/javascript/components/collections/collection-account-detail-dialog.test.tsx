@@ -245,7 +245,9 @@ describe("Collections payment history destination", () => {
         />,
       )
 
-      expect(screen.getByText(payment.date)).toBeInTheDocument()
+      expect(
+        screen.getByText(`Comprobante enviado el ${payment.date}`),
+      ).toBeInTheDocument()
       expect(screen.getByText("Pago parcial")).toBeInTheDocument()
       expect(screen.getAllByText("Rechazado")).toHaveLength(2)
     },
