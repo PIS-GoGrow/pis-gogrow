@@ -80,11 +80,18 @@ configurations:
 # uno, hay que especificar una de las claves de configuración de arriba en el
 # atributo configuration, especificar un único rol de los que están disponibles
 # para la configuración en role e indicar si requiere acción.
+#
+# IMPORTANTE: Cualquier cambio que se haga acá tiene que ser avisado a Juan
+# Andrés Olmedo o Sebastián Rama. El content_sid es un identificador de Twilio.
+# Si se quiere agregar un evento y probarlo en la app, se puede asignar un
+# valor cualquiera a content_sid, pero avisar antes de que se mergee para
+# corregirlo.
 events:
   order_confirmation:
     configuration: order_updates
     role: consumer
     requires_action: false
+    content_sid: HX15c38778b10d55bcd69c94e903bfc8e1
 
   order_rejection:
     configuration: order_updates

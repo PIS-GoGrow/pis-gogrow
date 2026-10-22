@@ -51,11 +51,14 @@ class Notification < ApplicationRecord
   end
 
   # Determina si mandarle o no una notificación por WhatsApp al usuario.
+  # Si el usuario no tiene un teléfono configurado, no la enviamos.
   # Si le estamos mandando una notificación a un proveedor que está cerrado en el día
-  # de hoy, no la envíamos.
+  # de hoy, no la enviamos.
   # Si la configuración no es configurable, la enviamos. Si sí, nos fijamos si el
   # usuario la tiene configurada.
   def send_to_user?
+    return false unless user.phone
+
     return false if role == "provider" && user.provider&.closed_on?(Date.current)
 
     return true unless notification_configuration.configurable
