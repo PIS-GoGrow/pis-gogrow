@@ -52,8 +52,10 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     expect(page).to have_content("Paso 2 de 4")
     expect(page).to have_content("Hora de cierre")
 
-    find_by_id("order_deadline").set("12:30")
-    page.execute_script("document.getElementById('order_deadline').value = '12:30'")
+    click_button "Agregar hora de cierre"
+    find_by_id("order_deadline").click
+    find("[role=option]", exact_text: "12:30").click
+    click_button "Guardar cambios"
     click_button "Continuar"
 
     # Paso 3: Entregas
