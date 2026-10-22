@@ -26,7 +26,7 @@ class AdminConsumerSummary
     def status = AdminConsumerSummary.status_of(accounts)
 
     def orders
-      accounts.flat_map { it.orders.select(&:confirmed?) }.sort_by(&:created_at)
+      accounts.flat_map { it.orders.select(&:confirmed?) }.sort_by { [ it.delivery_date&.jd || 0, it.created_at ] }
     end
 
     def subsidy = orders.sum { it.subsidy || 0 }.to_f

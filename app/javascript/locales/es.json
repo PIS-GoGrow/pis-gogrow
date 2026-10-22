@@ -931,6 +931,7 @@
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
         "partial_payment_badge": "Pago parcial",
+        "receipt_sent_at": "Comprobante enviado el %{date}",
         "reminder": {
           "back": "Volver",
           "confirm": {
