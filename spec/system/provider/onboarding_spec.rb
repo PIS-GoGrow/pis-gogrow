@@ -33,7 +33,14 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
     expect(page).not_to have_css("[role='option']", visible: true, wait: 5)
     expect(page).not_to have_css("[data-radix-popper-content-wrapper]", visible: true, wait: 5)
-    expect(trigger).to have_text(label)
+
+    expect(find_by_id("bank_account_type")).to have_text(label)
+  end
+
+  def continue_onboarding
+    button = find("button[type='submit'][value='continue']", text: "Continuar", visible: true)
+    button.scroll_to
+    button.click
   end
 
   it "guía al proveedor a través de los 4 pasos, persiste la configuración y desbloquea el panel" do
@@ -53,7 +60,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     fill_in "bank_account_holder", with: "Tu Vianda SRL"
     fill_in "tax_id", with: "212345670012"
 
-    click_button "Continuar"
+    continue_onboarding
 
     # Paso 2: Hora de cierre
     expect(page).to have_content("Paso 2 de 4")
@@ -61,9 +68,9 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
     click_button "Agregar hora de cierre"
     find_by_id("order_deadline").click
-    find("[role=option]", exact_text: "12:30").click
+    find("[role='option']", exact_text: "12:30").click
     click_button "Guardar cambios"
-    click_button "Continuar"
+    continue_onboarding
 
     # Paso 3: Entregas
     expect(page).to have_content("Paso 3 de 4")
@@ -71,7 +78,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
     # Toggle switch de entregas a domicilio
     find("button[role='switch']").click
-    click_button "Continuar"
+    continue_onboarding
 
     # Paso 4: Notificaciones
     expect(page).to have_content("Paso 4 de 4")
@@ -119,16 +126,14 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
     expect(page).to have_content("Paso 1 de 4")
 
-    # Ingresar RUT con longitud inválida
     fill_in "bank_name", with: "BROU"
     choose_account_type "Caja de ahorro"
     fill_in "bank_account_number", with: "001234567-00001"
     fill_in "bank_account_holder", with: "Tu Vianda SRL"
     fill_in "tax_id", with: "12345"
 
-    click_button "Continuar"
+    continue_onboarding
 
-    # Permanece en el paso 1 y muestra feedback de error
     expect(page).to have_content("Paso 1 de 4")
     expect(provider.reload.bank_name).to be_nil
   end
@@ -137,15 +142,12 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     sign_in provider_user, role: :provider
     visit provider_onboarding_path
 
-    # Omitir el paso 1
     expect(page).to have_content("Paso 1 de 4")
     find("button[aria-label='Omitir por ahora']").click
 
-    # Llega al paso 2 sin haber guardado datos de cobro
     expect(page).to have_content("Paso 2 de 4")
     expect(provider.reload.bank_name).to be_nil
 
-    # Volver al paso 1
     find("button[aria-label='Volver al paso anterior']").click
     expect(page).to have_content("Paso 1 de 4")
   end
