@@ -117,10 +117,127 @@ RSpec.describe OrderReminders::Generate do
         described_class.call(date:, now: at(12))
       }.not_to change { reminders_for(consumer).count }
     end
+
+    it "creates a single reminder when two providers share the earliest deadline" do
+      endulzate.update!(order_deadline: "12:00")
+
+      expect {
+        described_class.call(date:, now: at(10, 59))
+      }.not_to change { reminders_for(consumer).count }
+
+      described_class.call(date:, now: at(11))
+      described_class.call(date:, now: at(11))
+
+      expect(reminders_for(consumer).count).to eq(1)
+    end
+
+    it "still notifies if the first run inside the window is late" do
+      expect {
+        described_class.call(date:, now: at(11, 30))
+      }.to change { reminders_for(consumer).count }.by(1)
+    end
+
+    it "does not notify again when the deadline changes after the reminder was sent" do
+      described_class.call(date:, now: at(11))
+      tuviandita.update!(order_deadline: "12:30")
+
+      expect {
+        described_class.call(date:, now: at(11, 45))
+      }.not_to change { reminders_for(consumer).count }
+    end
+
+    it "only notifies employees without an order, in the same run" do
+      described_class.call(date:, now: at(11))
+
+      expect(Notification.where(event: "order_deadline_reminder").map(&:user))
+        .to contain_exactly(consumer.user)
+      expect(Notification.where(event: "order_deadline_reminder", user: [ users(:admin), users(:provider_user) ]))
+        .to be_empty
+    end
+
+    it "notifies an employee whose only active order is for another day" do
+      expect(consumer.orders.joins(:schedule).where(schedules: { date: date + 3 }, status: :confirmed)).to exist
+
+      expect {
+        described_class.call(date:, now: at(11))
+      }.to change { reminders_for(consumer).count }.by(1)
+    end
+
+    it "notifies when a provider publishes a menu shortly before its deadline" do
+      empty_date = date + 10.days
+
+      expect {
+        described_class.call(date: empty_date, now: at(11, 0, empty_date))
+      }.not_to change { reminders_for(consumer).count }
+
+      menus(:milanesa).schedules.create!(date: empty_date, amount: 5)
+
+      expect {
+        described_class.call(date: empty_date, now: at(11, 30, empty_date))
+      }.to change { reminders_for(consumer).count }.by(1)
+    end
+
+    context "when deciding the earliest deadline" do
+      it "ignores a provider that is closed that day" do
+        tuviandita.closures.create!(starts_on: date, ends_on: date, reason: "Feriado")
+
+        expect {
+          described_class.call(date:, now: at(11))
+        }.not_to change { reminders_for(consumer).count }
+
+        expect {
+          described_class.call(date:, now: at(12))
+        }.to change { reminders_for(consumer).count }.by(1)
+      end
+
+      it "ignores a provider whose menu is archived" do
+        menus(:milanesa).update_column(:archived_at, Time.current)
+
+        expect {
+          described_class.call(date:, now: at(11))
+        }.not_to change { reminders_for(consumer).count }
+
+        expect {
+          described_class.call(date:, now: at(12))
+        }.to change { reminders_for(consumer).count }.by(1)
+      end
+
+      it "ignores a provider with dishes published only for another day" do
+        providers(:office_provider).update!(order_deadline: "10:00")
+
+        expect {
+          described_class.call(date:, now: at(9))
+        }.not_to change { reminders_for(consumer).count }
+
+        expect {
+          described_class.call(date:, now: at(11))
+        }.to change { reminders_for(consumer).count }.by(1)
+      end
+    end
+
+    context "with WhatsApp" do
+      let(:configuration) { Notification::Configuration.find_by!(key: "order_reminders") }
+
+      it "enqueues the WhatsApp message for an employee subscribed to order reminders" do
+        configuration.users << consumer.user
+
+        expect {
+          described_class.call(date:, now: at(11))
+        }.to have_enqueued_job(WhatsappSenderJob).with(:order_deadline_reminder, {}, {}, consumer.user.phone)
+      end
+
+      it "does not enqueue WhatsApp for an employee who turned order reminders off" do
+        expect {
+          described_class.call(date:, now: at(11))
+        }.not_to have_enqueued_job(WhatsappSenderJob)
+
+        expect(reminders_for(consumer).count).to eq(1)
+      end
+    end
   end
 
-  def at(hour, minute = 0)
-    Time.zone.local(date.year, date.month, date.day, hour, minute)
+  def at(hour, minute = 0, day = date)
+    Time.zone.local(day.year, day.month, day.day, hour, minute)
   end
 
   def reminders_for(target_consumer)
