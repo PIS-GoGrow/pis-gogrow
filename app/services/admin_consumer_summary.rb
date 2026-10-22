@@ -83,9 +83,18 @@ class AdminConsumerSummary
   end
 
   def months
-    accounts.group_by(&:month)
-            .map { |month, group| MonthRow.new(month:, accounts: group) }
-            .sort_by { -it.month.jd }
+    accounts_by_month = accounts.group_by(&:month)
+    history_years = accounts_by_month.keys.map(&:year).uniq.select { it <= Date.current.year }.sort.reverse
+    years = [ Date.current.year, *history_years.reject { it == Date.current.year } ]
+
+    years.flat_map do |year|
+      last_month = year == Date.current.year ? Date.current.month : 12
+
+      last_month.downto(1).map do |month_number|
+        month = Date.new(year, month_number, 1)
+        MonthRow.new(month:, accounts: accounts_by_month.fetch(month, []))
+      end
+    end
   end
 
   private
