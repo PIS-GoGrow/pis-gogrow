@@ -832,6 +832,8 @@
           "no_price": "Importe no disponible",
           "no_provider": "Proveedor no disponible",
           "quantity": "x%{count}",
+          "review": "Calificar vianda",
+          "reviewed": "Vianda calificada",
           "title": "Mis pedidos",
           "upcoming_address": "Lo recibís en: %{address} (%{delivery_method})",
           "upcoming_empty_description": "No tenés viandas en camino.",
@@ -1493,6 +1495,29 @@
           "heading": "¡Bienvenido de nuevo!",
           "submit": "Iniciar sesión",
           "title": "Iniciar sesión"
+        }
+      },
+      "reviews": {
+        "error": {
+          "close": "Volver a Pedidos",
+          "description": "No pudimos guardar tu opinión.\nIntentá nuevamente más tarde.",
+          "title": "¡Ups! Algo salió mal"
+        },
+        "new": {
+          "back": "Volver",
+          "counter": "%{count}/200",
+          "experience": "Contá tu experiencia",
+          "placeholder": "Compartí tu opinión con tus compañeros de GoGrow…",
+          "question": "¿Qué te pareció?",
+          "rating_label": "Puntuación",
+          "star": "%{count} estrellas",
+          "submit": "Enviar",
+          "title": "Calificá tu vianda"
+        },
+        "thanks": {
+          "close": "Cerrar",
+          "description": "Tu opinión ayudará a tus compañeros de GoGrow a elegir su próxima vianda.",
+          "title": "¡Gracias por tu opinión!"
         }
       },
       "schedules": {
