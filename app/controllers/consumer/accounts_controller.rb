@@ -33,7 +33,7 @@ class Consumer::AccountsController < Consumer::InertiaController
 
     render inertia: {
       accounts: AccountSerializer.new(accounts, params: { orders_sum: sums }).as_json,
-      providers: ProviderSerializer.new(providers).as_json,
+      providers: PaymentProviderSerializer.new(providers).as_json,
       history:,
       history_accounts: AccountSerializer.new(history_accounts, params: { orders_sum: history_sums }).as_json,
       current_month_debt:,
