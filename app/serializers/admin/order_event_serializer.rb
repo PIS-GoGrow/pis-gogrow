@@ -29,6 +29,7 @@ class Admin::OrderEventSerializer < ApplicationSerializer
   typelize "Array<{ field: 'status' | 'amount' | 'price' | 'discounted_price' | 'delivery_method' | 'address' | 'notes' | 'selected_options' | 'rejection_reason' | 'rejection_details'; before: string | null; after: string | null }>"
   attribute :changes do |event|
     event.changeset.map do |field, (before, after)|
+      before = nil if event.created?
       { field:, before: format_value(field, before), after: format_value(field, after) }
     end
   end

@@ -505,6 +505,10 @@ class Order < ApplicationRecord
     )
     return if changeset.empty?
 
+    # Al crear, Rails informa como valor anterior de status el default crudo de
+    # la columna (0), no nil: un pedido nuevo no tenía ningún valor antes.
+    changeset.transform_values! { [ nil, it.last ] } if previously_new_record?
+
     OrderEvent.create!(
       order_id: id,
       company_id: consumer.company_id,

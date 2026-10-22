@@ -28,4 +28,18 @@ RSpec.describe Admin::OrderEventSerializer do
       { field: "selected_options", before: "Filetto", after: "Bolognesa, Parmesano, Sin sal" }
     ])
   end
+
+  # Los eventos de creación grabados antes del arreglo guardaron el default crudo
+  # de status (0) como valor anterior, y el registro no se puede corregir.
+  it "shows no previous value for a creation, even one recorded with the raw status default" do
+    event = OrderEvent.create!(
+      order_id: 1, company: companies(:gogrow), action: :created,
+      changeset: { "status" => [ 0, "pending" ], "amount" => [ nil, 1 ] }
+    )
+
+    expect(described_class.new(event).to_h["changes"]).to eq([
+      { field: "status", before: nil, after: I18n.t("pages.orders.statuses.pending") },
+      { field: "amount", before: nil, after: "1" }
+    ])
+  end
 end

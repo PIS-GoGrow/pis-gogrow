@@ -20,7 +20,7 @@ RSpec.describe OrderEvent, type: :model do
     expect(created.events.sole).to have_attributes(
       action: "created",
       company: companies(:gogrow),
-      changeset: a_hash_including("amount" => [ nil, 2 ], "price" => [ nil, "600.0" ], "discounted_price" => [ nil, "300.0" ])
+      changeset: a_hash_including("status" => [ nil, "pending" ], "amount" => [ nil, 2 ], "price" => [ nil, "600.0" ], "discounted_price" => [ nil, "300.0" ])
     )
   end
 
