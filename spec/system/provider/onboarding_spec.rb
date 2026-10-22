@@ -39,7 +39,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
   def continue_onboarding
     button = find("button[type='submit'][value='continue']", text: "Continuar", visible: true)
-    button.scroll_to
+    page.execute_script("arguments[0].scrollIntoView({ behavior: 'instant', block: 'center' });", button)
     button.click
   end
 
