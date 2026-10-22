@@ -104,7 +104,8 @@ Rails.application.routes.draw do
       get :receipt, on: :member, path: "archivo"
     end
 
-    resources :accounts, path: "pagos", only: [ :index, :show ]
+    get "payments", to: "accounts#index", as: :accounts
+    resources :accounts, only: [ :show ]
   end
 
   namespace :admin, path: "rrhh" do

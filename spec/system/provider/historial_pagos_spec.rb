@@ -151,7 +151,7 @@ RSpec.describe "Historial de pagos del proveedor" do
 
     expect(page).to have_css("[role=dialog]")
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
@@ -171,13 +171,13 @@ RSpec.describe "Historial de pagos del proveedor" do
 
       click_on "Empleados"
       click_on employee.name
-      expect(page).to have_content(approved.created_at.strftime("%d/%m/%y"))
+      expect(page).to have_content(I18n.t("pages.provider_collections.receipt_sent_at", date: approved.created_at.strftime("%d/%m/%y")))
       expect(page).to have_content("$300")
 
       expect(page).to have_button("Descargar comprobantes", exact: true)
       expect(page).to have_link("Descargar primer-intento.png", href: receipt_provider_payment_path(rejected))
       expect(page).to have_link("Descargar segundo-intento.png", href: receipt_provider_payment_path(approved))
-      expect(page).to have_content(rejected.created_at.strftime("%d/%m/%y"))
+      expect(page).to have_content(I18n.t("pages.provider_collections.receipt_sent_at", date: rejected.created_at.strftime("%d/%m/%y")))
       expect(page).to have_content("Rechazado")
       expect(page).to have_content("Aprobado")
 

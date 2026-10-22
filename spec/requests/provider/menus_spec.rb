@@ -59,6 +59,12 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    it "redirects admins to the root page" do
+      sign_in users(:admin), role: :admin
+      post provider_menus_path, params: { menu: { name: "Plato", price: 200 } }
+      expect(response).to redirect_to(root_path)
+    end
+
     it "creates a new dish with option groups and goes back to the new dish page" do
       expect do
         post provider_menus_path, params: {
@@ -142,6 +148,20 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(response).to redirect_to(new_provider_menu_path)
       follow_redirect!
       expect(inertia.props[:errors]).to have_key(:price)
+    end
+
+    it "rejects negative and non-numeric price via parameter bypass" do
+      [ -10, "gratis" ].each do |invalid_price|
+        expect do
+          post provider_menus_path, params: {
+            menu: { name: "Plato inválido", price: invalid_price }
+          }
+        end.not_to change(Menu, :count)
+
+        expect(response).to redirect_to(new_provider_menu_path)
+        follow_redirect!
+        expect(inertia.props[:errors]).to have_key(:price)
+      end
     end
 
     context "with an agenda" do
@@ -754,6 +774,22 @@ RSpec.describe "Provider::Menus", type: :request do
       expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa)))
       follow_redirect!
       expect(inertia.props[:errors]).to have_key(:agenda)
+    end
+
+    it "rejects non-positive or non-numeric price via parameter bypass without updating" do
+      menu = menus(:milanesa)
+
+      [ 0, -15, "gratis" ].each do |invalid_price|
+        expect do
+          patch provider_menu_path(menu), params: {
+            menu: { name: menu.name, price: invalid_price }
+          }
+        end.not_to change { menu.reload.price }
+
+        expect(response).to redirect_to(edit_provider_menu_path(menu))
+        follow_redirect!
+        expect(inertia.props[:errors]).to have_key(:price)
+      end
     end
   end
 
