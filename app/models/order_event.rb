@@ -24,3 +24,29 @@ class OrderEvent < ApplicationRecord
 
   def readonly? = persisted? || super
 end
+
+# == Schema Information
+#
+# Table name: order_events
+#
+#  id         :bigint           not null, primary key
+#  action     :integer          not null
+#  actor_name :string
+#  changeset  :jsonb            not null
+#  role       :integer
+#  created_at :datetime         not null
+#  company_id :bigint           not null
+#  order_id   :bigint           not null
+#  user_id    :bigint
+#
+# Indexes
+#
+#  index_order_events_on_company_id_and_created_at  (company_id,created_at)
+#  index_order_events_on_order_id                   (order_id)
+#  index_order_events_on_user_id                    (user_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (company_id => companies.id)
+#  fk_rails_...  (user_id => users.id) ON DELETE => nullify
+#
