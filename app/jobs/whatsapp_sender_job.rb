@@ -5,15 +5,21 @@
 # Para que funcione, necesita estar configurada la variable TWILIO_DELIVERY_ENABLED
 # en true, y cargadas las credenciales. En producción, la variable TWILIO_DELIVERY_ENABLED
 # no se respeta.
+# Cuando hay un error de red, se reintenta hasta tres veces el envío.
 class WhatsappSenderJob < ApplicationJob
+  class MissingENV < StandardError; end
+  class MissingContentSID < StandardError; end
+  class TransientTwilioError < StandardError; end
+
   queue_as :default
+
+  retry_on TransientTwilioError,
+    wait: :polynomially_longer,
+    attempts: 3
 
   ACCOUNT_SID_ENV = "TWILIO_ACCOUNT_SID"
   AUTH_TOKEN_ENV = "TWILIO_AUTH_TOKEN"
   FROM_ENV = "TWILIO_PHONE"
-
-  class MissingENV < StandardError; end
-  class MissingContentSID < StandardError; end
 
   def perform(notification, event_key, title_data, description_data, phone, *args)
     return if Rails.env.development? && ENV["TWILIO_DELIVERY_ENABLED"] != "true"
@@ -44,6 +50,10 @@ class WhatsappSenderJob < ApplicationJob
     Rails.logger.warn("Clave ENV faltante: #{e.message}")
   rescue MissingContentSID => e
     Rails.logger.error("Configuración de content SID faltante en config/notifications.yml para #{e.message}")
+  rescue Twilio::REST::TwilioError => e
+    raise unless e.cause.is_a?(Faraday::Error)
+
+    raise TransientTwilioError, e.message
   end
 
   private
