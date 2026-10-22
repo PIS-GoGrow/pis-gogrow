@@ -34,6 +34,7 @@ export function OrderSummary({
               </span>
               <span>{formatMoney(subtotal ?? 0)}</span>
             </div>
+            {tiers.length === 0 && <BenefitLine />}
             {tiers.map((tier, index) => (
               <BenefitLine
                 key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
@@ -58,14 +59,27 @@ export function OrderSummary({
   }
 }
 
+// Sin tier, la vianda no tiene ningún subsidio: la línea se muestra igual, en
+// $0, para que el desglose diga cuánto cubre GoGrow aunque sea nada.
 export function BenefitLine({
   tier,
   className,
 }: {
-  tier: DiscountTier
+  tier?: DiscountTier
   className?: string
 }) {
   const { t } = useTranslation()
+
+  if (!tier) {
+    return (
+      <div className={cn("flex justify-between", className)}>
+        <span className="text-muted-foreground">
+          {t("pages.cart.no_benefit")}
+        </span>
+        <span>{formatMoney(0)}</span>
+      </div>
+    )
+  }
 
   const label = tier.name
     ? `${tier.name} (${tier.percentage}%)`

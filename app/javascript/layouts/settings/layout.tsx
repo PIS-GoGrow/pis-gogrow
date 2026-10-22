@@ -17,11 +17,19 @@ import {
 } from "@/routes"
 import type { NavItem } from "@/types"
 
-export default function SettingsLayout({ children }: PropsWithChildren) {
+interface SettingsLayoutProps extends PropsWithChildren {
+  compactConsumerMobile?: boolean
+}
+
+export default function SettingsLayout({
+  children,
+  compactConsumerMobile = false,
+}: SettingsLayoutProps) {
   const { t } = useTranslation()
   const { url, props } = usePage()
   const isConsumer = props.auth.session.role === "consumer"
   const isAdmin = props.auth.session.role === "admin"
+  const hideMobileSettingsNavigation = isConsumer && compactConsumerMobile
 
   const sidebarNavItems: NavItem[] = [
     {
@@ -58,13 +66,20 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
 
   return (
     <div className={cn("px-4 py-6 md:pb-6", !isAdmin && "pb-24")}>
-      <Heading
-        title={t("components.settings_layout.title")}
-        description={t("components.settings_layout.description")}
-      />
+      <div className={cn(hideMobileSettingsNavigation && "hidden md:block")}>
+        <Heading
+          title={t("components.settings_layout.title")}
+          description={t("components.settings_layout.description")}
+        />
+      </div>
 
       <div className="flex flex-col space-y-8 lg:flex-row lg:space-y-0 lg:space-x-12">
-        <aside className="w-full max-w-xl lg:w-48">
+        <aside
+          className={cn(
+            "w-full max-w-xl lg:w-48",
+            hideMobileSettingsNavigation && "hidden md:block",
+          )}
+        >
           <nav className="flex flex-col space-y-1 space-x-0">
             {sidebarNavItems.map((item, index) => (
               <Button
@@ -85,7 +100,12 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
           </nav>
         </aside>
 
-        <Separator className="my-6 md:hidden" />
+        <Separator
+          className={cn(
+            "my-6 md:hidden",
+            hideMobileSettingsNavigation && "hidden",
+          )}
+        />
 
         <div className="flex-1 md:max-w-2xl">
           <section className="max-w-xl space-y-12">{children}</section>
