@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -357,9 +357,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120001) do
     t.integer "bank_account_type"
     t.string "bank_name"
     t.datetime "created_at", null: false
+    t.datetime "deliveries_configured_at"
     t.boolean "home_delivery", default: true, null: false
+    t.datetime "notifications_configured_at"
     t.datetime "onboarding_completed_at"
     t.time "order_deadline"
+    t.datetime "order_deadline_configured_at"
+    t.datetime "payment_details_configured_at"
     t.string "tax_id"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
@@ -367,12 +371,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120001) do
   end
 
   create_table "reviews", force: :cascade do |t|
+    t.bigint "consumer_id"
     t.datetime "created_at", null: false
     t.string "description"
     t.bigint "menu_id", null: false
+    t.bigint "order_id"
     t.integer "rating"
     t.datetime "updated_at", null: false
+    t.index ["consumer_id"], name: "index_reviews_on_consumer_id"
     t.index ["menu_id"], name: "index_reviews_on_menu_id"
+    t.index ["order_id"], name: "index_reviews_on_order_id", unique: true
   end
 
   create_table "schedules", force: :cascade do |t|
@@ -629,7 +637,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120001) do
   add_foreign_key "payments", "providers"
   add_foreign_key "provider_closures", "providers"
   add_foreign_key "providers", "users", on_delete: :nullify
+  add_foreign_key "reviews", "consumers"
   add_foreign_key "reviews", "menus"
+  add_foreign_key "reviews", "orders"
   add_foreign_key "schedules", "menus"
   add_foreign_key "schedules", "users", column: "availability_changed_by_id"
   add_foreign_key "sessions", "users"

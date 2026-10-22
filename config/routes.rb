@@ -95,7 +95,11 @@ Rails.application.routes.draw do
 
     resources :orders, path: "pedidos", only: [ :index, :show, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer, path: "cancelar"
+      resource :review, only: [ :new, :create ], path: "calificacion", path_names: { new: "nueva" }
     end
+
+    # La pantalla de agradecimiento no necesita el pedido: solo confirma el envío.
+    get "calificacion/gracias", to: "reviews#thanks", as: :review_thanks
 
     resources :payments, path: "comprobantes", only: [ :create, :update, :destroy ] do
       get :receipt, on: :member, path: "archivo"

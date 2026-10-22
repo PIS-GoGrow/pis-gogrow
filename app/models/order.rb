@@ -47,6 +47,8 @@ class Order < ApplicationRecord
   has_many :order_benefits, dependent: :destroy
   has_many :benefits, through: :order_benefits
 
+  has_one :review, dependent: :destroy
+
   # El mensaje de aclaraciones es opcional: la pantalla manda "" cuando el
   # empleado no escribe nada, y sin esto el pedido queda con un string vacío que
   # las vistas no distinguen de un nil (muestran "Notas" en vez de "Sin notas").
@@ -223,6 +225,18 @@ class Order < ApplicationRecord
 
   def modifiable?
     modification_block_reason.nil?
+  end
+
+  # Solo se califica un plato ya consumido: un pedido confirmado del empleado cuya
+  # entrega ya pasó y que todavía no calificó. Necesita el plato vivo porque la
+  # reseña se agrega sobre él para el detalle. Es la única guarda del endpoint:
+  # que la pantalla esconda el botón no frena un POST directo.
+  def reviewable?
+    confirmed? && delivery_date&.before?(Date.current) && schedule&.menu.present? && review.nil?
+  end
+
+  def reviewed?
+    review.present?
   end
 
   # El cupo del schedule y los beneficios ya cuentan las unidades de esta orden,

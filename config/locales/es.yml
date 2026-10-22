@@ -736,6 +736,8 @@ es:
           confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
+        review: "Calificar vianda"
+        reviewed: "Vianda calificada"
       show:
         title: "Detalle del pedido"
         back: "Volver a mis pedidos"
@@ -777,6 +779,21 @@ es:
       delivery_methods:
         office: "Oficina"
         home: "Domicilio"
+    reviews:
+      new:
+        title: "Calificá tu vianda"
+        back: "Volver"
+        question: "¿Qué te pareció?"
+        rating_label: "Puntuación"
+        star: "%{count} estrellas"
+        experience: "Contá tu experiencia"
+        placeholder: "Compartí tu opinión con tus compañeros de GoGrow…"
+        counter: "%{count}/200"
+        submit: "Enviar"
+      thanks:
+        title: "¡Gracias por tu opinión!"
+        description: "Tu opinión ayudará a tus compañeros de GoGrow a elegir su próxima vianda."
+        close: "Cerrar"
     provider_collections:
       statuses:
         pending: "Pendiente"

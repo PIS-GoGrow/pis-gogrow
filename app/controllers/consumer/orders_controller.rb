@@ -3,7 +3,7 @@
 class Consumer::OrdersController < Consumer::InertiaController
   def index
     consumer = Current.user.consumer
-    orders = consumer.orders.preload(provider: :user, schedule: { menu: { provider: :user } })
+    orders = consumer.orders.preload(:review, provider: :user, schedule: { menu: { provider: :user } })
 
     @upcoming_orders = orders.upcoming
     @past_orders = orders.history.where(created_at: (Date.current - 3.months)..)
@@ -20,7 +20,7 @@ class Consumer::OrdersController < Consumer::InertiaController
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
     @order = consumer.orders.preload(
-      schedule: { menu: [ :option_groups, { provider: :user } ] }
+      :review, schedule: { menu: [ :option_groups, { provider: :user } ] }
     ).find(params[:id])
 
     @delivery_addresses = @order.delivery_address_options consumer
