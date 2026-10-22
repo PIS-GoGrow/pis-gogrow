@@ -220,6 +220,44 @@ describe("ConsumerCart delivery address", () => {
   })
 })
 
+describe("ConsumerCart delivery date", () => {
+  it("shows a single delivery date under the title instead of on every dish", async () => {
+    await renderCart({
+      cart: [
+        cartItem("Tu Viandita", true, 1),
+        cartItem("Tu Viandita", true, 2),
+      ],
+    })
+
+    const date = screen.getByText("Entrega: lunes, 14 de setiembre")
+
+    expect(screen.getAllByText(/^Entrega:/)).toHaveLength(1)
+    expect(screen.getByRole("heading", { name: "Tu carrito" })).toHaveProperty(
+      "nextElementSibling",
+      date,
+    )
+  })
+
+  it("keeps a date on each dish when the cart spans several days", async () => {
+    await renderCart({
+      cart: [
+        cartItem("Tu Viandita", true, 1),
+        { ...cartItem("Tu Viandita", true, 2), date: "2026-09-15" },
+      ],
+    })
+
+    expect(
+      screen.getByText("Entrega: lunes, 14 de setiembre"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText("Entrega: martes, 15 de setiembre"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: "Tu carrito" }).nextElementSibling,
+    ).toHaveProperty("tagName", "SECTION")
+  })
+})
+
 // IBP-006 CA10 — "Si no corresponde subsidio, el sistema muestra valor cero y
 // el motivo."
 describe("ConsumerCart without subsidy", () => {

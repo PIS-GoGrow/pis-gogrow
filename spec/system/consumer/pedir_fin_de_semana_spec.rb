@@ -39,7 +39,7 @@ RSpec.describe "Pedir durante el fin de semana", type: :system do
       expect(page).to have_content("¡Pedido recibido!")
       expect(page).to have_content("Milanesa con papas fritas")
 
-      click_link "Ver mis pedidos"
+      click_link "Ir a Mis pedidos"
       expect(page).to have_current_path(orders_path)
     end
   end

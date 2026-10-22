@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import AddedBadge from "@/components/consumer/menus/added-badge"
 import { Button } from "@/components/ui/button"
 import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
@@ -39,9 +40,7 @@ export default function MenuItem({
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-1.5">
           <span className="text-muted-foreground text-sm">{providerName}</span>
-          {addedQuantity && (
-            <span className="text-foreground text-xs">• Agregado</span>
-          )}
+          {addedQuantity && <AddedBadge />}
           {ordersClosed && (
             <span className="text-destructive flex items-center gap-1 text-xs">
               <span className="bg-destructive inline-block size-1.5 rounded-full" />

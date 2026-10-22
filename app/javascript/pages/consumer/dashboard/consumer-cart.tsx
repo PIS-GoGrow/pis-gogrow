@@ -75,6 +75,19 @@ export function ConsumerCart({
     officeOnlyProviders.length > 0 &&
     !!selectedAddress &&
     selectedAddress !== office?.address
+  const deliveryDates = [...new Set(cart.map((item) => item.date))]
+  // Con un solo día de entrega la fecha va arriba; con varios, cada plato
+  // lleva la suya.
+  const singleDeliveryDate =
+    deliveryDates.length === 1 ? deliveryDates[0] : null
+  const deliveryLabel = (date: string) =>
+    t("pages.cart.delivery", {
+      date: new Date(`${date}T12:00:00`).toLocaleDateString("es-UY", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }),
+    })
 
   return (
     <MobileCard>
@@ -91,6 +104,11 @@ export function ConsumerCart({
         </Button>
       </Link>
       <h1 className="text-xl font-bold">Tu carrito</h1>
+      {singleDeliveryDate && (
+        <p className="text-muted-foreground mt-2 text-sm">
+          {deliveryLabel(singleDeliveryDate)}
+        </p>
+      )}
       <section className="border-border mt-8 border-b pb-4">
         <div className="mb-3 flex items-center justify-between text-sm font-semibold">
           <h2>{t("pages.cart.delivery_address")}</h2>
@@ -155,18 +173,11 @@ export function ConsumerCart({
               key={item.cartId}
               className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
             >
-              <p className="text-muted-foreground mb-2">
-                {t("pages.cart.delivery", {
-                  date: new Date(`${item.date}T12:00:00`).toLocaleDateString(
-                    "es-UY",
-                    {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                    },
-                  ),
-                })}
-              </p>
+              {!singleDeliveryDate && (
+                <p className="text-muted-foreground mb-2">
+                  {deliveryLabel(item.date)}
+                </p>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   {item.menu.name} x{item.quantity}
