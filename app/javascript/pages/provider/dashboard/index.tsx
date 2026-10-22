@@ -96,7 +96,9 @@ export default function ProviderDashboard({
                         {t("pages.provider_dashboard.index.profile.title")}
                       </span>
                       <span className="text-muted-foreground block text-sm font-normal">
-                        {t("pages.provider_dashboard.index.profile.description")}
+                        {t(
+                          "pages.provider_dashboard.index.profile.description",
+                        )}
                       </span>
                     </span>
                     <span className="bg-card grid size-9 shrink-0 place-items-center rounded-full">

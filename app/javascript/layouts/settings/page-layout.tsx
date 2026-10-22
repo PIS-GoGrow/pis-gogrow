@@ -35,8 +35,7 @@ export default function SettingsPageLayout({
   // Admin y proveedor navegan sus ajustes desde el hub de Cuenta, con flecha de
   // volver; el empleado usa el panel lateral de configuración.
   if (role === "admin" || role === "provider") {
-    const backHref =
-      role === "provider" ? providerAccount().url : adminBackHref
+    const backHref = role === "provider" ? providerAccount().url : adminBackHref
     const backLabel =
       role === "provider"
         ? t("components.settings_layout.back_to_account")

@@ -82,7 +82,8 @@ export default function ClosingTimeSection({
                     : { order_deadline: value },
                   {
                     preserveScroll: true,
-                    onError: (errors) => setEditError(errors.order_deadline?.[0]),
+                    onError: (errors) =>
+                      setEditError(errors.order_deadline?.[0]),
                     onSuccess: () => {
                       setNewTime(value)
                       setStage("saved")
