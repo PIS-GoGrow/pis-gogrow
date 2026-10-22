@@ -114,5 +114,13 @@ RSpec.describe "Consumer reviews", type: :request do
       }.not_to change(Review, :count)
       expect(response).to redirect_to(orders_path)
     end
+
+    it "lleva a la pantalla de error cuando el guardado falla por un motivo inesperado" do
+      allow_any_instance_of(Review).to receive(:save).and_raise(ActiveRecord::RecordNotUnique)
+
+      post order_review_path(reviewable), params: { rating: 5 }
+
+      expect(response).to redirect_to(review_error_path)
+    end
   end
 end

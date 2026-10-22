@@ -1419,6 +1419,11 @@
         }
       },
       "reviews": {
+        "error": {
+          "close": "Volver a Pedidos",
+          "description": "No pudimos guardar tu opinión. Intentá nuevamente más tarde.",
+          "title": "¡Ups! Algo salió mal"
+        },
         "new": {
           "back": "Volver",
           "counter": "%{count}/200",

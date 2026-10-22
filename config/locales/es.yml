@@ -795,6 +795,10 @@ es:
         title: "¡Gracias por tu opinión!"
         description: "Tu opinión ayudará a tus compañeros de GoGrow a elegir su próxima vianda."
         close: "Cerrar"
+      error:
+        title: "¡Ups! Algo salió mal"
+        description: "No pudimos guardar tu opinión. Intentá nuevamente más tarde."
+        close: "Volver a Pedidos"
     provider_collections:
       statuses:
         pending: "Pendiente"

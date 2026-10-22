@@ -98,8 +98,9 @@ Rails.application.routes.draw do
       resource :review, only: [ :new, :create ], path: "calificacion", path_names: { new: "nueva" }
     end
 
-    # La pantalla de agradecimiento no necesita el pedido: solo confirma el envío.
+    # Las pantallas de resultado no necesitan el pedido: solo informan el envío.
     get "calificacion/gracias", to: "reviews#thanks", as: :review_thanks
+    get "calificacion/error", to: "reviews#error", as: :review_error
 
     resources :payments, path: "comprobantes", only: [ :create, :update, :destroy ] do
       get :receipt, on: :member, path: "archivo"

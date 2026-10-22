@@ -22,9 +22,16 @@ class Consumer::ReviewsController < Consumer::InertiaController
     else
       redirect_to new_order_review_path(order), inertia: { errors: review.errors }, status: :see_other
     end
+  rescue ActiveRecord::RecordNotUnique, ActiveRecord::StatementInvalid
+    # El guardado falló por algo que no es validación (p. ej. un doble envío que
+    # choca contra el índice único del pedido): la pantalla de error del flujo.
+    redirect_to review_error_path, status: :see_other
   end
 
   def thanks
+  end
+
+  def error
   end
 
   private
