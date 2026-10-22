@@ -7,7 +7,7 @@ class Notification::Registry
   PATH = Rails.root.join("config/notifications.yml").freeze
 
   Configuration = Data.define(:key, :roles, :configurable)
-  Event = Data.define(:key, :configuration_key, :role, :requires_action)
+  Event = Data.define(:key, :configuration_key, :role, :requires_action, :content_sid)
 
   class InvalidRegistry < StandardError; end
   class UnknownEvent < StandardError; end
@@ -44,6 +44,10 @@ class Notification::Registry
     # Tira error si la clave no está definida.
     def event!(key)
       events.fetch(key.to_sym) { raise UnknownEvent, "Evento desconocido: #{key.inspect}" }
+    end
+
+    def content_sid(event_key)
+      event!(event_key).content_sid
     end
 
     private
@@ -84,7 +88,9 @@ class Notification::Registry
 
         requires_action = attrs.fetch(:requires_action)
 
-        [ key, Event.new(key:, configuration_key:, role:, requires_action:) ]
+        content_sid = attrs.fetch(:content_sid, nil)
+
+        [ key, Event.new(key:, configuration_key:, role:, requires_action:, content_sid:) ]
       end
 
       [ configurations.freeze, events.freeze ].freeze
