@@ -24,5 +24,5 @@ class Admin::PaymentsIndexSerializer < ApplicationSerializer
   typelize consumption: CONSUMPTION_DETAIL
   attributes :consumption
 
-  has_many :providers, resource: Admin::PaymentProviderSerializer
+  has_many :providers, resource: PaymentProviderSerializer
 end

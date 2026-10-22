@@ -1,9 +1,10 @@
 # frozen_string_literal: true
 
 class Consumer::OrdersController < Consumer::InertiaController
+  before_action :set_consumer
+
   def index
-    consumer = Current.user.consumer
-    orders = consumer.orders.preload(:review, provider: :user, schedule: { menu: { provider: :user } })
+    orders = @consumer.orders.preload(:review, provider: :user, schedule: { menu: { provider: :user } })
 
     @upcoming_orders = orders.upcoming
     @past_orders = orders.history.where(created_at: (Date.current - 3.months)..)
@@ -15,15 +16,13 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def show
-    consumer = Current.user.consumer
-
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
-    @order = consumer.orders.preload(
+    @order = @consumer.orders.preload(
       :review, schedule: { menu: [ :option_groups, { provider: :user } ] }
     ).find(params[:id])
 
-    @delivery_addresses = @order.delivery_address_options consumer
+    @delivery_addresses = @order.delivery_address_options @consumer
     @max_quantity = @order.max_quantity
     @editing = params[:edit] == "1"
 
@@ -39,7 +38,6 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def create
-    consumer = Current.user.consumer
     requested_items = order_params.fetch(:items)
 
     # Rechazamos si no hay carrito o si las cantidades no son numéricas.
@@ -48,12 +46,12 @@ class Consumer::OrdersController < Consumer::InertiaController
     # Rechazamos si la dirección es invalida
     # delivery_addresses ya verifica que la dirección no sea blank, por lo que acá
     # está manejado el caso de que no haya dirección de envío.
-    return reject_order(:invalid_address) unless consumer.delivery_addresses.include?(order_params[:address]) || valid_new_address?(consumer, order_params[:address])
+    return reject_order(:invalid_address) unless @consumer.delivery_addresses.include?(order_params[:address]) || valid_new_address?(@consumer, order_params[:address])
 
     created_orders = []
 
     Order.transaction do
-      consumer.lock!
+      @consumer.lock!
 
       schedule_ids = requested_items.pluck(:schedule_id)
 
@@ -70,11 +68,11 @@ class Consumer::OrdersController < Consumer::InertiaController
       # rango de fechas permitidas (definidas por Calendar#allowed_order_dates)
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
-      lines = OrderPricing.new(consumer).call(
+      pricing = OrderPricing.new(@consumer).call(
         requested_items.map { |item| { schedule: schedules.fetch(item[:schedule_id].to_i), quantity: item[:quantity].to_i } }
       )
 
-      requested_items.zip(lines).each do |item, line|
+      requested_items.each do |item|
         quantity = item[:quantity].to_i
         schedule = schedules.fetch(item[:schedule_id].to_i)
 
@@ -82,7 +80,7 @@ class Consumer::OrdersController < Consumer::InertiaController
         # el proveedor solo hace entregas a oficina, se cambia automáticamente para que se
         # entregue en la oficina. En el carrito ya se le avisó al consumidor que la entrega
         # se iba a hacer en la oficina.
-        delivery = consumer.delivery_for(schedule.menu.provider, order_params[:address])
+        delivery = @consumer.delivery_for(schedule.menu.provider, order_params[:address])
 
         # Si en este punto la dirección es blank, es porque no hay una dirección para la
         # empresa.
@@ -93,13 +91,13 @@ class Consumer::OrdersController < Consumer::InertiaController
 
         # Tratamos de crear la orden
         order = Order.reserve(
-          consumer:,
+          consumer: @consumer,
           schedule:,
           quantity:,
           notes: item[:notes],
-          discounted_price: line.discounted_price,
+          discounted_price: pricing[schedule.id].discounted_price,
           selected_options: selected_options_for(schedule.menu, item[:options]),
-          benefits: line.benefits,
+          benefits: pricing[schedule.id].benefits,
           **delivery
         )
 
@@ -117,13 +115,12 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def update
-    consumer = Current.user.consumer
-    order = consumer.orders.find(params[:id])
+    order = @consumer.orders.find(params[:id])
 
     return reject_update(order, :invalid_quantity) unless update_params[:quantity].to_s.match?(/\A[1-9]\d*\z/)
-    return reject_update(order, :invalid_address) unless order.delivery_address_options(consumer).pluck(:address).include?(update_params[:address])
+    return reject_update(order, :invalid_address) unless order.delivery_address_options(@consumer).pluck(:address).include?(update_params[:address])
 
-    delivery = consumer.delivery_for(order.provider, update_params[:address])
+    delivery = @consumer.delivery_for(order.provider, update_params[:address])
     return reject_update(order, :office_address_required) if delivery[:address].blank?
 
     modified = order.modify(
@@ -144,7 +141,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def cancel
-    order = Current.user.consumer.orders.find(params[:id])
+    order = @consumer.orders.find(params[:id])
 
     if order.cancel(by: Current.user)
       redirect_to orders_path, notice: t("flash.order_cancelled"), status: :see_other
@@ -153,14 +150,85 @@ class Consumer::OrdersController < Consumer::InertiaController
     end
   end
 
+  def pricing
+    requested_items = pricing_params
+
+    # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos
+    # todos los schedules correspondientes.
+    schedule_ids = requested_items.pluck(:schedule_id)
+    schedules =
+      Schedule
+        .includes(menu: :provider)
+        .where(id: schedule_ids.uniq, date: Calendar.new.allowed_order_dates)
+        .order(:id)
+        .index_by(&:id)
+
+    requested_items.map! do |item|
+      schedule = schedules.dig(item[:schedule_id].to_i)
+      { schedule:, quantity: item[:quantity].to_i } if schedule
+    end.compact!
+
+    @pricing = OrderPricing.new(@consumer).call(requested_items)
+
+    render json: to_pricing(requested_items, @pricing)
+  end
+
   private
+
+  def to_pricing(items, pricing)
+    items_by_schedule = items.index_by { |item| item[:schedule].id }
+
+    lines = pricing.to_h do |schedule_id, result|
+      item = items_by_schedule.fetch(schedule_id)
+      quantity = item[:quantity]
+      price = result.price.to_f
+
+      tiers = result.benefits.map do |benefit, units_used|
+        discount = price * units_used * benefit.percentage / 100 / quantity
+
+        {
+          name: benefit.benefit_configuration.name,
+          percentage: benefit.percentage,
+          quantity: units_used,
+          discount: discount.to_f
+        }
+      end
+
+      discount = price - result.discounted_price.to_f
+      [
+        schedule_id.to_s,
+        {
+          subtotal: price,
+          discount: discount,
+          total: price - discount,
+          tiers: tiers
+        }
+      ]
+    end
+
+    {
+      subtotal: lines.values.sum { |line| line[:subtotal] },
+      discount: lines.values.sum { |line| line[:discount] },
+      total: lines.values.sum { |line| line[:total] },
+      lines: lines,
+      subsidizedQuantity: items.sum do |item|
+        pricing.fetch(item[:schedule][:id]).benefits.sum { |_, u| u }
+      end,
+      fullPriceQuantity: items.sum do |item|
+        schedule_id = item[:schedule][:id]
+        quantity = item[:quantity]
+        subsidized = pricing.fetch(schedule_id).benefits.sum { |_, u| u }
+        quantity - subsidized
+      end
+    }
+  end
 
   def reject_update(order, reason)
     redirect_to order_path(order), alert: t("validations.#{reason}"), status: :see_other
   end
 
   def reject_order(reason)
-    redirect_to dashboard_path, inertia: {
+    redirect_to dashboard_cart_path, inertia: {
       errors: { order_error: t("validations.#{reason}") }
     }, status: :see_other
   end
@@ -221,5 +289,13 @@ class Consumer::OrdersController < Consumer::InertiaController
 
   def order_params
     params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] } ] ] ])
+  end
+
+  def pricing_params
+    params.expect(items: [ [ :schedule_id, :quantity ] ])
+  end
+
+  def set_consumer
+    @consumer = Current.user.consumer
   end
 end

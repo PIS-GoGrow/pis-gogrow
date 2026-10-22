@@ -309,6 +309,13 @@ RSpec.describe MonthlyBenefit, type: :model do
       end
     end
   end
+
+  describe "#benefit_max_price" do
+    it "devuelve el max_price de la regla" do
+      rule = build_rule(effective_from: today + 1, max_price: 350)
+      expect(rule.benefit_max_price).to eq(350)
+    end
+  end
 end
 # == Schema Information
 #

@@ -2,6 +2,8 @@ import { Head, Link } from "@inertiajs/react"
 import { X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import ReviewActions from "@/components/reviews/review-actions"
+import ReviewPage from "@/components/reviews/review-page"
 import { Button } from "@/components/ui/button"
 import AppLayout from "@/layouts/app-layout"
 import { consumerOrders } from "@/routes"
@@ -25,26 +27,29 @@ export default function Error() {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.reviews.error.title")} />
 
-      <div className="mx-auto flex min-h-[70vh] w-full max-w-128 flex-col items-center justify-center gap-6 p-5 text-center">
-        <div className="bg-primary text-primary-foreground flex size-16 items-center justify-center rounded-full">
-          <X className="size-8" aria-hidden="true" />
-        </div>
+      <ReviewPage>
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-8 overflow-y-auto px-6 py-8 text-center">
+          <div className="text-foreground flex size-20 shrink-0 items-center justify-center rounded-full border-2 border-current">
+            <X className="size-10" strokeWidth={2.5} aria-hidden="true" />
+          </div>
 
-        <div className="grid gap-2">
-          <h1 className="text-2xl font-bold">
-            {t("pages.reviews.error.title")}
-          </h1>
-          <p className="text-muted-foreground">
-            {t("pages.reviews.error.description")}
-          </p>
+          <div className="grid w-full max-w-88 gap-3">
+            <h1 className="text-2xl font-bold">
+              {t("pages.reviews.error.title")}
+            </h1>
+            <p className="text-muted-foreground mx-auto w-fit max-w-full text-left text-base leading-relaxed whitespace-pre-line">
+              {t("pages.reviews.error.description")}
+            </p>
+          </div>
         </div>
-
-        <Button size="lg" className="w-full max-w-xs" asChild>
-          <Link href={consumerOrders.index().url}>
-            {t("pages.reviews.error.close")}
-          </Link>
-        </Button>
-      </div>
+        <ReviewActions>
+          <Button size="lg" className="w-full" asChild>
+            <Link href={consumerOrders.index().url}>
+              {t("pages.reviews.error.close")}
+            </Link>
+          </Button>
+        </ReviewActions>
+      </ReviewPage>
     </AppLayout>
   )
 }

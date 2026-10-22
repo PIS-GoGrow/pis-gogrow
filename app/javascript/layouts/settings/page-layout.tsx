@@ -14,6 +14,8 @@ interface SettingsPageLayoutProps {
   children: ReactNode
   adminBackHref?: string
   adminBackLabel?: string
+  consumerMobileBackHref?: string
+  consumerMobileBackLabel?: string
 }
 
 export default function SettingsPageLayout({
@@ -22,6 +24,8 @@ export default function SettingsPageLayout({
   children,
   adminBackHref = adminAccount().url,
   adminBackLabel,
+  consumerMobileBackHref,
+  consumerMobileBackLabel,
 }: SettingsPageLayoutProps) {
   const { auth } = usePage().props
 
@@ -45,9 +49,30 @@ export default function SettingsPageLayout({
   }
 
   return (
-    <SettingsLayout>
+    <SettingsLayout
+      compactConsumerMobile={
+        auth.session.role === "consumer" && consumerMobileBackHref != null
+      }
+    >
       <div className="space-y-6">
+        {auth.session.role === "consumer" && consumerMobileBackHref && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="-ml-2 md:hidden"
+            asChild
+          >
+            <Link
+              href={consumerMobileBackHref}
+              aria-label={consumerMobileBackLabel}
+            >
+              <ArrowLeft aria-hidden="true" />
+            </Link>
+          </Button>
+        )}
+
         <HeadingSmall title={title} description={description} />
+
         {children}
       </div>
     </SettingsLayout>

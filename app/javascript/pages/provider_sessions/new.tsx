@@ -37,6 +37,7 @@ export default function ProviderSignIn() {
       <Form
         action={providerSessions.create()}
         resetOnSuccess={["password"]}
+        noValidate
         className="flex flex-col gap-6"
       >
         {({ processing }) => (
@@ -114,6 +115,7 @@ export default function ProviderSignIn() {
 
           <Form
             action={providerPasswordResets.create()}
+            noValidate
             className="flex flex-col gap-4"
           >
             {({ processing, errors }) => (

@@ -1,8 +1,10 @@
 import { Form, Head, Link } from "@inertiajs/react"
-import { ArrowLeft } from "lucide-react"
+import { ChevronLeft } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import ReviewActions from "@/components/reviews/review-actions"
+import ReviewPage from "@/components/reviews/review-page"
 import StarRating from "@/components/reviews/star-rating"
 import { Button } from "@/components/ui/button"
 import {
@@ -40,7 +42,7 @@ export default function New({ order }: ConsumerReviewsNew) {
 
   const subtitle = [
     order.provider_name,
-    order.date && formatDeliveryDate(order.date),
+    order.date && formatDeliveryDate(order.date).replace(",", ""),
   ]
     .filter(Boolean)
     .join(" · ")
@@ -49,80 +51,101 @@ export default function New({ order }: ConsumerReviewsNew) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.reviews.new.title")} />
 
-      <div className="mx-auto grid w-full max-w-128 gap-6 p-5">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="justify-self-start"
-          asChild
+      <ReviewPage>
+        <Form
+          action={consumerReviews.create(order.id)}
+          className="flex min-h-0 flex-1 flex-col"
         >
-          <Link href={consumerOrders.index().url}>
-            <ArrowLeft />
-            {t("pages.reviews.new.back")}
-          </Link>
-        </Button>
-
-        <h1 className="text-2xl font-bold">{t("pages.reviews.new.title")}</h1>
-
-        <Card>
-          <CardHeader>
-            {subtitle && <CardDescription>{subtitle}</CardDescription>}
-            <CardTitle className="text-lg">
-              {order.menu_name ?? t("pages.orders.index.no_menu")}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-
-        <Form action={consumerReviews.create(order.id)} className="grid gap-6">
           {({ processing, errors }) => (
             <>
-              <input type="hidden" name="rating" value={rating || ""} />
+              <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-5">
+                <div className="grid min-w-0 gap-6 pb-4">
+                  <div className="relative flex min-h-11 items-center justify-center px-11">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute left-0 size-11"
+                      asChild
+                    >
+                      <Link
+                        href={consumerOrders.index().url}
+                        aria-label={t("pages.reviews.new.back")}
+                      >
+                        <ChevronLeft aria-hidden="true" />
+                      </Link>
+                    </Button>
+                    <h1 className="text-center text-base font-semibold">
+                      {t("pages.reviews.new.title")}
+                    </h1>
+                  </div>
 
-              <Field data-invalid={!!errors.rating}>
-                <FieldLabel>{t("pages.reviews.new.question")}</FieldLabel>
-                <StarRating value={rating} onChange={setRating} />
-                <FieldError
-                  errors={errors.rating?.map((message) => ({ message }))}
-                />
-              </Field>
+                  <Card className="bg-muted/40 gap-0 rounded-lg py-3 shadow-none">
+                    <CardHeader className="gap-1 px-4">
+                      <CardTitle className="text-sm font-semibold">
+                        {order.menu_name ?? t("pages.orders.index.no_menu")}
+                      </CardTitle>
+                      {subtitle && (
+                        <CardDescription className="text-xs">
+                          {subtitle}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                  </Card>
 
-              <Field data-invalid={!!errors.description}>
-                <FieldLabel htmlFor="description">
-                  {t("pages.reviews.new.experience")}
-                </FieldLabel>
-                <Textarea
-                  id="description"
-                  name="description"
-                  maxLength={MAX_DESCRIPTION}
-                  rows={4}
-                  placeholder={t("pages.reviews.new.placeholder")}
-                  value={description}
-                  onChange={(event) => setDescription(event.target.value)}
-                  aria-invalid={!!errors.description}
-                />
-                <p className="text-muted-foreground justify-self-end text-xs">
-                  {t("pages.reviews.new.counter", {
-                    count: description.length,
-                  })}
-                </p>
-                <FieldError
-                  errors={errors.description?.map((message) => ({ message }))}
-                />
-              </Field>
+                  <input type="hidden" name="rating" value={rating || ""} />
 
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={rating === 0 || processing}
-              >
-                {processing && <Spinner />}
-                {t("pages.reviews.new.submit")}
-              </Button>
+                  <Field data-invalid={!!errors.rating}>
+                    <FieldLabel>{t("pages.reviews.new.question")}</FieldLabel>
+                    <StarRating value={rating} onChange={setRating} />
+                    <FieldError
+                      errors={errors.rating?.map((message) => ({ message }))}
+                    />
+                  </Field>
+
+                  <Field data-invalid={!!errors.description}>
+                    <FieldLabel htmlFor="description">
+                      {t("pages.reviews.new.experience")}
+                    </FieldLabel>
+                    <Textarea
+                      id="description"
+                      name="description"
+                      className="field-sizing-fixed min-h-28 min-w-0 resize-y overflow-x-hidden [overflow-wrap:anywhere] whitespace-pre-wrap"
+                      wrap="soft"
+                      maxLength={MAX_DESCRIPTION}
+                      rows={4}
+                      placeholder={t("pages.reviews.new.placeholder")}
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      aria-invalid={!!errors.description}
+                    />
+                    <p className="text-muted-foreground w-full text-right text-xs">
+                      {t("pages.reviews.new.counter", {
+                        count: description.length,
+                      })}
+                    </p>
+                    <FieldError
+                      errors={errors.description?.map((message) => ({
+                        message,
+                      }))}
+                    />
+                  </Field>
+                </div>
+              </div>
+              <ReviewActions>
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full"
+                  disabled={rating === 0 || processing}
+                >
+                  {processing && <Spinner />}
+                  {t("pages.reviews.new.submit")}
+                </Button>
+              </ReviewActions>
             </>
           )}
         </Form>
-      </div>
+      </ReviewPage>
     </AppLayout>
   )
 }

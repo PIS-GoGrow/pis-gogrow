@@ -57,4 +57,43 @@ describe("Consumer::Reviews New Page", () => {
     fireEvent.change(textarea, { target: { value: "Muy rico" } })
     expect(screen.getByText("8/200")).toBeInTheDocument()
   })
+
+  it.each(["a".repeat(200), "vianda ".repeat(29).slice(0, 200)])(
+    "conserva el limite y el contador con una resena de 200 caracteres",
+    (description) => {
+      render(<New order={order} />)
+      const textarea = document.getElementById(
+        "description",
+      ) as HTMLTextAreaElement
+      expect(textarea.maxLength).toBe(200)
+      fireEvent.change(textarea, { target: { value: description } })
+      expect(textarea.value).toHaveLength(200)
+      expect(screen.getByText("200/200")).toBeInTheDocument()
+    },
+  )
+
+  it("mantiene una sola estrella seleccionada y envia su puntuacion", () => {
+    render(<New order={order} />)
+    const stars = screen.getAllByRole("radio")
+    stars.forEach((star, index) => {
+      fireEvent.click(star)
+      expect(star).toHaveAttribute("aria-checked", "true")
+      expect(
+        stars.filter((item) => item.getAttribute("aria-checked") === "true"),
+      ).toHaveLength(1)
+      expect(document.querySelector('input[name="rating"]')).toHaveValue(
+        String(index + 1),
+      )
+    })
+  })
+
+  it("muestra el plato antes del proveedor y la fecha sin coma", () => {
+    render(<New order={order} />)
+    const dish = screen.getByText("Sorrentinos")
+    const subtitle = screen.getByText(/Endulzate by Noe/)
+    expect(subtitle.textContent).not.toContain(",")
+    expect(
+      dish.compareDocumentPosition(subtitle) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
 })

@@ -18,6 +18,7 @@ end
 #  amount                   :integer
 #  description              :string
 #  due_date                 :date
+#  max_price                :decimal(10, 2)
 #  percentage               :integer
 #  status                   :integer
 #  created_at               :datetime         not null
