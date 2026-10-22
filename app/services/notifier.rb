@@ -26,7 +26,6 @@ class Notifier
       description: I18n.t!("notifications.#{event.key}.description", **description_data)
     )
 
-    p notification.send_to_user?
     if notification.send_to_user?
       WhatsappSenderJob.perform_now(event_key, title_data, description_data, user.phone)
     end
