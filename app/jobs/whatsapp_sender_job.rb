@@ -15,8 +15,10 @@ class WhatsappSenderJob < ApplicationJob
   class MissingENV < StandardError; end
   class MissingContentSID < StandardError; end
 
-  def perform(event_key, title_data, description_data, phone, *args)
+  def perform(notification, event_key, title_data, description_data, phone, *args)
     return if Rails.env.development? && ENV["TWILIO_DELIVERY_ENABLED"] != "true"
+
+    Rails.logger.info("Enviando notificación de id: #{notification.id}")
 
     account_sid = ENV.fetch(ACCOUNT_SID_ENV, nil)
     auth_token = ENV.fetch(AUTH_TOKEN_ENV, nil)
@@ -36,6 +38,8 @@ class WhatsappSenderJob < ApplicationJob
         content_sid:,
         content_variables: content_variables(title_data, description_data)
     )
+
+    notification.update! whatsapp_sent_at: Time.now
   rescue MissingENV => e
     Rails.logger.warn("Clave ENV faltante: #{e.message}")
   rescue MissingContentSID => e
