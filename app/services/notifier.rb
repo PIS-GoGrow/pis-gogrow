@@ -27,7 +27,7 @@ class Notifier
     )
 
     if notification.send_to_user?
-      WhatsappSenderJob.perform_now(event_key, title_data, description_data, user.phone)
+      WhatsappSenderJob.perform_later(notification, event_key, title_data, description_data, user.phone)
     end
 
     notification
