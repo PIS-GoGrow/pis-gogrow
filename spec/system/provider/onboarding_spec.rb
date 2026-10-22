@@ -73,6 +73,12 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     find_by_id("order_deadline").click
     find("[role='option']", exact_text: "12:30").click
     click_button "Guardar cambios"
+
+    # El diálogo debe cerrarse por completo (overlay incluido) antes de continuar;
+    # si no, el overlay intercepta el click sobre "Continuar".
+    expect(page).not_to have_css("[data-slot='dialog-overlay']", visible: true, wait: 10)
+    expect(page).not_to have_css("[role='dialog']", visible: true, wait: 10)
+
     continue_onboarding
 
     # Paso 3: Entregas (RadioGroup: oficina / domicilio)
