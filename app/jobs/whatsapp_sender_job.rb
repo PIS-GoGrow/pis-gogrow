@@ -1,18 +1,17 @@
 # frozen_string_literal: true
 
-# Envía un mensaje de WhatsApp a un número de celular, dados una clave de evento
-# configurada en config/notifications.yml y los datos extra que se necesiten.
-# Para que funcione, necesitan estar cargadas las credenciales. En development,
-# solo corre cuando esta configurado.
-# Cuando hay un error de red, se reintenta hasta cinco veces el envío. Si los cinco
-# intentos fallan, se marca la notificación con el atrbuto failed.
-# Si el Job fue exitoso, marca la notifiación como no failed y registra la hora de
-# envío
+# Envía un mensaje de WhatsApp a un número de celular.
 # Este Job no debería ser accedido desde ningún lugar, menos el servicio Notifier.
-# Supone que Notifier ya chequeó que la clave de evento exista.
+# Ver más documentación en docs/notificaciones.md
 class WhatsappSenderJob < ApplicationJob
+  # Errores que se reintentan y que no
   class TransientTwilioError < StandardError; end
   class PermanentTwilioError < StandardError; end
+
+  # No reintentamos si: hay un error de autenticación, el número del usuario es inválido,
+  # el usuario se desuscribió, el teléfono de salida está mal, el usuario no tiene cuenta
+  # de WhatsApp.
+  PERMANENT_ERROR_CODES = [ 20003, 21211, 21610, 63007, 63024 ].freeze
 
   queue_as :default
 
@@ -23,11 +22,6 @@ class WhatsappSenderJob < ApplicationJob
     Rails.logger.error("Reintentos agotados (notification #{notification.id}): #{error.message}")
     notification.update! failed: true
   end
-
-  # No reintentamos si: hay un error de autenticación, el número del usuario es inválido,
-  # el usuario se desuscribió, el teléfono de salida está mal, el usuario no tiene cuenta
-  # de WhatsApp.
-  PERMANENT_ERRROR_CODES = [20003, 21211, 21610, 63007, 63024].freeze
 
   discard_on PermanentTwilioError do |job, error|
     Rails.logger.error("Fallo (notification #{job.arguments.first.id}): #{error.message}")
@@ -80,7 +74,7 @@ class WhatsappSenderJob < ApplicationJob
   end
 
   def transient?(error)
-    PERMANENT_ERRROR_CODES.exclude? error.code
+    PERMANENT_ERROR_CODES.exclude? error.code
   end
 
   def client
