@@ -162,7 +162,11 @@ export default function ConsumptionDetailDialog({
                   <Separator />
                   <div className="grid gap-1">
                     <dt className="text-muted-foreground text-sm">
-                      {t(`${page}.total`)}
+                      {t(
+                        provider.paid
+                          ? `${page}.total_paid`
+                          : `${page}.total_due`,
+                      )}
                     </dt>
                     <dd>{formatMoney(provider.payable_amount)}</dd>
                   </div>

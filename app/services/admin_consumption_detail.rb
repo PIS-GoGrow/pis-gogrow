@@ -38,6 +38,7 @@ class AdminConsumptionDetail
       vat_rate: (account.vat_rate.to_d * 100).to_f,
       vat_amount: account.vat_amount.to_f,
       payable_amount: account.payable_amount.to_f,
+      paid: account.collection_status == "approved",
       days: ConsumptionDays.call(orders) do |order|
         {
           id: order.id,

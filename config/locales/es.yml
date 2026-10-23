@@ -25,6 +25,7 @@ es:
     order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
     order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     order_updated: "Pedido actualizado."
+    review_unavailable: "Este pedido ya no se puede calificar."
     already_signed_in: "Ya iniciaste sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
     debt_alert_updated: "Monto de alerta de deuda actualizado"
@@ -124,6 +125,9 @@ es:
         dish_modified: "porque el plato fue modificado"
         dish_deleted: "porque el plato fue eliminado"
         dish_unpublished: "porque el plato fue retirado del menú de ese día"
+    order_deadline_reminder:
+      title: "Recordatorio de pedido"
+      description: "¡No te quedes sin almuerzo! Todavía no pediste tu vianda de hoy."
     debt_threshold_exceeded:
       title: "Tu deuda superó el monto límite"
       description: "Tu deuda es de %{debt} y superó el límite de %{threshold} definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca."
@@ -211,6 +215,9 @@ es:
     hr_payment_reminders:
       title: "Recordatorios de pago de Recursos Humanos"
       description: "Recordatorios de pagos vencidos enviados por Recursos Humanos."
+    order_reminders:
+      title: "Recordatorios de pedidos"
+      description: "Recibí un aviso para no olvidarte de pedir tu vianda."
   activerecord:
     errors:
       models:
@@ -319,6 +326,7 @@ es:
     menu: "Menú de navegación"
     benefit_configurations: "Subsidios"
     invoices: "Facturas"
+    order_events: "Auditoría"
     change_to: "Cambiar a"
     provider:
       home: "Inicio"
@@ -393,6 +401,8 @@ es:
         settings: "Configuración"
         subsidies: "Subsidios"
         subsidies_description: "Gestioná los subsidios de tu empresa"
+        order_events: "Auditoría de pedidos"
+        order_events_description: "Consultá quién creó o cambió cada pedido"
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
         more_options: "Más opciones"
@@ -430,6 +440,57 @@ es:
           title: "Ranking deuda de empleados"
           view: "Ver empleados con saldos pendientes"
           empty: "Ningún empleado tiene saldos pendientes en este mes."
+      order_events:
+        index:
+          title: "Auditoría de pedidos"
+          description: "Cada creación y cambio de un pedido, con quién lo hizo. El registro no se puede editar ni borrar."
+          filters:
+            order: "Pedido"
+            order_placeholder: "PED-123"
+            action: "Acción"
+            role: "Rol"
+            actor: "Actor"
+            actor_placeholder: "Nombre"
+            dates: "Fechas"
+            all: "Todas"
+            all_roles: "Todos"
+            apply: "Filtrar"
+            clear: "Limpiar"
+          occurred_at: "Fecha y hora"
+          order: "Pedido"
+          actor: "Actor"
+          role: "Rol"
+          action: "Acción"
+          changes: "Cambio"
+          before: "Anterior"
+          after: "Nuevo"
+          empty_value: "—"
+          system: "Sistema"
+          truncated: "Se muestran los %{shown} eventos más recientes de %{total}. Usá los filtros para acotar la búsqueda."
+          empty_title: "No hay eventos"
+          empty_description: "Cuando se cree o cambie un pedido, va a quedar registrado acá."
+          actions:
+            created: "Creación"
+            modified: "Modificación"
+            price_changed: "Cambio económico"
+            confirmed: "Confirmación"
+            cancelled: "Cancelación"
+            rejected: "Rechazo"
+          roles:
+            consumer: "Empleado"
+            provider: "Proveedor"
+            admin: "RR. HH."
+          fields:
+            status: "Estado"
+            amount: "Cantidad"
+            price: "Precio de lista"
+            discounted_price: "Precio a cobrar"
+            delivery_method: "Entrega"
+            address: "Dirección"
+            notes: "Notas"
+            selected_options: "Opciones"
+            rejection_reason: "Motivo de rechazo"
+            rejection_details: "Detalle del rechazo"
       invoices:
         index:
           title: "Facturas de proveedores"
@@ -660,7 +721,8 @@ es:
             meals_tab: "Viandas"
             subtotal: "Subtotal sin IVA"
             vat: "IVA (%{rate}%)"
-            total: "Total pagado"
+            total_paid: "Total pagado"
+            total_due: "Total a pagar"
             user: "Usuario"
             quantity: "Cant."
             employee: "Empleado"
@@ -765,6 +827,8 @@ es:
           confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
+        review: "Calificar vianda"
+        reviewed: "Vianda calificada"
       show:
         title: "Detalle del pedido"
         back: "Volver a mis pedidos"
@@ -806,6 +870,25 @@ es:
       delivery_methods:
         office: "Oficina"
         home: "Domicilio"
+    reviews:
+      new:
+        title: "Calificá tu vianda"
+        back: "Volver"
+        question: "¿Qué te pareció?"
+        rating_label: "Puntuación"
+        star: "%{count} estrellas"
+        experience: "Contá tu experiencia"
+        placeholder: "Compartí tu opinión con tus compañeros de GoGrow…"
+        counter: "%{count}/200"
+        submit: "Enviar"
+      thanks:
+        title: "¡Gracias por tu opinión!"
+        description: "Tu opinión ayudará a tus compañeros de GoGrow a elegir su próxima vianda."
+        close: "Cerrar"
+      error:
+        title: "¡Ups! Algo salió mal"
+        description: "No pudimos guardar tu opinión.\nIntentá nuevamente más tarde."
+        close: "Volver a Pedidos"
     provider_collections:
       statuses:
         pending: "Pendiente"
@@ -1442,6 +1525,11 @@ es:
             same_year: "%{from_day_month} al %{to_day_month} de %{year}"
             other_year: "%{from} al %{to}"
     consumer_dashboard:
+      benefit_card:
+        title: "Tu consumo"
+        period: "Este mes"
+        used: "%{used} de %{limit}"
+        unit: "viandas subsidiadas"
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
         closure:
