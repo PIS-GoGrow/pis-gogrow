@@ -6,7 +6,6 @@ FactoryBot.define do
     title { "MyString" }
     description { "MyString" }
     requires_action { false }
-    closed { false }
   end
 end
 
