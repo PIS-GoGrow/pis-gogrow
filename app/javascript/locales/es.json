@@ -159,6 +159,10 @@
         "description": "Recibí una notificación cuando un pedido sea cancelado por el cliente.",
         "title": "Cancelaciones"
       },
+      "order_reminders": {
+        "description": "Recibí un aviso para no olvidarte de pedir tu vianda.",
+        "title": "Recordatorios de pedidos"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
@@ -219,6 +223,10 @@
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
         "title": "Tu pedido fue confirmado"
+      },
+      "order_deadline_reminder": {
+        "description": "¡No te quedes sin almuerzo! Todavía no pediste tu vianda de hoy.",
+        "title": "Recordatorio de pedido"
       },
       "order_received": {
         "description": "%{consumer} pidió %{amount} de %{dish} para el %{date}.",

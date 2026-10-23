@@ -125,6 +125,9 @@ es:
         dish_modified: "porque el plato fue modificado"
         dish_deleted: "porque el plato fue eliminado"
         dish_unpublished: "porque el plato fue retirado del menú de ese día"
+    order_deadline_reminder:
+      title: "Recordatorio de pedido"
+      description: "¡No te quedes sin almuerzo! Todavía no pediste tu vianda de hoy."
     debt_threshold_exceeded:
       title: "Tu deuda superó el monto límite"
       description: "Tu deuda es de %{debt} y superó el límite de %{threshold} definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca."
@@ -212,6 +215,9 @@ es:
     hr_payment_reminders:
       title: "Recordatorios de pago de Recursos Humanos"
       description: "Recordatorios de pagos vencidos enviados por Recursos Humanos."
+    order_reminders:
+      title: "Recordatorios de pedidos"
+      description: "Recibí un aviso para no olvidarte de pedir tu vianda."
   activerecord:
     errors:
       models:
