@@ -36,6 +36,8 @@ describe("EditOrderSheet", () => {
     discounted_price: 250,
     cancellable: true,
     modifiable: true,
+    reviewable: false,
+    reviewed: false,
     selected_options: [],
   }
 

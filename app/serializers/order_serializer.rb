@@ -72,6 +72,16 @@ class OrderSerializer < ApplicationSerializer
   attribute :rejection_reason do |order|
     order.rejection_reason
   end
+
+  typelize :boolean
+  attribute :reviewable do |order|
+    order.reviewable?
+  end
+
+  typelize :boolean
+  attribute :reviewed do |order|
+    order.reviewed?
+  end
 end
 
 # == Schema Information
