@@ -234,7 +234,7 @@ RSpec.describe OrderReminders::Generate do
         expect(reminders_for(consumer).count).to eq(1)
       end
     end
-    
+
     it "creates today's reminder when yesterday's reminder is still active" do
       yesterday = date - 1.day
 
