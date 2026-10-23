@@ -8,9 +8,8 @@ class Notifier
   class MissingConfiguration < StandardError; end
 
   def self.call(event_key:, user:, notifiable:, title_data: {}, description_data: {})
+    # Buscamos el evento indicado y la Notification::Configuration correspondiente
     event = Notification::Registry.event!(event_key)
-
-    # Buscamos la Notification::Configuration correspondiente a ese evento
     configuration = find_configuration_for! event
 
     # I18n.t! lanza I18n::MissingTranslationData si falta la traducción, en vez de
