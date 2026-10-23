@@ -6,7 +6,7 @@ import type { ConsumerDashboardIndex } from "@/types"
 
 import { ConsumerCart } from "./consumer-cart"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
-import { cartPricedItem, priceItems } from "./pricing"
+import { type Pricing, cartPricedItem, priceItems } from "./pricing"
 
 type Benefit = ConsumerDashboardIndex["benefit"]
 
@@ -68,8 +68,6 @@ const cartItem = (
 })
 
 const benefit: Benefit = {
-  limit: 5,
-  used: 0,
   percentage: 50,
   monthly_limit: 20,
   monthly_used: 0,
@@ -215,6 +213,81 @@ describe("ConsumerCart delivery address", () => {
     expect(
       screen.getByText(
         "Endulzate by Noe, Dulce Sur y La Olla entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+      ),
+    ).toBeInTheDocument()
+  })
+})
+
+// IBP-006 CA10 — "Si no corresponde subsidio, el sistema muestra valor cero y
+// el motivo."
+describe("ConsumerCart without subsidy", () => {
+  const fullPrice = (quantity: number, subsidized = 0): Pricing => ({
+    subtotal: 301 * quantity,
+    discount: 0,
+    total: 301 * quantity,
+    lines: {
+      "1": {
+        subtotal: 301 * quantity,
+        discount: 0,
+        total: 301 * quantity,
+        tiers: [],
+      },
+    },
+    subsidizedQuantity: subsidized,
+    fullPriceQuantity: quantity - subsidized,
+  })
+
+  it("shows the GoGrow subsidy at zero for a dish without benefit", async () => {
+    await renderCart({
+      monthlyLimit: 0,
+      monthlyRemaining: 0,
+      pricing: fullPrice(1),
+    })
+
+    expect(screen.getByText("Subsidio GoGrow").nextSibling).toHaveTextContent(
+      "$0",
+    )
+  })
+
+  it("says the employee has no benefit instead of claiming they used it up", async () => {
+    await renderCart({
+      monthlyLimit: 0,
+      monthlyRemaining: 0,
+      pricing: fullPrice(1),
+    })
+
+    expect(
+      screen.getByText(
+        "No tenés un beneficio asignado. La vianda de este pedido se cobra a precio completo.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Ya utilizaste/)).not.toBeInTheDocument()
+  })
+
+  it("says the monthly quota is used up when it had one", async () => {
+    await renderCart({
+      monthlyLimit: 20,
+      monthlyRemaining: 0,
+      pricing: fullPrice(2),
+    })
+
+    expect(
+      screen.getByText(
+        "Ya utilizaste las 20 viandas subsidiadas de este mes. Las 2 viandas de este pedido se cobran a precio completo.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("splits the order when only part of it is subsidized", async () => {
+    await renderCart({
+      monthlyLimit: 20,
+      monthlyRemaining: 1,
+      pricing: fullPrice(3, 1),
+    })
+
+    expect(
+      screen.getByText(
+        "Te queda 1 vianda subsidiada este mes. De este pedido, 1 con beneficio y 2 a precio completo.",
       ),
     ).toBeInTheDocument()
   })

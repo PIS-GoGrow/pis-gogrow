@@ -4,13 +4,13 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import MonthSelect from "@/components/admin/month-select"
-import BankDetails from "@/components/admin/payments/bank-details"
 import ConsumptionDetailDialog, {
   type ConsumptionDetail,
 } from "@/components/admin/payments/consumption-detail-dialog"
 import PeriodCard from "@/components/admin/payments/period-card"
 import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
+import BankDetails from "@/components/payments/bank-details"
 import Stat from "@/components/stat"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"

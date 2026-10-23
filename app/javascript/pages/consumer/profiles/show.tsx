@@ -1,5 +1,5 @@
-import { Head, router, usePage } from "@inertiajs/react"
-import { LogOut } from "lucide-react"
+import { Head, Link, router, usePage } from "@inertiajs/react"
+import { ChevronRight, LogOut } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import BenefitSummaryCard from "@/components/benefit-summary-card"
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
-import { consumerProfiles, sessions } from "@/routes"
+import { consumerProfiles, sessions, settingsNotifications } from "@/routes"
 import type { BreadcrumbItem, ConsumerProfilesShow } from "@/types"
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -111,6 +111,37 @@ export default function Show({
               )}
             </dl>
           )}
+        </section>
+
+        <section
+          aria-labelledby="consumer-settings-title"
+          className="md:hidden"
+        >
+          <h3 id="consumer-settings-title" className="mb-3 text-xl font-bold">
+            {t(`${page}.settings`)}
+          </h3>
+
+          <div className="border-t">
+            <Link
+              href={settingsNotifications.index().url}
+              prefetch
+              className="hover:bg-accent/50 flex w-full cursor-pointer items-center gap-4 border-b px-1 py-5 transition-colors"
+            >
+              <span className="min-w-0 flex-1 text-left">
+                <span className="block text-base font-medium">
+                  {t(`${page}.notifications`)}
+                </span>
+                <span className="text-muted-foreground block text-sm">
+                  {t(`${page}.notifications_description`)}
+                </span>
+              </span>
+
+              <ChevronRight
+                className="text-muted-foreground size-5 shrink-0"
+                aria-hidden="true"
+              />
+            </Link>
+          </div>
         </section>
       </PageContainer>
 

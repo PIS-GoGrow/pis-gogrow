@@ -45,6 +45,7 @@ const provider = (id: number, name: string) => ({
   vat_rate: 22,
   vat_amount: 3564,
   payable_amount: 19764,
+  paid: false,
   days: [],
 })
 

@@ -62,6 +62,7 @@ Todas las pantallas con sesión iniciada comparten el mismo esqueleto. Las medid
 | Separaciones | `PageContainer` | `mb-8` entre el encabezado y el contenido, y `gap-4` entre cada hijo directo |
 | Título de la pestaña del navegador | `<Head title>` | El mismo texto que `title` |
 | Breadcrumbs | `breadcrumbs` de `AppLayout` | Al menos la sección actual |
+| Calificaciones: viewport y acciones inferiores | `ReviewPage` + `ReviewActions`, en `components/reviews/` | Contenido desplazable, acciones visibles y espacio seguro inferior; respeta el teclado mediante `visualViewport` |
 | Lista de tarjetas | `grid gap-4 md:grid-cols-2` | 1 columna en móvil, 2 desde tablet |
 | Cada ítem de la lista | `ListItemCard` | Tarjeta compacta: `py-4` y `gap-4`, con `px-4` en sus partes |
 | Lista vacía | `Empty className="border"` con `EmptyMedia variant="icon"` | Ver [Empty](#empty) |
@@ -94,7 +95,7 @@ Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla
 | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter` | `@/components/ui/card` | Superficies: ítems de lista, métricas, formularios, resúmenes |
 | `Alert`, `AlertTitle`, `AlertDescription` | `@/components/ui/alert` | Errores, avisos y confirmaciones dentro de la pantalla |
 | `Field`, `FieldLabel`, `FieldError`, `FieldDescription`, `FieldGroup`, `FieldSet`, `FieldLegend`, `FieldContent`, `FieldTitle`, `FieldSeparator` | `@/components/ui/field` | Estructura de formularios: etiqueta, ayuda, error, grupos, divisor con texto |
-| `Input` | `@/components/ui/input` | Texto, email, número, búsqueda, archivo. Para fechas, `DatePicker` |
+| `Input` | `@/components/ui/input` | Texto, email, número, búsqueda. Para fechas, `DatePicker`; para archivos, `FileInput` |
 | `Textarea` | `@/components/ui/textarea` | Texto multilínea |
 | `InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator` | `@/components/ui/input-otp` | Código de verificación en casillas separadas (6 dígitos del reseteo de contraseña) |
 | `Label` | `@/components/ui/label` | Etiqueta suelta fuera de un `Field` |
@@ -153,6 +154,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `DatePicker`, `DateRangePicker` | `@/components/date-picker` | Elegir una fecha o un rango en un formulario; reciben y devuelven fechas `YYYY-MM-DD` |
 | `OptionChoices` | `@/components/menus/option-choices` | Elegir las opciones de un grupo de un plato: `RadioGroup` si el grupo admite una, casillas con tope si admite varias |
 | `QuantityInput` | `@/components/quantity-input` | Elegir una cantidad entre un mínimo y un máximo |
+| `FileInput` | `@/components/file-input` | Elegir un archivo con botón y texto en español; recibe las props de `<input>` y `fileName` con el nombre elegido |
 | `PasswordSetupForm` | `@/components/password-setup-form` | Formulario de contraseña nueva con checklist de requisitos y confirmación; el botón queda deshabilitado hasta que se cumplen. Recibe `action`, `submitLabel` y, opcional, `email` de solo lectura. Lo usan el alta del proveedor y el reseteo |
 | `CompletedSheet` | `@/components/completed-sheet` | Sheet inferior de confirmación («¡Registro completado!») con un botón «Listo» que navega a `href` |
 
@@ -298,10 +300,12 @@ Cada control de formulario va dentro de un `Field`:
 - Con error: `data-invalid` en el `Field` (pinta etiqueta y texto) y `aria-invalid` en el control (pinta el borde).
 - `Field orientation="horizontal"` pone el control al lado de la etiqueta (checkbox, switch). `FieldGroup` apila varios `Field`, y `FieldSet` con `FieldLegend` agrupa opciones bajo un título.
 
-`Input` acepta las mismas props que `<input>` y sirve para cualquier `type`. `Label` sólo se usa suelto, fuera de un `Field`.
+`Input` acepta las mismas props que `<input>` y sirve para cualquier `type` salvo `file`, que muestra el botón nativo del navegador en inglés: para archivos se usa `FileInput`. `Label` sólo se usa suelto, fuera de un `Field`.
+
+Todo `<form>` o `<Form>` lleva `noValidate`. Sin él, `required`, `min`, `max` o `type="email"` disparan los globos del navegador, en inglés y de a un campo por vez. Los errores los resuelve el servidor (o una validación propia antes de enviar) y se muestran todos juntos, cada uno en el `FieldError` de su campo.
 
 ```tsx
-<Form action={providerMenus.create()}>
+<Form action={providerMenus.create()} noValidate>
   {({ errors, processing }) => (
     <FieldGroup>
       <Field data-invalid={!!errors.name}>

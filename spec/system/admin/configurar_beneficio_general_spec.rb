@@ -76,4 +76,15 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
     expect(replaced_config).to be_present
     expect(replaced_config.subsidy_percentage).to eq(70)
   end
+
+  it "muestra error en español junto al campo cuando el porcentaje está fuera de rango" do
+    visit admin_benefit_configurations_path
+
+    open_editor
+
+    fill_in "subsidy_percentage", with: "150"
+    click_button "Programar Subsidio"
+
+    expect(page).to have_content("debe ser menor que o igual a 100")
+  end
 end
