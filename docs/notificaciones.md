@@ -151,3 +151,24 @@ notificaciones a un mismo usuario en el mismo evento.
 
 Si los locales definidos para una notificación necesitan datos extra, se pueden pasar
 en `title_data` y `description_data`.
+
+# WhatsappSenderJob
+Envía un mensaje de WhatsApp a un número de celular, dados una clave de evento
+configurada en `config/notifications.yml` y los datos extra que se necesiten.
+Para que funcione, necesitan estar cargadas las credenciales. En development,
+solo corre cuando esta configurada la variable `TWILIO_DELIVERY_ENABLED=true`.
+Las credenciales se configuran con `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
+`TWILIO_PHONE`.
+
+Cuando hay un error de red, se reintenta hasta cinco veces el envío. Si los cinco
+intentos fallan, se marca la notificación con el atributo `failed`. Si el Job fue
+exitoso, marca la notifiación como no fallada y registra la hora de envío en el
+atributo `whatsapp_sent_at`. Hay algunos tipos de error que no se reintentan.
+
+Los datos extra de locales de notificaciones se pasan a Twilio, agregando `title_`
+a las claves de los datos de título y agregando `description_` a las claves de
+datos de descripción.
+
+Este Job no debería ser accedido desde ningún lugar, menos el servicio `Notifier`.
+Supone que Notifier ya chequeó que la clave de evento exista y que todas las
+notificaciones tienen un content SID asignado.
