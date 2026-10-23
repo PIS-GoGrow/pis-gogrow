@@ -14,6 +14,7 @@ RSpec.describe Admin::ConsumerOrderSerializer do
       expect(serialized).to eq(
         "id" => order.id,
         "amount" => order.amount,
+        "provider_id" => order.provider_id,
         "date" => order.delivery_date.strftime("%-d/%-m"),
         "provider_name" => order.schedule.menu.provider.user.name,
         "subsidy" => (order.price - order.discounted_price).to_f,
@@ -37,6 +38,7 @@ RSpec.describe Admin::ConsumerOrderSerializer do
       serialized = described_class.new(order).to_h
 
       expect(serialized["date"]).to eq(delivery.strftime("%-d/%-m"))
+      expect(serialized["provider_id"]).to eq(order.provider_id)
       expect(serialized["provider_name"]).to be_nil
     end
 

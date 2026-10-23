@@ -357,7 +357,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(inertia).to render_component("consumer/dashboard/cart")
       expect(inertia.props).to include(:benefit, :addresses)
       expect(inertia.props[:benefit]).to include(
-        :limit, :used, :percentage, :monthly_limit, :monthly_used, :monthly_remaining, :specials
+        :percentage, :monthly_limit, :monthly_used, :monthly_remaining, :specials
       )
       expect(inertia.props[:addresses]).to be_an(Array)
     end

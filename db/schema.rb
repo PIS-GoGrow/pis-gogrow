@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -278,6 +278,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120001) do
     t.index ["order_id"], name: "index_order_benefits_on_order_id"
   end
 
+  create_table "order_events", force: :cascade do |t|
+    t.integer "action", null: false
+    t.string "actor_name"
+    t.jsonb "changeset", default: {}, null: false
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "order_id", null: false
+    t.integer "role"
+    t.bigint "user_id"
+    t.index ["company_id", "created_at"], name: "index_order_events_on_company_id_and_created_at"
+    t.index ["order_id"], name: "index_order_events_on_order_id"
+    t.index ["user_id"], name: "index_order_events_on_user_id"
+  end
+
   create_table "orders", force: :cascade do |t|
     t.string "address"
     t.integer "amount"
@@ -367,12 +381,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120001) do
   end
 
   create_table "reviews", force: :cascade do |t|
+    t.bigint "consumer_id"
     t.datetime "created_at", null: false
     t.string "description"
     t.bigint "menu_id", null: false
+    t.bigint "order_id"
     t.integer "rating"
     t.datetime "updated_at", null: false
+    t.index ["consumer_id"], name: "index_reviews_on_consumer_id"
     t.index ["menu_id"], name: "index_reviews_on_menu_id"
+    t.index ["order_id"], name: "index_reviews_on_order_id", unique: true
   end
 
   create_table "schedules", force: :cascade do |t|
@@ -618,6 +636,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120001) do
   add_foreign_key "order_accounts", "orders"
   add_foreign_key "order_benefits", "benefits"
   add_foreign_key "order_benefits", "orders"
+  add_foreign_key "order_events", "companies"
+  add_foreign_key "order_events", "users", on_delete: :nullify
   add_foreign_key "orders", "consumers"
   add_foreign_key "orders", "providers", on_delete: :nullify
   add_foreign_key "orders", "schedules"
@@ -629,7 +649,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120001) do
   add_foreign_key "payments", "providers"
   add_foreign_key "provider_closures", "providers"
   add_foreign_key "providers", "users", on_delete: :nullify
+  add_foreign_key "reviews", "consumers"
   add_foreign_key "reviews", "menus"
+  add_foreign_key "reviews", "orders"
   add_foreign_key "schedules", "menus"
   add_foreign_key "schedules", "users", column: "availability_changed_by_id"
   add_foreign_key "sessions", "users"

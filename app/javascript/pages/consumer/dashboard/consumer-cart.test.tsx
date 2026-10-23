@@ -68,8 +68,6 @@ const cartItem = (
 })
 
 const benefit: Benefit = {
-  limit: 5,
-  used: 0,
   percentage: 50,
   monthly_limit: 20,
   monthly_used: 0,

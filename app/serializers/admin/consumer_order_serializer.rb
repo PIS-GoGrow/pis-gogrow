@@ -5,6 +5,11 @@ class Admin::ConsumerOrderSerializer < ApplicationSerializer
 
   attributes :id, :amount
 
+  typelize :number, nullable: true
+  attribute :provider_id do |order|
+    order[:provider_id] || order.schedule&.menu&.provider_id
+  end
+
   # Formateada en el servidor: el SSR corre en UTC y el cliente no.
   typelize :string, nullable: true
   attribute :date do |order|

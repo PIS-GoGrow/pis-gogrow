@@ -89,11 +89,6 @@ class Consumer < ApplicationRecord
     monthly_benefit_used_in Date.current.all_month
   end
 
-  # Devuelve la cantidad de viandas compradas en órdenes confirmadas esta semana
-  def monthly_benefit_used_this_week
-    monthly_benefit_used_in Date.current.all_week
-  end
-
   # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes,
   # contando solo las órdenes confirmadas
   def remaining_monthly_benefit

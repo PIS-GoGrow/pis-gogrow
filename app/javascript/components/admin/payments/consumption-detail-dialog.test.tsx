@@ -24,6 +24,7 @@ const tuViandita: ConsumptionDetail["providers"][number] = {
   vat_rate: 22,
   vat_amount: 3564,
   payable_amount: 19764,
+  paid: true,
   days: [
     {
       date: "30/08",
@@ -89,6 +90,16 @@ describe("ConsumptionDetailDialog", () => {
     expect(dialog).toHaveTextContent("IVA (22%)$3.564")
     expect(dialog).toHaveTextContent("Total pagado$19.764")
     expect(screen.getByRole("button", { name: "Cerrar" })).toBeInTheDocument()
+  })
+
+  // IBP-032 CA3: el detalle no puede llamar "pagado" a lo que la tarjeta muestra
+  // como pendiente.
+  it("rotula el total como a pagar mientras el pago no está aprobado", () => {
+    render(<Harness providers={[{ ...tuViandita, paid: false }]} />)
+
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveTextContent("Total a pagar$19.764")
+    expect(dialog).not.toHaveTextContent("Total pagado")
   })
 
   it("no muestra el filtro si el mes tiene un solo proveedor", () => {

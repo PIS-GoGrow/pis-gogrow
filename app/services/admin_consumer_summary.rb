@@ -14,7 +14,7 @@ class AdminConsumerSummary
     def avatar_url = consumer.user.avatar_url
   end
 
-  ProviderRow = Data.define(:name, :amount, :status)
+  ProviderRow = Data.define(:id, :name, :amount, :status)
 
   MonthRow = Data.define(:month, :accounts) do
     def key = month.strftime("%Y-%m")
@@ -33,7 +33,14 @@ class AdminConsumerSummary
 
     def providers
       accounts
-        .map { ProviderRow.new(name: it.provider.user.name, amount: it.amount.to_f, status: it.collection_status) }
+        .map do |account|
+          ProviderRow.new(
+            id: account.provider_id,
+            name: account.provider.user.name,
+            amount: account.amount.to_f,
+            status: account.collection_status
+          )
+        end
         .sort_by(&:name)
     end
   end
@@ -76,9 +83,18 @@ class AdminConsumerSummary
   end
 
   def months
-    accounts.group_by(&:month)
-            .map { |month, group| MonthRow.new(month:, accounts: group) }
-            .sort_by { -it.month.jd }
+    accounts_by_month = accounts.group_by(&:month)
+    history_years = accounts_by_month.keys.map(&:year).uniq.select { it <= Date.current.year }.sort.reverse
+    years = [ Date.current.year, *history_years.reject { it == Date.current.year } ]
+
+    years.flat_map do |year|
+      last_month = year == Date.current.year ? Date.current.month : 12
+
+      last_month.downto(1).map do |month_number|
+        month = Date.new(year, month_number, 1)
+        MonthRow.new(month:, accounts: accounts_by_month.fetch(month, []))
+      end
+    end
   end
 
   private
