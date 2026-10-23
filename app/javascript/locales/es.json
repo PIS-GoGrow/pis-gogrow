@@ -160,6 +160,10 @@
         "description": "Recibí una notificación cuando un pedido sea cancelado por el cliente.",
         "title": "Cancelaciones"
       },
+      "order_reminders": {
+        "description": "Recibí un aviso para no olvidarte de pedir tu vianda.",
+        "title": "Recordatorios de pedidos"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
@@ -220,6 +224,10 @@
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
         "title": "Tu pedido fue confirmado"
+      },
+      "order_deadline_reminder": {
+        "description": "¡No te quedes sin almuerzo! Todavía no pediste tu vianda de hoy.",
+        "title": "Recordatorio de pedido"
       },
       "order_received": {
         "description": "%{consumer} pidió %{amount} de %{dish} para el %{date}.",
@@ -456,6 +464,29 @@
             "consumption": "Consumo",
             "date": "Fecha",
             "employee": "Empleado",
+            "filters": {
+              "all_providers": "Todos",
+              "all_statuses": "Todos",
+              "apply": "Aplicar",
+              "cancel": "Cancelar",
+              "clear": "Limpiar filtros",
+              "empty_description": "Probá cambiando o limpiando los filtros.",
+              "empty_title": "No hay consumos que coincidan",
+              "open": "Filtrar historial",
+              "provider_chip": "Proveedor: %{provider}",
+              "providers": "Proveedores:",
+              "remove_provider": "Quitar filtro de proveedor %{provider}",
+              "remove_status": "Quitar filtro de estado",
+              "remove_subsidy": "Quitar filtro de subsidio",
+              "status": "Estado de pago",
+              "status_chip": "Estado: %{status}",
+              "subsidy": "Subsidio aplicado",
+              "subsidy_all": "Todos los consumos",
+              "subsidy_chip": "Subsidio: %{subsidy}",
+              "subsidy_with": "Con subsidio aplicado",
+              "subsidy_without": "Sin subsidio aplicado",
+              "title": "Filtros del historial"
+            },
             "history": "Historial de consumo",
             "history_empty_description": "Este empleado todavía no realizó ningún pedido de viandas.",
             "history_empty_title": "Sin consumos",
@@ -468,6 +499,7 @@
             "month_detail_description": "Pedidos confirmados del mes, con lo que cubre la empresa y lo que paga el empleado.",
             "no_provider": "Sin proveedor",
             "orders_empty": "No hay pedidos confirmados en este mes.",
+            "orders_empty_title": "Sin consumos",
             "provider": "Proveedor",
             "quantity": "Cant.",
             "reminder": {
@@ -495,6 +527,7 @@
             "this_month": "Este mes",
             "title": "Detalle del empleado",
             "total": "Total: %{amount}",
+            "total_label": "Total",
             "view_month": "Ver el detalle de %{month}",
             "year_label": "Año"
           }
@@ -626,7 +659,8 @@
               "quantity": "Cant.",
               "subtotal": "Subtotal sin IVA",
               "title": "%{provider}: Consumo %{month}",
-              "total": "Total pagado",
+              "total_due": "Total a pagar",
+              "total_paid": "Total pagado",
               "user": "Usuario",
               "vat": "IVA (%{rate}%)"
             },
@@ -705,6 +739,12 @@
         "total": "Monto a pagar"
       },
       "consumer_dashboard": {
+        "benefit_card": {
+          "period": "Este mes",
+          "title": "Tu consumo",
+          "unit": "viandas subsidiadas",
+          "used": "%{used} de %{limit}"
+        },
         "index": {
           "closure": {
             "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
