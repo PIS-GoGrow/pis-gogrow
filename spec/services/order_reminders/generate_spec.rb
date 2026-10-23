@@ -234,6 +234,66 @@ RSpec.describe OrderReminders::Generate do
         expect(reminders_for(consumer).count).to eq(1)
       end
     end
+    
+    it "creates today's reminder when yesterday's reminder is still active" do
+      yesterday = date - 1.day
+
+      previous = Notifier.call(
+        event_key: :order_deadline_reminder,
+        user: consumer.user,
+        notifiable: consumer
+      )
+
+      previous.update_columns(
+        created_at: yesterday.in_time_zone + 11.hours,
+        updated_at: yesterday.in_time_zone + 11.hours
+      )
+
+      expect(previous.closed_at).to be_nil
+
+      expect {
+        described_class.call(date:, now: at(11))
+      }.not_to raise_error
+
+      expect(previous.reload.closed_at).to be_present
+
+      expect(
+        reminders_for(consumer)
+          .where(created_at: date.in_time_zone.all_day)
+          .count
+      ).to eq(1)
+    end
+
+    it "continues notifying other employees when one has an active reminder from yesterday" do
+      orders(:upcoming_pending_today)
+        .update_column(:status, Order.statuses[:cancelled])
+
+      previous = Notifier.call(
+        event_key: :order_deadline_reminder,
+        user: consumer.user,
+        notifiable: consumer
+      )
+
+      yesterday = date - 1.day
+      previous.update_columns(
+        created_at: yesterday.in_time_zone + 11.hours,
+        updated_at: yesterday.in_time_zone + 11.hours
+      )
+
+      described_class.call(date:, now: at(11))
+
+      expect(
+        reminders_for(consumer)
+          .where(created_at: date.in_time_zone.all_day)
+          .count
+      ).to eq(1)
+
+      expect(
+        reminders_for(consumer_with_order)
+          .where(created_at: date.in_time_zone.all_day)
+          .count
+      ).to eq(1)
+    end
   end
 
   def at(hour, minute = 0, day = date)

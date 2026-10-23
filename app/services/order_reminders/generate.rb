@@ -72,6 +72,8 @@ module OrderReminders
         return if ordered_for_date?(consumer)
         return if already_notified?(consumer)
 
+        close_previous_active_reminders(consumer)
+
         notification = Notifier.call(
           event_key: EVENT,
           user: consumer.user,
@@ -82,6 +84,16 @@ module OrderReminders
           "[OrderReminders::Generate] No se pudo crear #{EVENT} para Consumer##{consumer.id}"
         ) unless notification
       end
+    end
+
+    # Funcion auxiliar para que, si el consumidor no cierra un recordatorio de una fecha pasada, en el dia actual
+    # se cierra automaticamente y se crea una nueva:
+    def close_previous_active_reminders(consumer)
+      consumer.user.notifications
+              .active
+              .where(event: EVENT, notifiable: consumer)
+              .where(created_at: ...date.in_time_zone.beginning_of_day)
+              .find_each(&:close!)
     end
 
     def ordered_for_date?(consumer)
