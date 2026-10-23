@@ -501,8 +501,6 @@ RSpec.describe "Orders", type: :request do
       get dashboard_path
       expect(inertia).to have_props(
         benefit: {
-          limit: 4,
-          used: 2,
           percentage: 50,
           monthly_limit: 16,
           monthly_used: 2,

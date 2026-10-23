@@ -1494,6 +1494,11 @@ es:
             same_year: "%{from_day_month} al %{to_day_month} de %{year}"
             other_year: "%{from} al %{to}"
     consumer_dashboard:
+      benefit_card:
+        title: "Tu consumo"
+        period: "Este mes"
+        used: "%{used} de %{limit}"
+        unit: "viandas subsidiadas"
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
         closure:
