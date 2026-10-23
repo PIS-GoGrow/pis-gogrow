@@ -24,7 +24,9 @@ class WhatsappSenderJob < ApplicationJob
   end
 
   discard_on PermanentTwilioError do |job, error|
-    Rails.logger.error("Fallo (notification #{job.arguments.first.id}): #{error.message}")
+    notification = job.arguments.first
+
+    Rails.logger.error("Fallo (notification #{notification.id}): #{error.message}")
     notification.update! failed: true
   end
 
