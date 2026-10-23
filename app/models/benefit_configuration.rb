@@ -219,7 +219,7 @@ class BenefitConfiguration < ApplicationRecord
     when BirthdayBenefit, OnboardingBenefit
       { type: rule.is_a?(BirthdayBenefit) ? "birthday" : "onboarding", limit: rule.limit, **validity_in_days(rule.deadline_days) }
     when GiftBenefit
-      { type: "gift", limit: rule.limit, effective_from: rule.effective_from, **validity_between(rule.effective_from, rule.deadline_date) }
+      { type: "gift", limit: rule.limit, effective_from: rule.effective_from, **validity_between(rule.effective_from, rule.deadline_date&.next_day) }
     end
   end
 
@@ -239,7 +239,7 @@ class BenefitConfiguration < ApplicationRecord
 
   # Una semana son 7 días y un mes, 30: la validez de cumpleaños y onboarding se
   # guarda como deadline_days. La del premio se suma a la fecha de inicio en el
-  # calendario, porque tiene una fecha límite real.
+  # calendario, porque tiene una fecha límite real, que es el último día de uso.
   def special_rule_attributes(condition)
     amount = condition[:validity_amount].presence&.to_i
     unit = condition[:validity_unit].presence_in(%w[days weeks months])
@@ -259,7 +259,7 @@ class BenefitConfiguration < ApplicationRecord
         type: GiftBenefit.name,
         limit: condition[:limit],
         effective_from:,
-        deadline_date: (effective_from.advance(unit.to_sym => amount) if effective_from && amount && unit)
+        deadline_date: (effective_from.advance(unit.to_sym => amount).prev_day if effective_from && amount && unit)
       }
     end
   end

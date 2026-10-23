@@ -53,13 +53,29 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       expect(configuration.benefit_rules.first.errors[:deadline_days]).to be_present
     end
 
-    it "calcula la fecha límite del premio sumando la validez a la fecha de inicio" do
+    it "calcula la fecha límite del cupón como el último día de la validez" do
       configuration = save_special(condition: { type: "gift", limit: 3, effective_from: "2026-06-01", validity_amount: 1, validity_unit: "months" })
 
       rule = configuration.benefit_rules.first
       expect(rule).to be_a(GiftBenefit)
-      expect(rule.deadline_date).to eq(Date.new(2026, 7, 1))
+      expect(rule.deadline_date).to eq(Date.new(2026, 6, 30))
       expect(configuration.special_condition).to include(type: "gift", effective_from: Date.new(2026, 6, 1), validity_amount: 1, validity_unit: "months")
+    end
+
+    it "da un cupón de una semana que se usa siete días" do
+      configuration = save_special(condition: { type: "gift", limit: 3, effective_from: "2026-05-18", validity_amount: 1, validity_unit: "weeks" })
+
+      expect(configuration.benefit_rules.first.deadline_date).to eq(Date.new(2026, 5, 24))
+      expect(configuration.special_condition).to include(validity_amount: 1, validity_unit: "weeks")
+    end
+
+    it "acepta un cupón de un solo día" do
+      configuration = save_special(condition: { type: "gift", limit: 1, effective_from: "2026-05-12", validity_amount: 1, validity_unit: "days" })
+
+      expect(configuration).to be_persisted
+      expect(configuration.benefit_rules.first.deadline_date).to eq(Date.new(2026, 5, 12))
+      expect(configuration.special_condition).to include(validity_amount: 1, validity_unit: "days")
+      expect(one.benefits.find_by!(benefit_configuration: configuration).due_date).to eq(Date.new(2026, 5, 12))
     end
 
     it "rechaza un premio que empieza en el pasado" do
