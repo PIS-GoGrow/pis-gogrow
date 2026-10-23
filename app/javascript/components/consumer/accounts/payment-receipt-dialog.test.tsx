@@ -7,7 +7,7 @@ import type { Payment } from "@/types"
 import PaymentReceiptDialog from "./payment-receipt-dialog"
 
 let triggerSuccess: (() => void) | undefined
-let triggerError: (() => void) | undefined
+let triggerError: ((errors: Record<string, string[]>) => void) | undefined
 let triggerBefore: (() => boolean) | undefined
 
 interface MockFormProps {
@@ -22,7 +22,7 @@ interface MockFormProps {
   method?: string
   onBefore?: () => boolean
   onSuccess?: () => void
-  onError?: () => void
+  onError?: (errors: Record<string, string[]>) => void
   className?: string
 }
 
@@ -386,7 +386,7 @@ describe("PaymentReceiptDialog", () => {
 
     expect(triggerError).toBeDefined()
     act(() => {
-      triggerError?.()
+      triggerError?.({})
     })
 
     expect(
@@ -404,6 +404,28 @@ describe("PaymentReceiptDialog", () => {
 
     expect(
       screen.queryByText("No se pudo subir el comprobante"),
+    ).not.toBeInTheDocument()
+  })
+
+  it("shows the server's reason when the receipt is rejected", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} />)
+
+    await user.click(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    )
+
+    act(() => {
+      triggerError?.({ receipt: ["El archivo debe ser PDF, JPG o PNG."] })
+    })
+
+    expect(
+      await screen.findByText("El archivo debe ser PDF, JPG o PNG."),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(
+        "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
+      ),
     ).not.toBeInTheDocument()
   })
 })

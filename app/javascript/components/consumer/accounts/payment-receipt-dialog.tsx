@@ -66,6 +66,9 @@ export default function PaymentReceiptDialog({
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [uploadResult, setUploadResult] = useState<UploadResult>(null)
+  const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(
+    null,
+  )
   const [fileMissing, setFileMissing] = useState(false)
 
   useEffect(() => {
@@ -103,7 +106,8 @@ export default function PaymentReceiptDialog({
     setUploadResult("success")
   }
 
-  function handleUploadError() {
+  function handleUploadError(errors: Record<string, string | string[]>) {
+    setUploadErrorMessage([errors.receipt].flat()[0] ?? null)
     handleOpenChange(false)
     setUploadResult("error")
   }
@@ -218,7 +222,6 @@ export default function PaymentReceiptDialog({
           <Form
             action={createAction}
             className="grid min-w-0 gap-3 rounded-lg bg-zinc-100 p-3 dark:bg-zinc-900"
-            errorBag={`payment-account-${accountId}`}
             noValidate
             onBefore={handleBeforeUpload}
             onError={handleUploadError}
@@ -308,7 +311,10 @@ export default function PaymentReceiptDialog({
       <AdaptableDialog
         open={uploadResult !== null}
         onOpenChange={(nextOpen) => {
-          if (!nextOpen) setUploadResult(null)
+          if (!nextOpen) {
+            setUploadResult(null)
+            setUploadErrorMessage(null)
+          }
         }}
       >
         <AdaptableDialogContent showCloseButton={false} className="p-5">
@@ -321,7 +327,8 @@ export default function PaymentReceiptDialog({
             <AdaptableDialogDescription className="text-base leading-6">
               {uploadResult === "success"
                 ? t("pages.accounts.show.receipt_success_description")
-                : t("pages.accounts.show.receipt_error_description")}
+                : (uploadErrorMessage ??
+                  t("pages.accounts.show.receipt_error_description"))}
             </AdaptableDialogDescription>
             <Button
               type="button"
