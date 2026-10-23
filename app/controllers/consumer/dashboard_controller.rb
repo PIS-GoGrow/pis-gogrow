@@ -82,8 +82,6 @@ class Consumer::DashboardController < Consumer::InertiaController
     pricing = OrderPricing.new(@consumer)
 
     {
-      limit: @consumer.monthly_benefit_available / 4,
-      used: @consumer.monthly_benefit_used_this_week,
       percentage: @consumer.monthly_benefit_percentage,
       monthly_limit: @consumer.monthly_benefit_available,
       monthly_used: @consumer.monthly_benefit_used_this_month,

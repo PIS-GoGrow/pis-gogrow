@@ -60,8 +60,6 @@ function renderMenu(
       date={date}
       setDate={vi.fn()}
       benefit={{
-        limit: 5,
-        used: 2,
         percentage: 50,
         monthly_limit: 20,
         monthly_used: 2,
