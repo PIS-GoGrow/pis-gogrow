@@ -84,7 +84,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
     # Paso 3: Entregas (RadioGroup: oficina / domicilio)
     expect(page).to have_content("Paso 3 de 4")
-    expect(page).to have_content("Entregas")
+    expect(page).to have_content("Configure sus entregas")
 
     # "Continuar" está deshabilitado hasta elegir una opción
     find("label[for='delivery-office']").click
@@ -99,7 +99,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
     # Pantalla final de éxito
     expect(page).to have_content("¡Todo listo!")
-    expect(page).to have_content("Tu cuenta ya está configurada")
+    expect(page).to have_content("Su cuenta ya está configurada")
 
     click_on "Ir al Inicio"
 
