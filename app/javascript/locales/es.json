@@ -625,7 +625,8 @@
               "quantity": "Cant.",
               "subtotal": "Subtotal sin IVA",
               "title": "%{provider}: Consumo %{month}",
-              "total": "Total pagado",
+              "total_due": "Total a pagar",
+              "total_paid": "Total pagado",
               "user": "Usuario",
               "vat": "IVA (%{rate}%)"
             },
