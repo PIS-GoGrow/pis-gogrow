@@ -148,11 +148,22 @@ RSpec.describe "Admin::Payments", type: :request do
         )
         expect(period["providers"].sole).to include(
           "id" => providers(:tuviandita).id, "name" => "Provider User", "meals" => 4,
-          "subtotal" => 601.0, "vat_rate" => 0.0, "vat_amount" => 0.0, "payable_amount" => 601.0
+          "subtotal" => 601.0, "vat_rate" => 0.0, "vat_amount" => 0.0, "payable_amount" => 601.0, "paid" => false
         )
         expect(period["providers"].sole["days"].flat_map { it["orders"] }.pluck("id")).to contain_exactly(
           orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id, orders(:other_consumer_upcoming).id
         )
+      end
+
+      # IBP-032 CA3: el detalle rotula el total como pagado solo con el pago aprobado.
+      it "marks the detail as paid only once the payment is approved" do
+        account = accounts(:gogrow_tuviandita_current)
+        payment = account.payments.build(provider: account.provider, status: :approved)
+        payment.save!(validate: false)
+
+        get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
+
+        expect(inertia.props[:consumption]["providers"].sole).to include("paid" => true)
       end
 
       it "splits what the employee pays from what GoGrow pays in each order" do

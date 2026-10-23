@@ -249,7 +249,7 @@ RSpec.describe Consumer, type: :model do
     end
   end
 
-  describe "#subsidized_meals_used_this_week" do
+  describe "#monthly_benefit_used_this_month" do
     before do
       Order.destroy_all
       Schedule.delete_all
@@ -258,7 +258,7 @@ RSpec.describe Consumer, type: :model do
     let(:menu) { menus(:milanesa) }
     let(:today_schedule) { Schedule.create!(menu:, date: Date.current, amount: 30) }
 
-    it "sums active orders delivered in the current week" do
+    it "sums active orders delivered in the current month" do
       Order.create!(
         consumer:, schedule: today_schedule, amount: 2,
         price: 600, address: consumer.company.address, delivery_method: :office, status: :confirmed
@@ -272,7 +272,7 @@ RSpec.describe Consumer, type: :model do
         price: 1200, address: consumer.company.address, delivery_method: :office, status: :cancelled
       ).apply_benefit! benefits(:monthly), 4
 
-      expect(consumer.monthly_benefit_used_this_week).to eq(3)
+      expect(consumer.monthly_benefit_used_this_month).to eq(3)
     end
   end
 
