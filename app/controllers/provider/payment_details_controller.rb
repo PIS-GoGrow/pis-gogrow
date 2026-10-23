@@ -10,6 +10,7 @@ class Provider::PaymentDetailsController < Provider::InertiaController
     provider.assign_attributes(payment_details_params)
 
     if provider.save(context: :payment_details)
+      provider.mark_section_configured!(:payment_details)
       redirect_to provider_payment_details_path, notice: t("flash.payment_details_updated")
     else
       redirect_to provider_payment_details_path, inertia: { errors: provider.errors }
