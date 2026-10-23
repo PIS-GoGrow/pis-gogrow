@@ -376,6 +376,7 @@ es:
     settings_layout:
       title: "Configuración"
       description: "Administrá tu perfil y la configuración de tu cuenta"
+      back_to_account: "Volver a Cuenta"
     delete_account:
       title: "Eliminar cuenta"
       description: "Eliminá tu cuenta y todos tus datos"
@@ -1138,8 +1139,8 @@ es:
           label: "Hora límite"
           help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
         profile:
-          title: "Completá tu cuenta"
-          description: "La configuración de los pasos estará disponible próximamente."
+          title: "Complete su cuenta"
+          description: "Deje todo listo para empezar a recibir pedidos."
         orders:
           title: "Pedidos"
           today: "Hoy"
@@ -1422,6 +1423,7 @@ es:
         title: "Cuenta"
         sign_out: "Salir"
         settings: "Configuración"
+        incomplete: "Incompleto"
         payment_details: "Datos de cobro"
         payment_details_description: "Configurá dónde querés recibir tus cobros"
         operational_settings: "Configuración operativa"
@@ -1441,23 +1443,19 @@ es:
       steps:
         1:
           title: "Datos de cobro"
-          description: "Ingresá los datos de la cuenta donde vas a recibir los pagos de tus pedidos."
+          description: "Ingrese los datos de la cuenta donde recibirá los pagos de sus pedidos."
         2:
-          title: "Hora de cierre"
-          description: "Definí hasta qué hora recibís pedidos cada día."
-          order_deadline: "Hora de cierre"
-          order_deadline_description: "Después de esta hora no se reciben más pedidos del día."
+          title: "Configure sus pedidos"
+          description: "Defina hasta qué hora recibe pedidos y qué días no estará disponible."
         3:
-          title: "Entregas"
-          description: "Elegí si aceptás direcciones de entrega personalizadas además de las oficinas."
-          home_delivery: "Direcciones personalizadas"
-          home_delivery_description: "Aceptás pedidos con direcciones de entrega además de las oficinas."
+          title: "Configure sus entregas"
+          description: "Elija dónde realiza sus entregas y si acepta direcciones personalizadas."
         4:
           title: "Notificaciones"
-          description: "Elegí qué alertas querés recibir sobre tus pedidos y pagos."
+          description: "Elija qué alertas desea recibir sobre sus pedidos y pagos."
       done:
         title: "¡Todo listo!"
-        description: "Tu cuenta ya está configurada y podés empezar a recibir pedidos."
+        description: "Su cuenta ya está configurada y puede empezar a recibir pedidos."
         cta: "Ir al Inicio"
     provider_payment_details:
       show:
@@ -1495,6 +1493,7 @@ es:
         back: "Volver a Cuenta"
         closing_time: "Hora de cierre"
         closing_time_description: "Hasta qué hora recibís pedidos."
+        closing_time_placeholder: "Seleccione una hora"
         add_closing_time: "Agregar hora de cierre"
         add_closing_time_title: "Agregar Hora de cierre"
         save_changes: "Guardar cambios"
