@@ -14,6 +14,7 @@ end
 #  closed_at                     :datetime
 #  description                   :string
 #  event                         :string           not null
+#  failed                        :boolean
 #  notifiable_type               :string           not null
 #  requires_action               :boolean          not null
 #  role                          :string           not null
