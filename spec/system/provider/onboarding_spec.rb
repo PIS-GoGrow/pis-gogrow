@@ -74,8 +74,9 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     find("[role='option']", exact_text: "12:30").click
     click_button "Guardar cambios"
 
-    # El diálogo debe cerrarse por completo (overlay incluido) antes de continuar;
-    # si no, el overlay intercepta el click sobre "Continuar".
+    expect(page).to have_content("¡Hora de cierre guardada!")
+    click_on "Listo"
+
     expect(page).not_to have_css("[data-slot='dialog-overlay']", visible: true, wait: 10)
     expect(page).not_to have_css("[role='dialog']", visible: true, wait: 10)
 
