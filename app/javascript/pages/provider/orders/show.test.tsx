@@ -59,6 +59,7 @@ function order(overrides: Partial<ProviderOrderDetail> = {}) {
     remaining_amount: 8,
     rejection_reason: null,
     rejection_details: null,
+    rejectable: true,
   }
 
   return { ...base, ...overrides }
@@ -169,6 +170,7 @@ describe("Provider::Orders Show Page", () => {
           status: "rejected",
           rejection_reason: "other",
           rejection_details: "Cerrado por reformas",
+          rejectable: false,
         })}
       />,
     )
@@ -229,6 +231,7 @@ describe("Provider::Orders Show Page", () => {
           status: "rejected",
           rejection_reason: "out_of_stock",
           rejection_details: null,
+          rejectable: false,
         })}
       />,
     )
@@ -307,7 +310,14 @@ describe("Provider::Orders Show Page", () => {
   })
 
   it("deja los botones a la vista, deshabilitados, en un pedido cancelado", () => {
-    render(<Show order={order({ status: "cancelled" })} />)
+    render(<Show order={order({ status: "cancelled", rejectable: false })} />)
+
+    expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Rechazar" })).toBeDisabled()
+  })
+
+  it("deshabilita Rechazar en un pedido confirmado que ya no se puede rechazar", () => {
+    render(<Show order={order({ status: "confirmed", rejectable: false })} />)
 
     expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Rechazar" })).toBeDisabled()
