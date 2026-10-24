@@ -42,8 +42,7 @@ class Consumer < ApplicationRecord
 
   # Devuelve todos los beneficios mensuales del cliente
   def monthly_benefits
-    benefits.joins(benefit_configuration: :benefit_rules)
-            .where(benefit_rules: { type: MonthlyBenefit.name })
+    benefits.monthly
   end
 
   def current_monthly_benefit

@@ -11,8 +11,6 @@
 # Con modifiable_order (al modificar una orden) se le devuelve a cada beneficio lo que
 # esa orden ya tenía reservado, para no rechazarla contra su propio consumo.
 class OrderPricing
-  # benefits es un hash de la forma:
-  #   { benefit, units_used }
   OrderItemPricing = Data.define(:price, :discounted_price, :benefits)
   # total contiene el porcentaje total de subsidios aplicable, base el porcentaje de
   # subsidio mensual, y specials es un arreglo de hashes de la forma
@@ -30,7 +28,7 @@ class OrderPricing
     @modifiable_order = modifiable_order
   end
 
-  # items: [{ schedule: { id:, date:, price: }, quantity: }].
+  # items: [{ schedule: { id:, date:, price: }, quantity:, benefits: [id] }].
   # Devuelve un hash:
   #   { schedule_id: OrderItemPricing }
   # donde OrderItemPricing contiene toda la información de beneficios necesaria:
@@ -46,32 +44,33 @@ class OrderPricing
     # de mayor a menor.
     # De esta manera, si quedan pocos beneficios, estos se van a aplicar sobre las
     # órdenes más caras, beneficiando al consumidor.
-    items.sort_by! { |item| item[:schedule].price }.reverse!
+    order = items.each_index.sort_by { |i| [-items[i][:schedule].price, i] }
 
-    items.to_h do |item|
-      schedule = item[:schedule]
-      quantity = item[:quantity]
+    order.map! do |i|
+      schedule = items[i][:schedule]
+      selected_benefits = benefits_from_ids(items[i][:benefits].to_a)
+      quantity = items[i][:quantity]
 
       # coverage es un arreglo con cada beneficio que se va aplicar, su porcentaje y
       # la cantidad que se va a aplicar
       coverage = []
 
-      # Calculamos para cada beneficio especial cuánto podemos aplicar a la orden
-      benefits.each do |benefit|
+      # Calculamos para cada beneficio cuánto podemos aplicar a la orden
+      selected_benefits.each do |benefit|
         # No aplicar el beneficio si no es válido en la fecha dada
         next unless benefit.valid_on?(schedule.date)
         # No aplicar el beneficio si se supera el precio máximo
-        next if benefit.max_price && benefit.max_price < quantity * schedule.price
+        next if benefit.max_price && benefit.max_price < schedule.price
         # No seguir aplicando beneficios si ya superamos el cien porciento con los que
         # tenemos en cada una de las unidades
-        next if coverage.sum { |benefit| benefit[1] * benefit[2] } >= 100 * quantity
+        next if coverage_percentage(coverage, quantity) >= 100
 
         appliable_units = [ quantity, benefit_left[benefit] ].compact.min
 
         next unless appliable_units.positive?
 
         benefit_left[benefit] -= appliable_units if benefit_left[benefit]
-        coverage << [ benefit, benefit.percentage, appliable_units ]
+        coverage << [ benefit, appliable_units ]
       end
 
       [ schedule.id, pricing_for(schedule.price, quantity, coverage) ]
@@ -104,34 +103,56 @@ class OrderPricing
 
   private
 
-  # Devuelve los beneficios no expirados del usuario ordenados por porcentaje,
-  # de modo de que los beneficios de mayor porcentaje se apliquen antes.
-  def benefits
-    @benefits ||= consumer
-      .benefits
-      .where.not(status: :expired)
-      .order(percentage: :desc)
-      .to_a
-  end
-
   # Por vianda y no por ítem: cada vianda puede tener una combinación distinta
   # de beneficios según cuántos usos le quedaban a cada uno.
   def pricing_for(unit_price, quantity, coverage)
     # Para cada unidad, evaluamos qué beneficios se pueden aplicar a él y calculamos
     # su precio.
-    # El precio descontado total, es la suma de los precios descontados de cada unidad
-    discount_percentage = coverage.sum { |benefit| benefit[1] * benefit[2] } / quantity.to_f
+    # El precio descontado total es la suma de los precios descontados de cada unidad
+    discount_percentage = coverage_percentage(coverage, quantity)
     discounted_price = unit_price * quantity * (100 - discount_percentage.clamp(0, 100)) / 100
-
-    benefits = coverage.filter_map do |benefit, _percentage, units_used|
-      [ benefit, units_used ] if benefit && units_used.positive?
-    end
 
     OrderItemPricing.new(
       price: unit_price * quantity,
       discounted_price: discounted_price.round(2),
-      benefits: benefits.to_h
+      benefits: coverage.to_h
     )
+  end
+
+  def coverage_percentage(coverage, quantity)
+    coverage.sum { it[0].percentage * it[1] } / quantity.to_f
+  end
+
+  # Devuelve los beneficios no expirados seleccionados del usuario ordenados
+  # por porcentaje, de modo de que los beneficios de mayor porcentaje se apliquen antes.
+  # Los primeros beneficios son los mensuales, para que estos se apliquen
+  # siempre y antes que todo el resto.
+  def benefits_from_ids(benefit_ids)
+    monthly_benefits +
+      special_benefits.select { |benefit| benefit_ids.include? benefit.id }
+  end
+
+  def benefits
+    monthly_benefits + special_benefits
+  end
+
+  def monthly_benefits
+    @monthly_benefits ||=
+      consumer
+        .benefits
+        .where.not(status: :expired)
+        .monthly
+        .to_a
+  end
+
+  def special_benefits
+    @special_benefits ||=
+      consumer
+        .benefits
+        .where.not(status: :expired)
+        .special
+        .order(percentage: :desc)
+        .to_a
   end
 
   def benefit_used

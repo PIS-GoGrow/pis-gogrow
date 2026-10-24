@@ -68,11 +68,11 @@ class Consumer::OrdersController < Consumer::InertiaController
       # rango de fechas permitidas (definidas por Calendar#allowed_order_dates)
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
-      pricing = OrderPricing.new(@consumer).call(
+      pricings = OrderPricing.new(@consumer).call(
         requested_items.map { |item| { schedule: schedules.fetch(item[:schedule_id].to_i), quantity: item[:quantity].to_i } }
       )
 
-      requested_items.each do |item|
+      requested_items.zip(pricing).each do |item, pricing|
         quantity = item[:quantity].to_i
         schedule = schedules.fetch(item[:schedule_id].to_i)
 
@@ -95,9 +95,9 @@ class Consumer::OrdersController < Consumer::InertiaController
           schedule:,
           quantity:,
           notes: item[:notes],
-          discounted_price: pricing[schedule.id].discounted_price,
+          discounted_price: pricing.discounted_price,
           selected_options: selected_options_for(schedule.menu, item[:options]),
-          benefits: pricing[schedule.id].benefits,
+          benefits: pricing.benefits,
           **delivery
         )
 
@@ -168,17 +168,17 @@ class Consumer::OrdersController < Consumer::InertiaController
       { schedule:, quantity: item[:quantity].to_i } if schedule
     end.compact!
 
-    @pricing = OrderPricing.new(@consumer).call(requested_items)
+    pricings = OrderPricing.new(@consumer).call(requested_items)
 
-    render json: to_pricing(requested_items, @pricing)
+    render json: to_pricing(requested_items, pricings)
   end
 
   private
 
-  def to_pricing(items, pricing)
+  def to_pricing(items, pricings)
     items_by_schedule = items.index_by { |item| item[:schedule].id }
 
-    lines = pricing.to_h do |schedule_id, result|
+    lines = pricings.to_h do |schedule_id, result|
       item = items_by_schedule.fetch(schedule_id)
       quantity = item[:quantity]
       price = result.price.to_f
@@ -211,13 +211,13 @@ class Consumer::OrdersController < Consumer::InertiaController
       discount: lines.values.sum { |line| line[:discount] },
       total: lines.values.sum { |line| line[:total] },
       lines: lines,
-      subsidizedQuantity: items.sum do |item|
-        pricing.fetch(item[:schedule][:id]).benefits.sum { |_, u| u }
+      subsidizedQuantity: items.zip(pricings).sum do |item, pricing|
+        pricing[1].benefits.sum { |_, u| u }
       end,
-      fullPriceQuantity: items.sum do |item|
+      fullPriceQuantity: items.zip(pricings).sum do |item, pricing|
         schedule_id = item[:schedule][:id]
         quantity = item[:quantity]
-        subsidized = pricing.fetch(schedule_id).benefits.sum { |_, u| u }
+        subsidized = pricing[1].benefits.sum { |_, u| u }
         quantity - subsidized
       end
     }
