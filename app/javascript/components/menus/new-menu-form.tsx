@@ -200,9 +200,7 @@ export default function MenuForm({
 
     const problem = agenda ? agendaProblem(agenda) : null
     setAgendaError(
-      problem
-        ? t(`pages.provider_menus.edit.agenda.${problem}`)
-        : null,
+      problem ? t(`pages.provider_menus.edit.agenda.${problem}`) : null,
     )
 
     if (emptyFields.length > 0 || priceNotPositive || problem !== null) return
