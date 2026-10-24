@@ -174,7 +174,6 @@ export default function PaymentReceiptDialog({
                           <Button
                             disabled={processing}
                             type="submit"
-                            variant="destructive"
                             className="max-md:w-full"
                           >
                             {processing && <Spinner />}

@@ -37,7 +37,7 @@ export default function DeleteUser() {
 
         <AdaptableDialog>
           <AdaptableDialogTrigger asChild>
-            <Button variant="destructive">
+            <Button>
               {t("components.delete_account.title")}
             </Button>
           </AdaptableDialogTrigger>
@@ -98,7 +98,6 @@ export default function DeleteUser() {
                     </AdaptableDialogClose>
 
                     <Button
-                      variant="destructive"
                       disabled={processing}
                       asChild
                       className="max-md:flex-1"

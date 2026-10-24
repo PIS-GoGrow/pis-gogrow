@@ -64,7 +64,6 @@ export default function DeleteSpecialSubsidyDialog({
             </Button>
           </AdaptableDialogClose>
           <Button
-            variant="destructive"
             className="max-md:flex-1"
             disabled={processing}
             onClick={handleDelete}

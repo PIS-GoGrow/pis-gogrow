@@ -201,7 +201,6 @@ export default function ProviderOrderActions({
             </AdaptableDialogClose>
             <Button
               type="button"
-              variant="destructive"
               disabled={!canReject}
               className="max-md:flex-1"
               onClick={handleReject}
