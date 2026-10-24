@@ -45,6 +45,17 @@ RSpec.describe "Orders", type: :request do
         )
       end
 
+      it "serializes upcoming orders with cancellation_block_reason when provider deadline passed" do
+        order = orders(:upcoming_pending_today)
+        order.schedule.menu.provider.update!(order_deadline: "12:00")
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 14, min: 0)) do
+          get orders_path
+          serialized_order = inertia.props[:upcoming_orders].find { it[:id] == order.id }
+          expect(serialized_order).to include(cancellable: false, cancellation_block_reason: "order_deadline_passed")
+        end
+      end
+
       it "exposes the data needed to follow an order" do
         get orders_path
 
@@ -168,6 +179,21 @@ RSpec.describe "Orders", type: :request do
         get order_path(orders(:other_consumer_upcoming))
 
         expect(response).to have_http_status(:not_found)
+      end
+
+      it "exposes cancellation props accurately before and after the provider deadline" do
+        order = orders(:upcoming_pending_today)
+        order.schedule.menu.provider.update!(order_deadline: "12:00")
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 11, min: 30)) do
+          get order_path(order)
+          expect(inertia.props[:order]).to include(cancellable: true, cancellation_block_reason: nil)
+        end
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 14, min: 0)) do
+          get order_path(order)
+          expect(inertia.props[:order]).to include(cancellable: false, cancellation_block_reason: "order_deadline_passed")
+        end
       end
 
       it "exposes what the edit form needs on a pending order" do
@@ -483,6 +509,7 @@ RSpec.describe "Orders", type: :request do
       follow_redirect!
       expect(inertia).to render_component("consumer/dashboard/confirmation")
       expect(inertia).to have_flash(notice: I18n.t("flash.cart_confirmed"))
+      expect(inertia).to have_flash(notice: "Pedido realizado. Tus platos quedaron reservados.")
       expect(inertia).to have_props(total: 300.0)
       expect(inertia).to have_props(orders: [
           {
@@ -1181,6 +1208,15 @@ RSpec.describe "Orders", type: :request do
       expect(orders(:upcoming_pending_future).reload).to be_pending
     end
 
+    it "rejects an admin session attempting to cancel a consumer order" do
+      sign_in users(:admin), role: :admin
+
+      patch cancel_consumer_order_path(orders(:upcoming_pending_future))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_future).reload).to be_pending
+    end
+
     context "when signed in as an employee" do
       before { sign_in users(:one) }
 
@@ -1214,6 +1250,20 @@ RSpec.describe "Orders", type: :request do
         patch cancel_consumer_order_path(order)
 
         expect(order.reload).to be_confirmed
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
+      end
+
+      it "refuses a direct request against a pending order after the provider's deadline on its delivery day" do
+        order = orders(:upcoming_pending_today)
+        order.schedule.menu.provider.update!(order_deadline: "12:00")
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          patch cancel_consumer_order_path(order)
+        end
+
+        expect(order.reload).to be_pending
 
         follow_redirect!
         expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
@@ -1255,6 +1305,12 @@ RSpec.describe "Orders", type: :request do
 
         follow_redirect!
         expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
+      end
+
+      it "returns 404 when attempting to cancel a non-existent order id" do
+        patch cancel_consumer_order_path(id: 999_999)
+
+        expect(response).to have_http_status(:not_found)
       end
     end
   end

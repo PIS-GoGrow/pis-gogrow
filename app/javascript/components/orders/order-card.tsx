@@ -31,6 +31,10 @@ export default function OrderCard({ order, section }: OrderCardProps) {
   // cuando el subsidio efectivamente lo bajó.
   const charged = order.discounted_price ?? order.price
 
+  const notReceived =
+    order.status === "cancelled" || order.status === "rejected"
+  const addressKey = notReceived ? "cancelled_address" : `${section}_address`
+
   return (
     <Card className="hover:bg-accent/40 focus-within:ring-ring/50 relative gap-2 py-4 transition-colors focus-within:ring-[3px]">
       <CardHeader className="gap-1 px-4">
@@ -58,7 +62,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
       <CardContent className="flex items-baseline justify-between gap-3 px-4">
         <p className="text-muted-foreground text-sm">
           {order.address
-            ? t(`pages.orders.index.${section}_address`, {
+            ? t(`pages.orders.index.${addressKey}`, {
                 address: order.address,
                 delivery_method: t(
                   `pages.orders.delivery_methods.${order.delivery_method}`,
