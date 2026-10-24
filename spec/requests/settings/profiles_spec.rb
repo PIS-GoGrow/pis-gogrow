@@ -185,10 +185,30 @@ RSpec.describe "Settings::Profiles", type: :request do
       expect(inertia.props[:errors]).to include("phone")
     end
 
-    it "registra el cambio de teléfono" do
-      patch settings_profile_path, params: { name: user.name, phone: "099123456" }
+    it "guarda un celular uruguayo escrito sin código de país en formato internacional" do
+      patch settings_profile_path, params: { name: user.name, phone: "099 123 456" }
 
-      expect(user.audit_logs.sole.changeset).to eq("phone" => [ nil, "099123456" ])
+      expect(user.reload.phone).to eq("+59899123456")
+    end
+
+    it "respeta el código de país de un celular extranjero" do
+      patch settings_profile_path, params: { name: user.name, phone: "+54 9 11 2345-6789" }
+
+      expect(user.reload.phone).to eq("+5491123456789")
+    end
+
+    it "rechaza un teléfono fijo" do
+      patch settings_profile_path, params: { name: user.name, phone: "2900 1234" }
+
+      expect(user.reload.phone).to be_nil
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("phone")
+    end
+
+    it "registra el cambio de teléfono" do
+      patch settings_profile_path, params: { name: user.name, phone: "+59899123456" }
+
+      expect(user.audit_logs.sole.changeset).to eq("phone" => [ nil, "+59899123456" ])
     end
 
     it "registra el cambio de entregas a domicilio" do

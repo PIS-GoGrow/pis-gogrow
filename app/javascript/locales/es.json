@@ -1657,8 +1657,8 @@
             "label": "También realizo entregas a domicilio"
           },
           "phone": "Teléfono",
-          "phone_description": "Lo usamos para enviarte notificaciones por WhatsApp.",
-          "phone_placeholder": "+59899123456",
+          "phone_description": "Lo usamos para enviarte notificaciones por WhatsApp. Si tu celular no es de Uruguay, escribilo con + y el código de país.",
+          "phone_placeholder": "099 123 456",
           "title": "Configuración del perfil"
         },
         "sessions": {
