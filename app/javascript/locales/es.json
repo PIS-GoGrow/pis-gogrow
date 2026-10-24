@@ -742,7 +742,7 @@
         "benefit_card": {
           "period": "Este mes",
           "title": "Tu consumo",
-          "unit": "viandas subsidiadas",
+          "unit": "viandas pedidas",
           "used": "%{used} de %{limit}"
         },
         "index": {

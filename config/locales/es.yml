@@ -1528,7 +1528,7 @@ es:
         title: "Tu consumo"
         period: "Este mes"
         used: "%{used} de %{limit}"
-        unit: "viandas subsidiadas"
+        unit: "viandas pedidas"
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
         added: "Agregado"

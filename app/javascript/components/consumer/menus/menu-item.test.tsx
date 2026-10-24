@@ -61,9 +61,11 @@ describe("MenuItem", () => {
     render(<MenuItem {...props} soldOut={false} addedQuantity={2} />)
 
     expect(screen.getByText("Agregado")).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Agregar Milanesa con papas fritas" }),
-    ).toHaveTextContent("2")
+    const button = screen.getByRole("button", {
+      name: "Agregar Milanesa con papas fritas",
+    })
+    expect(button).toHaveTextContent("2")
+    expect(button).toHaveClass("bg-blue-700", "text-white")
   })
 
   it("shows the provider and the price next to the dish", () => {
