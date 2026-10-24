@@ -228,7 +228,7 @@ describe("ConsumerCart delivery date", () => {
       ],
     })
 
-    const date = screen.getByText("Entrega: lunes, 14 de setiembre")
+    const date = screen.getByText("Entrega: Lunes 14 de setiembre")
 
     expect(screen.getAllByText(/^Entrega:/)).toHaveLength(1)
     expect(screen.getByRole("heading", { name: "Tu carrito" })).toHaveProperty(
@@ -246,10 +246,10 @@ describe("ConsumerCart delivery date", () => {
     })
 
     expect(
-      screen.getByText("Entrega: lunes, 14 de setiembre"),
+      screen.getByText("Entrega: Lunes 14 de setiembre"),
     ).toBeInTheDocument()
     expect(
-      screen.getByText("Entrega: martes, 15 de setiembre"),
+      screen.getByText("Entrega: Martes 15 de setiembre"),
     ).toBeInTheDocument()
     expect(
       screen.getByRole("heading", { name: "Tu carrito" }).nextElementSibling,
@@ -340,7 +340,7 @@ describe("ConsumerCart quantity", () => {
 
   it("changes the quantity of the dish whose counter was used", async () => {
     const setQuantity = vi.fn()
-    renderCart({ cart: twoDishes(3), setQuantity })
+    await renderCart({ cart: twoDishes(3), setQuantity })
 
     await userEvent.click(
       screen.getByRole("button", { name: "Agregar una unidad de Plato 1" }),
@@ -356,7 +356,7 @@ describe("ConsumerCart quantity", () => {
   it("turns the minus into a trash that removes the dish at quantity 1", async () => {
     const remove = vi.fn()
     const setQuantity = vi.fn()
-    renderCart({ cart: twoDishes(2), remove, setQuantity })
+    await renderCart({ cart: twoDishes(2), remove, setQuantity })
 
     expect(
       screen.queryByRole("button", { name: "Quitar Plato 1" }),
@@ -370,16 +370,18 @@ describe("ConsumerCart quantity", () => {
     expect(setQuantity).not.toHaveBeenCalled()
   })
 
-  it("does not go above the remaining stock", () => {
-    renderCart({ cart: [{ ...cartItem("Tu Viandita", true), quantity: 5 }] })
+  it("does not go above the remaining stock", async () => {
+    await renderCart({
+      cart: [{ ...cartItem("Tu Viandita", true), quantity: 5 }],
+    })
 
     expect(
       screen.getByRole("button", { name: "Agregar una unidad de Plato 1" }),
     ).toBeDisabled()
   })
 
-  it("disables the counters while the order is processing", () => {
-    renderCart({ cart: twoDishes(2), processing: true })
+  it("disables the counters while the order is processing", async () => {
+    await renderCart({ cart: twoDishes(2), processing: true })
 
     expect(
       screen.getByRole("button", { name: "Quitar una unidad de Plato 1" }),

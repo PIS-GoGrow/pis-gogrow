@@ -3,7 +3,6 @@ import { Download, FileText, Trash2 } from "lucide-react"
 import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { FileInput } from "@/components/file-input"
 import {
   AdaptableDialog,
   AdaptableDialogClose,
@@ -14,6 +13,7 @@ import {
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
+import { FileInput } from "@/components/file-input"
 import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Field,
