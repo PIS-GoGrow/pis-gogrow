@@ -4,10 +4,12 @@ import { ChevronLeft, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
+import { QuantityInput } from "@/components/quantity-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { RadioGroup } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
+import { formatLongDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 import { consumerDashboard } from "@/routes"
@@ -32,6 +34,7 @@ interface Props {
   error?: string | string[]
   confirm: () => void
   remove: (cartId: string) => void
+  setQuantity: (cartId: string, quantity: number) => void
   loading: boolean
 }
 
@@ -48,6 +51,7 @@ export function ConsumerCart({
   error,
   confirm,
   remove,
+  setQuantity,
   loading,
 }: Props) {
   const { t } = useTranslation()
@@ -82,11 +86,7 @@ export function ConsumerCart({
     deliveryDates.length === 1 ? deliveryDates[0] : null
   const deliveryLabel = (date: string) =>
     t("pages.cart.delivery", {
-      date: new Date(`${date}T12:00:00`).toLocaleDateString("es-UY", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-      }),
+      date: formatLongDate(date),
     })
 
   return (
@@ -199,16 +199,23 @@ export function ConsumerCart({
               {item.notes && (
                 <p className="text-muted-foreground mt-2">{item.notes}</p>
               )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={processing}
-                onClick={() => remove(item.cartId)}
-                className="mt-2"
-              >
-                {t("pages.cart.remove", { name: item.menu.name })}
-              </Button>
+              <div className="mt-2">
+                <QuantityInput
+                  size="sm"
+                  value={item.quantity}
+                  max={item.remaining}
+                  disabled={processing}
+                  onChange={(quantity) => setQuantity(item.cartId, quantity)}
+                  onRemove={() => remove(item.cartId)}
+                  decreaseLabel={t("pages.cart.decrease", {
+                    name: item.menu.name,
+                  })}
+                  increaseLabel={t("pages.cart.increase", {
+                    name: item.menu.name,
+                  })}
+                  removeLabel={t("pages.cart.remove", { name: item.menu.name })}
+                />
+              </div>
             </div>
           )
         })}

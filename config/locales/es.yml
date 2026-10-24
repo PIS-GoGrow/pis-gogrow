@@ -1344,6 +1344,8 @@ es:
       office_delivery_warning_other: "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
       remove: "Quitar %{name}"
+      decrease: "Quitar una unidad de %{name}"
+      increase: "Agregar una unidad de %{name}"
       delivery: "Entrega: %{date}"
       benefit: "Subsidio Base (%{percentage}%)"
       no_benefit: "Subsidio GoGrow"
@@ -1518,11 +1520,6 @@ es:
           saved_description: "No recibirás pedidos del %{period}."
           edit: "Editar cierre %{reason}"
           delete: "Eliminar cierre %{reason}"
-          period:
-            single: "%{date}"
-            same_month: "%{from_day} al %{to_day_month} de %{year}"
-            same_year: "%{from_day_month} al %{to_day_month} de %{year}"
-            other_year: "%{from} al %{to}"
     consumer_dashboard:
       benefit_card:
         title: "Tu consumo"
@@ -1532,6 +1529,8 @@ es:
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
         added: "Agregado"
+        add: "Agregar"
+        modify: "Modificar"
         closure:
           title_now: "%{provider} no está disponible"
           title_soon: "%{provider} no estará disponible"
@@ -1636,10 +1635,11 @@ es:
         back_to_account: "Volver a Mi cuenta"
   date:
     formats:
+      default: "%d/%m/%y"
+      short: "%d/%m/%y"
+      long: "%A %-d de %B"
       month_year: "%B %Y"
       month_name_year: "%B %Y"
-      day_month: "%-d de %B"
-      day_month_year: "%-d de %B de %Y"
     month_names:
       [
         ~,

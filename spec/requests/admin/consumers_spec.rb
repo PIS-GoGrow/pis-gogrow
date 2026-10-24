@@ -243,7 +243,7 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
         dates = month[:orders].to_h { [ it[:id], it[:date] ] }
-        expect(dates[order.id]).to eq(delivery.strftime("%-d/%-m"))
+        expect(dates[order.id]).to eq(DateFormat.short(delivery))
       end
 
       it "sorts confirmed orders in consumption history chronologically by delivery_date ascending" do
@@ -269,7 +269,7 @@ RSpec.describe "Admin::Consumers", type: :request do
         expect(response).to have_http_status(:ok)
         month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
         order_prop = month[:orders].find { it[:id] == order.id }
-        expect(order_prop[:date]).to be_nil
+        expect(order_prop[:date]).to eq(DateFormat.short(order.created_at))
       end
 
       it "retains and renders delivery_date even after the associated schedule is destroyed" do
@@ -285,7 +285,7 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
         dates = month[:orders].to_h { [ it[:id], it[:date] ] }
-        expect(dates[order.id]).to eq(delivery.strftime("%-d/%-m"))
+        expect(dates[order.id]).to eq(DateFormat.short(delivery))
       end
       it "shows the active benefit percentage" do
         get admin_consumer_path(consumers(:one))

@@ -104,6 +104,7 @@ async function renderCart(
     back: vi.fn(),
     confirm: vi.fn(),
     remove: vi.fn(),
+    setQuantity: vi.fn(),
   }
   return render(<ConsumerCart {...defaults} {...props} />)
 }
@@ -227,7 +228,7 @@ describe("ConsumerCart delivery date", () => {
       ],
     })
 
-    const date = screen.getByText("Entrega: lunes, 14 de setiembre")
+    const date = screen.getByText("Entrega: Lunes 14 de setiembre")
 
     expect(screen.getAllByText(/^Entrega:/)).toHaveLength(1)
     expect(screen.getByRole("heading", { name: "Tu carrito" })).toHaveProperty(
@@ -245,10 +246,10 @@ describe("ConsumerCart delivery date", () => {
     })
 
     expect(
-      screen.getByText("Entrega: lunes, 14 de setiembre"),
+      screen.getByText("Entrega: Lunes 14 de setiembre"),
     ).toBeInTheDocument()
     expect(
-      screen.getByText("Entrega: martes, 15 de setiembre"),
+      screen.getByText("Entrega: Martes 15 de setiembre"),
     ).toBeInTheDocument()
     expect(
       screen.getByRole("heading", { name: "Tu carrito" }).nextElementSibling,
@@ -328,5 +329,65 @@ describe("ConsumerCart without subsidy", () => {
         "Te queda 1 vianda subsidiada este mes. De este pedido, 1 con beneficio y 2 a precio completo.",
       ),
     ).toBeInTheDocument()
+  })
+})
+
+describe("ConsumerCart quantity", () => {
+  const twoDishes = (quantity: number): CartItem[] => [
+    { ...cartItem("Tu Viandita", true, 1), quantity },
+    cartItem("Tu Viandita", true, 2),
+  ]
+
+  it("changes the quantity of the dish whose counter was used", async () => {
+    const setQuantity = vi.fn()
+    await renderCart({ cart: twoDishes(3), setQuantity })
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Agregar una unidad de Plato 1" }),
+    )
+    await userEvent.click(
+      screen.getByRole("button", { name: "Quitar una unidad de Plato 1" }),
+    )
+
+    expect(setQuantity).toHaveBeenNthCalledWith(1, "1-", 4)
+    expect(setQuantity).toHaveBeenNthCalledWith(2, "1-", 2)
+  })
+
+  it("turns the minus into a trash that removes the dish at quantity 1", async () => {
+    const remove = vi.fn()
+    const setQuantity = vi.fn()
+    await renderCart({ cart: twoDishes(2), remove, setQuantity })
+
+    expect(
+      screen.queryByRole("button", { name: "Quitar Plato 1" }),
+    ).not.toBeInTheDocument()
+    // El plato 2 tiene cantidad 1: ya muestra el tacho.
+    await userEvent.click(
+      screen.getByRole("button", { name: "Quitar Plato 2" }),
+    )
+
+    expect(remove).toHaveBeenCalledWith("2-")
+    expect(setQuantity).not.toHaveBeenCalled()
+  })
+
+  it("does not go above the remaining stock", async () => {
+    await renderCart({
+      cart: [{ ...cartItem("Tu Viandita", true), quantity: 5 }],
+    })
+
+    expect(
+      screen.getByRole("button", { name: "Agregar una unidad de Plato 1" }),
+    ).toBeDisabled()
+  })
+
+  it("disables the counters while the order is processing", async () => {
+    await renderCart({ cart: twoDishes(2), processing: true })
+
+    expect(
+      screen.getByRole("button", { name: "Quitar una unidad de Plato 1" }),
+    ).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: "Quitar Plato 2" }),
+    ).toBeDisabled()
   })
 })

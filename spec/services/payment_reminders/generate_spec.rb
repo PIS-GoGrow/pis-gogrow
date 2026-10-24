@@ -47,7 +47,7 @@ RSpec.describe PaymentReminders::Generate do
       )
       expect(notification.description).to include("$1.500")
       expect(notification.description).to include(account.provider.user.name)
-      expect(notification.description).to include("10/11/2026")
+      expect(notification.description).to include("martes 10 de noviembre")
     end
 
     describe "payment period opening notice" do
@@ -166,7 +166,7 @@ RSpec.describe PaymentReminders::Generate do
         requires_action: false
       )
       expect(notification.description).to include("3 días")
-      expect(notification.description).to include("10/11/2026")
+      expect(notification.description).to include("martes 10 de noviembre")
       expect(notification.description).to include("$1.500")
       expect(notification.description).to include(account.provider.user.name)
       expect(notification.description).to include("Revisá el detalle de tu pago")

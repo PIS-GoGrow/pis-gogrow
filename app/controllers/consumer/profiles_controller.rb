@@ -13,7 +13,7 @@ class Consumer::ProfilesController < Consumer::InertiaController
       monthly_limit: consumer.monthly_benefit_available,
       monthly_remaining: consumer.remaining_monthly_benefit,
       max_price: benefit.benefit_configuration.benefit_rules.find { it.is_a?(MonthlyBenefit) }&.max_price&.to_f,
-      due_date: benefit.due_date && I18n.l(benefit.due_date, format: "%d/%m/%Y")
+      due_date: DateFormat.short(benefit.due_date)
     }
   end
 end

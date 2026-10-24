@@ -13,7 +13,7 @@ class Admin::ConsumerOrderSerializer < ApplicationSerializer
   # Formateada en el servidor: el SSR corre en UTC y el cliente no.
   typelize :string, nullable: true
   attribute :date do |order|
-    order.delivery_date&.strftime("%-d/%-m")
+    DateFormat.short(order.delivery_date || order.created_at)
   end
 
   typelize :string?

@@ -89,7 +89,7 @@ RSpec.describe "Flujo mobile de selección de platos del empleado", type: :syste
     calm_animations
 
     expect(page).to have_content("Tu carrito")
-    expect(page).to have_content(/Entrega: lunes, #{monday.day} de/)
+    expect(page).to have_content(/Entrega: Lunes #{monday.day} de/i)
 
     # Volver al menú para agregar un plato de otro día
     find_button("Volver").click
@@ -108,8 +108,8 @@ RSpec.describe "Flujo mobile de selección de platos del empleado", type: :syste
     click_link "Ver carrito"
     calm_animations
 
-    expect(page).to have_content(/Entrega: lunes, #{monday.day} de/)
-    expect(page).to have_content(/Entrega: martes, #{tuesday.day} de/)
+    expect(page).to have_content(/Entrega: Lunes #{monday.day} de/i)
+    expect(page).to have_content(/Entrega: Martes #{tuesday.day} de/i)
 
     # 5. Confirmación del pedido: tick y botón "Ir a Mis pedidos"
     click_button "Confirmar pedido"

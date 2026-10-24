@@ -32,7 +32,7 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
 
     click_button "Programar Subsidio"
 
-    date = Calendar.new.configurable_month.strftime("%d/%m/%y")
+    date = DateFormat.long(Calendar.new.configurable_month, inline: true)
     expect(page).to have_content("Hay un cambio programado para el " + date, wait: 30)
 
     new_config = BenefitConfiguration.joins(:benefit_rules)
@@ -62,7 +62,7 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
     fill_in "subsidy_percentage", with: "70"
     click_button "Programar Subsidio"
 
-    date = Calendar.new.configurable_month.strftime("%d/%m/%y")
+    date = DateFormat.long(Calendar.new.configurable_month, inline: true)
     expect(page).to have_content("Ya hay un cambio programado para el " + date, wait: 30)
 
     click_button "Reemplazar por este"
