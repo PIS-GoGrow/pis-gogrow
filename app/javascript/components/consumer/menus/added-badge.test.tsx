@@ -8,7 +8,9 @@ describe("AddedBadge", () => {
     const { container } = render(<AddedBadge />)
 
     expect(screen.getByText("Agregado")).toBeInTheDocument()
-    const dot = container.querySelector("span.size-1\\.5.rounded-full.bg-blue-500")
+    const dot = container.querySelector(
+      "span.size-1\\.5.rounded-full.bg-blue-500",
+    )
     expect(dot).toBeInTheDocument()
   })
 
