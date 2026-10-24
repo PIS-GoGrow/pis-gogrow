@@ -448,6 +448,15 @@ RSpec.describe Order, type: :model do
           expect(orders(:upcoming_pending_future)).to be_cancellable
         end
       end
+
+      it "keeps an order for today cancellable when the provider has no deadline configured" do
+        order.schedule.menu.provider.update!(order_deadline: nil)
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(order).to be_cancellable
+          expect(order.cancellation_block_reason).to be_nil
+        end
+      end
     end
 
     it "lets a confirmed order be cancelled while its delivery day is still ahead" do

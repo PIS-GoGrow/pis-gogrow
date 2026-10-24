@@ -194,4 +194,69 @@ describe("EditOrderSheet", () => {
     const submitButton = screen.getByRole("button", { name: "Guardar cambios" })
     expect(submitButton).toBeEnabled()
   })
+
+  describe("address rendering matching cart behavior", () => {
+    it("renders office and the selected custom address", () => {
+      const multipleAddresses: ConsumerOrdersShow["delivery_addresses"] = [
+        { id: "office", label: "Oficina", address: "18 de Julio 1006" },
+        { id: "home-1", label: "Casa", address: "Julio Herrera y Reissig 565" },
+        { id: "home-2", label: "Padres", address: "Bulevar Artigas 1234" },
+      ]
+
+      render(
+        <EditOrderSheet
+          order={{
+            ...baseOrder,
+            address: "Julio Herrera y Reissig 565",
+          }}
+          addresses={multipleAddresses}
+          optionGroups={[]}
+          maxQuantity={5}
+          editing={true}
+        />,
+      )
+
+      expect(screen.getByText("18 de Julio 1006")).toBeInTheDocument()
+      expect(screen.getByText("Julio Herrera y Reissig 565")).toBeInTheDocument()
+      expect(screen.queryByText("Bulevar Artigas 1234")).not.toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: /Ver mis direcciones/i }),
+      ).toBeInTheDocument()
+    })
+
+    it("does not render the saved addresses sheet button when there is only one custom address", () => {
+      const singleCustomAddress: ConsumerOrdersShow["delivery_addresses"] = [
+        { id: "office", label: "Oficina", address: "18 de Julio 1006" },
+        { id: "home-1", label: "Casa", address: "Julio Herrera y Reissig 565" },
+      ]
+
+      render(
+        <EditOrderSheet
+          order={baseOrder}
+          addresses={singleCustomAddress}
+          optionGroups={[]}
+          maxQuantity={5}
+          editing={true}
+        />,
+      )
+
+      expect(
+        screen.queryByRole("button", { name: /Ver mis direcciones/i }),
+      ).not.toBeInTheDocument()
+    })
+
+    it("never renders remaining stock message even with small maxQuantity", () => {
+      render(
+        <EditOrderSheet
+          order={baseOrder}
+          addresses={addresses}
+          optionGroups={[]}
+          maxQuantity={2}
+          editing={true}
+        />,
+      )
+
+      expect(screen.queryByText(/disponibles/i)).not.toBeInTheDocument()
+    })
+  })
 })
