@@ -47,7 +47,7 @@ RSpec.describe "Programar cierres de recepción de pedidos como proveedor", type
 
     # Lunes está abierto: sí se puede publicar
     find("button", text: /\b#{monday.day}\b/).click
-    expect(page).to have_content("No hay platos publicados para el lunes todavía")
+    expect(page).to have_content("No hay platos publicados para el #{DateFormat.long(monday, inline: true)} todavía")
     expect(page).to have_link("Agregar platos")
 
     visit_hydrated provider_operational_settings_path
