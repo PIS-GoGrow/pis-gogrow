@@ -116,7 +116,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     end
 
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_error_title"))
-    expect(page).to have_content(I18n.t("pages.accounts.show.receipt_error_description"))
+    expect(page).to have_content(I18n.t("activerecord.errors.models.payment.attributes.receipt.invalid_content_type"))
     expect(page).to have_button(I18n.t("pages.accounts.show.receipt_error_action"))
     expect(consumers(:one).accounts.find_by!(provider:).payments).to be_empty
   end
