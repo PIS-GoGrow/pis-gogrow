@@ -132,7 +132,7 @@ class OrderPricing
   # siempre y antes que todo el resto.
   def benefits_from_ids(benefit_ids)
     monthly_benefits +
-      special_benefits.select { |benefit| benefit_ids.include? benefit.id }
+      special_benefits.select { |benefit| benefit_ids.include? benefit.id.to_i }
   end
 
   def benefits

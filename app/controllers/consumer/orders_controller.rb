@@ -163,9 +163,10 @@ class Consumer::OrdersController < Consumer::InertiaController
         .order(:id)
         .index_by(&:id)
 
+    p requested_items
     requested_items.map! do |item|
       schedule = schedules.dig(item[:schedule_id].to_i)
-      { schedule:, quantity: item[:quantity].to_i } if schedule
+      { schedule:, quantity: item[:quantity].to_i, benefits: item[:benefits] } if schedule
     end.compact!
 
     pricings = OrderPricing.new(@consumer).call(requested_items)
@@ -288,11 +289,11 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def order_params
-    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] } ] ] ])
+    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] }, benefits: [] ] ] ])
   end
 
   def pricing_params
-    params.expect(items: [ [ :schedule_id, :quantity ] ])
+    params.expect(items: [ [ :schedule_id, :quantity, benefits: [] ] ])
   end
 
   def set_consumer
