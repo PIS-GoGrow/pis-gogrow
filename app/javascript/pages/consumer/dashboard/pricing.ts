@@ -5,6 +5,7 @@ import type { CartItem } from "./consumer-types"
 export interface PricedItem {
   schedule_id: number
   quantity: number
+  benefits: number[]
 }
 
 export interface DiscountTier {
@@ -89,16 +90,13 @@ export const lastUnitsLine = (
   return { subtotal, discount, total: subtotal - discount, tiers }
 }
 
-type Quantifiable = Pick<CartItem, "id" | "quantity">
+type Quantifiable = Pick<CartItem, "id" | "quantity" | "benefits">
 export const cartPricedItem = (items: Quantifiable[]): PricedItem[] => {
-  const quantities = new Map<CartItem["id"], number>()
-
-  for (const item of items) {
-    quantities.set(item.id, (quantities.get(item.id) ?? 0) + item.quantity)
-  }
-
-  return Array.from(quantities, ([id, quantity]) => ({
-    schedule_id: id,
-    quantity,
-  }))
+  return items.map((item) => {
+    return {
+      schedule_id: item.id,
+      quantity: item.quantity,
+        benefits: item.benefits,
+    }
+  })
 }

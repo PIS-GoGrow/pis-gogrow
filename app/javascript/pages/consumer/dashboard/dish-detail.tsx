@@ -1,4 +1,4 @@
-import { ChevronLeft, Star } from "lucide-react"
+import { ChevronLeft, Star, TicketPercent } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -7,12 +7,15 @@ import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Field, FieldContent, FieldLabel, FieldDescription } from "@/components/ui/field"
 import { formatMoney } from "@/lib/money"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { OrderSummary } from "./order-summary"
 import type { PricedLine } from "./pricing"
 import { cartPricedItem, lastUnitsLine, priceItems } from "./pricing"
+import type { ConsumerDashboardIndex } from "@/types"
 
 interface Props {
   item: Schedule
@@ -24,7 +27,8 @@ interface Props {
   setSelections: (value: Selections) => void
   cart: CartItem[]
   back: () => void
-  add: () => void
+  add: (benefits: number[]) => void
+  benefit: ConsumerDashboardIndex["benefit"]
 }
 
 export function DishDetail({
@@ -38,9 +42,12 @@ export function DishDetail({
   cart,
   back,
   add,
+  benefit,
 }: Props) {
   const { t } = useTranslation()
   const [line, setLine] = useState<PricedLine | null>(null)
+  // Al principio, todos los beneficios están activados
+  const [benefitIds, setBenefitIds] = useState<number[]>(benefit.specials.map((b) => b.id))
 
   const inCart =
     cartPricedItem(cart).find((i) => item.id === i.schedule_id)?.quantity ?? 0
@@ -53,7 +60,7 @@ export function DishDetail({
     const timeout = setTimeout(async () => {
       try {
         const result = await priceItems(
-          cartPricedItem([...cart, { ...item, quantity }]),
+          cartPricedItem([...cart, { ...item, quantity, benefits: benefitIds }]),
         )
         if (cancelled) return
 
@@ -71,7 +78,14 @@ export function DishDetail({
       cancelled = true
       clearTimeout(timeout)
     }
-  }, [cart, item, inCart, item.id, item.date, item.menu.price, quantity])
+  }, [cart, item, inCart, item.id, item.date, item.menu.price, quantity, benefitIds])
+
+  function setChecked(benefitId: number) {
+    if (benefitIds.includes(benefitId))
+      setBenefitIds(benefitIds.filter((b) => b !== benefitId))
+    else
+      setBenefitIds(benefitIds.concat([benefitId]))
+  }
 
   const reviews = item.menu.reviews
   const choicesMissing = item.menu.option_groups.some(
@@ -170,6 +184,35 @@ export function DishDetail({
           {notes.length}/140
         </p>
       </section>
+      <section className="border-border border-b py-4 text-sm grid gap-2">
+        {
+          benefit.specials.filter((benefit) => {
+            return benefit.remaining === null || benefit.remaining > 0
+          }).map((benefit) => (
+            <div key={benefit.id} className="flex justify-between">
+              <div className="flex">
+                <TicketPercent color="#29944c" className="mr-2" size="20"/>
+                <p>{benefit.name} ({benefit.percentage}% off)</p>
+              </div>
+
+              <Field orientation="horizontal" className="max-w-fit">
+                <Checkbox
+                  id={`benefit-checkbox-${benefit.id}`}
+                  name={`benefit-checkbox-${benefit.id}`}
+                  onCheckedChange={() => setChecked(benefit.id)}
+                  checked={benefitIds.includes(benefit.id)}
+                />
+
+                <FieldContent className="max-w-fit">
+                  <FieldLabel htmlFor={`benefit-checkbox-${benefit.id}`}>
+                    Aplicar
+                  </FieldLabel>
+                </FieldContent>
+              </Field>
+            </div>
+          ))
+        }
+      </section>
       <OrderSummary
         loading={false}
         subtotal={line?.subtotal}
@@ -184,7 +227,7 @@ export function DishDetail({
         />
         <Button
           disabled={addDisabled}
-          onClick={add}
+          onClick={() => add(benefitIds)}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
         >
           Agregar

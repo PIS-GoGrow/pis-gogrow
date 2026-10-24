@@ -61,12 +61,12 @@ export default function Index({
     setView("detail")
   }
 
-  function addToCart() {
+  function addToCart(benefitsSelected: number[]) {
     if (!selected || selected.sold_out || selected.orders_closed) return
 
     // Dos veces el mismo plato con distinta personalización son dos líneas del
     // carrito, así que la clave incluye lo elegido además de las notas.
-    const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}`
+    const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}-${JSON.stringify(benefitsSelected)}`
 
     setCart((items) => {
       const found = items.find((item) => item.cartId === cartId)
@@ -88,6 +88,7 @@ export default function Index({
               quantity: Math.min(selected.remaining, quantity),
               notes,
               selections,
+              benefits: benefitsSelected,
             },
           ]
     })
@@ -166,6 +167,7 @@ export default function Index({
             cart={cart}
             back={() => setView("menu")}
             add={addToCart}
+            benefit={benefit}
           />
         )}
       </div>
