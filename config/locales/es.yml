@@ -249,6 +249,8 @@ es:
           attributes:
             password:
               provider_policy: "debe tener al menos 16 caracteres, una mayúscula, un número y un carácter especial"
+            phone:
+              invalid: "No es un celular válido. Si no es de Uruguay, escribilo con + y el código de país."
         benefit_configuration:
           attributes:
             effective_from:
@@ -1753,8 +1755,8 @@ es:
         heading: "Información del perfil"
         description: "Actualizá tu nombre y tu teléfono"
         phone: "Teléfono"
-        phone_placeholder: "+59899123456"
-        phone_description: "Lo usamos para enviarte notificaciones por WhatsApp."
+        phone_placeholder: "099 123 456"
+        phone_description: "Lo usamos para enviarte notificaciones por WhatsApp. Si tu celular no es de Uruguay, escribilo con + y el código de país."
         email_description: "Este dato es solo de consulta y no se puede modificar."
         back: "Volver a Perfil y Apariencia"
         home_delivery:
