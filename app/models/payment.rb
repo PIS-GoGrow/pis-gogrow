@@ -46,7 +46,10 @@ class Payment < ApplicationRecord
   # Un comprobante reenviado es el mismo pago, y solo puede haber una
   # notificación activa por pago.
   def notify_receipt_submitted
-    user = account.provider.user
+    provider = account.provider
+    return if provider.closed_on?(Date.current)
+
+    user = provider.user
     return unless user
 
     Notification.close_by(event: "payment_receipt_submitted", notifiable: self, user:)
