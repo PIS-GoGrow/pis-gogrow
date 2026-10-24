@@ -41,6 +41,18 @@ RSpec.describe Payment, type: :model do
       )
     end
 
+    it "does not notify the provider when it is closed" do
+      provider.closures.create!(
+        starts_on: Date.current,
+        ends_on: Date.current,
+        reason: "Vacaciones"
+      )
+
+      payment_with_receipt.save!
+
+      expect(notifications).to be_empty
+    end
+
     it "keeps a single active notification when the receipt is sent again" do
       payment = payment_with_receipt.tap(&:save!)
       payment.reject_with("Ilegible")
