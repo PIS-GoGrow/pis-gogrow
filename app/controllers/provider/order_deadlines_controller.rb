@@ -1,18 +1,27 @@
 # frozen_string_literal: true
 
 class Provider::OrderDeadlinesController < Provider::InertiaController
+  skip_before_action :require_onboarding
+
   def update
     if invalid_order_deadline?
       provider.errors.add(:order_deadline, t("validations.invalid_order_deadline"))
-      redirect_to provider_operational_settings_path, inertia: { errors: provider.errors }
+      redirect_to settings_path, inertia: { errors: provider.errors }
     elsif provider.update(order_deadline: parsed_order_deadline)
-      redirect_to provider_operational_settings_path
+      provider.mark_section_configured!(:operational_settings)
+      redirect_to settings_path
     else
-      redirect_to provider_operational_settings_path, inertia: { errors: provider.errors }
+      redirect_to settings_path, inertia: { errors: provider.errors }
     end
   end
 
   private
+
+  def settings_path
+    return provider_onboarding_path(step: 2) if params[:onboarding].present?
+
+    provider_operational_settings_path
+  end
 
   def provider
     @provider ||= Current.user.provider

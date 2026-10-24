@@ -66,6 +66,7 @@
         "uppercase": "Al menos una mayúscula"
       },
       "settings_layout": {
+        "back_to_account": "Volver a Cuenta",
         "description": "Administrá tu perfil y la configuración de tu cuenta",
         "title": "Configuración"
       }
@@ -741,10 +742,11 @@
         "benefit_card": {
           "period": "Este mes",
           "title": "Tu consumo",
-          "unit": "viandas subsidiadas",
+          "unit": "viandas pedidas",
           "used": "%{used} de %{limit}"
         },
         "index": {
+          "added": "Agregado",
           "closure": {
             "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
             "dismiss": "Cerrar aviso",
@@ -755,7 +757,7 @@
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
         },
         "options": {
-          "choose": "Elegí tu %{name}",
+          "choose": "Elegí tu/s %{name}",
           "limit": "Podés elegir hasta %{count}",
           "optional": "Opcional",
           "required": "Obligatorio"
@@ -922,6 +924,7 @@
         "show": {
           "deliveries": "Entregas",
           "deliveries_description": "Elegí dónde realizás tus entregas",
+          "incomplete": "Incompleto",
           "notifications": "Notificaciones",
           "notifications_description": "Configurá qué alertas querés recibir",
           "operational_settings": "Configuración operativa",
@@ -1150,8 +1153,8 @@
             "total": "Deuda total"
           },
           "profile": {
-            "description": "La configuración de los pasos estará disponible próximamente.",
-            "title": "Completá tu cuenta"
+            "description": "Deje todo listo para empezar a recibir pedidos.",
+            "title": "Complete su cuenta"
           },
           "title": "Inicio"
         }
@@ -1328,7 +1331,7 @@
         "continue": "Continuar",
         "done": {
           "cta": "Ir al Inicio",
-          "description": "Tu cuenta ya está configurada y podés empezar a recibir pedidos.",
+          "description": "Su cuenta ya está configurada y puede empezar a recibir pedidos.",
           "title": "¡Todo listo!"
         },
         "finish": "Finalizar",
@@ -1336,23 +1339,19 @@
         "skip": "Omitir por ahora",
         "steps": {
           "1": {
-            "description": "Ingresá los datos de la cuenta donde vas a recibir los pagos de tus pedidos.",
+            "description": "Ingrese los datos de la cuenta donde recibirá los pagos de sus pedidos.",
             "title": "Datos de cobro"
           },
           "2": {
-            "description": "Definí hasta qué hora recibís pedidos cada día.",
-            "order_deadline": "Hora de cierre",
-            "order_deadline_description": "Después de esta hora no se reciben más pedidos del día.",
-            "title": "Hora de cierre"
+            "description": "Defina hasta qué hora recibe pedidos y qué días no estará disponible.",
+            "title": "Configure sus pedidos"
           },
           "3": {
-            "description": "Elegí si aceptás direcciones de entrega personalizadas además de las oficinas.",
-            "home_delivery": "Direcciones personalizadas",
-            "home_delivery_description": "Aceptás pedidos con direcciones de entrega además de las oficinas.",
-            "title": "Entregas"
+            "description": "Elija dónde realiza sus entregas y si acepta direcciones personalizadas.",
+            "title": "Configure sus entregas"
           },
           "4": {
-            "description": "Elegí qué alertas querés recibir sobre tus pedidos y pagos.",
+            "description": "Elija qué alertas desea recibir sobre sus pedidos y pagos.",
             "title": "Notificaciones"
           }
         }
@@ -1364,6 +1363,7 @@
           "back": "Volver a Cuenta",
           "closing_time": "Hora de cierre",
           "closing_time_description": "Hasta qué hora recibís pedidos.",
+          "closing_time_placeholder": "Seleccione una hora",
           "closures": {
             "cancel": "Cancelar",
             "date_range": "Rango de fechas",

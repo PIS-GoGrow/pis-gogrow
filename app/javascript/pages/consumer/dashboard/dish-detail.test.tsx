@@ -59,7 +59,7 @@ const mocks = vi.hoisted(() => ({ priceItems: vi.fn() }))
 vi.mock("@/pages/consumer/dashboard/pricing", () => ({
   priceItems: mocks.priceItems,
   cartPricedItem: (cart: { id: number; quantity: number }[]) =>
-    cart.map((item) => ({ id: item.id, quantity: item.quantity })),
+    cart.map((item) => ({ schedule_id: item.id, quantity: item.quantity })),
 }))
 
 beforeEach(() => {
@@ -104,6 +104,26 @@ describe("DishDetail", () => {
     renderDetail({ item: { ...schedule(), remaining: 2 }, quantity: 2 })
 
     expect(screen.getByRole("button", { name: "Agregar uno" })).toBeDisabled()
+  })
+
+  it("marks the dish as added when it is already in the cart", () => {
+    const added: CartItem = {
+      ...schedule(),
+      cartId: "1-",
+      quantity: 1,
+      notes: "",
+      selections: {},
+    }
+
+    renderDetail({ cart: [added] })
+
+    expect(screen.getByText("Agregado")).toBeInTheDocument()
+  })
+
+  it("does not mark a dish that is not in the cart", () => {
+    renderDetail()
+
+    expect(screen.queryByText("Agregado")).not.toBeInTheDocument()
   })
 
   it("shows the real reviews of the dish", () => {

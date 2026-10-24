@@ -1,5 +1,7 @@
+import { Tick01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { Link } from "@inertiajs/react"
-import { Check, X } from "lucide-react"
+import { X } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -78,7 +80,12 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
         </Button>
 
         <div className="bg-primary text-primary-foreground mx-auto flex size-20 items-center justify-center rounded-full">
-          <Check aria-hidden="true" className="size-10" strokeWidth={2.5} />
+          <HugeiconsIcon
+            icon={Tick01Icon}
+            size={40}
+            strokeWidth={2}
+            aria-hidden="true"
+          />
         </div>
 
         <h1 className="mt-3 text-center text-2xl font-bold">
@@ -140,7 +147,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
         <BottomAction>
           <Button className="h-12 w-full" asChild>
             <Link href={consumerOrders.index()} prefetch>
-              Ver mis pedidos
+              Ir a Mis pedidos
             </Link>
           </Button>
         </BottomAction>

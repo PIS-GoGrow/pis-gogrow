@@ -24,5 +24,7 @@ class Provider::DashboardController < Provider::InertiaController
     @month_orders_count = month_orders.count
     @month_dishes_count = @provider.menus.count
     @average_rating = Review.joins(:menu).where(menus: { provider_id: @provider.id }).average(:rating)&.round(1)&.to_f
+    @completed_sections_count = @provider.completed_sections_count
+    @sections_total = @provider.total_sections_count
   end
 end

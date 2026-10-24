@@ -2,6 +2,7 @@ import { ChevronLeft, Star } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import AddedBadge from "@/components/consumer/menus/added-badge"
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
@@ -91,7 +92,12 @@ export function DishDetail({
       >
         <ChevronLeft aria-hidden="true" className="size-5" />
       </Button>
-      <p className="text-muted-foreground text-xs">{item.menu.provider_name}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-muted-foreground text-xs">
+          {item.menu.provider_name}
+        </p>
+        {inCart > 0 && <AddedBadge />}
+      </div>
       <h1 className="mt-1 text-xl font-bold">{item.menu.name}</h1>
       <p className="text-muted-foreground mt-2 text-xs leading-5">
         {item.menu.description}

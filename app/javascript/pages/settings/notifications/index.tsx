@@ -72,7 +72,7 @@ export default function Notifications({
 
               return (
                 <div key={key} className="flex border-b py-3">
-                  <div className="w-[90%] pr-5">
+                  <div className="min-w-0 flex-1 pr-5">
                     <h2>{title}</h2>
                     <p className="text-muted-foreground text-sm">
                       {description}
