@@ -59,4 +59,11 @@ describe("WeekDayTabs", () => {
 
     expect(screen.queryByText("Publicado")).not.toBeInTheDocument()
   })
+
+  it("muestra el texto publicado en verde", () => {
+    renderTabs([day("2026-10-19", [{ id: 1 }])])
+
+    const publishedBadge = screen.getByText("Publicado")
+    expect(publishedBadge).toHaveClass("text-green-600", "dark:text-green-400")
+  })
 })

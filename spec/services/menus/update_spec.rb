@@ -297,4 +297,32 @@ RSpec.describe Menus::Update do
       end
     end
   end
+
+  describe "validaciones de agenda con repetición" do
+    it "rechaza actualizar a repetición semanal con weekdays vacío y no altera agendas" do
+      result = update({ mode: "weekly", starts_on: thursday.iso8601, weekdays: [], amount: 5 })
+
+      expect(result.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+      expect(menu.reload.agendas).to be_empty
+    end
+
+    it "rechaza actualizar a rango personalizado con weekdays vacío y no crea variantes ni agendas" do
+      result = update({
+        mode: "range",
+        starts_on: thursday.iso8601,
+        ends_on: friday.iso8601,
+        weekdays: [],
+        amount: 5
+      })
+
+      expect(result.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+      expect(menu.reload.variants).to be_empty
+    end
+
+    it "rechaza weekdays con días fuera del rango laboral 1..5" do
+      result = update({ mode: "weekly", starts_on: thursday.iso8601, weekdays: [ 0, 6 ], amount: 5 })
+
+      expect(result.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+    end
+  end
 end
