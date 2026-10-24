@@ -86,7 +86,13 @@ describe("OrderConfirmation Page", () => {
   })
 
   it("contains a link to view consumer orders", () => {
-    render(<OrderConfirmation total={450} orders={sampleOrders} />)
+    const { container } = render(
+      <OrderConfirmation total={450} orders={sampleOrders} />,
+    )
+
+    const tickContainer = container.querySelector(".bg-primary.rounded-full")
+    expect(tickContainer).toBeInTheDocument()
+    expect(tickContainer?.querySelector("svg")).toBeInTheDocument()
 
     const ordersLink = screen.getByRole("link", { name: "Ir a Mis pedidos" })
     expect(ordersLink).toBeInTheDocument()

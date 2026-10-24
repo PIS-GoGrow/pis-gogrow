@@ -59,7 +59,7 @@ describe("SettingsPageLayout", () => {
     ).not.toBeInTheDocument()
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/provider/account")
+    ).toHaveAttribute("href", "/proveedor/cuenta")
   })
 
   it("preserves the settings sidebar for employees", () => {

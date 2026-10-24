@@ -187,7 +187,7 @@ describe("Provider Onboarding Show Page", () => {
       await user.click(screen.getByRole("button", { name: "Continuar" }))
 
       expect(patchMock).toHaveBeenCalledWith(
-        "/provider/onboarding",
+        "/proveedor/primeros-pasos",
         { step: 2, commit: "continue" },
         expect.objectContaining({ preserveScroll: true }),
       )
