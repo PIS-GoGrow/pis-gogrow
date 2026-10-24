@@ -37,9 +37,7 @@ export default function DeleteUser() {
 
         <AdaptableDialog>
           <AdaptableDialogTrigger asChild>
-            <Button>
-              {t("components.delete_account.title")}
-            </Button>
+            <Button>{t("components.delete_account.title")}</Button>
           </AdaptableDialogTrigger>
           <AdaptableDialogContent
             showCloseButton={false}

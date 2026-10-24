@@ -280,8 +280,12 @@ describe("DishDetail", () => {
       })
 
       expect(screen.getByText("Agregado")).toBeInTheDocument()
-      expect(screen.getByRole("button", { name: "Modificar" })).toBeInTheDocument()
-      expect(screen.queryByRole("button", { name: "Agregar" })).not.toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Modificar" }),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: "Agregar" }),
+      ).not.toBeInTheDocument()
 
       const trashButton = screen.getByRole("button", { name: "Quitar" })
       expect(trashButton).toBeInTheDocument()

@@ -92,10 +92,14 @@ export default function Index({
 
     setCart((items) => {
       if (editingCartId) {
-        const targetIndex = items.findIndex((item) => item.cartId === editingCartId)
+        const targetIndex = items.findIndex(
+          (item) => item.cartId === editingCartId,
+        )
         if (targetIndex === -1) return items
 
-        const withoutCurrent = items.filter((item) => item.cartId !== editingCartId)
+        const withoutCurrent = items.filter(
+          (item) => item.cartId !== editingCartId,
+        )
         const duplicate = withoutCurrent.find((item) => item.cartId === cartId)
         if (duplicate) {
           return withoutCurrent.map((item) =>
@@ -223,7 +227,6 @@ export default function Index({
             onRemove={editingCartId ? handleRemoveFromCartAndBack : undefined}
           />
         )}
-
       </div>
     </AppLayout>
   )
