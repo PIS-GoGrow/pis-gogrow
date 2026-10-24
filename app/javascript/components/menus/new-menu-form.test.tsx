@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event"
 import { describe, expect, it } from "vitest"
 
 import type { ProviderMenusNew } from "@/types"
+
 import MenuForm from "./new-menu-form"
 
 describe("MenuForm", () => {
@@ -10,6 +11,8 @@ describe("MenuForm", () => {
     today: "2030-01-09",
     maximum_publish_date: "2030-01-18",
     default_date: null,
+    saved_menus: [],
+    published: [],
   }
 
   it("shows every missing field at once in Spanish", async () => {
