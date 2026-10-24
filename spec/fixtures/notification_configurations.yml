@@ -1,9 +1,0 @@
-_fixture:
-  model_class: Notification::Configuration
-
-one:
-  key: orders
-  configurable: true
-  roles: [consumer, admin, provider]
-  created_at: <%= Time.current %>
-  updated_at: <%= Time.current %>
