@@ -3,7 +3,62 @@
 require "rails_helper"
 
 RSpec.describe Notification, type: :model do
-  pending "add some examples to (or delete) #{__FILE__}"
+  fixtures :users, :consumers, :providers
+
+  describe "#send_to_user?" do
+    let(:consumer_user) { consumers(:one).user }
+    let(:provider) { providers(:tuviandita) }
+
+    def notification_for(user, event:)
+      registry_event = Notification::Registry.event!(event)
+
+      described_class.new(
+        user:,
+        event:,
+        role: registry_event.role,
+        notification_configuration: Notification::Configuration.find_by!(key: registry_event.configuration_key.to_s)
+      )
+    end
+
+    before do
+      consumer_user.update!(phone: "+59899123456")
+      provider.user.update!(phone: "+59899654321")
+    end
+
+    it "no envía si el usuario no tiene teléfono" do
+      consumer_user.update!(phone: nil)
+
+      expect(notification_for(consumer_user, event: "debt_threshold_exceeded").send_to_user?).to be(false)
+    end
+
+    it "envía un evento de un grupo no configurable sin suscripción" do
+      expect(notification_for(consumer_user, event: "debt_threshold_exceeded").send_to_user?).to be(true)
+    end
+
+    it "no envía un evento de un grupo configurable si el usuario no está suscrito" do
+      expect(notification_for(consumer_user, event: "order_confirmation").send_to_user?).to be(false)
+    end
+
+    it "envía un evento de un grupo configurable si el usuario está suscrito" do
+      Notification::Configuration.find_by!(key: "order_updates").users << consumer_user
+
+      expect(notification_for(consumer_user, event: "order_confirmation").send_to_user?).to be(true)
+    end
+
+    context "con un proveedor suscrito" do
+      before { Notification::Configuration.find_by!(key: "provider_orders").users << provider.user }
+
+      it "envía si el proveedor abre hoy" do
+        expect(notification_for(provider.user, event: "order_received").send_to_user?).to be(true)
+      end
+
+      it "no envía si el proveedor cierra hoy" do
+        provider.closures.create!(starts_on: Date.current, ends_on: Date.current + 1, reason: "Vacaciones")
+
+        expect(notification_for(provider.user, event: "order_received").send_to_user?).to be(false)
+      end
+    end
+  end
 end
 
 # == Schema Information
