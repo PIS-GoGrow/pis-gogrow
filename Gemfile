@@ -66,6 +66,9 @@ gem "twilio-ruby"
 # Exportar planillas de Excel
 gem "caxlsx", "~> 4.5"
 
+# Normalizar y validar teléfonos (formato E.164 que pide Twilio)
+gem "phonelib"
+
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
