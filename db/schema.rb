@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_24_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -245,6 +245,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_120001) do
     t.datetime "created_at", null: false
     t.string "description"
     t.string "event", null: false
+    t.boolean "failed"
     t.bigint "notifiable_id", null: false
     t.string "notifiable_type", null: false
     t.bigint "notification_configuration_id", null: false
@@ -253,6 +254,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_120001) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.datetime "whatsapp_sent_at"
     t.index ["notifiable_type", "notifiable_id", "event", "user_id"], name: "index_notifications_one_active_per_event", unique: true, where: "(closed_at IS NULL)"
     t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
     t.index ["notification_configuration_id"], name: "index_notifications_on_notification_configuration_id"

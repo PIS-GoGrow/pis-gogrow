@@ -8,9 +8,8 @@ class Notifier
   class MissingConfiguration < StandardError; end
 
   def self.call(event_key:, user:, notifiable:, title_data: {}, description_data: {})
+    # Buscamos el evento indicado y la Notification::Configuration correspondiente
     event = Notification::Registry.event!(event_key)
-
-    # Buscamos la Notification::Configuration correspondiente a ese evento
     configuration = find_configuration_for! event
 
     # I18n.t! lanza I18n::MissingTranslationData si falta la traducción, en vez de
@@ -26,8 +25,8 @@ class Notifier
       description: I18n.t!("notifications.#{event.key}.description", **description_data)
     )
 
-    if configuration.users.pluck(:id).include? user.id
-      WhatsappSenderJob.perform_later(event_key, title_data, description_data, user.phone)
+    if notification.send_to_user?
+      WhatsappSenderJob.perform_later(notification, event_key, title_data, description_data, user.phone)
     end
 
     notification
