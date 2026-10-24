@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe WhatsappSenderJob, type: :job do
-  fixtures :users, :notification_configurations, :orders
+  fixtures :users, :orders
 
   include ActiveJob::TestHelper
 
@@ -46,7 +46,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
       event: EVENT_KEY.to_s,
       role: users(:one).roles[0],
       notifiable: orders(:upcoming_pending_future),
-      notification_configuration: notification_configurations(:one)
+      notification_configuration: Notification::Configuration.find_by!(key: "order_updates")
     )
   end
 
@@ -56,7 +56,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
       {
         EVENT_KEY => Notification::Registry::Event.new(
           key: EVENT_KEY,
-          configuration_key: :orders,
+          configuration_key: :order_updates,
           role: "consumer",
           requires_action: false,
           content_sid: CONTENT_SID
@@ -73,10 +73,10 @@ RSpec.describe WhatsappSenderJob, type: :job do
   # Un RestError con el código dado. En las versiones actuales de twilio-ruby el
   # constructor es RestError.new(message, response) y toma el código, el status y
   # el resto de los datos del cuerpo de la respuesta.
-  def rest_error(code)
+  def rest_error(code, status: 400)
     response = instance_double(
       Twilio::Response,
-      status_code: 400,
+      status_code: status,
       body: {
         "code" => code,
         "message" => "Twilio error #{code}",
@@ -153,6 +153,50 @@ RSpec.describe WhatsappSenderJob, type: :job do
       end
     end
 
+    context "con valores que no son texto" do
+      let(:description_data) { { amount: 2, count: 3 } }
+
+      it "los manda como texto" do
+        messages = stub_twilio(:ok)
+
+        perform_now_job
+
+        expect(JSON.parse(messages.calls.first.fetch(:content_variables)))
+          .to include("description_amount" => "2", "description_count" => "3")
+      end
+    end
+
+    context "con un evento con plantillas en singular y plural" do
+      before do
+        Notification::Registry.set_data([
+          {},
+          {
+            EVENT_KEY => Notification::Registry::Event.new(
+              key: EVENT_KEY,
+              configuration_key: :order_updates,
+              role: "consumer",
+              requires_action: false,
+              content_sid: { one: "HXsingular", other: "HXplural" }
+            )
+          }
+        ])
+      end
+
+      { 1 => "HXsingular", 3 => "HXplural" }.each do |count, content_sid|
+        context "y count #{count}" do
+          let(:description_data) { { count: } }
+
+          it "usa la plantilla #{content_sid}" do
+            messages = stub_twilio(:ok)
+
+            perform_now_job
+
+            expect(messages.calls.first[:content_sid]).to eq(content_sid)
+          end
+        end
+      end
+    end
+
     context "sin datos extra" do
       let(:title_data) { {} }
       let(:description_data) { {} }
@@ -189,14 +233,20 @@ RSpec.describe WhatsappSenderJob, type: :job do
   end
 
   describe "errores transitorios" do
-    it "reintenta un RestError con código no permanente, sin tocar failed" do
-      stub_twilio(rest_error(30008))
+    it "reintenta un RestError 5xx, sin tocar failed" do
+      stub_twilio(rest_error(20500, status: 500))
 
       expect { perform_now_job }.to have_enqueued_job(described_class)
 
       notification.reload
       expect(notification.whatsapp_sent_at).to be_nil
       expect(notification.failed).not_to be(true)
+    end
+
+    it "reintenta un RestError 429" do
+      stub_twilio(rest_error(20429, status: 429))
+
+      expect { perform_now_job }.to have_enqueued_job(described_class)
     end
 
     it "reintenta un TwilioError genérico (por ejemplo de red)" do
@@ -208,7 +258,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
     end
 
     it "marca como enviada y no fallada si un reintento tiene éxito" do
-      messages = stub_twilio(rest_error(30008), :ok)
+      messages = stub_twilio(rest_error(20500, status: 500), :ok)
 
       perform_enqueued_jobs { perform_later_job }
 
@@ -219,7 +269,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
     end
 
     it "no marca failed antes de agotar los intentos" do
-      messages = stub_twilio(rest_error(30008))
+      messages = stub_twilio(rest_error(20500, status: 500))
 
       perform_now_job
 
@@ -228,7 +278,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
     end
 
     it "marca la notificación como failed después de agotar los intentos" do
-      messages = stub_twilio(rest_error(30008))
+      messages = stub_twilio(rest_error(20500, status: 500))
 
       perform_enqueued_jobs do
         # Según cómo esté implementado el agotamiento de reintentos, el error
@@ -246,9 +296,9 @@ RSpec.describe WhatsappSenderJob, type: :job do
   end
 
   describe "errores permanentes" do
-    described_class::PERMANENT_ERROR_CODES.each do |code|
-      it "no reintenta un RestError con código #{code} y marca failed" do
-        messages = stub_twilio(rest_error(code))
+    { 21211 => 400, 20003 => 401, 21656 => 400, 20404 => 404 }.each do |code, status|
+      it "no reintenta un RestError #{status} (código #{code}) y marca failed" do
+        messages = stub_twilio(rest_error(code, status:))
 
         expect { perform_now_job }.not_to have_enqueued_job(described_class)
 

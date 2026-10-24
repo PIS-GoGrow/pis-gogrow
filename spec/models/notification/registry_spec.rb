@@ -19,6 +19,16 @@ RSpec.describe Notification::Registry, type: :model do
     end
   end
 
+  it "tiene una plantilla de Twilio por cada texto de cada evento" do
+    described_class.events.each_value do |event|
+      description = I18n.t("notifications.#{event.key}.description")
+      expected = description.is_a?(Hash) ? %i[one other] : nil
+
+      expect(event.content_sid.is_a?(Hash) ? event.content_sid.keys.sort : nil).to eq(expected), event.key.to_s
+      expect(Array(event.content_sid.try(:values) || event.content_sid)).to all(match(/\AHX\h{32}\z/)), event.key.to_s
+    end
+  end
+
   it "queda sincronizado con la base" do
     expect(Notification::Configuration.sync!).to be_blank
   end
