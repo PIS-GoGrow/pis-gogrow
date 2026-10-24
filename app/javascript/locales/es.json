@@ -742,10 +742,11 @@
         "benefit_card": {
           "period": "Este mes",
           "title": "Tu consumo",
-          "unit": "viandas subsidiadas",
+          "unit": "viandas pedidas",
           "used": "%{used} de %{limit}"
         },
         "index": {
+          "added": "Agregado",
           "closure": {
             "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
             "dismiss": "Cerrar aviso",
@@ -756,7 +757,7 @@
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
         },
         "options": {
-          "choose": "Elegí tu %{name}",
+          "choose": "Elegí tu/s %{name}",
           "limit": "Podés elegir hasta %{count}",
           "optional": "Opcional",
           "required": "Obligatorio"
