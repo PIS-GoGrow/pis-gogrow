@@ -87,6 +87,8 @@ configurations:
 #
 # IMPORTANTE: Cualquier cambio que se haga acá tiene que ser avisado a Juan
 # Andrés Olmedo o Sebastián Rama. El content_sid es un identificador de Twilio.
+# Si la descripción del evento tiene textos en singular y plural (one/other en
+# es.yml), content_sid lleva una plantilla para cada uno, con las claves one y other.
 # Si se quiere agregar un evento y probarlo en la app, se puede asignar un
 # valor cualquiera a content_sid, pero avisar antes de que se mergee para
 # corregirlo.
@@ -95,87 +97,105 @@ events:
     configuration: order_updates
     role: consumer
     requires_action: false
-    content_sid: HX15c38778b10d55bcd69c94e903bfc8e1
+    content_sid: HXa9afb0595862512cdcb61ead36bc9d6a
 
   order_rejection:
     configuration: order_updates
     role: consumer
     requires_action: false
+    content_sid: HX732ee2e06cdb22417e5a986181f7e21c
 
   debt_threshold_exceeded:
     configuration: debt_alerts
     role: consumer
     requires_action: true
+    content_sid: HXe5c40ac16ac571b7f48f9bc86bda16b6
 
   debt_payment_reminder:
     configuration: provider_payment_reminders
     role: consumer
     requires_action: true
+    content_sid: HXfd58ebfc4ded86250c260a5905fb0dbe
 
   payment_available:
     configuration: automatic_payment_reminders
     role: consumer
     requires_action: false
+    content_sid: HX4cae87f48c1b43294482bfc36ac2160e
 
   payment_due_soon:
     configuration: automatic_payment_reminders
     role: consumer
     requires_action: false
+    content_sid: HX1b4e41424c51b6adf7e355b09d54a24b
 
   employee_debt_overdue:
     configuration: employee_debts
     role: admin
     requires_action: false
+    content_sid:
+      one: HX1a0c3e497bd3cbe83502d77e85a9d9dc
+      other: HX331ac66fb467554f7557ff2b5d8649b1
 
   company_payment_upcoming:
     configuration: company_payments
     role: admin
     requires_action: true
+    content_sid: HX0eaedab938c797c421dc7b87b730ccae
 
   company_payment_overdue:
     configuration: company_payments
     role: admin
     requires_action: true
+    content_sid: HXfdf833599d4cc5ce9b78653ae5520e73
 
   company_payment_rejected:
     configuration: company_payments
     role: admin
     requires_action: true
+    content_sid: HXb44ebfba81344bbc1e0f40488ca1ca64
 
   company_payment_approved:
     configuration: company_payments
     role: admin
     requires_action: false
+    content_sid: HXa542c1a57409785d7bf8453c5a6a295d
 
   order_cancellation:
     configuration: order_cancellations
     role: provider
     requires_action: false
+    content_sid: HX2d2f40141d9e3d2212c20696e5083b9d
 
   provider_menu_unpublished:
     configuration: menu_publication_reminders
     role: provider
     requires_action: true
+    content_sid: HX9c1eb97ae7fc5e93d87c8aea4e1c21a2
 
   hr_debt_payment_reminder:
     configuration: hr_payment_reminders
     role: consumer
     requires_action: false
+    content_sid: HXc358f9f429fb28a8ecf868a719d8ad06
 
   order_received:
     configuration: provider_orders
     role: provider
     requires_action: false
+    content_sid: HX36a5150511ca860a37b2b6c894189926
 
   payment_receipt_submitted:
     configuration: provider_payments
     role: provider
     requires_action: false
+    content_sid: HXf05da66ac03bfaaf6796456f5216d65c
 
   order_deadline_reminder:
     configuration: order_reminders
     role: consumer
     requires_action: false
+    content_sid: HX3b9a8a531c43e822e692bfdb3df25078
 
   coupon_assigned:
     configuration: coupons
