@@ -1022,7 +1022,7 @@ RSpec.describe Order, type: :model do
         title: "Un pedido fue cancelado"
       )
       expect(notification.description).to eq(
-        "El pedido de #{order.consumer.user.name} del #{order.schedule.date.strftime("%d/%m")} " \
+        "El pedido de #{order.consumer.user.name} del #{DateFormat.long(order.schedule.date, inline: true)} " \
         "de #{order.menu_name} fue cancelado."
       )
     end
@@ -1069,7 +1069,7 @@ RSpec.describe Order, type: :model do
       order.decide(:confirmed)
 
       description = confirmation_notifications(order).first.description
-      expect(description).to include(I18n.l(order.schedule.date, format: :short))
+      expect(description).to include(DateFormat.long(order.schedule.date, inline: true))
       expect(description).to include(users(:provider_user).name)
     end
 

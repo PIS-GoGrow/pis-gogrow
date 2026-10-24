@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next"
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Button } from "@/components/ui/button"
 import AppLayout from "@/layouts/app-layout"
+import { formatLongDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
 import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardConfirmation } from "@/types"
@@ -43,12 +44,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
   }, [orders])
 
   const deliveryDates = [...new Set(orders.map((item) => item.date))].map(
-    (date) =>
-      new Date(`${date}T12:00:00`).toLocaleDateString("es-UY", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-      }),
+    (date) => formatLongDate(date),
   )
 
   const primaryDelivery = deliveries[0]
@@ -97,7 +93,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
 
         <div className="border-border bg-muted mt-5 rounded-lg border p-4 text-sm">
           <p className="text-muted-foreground">Entrega</p>
-          <p className="mt-1 font-semibold capitalize">{deliveryDates[0]}</p>
+          <p className="mt-1 font-semibold">{deliveryDates[0]}</p>
           {primaryDelivery && (
             <p className="mt-1 font-medium">
               {t(

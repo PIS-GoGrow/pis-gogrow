@@ -380,7 +380,7 @@ class Order < ApplicationRecord
       user: consumer.user,
       notifiable: self,
       description_data: {
-        date: I18n.l(schedule.date, format: :short),
+        date: DateFormat.long(schedule.date, inline: true),
         provider: provider.user.name
       }
     )
@@ -395,7 +395,7 @@ class Order < ApplicationRecord
       notifiable: self,
       description_data: {
         consumer: consumer.user.name,
-        date: I18n.l(schedule.date, format: "%d/%m"),
+        date: DateFormat.long(schedule.date, inline: true),
         dish: menu_name
       }
     )
@@ -413,7 +413,7 @@ class Order < ApplicationRecord
         consumer: consumer.user.name,
         amount:,
         dish: menu_name,
-        date: I18n.l(schedule.date, format: :short)
+        date: DateFormat.long(schedule.date, inline: true)
       }
     )
   end
@@ -437,7 +437,7 @@ class Order < ApplicationRecord
   # Guarda los datos necesarios para notificar un rechazo aunque luego se elimine el schedule.
   def capture_rejection_notification_data
     @rejection_notification_data = {
-      date: I18n.l(delivery_date, format: :short),
+      date: DateFormat.long(delivery_date, inline: true),
       dish: menu_name,
       provider: provider_name
     }

@@ -700,8 +700,10 @@
       "cart": {
         "add_address": "Agregar",
         "benefit": "Subsidio Base (%{percentage}%)",
+        "decrease": "Quitar una unidad de %{name}",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
+        "increase": "Agregar una unidad de %{name}",
         "monthly": {
           "full_price_one": "La vianda de este pedido se cobra a precio completo.",
           "full_price_other": "Las %{count} viandas de este pedido se cobran a precio completo.",
@@ -746,6 +748,7 @@
           "used": "%{used} de %{limit}"
         },
         "index": {
+          "add": "Agregar",
           "added": "Agregado",
           "closure": {
             "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
@@ -754,6 +757,7 @@
             "title_now": "%{provider} no está disponible",
             "title_soon": "%{provider} no estará disponible"
           },
+          "modify": "Modificar",
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
         },
         "options": {
@@ -1371,12 +1375,6 @@
             "description": "Días en los que no recibís pedidos.",
             "edit": "Editar cierre %{reason}",
             "edit_title": "Editar cierre",
-            "period": {
-              "other_year": "%{from} al %{to}",
-              "same_month": "%{from_day} al %{to_day_month} de %{year}",
-              "same_year": "%{from_day_month} al %{to_day_month} de %{year}",
-              "single": "%{date}"
-            },
             "reason": "Motivo",
             "reason_placeholder": "Vacaciones",
             "save": "Guardar cambios",

@@ -89,11 +89,3 @@ export function summarize(orders: ProviderOrder[]) {
     total: Math.round(total * 100) / 100,
   }
 }
-
-// Parte el string ISO en lugar de crear un Date, que depende de la zona
-// horaria del navegador.
-export function formatDayDate(date: string) {
-  const [, month, day] = date.split("-")
-
-  return `${day}/${month}`
-}

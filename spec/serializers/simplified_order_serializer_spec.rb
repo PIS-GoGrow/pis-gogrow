@@ -39,13 +39,13 @@ RSpec.describe SimplifiedOrderSerializer do
       expect(serialized["menu_name"]).to eq("Plato del día")
     end
 
-    it "returns nil for date without error when delivery_date is nil" do
+    it "falls back to created_at for date without error when delivery_date is nil" do
       order = orders(:history_without_schedule)
       order.update_columns(delivery_date: nil)
 
       serialized = described_class.new(order).to_h
 
-      expect(serialized["date"]).to be_nil
+      expect(serialized["date"]).to eq(DateFormat.short(order.created_at))
     end
 
     it "falls back price to base price when discounted_price is nil" do

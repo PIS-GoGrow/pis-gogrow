@@ -220,7 +220,7 @@ RSpec.describe ProviderCollectionSummary do
 
     expect(detail[:month]).to eq(I18n.l(Date.current.beginning_of_month, format: :month_name_year))
     expect(detail[:clients]).to eq([ { id: consumer.company.id, name: consumer.company.name, subtotal: 400.0, vat_amount: 0.0, payable_amount: 400.0 } ])
-    expect(detail[:days].pluck(:date)).to eq(dates.reverse.map { it.strftime("%d/%m") })
+    expect(detail[:days].pluck(:date)).to eq(dates.reverse.map { DateFormat.short(it) })
     expect(detail[:days].map { it[:orders].pluck(:id) }).to eq(orders.reverse.map { [ it.id ] })
     expect(detail_orders.sum { it[:amount] }).to eq(400.0)
     expect(detail_orders.sum { it[:meals] }).to eq(4)

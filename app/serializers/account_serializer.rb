@@ -34,7 +34,7 @@ class AccountSerializer < ApplicationSerializer
 
   typelize :string
   attribute :due_date do |account|
-    account.due_date.strftime("%d/%m/%y")
+    DateFormat.short(account.due_date)
   end
 
   typelize :boolean
