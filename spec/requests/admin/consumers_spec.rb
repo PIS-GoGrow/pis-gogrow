@@ -189,14 +189,47 @@ RSpec.describe "Admin::Consumers", type: :request do
       it "groups the consumption history by month with its providers and confirmed orders" do
         get admin_consumer_path(consumers(:one))
 
-        month = inertia.props[:months].sole
+        month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
         expect(month).to include(amount: 950.75, status: "pending")
+        expect(month[:providers].pluck(:id)).to contain_exactly(providers(:tuviandita).id, providers(:endulzate).id)
         expect(month[:providers].pluck(:name, :status)).to contain_exactly(
           [ "Provider User", "rejected" ], [ "Other Provider User", "pending" ]
         )
         expect(month[:orders].pluck(:id)).to contain_exactly(
           orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id
         )
+        expect(month[:orders].pluck(:provider_id)).to contain_exactly(providers(:tuviandita).id, providers(:tuviandita).id)
+      end
+
+      it "sends the current year from the current month to January and fills months without consumption" do
+        get admin_consumer_path(consumers(:one))
+
+        current_year = Date.current.year
+        months = inertia.props[:months].select { it[:year] == current_year }
+
+        expect(months.pluck(:key)).to eq(
+          Date.current.month.downto(1).map { |month| format("%<year>d-%<month>02d", year: current_year, month:) }
+        )
+
+        empty_months = months.reject { it[:key] == Date.current.strftime("%Y-%m") }
+        expect(empty_months).to all(
+          include(amount: 0.0, subsidy: 0.0, status: nil, providers: [], orders: [])
+        )
+      end
+
+      it "puts the current year first and includes complete previous years with consumption" do
+        previous_year = Date.current.year - 1
+        consumers(:one).accounts.create!(
+          provider: providers(:tuviandita),
+          month: Date.new(previous_year, 5, 1),
+          amount: 150
+        )
+
+        get admin_consumer_path(consumers(:one))
+
+        months = inertia.props[:months]
+        expect(months.pluck(:year).uniq).to eq([ Date.current.year, previous_year ])
+        expect(months.count { it[:year] == previous_year }).to eq(12)
       end
 
       # Sin publicación, el pedido conserva su fecha de entrega: no se muestra el
@@ -208,7 +241,8 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         get admin_consumer_path(consumers(:one))
 
-        dates = inertia.props[:months].sole[:orders].to_h { [ it[:id], it[:date] ] }
+        month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
+        dates = month[:orders].to_h { [ it[:id], it[:date] ] }
         expect(dates[order.id]).to eq(delivery.strftime("%-d/%-m"))
       end
 
@@ -221,7 +255,8 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         get admin_consumer_path(consumers(:one))
 
-        orders_in_month = inertia.props[:months].sole[:orders]
+        month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
+        orders_in_month = month[:orders]
         expect(orders_in_month.pluck(:id)).to eq([ earlier.id, later.id ])
       end
 
@@ -232,7 +267,8 @@ RSpec.describe "Admin::Consumers", type: :request do
         get admin_consumer_path(consumers(:one))
 
         expect(response).to have_http_status(:ok)
-        order_prop = inertia.props[:months].sole[:orders].find { it[:id] == order.id }
+        month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
+        order_prop = month[:orders].find { it[:id] == order.id }
         expect(order_prop[:date]).to be_nil
       end
 
@@ -247,7 +283,8 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         get admin_consumer_path(consumers(:one))
 
-        dates = inertia.props[:months].sole[:orders].to_h { [ it[:id], it[:date] ] }
+        month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
+        dates = month[:orders].to_h { [ it[:id], it[:date] ] }
         expect(dates[order.id]).to eq(delivery.strftime("%-d/%-m"))
       end
       it "shows the active benefit percentage" do

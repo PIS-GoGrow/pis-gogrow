@@ -9,4 +9,9 @@ class Provider::OnboardingProviderSerializer < ApplicationSerializer
   attribute :order_deadline do |provider|
     provider.order_deadline&.strftime("%H:%M")
   end
+
+  typelize deliveries_configured: :boolean
+  attribute :deliveries_configured do |provider|
+    provider.deliveries_configured_at.present?
+  end
 end

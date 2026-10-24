@@ -26,6 +26,8 @@ class Settings::NotificationsController < InertiaController
       config.users.destroy Current.user
     end
 
+    Current.user.provider&.mark_section_configured!(:notifications)
+
     redirect_to settings_notifications_path, notice: I18n.t("flash.config_update")
   rescue ActiveRecord::ActiveRecordError => error
     Rails.logger.error("[Settings::NotificationsController] #{error.class}: #{error.message}")

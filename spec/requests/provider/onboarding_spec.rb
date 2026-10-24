@@ -7,7 +7,15 @@ RSpec.describe "Provider::Onboarding", type: :request do
 
   let(:provider) { providers(:tuviandita) }
 
-  before { provider.update!(onboarding_completed_at: nil) }
+  before do
+    provider.update!(
+      onboarding_completed_at: nil,
+      payment_details_configured_at: nil,
+      order_deadline_configured_at: nil,
+      deliveries_configured_at: nil,
+      notifications_configured_at: nil
+    )
+  end
 
   describe "el guard de onboarding" do
     it "manda al onboarding a un proveedor sin configurar" do
@@ -79,6 +87,16 @@ RSpec.describe "Provider::Onboarding", type: :request do
       end)
     end
 
+    it "incluye cierres, la fecha de hoy y si venció la hora para el paso 2" do
+      get provider_onboarding_path(step: 2)
+
+      expect(inertia).to(have_props do |props|
+        props["closures"].is_a?(Array) &&
+          props["today"].is_a?(String) &&
+          [ true, false ].include?(props["order_deadline_passed_today"])
+      end)
+    end
+
     it "hace fallback al paso 1 si se pasa un parámetro de paso inválido" do
       get provider_onboarding_path(step: 99)
       expect(inertia).to have_props { |props| props["step"] == "1" }
@@ -106,6 +124,7 @@ RSpec.describe "Provider::Onboarding", type: :request do
 
       expect(response).to redirect_to(provider_onboarding_path(step: 2))
       expect(provider.reload.bank_name).to eq("BROU")
+      expect(provider.payment_details_configured_at).to be_present
     end
 
     it "no avanza cuando los datos de cobro son inválidos" do
@@ -134,6 +153,7 @@ RSpec.describe "Provider::Onboarding", type: :request do
 
       expect(response).to redirect_to(provider_onboarding_path(step: 4))
       expect(provider.reload.home_delivery).to be(false)
+      expect(provider.deliveries_configured_at).to be_present
     end
 
     it "suscribe a notificaciones y completa el onboarding en el paso 4" do
@@ -144,6 +164,12 @@ RSpec.describe "Provider::Onboarding", type: :request do
       expect(response).to redirect_to(provider_onboarding_path(step: "done"))
       expect(config.reload.users).to include(provider.user)
       expect(provider.reload.onboarding_completed_at).to be_present
+    end
+
+    it "marca las notificaciones como configuradas aunque no se suscriba a ninguna en el paso 4" do
+      patch provider_onboarding_path, params: { step: 4, commit: "continue", subscribed_ids: [] }
+
+      expect(provider.reload.notifications_configured_at).to be_present
     end
 
     it "rechaza un RUT o CI con longitud inválida en el paso 1" do

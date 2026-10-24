@@ -20,5 +20,7 @@ class Provider::DashboardController < Provider::InertiaController
     @month_orders_count = month.orders_count
     @month_dishes_count = month.dishes_count
     @average_rating = month.average_rating
+    @completed_sections_count = @provider.completed_sections_count
+    @sections_total = @provider.total_sections_count
   end
 end

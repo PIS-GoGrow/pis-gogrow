@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import AppLayout from "@/layouts/app-layout"
 import {
+  providerAccount,
   providerCollections,
   providerDashboard,
   providerInsights,
@@ -33,9 +34,13 @@ export default function ProviderDashboard({
   month_orders_count,
   month_dishes_count,
   average_rating,
+  completed_sections_count,
+  sections_total,
 }: Props) {
   const { t } = useTranslation()
   const { auth } = usePage().props
+  const completionDegrees =
+    sections_total > 0 ? (completed_sections_count / sections_total) * 360 : 0
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -58,35 +63,48 @@ export default function ProviderDashboard({
         <NotificationBanners />
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="dark:border-border dark:bg-muted dark:hover:bg-accent gap-3 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] py-4 shadow-none transition-colors hover:bg-[#EEEEEE] lg:col-span-2">
-            <CardContent className="px-4">
-              <Button
-                type="button"
-                variant="ghost"
-                className="group h-auto w-full cursor-pointer justify-start gap-3 p-0 text-left whitespace-normal hover:bg-transparent"
-              >
-                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[conic-gradient(#16a34a_0deg_270deg,var(--color-muted)_270deg_360deg)] p-1">
-                  <span className="bg-card grid size-full place-items-center rounded-full">
-                    <span className="text-sm font-semibold">3/4</span>
-                  </span>
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-base font-semibold">
-                    {t("pages.provider_dashboard.index.profile.title")}
-                  </span>
-                  <span className="text-muted-foreground block text-sm font-normal">
-                    {t("pages.provider_dashboard.index.profile.description")}
-                  </span>
-                </span>
-                <span className="bg-card grid size-9 shrink-0 place-items-center rounded-full">
-                  <ChevronRight
-                    className="size-4 transition-transform group-hover:translate-x-0.5"
-                    aria-hidden="true"
-                  />
-                </span>
-              </Button>
-            </CardContent>
-          </Card>
+          {completed_sections_count < sections_total && (
+            <Card className="dark:border-border dark:bg-muted dark:hover:bg-accent gap-3 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] py-4 shadow-none transition-colors hover:bg-[#EEEEEE] lg:col-span-2">
+              <CardContent className="px-4">
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="group h-auto w-full cursor-pointer justify-start gap-3 p-0 text-left whitespace-normal hover:bg-transparent"
+                >
+                  <Link href={providerAccount().url}>
+                    <span
+                      className="grid size-12 shrink-0 place-items-center rounded-full p-1"
+                      style={{
+                        background: `conic-gradient(#16a34a 0deg ${completionDegrees}deg, var(--color-muted) ${completionDegrees}deg 360deg)`,
+                      }}
+                    >
+                      <span className="bg-card grid size-full place-items-center rounded-full">
+                        <span className="text-sm font-semibold">
+                          {completed_sections_count}/{sections_total}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-base font-semibold">
+                        {t("pages.provider_dashboard.index.profile.title")}
+                      </span>
+                      <span className="text-muted-foreground block text-sm font-normal">
+                        {t(
+                          "pages.provider_dashboard.index.profile.description",
+                        )}
+                      </span>
+                    </span>
+                    <span className="bg-card grid size-9 shrink-0 place-items-center rounded-full">
+                      <ChevronRight
+                        className="size-4 transition-transform group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="dark:border-border dark:bg-muted gap-4 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] py-4 shadow-none">
             <CardHeader className="grid-cols-[1fr_auto] grid-rows-1 items-center px-4">
