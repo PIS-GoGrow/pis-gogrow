@@ -561,7 +561,7 @@ es:
               seniority: "Antigüedad"
               birthday: "Cumpleaños"
               onboarding: "Onboarding"
-              gift: "Premio"
+              gift: "Cupón"
             form:
               add_title: "Agregar subsidio especial"
               edit_title: "Modificar subsidio especial"

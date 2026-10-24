@@ -10,7 +10,7 @@ class GiftBenefit < BenefitRule
   with_options on: :special_subsidy, allow_nil: true do
     validates :limit, numericality: { only_integer: true, greater_than: 0 }
     validates :effective_from, comparison: { greater_than_or_equal_to: -> { Date.current } }, if: :effective_from_changed?
-    validates :deadline_date, comparison: { greater_than: :effective_from }, if: :effective_from
+    validates :deadline_date, comparison: { greater_than_or_equal_to: :effective_from }, if: :effective_from
   end
 
   def applicable_to?(consumer, date: Date.current)
