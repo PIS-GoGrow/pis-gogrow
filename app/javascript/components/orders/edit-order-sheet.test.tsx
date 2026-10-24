@@ -217,7 +217,9 @@ describe("EditOrderSheet", () => {
       )
 
       expect(screen.getByText("18 de Julio 1006")).toBeInTheDocument()
-      expect(screen.getByText("Julio Herrera y Reissig 565")).toBeInTheDocument()
+      expect(
+        screen.getByText("Julio Herrera y Reissig 565"),
+      ).toBeInTheDocument()
       expect(screen.queryByText("Bulevar Artigas 1234")).not.toBeInTheDocument()
       expect(
         screen.getByRole("button", { name: /Ver mis direcciones/i }),

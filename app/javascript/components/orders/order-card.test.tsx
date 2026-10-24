@@ -61,7 +61,9 @@ describe("OrderCard", () => {
       render(<OrderCard order={cancelledOrder} section="history" />)
 
       expect(
-        screen.getByText(/Lo pediste para: Julio Herrera y Reissig 565 \(Domicilio\)/i),
+        screen.getByText(
+          /Lo pediste para: Julio Herrera y Reissig 565 \(Domicilio\)/i,
+        ),
       ).toBeInTheDocument()
       expect(screen.queryByText(/Lo recibiste en:/i)).not.toBeInTheDocument()
     })
@@ -77,7 +79,9 @@ describe("OrderCard", () => {
       render(<OrderCard order={rejectedOrder} section="history" />)
 
       expect(
-        screen.getByText(/Lo pediste para: Julio Herrera y Reissig 565 \(Domicilio\)/i),
+        screen.getByText(
+          /Lo pediste para: Julio Herrera y Reissig 565 \(Domicilio\)/i,
+        ),
       ).toBeInTheDocument()
       expect(screen.queryByText(/Lo recibiste en:/i)).not.toBeInTheDocument()
     })
@@ -93,7 +97,9 @@ describe("OrderCard", () => {
       render(<OrderCard order={confirmedOrder} section="history" />)
 
       expect(
-        screen.getByText(/Lo recibiste en: Julio Herrera y Reissig 565 \(Domicilio\)/i),
+        screen.getByText(
+          /Lo recibiste en: Julio Herrera y Reissig 565 \(Domicilio\)/i,
+        ),
       ).toBeInTheDocument()
     })
 
@@ -101,7 +107,9 @@ describe("OrderCard", () => {
       render(<OrderCard order={baseOrder} section="upcoming" />)
 
       expect(
-        screen.getByText(/Lo recibís en: Julio Herrera y Reissig 565 \(Domicilio\)/i),
+        screen.getByText(
+          /Lo recibís en: Julio Herrera y Reissig 565 \(Domicilio\)/i,
+        ),
       ).toBeInTheDocument()
     })
   })
