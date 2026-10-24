@@ -144,6 +144,9 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `DeliveryFilterSheet` | `@/components/orders/delivery-filter-sheet` | Filtro de tipo de entrega (Todas, Oficina, Domicilios) en un sheet inferior, con Cancelar y Aplicar |
 | `ProviderOrderDays` | `@/components/orders/provider-order-days` | Pedidos del proveedor agrupados por día: acordeón en celular, lista de días y panel del día elegido desde `lg` |
 | `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail`, `badge` y `action` opcionales |
+| `DashboardMetric` | `@/components/provider/dashboard-metric` | Número con su etiqueta en el Inicio y en Hallazgos del proveedor; `valueFirst` pone el número arriba y centrado. El fondo y el borde los pasa quien lo usa con `className` |
+| `InsightsMetrics` | `@/components/provider/insights-metrics` | Las tres métricas grises de los hallazgos del proveedor (Pedidos, Platos y ★ Valoración, con «—» si no hay reseñas). Recibe `orders`, `dishes` y `rating` |
+| `AiInsightCard` | `@/components/provider/ai-insight-card` | Tarjeta violeta con gradiente y el pie «Generado por IA»; el texto va como `children` |
 | `MobileNav` | `@/components/mobile-nav` | Barra inferior móvil de RRHH; recibe ítems con ícono, ruta opcional y estado activo |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |

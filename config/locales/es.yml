@@ -386,6 +386,12 @@ es:
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresá tu contraseña para confirmar que querés eliminar tu cuenta definitivamente."
     month_select:
       this_month: "Este mes"
+    insights_metrics:
+      orders: "Pedidos"
+      dishes: "Platos"
+      rating: "Valoración"
+    ai_insight_card:
+      generated: "Generado por IA"
     date_picker:
       placeholder: "Elegí una fecha"
       range_placeholder: "Elegí un rango"
@@ -1154,16 +1160,22 @@ es:
           deadline_all_day: "Recibiendo pedidos todo el día"
         insights:
           title: "Hallazgos del mes"
-          orders: "Pedidos"
-          dishes: "Platos"
-          rating: "Valoración"
           description: "Los hallazgos basados en las valoraciones estarán disponibles próximamente."
-          generated: "Generado por IA"
         payments:
           title: "Resumen de cobros"
           pending: "Cobros pendientes"
           total: "Deuda total"
           description: "Los cobros pendientes aparecerán acá próximamente."
+    provider_insights:
+      index:
+        title: "Hallazgos"
+        back: "Volver al inicio"
+        period: "Período"
+        top_dishes: "Platos más pedidos"
+        top_rated_dishes: "Mejor valorados"
+        orders_count: "x%{count}"
+        empty_orders: "Todavía no hay pedidos en este período"
+        empty_reviews: "Todavía no hay reseñas en este período"
     schedules:
       index:
         title: "Gestión de Menú"
