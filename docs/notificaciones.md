@@ -160,14 +160,33 @@ solo corre cuando esta configurada la variable `TWILIO_DELIVERY_ENABLED=true`.
 Las credenciales se configuran con `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
 `TWILIO_PHONE`.
 
-Cuando hay un error de red, se reintenta hasta cinco veces el envío. Si los cinco
-intentos fallan, se marca la notificación con el atributo `failed`. Si el Job fue
+Cuando hay un error de red, Twilio responde 429 o un 5xx, se reintenta hasta cinco
+veces el envío. Si los cinco intentos fallan, se marca la notificación con el
+atributo `failed`. Cualquier otro error de Twilio (un 4xx: credenciales, número o
+variables inválidas) no se reintenta y marca `failed` en el momento. Si el Job fue
 exitoso, marca la notifiación como no fallada y registra la hora de envío en el
-atributo `whatsapp_sent_at`. Hay algunos tipos de error que no se reintentan.
+atributo `whatsapp_sent_at`.
+
+`whatsapp_sent_at` y `failed` solo dicen si Twilio aceptó el mensaje, no si llegó
+al celular. Los errores de entrega (por ejemplo, que el número no tenga WhatsApp)
+Twilio los informa después, por el status callback, y hoy no los recibimos.
+
+`User` guarda el teléfono en formato internacional (`+59899123456`), que es el que
+pide Twilio: lo normaliza con `phonelib`, interpretando como uruguayo un número sin
+`+`, y solo acepta celulares.
 
 Los datos extra de locales de notificaciones se pasan a Twilio, agregando `title_`
 a las claves de los datos de título y agregando `description_` a las claves de
 datos de descripción.
+
+Cada evento tiene una plantilla en Twilio (Content Template Builder) con el mismo
+texto que `config/locales/es.yml`: el título en negrita en la primera línea y la
+descripción abajo, con cada `%{dato}` reemplazado por `{{description_dato}}`. Las
+plantillas se llaman `gogrow_<evento>` y su SID va en `content_sid` de
+`config/notifications.yml`. Si la descripción tiene singular y plural, hay una
+plantilla para cada forma (`gogrow_<evento>_one` y `gogrow_<evento>_other`) y el Job
+elige según el dato `count`. Si se cambia un texto en `es.yml`, hay que crear una
+plantilla nueva en Twilio y actualizar su SID: las plantillas no se pueden editar.
 
 Este Job no debería ser accedido desde ningún lugar, menos el servicio `Notifier`.
 Supone que Notifier ya chequeó que la clave de evento exista y que todas las

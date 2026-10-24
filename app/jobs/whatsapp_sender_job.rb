@@ -8,11 +8,6 @@ class WhatsappSenderJob < ApplicationJob
   class TransientTwilioError < StandardError; end
   class PermanentTwilioError < StandardError; end
 
-  # No reintentamos si: hay un error de autenticación, el número del usuario es inválido,
-  # el usuario se desuscribió, el teléfono de salida está mal, el usuario no tiene cuenta
-  # de WhatsApp.
-  PERMANENT_ERROR_CODES = [ 20003, 21211, 21610, 63007, 63024 ].freeze
-
   queue_as :default
 
   # Hacer cinco reintentos cubre al rededor de 15 minutos.
@@ -38,11 +33,7 @@ class WhatsappSenderJob < ApplicationJob
     Rails.logger.info("Enviando notificación (notification #{notification.id})")
 
     from = ENV.fetch("TWILIO_PHONE")
-    content_sid = Notification::Registry.content_sid(event_key)
-
-    # TODO: Borrar esta línea y hacer el chequeo en Notification::Registry cuando todas
-    # las notificaciones estén configuradas
-    return unless content_sid
+    content_sid = Notification::Registry.content_sid(event_key, count: description_data[:count])
 
     message = client.messages.create(
         from:,
@@ -72,11 +63,14 @@ class WhatsappSenderJob < ApplicationJob
       .merge(
         description_data.transform_keys { |key| "description_#{key}" }
       )
+      .transform_values(&:to_s)
       .to_json
   end
 
+  # Un 4xx (salvo 429) no va a cambiar al reintentar: credenciales, número o variables
+  # inválidas.
   def transient?(error)
-    PERMANENT_ERROR_CODES.exclude? error.code
+    error.status_code == 429 || error.status_code >= 500
   end
 
   def client
