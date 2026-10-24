@@ -74,7 +74,7 @@ RSpec.describe "Precio máximo en beneficios al ordenar viandas", type: :system 
     expect(page).to have_content("Tarta de Acelga")
 
     # Alerta informando que 1 vianda tiene beneficio y 1 se cobra a precio completo
-    expect(page).to have_content("1 tendrán el beneficio y 1 se cobrarán a precio completo")
+    expect(page).to have_content("De este pedido, 1 con beneficio y 1 a precio completo.")
 
     # Confirmar pedido
     expect(page).to have_button("Confirmar pedido", disabled: false)

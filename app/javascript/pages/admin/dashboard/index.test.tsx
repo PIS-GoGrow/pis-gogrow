@@ -117,6 +117,7 @@ describe("Admin Dashboard Page", () => {
               vat_rate: 0,
               vat_amount: 0,
               payable_amount: 5425,
+              paid: false,
               days: [],
             },
           ],

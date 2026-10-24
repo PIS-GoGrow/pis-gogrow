@@ -39,7 +39,7 @@ export default function Index({
   providers,
 }: ConsumerOrdersIndex) {
   const { t } = useTranslation()
-  const { formatDeliveryDate } = useFormatters()
+  const { formatLongDate } = useFormatters()
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -68,7 +68,7 @@ export default function Index({
         <section key={group.date ?? "undated"} className="grid gap-2">
           <h2 className="text-muted-foreground text-sm">
             {group.date
-              ? formatDeliveryDate(group.date)
+              ? formatLongDate(group.date)
               : t("pages.orders.index.no_date")}
           </h2>
 

@@ -14,6 +14,7 @@ import AccountCard from "@/components/consumer/accounts/account-card"
 import OrdersTable from "@/components/consumer/accounts/orders-table"
 import PaymentHistoryCard from "@/components/consumer/accounts/payment-history-card"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
+import BankDetails from "@/components/payments/bank-details"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,14 +32,14 @@ import { consumerAccounts } from "@/routes"
 import type {
   Account,
   BreadcrumbItem,
-  Provider,
+  PaymentProvider,
   SimplifiedOrder,
 } from "@/types"
 
 interface AccountProps {
   accounts: Account[]
   history_accounts: Account[]
-  providers: Provider[]
+  providers: PaymentProvider[]
   history: boolean
   current_month_debt: number
   current_month_ordered: number
@@ -100,6 +101,8 @@ export default function Index({
       </CardHeader>
 
       <CardContent className="grid gap-4">
+        <BankDetails provider={p} />
+
         {accountsJSX[p.id] ? (
           accountsJSX[p.id]
         ) : (

@@ -1,12 +1,15 @@
 import { Link } from "@inertiajs/react"
+import { type TFunction } from "i18next"
 import { ChevronLeft, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
+import { QuantityInput } from "@/components/quantity-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { RadioGroup } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
+import { formatLongDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 import { consumerDashboard } from "@/routes"
@@ -15,7 +18,7 @@ import { AddAddressSheet } from "./add-address-sheet"
 import { AddressOption } from "./address-option"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
 import { BenefitLine, OrderSummary } from "./order-summary"
-import type { Pricing } from "./pricing"
+import type { DiscountTier, Pricing } from "./pricing"
 import { SavedAddressesSheet } from "./saved-addresses-sheet"
 
 interface Props {
@@ -31,6 +34,7 @@ interface Props {
   error?: string | string[]
   confirm: () => void
   remove: (cartId: string) => void
+  setQuantity: (cartId: string, quantity: number) => void
   loading: boolean
 }
 
@@ -47,6 +51,7 @@ export function ConsumerCart({
   error,
   confirm,
   remove,
+  setQuantity,
   loading,
 }: Props) {
   const { t } = useTranslation()
@@ -74,6 +79,15 @@ export function ConsumerCart({
     officeOnlyProviders.length > 0 &&
     !!selectedAddress &&
     selectedAddress !== office?.address
+  const deliveryDates = [...new Set(cart.map((item) => item.date))]
+  // Con un solo día de entrega la fecha va arriba; con varios, cada plato
+  // lleva la suya.
+  const singleDeliveryDate =
+    deliveryDates.length === 1 ? deliveryDates[0] : null
+  const deliveryLabel = (date: string) =>
+    t("pages.cart.delivery", {
+      date: formatLongDate(date),
+    })
 
   return (
     <MobileCard>
@@ -90,6 +104,11 @@ export function ConsumerCart({
         </Button>
       </Link>
       <h1 className="text-xl font-bold">Tu carrito</h1>
+      {singleDeliveryDate && (
+        <p className="text-muted-foreground mt-2 text-sm">
+          {deliveryLabel(singleDeliveryDate)}
+        </p>
+      )}
       <section className="border-border mt-8 border-b pb-4">
         <div className="mb-3 flex items-center justify-between text-sm font-semibold">
           <h2>{t("pages.cart.delivery_address")}</h2>
@@ -141,19 +160,7 @@ export function ConsumerCart({
         <Alert className="mt-4 border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
           <TriangleAlert aria-hidden="true" className="text-amber-600" />
           <AlertDescription>
-            {monthlyRemaining === 0 ? (
-              <p>
-                Ya utilizaste las {monthlyLimit} viandas subsidiadas de este
-                mes. Las {pricing?.fullPriceQuantity} viandas de este pedido se
-                cobrarán a precio completo.
-              </p>
-            ) : (
-              <p>
-                Te quedan {monthlyRemaining} viandas subsidiadas este mes. De
-                este pedido, {pricing?.subsidizedQuantity} tendrán el beneficio
-                y {pricing?.fullPriceQuantity} se cobrarán a precio completo.
-              </p>
-            )}
+            <p>{fullPriceNotice(t, monthlyLimit, monthlyRemaining, pricing)}</p>
           </AlertDescription>
         </Alert>
       )}
@@ -166,33 +173,20 @@ export function ConsumerCart({
               key={item.cartId}
               className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
             >
-              <p className="text-muted-foreground mb-2">
-                {t("pages.cart.delivery", {
-                  date: new Date(`${item.date}T12:00:00`).toLocaleDateString(
-                    "es-UY",
-                    {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                    },
-                  ),
-                })}
-              </p>
+              {!singleDeliveryDate && (
+                <p className="text-muted-foreground mb-2">
+                  {deliveryLabel(item.date)}
+                </p>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   {item.menu.name} x{item.quantity}
                 </span>
                 <span>{formatMoney(line)}</span>
               </div>
-              {pricing?.lines?.[item.id]?.tiers
-                .filter((tier) => tier.discount > 0)
-                .map((tier, index) => (
-                  <BenefitLine
-                    key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
-                    tier={tier}
-                    className="mt-3"
-                  />
-                ))}
+              {pricing?.lines?.[item.id] && (
+                <ItemBenefitLines tiers={pricing.lines[item.id].tiers} />
+              )}
               {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
                   aparte, así que el carrito lo muestra por su cuenta. */}
               {item.menu.option_groups
@@ -205,16 +199,23 @@ export function ConsumerCart({
               {item.notes && (
                 <p className="text-muted-foreground mt-2">{item.notes}</p>
               )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={processing}
-                onClick={() => remove(item.cartId)}
-                className="mt-2"
-              >
-                {t("pages.cart.remove", { name: item.menu.name })}
-              </Button>
+              <div className="mt-2">
+                <QuantityInput
+                  size="sm"
+                  value={item.quantity}
+                  max={item.remaining}
+                  disabled={processing}
+                  onChange={(quantity) => setQuantity(item.cartId, quantity)}
+                  onRemove={() => remove(item.cartId)}
+                  decreaseLabel={t("pages.cart.decrease", {
+                    name: item.menu.name,
+                  })}
+                  increaseLabel={t("pages.cart.increase", {
+                    name: item.menu.name,
+                  })}
+                  removeLabel={t("pages.cart.remove", { name: item.menu.name })}
+                />
+              </div>
             </div>
           )
         })}
@@ -260,4 +261,43 @@ export function ConsumerCart({
       )}
     </MobileCard>
   )
+}
+
+// Explica por qué parte del pedido va a precio completo. Sin cupo mensual pero
+// con un subsidio especial aplicado, no se dice que no hay beneficio.
+function fullPriceNotice(
+  t: TFunction,
+  monthlyLimit: number,
+  monthlyRemaining: number,
+  pricing: Pricing | null,
+) {
+  const subsidized = pricing?.subsidizedQuantity ?? 0
+  const full = pricing?.fullPriceQuantity ?? 0
+
+  const reason =
+    monthlyLimit === 0
+      ? subsidized === 0 && t("pages.cart.monthly.no_benefit")
+      : monthlyRemaining === 0
+        ? t("pages.cart.monthly.used_up", { count: monthlyLimit })
+        : t("pages.cart.monthly.remaining", { count: monthlyRemaining })
+  const detail =
+    subsidized > 0
+      ? t("pages.cart.monthly.split", { subsidized, full })
+      : t("pages.cart.monthly.full_price", { count: full })
+
+  return [reason, detail].filter(Boolean).join(" ")
+}
+
+function ItemBenefitLines({ tiers }: { tiers: DiscountTier[] }) {
+  const discounted = tiers.filter((tier) => tier.discount > 0)
+
+  if (discounted.length === 0) return <BenefitLine className="mt-3" />
+
+  return discounted.map((tier, index) => (
+    <BenefitLine
+      key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
+      tier={tier}
+      className="mt-3"
+    />
+  ))
 }

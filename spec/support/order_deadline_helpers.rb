@@ -21,7 +21,9 @@ module OrderDeadlineHelpers
   end
 
   def choose_time(time)
-    find("[role=option]", exact_text: time).click
+    option = find("[role=option]", exact_text: time)
+    page.execute_script("arguments[0].scrollIntoView({ block: 'center' });", option)
+    option.click
   end
 end
 

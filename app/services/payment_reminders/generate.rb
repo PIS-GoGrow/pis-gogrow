@@ -51,7 +51,7 @@ module PaymentReminders
         description_data: {
           amount: Account.format_amount(account.amount),
           provider: account.provider.user.name,
-          due_date: I18n.l(account.due_date, format: "%d/%m/%Y"),
+          due_date: DateFormat.long(account.due_date, inline: true),
           days: DAYS_BEFORE_DUE
         }
       )

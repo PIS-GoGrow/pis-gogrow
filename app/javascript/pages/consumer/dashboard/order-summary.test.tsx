@@ -115,4 +115,16 @@ describe("OrderSummary", () => {
       "$320,10",
     )
   })
+
+  // IBP-006 CA10: sin beneficio no hay tiers, y el desglose igual tiene que
+  // decir que GoGrow cubre $0.
+  it("shows the GoGrow subsidy at zero when no benefit applies", () => {
+    render(
+      <OrderSummary loading={false} subtotal={301} total={301} tiers={[]} />,
+    )
+
+    expect(screen.getByText("Subsidio GoGrow").nextSibling).toHaveTextContent(
+      "$0",
+    )
+  })
 })

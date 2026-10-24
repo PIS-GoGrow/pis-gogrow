@@ -59,7 +59,7 @@ const mocks = vi.hoisted(() => ({ priceItems: vi.fn() }))
 vi.mock("@/pages/consumer/dashboard/pricing", () => ({
   priceItems: mocks.priceItems,
   cartPricedItem: (cart: { id: number; quantity: number }[]) =>
-    cart.map((item) => ({ id: item.id, quantity: item.quantity })),
+    cart.map((item) => ({ schedule_id: item.id, quantity: item.quantity })),
 }))
 
 beforeEach(() => {
@@ -104,6 +104,26 @@ describe("DishDetail", () => {
     renderDetail({ item: { ...schedule(), remaining: 2 }, quantity: 2 })
 
     expect(screen.getByRole("button", { name: "Agregar uno" })).toBeDisabled()
+  })
+
+  it("marks the dish as added when it is already in the cart", () => {
+    const added: CartItem = {
+      ...schedule(),
+      cartId: "1-",
+      quantity: 1,
+      notes: "",
+      selections: {},
+    }
+
+    renderDetail({ cart: [added] })
+
+    expect(screen.getByText("Agregado")).toBeInTheDocument()
+  })
+
+  it("does not mark a dish that is not in the cart", () => {
+    renderDetail()
+
+    expect(screen.queryByText("Agregado")).not.toBeInTheDocument()
   })
 
   it("shows the real reviews of the dish", () => {
@@ -235,5 +255,89 @@ describe("DishDetail", () => {
     await user.click(screen.getByRole("button", { name: "Agregar" }))
 
     expect(add).toHaveBeenCalledOnce()
+  })
+
+  describe("when editing an already added dish", () => {
+    it("renders the 'Modificar' button and trash icon when quantity is 1", async () => {
+      const user = userEvent.setup()
+      const onRemove = vi.fn()
+      const add = vi.fn()
+      const cartItem: CartItem = {
+        ...schedule(),
+        cartId: "1-",
+        quantity: 1,
+        notes: "Sin sal",
+        selections: {},
+      }
+
+      renderDetail({
+        cart: [cartItem],
+        editingCartId: "1-",
+        quantity: 1,
+        notes: "Sin sal",
+        onRemove,
+        add,
+      })
+
+      expect(screen.getByText("Agregado")).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Modificar" }),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: "Agregar" }),
+      ).not.toBeInTheDocument()
+
+      const trashButton = screen.getByRole("button", { name: "Quitar" })
+      expect(trashButton).toBeInTheDocument()
+
+      await user.click(trashButton)
+      expect(onRemove).toHaveBeenCalledOnce()
+    })
+
+    it("allows modifying the dish and clicking 'Modificar'", async () => {
+      const user = userEvent.setup()
+      const add = vi.fn()
+      const cartItem: CartItem = {
+        ...schedule(),
+        cartId: "1-",
+        quantity: 1,
+        notes: "",
+        selections: {},
+      }
+
+      renderDetail({
+        cart: [cartItem],
+        editingCartId: "1-",
+        quantity: 2,
+        onRemove: vi.fn(),
+        add,
+      })
+
+      const modifyButton = screen.getByRole("button", { name: "Modificar" })
+      await user.click(modifyButton)
+      expect(add).toHaveBeenCalledOnce()
+    })
+
+    it("does not reduce the quota by the dish currently being edited", () => {
+      const cartItem: CartItem = {
+        ...schedule(),
+        cartId: "1-",
+        quantity: 2,
+        notes: "",
+        selections: {},
+      }
+
+      // Con remaining: 3 y 2 ya en el carrito para este ítem:
+      // Al editarlo, el tope debe ser 3 (no 3 - 2 = 1)
+      renderDetail({
+        item: { ...schedule(), remaining: 3 },
+        cart: [cartItem],
+        editingCartId: "1-",
+        quantity: 2,
+        onRemove: vi.fn(),
+      })
+
+      expect(screen.getByRole("button", { name: "Agregar uno" })).toBeEnabled()
+    })
   })
 })

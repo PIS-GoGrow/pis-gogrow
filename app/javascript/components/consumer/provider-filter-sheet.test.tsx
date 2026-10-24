@@ -23,6 +23,10 @@ describe("ProviderFilterSheet", () => {
     expect(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     ).toBeInTheDocument()
+    const icon = screen
+      .getByRole("button", { name: "Filtrar por proveedores" })
+      .querySelector("svg")
+    expect(icon).toHaveClass("lucide-settings-2")
   })
 
   it("opens filter sheet and displays providers and 'Todos'", async () => {

@@ -107,7 +107,7 @@ RSpec.describe "Provider::Collections", type: :request do
             )
             expect(detail_orders.sum { it[:meals] }).to eq(4)
             expect(detail_orders.sum { it[:amount] }).to eq(1202.0)
-            expect(detail[:days].pluck(:date)).to eq([ dates.last, dates.first ].map { it.strftime("%d/%m") })
+            expect(detail[:days].pluck(:date)).to eq([ dates.last, dates.first ].map { DateFormat.short(it) })
             true
           }
         end
@@ -324,6 +324,21 @@ RSpec.describe "Provider::Collections", type: :request do
         [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
       )
       expect(props[:orders].sum { it[:subsidy] }).to eq(601.0)
+      upcoming = props[:orders].find { it[:id] == orders(:upcoming_confirmed_future).id }
+      expect(upcoming[:delivery_date]).to eq(orders(:upcoming_confirmed_future).delivery_date.strftime("%d/%m/%y"))
+    end
+
+    it "retains delivery_date in orders props even when schedule is nil" do
+      sign_in provider_user, role: :provider
+
+      order = orders(:upcoming_confirmed_future)
+      delivery = order.delivery_date
+      order.update_columns(schedule_id: nil)
+
+      get provider_collection_path(accounts(:gogrow_tuviandita_current))
+
+      serialized_order = props[:orders].find { it[:id] == order.id }
+      expect(serialized_order[:delivery_date]).to eq(delivery.strftime("%d/%m/%y"))
     end
 
     it "lists the payments of the account, newest first" do

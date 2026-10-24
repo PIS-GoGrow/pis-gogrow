@@ -58,6 +58,7 @@ export default function DebtAlertCard({ threshold }: DebtAlertCardProps) {
             action={adminDebtAlert()}
             options={{ preserveScroll: true }}
             onSuccess={() => setIsEditing(false)}
+            noValidate
             className="grid gap-4"
           >
             {({ errors, processing }) => (

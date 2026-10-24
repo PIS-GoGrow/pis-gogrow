@@ -32,7 +32,7 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
 
     click_button "Programar Subsidio"
 
-    date = Calendar.new.configurable_month.strftime("%d/%m/%y")
+    date = DateFormat.long(Calendar.new.configurable_month, inline: true)
     expect(page).to have_content("Hay un cambio programado para el " + date, wait: 30)
 
     new_config = BenefitConfiguration.joins(:benefit_rules)
@@ -62,7 +62,7 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
     fill_in "subsidy_percentage", with: "70"
     click_button "Programar Subsidio"
 
-    date = Calendar.new.configurable_month.strftime("%d/%m/%y")
+    date = DateFormat.long(Calendar.new.configurable_month, inline: true)
     expect(page).to have_content("Ya hay un cambio programado para el " + date, wait: 30)
 
     click_button "Reemplazar por este"
@@ -75,5 +75,16 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
                                           .last
     expect(replaced_config).to be_present
     expect(replaced_config.subsidy_percentage).to eq(70)
+  end
+
+  it "muestra error en español junto al campo cuando el porcentaje está fuera de rango" do
+    visit admin_benefit_configurations_path
+
+    open_editor
+
+    fill_in "subsidy_percentage", with: "150"
+    click_button "Programar Subsidio"
+
+    expect(page).to have_content("debe ser menor que o igual a 100")
   end
 end

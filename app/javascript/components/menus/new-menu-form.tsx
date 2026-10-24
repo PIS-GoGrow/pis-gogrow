@@ -189,20 +189,23 @@ export default function MenuForm({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    for (const field of ["name", "price", "description"] as const) {
-      if (data[field].trim() === "") {
-        setError(field, [t(`${key}.required`)])
-        return
-      }
-    }
+    const emptyFields = (["name", "price", "description"] as const).filter(
+      (field) => data[field].trim() === "",
+    )
+    emptyFields.forEach((field) => setError(field, [t(`${key}.required`)]))
+
+    const priceNotPositive =
+      data.price.trim() !== "" && !(Number(data.price) > 0)
+    if (priceNotPositive) setError("price", [t(`${key}.price_positive`)])
 
     const problem = agenda ? agendaProblem(agenda) : null
-    if (problem) {
-      setAgendaError(t(`pages.provider_menus.edit.agenda.${problem}`))
-      return
-    }
+    setAgendaError(
+      problem
+        ? t(`pages.provider_menus.edit.agenda.${problem}`)
+        : null,
+    )
 
-    setAgendaError(null)
+    if (emptyFields.length > 0 || priceNotPositive || problem !== null) return
 
     if (edit) {
       transform((formData) => ({ menu: menuPayload(formData) }))
@@ -281,6 +284,7 @@ export default function MenuForm({
     <>
       <form
         onSubmit={handleSubmit}
+        noValidate
         className={menu ? "mx-auto w-full max-w-3xl" : undefined}
       >
         <div className="flex flex-col gap-4">
