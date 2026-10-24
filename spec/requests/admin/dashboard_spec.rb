@@ -49,7 +49,7 @@ RSpec.describe "Admin::Dashboard", type: :request do
         expect(response).to have_http_status(:ok)
         expect(inertia).to render_component("admin/dashboard/index")
         expect(inertia).to have_props(
-          today: I18n.l(Date.current, format: "%A %-d de %B").capitalize,
+          today: DateFormat.long(Date.current),
           month: current_key,
           current_month: current_key,
           summary: {

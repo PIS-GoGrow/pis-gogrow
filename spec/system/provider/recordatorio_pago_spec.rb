@@ -32,7 +32,7 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
 
     # En la pantalla de cobros, seleccionar clientes/empleados del grupo del mes anterior
     previous_month_label = I18n.l(Date.current.prev_month, format: :month_name_year)
-    within(find("[role=tabpanel] [data-slot=card]", text: "GoGrow", text: previous_month_label)) do
+    within(find("[role=tabpanel] [data-slot=card]", text: previous_month_label)) do
       click_on "Empleados"
       click_on employee_user.name
     end

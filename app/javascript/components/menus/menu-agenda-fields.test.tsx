@@ -122,8 +122,12 @@ describe("MenuAgendaFields component", () => {
       />,
     )
 
-    expect(screen.getByLabelText("Desde")).toHaveTextContent("Enero 10, 2030")
-    expect(screen.getByLabelText("Hasta")).toHaveTextContent("Enero 15, 2030")
+    expect(screen.getByLabelText("Desde")).toHaveTextContent(
+      "Jueves 10 de enero",
+    )
+    expect(screen.getByLabelText("Hasta")).toHaveTextContent(
+      "Martes 15 de enero",
+    )
   })
 
   it("renders error message when error prop is provided", () => {

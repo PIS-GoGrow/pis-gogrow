@@ -27,7 +27,7 @@ RSpec.describe "Integración de recordatorios de menú", type: :job do
     configuration.users << provider.user
 
     expect { 2.times { run_reminders } }.to have_enqueued_job(WhatsappSenderJob)
-      .with(instance_of(Notification), :provider_menu_unpublished, {}, { date: "9/1/2030" }, "+59899123456").exactly(:once)
+      .with(instance_of(Notification), :provider_menu_unpublished, {}, { date: "miércoles 9 de enero" }, "+59899123456").exactly(:once)
   end
 
   it "no genera avisos ni entregas durante el fin de semana" do
@@ -43,7 +43,7 @@ RSpec.describe "Integración de recordatorios de menú", type: :job do
     run_reminders
     notification = provider.user.notifications.find_by!(event:)
 
-    expect(notification.description).to eq("Todavía no publicaste un menú para el 9/1/2030.")
+    expect(notification.description).to eq("Todavía no publicaste un menú para el miércoles 9 de enero.")
     travel_to Time.utc(2030, 1, 10, 3, 5)
     ProviderMenuUnpublishedNotificationsCleanupJob.perform_now
 

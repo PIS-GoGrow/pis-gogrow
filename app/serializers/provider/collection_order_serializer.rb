@@ -17,7 +17,7 @@ class Provider::CollectionOrderSerializer < ApplicationSerializer
 
   typelize :string, nullable: true
   attribute :delivery_date do |order|
-    order.delivery_date&.strftime("%d/%m/%y")
+    DateFormat.short(order.delivery_date)
   end
 
   # Lo que paga el empleado.

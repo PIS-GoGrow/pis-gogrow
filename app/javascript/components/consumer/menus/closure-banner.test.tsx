@@ -9,7 +9,7 @@ describe("ClosureBanner", () => {
   const closure: ConsumerClosure = {
     id: 1,
     provider_name: "Tu Vianda SRL",
-    period: "20 al 22 de octubre de 2026",
+    period: "20/10/26 al 22/10/26",
     reason: "Vacaciones de invierno",
     starts_on: "2026-10-20",
     ends_on: "2026-10-22",
@@ -23,7 +23,7 @@ describe("ClosureBanner", () => {
     ).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Sus viandas no estarán disponibles del 20 al 22 de octubre de 2026. Motivo: Vacaciones de invierno",
+        "Sus viandas no estarán disponibles del 20/10/26 al 22/10/26. Motivo: Vacaciones de invierno",
       ),
     ).toBeInTheDocument()
   })

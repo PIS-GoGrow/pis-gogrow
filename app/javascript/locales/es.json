@@ -66,6 +66,7 @@
         "uppercase": "Al menos una mayúscula"
       },
       "settings_layout": {
+        "back_to_account": "Volver a Cuenta",
         "description": "Administrá tu perfil y la configuración de tu cuenta",
         "title": "Configuración"
       }
@@ -463,6 +464,29 @@
             "consumption": "Consumo",
             "date": "Fecha",
             "employee": "Empleado",
+            "filters": {
+              "all_providers": "Todos",
+              "all_statuses": "Todos",
+              "apply": "Aplicar",
+              "cancel": "Cancelar",
+              "clear": "Limpiar filtros",
+              "empty_description": "Probá cambiando o limpiando los filtros.",
+              "empty_title": "No hay consumos que coincidan",
+              "open": "Filtrar historial",
+              "provider_chip": "Proveedor: %{provider}",
+              "providers": "Proveedores:",
+              "remove_provider": "Quitar filtro de proveedor %{provider}",
+              "remove_status": "Quitar filtro de estado",
+              "remove_subsidy": "Quitar filtro de subsidio",
+              "status": "Estado de pago",
+              "status_chip": "Estado: %{status}",
+              "subsidy": "Subsidio aplicado",
+              "subsidy_all": "Todos los consumos",
+              "subsidy_chip": "Subsidio: %{subsidy}",
+              "subsidy_with": "Con subsidio aplicado",
+              "subsidy_without": "Sin subsidio aplicado",
+              "title": "Filtros del historial"
+            },
             "history": "Historial de consumo",
             "history_empty_description": "Este empleado todavía no realizó ningún pedido de viandas.",
             "history_empty_title": "Sin consumos",
@@ -475,6 +499,7 @@
             "month_detail_description": "Pedidos confirmados del mes, con lo que cubre la empresa y lo que paga el empleado.",
             "no_provider": "Sin proveedor",
             "orders_empty": "No hay pedidos confirmados en este mes.",
+            "orders_empty_title": "Sin consumos",
             "provider": "Proveedor",
             "quantity": "Cant.",
             "reminder": {
@@ -502,6 +527,7 @@
             "this_month": "Este mes",
             "title": "Detalle del empleado",
             "total": "Total: %{amount}",
+            "total_label": "Total",
             "view_month": "Ver el detalle de %{month}",
             "year_label": "Año"
           }
@@ -674,8 +700,10 @@
       "cart": {
         "add_address": "Agregar",
         "benefit": "Subsidio Base (%{percentage}%)",
+        "decrease": "Quitar una unidad de %{name}",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
+        "increase": "Agregar una unidad de %{name}",
         "monthly": {
           "full_price_one": "La vianda de este pedido se cobra a precio completo.",
           "full_price_other": "Las %{count} viandas de este pedido se cobran a precio completo.",
@@ -716,10 +744,12 @@
         "benefit_card": {
           "period": "Este mes",
           "title": "Tu consumo",
-          "unit": "viandas subsidiadas",
+          "unit": "viandas pedidas",
           "used": "%{used} de %{limit}"
         },
         "index": {
+          "add": "Agregar",
+          "added": "Agregado",
           "closure": {
             "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
             "dismiss": "Cerrar aviso",
@@ -727,10 +757,11 @@
             "title_now": "%{provider} no está disponible",
             "title_soon": "%{provider} no estará disponible"
           },
+          "modify": "Modificar",
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
         },
         "options": {
-          "choose": "Elegí tu %{name}",
+          "choose": "Elegí tu/s %{name}",
           "limit": "Podés elegir hasta %{count}",
           "optional": "Opcional",
           "required": "Obligatorio"
@@ -896,6 +927,7 @@
         "show": {
           "deliveries": "Entregas",
           "deliveries_description": "Elegí dónde realizás tus entregas",
+          "incomplete": "Incompleto",
           "notifications": "Notificaciones",
           "notifications_description": "Configurá qué alertas querés recibir",
           "operational_settings": "Configuración operativa",
@@ -1124,8 +1156,8 @@
             "total": "Deuda total"
           },
           "profile": {
-            "description": "La configuración de los pasos estará disponible próximamente.",
-            "title": "Completá tu cuenta"
+            "description": "Deje todo listo para empezar a recibir pedidos.",
+            "title": "Complete su cuenta"
           },
           "title": "Inicio"
         }
@@ -1302,7 +1334,7 @@
         "continue": "Continuar",
         "done": {
           "cta": "Ir al Inicio",
-          "description": "Tu cuenta ya está configurada y podés empezar a recibir pedidos.",
+          "description": "Su cuenta ya está configurada y puede empezar a recibir pedidos.",
           "title": "¡Todo listo!"
         },
         "finish": "Finalizar",
@@ -1310,23 +1342,19 @@
         "skip": "Omitir por ahora",
         "steps": {
           "1": {
-            "description": "Ingresá los datos de la cuenta donde vas a recibir los pagos de tus pedidos.",
+            "description": "Ingrese los datos de la cuenta donde recibirá los pagos de sus pedidos.",
             "title": "Datos de cobro"
           },
           "2": {
-            "description": "Definí hasta qué hora recibís pedidos cada día.",
-            "order_deadline": "Hora de cierre",
-            "order_deadline_description": "Después de esta hora no se reciben más pedidos del día.",
-            "title": "Hora de cierre"
+            "description": "Defina hasta qué hora recibe pedidos y qué días no estará disponible.",
+            "title": "Configure sus pedidos"
           },
           "3": {
-            "description": "Elegí si aceptás direcciones de entrega personalizadas además de las oficinas.",
-            "home_delivery": "Direcciones personalizadas",
-            "home_delivery_description": "Aceptás pedidos con direcciones de entrega además de las oficinas.",
-            "title": "Entregas"
+            "description": "Elija dónde realiza sus entregas y si acepta direcciones personalizadas.",
+            "title": "Configure sus entregas"
           },
           "4": {
-            "description": "Elegí qué alertas querés recibir sobre tus pedidos y pagos.",
+            "description": "Elija qué alertas desea recibir sobre sus pedidos y pagos.",
             "title": "Notificaciones"
           }
         }
@@ -1338,6 +1366,7 @@
           "back": "Volver a Cuenta",
           "closing_time": "Hora de cierre",
           "closing_time_description": "Hasta qué hora recibís pedidos.",
+          "closing_time_placeholder": "Seleccione una hora",
           "closures": {
             "cancel": "Cancelar",
             "date_range": "Rango de fechas",
@@ -1345,12 +1374,6 @@
             "description": "Días en los que no recibís pedidos.",
             "edit": "Editar cierre %{reason}",
             "edit_title": "Editar cierre",
-            "period": {
-              "other_year": "%{from} al %{to}",
-              "same_month": "%{from_day} al %{to_day_month} de %{year}",
-              "same_year": "%{from_day_month} al %{to_day_month} de %{year}",
-              "single": "%{date}"
-            },
             "reason": "Motivo",
             "reason_placeholder": "Vacaciones",
             "save": "Guardar cambios",

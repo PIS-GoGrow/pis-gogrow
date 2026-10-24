@@ -14,7 +14,7 @@ class Provider::DashboardController < Provider::InertiaController
            .where(schedules: { date: Date.current.all_month })
            .where.not(status: [ :cancelled, :rejected ])
 
-    @today = I18n.l(Date.current, format: "%A %-d de %B").capitalize
+    @today = DateFormat.long(Date.current)
     @today_orders_count = today_orders.count
     @pending_orders_count = today_orders.pending.count
     @office_orders_count = today_orders.office.count
@@ -24,5 +24,7 @@ class Provider::DashboardController < Provider::InertiaController
     @month_orders_count = month_orders.count
     @month_dishes_count = @provider.menus.count
     @average_rating = Review.joins(:menu).where(menus: { provider_id: @provider.id }).average(:rating)&.round(1)&.to_f
+    @completed_sections_count = @provider.completed_sections_count
+    @sections_total = @provider.total_sections_count
   end
 end

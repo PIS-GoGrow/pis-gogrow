@@ -39,7 +39,7 @@ export default function Show({
   editing,
 }: ConsumerOrdersShow) {
   const { t } = useTranslation()
-  const { formatMoney, formatDeliveryDate } = useFormatters()
+  const { formatMoney, formatLongDate } = useFormatters()
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -101,7 +101,7 @@ export default function Show({
 
               <Row label={t("pages.orders.show.date")}>
                 {order.date
-                  ? formatDeliveryDate(order.date)
+                  ? formatLongDate(order.date)
                   : t("pages.orders.index.no_date")}
               </Row>
 

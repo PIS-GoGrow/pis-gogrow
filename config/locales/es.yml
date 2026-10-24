@@ -378,6 +378,7 @@ es:
     settings_layout:
       title: "Configuración"
       description: "Administrá tu perfil y la configuración de tu cuenta"
+      back_to_account: "Volver a Cuenta"
     delete_account:
       title: "Eliminar cuenta"
       description: "Eliminá tu cuenta y todos tus datos"
@@ -658,7 +659,31 @@ es:
           quantity: "Cant."
           employee: "Empleado"
           no_provider: "Sin proveedor"
+          orders_empty_title: "Sin consumos"
           orders_empty: "No hay pedidos confirmados en este mes."
+          filters:
+            open: "Filtrar historial"
+            title: "Filtros del historial"
+            providers: "Proveedores:"
+            all_providers: "Todos"
+            status: "Estado de pago"
+            all_statuses: "Todos"
+            subsidy: "Subsidio aplicado"
+            subsidy_all: "Todos los consumos"
+            subsidy_with: "Con subsidio aplicado"
+            subsidy_without: "Sin subsidio aplicado"
+            provider_chip: "Proveedor: %{provider}"
+            status_chip: "Estado: %{status}"
+            subsidy_chip: "Subsidio: %{subsidy}"
+            remove_provider: "Quitar filtro de proveedor %{provider}"
+            remove_status: "Quitar filtro de estado"
+            remove_subsidy: "Quitar filtro de subsidio"
+            empty_title: "No hay consumos que coincidan"
+            empty_description: "Probá cambiando o limpiando los filtros."
+            clear: "Limpiar filtros"
+            cancel: "Cancelar"
+            apply: "Aplicar"
+          total_label: "Total"
           total: "Total: %{amount}"
           close: "Cerrar"
       payments:
@@ -1116,8 +1141,8 @@ es:
           label: "Hora límite"
           help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
         profile:
-          title: "Completá tu cuenta"
-          description: "La configuración de los pasos estará disponible próximamente."
+          title: "Complete su cuenta"
+          description: "Deje todo listo para empezar a recibir pedidos."
         orders:
           title: "Pedidos"
           today: "Hoy"
@@ -1321,6 +1346,8 @@ es:
       office_delivery_warning_other: "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
       remove: "Quitar %{name}"
+      decrease: "Quitar una unidad de %{name}"
+      increase: "Agregar una unidad de %{name}"
       delivery: "Entrega: %{date}"
       benefit: "Subsidio Base (%{percentage}%)"
       no_benefit: "Subsidio GoGrow"
@@ -1400,6 +1427,7 @@ es:
         title: "Cuenta"
         sign_out: "Salir"
         settings: "Configuración"
+        incomplete: "Incompleto"
         payment_details: "Datos de cobro"
         payment_details_description: "Configurá dónde querés recibir tus cobros"
         operational_settings: "Configuración operativa"
@@ -1419,23 +1447,19 @@ es:
       steps:
         1:
           title: "Datos de cobro"
-          description: "Ingresá los datos de la cuenta donde vas a recibir los pagos de tus pedidos."
+          description: "Ingrese los datos de la cuenta donde recibirá los pagos de sus pedidos."
         2:
-          title: "Hora de cierre"
-          description: "Definí hasta qué hora recibís pedidos cada día."
-          order_deadline: "Hora de cierre"
-          order_deadline_description: "Después de esta hora no se reciben más pedidos del día."
+          title: "Configure sus pedidos"
+          description: "Defina hasta qué hora recibe pedidos y qué días no estará disponible."
         3:
-          title: "Entregas"
-          description: "Elegí si aceptás direcciones de entrega personalizadas además de las oficinas."
-          home_delivery: "Direcciones personalizadas"
-          home_delivery_description: "Aceptás pedidos con direcciones de entrega además de las oficinas."
+          title: "Configure sus entregas"
+          description: "Elija dónde realiza sus entregas y si acepta direcciones personalizadas."
         4:
           title: "Notificaciones"
-          description: "Elegí qué alertas querés recibir sobre tus pedidos y pagos."
+          description: "Elija qué alertas desea recibir sobre sus pedidos y pagos."
       done:
         title: "¡Todo listo!"
-        description: "Tu cuenta ya está configurada y podés empezar a recibir pedidos."
+        description: "Su cuenta ya está configurada y puede empezar a recibir pedidos."
         cta: "Ir al Inicio"
     provider_payment_details:
       show:
@@ -1473,6 +1497,7 @@ es:
         back: "Volver a Cuenta"
         closing_time: "Hora de cierre"
         closing_time_description: "Hasta qué hora recibís pedidos."
+        closing_time_placeholder: "Seleccione una hora"
         add_closing_time: "Agregar hora de cierre"
         add_closing_time_title: "Agregar Hora de cierre"
         save_changes: "Guardar cambios"
@@ -1497,19 +1522,17 @@ es:
           saved_description: "No recibirás pedidos del %{period}."
           edit: "Editar cierre %{reason}"
           delete: "Eliminar cierre %{reason}"
-          period:
-            single: "%{date}"
-            same_month: "%{from_day} al %{to_day_month} de %{year}"
-            same_year: "%{from_day_month} al %{to_day_month} de %{year}"
-            other_year: "%{from} al %{to}"
     consumer_dashboard:
       benefit_card:
         title: "Tu consumo"
         period: "Este mes"
         used: "%{used} de %{limit}"
-        unit: "viandas subsidiadas"
+        unit: "viandas pedidas"
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
+        added: "Agregado"
+        add: "Agregar"
+        modify: "Modificar"
         closure:
           title_now: "%{provider} no está disponible"
           title_soon: "%{provider} no estará disponible"
@@ -1517,7 +1540,7 @@ es:
           empty: "%{provider} no recibirá pedidos del %{period}."
           dismiss: "Cerrar aviso"
       options:
-        choose: "Elegí tu %{name}"
+        choose: "Elegí tu/s %{name}"
         limit: "Podés elegir hasta %{count}"
         required: "Obligatorio"
         optional: "Opcional"
@@ -1614,10 +1637,11 @@ es:
         back_to_account: "Volver a Mi cuenta"
   date:
     formats:
+      default: "%d/%m/%y"
+      short: "%d/%m/%y"
+      long: "%A %-d de %B"
       month_year: "%B %Y"
       month_name_year: "%B %Y"
-      day_month: "%-d de %B"
-      day_month_year: "%-d de %B de %Y"
     month_names:
       [
         ~,
