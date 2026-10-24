@@ -102,10 +102,10 @@ RSpec.describe "Ver la personalización del pedido", type: :system do
 
     click_button "Agregar #{menu.name}"
     expect(page).to have_content("Notas para este plato")
-    find("section", text: "Elegí: Salsa").find("label", text: "Bolognesa").click
-    find("section", text: "Elegí: Relleno").find("label", text: "Espinaca y queso").click
+    find("section", text: "Elegí tu/s salsa").find("label", text: "Bolognesa").click
+    find("section", text: "Elegí tu/s relleno").find("label", text: "Espinaca y queso").click
     click_button "Agregar"
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
     click_button "Confirmar pedido"
     expect(page).to have_content("¡Pedido recibido!")

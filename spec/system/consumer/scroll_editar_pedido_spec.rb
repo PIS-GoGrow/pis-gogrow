@@ -62,9 +62,9 @@ RSpec.describe "Scroll al editar pedido con múltiples opciones", type: :system 
 
     within(dialog) do
       expect(page).to have_content("Modificar pedido")
-      expect(page).to have_content("Elegí: Salsa")
-      expect(page).to have_content("Elegí: Relleno")
-      expect(page).to have_content("Elegí: Queso rallado")
+      expect(page).to have_content("Elegí tu/s salsa")
+      expect(page).to have_content("Elegí tu/s relleno")
+      expect(page).to have_content("Elegí tu/s queso rallado")
 
       find("label", text: "Bolognesa").click
 

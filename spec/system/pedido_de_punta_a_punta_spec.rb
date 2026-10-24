@@ -73,14 +73,14 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     click_button "Agregar"
   end
 
-  # Cada grupo es una <section> "Elegí: <nombre>": buscar por el título evita
+  # Cada grupo es una <section> "Elegí tu <nombre>": buscar por el título evita
   # elegir la opción de otro grupo.
   def pick_option(group, option)
-    find("section", text: "Elegí: #{group}").find("label", text: option).click
+    find("section", text: "Elegí tu/s #{group.downcase}").find("label", text: option).click
   end
 
   def open_cart
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
   end
 
@@ -130,7 +130,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       open_menu(as: e1_user, day: tuesday)
       expect(page).to have_button("Agregar #{p1_wok.name}")
       click_button "Agregar #{p1_milanesa.name}"
-      within("section", text: "Elegí: Guarnición") do
+      within("section", text: "Elegí tu/s guarnición") do
         expect(page).to have_css("[role=radio]", count: 2)
       end
       expect(page).to have_button("Agregar", exact: true, disabled: true)

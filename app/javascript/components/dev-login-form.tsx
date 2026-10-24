@@ -28,6 +28,7 @@ export default function DevLoginForm() {
         action={sessions.create()}
         resetOnSuccess={["password"]}
         disableWhileProcessing
+        noValidate
         className="flex flex-col gap-6"
       >
         {({ processing }) => (

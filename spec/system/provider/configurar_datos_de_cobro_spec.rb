@@ -22,6 +22,8 @@ RSpec.describe "Configurar los datos de cobro del proveedor" do
   def choose_account_type(label)
     find_by_id("bank_account_type").click
     find("[role=option]", exact_text: label).click
+    expect(page).not_to have_css("[role=option]", visible: true, wait: 5)
+    expect(page).not_to have_css("[data-radix-popper-content-wrapper]", visible: true, wait: 5)
   end
 
   def fill_valid_details(tax_id: "212345670012", number: "001234567-00001")

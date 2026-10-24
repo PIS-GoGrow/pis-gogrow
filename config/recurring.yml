@@ -34,3 +34,6 @@ production:
   provider_menu_unpublished_notifications_cleanup:
     class: ProviderMenuUnpublishedNotificationsCleanupJob
     schedule: every day at 00:05 America/Montevideo
+  employee_order_reminders:
+    class: EmployeeOrderRemindersJob
+    schedule: every minute

@@ -142,7 +142,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
         expect(page).to have_content("Subtotal sin IVA")
         expect(page).to have_content("#{short_money(current_period.amount)} | 4 viandas")
         expect(page).to have_content("IVA (0%)")
-        expect(page).to have_content("Total pagado")
+        expect(page).to have_content("Total a pagar")
       end
     end
   end

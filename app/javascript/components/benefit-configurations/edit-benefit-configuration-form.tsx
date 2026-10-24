@@ -106,7 +106,7 @@ export default function EditBenefitConfigurationForm({
   const efectiveFromErrors = errors.benefit_rules?.at(0)?.effective_from
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} noValidate>
       <FieldGroup>
         <Field
           orientation="horizontal"

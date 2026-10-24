@@ -22,6 +22,10 @@ class SeniorityBenefit < BenefitRule
   def benefit_deadline(consumer, date: Date.current)
     nil
   end
+
+  def benefit_max_price
+    nil
+  end
 end
 # == Schema Information
 #

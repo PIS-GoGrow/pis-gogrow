@@ -50,13 +50,30 @@ RSpec.describe "Consumer dashboard", type: :request do
     expect(inertia).to have_props { |props|
       props[:schedules].one? &&
         props[:schedules].first[:id] == schedule.id &&
-        props.dig(:benefit, :percentage) == 50 &&
-        props[:addresses].pluck(:label) == [ "Oficina", "Casa" ]
+        props.dig(:benefit, :percentage) == 50
     }
   end
+  it "renders the cart with its server props" do
+      travel_to(Time.zone.local(2026, 9, 14, 10))
+      Order.destroy_all
+      Schedule.delete_all
+      user = consumer_user
+      schedule = create_schedule
+      sign_in_as_consumer(user)
 
-  it "reports the five meal weekly allowance using delivery dates" do
-    # A fin de mes la semana siguiente cae en otro mes y sale del tope mensual.
+      get dashboard_cart_path
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to render_component("consumer/dashboard/cart")
+      expect(inertia).to have_props { |props|
+        props.dig(:benefit, :percentage) == 50 &&
+          props[:addresses].pluck(:label) == [ "Oficina", "Casa" ]
+      }
+    end
+
+  # La tarjeta "Tu consumo" muestra el mes contra el tope mensual: no hay tope
+  # semanal en los requisitos, y dividir el mensual entre 4 daba 0 con K < 4.
+  it "reports the monthly allowance using delivery dates" do
     travel_to(Time.zone.local(2026, 9, 14, 10))
     Order.destroy_all
     Schedule.delete_all
@@ -74,8 +91,6 @@ RSpec.describe "Consumer dashboard", type: :request do
     expect(user.consumer.benefits.first.amount).to eq(20)
     expect(inertia).to have_props(
       benefit: {
-        limit: 5,
-        used: 2,
         percentage: 50,
         monthly_limit: 20,
         monthly_used: 5,
@@ -399,7 +414,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       publish(menus(:milanesa), monday)
       sign_in users(:one)
 
-      get dashboard_path
+      get dashboard_cart_path
 
       expect(inertia.props[:addresses].pluck(:id)).to eq([ "office" ])
     end
@@ -436,7 +451,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
       get dashboard_path
 
-      expect(inertia.props[:benefit]).to include(used: 0, monthly_used: 0)
+      expect(inertia.props[:benefit]).to include(monthly_used: 0)
     end
   end
 

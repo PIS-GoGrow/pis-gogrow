@@ -1,6 +1,7 @@
 import { Plus } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import AddedBadge from "@/components/consumer/menus/added-badge"
 import { Button } from "@/components/ui/button"
 import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
@@ -39,9 +40,7 @@ export default function MenuItem({
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-1.5">
           <span className="text-muted-foreground text-sm">{providerName}</span>
-          {addedQuantity && (
-            <span className="text-foreground text-xs">• Agregado</span>
-          )}
+          {addedQuantity && <AddedBadge />}
           {ordersClosed && (
             <span className="text-destructive flex items-center gap-1 text-xs">
               <span className="bg-destructive inline-block size-1.5 rounded-full" />
@@ -75,7 +74,7 @@ export default function MenuItem({
           !addedQuantity &&
             "border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground",
           addedQuantity &&
-            "border-primary bg-primary text-primary-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground dark:border-primary dark:bg-primary dark:text-primary-foreground dark:hover:border-primary dark:hover:bg-primary dark:hover:text-primary-foreground",
+            "border-blue-700 bg-blue-700 text-white hover:border-blue-700 hover:bg-blue-700 hover:text-white dark:border-blue-700 dark:bg-blue-700 dark:text-white dark:hover:border-blue-700 dark:hover:bg-blue-700 dark:hover:text-white",
         )}
       >
         {addedQuantity ?? <Plus aria-hidden="true" className="size-4" />}

@@ -1,6 +1,8 @@
 import { ChevronLeft, Star } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import AddedBadge from "@/components/consumer/menus/added-badge"
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
@@ -10,7 +12,8 @@ import { formatMoney } from "@/lib/money"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { OrderSummary } from "./order-summary"
-import { type Benefit, cartPricedItem, priceItems } from "./pricing"
+import type { PricedLine } from "./pricing"
+import { cartPricedItem, lastUnitsLine, priceItems } from "./pricing"
 
 interface Props {
   item: Schedule
@@ -20,7 +23,6 @@ interface Props {
   setNotes: (value: string) => void
   selections: Selections
   setSelections: (value: Selections) => void
-  benefit: Benefit
   cart: CartItem[]
   back: () => void
   add: () => void
@@ -34,22 +36,44 @@ export function DishDetail({
   setNotes,
   selections,
   setSelections,
-  benefit,
   cart,
   back,
   add,
 }: Props) {
   const { t } = useTranslation()
-  // El plato se agrega al final del carrito, así que lo que ya está ahí gasta
-  // primero el cupo y los usos de los beneficios.
-  const pricing = priceItems(
-    [
-      ...cart.map(cartPricedItem),
-      { key: "", date: item.date, price: item.menu.price, quantity },
-    ],
-    benefit,
-  )
-  const line = pricing.lines[""]
+  const [line, setLine] = useState<PricedLine | null>(null)
+
+  const inCart =
+    cartPricedItem(cart).find((i) => item.id === i.schedule_id)?.quantity ?? 0
+
+  useEffect(() => {
+    let cancelled = false
+
+    // Esperar 200 milisegundos para hacer la request, por si el usuario toca varias veces
+    // seguidas los botones de + o -.
+    const timeout = setTimeout(async () => {
+      try {
+        const result = await priceItems(
+          cartPricedItem([...cart, { ...item, quantity }]),
+        )
+        if (cancelled) return
+
+        const preLine = result.lines[String(item.id)]
+
+        setLine(
+          preLine ? lastUnitsLine(inCart + quantity, quantity, preLine) : null,
+        )
+      } finally {
+        // No hacer nada
+      }
+    }, 200)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
+    }
+  }, [cart, item, inCart, item.id, item.date, item.menu.price, quantity])
+
   const reviews = item.menu.reviews
   const choicesMissing = item.menu.option_groups.some(
     (group) => group.required && !selections[group.id]?.length,
@@ -68,7 +92,12 @@ export function DishDetail({
       >
         <ChevronLeft aria-hidden="true" className="size-5" />
       </Button>
-      <p className="text-muted-foreground text-xs">{item.menu.provider_name}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-muted-foreground text-xs">
+          {item.menu.provider_name}
+        </p>
+        {inCart > 0 && <AddedBadge />}
+      </div>
       <h1 className="mt-1 text-xl font-bold">{item.menu.name}</h1>
       <p className="text-muted-foreground mt-2 text-xs leading-5">
         {item.menu.description}
@@ -148,14 +177,15 @@ export function DishDetail({
         </p>
       </section>
       <OrderSummary
-        subtotal={line.subtotal}
-        total={line.total}
-        tiers={line.tiers}
+        loading={false}
+        subtotal={line?.subtotal}
+        total={line?.total}
+        tiers={line?.tiers}
       />
       <BottomAction className="flex">
         <QuantityInput
           value={quantity}
-          max={item.remaining}
+          max={item.remaining - inCart}
           onChange={setQuantity}
         />
         <Button

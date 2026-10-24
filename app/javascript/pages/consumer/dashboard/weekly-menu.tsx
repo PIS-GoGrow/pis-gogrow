@@ -1,3 +1,4 @@
+import { Link } from "@inertiajs/react"
 import { UtensilsCrossed } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -16,9 +17,11 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { Spinner } from "@/components/ui/spinner"
 import useSessionStorage from "@/hooks/use-session-storage"
 import { formatLongDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
+import { dashboardCart } from "@/routes"
 import type { ConsumerClosure, ConsumerDashboardIndex } from "@/types"
 
 import { BenefitCard } from "./benefit-card"
@@ -34,9 +37,9 @@ interface Props {
   closures: ConsumerClosure[]
   cart: CartItem[]
   count: number
-  total: number
+  loading: boolean
+  total?: number
   openDetail: (item: Schedule) => void
-  openCart: () => void
 }
 
 export const today = () => {
@@ -56,9 +59,9 @@ export function WeeklyMenu({
   closures,
   cart,
   count,
+  loading,
   total,
   openDetail,
-  openCart,
 }: Props) {
   const { t } = useTranslation()
   const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set())
@@ -209,18 +212,23 @@ export function WeeklyMenu({
             <div className="border-border bg-card rounded-xl border p-5">
               <p className="text-muted-foreground text-sm">Tu carrito</p>
               <h3 className="mt-8 text-lg">
-                {count} platos · {formatMoney(total)}
+                {count} platos ·{" "}
+                {!loading ? (
+                  formatMoney(total ?? 0)
+                ) : (
+                  <Spinner className="inline" />
+                )}
               </h3>
               <p className="text-muted-foreground mt-4 text-sm">
                 Agregá platos de distintos días y proveedores.
               </p>
               <Button
                 type="button"
-                onClick={openCart}
                 disabled={count === 0}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-8 w-full"
+                asChild
               >
-                Ver carrito
+                <Link href={dashboardCart().url}>Ver carrito</Link>
               </Button>
             </div>
           </aside>
@@ -244,11 +252,11 @@ export function WeeklyMenu({
       {count > 0 && (
         <Button
           type="button"
-          onClick={openCart}
           data-slot="floating-cart-button"
           className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground fixed right-5 bottom-24 left-5 z-20 h-12 rounded-lg text-sm shadow-lg md:bottom-6 lg:hidden"
+          asChild
         >
-          Ver carrito
+          <Link href={dashboardCart().url}>Ver carrito</Link>
         </Button>
       )}
 
