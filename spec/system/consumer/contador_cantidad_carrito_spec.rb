@@ -79,4 +79,67 @@ RSpec.describe "Contador de cantidad y botón quitar en el carrito del consumido
     expect(page).to have_content("Todavía no agregaste platos.")
     expect(page).to have_no_content("Milanesa con papas fritas")
   end
+
+  it "al tocar un plato ya agregado abre la pantalla en modo modificación, permite editar la cantidad y guardar" do
+    visit_hydrated dashboard_path
+    click_button "Agregar Milanesa con papas fritas"
+    expect(page).to have_content("Notas para este plato")
+    fill_in "notes", with: "Sin sal"
+    click_button "Agregar"
+
+    # En el menú semanal, el plato aparece con badge Agregado y cantidad 1
+    expect(page).to have_content("Agregado")
+    expect(page).to have_button("Agregar Milanesa con papas fritas", text: "1")
+
+    # Al volver a tocar el plato agregado, abre el detalle con los datos precargados y botón 'Modificar'
+    click_button "Agregar Milanesa con papas fritas"
+    expect(page).to have_content("Agregado")
+    expect(page).to have_field("notes", with: "Sin sal")
+    expect(page).to have_button("Modificar", exact: true)
+    expect(page).to have_no_button("Agregar", exact: true)
+
+    # Contador muestra el tacho al estar en 1 (aria-label 'Quitar')
+    expect(page).to have_button("Quitar", exact: true)
+
+    # Aumentar a 2: el botón '-' ya no es tacho, sino 'Quitar uno'
+    click_button "Agregar uno"
+    expect(page).to have_button("Quitar uno", exact: true)
+    expect(page).to have_no_button("Quitar", exact: true)
+
+    # Guardar cambios
+    click_button "Modificar", exact: true
+
+    # Vuelve al menú y el contador del plato muestra 2
+    expect(page).to have_content("Agregado")
+    expect(page).to have_button("Agregar Milanesa con papas fritas", text: "2")
+
+    # Ir al carrito y confirmar el pedido con cantidad 2 y notas modificadas
+    click_link "Ver carrito"
+    expect(page).to have_content("Milanesa con papas fritas x2")
+    click_button "Confirmar pedido"
+    expect(page).to have_content("¡Pedido recibido!")
+    expect(Order.last.amount).to eq(2)
+    expect(Order.last.notes).to eq("Sin sal")
+  end
+
+  it "elimina el plato del carrito y vuelve al menú al presionar el tacho de basura en el detalle del plato agregado" do
+    visit_hydrated dashboard_path
+    click_button "Agregar Milanesa con papas fritas"
+    click_button "Agregar"
+
+    expect(page).to have_content("Agregado")
+
+    # Abrir el plato agregado
+    click_button "Agregar Milanesa con papas fritas"
+    expect(page).to have_button("Modificar", exact: true)
+
+    # Presionar el tacho de basura
+    click_button "Quitar", exact: true
+
+    # Vuelve al menú y el plato ya no está en el carrito
+    expect(page).to have_content("Menú semanal")
+    expect(page).to have_no_content("Agregado")
+    expect(page).to have_button("Agregar Milanesa con papas fritas", text: "")
+    expect(page).to have_content("0 platos")
+  end
 end

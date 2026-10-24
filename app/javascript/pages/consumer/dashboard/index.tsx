@@ -36,6 +36,7 @@ export default function Index({
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
   const [selections, setSelections] = useState<Selections>({})
+  const [editingCartId, setEditingCartId] = useState<string | null>(null)
 
   // Un proveedor cerrado no tiene platos que mostrar, pero tiene que seguir en
   // el filtro para poder ver por qué no hay menú.
@@ -55,10 +56,31 @@ export default function Index({
 
   function openDetail(item: Schedule) {
     setSelected(item)
-    setQuantity(1)
-    setNotes("")
-    setSelections({})
+    const existing = cart.find((c) => c.id === item.id)
+    if (existing) {
+      setEditingCartId(existing.cartId)
+      setQuantity(existing.quantity)
+      setNotes(existing.notes)
+      setSelections(existing.selections)
+    } else {
+      setEditingCartId(null)
+      setQuantity(1)
+      setNotes("")
+      setSelections({})
+    }
     setView("detail")
+  }
+
+  function handleBack() {
+    setEditingCartId(null)
+    setView("menu")
+  }
+
+  function handleRemoveFromCartAndBack() {
+    if (!editingCartId) return
+    setCart((items) => items.filter((item) => item.cartId !== editingCartId))
+    setEditingCartId(null)
+    setView("menu")
   }
 
   function addToCart() {
@@ -69,6 +91,36 @@ export default function Index({
     const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}`
 
     setCart((items) => {
+      if (editingCartId) {
+        const targetIndex = items.findIndex((item) => item.cartId === editingCartId)
+        if (targetIndex === -1) return items
+
+        const withoutCurrent = items.filter((item) => item.cartId !== editingCartId)
+        const duplicate = withoutCurrent.find((item) => item.cartId === cartId)
+        if (duplicate) {
+          return withoutCurrent.map((item) =>
+            item.cartId === cartId
+              ? {
+                  ...item,
+                  quantity: Math.min(item.remaining, item.quantity + quantity),
+                }
+              : item,
+          )
+        }
+
+        const updatedItem: CartItem = {
+          ...selected,
+          cartId,
+          quantity: Math.min(selected.remaining, quantity),
+          notes,
+          selections,
+        }
+
+        const next = [...items]
+        next[targetIndex] = updatedItem
+        return next
+      }
+
       const found = items.find((item) => item.cartId === cartId)
 
       return found
@@ -92,6 +144,7 @@ export default function Index({
           ]
     })
 
+    setEditingCartId(null)
     setView("menu")
   }
 
@@ -164,8 +217,10 @@ export default function Index({
             setSelections={setSelections}
             setNotes={setNotes}
             cart={cart}
-            back={() => setView("menu")}
+            back={handleBack}
             add={addToCart}
+            editingCartId={editingCartId}
+            onRemove={editingCartId ? handleRemoveFromCartAndBack : undefined}
           />
         )}
 

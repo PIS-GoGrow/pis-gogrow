@@ -32,9 +32,10 @@ export default function MenuItem({
 
   return (
     <div
+      onClick={disabled ? undefined : onSelect}
       className={cn(
         "border-border bg-card mb-3 flex items-center gap-4 rounded-xl border p-4",
-        disabled && "opacity-50",
+        disabled ? "opacity-50" : "cursor-pointer",
       )}
     >
       <div className="min-w-0 flex-1">
@@ -67,7 +68,10 @@ export default function MenuItem({
         size="icon"
         variant="outline"
         disabled={disabled}
-        onClick={onSelect}
+        onClick={(e) => {
+          e.stopPropagation()
+          onSelect?.()
+        }}
         aria-label={`Agregar ${name}`}
         className={cn(
           "size-8 shrink-0 rounded-full",

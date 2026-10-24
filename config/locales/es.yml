@@ -1529,6 +1529,8 @@ es:
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
         added: "Agregado"
+        add: "Agregar"
+        modify: "Modificar"
         closure:
           title_now: "%{provider} no está disponible"
           title_soon: "%{provider} no estará disponible"

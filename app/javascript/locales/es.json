@@ -748,6 +748,7 @@
           "used": "%{used} de %{limit}"
         },
         "index": {
+          "add": "Agregar",
           "added": "Agregado",
           "closure": {
             "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
@@ -756,6 +757,7 @@
             "title_now": "%{provider} no está disponible",
             "title_soon": "%{provider} no estará disponible"
           },
+          "modify": "Modificar",
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
         },
         "options": {

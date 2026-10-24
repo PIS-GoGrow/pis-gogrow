@@ -1,5 +1,5 @@
 import { ChevronLeft, Star } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import AddedBadge from "@/components/consumer/menus/added-badge"
@@ -26,6 +26,8 @@ interface Props {
   cart: CartItem[]
   back: () => void
   add: () => void
+  editingCartId?: string | null
+  onRemove?: () => void
 }
 
 export function DishDetail({
@@ -39,12 +41,33 @@ export function DishDetail({
   cart,
   back,
   add,
+  editingCartId,
+  onRemove,
 }: Props) {
   const { t } = useTranslation()
   const [line, setLine] = useState<PricedLine | null>(null)
 
+  const isEditing = Boolean(editingCartId ?? onRemove)
+
   const inCart =
     cartPricedItem(cart).find((i) => item.id === i.schedule_id)?.quantity ?? 0
+
+  const cartWithoutCurrent = useMemo(
+    () =>
+      editingCartId
+        ? cart.filter((c) => c.cartId !== editingCartId)
+        : cart.filter((c) => c.id !== item.id),
+    [cart, editingCartId, item.id],
+  )
+
+  const otherInCart = useMemo(
+    () =>
+      cartPricedItem(cartWithoutCurrent).find((i) => item.id === i.schedule_id)
+        ?.quantity ?? 0,
+    [cartWithoutCurrent, item.id],
+  )
+
+  const maxQuantity = item.remaining - (isEditing ? otherInCart : inCart)
 
   useEffect(() => {
     let cancelled = false
@@ -53,15 +76,17 @@ export function DishDetail({
     // seguidas los botones de + o -.
     const timeout = setTimeout(async () => {
       try {
+        const cartToPrice = isEditing ? cartWithoutCurrent : cart
         const result = await priceItems(
-          cartPricedItem([...cart, { ...item, quantity }]),
+          cartPricedItem([...cartToPrice, { ...item, quantity }]),
         )
         if (cancelled) return
 
         const preLine = result.lines[String(item.id)]
+        const totalUnits = (isEditing ? otherInCart : inCart) + quantity
 
         setLine(
-          preLine ? lastUnitsLine(inCart + quantity, quantity, preLine) : null,
+          preLine ? lastUnitsLine(totalUnits, quantity, preLine) : null,
         )
       } finally {
         // No hacer nada
@@ -72,7 +97,18 @@ export function DishDetail({
       cancelled = true
       clearTimeout(timeout)
     }
-  }, [cart, item, inCart, item.id, item.date, item.menu.price, quantity])
+  }, [
+    cart,
+    item,
+    inCart,
+    isEditing,
+    cartWithoutCurrent,
+    otherInCart,
+    item.id,
+    item.date,
+    item.menu.price,
+    quantity,
+  ])
 
   const reviews = item.menu.reviews
   const choicesMissing = item.menu.option_groups.some(
@@ -185,15 +221,18 @@ export function DishDetail({
       <BottomAction className="flex">
         <QuantityInput
           value={quantity}
-          max={item.remaining - inCart}
+          max={maxQuantity}
           onChange={setQuantity}
+          onRemove={onRemove}
         />
         <Button
           disabled={addDisabled}
           onClick={add}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
         >
-          Agregar
+          {isEditing
+            ? t("pages.consumer_dashboard.index.modify")
+            : t("pages.consumer_dashboard.index.add")}
         </Button>
       </BottomAction>
     </MobileCard>

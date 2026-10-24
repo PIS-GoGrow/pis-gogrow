@@ -74,4 +74,13 @@ describe("MenuItem", () => {
     expect(screen.getByText("Tu Viandita")).toBeInTheDocument()
     expect(screen.getByText(/\$300/)).toBeInTheDocument()
   })
+
+  it("calls onSelect when clicking the dish card", async () => {
+    const user = userEvent.setup()
+    const onSelect = vi.fn()
+    render(<MenuItem {...props} soldOut={false} onSelect={onSelect} />)
+
+    await user.click(screen.getByText("Milanesa con papas fritas"))
+    expect(onSelect).toHaveBeenCalledOnce()
+  })
 })
