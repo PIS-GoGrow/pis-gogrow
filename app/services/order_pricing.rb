@@ -120,13 +120,16 @@ class OrderPricing
     coverage.sum { it[0].percentage * it[1] } / quantity.to_f
   end
 
-  # Devuelve los beneficios no expirados seleccionados del usuario ordenados
-  # por porcentaje, de modo de que los beneficios de mayor porcentaje se apliquen antes.
-  # Los primeros beneficios son los mensuales, para que estos se apliquen
-  # siempre y antes que todo el resto.
+  # Devuelve los beneficios no expirados seleccionados por el usuario.
+  # El orden es: primero los beneficios mensuales, después los que no tienen límite
+  # y después el resto ordenado por porcentaje de mayor a menor.
+  # El usuario solo puede seleccionar los beneficios del último grupo.
   def benefits_from_ids(benefit_ids)
+    unlimited, limited = special_benefits .partition { |benefit| benefit.amount.nil? }
+
     monthly_benefits +
-      special_benefits.select { |benefit| benefit_ids.include? benefit.id.to_i }
+      unlimited +
+      limited.select { |benefit| benefit_ids.include? benefit.id.to_i }
   end
 
   def benefits

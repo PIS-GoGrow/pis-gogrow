@@ -67,6 +67,7 @@ export function DishDetail({
 
   // Al principio, todos los beneficios están activados
   const [benefitIds, setBenefitIds] = useState<number[]>(specialBenefitIds)
+  const [unusedBenefits, setUnusedBenefits] = useState<string[]>([])
 
   const isEditing = Boolean(editingCartId ?? onRemove)
 
@@ -103,6 +104,13 @@ export function DishDetail({
         )
         if (cancelled || !result?.lines) return
 
+        const usedBenefitIds = result.lines.at(-1)?.tiers?.map((tier) => tier.id)
+
+        setUnusedBenefits(
+          benefit.specials
+            .filter((benefit) => benefitIds.includes(benefit.id) && !usedBenefitIds?.includes(benefit.id))
+            .map((benefit) => benefit.name)
+        )
         setPricing(result)
       } finally {
         // No hacer nada
@@ -237,8 +245,10 @@ export function DishDetail({
       <section className="border-border grid gap-2 border-b py-4 text-sm">
         {benefit.specials
           .filter((benefit) => {
+            // No dejamos seleccionar beneficios sin límite (se aplican siempre)
+            // No mostramos beneficios para los que ya no quedan unidades disponibles
             return (
-              benefit.remaining === null ||
+              benefit.remaining !== null &&
               benefit.remaining - benefitHeld[benefit.id] > 0
             )
           })
@@ -267,6 +277,14 @@ export function DishDetail({
               </Field>
             </div>
           ))}
+        {
+          unusedBenefits.length > 0 && (
+            <p className="text-sm">
+              {t(`pages.consumer_dashboard.detail.reached_100.${unusedBenefits.length === 1 ? "one" : "other"}`,
+                { benefits: unusedBenefits.join(", ")})}
+            </p>
+          )
+        }
       </section>
       <OrderSummary
         loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede

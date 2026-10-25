@@ -758,6 +758,13 @@
           "unit": "viandas pedidas",
           "used": "%{used} de %{limit}"
         },
+        "detail": {
+          "add": "Agregar",
+          "reached_100": {
+            "one": "Se llegó al 100%, no se aplicará el beneficio %{benefits}",
+            "other": "Se llegó al 100%, no se aplicarán los beneficios: %{benefits}"
+          }
+        },
         "index": {
           "add": "Agregar",
           "added": "Agregado",
