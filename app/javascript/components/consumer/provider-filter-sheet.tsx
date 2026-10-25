@@ -1,5 +1,6 @@
 import { Settings2 } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import {
   AdaptableDialog,
@@ -21,17 +22,25 @@ interface Props<Id extends string | number> {
   providers: ProviderFilterOption<Id>[]
   selectedProviders: Set<Id>
   onApply: (providers: Set<Id>) => void
+  selectionMode?: "single" | "multiple"
 }
 
 export function ProviderFilterSheet<Id extends string | number>({
   providers,
   selectedProviders,
   onApply,
+  selectionMode = "multiple",
 }: Props<Id>) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [draftProviders, setDraftProviders] = useState<Set<Id>>(new Set())
 
   function toggleProvider(providerId: Id) {
+    if (selectionMode === "single") {
+      setDraftProviders(new Set([providerId]))
+      return
+    }
+
     setDraftProviders((selected) => {
       const next = new Set(selected)
 
@@ -55,7 +64,7 @@ export function ProviderFilterSheet<Id extends string | number>({
           type="button"
           variant="outline"
           size="icon"
-          aria-label="Filtrar por proveedores"
+          aria-label={t("pages.consumer_dashboard.index.provider_filter.open")}
           className="border-border bg-card hover:bg-accent ml-auto size-9 shrink-0 rounded-full shadow-none"
         >
           <Settings2 aria-hidden="true" className="size-4" />
@@ -69,7 +78,7 @@ export function ProviderFilterSheet<Id extends string | number>({
       >
         <div className="flex flex-col gap-5">
           <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
-            Filtrar por proveedores
+            {t("pages.consumer_dashboard.index.provider_filter.title")}
           </AdaptableDialogTitle>
 
           <div className="flex flex-col">
@@ -84,7 +93,7 @@ export function ProviderFilterSheet<Id extends string | number>({
                 htmlFor="dashboard-filter-all"
                 className="flex-1 cursor-pointer text-base leading-6 font-medium tracking-normal"
               >
-                Todos
+                {t("pages.consumer_dashboard.index.provider_filter.all")}
               </Label>
             </div>
 
@@ -116,7 +125,7 @@ export function ProviderFilterSheet<Id extends string | number>({
               className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 rounded-lg text-base font-medium shadow-none"
               onClick={() => setOpen(false)}
             >
-              Cancelar
+              {t("pages.consumer_dashboard.index.provider_filter.cancel")}
             </Button>
             <Button
               type="button"
@@ -126,7 +135,7 @@ export function ProviderFilterSheet<Id extends string | number>({
                 setOpen(false)
               }}
             >
-              Aplicar
+              {t("pages.consumer_dashboard.index.provider_filter.apply")}
             </Button>
           </div>
         </div>

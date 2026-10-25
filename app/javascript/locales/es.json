@@ -757,8 +757,21 @@
             "title_now": "%{provider} no está disponible",
             "title_soon": "%{provider} no estará disponible"
           },
+          "empty": {
+            "all": "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde.",
+            "filtered": "No encontramos viandas disponibles entre los proveedores seleccionados. Volvé a consultar más tarde.",
+            "title": "Menú no disponible"
+          },
           "modify": "Modificar",
-          "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
+          "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy.",
+          "provider_filter": {
+            "all": "Todos",
+            "apply": "Aplicar",
+            "cancel": "Cancelar",
+            "label": "Proveedores:",
+            "open": "Filtrar por proveedores",
+            "title": "Filtrar por Proveedores"
+          }
         },
         "options": {
           "choose": "Elegí tu/s %{name}",

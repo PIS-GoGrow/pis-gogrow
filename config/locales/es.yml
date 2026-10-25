@@ -1536,6 +1536,17 @@ es:
         added: "Agregado"
         add: "Agregar"
         modify: "Modificar"
+        provider_filter:
+          label: "Proveedores:"
+          open: "Filtrar por proveedores"
+          title: "Filtrar por Proveedores"
+          all: "Todos"
+          cancel: "Cancelar"
+          apply: "Aplicar"
+        empty:
+          title: "Menú no disponible"
+          all: "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde."
+          filtered: "No encontramos viandas disponibles entre los proveedores seleccionados. Volvé a consultar más tarde."
         closure:
           title_now: "%{provider} no está disponible"
           title_soon: "%{provider} no estará disponible"

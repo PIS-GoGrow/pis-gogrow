@@ -17,6 +17,7 @@ type View = "menu" | "detail"
 export default function Index({
   week,
   schedules,
+  providers,
   closures,
   benefit,
 }: ConsumerDashboardIndex) {
@@ -37,18 +38,6 @@ export default function Index({
   const [notes, setNotes] = useState("")
   const [selections, setSelections] = useState<Selections>({})
   const [editingCartId, setEditingCartId] = useState<string | null>(null)
-
-  // Un proveedor cerrado no tiene platos que mostrar, pero tiene que seguir en
-  // el filtro para poder ver por qué no hay menú.
-  const providers = useMemo(
-    () => [
-      ...new Set([
-        ...schedules.map((item) => item.menu.provider_name),
-        ...closures.map((closure) => closure.provider_name),
-      ]),
-    ],
-    [schedules, closures],
-  )
 
   const visibleSchedules = schedules.filter((item) => item.date === date)
 

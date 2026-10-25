@@ -32,7 +32,7 @@ interface Props {
   date: string
   setDate: (value: string) => void
   benefit: ConsumerDashboardIndex["benefit"]
-  providers: string[]
+  providers: ConsumerDashboardIndex["providers"]
   schedules: Schedule[]
   closures: ConsumerClosure[]
   cart: CartItem[]
@@ -64,7 +64,7 @@ export function WeeklyMenu({
   openDetail,
 }: Props) {
   const { t } = useTranslation()
-  const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set())
+  const [activeProviderId, setActiveProviderId] = useState<number | null>(null)
   // Se guarda en la sesión para que el aviso no vuelva al entrar a un plato y
   // volver al menú. Cada aviso (el de antes del cierre y el de durante) se
   // cierra por separado: la clave lleva el tipo y el id del cierre.
@@ -73,16 +73,18 @@ export function WeeklyMenu({
     [],
   )
   const currentDate = today()
+  const activeProvider = providers.find(
+    (provider) => provider.id === activeProviderId,
+  )
   const filteredSchedules =
-    activeProviders.size === 0
+    activeProviderId === null
       ? schedules
-      : schedules.filter((schedule) =>
-          activeProviders.has(schedule.menu.provider_name),
+      : schedules.filter(
+          (schedule) => schedule.menu.provider_id === activeProviderId,
         )
   const filterLabel =
-    activeProviders.size === 0
-      ? "Todos"
-      : providers.filter((provider) => activeProviders.has(provider)).join(", ")
+    activeProvider?.name ??
+    t("pages.consumer_dashboard.index.provider_filter.all")
   const soonClosures = closures.filter(
     (closure) =>
       closure.starts_on > date && !dismissed.includes(`soon-${closure.id}`),
@@ -91,8 +93,7 @@ export function WeeklyMenu({
     (closure) =>
       closure.starts_on <= date &&
       date <= closure.ends_on &&
-      (activeProviders.size === 0 ||
-        activeProviders.has(closure.provider_name)),
+      (activeProviderId === null || closure.provider_id === activeProviderId),
   )
   const closedBanners = closedToday.filter(
     (closure) => !dismissed.includes(`now-${closure.id}`),
@@ -143,18 +144,24 @@ export function WeeklyMenu({
 
             <div className="mt-6 mb-3 flex items-center">
               <span className="text-foreground min-w-0 truncate text-sm font-medium">
-                Proveedores:{" "}
+                {t("pages.consumer_dashboard.index.provider_filter.label")}{" "}
                 <span className="text-muted-foreground font-normal">
                   {filterLabel}
                 </span>
               </span>
               <ProviderFilterSheet
-                providers={providers.map((provider) => ({
-                  id: provider,
-                  name: provider,
-                }))}
-                selectedProviders={activeProviders}
-                onApply={setActiveProviders}
+                providers={providers}
+                selectedProviders={
+                  activeProviderId === null
+                    ? new Set<number>()
+                    : new Set([activeProviderId])
+                }
+                selectionMode="single"
+                onApply={(selectedProviders) =>
+                  setActiveProviderId(
+                    selectedProviders.values().next().value ?? null,
+                  )
+                }
               />
             </div>
 
@@ -164,20 +171,13 @@ export function WeeklyMenu({
                   <EmptyMedia variant="icon">
                     <UtensilsCrossed aria-hidden="true" />
                   </EmptyMedia>
-                  <EmptyTitle>Menú no disponible</EmptyTitle>
+                  <EmptyTitle>
+                    {t("pages.consumer_dashboard.index.empty.title")}
+                  </EmptyTitle>
                   <EmptyDescription>
-                    {activeProviders.size > 0 && closedToday.length > 0
-                      ? closedToday
-                          .map((closure) =>
-                            t("pages.consumer_dashboard.index.closure.empty", {
-                              provider: closure.provider_name,
-                              period: closure.period,
-                            }),
-                          )
-                          .join(" ")
-                      : schedules.length === 0
-                        ? "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde."
-                        : "No hay platos de los proveedores seleccionados para esta fecha. Probá cambiando el filtro."}
+                    {activeProviderId === null
+                      ? t("pages.consumer_dashboard.index.empty.all")
+                      : t("pages.consumer_dashboard.index.empty.filtered")}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>

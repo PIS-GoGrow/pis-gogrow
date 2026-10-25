@@ -31,6 +31,7 @@ const schedule: Schedule = {
     name: "Wok de verduras + arroz",
     description: "Salteado al wok",
     price: 140,
+    provider_id: 2,
     option_groups: [],
     provider_name: "Endulzate by Noe",
     home_delivery: true,
@@ -42,6 +43,7 @@ const closure = (
   overrides: Partial<ConsumerClosure> = {},
 ): ConsumerClosure => ({
   id: 1,
+  provider_id: 1,
   provider_name: "Tu Viandita",
   reason: "Vacaciones",
   starts_on: "2027-06-09",
@@ -66,7 +68,10 @@ function renderMenu(
         monthly_remaining: 18,
         specials: [],
       }}
-      providers={["Endulzate by Noe", "Tu Viandita"]}
+      providers={[
+        { id: 2, name: "Endulzate by Noe", order_deadline: null },
+        { id: 1, name: "Tu Viandita", order_deadline: null },
+      ]}
       schedules={[schedule]}
       closures={[]}
       cart={[]}
@@ -187,7 +192,7 @@ describe("WeeklyMenu closures", () => {
     ).toBeInTheDocument()
   })
 
-  it("keeps explaining the empty menu after the notice was dismissed", async () => {
+  it("keeps the filtered empty state after the notice was dismissed", async () => {
     const user = userEvent.setup()
     renderMenu({
       schedules: [],
@@ -203,7 +208,7 @@ describe("WeeklyMenu closures", () => {
 
     expect(
       screen.getByText(
-        "Tu Viandita no recibirá pedidos del 09/06/27 al 27/06/27.",
+        "No encontramos viandas disponibles entre los proveedores seleccionados. Volvé a consultar más tarde.",
       ),
     ).toBeInTheDocument()
   })
@@ -231,7 +236,7 @@ describe("WeeklyMenu closures", () => {
     expect(screen.queryByText(/no recibirá pedidos/)).not.toBeInTheDocument()
   })
 
-  it("explains an empty menu by the closure when filtering by that provider", async () => {
+  it("shows the filtered empty state for a closed provider", async () => {
     const user = userEvent.setup()
     renderMenu({
       schedules: [],
@@ -247,7 +252,7 @@ describe("WeeklyMenu closures", () => {
     expect(screen.getByText("Menú no disponible")).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Tu Viandita no recibirá pedidos del 09/06/27 al 27/06/27.",
+        "No encontramos viandas disponibles entre los proveedores seleccionados. Volvé a consultar más tarde.",
       ),
     ).toBeInTheDocument()
   })
@@ -268,7 +273,7 @@ describe("WeeklyMenu closures", () => {
     expect(screen.queryByText(/no recibirá pedidos/)).not.toBeInTheDocument()
     expect(
       screen.getByText(
-        "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde.",
+        "No encontramos viandas disponibles entre los proveedores seleccionados. Volvé a consultar más tarde.",
       ),
     ).toBeInTheDocument()
   })

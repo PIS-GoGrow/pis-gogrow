@@ -43,7 +43,7 @@ describe("ProviderFilterSheet", () => {
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
 
-    expect(screen.getByText("Filtrar por proveedores")).toBeInTheDocument()
+    expect(screen.getByText("Filtrar por Proveedores")).toBeInTheDocument()
     expect(screen.getByLabelText("Todos")).toBeInTheDocument()
     providers.forEach((provider) => {
       expect(screen.getByLabelText(provider.name)).toBeInTheDocument()
@@ -116,6 +116,59 @@ describe("ProviderFilterSheet", () => {
     await user.click(screen.getByLabelText("TuViandita"))
     await user.click(screen.getByRole("button", { name: "Cancelar" }))
 
+    expect(onApply).not.toHaveBeenCalled()
+  })
+
+  it("allows only one provider in single selection mode", async () => {
+    const user = userEvent.setup()
+    const onApply = vi.fn()
+
+    render(
+      <ProviderFilterSheet
+        providers={providers}
+        selectedProviders={new Set<number>()}
+        selectionMode="single"
+        onApply={onApply}
+      />,
+    )
+
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+    await user.click(screen.getByLabelText("TuViandita"))
+    await user.click(screen.getByLabelText("Chef Express"))
+
+    expect(screen.getByLabelText("TuViandita")).not.toBeChecked()
+    expect(screen.getByLabelText("Chef Express")).toBeChecked()
+
+    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+    expect(onApply).toHaveBeenCalledWith(new Set([2]))
+  })
+
+  it("restores the applied provider after cancelling a new draft", async () => {
+    const user = userEvent.setup()
+    const onApply = vi.fn()
+
+    render(
+      <ProviderFilterSheet
+        providers={providers}
+        selectedProviders={new Set([1])}
+        selectionMode="single"
+        onApply={onApply}
+      />,
+    )
+
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+    await user.click(screen.getByLabelText("Chef Express"))
+    await user.click(screen.getByRole("button", { name: "Cancelar" }))
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+
+    expect(screen.getByLabelText("TuViandita")).toBeChecked()
+    expect(screen.getByLabelText("Chef Express")).not.toBeChecked()
     expect(onApply).not.toHaveBeenCalled()
   })
 })
