@@ -9,6 +9,15 @@ RSpec.describe "Pedidos del consumidor" do
     sign_in users(:one), role: :consumer
   end
 
+  def open_provider_filter
+    expect(page).to have_no_selector("[role=dialog]")
+    find("button[aria-label='Filtrar por proveedores']").click
+    return if page.has_selector?("[role=dialog]", wait: 2)
+
+    find("button[aria-label='Filtrar por proveedores']").click
+    expect(page).to have_selector("[role=dialog]")
+  end
+
   it "permite consultar pedidos próximos e historial de los últimos 3 meses" do
     visit orders_path
 
@@ -42,10 +51,7 @@ RSpec.describe "Pedidos del consumidor" do
 
     expect(page).to have_content("Proveedores: Todos los proveedores")
 
-    find("button[aria-label='Filtrar por proveedores']").click
-    unless page.has_selector?("[role=dialog]", wait: 2)
-      find("button[aria-label='Filtrar por proveedores']").click
-    end
+    open_provider_filter
 
     within("[role=dialog]") do
       expect(page).to have_content("Filtrar por proveedores")
@@ -66,13 +72,13 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_content("Ensalada de quinoa")
     expect(page).to have_content("Milanesa con papas fritas")
 
-    find("button[aria-label='Filtrar por proveedores']").click
+    open_provider_filter
     within("[role=dialog]") do
       find("#dashboard-filter-#{providers(:office_provider).id}").click
       click_button "Aplicar"
     end
 
-    find("button[aria-label='Filtrar por proveedores']").click
+    open_provider_filter
     within("[role=dialog]") do
       find("#dashboard-filter-all").click
       expect(page).to have_selector("#dashboard-filter-all[data-state='checked']")
@@ -88,10 +94,7 @@ RSpec.describe "Pedidos del consumidor" do
 
     visit orders_path
     find("[role=tab]", text: "Historial").click
-    find("button[aria-label='Filtrar por proveedores']").click
-    unless page.has_selector?("[role=dialog]", wait: 2)
-      find("button[aria-label='Filtrar por proveedores']").click
-    end
+    open_provider_filter
 
     within("[role=dialog]") do
       find("#dashboard-filter-#{selected.id}").click
