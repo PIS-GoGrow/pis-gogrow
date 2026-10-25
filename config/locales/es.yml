@@ -19,7 +19,7 @@ es:
     consumer: "Consumidor"
     admin: "Admin"
   flash:
-    cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
+    cart_confirmed: "Pedido realizado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
     order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
     order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
@@ -812,6 +812,7 @@ es:
         quantity: "x%{count}"
         upcoming_address: "Lo recibís en: %{address} (%{delivery_method})"
         history_address: "Lo recibiste en: %{address} (%{delivery_method})"
+        cancelled_address: "Lo pediste para: %{address} (%{delivery_method})"
         no_date: "Sin fecha de entrega"
         no_price: "Importe no disponible"
         base_price: "Precio base: %{amount}"
@@ -826,6 +827,7 @@ es:
           confirm: "Cancelar pedido"
         cannot_cancel:
           confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar."
+          order_deadline_passed: "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
         review: "Calificar vianda"
@@ -851,7 +853,6 @@ es:
           address: "Dirección de entrega"
           notes: "Notas"
           notes_placeholder: "Sin salsa, sin cebolla…"
-          remaining: "Quedan %{count} disponibles para esta fecha"
           back: "Volver"
           confirm: "Guardar cambios"
         cannot_edit:
@@ -868,6 +869,7 @@ es:
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
+        delivered: "Entregado"
       delivery_methods:
         office: "Oficina"
         home: "Domicilio"
@@ -1076,6 +1078,7 @@ es:
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
+        delivered: "Entregado"
       index:
         title: "Pedidos"
         tabs:
