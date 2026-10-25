@@ -51,7 +51,7 @@ RSpec.describe "Pedidos del consumidor" do
       expect(page).to have_content("Filtrar por proveedores")
       expect(page).to have_content("Todos los proveedores")
       expect(page).to have_selector("#dashboard-filter-all[data-state='checked']")
-      find("label", text: "Office Provider User").click
+      find("#dashboard-filter-#{providers(:office_provider).id}").click
       click_button "Aplicar"
     end
 
@@ -68,13 +68,14 @@ RSpec.describe "Pedidos del consumidor" do
 
     find("button[aria-label='Filtrar por proveedores']").click
     within("[role=dialog]") do
-      find("label", text: "Office Provider User").click
+      find("#dashboard-filter-#{providers(:office_provider).id}").click
       click_button "Aplicar"
     end
 
     find("button[aria-label='Filtrar por proveedores']").click
     within("[role=dialog]") do
-      find("label", text: "Todos los proveedores").click
+      find("#dashboard-filter-all").click
+      expect(page).to have_selector("#dashboard-filter-all[data-state='checked']")
       click_button "Aplicar"
     end
 
@@ -93,7 +94,7 @@ RSpec.describe "Pedidos del consumidor" do
     end
 
     within("[role=dialog]") do
-      find("label", text: selected.user.name).click
+      find("#dashboard-filter-#{selected.id}").click
       click_button "Aplicar"
     end
 
