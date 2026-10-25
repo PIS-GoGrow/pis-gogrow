@@ -166,7 +166,7 @@ export function ConsumerCart({
       )}
 
       <section className="border-border mt-6 pb-4 text-sm md:border-b">
-        {cart.map((item) => {
+        {cart.map((item, i) => {
           const line = item.menu.price * item.quantity
           return (
             <div
@@ -184,8 +184,8 @@ export function ConsumerCart({
                 </span>
                 <span>{formatMoney(line)}</span>
               </div>
-              {pricing?.lines?.[item.id] && (
-                <ItemBenefitLines tiers={pricing.lines[item.id].tiers} />
+              {pricing?.lines?.[i] && (
+                <ItemBenefitLines tiers={pricing.lines[i].tiers} />
               )}
               {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
                   aparte, así que el carrito lo muestra por su cuenta. */}

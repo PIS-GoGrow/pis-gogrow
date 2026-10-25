@@ -40,16 +40,10 @@ class OrderPricing
     # De la forma { benefit: remaining_uses }
     benefit_left = benefits.to_h { |benefit| [ benefit, remaining_uses(benefit) ] }
 
-    # Ordenamos los items según el precio por unidad del menú al que corresponden,
-    # de mayor a menor.
-    # De esta manera, si quedan pocos beneficios, estos se van a aplicar sobre las
-    # órdenes más caras, beneficiando al consumidor.
-    order = items.each_index.sort_by { |i| [-items[i][:schedule].price, i] }
-
-    order.map! do |i|
-      schedule = items[i][:schedule]
-      selected_benefits = benefits_from_ids(items[i][:benefits].to_a)
-      quantity = items[i][:quantity]
+    items.map do |item|
+      schedule = item[:schedule]
+      selected_benefits = benefits_from_ids(item[:benefits].to_a)
+      quantity = item[:quantity]
 
       # coverage es un arreglo con cada beneficio que se va aplicar, su porcentaje y
       # la cantidad que se va a aplicar

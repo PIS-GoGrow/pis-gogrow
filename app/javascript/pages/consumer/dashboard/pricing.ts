@@ -26,7 +26,7 @@ export interface Pricing {
   subtotal: number
   discount: number
   total: number
-  lines: Record<string, PricedLine>
+  lines: PricedLine[]
   subsidizedQuantity: number
   fullPriceQuantity: number
 }

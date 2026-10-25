@@ -89,10 +89,7 @@ export function DishDetail({
         )
         if (cancelled || !result?.lines) return
 
-        const preLine = result.lines[String(item.id)]
-        const totalUnits = (isEditing ? otherInCart : inCart) + quantity
-
-        setLine(preLine ? lastUnitsLine(totalUnits, quantity, preLine) : null)
+        setLine(result.lines.at(-1) ?? null)
       } finally {
         // No hacer nada
       }

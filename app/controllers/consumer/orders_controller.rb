@@ -69,10 +69,16 @@ class Consumer::OrdersController < Consumer::InertiaController
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
       pricings = OrderPricing.new(@consumer).call(
-        requested_items.map { |item| { schedule: schedules.fetch(item[:schedule_id].to_i), quantity: item[:quantity].to_i } }
+        requested_items.map do |item|
+          {
+            schedule: schedules.fetch(item[:schedule_id].to_i),
+            quantity: item[:quantity].to_i,
+            benefits: item[:benefits]
+          }
+        end
       )
 
-      requested_items.zip(pricing).each do |item, pricing|
+      requested_items.zip(pricings).each do |item, pricing|
         quantity = item[:quantity].to_i
         schedule = schedules.fetch(item[:schedule_id].to_i)
 
@@ -95,9 +101,9 @@ class Consumer::OrdersController < Consumer::InertiaController
           schedule:,
           quantity:,
           notes: item[:notes],
-          discounted_price: pricing.discounted_price,
+          discounted_price: pricing[1].discounted_price,
           selected_options: selected_options_for(schedule.menu, item[:options]),
-          benefits: pricing.benefits,
+          benefits: pricing[1].benefits,
           **delivery
         )
 
@@ -150,7 +156,19 @@ class Consumer::OrdersController < Consumer::InertiaController
     end
   end
 
+  # Le provee al frontend una interfaz de JSON para el servicio OrderPricing
   def pricing
+    items = build_requested_items
+
+    pricings = OrderPricing.new(@consumer).call(items)
+
+    render json: Consumer::OrderPricingSerializer.new(items, pricings)
+  end
+
+  private
+
+  # Convierte las id de schedule
+  def build_requested_items
     requested_items = pricing_params
 
     # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos
@@ -163,65 +181,10 @@ class Consumer::OrdersController < Consumer::InertiaController
         .order(:id)
         .index_by(&:id)
 
-    p requested_items
-    requested_items.map! do |item|
+    requested_items.filter_map do |item|
       schedule = schedules.dig(item[:schedule_id].to_i)
       { schedule:, quantity: item[:quantity].to_i, benefits: item[:benefits] } if schedule
-    end.compact!
-
-    pricings = OrderPricing.new(@consumer).call(requested_items)
-
-    render json: to_pricing(requested_items, pricings)
-  end
-
-  private
-
-  def to_pricing(items, pricings)
-    items_by_schedule = items.index_by { |item| item[:schedule].id }
-
-    lines = pricings.to_h do |schedule_id, result|
-      item = items_by_schedule.fetch(schedule_id)
-      quantity = item[:quantity]
-      price = result.price.to_f
-
-      tiers = result.benefits.map do |benefit, units_used|
-        discount = price * units_used * benefit.percentage / 100 / quantity
-
-        {
-          name: benefit.benefit_configuration.name,
-          percentage: benefit.percentage,
-          quantity: units_used,
-          discount: discount.to_f
-        }
-      end
-
-      discount = price - result.discounted_price.to_f
-      [
-        schedule_id.to_s,
-        {
-          subtotal: price,
-          discount: discount,
-          total: price - discount,
-          tiers: tiers
-        }
-      ]
     end
-
-    {
-      subtotal: lines.values.sum { |line| line[:subtotal] },
-      discount: lines.values.sum { |line| line[:discount] },
-      total: lines.values.sum { |line| line[:total] },
-      lines: lines,
-      subsidizedQuantity: items.zip(pricings).sum do |item, pricing|
-        pricing[1].benefits.sum { |_, u| u }
-      end,
-      fullPriceQuantity: items.zip(pricings).sum do |item, pricing|
-        schedule_id = item[:schedule][:id]
-        quantity = item[:quantity]
-        subsidized = pricing[1].benefits.sum { |_, u| u }
-        quantity - subsidized
-      end
-    }
   end
 
   def reject_update(order, reason)
