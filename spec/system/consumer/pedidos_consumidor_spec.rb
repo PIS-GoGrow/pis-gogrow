@@ -25,10 +25,22 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_content("Cancelado")
   end
 
-  it "permite filtrar pedidos por proveedor en tiempo real" do
-    visit orders_path
+  it "filtra el historial por proveedor sin conservar el filtro al recargar" do
+    filtered_order = orders(:history_pending_past)
+    filtered_order.update_columns(
+      provider_id: providers(:office_provider).id,
+      provider_name: providers(:office_provider).user.name,
+      menu_name: "Ensalada de quinoa"
+    )
+    orders(:upcoming_pending_future).update_columns(
+      provider_id: providers(:endulzate).id,
+      provider_name: providers(:endulzate).user.name
+    )
 
-    expect(page).to have_content("Proveedores: Todos")
+    visit orders_path
+    find("[role=tab]", text: "Historial").click
+
+    expect(page).to have_content("Proveedores: Todos los proveedores")
 
     find("button[aria-label='Filtrar por proveedores']").click
     unless page.has_selector?("[role=dialog]", wait: 2)
@@ -37,11 +49,55 @@ RSpec.describe "Pedidos del consumidor" do
 
     within("[role=dialog]") do
       expect(page).to have_content("Filtrar por proveedores")
-      find("label", text: "Provider User").click
+      expect(page).to have_field("Todos los proveedores", checked: true)
+      find("label", text: "Office Provider User").click
       click_button "Aplicar"
     end
 
-    expect(page).to have_content("Proveedores: Provider User")
+    expect(page).to have_current_path(orders_path)
+    expect(page).to have_content("Proveedores: Office Provider User")
+    expect(page).to have_content("Ensalada de quinoa")
+    expect(page).not_to have_content("Milanesa con papas fritas")
+
+    refresh
+    find("[role=tab]", text: "Historial").click
+    expect(page).to have_content("Proveedores: Todos los proveedores")
+    expect(page).to have_content("Ensalada de quinoa")
+    expect(page).to have_content("Milanesa con papas fritas")
+
+    find("button[aria-label='Filtrar por proveedores']").click
+    within("[role=dialog]") do
+      find("label", text: "Office Provider User").click
+      click_button "Aplicar"
+    end
+
+    find("button[aria-label='Filtrar por proveedores']").click
+    within("[role=dialog]") do
+      find("label", text: "Todos los proveedores").click
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("Milanesa con papas fritas")
+  end
+
+  it "muestra el estado vacío del historial para un proveedor sin pedidos anteriores" do
+    selected = providers(:endulzate)
+    orders(:upcoming_pending_future).update_columns(provider_id: selected.id, provider_name: selected.user.name)
+
+    visit orders_path
+    find("[role=tab]", text: "Historial").click
+    find("button[aria-label='Filtrar por proveedores']").click
+    unless page.has_selector?("[role=dialog]", wait: 2)
+      find("button[aria-label='Filtrar por proveedores']").click
+    end
+
+    within("[role=dialog]") do
+      find("label", text: selected.user.name).click
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("No hay pedidos de este proveedor")
+    expect(page).to have_content("No tenés pedidos anteriores realizados a este proveedor.")
   end
 
 

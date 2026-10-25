@@ -854,6 +854,7 @@
           "office": "Oficina"
         },
         "index": {
+          "all_providers": "Todos los proveedores",
           "base_price": "Precio base: %{amount}",
           "cancel": "Cancelar",
           "cancel_dialog": {
@@ -872,12 +873,15 @@
           "history_address": "Lo recibiste en: %{address} (%{delivery_method})",
           "history_empty_description": "Tus pedidos completados aparecerán aquí.",
           "history_empty_title": "No tenés pedidos anteriores",
+          "history_filtered_empty_description": "No tenés pedidos anteriores realizados a este proveedor.",
+          "history_filtered_empty_title": "No hay pedidos de este proveedor",
           "history_tab": "Historial",
           "no_address": "Sin dirección de entrega",
           "no_date": "Sin fecha de entrega",
           "no_menu": "Plato no disponible",
           "no_price": "Importe no disponible",
           "no_provider": "Proveedor no disponible",
+          "providers_label": "Proveedores:",
           "quantity": "x%{count}",
           "review": "Calificar vianda",
           "reviewed": "Vianda calificada",
