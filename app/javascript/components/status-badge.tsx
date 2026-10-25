@@ -75,7 +75,9 @@ export default function StatusBadge({
     },
     invoice: {
       className: invoiceStyles[status as InvoiceStatus],
-      label: customLabel ?? t(`pages.provider_collections.invoice.statuses.${status}`),
+      label:
+        customLabel ??
+        t(`pages.provider_collections.invoice.statuses.${status}`),
     },
   }[kind]
 
