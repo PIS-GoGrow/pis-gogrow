@@ -45,9 +45,9 @@ class OrderPricing
       selected_benefits = benefits_from_ids(item[:benefits].to_a)
       quantity = item[:quantity]
 
-      # coverage es un arreglo con cada beneficio que se va aplicar, su porcentaje y
-      # la cantidad que se va a aplicar
-      coverage = []
+      coverage = Array.new(quantity) { [] } # indica qué beneficios se aplican para cada unidad
+      pct_sum = Array.new(quantity, 0) # indica cuánto se descuenta para cada unidad
+      units_used = selected_benefits.zip(Array.new(benefits.length, 0)).to_h
 
       # Calculamos para cada beneficio cuánto podemos aplicar a la orden
       selected_benefits.each do |benefit|
@@ -55,19 +55,36 @@ class OrderPricing
         next unless benefit.valid_on?(schedule.date)
         # No aplicar el beneficio si se supera el precio máximo
         next if benefit.max_price && benefit.max_price < schedule.price
-        # No seguir aplicando beneficios si ya superamos el cien porciento con los que
-        # tenemos en cada una de las unidades
-        next if coverage_percentage(coverage, quantity) >= 100
 
-        appliable_units = [ quantity, benefit_left[benefit] ].compact.min
+        # Para cada una de las unidades disponibles del beneficio, con límite en quantity,
+        # seleccionamos la unidad del pedido a la que aplicársela.
+        [ benefit_left[benefit] || quantity, quantity ].min.times do
+          # Calculamos las unidades con:
+          best = nil # mayor descuento con espacio disponible para este beneficio,
+          low = nil  # menor descuento
 
-        next unless appliable_units.positive?
+          quantity.times do |unit|
+            next if coverage[unit].include? benefit
 
-        benefit_left[benefit] -= appliable_units if benefit_left[benefit]
-        coverage << [ benefit, appliable_units ]
+            low = unit if low.nil? || pct_sum[unit] < pct_sum[low]
+            if pct_sum[unit] + benefit.percentage <= 100 && (best.nil? || pct_sum[unit] > pct_sum[best])
+              best = unit
+            end
+          end
+          unit = best || low
+          break if unit.nil? || pct_sum[unit] == 100
+
+          pct_sum[unit] += benefit.percentage
+          coverage[unit] << j
+          units_used[benefit] += 1
+        end
+
+        benefit_left[benefit] -= units_used[benefit] if benefit_left[benefit]
       end
 
-      [ schedule.id, pricing_for(schedule.price, quantity, coverage) ]
+      units_used.select! { |k, v| v > 0 }
+
+      [ schedule.id, pricing_for(schedule.price, quantity, units_used, pct_sum) ]
     end
   end
 
@@ -102,22 +119,18 @@ class OrderPricing
 
   # Por vianda y no por ítem: cada vianda puede tener una combinación distinta
   # de beneficios según cuántos usos le quedaban a cada uno.
-  def pricing_for(unit_price, quantity, coverage)
+  def pricing_for(unit_price, quantity, units_used, pct_sum)
     # Para cada unidad, evaluamos qué beneficios se pueden aplicar a él y calculamos
     # su precio.
     # El precio descontado total es la suma de los precios descontados de cada unidad
-    discount_percentage = coverage_percentage(coverage, quantity)
-    discounted_price = unit_price * quantity * (100 - discount_percentage.clamp(0, 100)) / 100
+    discount_percentage = pct_sum.map { |pct| pct.clamp(0, 100) }.sum / quantity.to_f
+    discounted_price = unit_price * quantity * (100 - discount_percentage) / 100
 
     OrderItemPricing.new(
       price: unit_price * quantity,
       discounted_price: discounted_price.round(2),
-      benefits: coverage.to_h
+      benefits: units_used
     )
-  end
-
-  def coverage_percentage(coverage, quantity)
-    coverage.sum { it[0].percentage * it[1] } / quantity.to_f
   end
 
   # Devuelve los beneficios no expirados seleccionados por el usuario.
