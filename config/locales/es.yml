@@ -1,4 +1,10 @@
 es:
+  benefit_usage:
+    errors:
+      invalid_month: "Seleccioná un mes válido que no sea futuro."
+      invalid_request: "Enviá únicamente el mes que querés consultar."
+      rate_limited: "Alcanzaste el límite de resúmenes. Intentá de nuevo en unos minutos."
+      summary_unavailable: "No pudimos generar el resumen. Intentá nuevamente más tarde."
   common:
     cancel: "Cancelar"
     close: "Cerrar"
