@@ -34,6 +34,7 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
     previous_month_label = I18n.l(Date.current.prev_month, format: :month_name_year)
     within(find("[role=tabpanel] [data-slot=card]", text: previous_month_label)) do
       click_on "Empleados"
+      expect(page).to have_content(employee_user.name)
       click_on employee_user.name
     end
 
@@ -63,5 +64,59 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
     # Ahora debe mostrarse el mensaje de cooldown en la cuenta
     expect(page).to have_content("Podés enviar otro recordatorio el")
     expect(page).not_to have_button(I18n.t("pages.provider_collections.reminder.trigger"))
+  end
+
+  it "cierra el recordatorio de pago pendiente en el panel del empleado cuando el proveedor aprueba el comprobante" do
+    Notifier.call(
+      event_key: DebtReminders::Eligibility::EVENT,
+      user: employee_user,
+      notifiable: consumer_account,
+      description_data: {
+        amount: "$450,75",
+        provider: provider.user.name,
+        period: I18n.l(consumer_account.month, format: :month_name_year)
+      }
+    )
+
+    # 1. El empleado ve la notificación activa en su inicio
+    sign_in employee_user, role: :consumer
+    visit dashboard_path
+    expect(page).to have_content("Recordatorio de pago pendiente")
+
+    # 2. El empleado sube el comprobante correspondiente a esa cuenta
+    visit accounts_path
+    within(find("[role=tabpanel]")) { click_on I18n.t("pages.accounts.show.receipt") }
+    within(find("[role=dialog]")) do
+      attach_file(I18n.t("pages.accounts.show.receipt_file"), Rails.root.join("public/icon.png").to_s)
+      click_on I18n.t("pages.accounts.show.receipt")
+    end
+    expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_title"))
+
+    # 3. La notificación sigue visible mientras el comprobante está en revisión
+    visit dashboard_path
+    expect(page).to have_content("Recordatorio de pago pendiente")
+
+    # 4. El proveedor ingresa y aprueba el comprobante
+    sign_out
+    sign_in provider_user, role: :provider
+    visit provider_collections_path
+
+    previous_month_label = I18n.l(Date.current.prev_month, format: :month_name_year)
+    within(find("[role=tabpanel] [data-slot=card]", text: previous_month_label)) do
+      click_on "Empleados"
+      expect(page).to have_content(employee_user.name)
+      click_on employee_user.name
+    end
+
+    click_on "Revisar pago"
+    within(find("[role=dialog]")) { click_on "Aprobar" }
+    expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
+    click_on I18n.t("pages.provider_collections.review.done")
+
+    # 5. El empleado vuelve a ingresar y la notificación ya no se muestra
+    sign_out
+    sign_in employee_user, role: :consumer
+    visit dashboard_path
+    expect(page).to have_no_content("Recordatorio de pago pendiente")
   end
 end

@@ -54,6 +54,16 @@ RSpec.describe Payment, type: :model do
       expect(reminder.reload.closed_at).to be_present
     end
 
+    it "stays open when the payment is rejected" do
+      reminder = manual_reminder
+      payment = payment_with_receipt(status: :submitted)
+      payment.save!
+
+      payment.reject_with("El comprobante no corresponde")
+
+      expect(reminder.reload.closed_at).to be_nil
+    end
+
     def manual_reminder
       Notifier.call(
         event_key: "debt_payment_reminder",
