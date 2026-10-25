@@ -41,6 +41,7 @@ class Consumer::OrderPricingSerializer
   def tiers_for(result, price, quantity)
     result.benefits.map do |benefit, units_used|
       {
+        id: benefit.id,
         name: benefit.benefit_configuration.name,
         percentage: benefit.percentage,
         quantity: units_used,

@@ -156,7 +156,8 @@ class Consumer::OrdersController < Consumer::InertiaController
     end
   end
 
-  # Le provee al frontend una interfaz de JSON para el servicio OrderPricing
+  # Le provee al frontend una interfaz de JSON para el servicio OrderPricing, para poder
+  # calcular el precio de pedidos en el carrito
   def pricing
     items = build_requested_items
 

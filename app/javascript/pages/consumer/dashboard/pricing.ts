@@ -9,6 +9,7 @@ export interface PricedItem {
 }
 
 export interface DiscountTier {
+  id: number
   name?: string
   percentage: number
   quantity: number
@@ -52,42 +53,6 @@ export async function priceItems(items: PricedItem[]): Promise<Pricing> {
   }
 
   return response.json() as Promise<Pricing>
-}
-
-export const lastUnitsLine = (
-  n: number,
-  k: number,
-  line: PricedLine,
-): PricedLine => {
-  if (!line) return line
-
-  if (n <= 0) return { subtotal: 0, discount: 0, total: 0, tiers: [] }
-
-  const units = Math.min(Math.max(k, 0), n)
-  const start = n - units // posición (0-indexed) desde la que cuentan las últimas k
-
-  const offset = 0
-  const tiers: DiscountTier[] = []
-
-  for (const tier of line.tiers) {
-    const tierStart = offset
-    const tierEnd = offset + tier.quantity
-
-    // unidades de este tier que caen dentro de la ventana [start, n)
-    const overlap = Math.max(0, tierEnd - Math.max(tierStart, start))
-    if (overlap === 0) continue
-
-    tiers.push({
-      ...tier,
-      quantity: overlap,
-      discount: (tier.discount * overlap) / tier.quantity,
-    })
-  }
-
-  const subtotal = (line.subtotal * units) / n
-  const discount = tiers.reduce((sum, t) => sum + t.discount, 0)
-
-  return { subtotal, discount, total: subtotal - discount, tiers }
 }
 
 type Quantifiable = Pick<CartItem, "id" | "quantity" | "benefits">

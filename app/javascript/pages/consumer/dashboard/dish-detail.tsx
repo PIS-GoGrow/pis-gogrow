@@ -14,8 +14,8 @@ import { formatMoney } from "@/lib/money"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { OrderSummary } from "./order-summary"
-import type { PricedLine } from "./pricing"
-import { cartPricedItem, lastUnitsLine, priceItems } from "./pricing"
+import type { Pricing } from "./pricing"
+import { cartPricedItem, priceItems } from "./pricing"
 import type { ConsumerDashboardIndex } from "@/types"
 
 interface Props {
@@ -50,9 +50,19 @@ export function DishDetail({
   benefit,
 }: Props) {
   const { t } = useTranslation()
-  const [line, setLine] = useState<PricedLine | null>(null)
+  const [pricing, setPricing] = useState<Pricing | null>(null)
+  const line = pricing?.lines?.at(-1)
+  const specialBenefitIds = benefit.specials.map((b) => b.id)
+  const benefitHeld = specialBenefitIds.reduce((acc, id) => {
+    acc[id] = pricing?.lines?.slice(0, -1)?.reduce((acc, line) => {
+      return acc + (line.tiers.find((t) => t.id === id)?.quantity ?? 0)
+    }, 0) ?? 0
+
+    return acc
+  }, {} as Record<number, number>)
+
   // Al principio, todos los beneficios están activados
-  const [benefitIds, setBenefitIds] = useState<number[]>(benefit.specials.map((b) => b.id))
+  const [benefitIds, setBenefitIds] = useState<number[]>(specialBenefitIds)
 
   const isEditing = Boolean(editingCartId ?? onRemove)
 
@@ -89,7 +99,7 @@ export function DishDetail({
         )
         if (cancelled || !result?.lines) return
 
-        setLine(result.lines.at(-1) ?? null)
+        setPricing(result)
       } finally {
         // No hacer nada
       }
@@ -101,6 +111,7 @@ export function DishDetail({
     }
   }, [cart, item, inCart, isEditing, cartWithoutCurrent, otherInCart, item.id, item.date, item.menu.price, quantity, benefitIds])
 
+  // Agrega/borra un beneficio para que se aplique a la orden
   function setChecked(benefitId: number) {
     if (benefitIds.includes(benefitId))
       setBenefitIds(benefitIds.filter((b) => b !== benefitId))
@@ -213,7 +224,7 @@ export function DishDetail({
       <section className="border-border border-b py-4 text-sm grid gap-2">
         {
           benefit.specials.filter((benefit) => {
-            return benefit.remaining === null || benefit.remaining > 0
+            return benefit.remaining === null || benefit.remaining - benefitHeld[benefit.id] > 0
           }).map((benefit) => (
             <div key={benefit.id} className="flex justify-between">
               <div className="flex">
@@ -240,7 +251,7 @@ export function DishDetail({
         }
       </section>
       <OrderSummary
-        loading={false}
+        loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede
         subtotal={line?.subtotal}
         total={line?.total}
         tiers={line?.tiers}
