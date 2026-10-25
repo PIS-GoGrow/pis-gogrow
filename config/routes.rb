@@ -95,7 +95,7 @@ Rails.application.routes.draw do
     resources :menus, path: "menu-del-dia", only: [ :index ]
     resources :delivery_addresses, path: "direcciones-de-entrega", only: [ :create ]
 
-    resources :orders, path: "pedidos", only: [ :index, :show, :create, :update ] do
+    resources :orders, path: "pedidos", path_names: { edit: "editar" }, only: [ :index, :show, :edit, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer, path: "cancelar"
       resource :review, only: [ :new, :create ], path: "calificacion", path_names: { new: "nueva" }
       post :pricing, on: :collection, as: :pricing

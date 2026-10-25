@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import type { Order } from "@/types"
@@ -54,20 +54,8 @@ describe("Consumer::Orders Show Page", () => {
     selected_options: [],
   }
 
-  const deliveryAddresses = [
-    { id: "1", label: "Oficina", address: "18 de Julio 1006" },
-  ]
-
   it("renders order information correctly", () => {
-    render(
-      <Show
-        order={baseOrder}
-        delivery_addresses={deliveryAddresses}
-        max_quantity={5}
-        option_groups={[]}
-        editing={false}
-      />,
-    )
+    render(<Show order={baseOrder} />)
 
     expect(screen.getByText("TuViandita")).toBeInTheDocument()
     expect(screen.getByText("Milanesa Napolitana")).toBeInTheDocument()
@@ -87,15 +75,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_confirmed",
     }
 
-    render(
-      <Show
-        order={rejectedOrder}
-        delivery_addresses={deliveryAddresses}
-        max_quantity={5}
-        option_groups={[]}
-        editing={false}
-      />,
-    )
+    render(<Show order={rejectedOrder} />)
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
     expect(screen.getByText("Sin stock disponible")).toBeInTheDocument()
@@ -113,15 +93,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_confirmed",
     }
 
-    render(
-      <Show
-        order={rejectedOrder}
-        delivery_addresses={deliveryAddresses}
-        max_quantity={5}
-        option_groups={[]}
-        editing={false}
-      />,
-    )
+    render(<Show order={rejectedOrder} />)
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
     expect(
@@ -129,22 +101,13 @@ describe("Consumer::Orders Show Page", () => {
     ).toBeInTheDocument()
   })
 
-  it("renders edit dialog open when editing is true", () => {
-    render(
-      <Show
-        order={baseOrder}
-        delivery_addresses={deliveryAddresses}
-        max_quantity={5}
-        option_groups={[]}
-        editing={true}
-      />,
-    )
+  it("links to the edit page when the order is modifiable", () => {
+    render(<Show order={baseOrder} />)
 
-    const dialog = screen.getByRole("dialog")
-    expect(dialog).toBeInTheDocument()
-    expect(
-      within(dialog).getByRole("heading", { name: "Modificar pedido" }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Editar/i })).toHaveAttribute(
+      "href",
+      "/pedidos/1/editar",
+    )
   })
 
   it("does not show block reason texts when order is confirmed and shows disabled buttons", () => {
@@ -157,15 +120,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_confirmed",
     }
 
-    render(
-      <Show
-        order={confirmedOrder}
-        delivery_addresses={deliveryAddresses}
-        max_quantity={5}
-        option_groups={[]}
-        editing={false}
-      />,
-    )
+    render(<Show order={confirmedOrder} />)
 
     expect(
       screen.queryByText(
@@ -191,15 +146,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_closed",
     }
 
-    render(
-      <Show
-        order={closedPendingOrder}
-        delivery_addresses={deliveryAddresses}
-        max_quantity={5}
-        option_groups={[]}
-        editing={false}
-      />,
-    )
+    render(<Show order={closedPendingOrder} />)
 
     expect(
       screen.getByText(
@@ -216,15 +163,7 @@ describe("Consumer::Orders Show Page", () => {
       notes: longNote,
     }
 
-    render(
-      <Show
-        order={orderWithLongNote}
-        delivery_addresses={deliveryAddresses}
-        max_quantity={5}
-        option_groups={[]}
-        editing={false}
-      />,
-    )
+    render(<Show order={orderWithLongNote} />)
 
     const notesElement = screen.getByText(longNote)
     expect(notesElement).toBeInTheDocument()

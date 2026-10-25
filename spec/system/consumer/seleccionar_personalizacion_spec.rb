@@ -225,20 +225,18 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       visit_hydrated order_path(order)
       calm_animations
 
-      click_button "Editar"
-      within("[role=dialog]") do
-        expect(page).to have_button("Guardar cambios", disabled: false)
+      click_link "Editar"
+      expect(page).to have_button("Guardar cambios", disabled: false)
 
-        pick_option("Extras", "Papaya")
+      pick_option("Extras", "Papaya")
 
-        expect(page).to have_button("Guardar cambios", disabled: true)
-      end
+      expect(page).to have_button("Guardar cambios", disabled: true)
 
       expect(order.reload.selected_options.first["values"]).to eq([ "Papaya" ])
     end
 
-    # Un pedido anterior a la funcionalidad no tiene elección guardada, así que el
-    # diálogo arranca con los grupos sin responder: tampoco se puede cambiar solo
+    # Un pedido anterior a la funcionalidad no tiene elección guardada, así que la
+    # pantalla arranca con los grupos sin responder: tampoco se puede cambiar solo
     # la cantidad hasta elegir la personalización.
     it "exige elegir la personalización de un pedido hecho antes de la funcionalidad" do
       order = order_with_selections
@@ -246,17 +244,15 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       visit_hydrated order_path(order)
       calm_animations
 
-      click_button "Editar"
-      within("[role=dialog]") do
-        expect(page).to have_button("Guardar cambios", disabled: true)
+      click_link "Editar"
+      expect(page).to have_button("Guardar cambios", disabled: true)
 
-        pick_option("Salsa", "Bolognesa")
-        pick_option("Relleno", "Ricota y nuez")
+      pick_option("Salsa", "Bolognesa")
+      pick_option("Relleno", "Ricota y nuez")
 
-        expect(page).to have_button("Guardar cambios", disabled: false)
-        click_button "Guardar cambios"
-      end
-      expect(page).to have_no_selector("[role=dialog]")
+      expect(page).to have_button("Guardar cambios", disabled: false)
+      click_button "Guardar cambios"
+      expect(page).to have_content("Pedido actualizado")
 
       expect(order.reload.selected_options.map { it["values"] })
         .to contain_exactly([ "Bolognesa" ], [ "Ricota y nuez" ])
@@ -300,13 +296,11 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
         visit_hydrated order_path(order)
         calm_animations
 
-        click_button "Editar"
-        within("[role=dialog]") do
-          pick_option("Salsa", "Bolognesa")
-          expect(page).to have_button("Guardar cambios", disabled: false)
-          click_button "Guardar cambios"
-        end
-        expect(page).to have_no_selector("[role=dialog]")
+        click_link "Editar"
+        pick_option("Salsa", "Bolognesa")
+        expect(page).to have_button("Guardar cambios", disabled: false)
+        click_button "Guardar cambios"
+        expect(page).to have_content("Pedido actualizado")
 
         expect(order.reload.selected_options.pluck("group_id")).to eq([ relleno.id ])
       end
@@ -317,16 +311,14 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       visit_hydrated order_path(order)
       calm_animations
 
-      click_button "Editar"
-      within("[role=dialog]") do
-        pick_option("Salsa", "Filetto")
-        # El clic y el PATCH son visitas de Inertia: sin esperar a que el radio
-        # refleje el cambio, el envío puede llevar la personalización anterior.
-        expect(checked_option("Salsa")).to include("Filetto")
+      click_link "Editar"
+      pick_option("Salsa", "Filetto")
+      # El clic y el PATCH son visitas de Inertia: sin esperar a que el radio
+      # refleje el cambio, el envío puede llevar la personalización anterior.
+      expect(checked_option("Salsa")).to include("Filetto")
 
-        click_button "Guardar cambios"
-      end
-      expect(page).to have_no_selector("[role=dialog]")
+      click_button "Guardar cambios"
+      expect(page).to have_content("Pedido actualizado")
 
       expect(order.reload.selected_options.map { it["values"] })
         .to contain_exactly([ "Filetto" ], [ "Ricota y nuez" ])

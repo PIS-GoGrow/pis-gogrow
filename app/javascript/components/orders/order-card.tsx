@@ -158,9 +158,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               className="w-full"
               asChild
             >
-              <Link
-                href={consumerOrders.show(order.id, { query: { edit: 1 } })}
-              >
+              <Link href={consumerOrders.edit(order.id)}>
                 <Pencil aria-hidden="true" />
                 {t("pages.orders.show.edit")}
               </Link>

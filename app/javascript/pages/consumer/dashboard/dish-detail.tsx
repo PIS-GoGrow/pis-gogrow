@@ -1,4 +1,5 @@
 import { ChevronLeft, Star } from "lucide-react"
+import type { ReactNode } from "react"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -7,6 +8,7 @@ import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { formatMoney } from "@/lib/money"
 
@@ -28,6 +30,11 @@ interface Props {
   add: () => void
   editingCartId?: string | null
   onRemove?: () => void
+  // Al modificar un pedido: el precio descuenta lo que ese pedido ya reservó.
+  orderId?: number
+  actionLabel?: string
+  processing?: boolean
+  children?: ReactNode
 }
 
 export function DishDetail({
@@ -43,6 +50,10 @@ export function DishDetail({
   add,
   editingCartId,
   onRemove,
+  orderId,
+  actionLabel,
+  processing = false,
+  children,
 }: Props) {
   const { t } = useTranslation()
   const [line, setLine] = useState<PricedLine | null>(null)
@@ -79,6 +90,7 @@ export function DishDetail({
         const cartToPrice = isEditing ? cartWithoutCurrent : cart
         const result = await priceItems(
           cartPricedItem([...cartToPrice, { ...item, quantity }]),
+          orderId,
         )
         if (cancelled) return
 
@@ -106,13 +118,15 @@ export function DishDetail({
     item.date,
     item.menu.price,
     quantity,
+    orderId,
   ])
 
   const reviews = item.menu.reviews
   const choicesMissing = item.menu.option_groups.some(
     (group) => group.required && !selections[group.id]?.length,
   )
-  const addDisabled = item.sold_out || item.orders_closed || choicesMissing
+  const addDisabled =
+    item.sold_out || item.orders_closed || choicesMissing || processing
 
   return (
     <MobileCard>
@@ -210,6 +224,7 @@ export function DishDetail({
           {notes.length}/140
         </p>
       </section>
+      {children}
       <OrderSummary
         loading={false}
         subtotal={line?.subtotal}
@@ -228,9 +243,11 @@ export function DishDetail({
           onClick={add}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
         >
-          {isEditing
-            ? t("pages.consumer_dashboard.index.modify")
-            : t("pages.consumer_dashboard.index.add")}
+          {processing && <Spinner />}
+          {actionLabel ??
+            (isEditing
+              ? t("pages.consumer_dashboard.index.modify")
+              : t("pages.consumer_dashboard.index.add"))}
         </Button>
       </BottomAction>
     </MobileCard>
