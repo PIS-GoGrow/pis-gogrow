@@ -10,7 +10,7 @@
 #
 # Con modifiable_order (al modificar una orden) se le devuelve a cada beneficio lo que
 # esa orden ya tenía reservado, para no rechazarla contra su propio consumo.
-class OrderPricing
+class Orders::Pricing
   BenefitUsed = Data.define(:units_used, :discount)
   OrderItemPricing = Data.define(:price, :discounted_price, :benefits)
   # total contiene el porcentaje total de subsidios aplicable, base el porcentaje de

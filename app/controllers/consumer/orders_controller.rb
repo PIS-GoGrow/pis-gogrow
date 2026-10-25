@@ -38,86 +38,22 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def create
-    requested_items = order_params.fetch(:items)
+    result = Orders::Place.new(
+      consumer: @consumer,
+      items: order_params[:items],
+      address: order_params[:address]
+    ).call
 
-    # Rechazamos si no hay carrito o si las cantidades no son numéricas.
-    return reject_order(:empty_cart) if requested_items.empty?
-    return reject_order(:invalid_quantity) unless requested_items.all? { |item| item[:quantity].to_s.match?(/\A[1-9]\d*\z/) }
-    # Rechazamos si la dirección es invalida
-    # delivery_addresses ya verifica que la dirección no sea blank, por lo que acá
-    # está manejado el caso de que no haya dirección de envío.
-    return reject_order(:invalid_address) unless @consumer.delivery_addresses.include?(order_params[:address]) || valid_new_address?(@consumer, order_params[:address])
-
-    created_orders = []
-
-    Order.transaction do
-      @consumer.lock!
-
-      schedule_ids = requested_items.pluck(:schedule_id)
-
-      # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos
-      # todos los schedules correspondientes.
-      schedules =
-        Schedule
-          .includes(menu: :provider)
-          .where(id: schedule_ids.uniq, date: Calendar.new.allowed_order_dates)
-          .order(:id)
-          .lock.index_by(&:id)
-
-      # Tiramos error si alguno de los schedules no existen o si están fuera del
-      # rango de fechas permitidas (definidas por Calendar#allowed_order_dates)
-      raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
-
-      pricings = OrderPricing.new(@consumer).call(
-        requested_items.map do |item|
-          {
-            schedule: schedules.fetch(item[:schedule_id].to_i),
-            quantity: item[:quantity].to_i,
-            benefits: item[:benefits]
-          }
-        end
-      )
-
-      requested_items.zip(pricings).each do |item, pricing|
-        quantity = item[:quantity].to_i
-        schedule = schedules.fetch(item[:schedule_id].to_i)
-
-        # Elegimos el modo de entrega. Si el usuario eligió entrega a domicilio, pero
-        # el proveedor solo hace entregas a oficina, se cambia automáticamente para que se
-        # entregue en la oficina. En el carrito ya se le avisó al consumidor que la entrega
-        # se iba a hacer en la oficina.
-        delivery = @consumer.delivery_for(schedule.menu.provider, order_params[:address])
-
-        # Si en este punto la dirección es blank, es porque no hay una dirección para la
-        # empresa.
-        if delivery[:address].blank?
-          reject_order(:office_address_required)
-          raise ActiveRecord::Rollback
-        end
-
-        # Tratamos de crear la orden
-        order = Order.reserve(
-          consumer: @consumer,
-          schedule:,
-          quantity:,
-          notes: item[:notes],
-          discounted_price: pricing[1].discounted_price,
-          selected_options: selected_options_for(schedule.menu, item[:options]),
-          benefits: pricing[1].benefits,
-          **delivery
-        )
-
-        raise ActiveRecord::RecordInvalid, order unless order.persisted?
-
-        created_orders << order
-      end
+    if result.success?
+      redirect_to dashboard_confirmation_path(confirmed_order_ids: result.orders.map(&:id)),
+                  notice: t("flash.cart_confirmed"),
+                  status: :see_other
+    else
+      reject_order(result.record ? order_error_reason(result.record) : result.error)
     end
-
-    redirect_to dashboard_confirmation_path(confirmed_order_ids: created_orders.map(&:id)), notice: t("flash.cart_confirmed"), status: :see_other unless performed?
-  rescue ActiveRecord::RecordInvalid => error
-    reject_order(order_error_reason(error.record))
-  rescue ActiveRecord::RecordNotFound, KeyError
-    reject_order(:cart_unavailable)
+  rescue ActionController::ParameterMissing
+    # Antes lo capturaba el `rescue KeyError`.
+    reject_order(:empty_cart)
   end
 
   def update
@@ -161,7 +97,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   def pricing
     items = build_requested_items
 
-    pricings = OrderPricing.new(@consumer).call(items)
+    pricings = Orders::Pricing.new(@consumer).call(items)
 
     render json: Consumer::OrderPricingSerializer.new(items, pricings)
   end
@@ -211,12 +147,6 @@ class Consumer::OrdersController < Consumer::InertiaController
     :cart_unavailable
   end
 
-  # Además de las direcciones conocidas, el carrito puede mandar una que el
-  # empleado ingresó sin guardarla para futuros pedidos.
-  def valid_new_address?(consumer, address)
-    consumer.delivery_address_options.pluck(:address).include?(address) || DeliveryAddress.valid_full_address?(address)
-  end
-
   # La dirección actual del pedido se mantiene como opción aunque no esté
   # guardada, para que modificar la cantidad no obligue a cambiarla.
   def delivery_address_options(consumer, order)
@@ -224,22 +154,6 @@ class Consumer::OrdersController < Consumer::InertiaController
     return options if order.address.blank? || options.pluck(:address).include?(order.address)
 
     options + [ { id: "current", label: t("pages.orders.addresses.current"), address: order.address } ]
-  end
-
-  # El cupo del schedule ya descuenta esta orden, así que el máximo que el
-  # empleado puede elegir es lo que queda más lo que ya tiene reservado.
-  # Del parámetro solo se confía el id del grupo y los valores: el nombre se toma
-  # del plato, así la copia guardada no depende de lo que mande el cliente.
-  def selected_options_for(menu, options)
-    groups = menu&.option_groups.to_a.index_by(&:id)
-
-    options.to_a.filter_map do |option|
-      group = groups[option[:group_id].to_i]
-      values = Array(option[:values]).map(&:to_s).compact_blank
-      next if group.nil? || values.empty?
-
-      { group_id: group.id, name: group.name, values: }
-    end
   end
 
   def max_quantity(order)
