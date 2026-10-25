@@ -11,6 +11,7 @@
 # Con modifiable_order (al modificar una orden) se le devuelve a cada beneficio lo que
 # esa orden ya tenía reservado, para no rechazarla contra su propio consumo.
 class OrderPricing
+  BenefitUsed = Data.define(:units_used, :discount)
   OrderItemPricing = Data.define(:price, :discounted_price, :benefits)
   # total contiene el porcentaje total de subsidios aplicable, base el porcentaje de
   # subsidio mensual, y specials es un arreglo de hashes de la forma
@@ -45,9 +46,11 @@ class OrderPricing
       selected_benefits = benefits_from_ids(item[:benefits].to_a)
       quantity = item[:quantity]
 
+      # Para cada beneficio, cuántas unidades se usaron y cuánto descuento se aplicó
+      benefit_used = selected_benefits.zip(Array.new(benefits.length, BenefitUsed[0, 0])).to_h
+
       coverage = Array.new(quantity) { [] } # indica qué beneficios se aplican para cada unidad
       pct_sum = Array.new(quantity, 0) # indica cuánto se descuenta para cada unidad
-      units_used = selected_benefits.zip(Array.new(benefits.length, 0)).to_h
 
       # Calculamos para cada beneficio cuánto podemos aplicar a la orden
       selected_benefits.each do |benefit|
@@ -74,17 +77,20 @@ class OrderPricing
           unit = best || low
           break if unit.nil? || pct_sum[unit] == 100
 
+          benefit_used[benefit] = BenefitUsed[
+            units_used: benefit_used[benefit].units_used + 1,
+            discount: benefit_used[benefit].discount + [ benefit.percentage, 100 - pct_sum[unit] ].min / 100.0 * schedule.price
+          ]
           pct_sum[unit] += benefit.percentage
           coverage[unit] << j
-          units_used[benefit] += 1
         end
 
-        benefit_left[benefit] -= units_used[benefit] if benefit_left[benefit]
+        benefit_left[benefit] -= benefit_used[benefit].units_used if benefit_left[benefit]
       end
 
-      units_used.select! { |k, v| v > 0 }
+      benefit_used.select! { |_benefit, benefit_used| benefit_used.units_used > 0 }
 
-      [ schedule.id, pricing_for(schedule.price, quantity, units_used, pct_sum) ]
+      [ schedule.id, pricing_for(schedule.price, quantity, benefit_used, pct_sum) ]
     end
   end
 
@@ -119,7 +125,7 @@ class OrderPricing
 
   # Por vianda y no por ítem: cada vianda puede tener una combinación distinta
   # de beneficios según cuántos usos le quedaban a cada uno.
-  def pricing_for(unit_price, quantity, units_used, pct_sum)
+  def pricing_for(unit_price, quantity, benefit_used, pct_sum)
     # Para cada unidad, evaluamos qué beneficios se pueden aplicar a él y calculamos
     # su precio.
     # El precio descontado total es la suma de los precios descontados de cada unidad
@@ -129,7 +135,7 @@ class OrderPricing
     OrderItemPricing.new(
       price: unit_price * quantity,
       discounted_price: discounted_price.round(2),
-      benefits: units_used
+      benefits: benefit_used
     )
   end
 
@@ -149,25 +155,23 @@ class OrderPricing
     monthly_benefits + special_benefits
   end
 
-  def monthly_benefits
-    @monthly_benefits ||=
+  def loaded_benefits
+    @loaded_benefits ||=
       consumer
         .benefits
-        .or(consumer.benefits.where(id: @modifiable_order&.order_benefits&.select(:benefit_id)))
+        .includes(benefit_configuration: :benefit_rules)
         .where.not(status: :expired)
-        .monthly
+        .or(consumer.benefits.where(id: @modifiable_order&.order_benefits&.select(:benefit_id)))
+        .order(percentage: :desc)
         .to_a
   end
 
+  def monthly_benefits
+    loaded_benefits.select { |b| b.monthly? }
+  end
+
   def special_benefits
-    @special_benefits ||=
-      consumer
-        .benefits
-        .or(consumer.benefits.where(id: @modifiable_order&.order_benefits&.select(:benefit_id)))
-        .where.not(status: :expired)
-        .special
-        .order(percentage: :desc)
-        .to_a
+    loaded_benefits.reject { |b| b.monthly? }
   end
 
   def benefit_used

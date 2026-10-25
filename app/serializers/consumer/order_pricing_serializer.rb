@@ -22,7 +22,7 @@ class Consumer::OrderPricingSerializer
   end
 
   def subsidized_quantities
-    @subsidized_quantities ||= @pricings.map { |pricing| pricing[1].benefits.sum { |_, units| units } }
+    @subsidized_quantities ||= @pricings.map { |pricing| pricing[1].benefits.sum { |_, used| used.units_used } }
   end
 
   def line_for(item, result)
@@ -39,13 +39,13 @@ class Consumer::OrderPricingSerializer
   end
 
   def tiers_for(result, price, quantity)
-    result.benefits.map do |benefit, units_used|
+    result.benefits.map do |benefit, benefit_used|
       {
         id: benefit.id,
         name: benefit.benefit_configuration.name,
         percentage: benefit.percentage,
-        quantity: units_used,
-        discount: (price * units_used * benefit.percentage / 100 / quantity).to_f
+        quantity: benefit_used.units_used,
+        discount: benefit_used.discount
       }
     end
   end
