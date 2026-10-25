@@ -286,7 +286,7 @@ class Order < ApplicationRecord
             return false
           end
 
-          line = OrderPricing.new(consumer, modifiable_order: self).call([ { schedule:, quantity: } ])[schedule_id]
+          line = Orders::Pricing.new(consumer, modifiable_order: self).call([ { schedule:, quantity:, benefits: benefit_ids } ]).first.second
 
           # El update tiene que ir antes de tocar los beneficios y cortar si
           # falla: si una validación rechaza el cambio, los beneficios no se
