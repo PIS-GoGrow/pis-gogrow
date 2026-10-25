@@ -278,6 +278,7 @@ RSpec.describe "Provider payments", type: :request do
     get receipt_provider_payment_path(payment)
 
     expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
   end
 
   it "keeps a rejected partial payment receipt accessible only to its provider" do

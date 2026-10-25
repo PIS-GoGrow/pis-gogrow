@@ -435,6 +435,7 @@ RSpec.describe "Provider::Menus", type: :request do
         get edit_provider_menu_path(menus(:sorrentinos))
 
         expect(response).to have_http_status(:not_found)
+        expect(inertia).to render_component("errors/not_found")
       end
 
       it "edits the dish as it is programmed on the day it was opened from" do

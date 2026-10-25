@@ -247,6 +247,7 @@ RSpec.describe "Provider::Invoices", type: :request do
       get file_provider_invoice_path(invoice)
 
       expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
     end
   end
 end
