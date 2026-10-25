@@ -10,7 +10,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
 
   before { sign_in admin_user, role: :admin }
 
-  describe "GET /admin/benefit_configurations" do
+  describe "GET /admin/subsidios" do
     it "renders the page with no configuration yet" do
       BenefitConfiguration.destroy_all
 
@@ -67,19 +67,19 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
     it "renders configurable_month as next month when accessed before cutoff date" do
       travel_to Date.new(2026, 10, 15) do
         get admin_benefit_configurations_path
-        expect(inertia.props[:configurable_month]).to eq("01/11/26")
+        expect(inertia.props[:configurable_month]).to eq("2026-11-01")
       end
     end
 
     it "renders configurable_month as two months ahead when accessed on or after cutoff date" do
       travel_to Date.new(2026, 10, 31) do
         get admin_benefit_configurations_path
-        expect(inertia.props[:configurable_month]).to eq("01/12/26")
+        expect(inertia.props[:configurable_month]).to eq("2026-12-01")
       end
     end
   end
 
-  describe "POST /admin/benefit_configurations" do
+  describe "POST /admin/subsidios" do
     before do
       BenefitConfiguration.destroy_all
     end
@@ -154,6 +154,37 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
 
       follow_redirect!
       expect(inertia.props[:errors][:benefit_configuration]).to have_key(:subsidy_percentage)
+    end
+
+    it "rejects subsidy_percentage greater than 100 or non-numeric via parameter bypass" do
+      [ 150, "cien" ].each do |invalid_percentage|
+        expect {
+          post admin_benefit_configurations_path, params: {
+            benefit_configuration: { subsidy_percentage: invalid_percentage, max_voucher_price: 150, monthly_voucher_limit: 20 }
+          }
+        }.not_to change(BenefitConfiguration, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors][:benefit_configuration]).to have_key(:subsidy_percentage)
+      end
+    end
+
+    it "redirects unauthorized roles when attempting to post a configuration" do
+      sign_in users(:one), role: :consumer
+      expect {
+        post admin_benefit_configurations_path, params: {
+          benefit_configuration: { subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20 }
+        }
+      }.not_to change(BenefitConfiguration, :count)
+      expect(response).to redirect_to(root_path)
+
+      sign_in users(:provider_user), role: :provider
+      expect {
+        post admin_benefit_configurations_path, params: {
+          benefit_configuration: { subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20 }
+        }
+      }.not_to change(BenefitConfiguration, :count)
+      expect(response).to redirect_to(root_path)
     end
 
     it "rejects a missing max_voucher_price" do

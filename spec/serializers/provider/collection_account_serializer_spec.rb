@@ -19,17 +19,16 @@ RSpec.describe Provider::CollectionAccountSerializer do
     payment
   end
 
-  it "prioritizes the oldest submitted payment for payment_id and receipt_url when multiple payments exist" do
+  it "exposes the submitted payment for payment_id and receipt_url" do
     account.payments.destroy_all
-    older_submitted = create_payment(account, status: :submitted, created_at: 2.days.ago)
-    create_payment(account, status: :submitted, created_at: 1.day.ago)
+    submitted = create_payment(account, status: :submitted)
 
     row = ProviderCollectionSummary::AccountRow.new(account:, meals: 3)
     serialized = described_class.new(row).to_h
 
-    expect(serialized["payment_id"]).to eq(older_submitted.id)
+    expect(serialized["payment_id"]).to eq(submitted.id)
     expect(serialized["status"]).to eq("submitted")
-    expect(serialized["receipt_url"]).to eq(Rails.application.routes.url_helpers.receipt_provider_payment_path(older_submitted))
+    expect(serialized["receipt_url"]).to eq(Rails.application.routes.url_helpers.receipt_provider_payment_path(submitted))
   end
 
   it "falls back to the last payment when no submitted payment exists" do

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -63,6 +63,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
     t.bigint "user_id", null: false
     t.index ["company_id"], name: "index_admins_on_company_id"
     t.index ["user_id"], name: "index_admins_on_user_id"
+  end
+
+  create_table "audit_logs", force: :cascade do |t|
+    t.bigint "auditable_id", null: false
+    t.string "auditable_type", null: false
+    t.jsonb "changeset", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["auditable_type", "auditable_id"], name: "index_audit_logs_on_auditable"
+    t.index ["user_id"], name: "index_audit_logs_on_user_id"
   end
 
   create_table "benefit_configuration_changes", force: :cascade do |t|
@@ -267,6 +278,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
     t.index ["order_id"], name: "index_order_benefits_on_order_id"
   end
 
+  create_table "order_events", force: :cascade do |t|
+    t.integer "action", null: false
+    t.string "actor_name"
+    t.jsonb "changeset", default: {}, null: false
+    t.bigint "company_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "order_id", null: false
+    t.integer "role"
+    t.bigint "user_id"
+    t.index ["company_id", "created_at"], name: "index_order_events_on_company_id_and_created_at"
+    t.index ["order_id"], name: "index_order_events_on_order_id"
+    t.index ["user_id"], name: "index_order_events_on_user_id"
+  end
+
   create_table "orders", force: :cascade do |t|
     t.string "address"
     t.integer "amount"
@@ -274,6 +299,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
     t.bigint "cancelled_by_id"
     t.bigint "consumer_id", null: false
     t.datetime "created_at", null: false
+    t.date "delivery_date"
     t.integer "delivery_method", null: false
     t.decimal "discounted_price", precision: 10, scale: 2
     t.string "menu_description"
@@ -283,6 +309,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
     t.bigint "modified_by_id"
     t.string "notes"
     t.decimal "price", precision: 10, scale: 2
+    t.bigint "provider_id"
+    t.string "provider_name"
+    t.datetime "rejected_at"
+    t.bigint "rejected_by_id"
     t.string "rejection_details"
     t.integer "rejection_reason"
     t.bigint "schedule_id"
@@ -293,6 +323,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
     t.index ["cancelled_by_id"], name: "index_orders_on_cancelled_by_id"
     t.index ["consumer_id"], name: "index_orders_on_consumer_id"
     t.index ["modified_by_id"], name: "index_orders_on_modified_by_id"
+    t.index ["provider_id"], name: "index_orders_on_provider_id"
+    t.index ["rejected_by_id"], name: "index_orders_on_rejected_by_id"
     t.index ["schedule_id"], name: "index_orders_on_schedule_id"
     t.check_constraint "delivery_method <> 1 OR address IS NOT NULL AND btrim(address::text) <> ''::text", name: "orders_home_delivery_requires_address"
   end
@@ -317,25 +349,52 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_payments_on_account_id"
+    t.index ["account_id"], name: "index_payments_on_account_id_submitted", unique: true, where: "(status = 1)"
     t.index ["provider_id"], name: "index_payments_on_provider_id"
   end
 
-  create_table "providers", force: :cascade do |t|
+  create_table "provider_closures", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.date "ends_on", null: false
+    t.bigint "provider_id", null: false
+    t.string "reason", null: false
+    t.date "starts_on", null: false
+    t.datetime "updated_at", null: false
+    t.index ["provider_id", "starts_on"], name: "index_provider_closures_on_provider_id_and_starts_on"
+    t.index ["provider_id"], name: "index_provider_closures_on_provider_id"
+    t.check_constraint "ends_on >= starts_on", name: "provider_closures_ends_on_after_starts_on"
+  end
+
+  create_table "providers", force: :cascade do |t|
+    t.string "bank_account_holder"
+    t.string "bank_account_number"
+    t.integer "bank_account_type"
+    t.string "bank_name"
+    t.datetime "created_at", null: false
+    t.datetime "deliveries_configured_at"
     t.boolean "home_delivery", default: true, null: false
+    t.datetime "notifications_configured_at"
+    t.datetime "onboarding_completed_at"
     t.time "order_deadline"
+    t.datetime "order_deadline_configured_at"
+    t.datetime "payment_details_configured_at"
+    t.string "tax_id"
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.index ["user_id"], name: "index_providers_on_user_id", unique: true
   end
 
   create_table "reviews", force: :cascade do |t|
+    t.bigint "consumer_id"
     t.datetime "created_at", null: false
     t.string "description"
     t.bigint "menu_id", null: false
+    t.bigint "order_id"
     t.integer "rating"
     t.datetime "updated_at", null: false
+    t.index ["consumer_id"], name: "index_reviews_on_consumer_id"
     t.index ["menu_id"], name: "index_reviews_on_menu_id"
+    t.index ["order_id"], name: "index_reviews_on_order_id", unique: true
   end
 
   create_table "schedules", force: :cascade do |t|
@@ -554,6 +613,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "admins", "companies"
   add_foreign_key "admins", "users"
+  add_foreign_key "audit_logs", "users", on_delete: :nullify
   add_foreign_key "benefit_configuration_changes", "benefit_configurations"
   add_foreign_key "benefit_configuration_changes", "users"
   add_foreign_key "benefit_configurations", "companies"
@@ -580,15 +640,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
   add_foreign_key "order_accounts", "orders"
   add_foreign_key "order_benefits", "benefits"
   add_foreign_key "order_benefits", "orders"
+  add_foreign_key "order_events", "companies"
+  add_foreign_key "order_events", "users", on_delete: :nullify
   add_foreign_key "orders", "consumers"
+  add_foreign_key "orders", "providers", on_delete: :nullify
   add_foreign_key "orders", "schedules"
   add_foreign_key "orders", "users", column: "cancelled_by_id"
   add_foreign_key "orders", "users", column: "modified_by_id"
+  add_foreign_key "orders", "users", column: "rejected_by_id", on_delete: :nullify
   add_foreign_key "otp_codes", "users"
   add_foreign_key "payments", "accounts"
   add_foreign_key "payments", "providers"
+  add_foreign_key "provider_closures", "providers"
   add_foreign_key "providers", "users", on_delete: :nullify
+  add_foreign_key "reviews", "consumers"
   add_foreign_key "reviews", "menus"
+  add_foreign_key "reviews", "orders"
   add_foreign_key "schedules", "menus"
   add_foreign_key "schedules", "users", column: "availability_changed_by_id"
   add_foreign_key "sessions", "users"

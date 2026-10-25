@@ -20,6 +20,9 @@ class Schedule < ApplicationRecord
             allow_nil: true
 
   validates :menu_id, uniqueness: { scope: :date }
+  validate :provider_open_on_date, on: :create
+
+  after_create_commit :close_missing_publication_notification
 
   # Las programaciones de platos eliminados (archivados) no se muestran.
   scope :on_active_menus, -> { joins(:menu).where(menus: { archived_at: nil }) }
@@ -38,11 +41,15 @@ class Schedule < ApplicationRecord
   end
 
   def available?(quantity: 1)
-    date.present? && date >= Date.current && !order_deadline_passed? && remaining_amount >= quantity && available && !menu.archived?
+    date.present? && date >= Date.current && !provider_closed? && !order_deadline_passed? && remaining_amount >= quantity && available && !menu.archived?
   end
 
   def order_deadline_passed?
     date == Date.current && menu.provider.order_deadline_passed_today?
+  end
+
+  def provider_closed?
+    menu.provider.closed_on?(date)
   end
 
   # No cancela los pedidos ya hechos sobre esta publicación: Order.reserve/#modify
@@ -51,6 +58,22 @@ class Schedule < ApplicationRecord
   # cancelled_by/cancelled_at.
   def set_availability(available:, by:)
     update(available:, availability_changed_at: Time.current, availability_changed_by: by)
+  end
+
+  def price
+    menu.price
+  end
+
+  private
+
+  def close_missing_publication_notification
+    Menus::MissingPublicationNotifier.close_for(schedule: self)
+  end
+
+  def provider_open_on_date
+    return if date.nil? || menu.nil?
+
+    errors.add(:date, I18n.t("validations.publish_date_closed")) if provider_closed?
   end
 end
 

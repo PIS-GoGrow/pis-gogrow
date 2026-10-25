@@ -14,15 +14,13 @@ import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { RadioGroup } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
+import { AddressOption } from "@/pages/consumer/dashboard/address-option"
+import { SavedAddressesSheet } from "@/pages/consumer/dashboard/saved-addresses-sheet"
 import { consumerOrders } from "@/routes"
 import type { ConsumerOrdersShow, Order } from "@/types"
-
-// Schedule::MAX_AMOUNT: así llega el cupo de un plato sin límite de stock.
-const UNLIMITED_STOCK = 2_147_483_647
 
 interface EditOrderSheetProps {
   order: Order
@@ -61,6 +59,14 @@ export default function EditOrderSheet({
         .length,
   )
 
+  const office = addresses.find((item) => item.id === "office")
+  const customAddresses = addresses.filter((item) => item.id !== "office")
+  const visibleAddresses = [
+    office,
+    customAddresses.find((item) => item.address === data.address) ??
+      customAddresses[0],
+  ].filter((item) => item !== undefined)
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -94,7 +100,10 @@ export default function EditOrderSheet({
         </Button>
       </AdaptableDialogTrigger>
 
-      <AdaptableDialogContent showCloseButton={false} className="p-5">
+      <AdaptableDialogContent
+        showCloseButton={false}
+        className="max-h-[90dvh] overflow-y-auto p-5"
+      >
         <form onSubmit={handleSubmit} className="flex min-w-0 flex-col gap-5">
           <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
             {t("pages.orders.show.edit_dialog.title")}
@@ -117,14 +126,6 @@ export default function EditOrderSheet({
               />
 
               <input type="hidden" id="quantity" value={data.quantity} />
-
-              {maxQuantity < UNLIMITED_STOCK && (
-                <p className="text-muted-foreground text-xs">
-                  {t("pages.orders.show.edit_dialog.remaining", {
-                    count: maxQuantity,
-                  })}
-                </p>
-              )}
             </div>
           </Field>
 
@@ -139,26 +140,23 @@ export default function EditOrderSheet({
               disabled={processing || addresses.length <= 1}
               className="gap-3"
             >
-              {addresses.map((item) => (
-                <label
+              {visibleAddresses.map((item) => (
+                <AddressOption
                   key={item.id}
-                  className={cn(
-                    "border-border bg-card flex min-h-16 gap-3 rounded-lg border p-3",
-                    data.address === item.address && "border-primary bg-muted",
-                  )}
-                >
-                  <RadioGroupItem value={item.address} className="mt-0.5" />
-
-                  <span className="text-xs">
-                    <b>{item.label}</b>
-
-                    <small className="text-muted-foreground mt-1 block">
-                      {item.address}
-                    </small>
-                  </span>
-                </label>
+                  option={item}
+                  selected={data.address === item.address}
+                />
               ))}
             </RadioGroup>
+
+            {customAddresses.length > 1 && (
+              <SavedAddressesSheet
+                addresses={addresses}
+                address={data.address}
+                disabled={processing}
+                onSelect={(address) => setData("address", address)}
+              />
+            )}
           </Field>
 
           {optionGroups.map((group) => (

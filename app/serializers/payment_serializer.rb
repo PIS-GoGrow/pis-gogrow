@@ -6,7 +6,7 @@ class PaymentSerializer < ApplicationSerializer
 
   typelize :string
   attribute :receipt_uploaded_at do |payment|
-    I18n.l(payment.created_at.to_date)
+    DateFormat.short(payment.created_at)
   end
 
   typelize :string?
@@ -47,8 +47,9 @@ end
 #
 # Indexes
 #
-#  index_payments_on_account_id   (account_id)
-#  index_payments_on_provider_id  (provider_id)
+#  index_payments_on_account_id            (account_id)
+#  index_payments_on_account_id_submitted  (account_id) UNIQUE WHERE (status = 1)
+#  index_payments_on_provider_id           (provider_id)
 #
 # Foreign Keys
 #

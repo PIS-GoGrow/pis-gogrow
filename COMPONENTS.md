@@ -62,6 +62,7 @@ Todas las pantallas con sesión iniciada comparten el mismo esqueleto. Las medid
 | Separaciones | `PageContainer` | `mb-8` entre el encabezado y el contenido, y `gap-4` entre cada hijo directo |
 | Título de la pestaña del navegador | `<Head title>` | El mismo texto que `title` |
 | Breadcrumbs | `breadcrumbs` de `AppLayout` | Al menos la sección actual |
+| Calificaciones: viewport y acciones inferiores | `ReviewPage` + `ReviewActions`, en `components/reviews/` | Contenido desplazable, acciones visibles y espacio seguro inferior; respeta el teclado mediante `visualViewport` |
 | Lista de tarjetas | `grid gap-4 md:grid-cols-2` | 1 columna en móvil, 2 desde tablet |
 | Cada ítem de la lista | `ListItemCard` | Tarjeta compacta: `py-4` y `gap-4`, con `px-4` en sus partes |
 | Lista vacía | `Empty className="border"` con `EmptyMedia variant="icon"` | Ver [Empty](#empty) |
@@ -94,7 +95,7 @@ Configuración es la excepción: usa `SettingsLayout`, que viene de la plantilla
 | `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardAction`, `CardContent`, `CardFooter` | `@/components/ui/card` | Superficies: ítems de lista, métricas, formularios, resúmenes |
 | `Alert`, `AlertTitle`, `AlertDescription` | `@/components/ui/alert` | Errores, avisos y confirmaciones dentro de la pantalla |
 | `Field`, `FieldLabel`, `FieldError`, `FieldDescription`, `FieldGroup`, `FieldSet`, `FieldLegend`, `FieldContent`, `FieldTitle`, `FieldSeparator` | `@/components/ui/field` | Estructura de formularios: etiqueta, ayuda, error, grupos, divisor con texto |
-| `Input` | `@/components/ui/input` | Texto, email, número, búsqueda, archivo. Para fechas, `DatePicker` |
+| `Input` | `@/components/ui/input` | Texto, email, número, búsqueda. Para fechas, `DatePicker`; para archivos, `FileInput` |
 | `Textarea` | `@/components/ui/textarea` | Texto multilínea |
 | `InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator` | `@/components/ui/input-otp` | Código de verificación en casillas separadas (6 dígitos del reseteo de contraseña) |
 | `Label` | `@/components/ui/label` | Etiqueta suelta fuera de un `Field` |
@@ -134,7 +135,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | Componente | Importar desde | Usar para |
 |---|---|---|
 | `AppLayout` | `@/layouts/app-layout` | Toda pantalla con sesión iniciada; recibe `breadcrumbs` |
-| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `actions`, `back` y `centered` |
+| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `badge` (al lado del título, como el contador de Empleados), `actions`, `back` y `centered` |
 | `ListItemCard` | `@/components/list-item-card` | Tarjeta compacta para cada ítem de una lista; acepta las mismas partes que `Card` |
 | `Heading` | `@/components/heading` | Encabezado con `eyebrow`, `description` y `actions` opcionales. En las pantallas se usa a través de `PageContainer` |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
@@ -150,9 +151,10 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `Icon` | `@/components/icon` | Renderizar un ícono de lucide recibido como prop |
 | `GoogleMark` | `@/components/branding/google-mark` | Logo de Google en el acceso con Google |
 | `DevLoginForm` | `@/components/dev-login-form` | Acceso con correo y contraseña a las cuentas de prueba; sólo se muestra con `DEV_LOGIN_ENABLED` |
-| `DatePicker` | `@/components/date-picker` | Elegir una fecha en un formulario; recibe y devuelve fechas `YYYY-MM-DD` |
+| `DatePicker`, `DateRangePicker` | `@/components/date-picker` | Elegir una fecha o un rango en un formulario; reciben y devuelven fechas `YYYY-MM-DD` |
 | `OptionChoices` | `@/components/menus/option-choices` | Elegir las opciones de un grupo de un plato: `RadioGroup` si el grupo admite una, casillas con tope si admite varias |
 | `QuantityInput` | `@/components/quantity-input` | Elegir una cantidad entre un mínimo y un máximo |
+| `FileInput` | `@/components/file-input` | Elegir un archivo con botón y texto en español; recibe las props de `<input>` y `fileName` con el nombre elegido |
 | `PasswordSetupForm` | `@/components/password-setup-form` | Formulario de contraseña nueva con checklist de requisitos y confirmación; el botón queda deshabilitado hasta que se cumplen. Recibe `action`, `submitLabel` y, opcional, `email` de solo lectura. Lo usan el alta del proveedor y el reseteo |
 | `CompletedSheet` | `@/components/completed-sheet` | Sheet inferior de confirmación («¡Registro completado!») con un botón «Listo» que navega a `href` |
 
@@ -298,10 +300,12 @@ Cada control de formulario va dentro de un `Field`:
 - Con error: `data-invalid` en el `Field` (pinta etiqueta y texto) y `aria-invalid` en el control (pinta el borde).
 - `Field orientation="horizontal"` pone el control al lado de la etiqueta (checkbox, switch). `FieldGroup` apila varios `Field`, y `FieldSet` con `FieldLegend` agrupa opciones bajo un título.
 
-`Input` acepta las mismas props que `<input>` y sirve para cualquier `type`. `Label` sólo se usa suelto, fuera de un `Field`.
+`Input` acepta las mismas props que `<input>` y sirve para cualquier `type` salvo `file`, que muestra el botón nativo del navegador en inglés: para archivos se usa `FileInput`. `Label` sólo se usa suelto, fuera de un `Field`.
+
+Todo `<form>` o `<Form>` lleva `noValidate`. Sin él, `required`, `min`, `max` o `type="email"` disparan los globos del navegador, en inglés y de a un campo por vez. Los errores los resuelve el servidor (o una validación propia antes de enviar) y se muestran todos juntos, cada uno en el `FieldError` de su campo.
 
 ```tsx
-<Form action={providerMenus.create()}>
+<Form action={providerMenus.create()} noValidate>
   {({ errors, processing }) => (
     <FieldGroup>
       <Field data-invalid={!!errors.name}>
@@ -407,21 +411,26 @@ Es el `Select` de Radix, **no** un `<select>` nativo: las opciones son `SelectIt
 </Field>
 ```
 
-### DatePicker
+### DatePicker y DateRangePicker
 
 ```tsx
-import { DatePicker } from "@/components/date-picker"
+import { DatePicker, DateRangePicker } from "@/components/date-picker"
 ```
 
 Botón con la fecha elegida que abre un `Calendar` en un `Popover`, en español. Es el [date picker de shadcn](https://ui.shadcn.com/docs/components/radix/date-picker) armado una sola vez para que las pantallas no repitan la composición.
 
 | Prop | Uso |
 |---|---|
-| `value` | Fecha `YYYY-MM-DD`; `""` si no hay |
-| `onChange` | Recibe la fecha elegida |
-| `min`, `max` | Primer y último día habilitado |
-| `weekdaysOnly` | Deshabilita sábados y domingos |
+| `value` / `from` y `to` | Fechas `YYYY-MM-DD`; `""` si no hay |
+| `onChange` | Recibe la fecha elegida (`DatePicker`) o el desde y el hasta (`DateRangePicker`) |
+| `min`, `max` | Primer y último día habilitado (`DateRangePicker` solo acepta `min`) |
+| `weekdaysOnly` | Deshabilita sábados y domingos (`DatePicker`) |
 | `id` | Para vincularlo con un `FieldLabel htmlFor` |
+| `className` | Clases del botón; `w-full` para que ocupe todo el ancho (`DateRangePicker`) |
+
+`DateRangePicker` escribe el rango como en el Figma, "9 junio – 27 junio 2027": el año una sola vez, salvo que el rango cruce de año.
+
+El encabezado del calendario sigue el Figma: domingo primero y días y meses en inglés ("Su Mo Tu…", "Jun"). Los textos accesibles quedan en español.
 
 ```tsx
 <Field>
@@ -430,7 +439,7 @@ Botón con la fecha elegida que abre un `Calendar` en un `Popover`, en español.
 </Field>
 ```
 
-- Para fechas en un formulario se usa este componente y no `Input type="date"`. Un rango se arma con dos, "Desde" y "Hasta", como en la agenda de un plato.
+- Para fechas en un formulario se usa este componente y no `Input type="date"`. Un rango en un solo campo, como el de los cierres programados, es `DateRangePicker`; si el diseño pide dos campos, "Desde" y "Hasta", como en la agenda de un plato, se usan dos `DatePicker`.
 - `Calendar` se puede usar suelto si la pantalla muestra un calendario siempre visible.
 
 ### ToggleGroup

@@ -21,8 +21,9 @@ end
 #
 # Indexes
 #
-#  index_payments_on_account_id   (account_id)
-#  index_payments_on_provider_id  (provider_id)
+#  index_payments_on_account_id            (account_id)
+#  index_payments_on_account_id_submitted  (account_id) UNIQUE WHERE (status = 1)
+#  index_payments_on_provider_id           (provider_id)
 #
 # Foreign Keys
 #

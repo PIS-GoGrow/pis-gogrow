@@ -5,13 +5,17 @@ import { describe, expect, it, vi } from "vitest"
 import { ProviderFilterSheet } from "./provider-filter-sheet"
 
 describe("ProviderFilterSheet", () => {
-  const providers = ["TuViandita", "Chef Express", "La Cocina"]
+  const providers = [
+    { id: 1, name: "TuViandita" },
+    { id: 2, name: "Chef Express" },
+    { id: 3, name: "La Cocina" },
+  ]
 
   it("renders trigger button", () => {
     render(
       <ProviderFilterSheet
         providers={providers}
-        selectedProviders={new Set()}
+        selectedProviders={new Set<number>()}
         onApply={vi.fn()}
       />,
     )
@@ -19,6 +23,10 @@ describe("ProviderFilterSheet", () => {
     expect(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     ).toBeInTheDocument()
+    const icon = screen
+      .getByRole("button", { name: "Filtrar por proveedores" })
+      .querySelector("svg")
+    expect(icon).toHaveClass("lucide-settings-2")
   })
 
   it("opens filter sheet and displays providers and 'Todos'", async () => {
@@ -26,7 +34,7 @@ describe("ProviderFilterSheet", () => {
     render(
       <ProviderFilterSheet
         providers={providers}
-        selectedProviders={new Set()}
+        selectedProviders={new Set<number>()}
         onApply={vi.fn()}
       />,
     )
@@ -38,7 +46,7 @@ describe("ProviderFilterSheet", () => {
     expect(screen.getByText("Filtrar por proveedores")).toBeInTheDocument()
     expect(screen.getByLabelText("Todos")).toBeInTheDocument()
     providers.forEach((provider) => {
-      expect(screen.getByLabelText(provider)).toBeInTheDocument()
+      expect(screen.getByLabelText(provider.name)).toBeInTheDocument()
     })
   })
 
@@ -49,7 +57,7 @@ describe("ProviderFilterSheet", () => {
     render(
       <ProviderFilterSheet
         providers={providers}
-        selectedProviders={new Set()}
+        selectedProviders={new Set<number>()}
         onApply={onApply}
       />,
     )
@@ -61,7 +69,7 @@ describe("ProviderFilterSheet", () => {
     await user.click(screen.getByLabelText("TuViandita"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
-    expect(onApply).toHaveBeenCalledWith(new Set(["TuViandita"]))
+    expect(onApply).toHaveBeenCalledWith(new Set([1]))
     expect(
       screen.queryByText("Filtrar por proveedores"),
     ).not.toBeInTheDocument()
@@ -74,7 +82,7 @@ describe("ProviderFilterSheet", () => {
     render(
       <ProviderFilterSheet
         providers={providers}
-        selectedProviders={new Set(["TuViandita"])}
+        selectedProviders={new Set([1])}
         onApply={onApply}
       />,
     )
@@ -96,7 +104,7 @@ describe("ProviderFilterSheet", () => {
     render(
       <ProviderFilterSheet
         providers={providers}
-        selectedProviders={new Set()}
+        selectedProviders={new Set<number>()}
         onApply={onApply}
       />,
     )

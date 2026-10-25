@@ -28,7 +28,7 @@ RSpec.describe "Provider::Orders", type: :request do
     )
   end
 
-  describe "GET /provider/orders" do
+  describe "GET /provider/pedidos" do
     it "redirects to sign in without a session" do
       get provider_orders_path
 
@@ -191,7 +191,7 @@ RSpec.describe "Provider::Orders", type: :request do
     end
   end
 
-  describe "GET /provider/orders/:id" do
+  describe "GET /provider/pedidos/:id" do
     it "redirects to sign in without a session" do
       get provider_order_path(orders(:upcoming_pending_today))
 
@@ -360,9 +360,28 @@ RSpec.describe "Provider::Orders", type: :request do
         props.deep_symbolize_keys.dig(:order, :status) == "cancelled"
       }
     end
+
+    it "keeps a rejected order accessible after its publication is deleted" do
+      order = orders(:upcoming_confirmed_future)
+      schedule = order.schedule
+      order.reject_for_dish_change!(reason: :dish_unpublished, by: users(:provider_user))
+      schedule.destroy!
+      sign_in users(:provider_user), role: :provider
+
+      get provider_order_path(order)
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to have_props { |props|
+        props["order"].slice("status", "date", "menu_name") == {
+          "status" => "rejected",
+          "date" => (Date.current + 3).iso8601,
+          "menu_name" => "Milanesa con papas fritas"
+        }
+      }
+    end
   end
 
-  describe "PATCH /provider/orders/:id/confirm" do
+  describe "PATCH /provider/pedidos/:id/confirmar" do
     it "redirects to sign in without a session" do
       patch confirm_provider_order_path(orders(:upcoming_pending_today))
 
@@ -463,7 +482,7 @@ RSpec.describe "Provider::Orders", type: :request do
     end
   end
 
-  describe "PATCH /provider/orders/:id/reject" do
+  describe "PATCH /provider/pedidos/:id/rechazar" do
     it "redirects to sign in without a session" do
       patch reject_provider_order_path(orders(:upcoming_pending_today))
 
@@ -500,6 +519,8 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.reload).to be_rejected
       expect(order.rejection_reason).to eq("out_of_stock")
       expect(order.rejection_details).to be_nil
+      expect(order.rejected_by).to eq(users(:provider_user))
+      expect(order.rejected_at).to be_present
       expect(response).to redirect_to(provider_orders_path)
 
       follow_redirect!

@@ -26,7 +26,32 @@ RSpec.describe "Provider::Invoices", type: :request do
     Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: Date.current, amount: 300)
   end
 
-  describe "POST /provider/invoices" do
+  describe "POST /provider/facturas" do
+    it "aprueba la factura posterior al pago solo cuando el cobro vigente está aprobado" do
+      sign_in provider_user, role: :provider
+
+      [ :approved, :rejected, :submitted ].each_with_index do |status, index|
+        settled_account = Account.create!(
+          owner: companies(:gogrow), provider: providers(:tuviandita),
+          month: Date.current.prev_month(index + 2), amount: 601
+        )
+        settled_account.payments.create!(
+          provider: providers(:tuviandita), status: :approved, created_at: 2.days.ago
+        )
+        payment = settled_account.payments.create!(
+          provider: providers(:tuviandita), status: :submitted,
+          receipt: invoice_upload(filename: "comprobante.png"), created_at: 1.day.ago
+        )
+        payment.approve if status == :approved
+        payment.reject_with("Comprobante ilegible") if status == :rejected
+
+        post provider_invoices_path, params: invoice_params(account_id: settled_account.id), headers: collections_headers
+
+        expect(response).to redirect_to(provider_collections_path)
+        expect(settled_account.invoices.sole.status).to eq(status == :approved ? "approved" : "pending")
+      end
+    end
+
     it "conserva el total informado con IVA sin volver a aplicarlo" do
       allow(ENV).to receive(:[]).and_call_original
       allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
@@ -54,6 +79,30 @@ RSpec.describe "Provider::Invoices", type: :request do
       }.not_to change(Invoice, :count)
 
       expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects an admin to the home page" do
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post provider_invoices_path, params: invoice_params
+      }.not_to change(Invoice, :count)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "rejects non-positive or unexpected data types for total_amount via parameter bypass" do
+      sign_in provider_user, role: :provider
+
+      [ "0", "-50", "monto_invalido" ].each do |invalid_amount|
+        expect {
+          post provider_invoices_path, params: invoice_params(total_amount: invalid_amount), headers: collections_headers
+        }.not_to change(Invoice, :count)
+
+        expect(response).to redirect_to(provider_collections_path)
+        follow_redirect!
+        expect(inertia.props[:errors]).to have_key("total_amount")
+      end
     end
 
     it "registers a pending invoice for the period of the signed in provider" do
@@ -131,7 +180,7 @@ RSpec.describe "Provider::Invoices", type: :request do
     end
   end
 
-  describe "DELETE /provider/invoices/:id" do
+  describe "DELETE /provider/facturas/:id" do
     it "removes a pending invoice" do
       invoice = create_invoice
       sign_in provider_user, role: :provider
@@ -169,7 +218,7 @@ RSpec.describe "Provider::Invoices", type: :request do
     end
   end
 
-  describe "GET /provider/invoices/:id/file" do
+  describe "GET /provider/facturas/:id/archivo" do
     it "shows the file inline to preview it" do
       invoice = create_invoice
       sign_in provider_user, role: :provider

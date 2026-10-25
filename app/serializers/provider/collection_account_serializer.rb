@@ -55,7 +55,7 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     {
       eligible: eligibility.eligible?,
       remaining: eligibility.remaining,
-      next_available_at: eligibility.next_available_at&.in_time_zone(Time.zone)&.strftime("%d/%m/%Y a las %H:%M"),
+      next_available_at: DateFormat.long_with_time(eligibility.next_available_at&.in_time_zone(Time.zone), inline: true),
       blocked_reason: eligibility.reason&.to_s
     }
   end
@@ -68,17 +68,17 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
 
   typelize :string
   attribute :due_date do |row|
-    row.due_date.strftime("%d/%m/%y")
+    DateFormat.short(row.due_date)
   end
 
   typelize :string, nullable: true
   attribute :paid_on do |row|
-    row.paid_on&.strftime("%d/%m/%y")
+    DateFormat.short(row.paid_on)
   end
 
-  # El pago que hay que revisar: el más viejo en submitted si hay alguno sin
-  # resolver (ver Account#payment_pending_review), o el último si no hay nada
-  # pendiente (para mostrar, por ejemplo, el motivo de un rechazo).
+  # El pago que hay que revisar: el que está en submitted, si lo hay (ver
+  # Account#payment_pending_review), o el último si no hay nada pendiente (para
+  # mostrar, por ejemplo, el motivo de un rechazo).
   typelize :number, nullable: true
   attribute :payment_id do |row|
     row.account.payment_pending_review&.id || row.account.last_payment&.id

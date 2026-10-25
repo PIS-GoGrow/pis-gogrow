@@ -2,9 +2,13 @@ import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
+import type { ConsumerDashboardIndex } from "@/types"
+
 import { ConsumerCart } from "./consumer-cart"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
-import { type Benefit, cartPricedItem, priceItems } from "./pricing"
+import { type Pricing, cartPricedItem, priceItems } from "./pricing"
+
+type Benefit = ConsumerDashboardIndex["benefit"]
 
 // El formulario de "Agregar una dirección" habla con el servidor; acá solo
 // importa qué direcciones ofrece el carrito y cuándo.
@@ -19,6 +23,11 @@ vi.mock("@inertiajs/react", () => ({
     reset: vi.fn(),
     transform: vi.fn(),
   }),
+  Link: ({ href, children, ...props }: React.ComponentProps<"a">) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  ),
 }))
 
 // IBP-014 — "Como EMPLEADO, quiero ingresar una dirección de entrega
@@ -59,8 +68,6 @@ const cartItem = (
 })
 
 const benefit: Benefit = {
-  limit: 5,
-  used: 0,
   percentage: 50,
   monthly_limit: 20,
   monthly_used: 0,
@@ -68,20 +75,28 @@ const benefit: Benefit = {
   specials: [],
 }
 
-function renderCart(
+async function renderCart(
   props: Partial<Parameters<typeof ConsumerCart>[0]> = {},
   benefitProps: Partial<Benefit> = {},
 ) {
   const cart = props.cart ?? [cartItem("Tu Viandita", true)]
+
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(JSON.stringify({ ...benefit, ...benefitProps }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    }),
+  )
+
+  const result = await priceItems(cartPricedItem(cart))
+
   const defaults = {
     monthlyLimit: 20,
     monthlyRemaining: 20,
-    pricing: priceItems(cart.map(cartPricedItem), {
-      ...benefit,
-      ...benefitProps,
-    }),
+    pricing: result,
     cart,
     addresses,
+    loading: false,
     address: "Av. 18 de Julio 1006",
     setAddress: vi.fn(),
     onAddAddress: vi.fn(),
@@ -89,13 +104,14 @@ function renderCart(
     back: vi.fn(),
     confirm: vi.fn(),
     remove: vi.fn(),
+    setQuantity: vi.fn(),
   }
   return render(<ConsumerCart {...defaults} {...props} />)
 }
 
 describe("ConsumerCart delivery address", () => {
-  it("shows the office and the last custom address used", () => {
-    renderCart()
+  it("shows the office and the last custom address used", async () => {
+    await renderCart()
 
     const options = screen.getAllByRole("radio")
     expect(options).toHaveLength(2)
@@ -104,8 +120,8 @@ describe("ConsumerCart delivery address", () => {
     expect(screen.queryByText("Flora Café")).not.toBeInTheDocument()
   })
 
-  it("shows the selected custom address next to the office", () => {
-    renderCart({ address: "Canelones 892" })
+  it("shows the selected custom address next to the office", async () => {
+    await renderCart({ address: "Canelones 892" })
 
     expect(screen.getByRole("radio", { name: /Flora Café/ })).toBeChecked()
     expect(screen.queryByText("Casa")).not.toBeInTheDocument()
@@ -114,7 +130,7 @@ describe("ConsumerCart delivery address", () => {
   it("lets the employee pick any of their addresses", async () => {
     const user = userEvent.setup()
     const setAddress = vi.fn()
-    renderCart({ setAddress })
+    await renderCart({ setAddress })
 
     await user.click(
       screen.getByRole("button", { name: "Ver mis direcciones" }),
@@ -130,7 +146,7 @@ describe("ConsumerCart delivery address", () => {
 
   it("opens the form to add a new address", async () => {
     const user = userEvent.setup()
-    renderCart()
+    await renderCart()
 
     await user.click(screen.getByRole("button", { name: "Agregar" }))
     const sheet = screen.getByRole("dialog", {
@@ -154,8 +170,8 @@ describe("ConsumerCart delivery address", () => {
 
   // Criterio 1: la dirección personalizada solo se habilita si el proveedor
   // entrega a domicilio.
-  it("keeps the order at the office when no provider delivers home", () => {
-    renderCart({
+  it("keeps the order at the office when no provider delivers home", async () => {
+    await renderCart({
       cart: [cartItem("Endulzate by Noe", false)],
       address: "Ellauri 1234",
     })
@@ -168,8 +184,8 @@ describe("ConsumerCart delivery address", () => {
     ).toBeDisabled()
   })
 
-  it("warns which provider only delivers to the office in a mixed cart", () => {
-    renderCart({
+  it("warns which provider only delivers to the office in a mixed cart", async () => {
+    await renderCart({
       cart: [
         cartItem("Endulzate by Noe", false, 1),
         cartItem("Tu Viandita", true, 2),
@@ -184,8 +200,8 @@ describe("ConsumerCart delivery address", () => {
     ).toBeInTheDocument()
   })
 
-  it("lists every office-only provider in a single warning", () => {
-    renderCart({
+  it("lists every office-only provider in a single warning", async () => {
+    await renderCart({
       cart: [
         cartItem("Endulzate by Noe", false, 1),
         cartItem("Dulce Sur", false, 2),
@@ -203,60 +219,175 @@ describe("ConsumerCart delivery address", () => {
   })
 })
 
-// IBP-037: el subsidio especial se suma al base, y cada línea del carrito
-// muestra qué beneficio le descuenta cuánto.
-describe("ConsumerCart benefits", () => {
-  const premio = {
-    id: 7,
-    name: "Premio",
-    percentage: 30,
-    remaining: 2,
-    due_date: null,
-  }
+describe("ConsumerCart delivery date", () => {
+  it("shows a single delivery date under the title instead of on every dish", async () => {
+    await renderCart({
+      cart: [
+        cartItem("Tu Viandita", true, 1),
+        cartItem("Tu Viandita", true, 2),
+      ],
+    })
 
-  // Figma: una sola línea "Beneficio GoGrow" por plato, con el porcentaje
-  // combinado del base y los especiales.
-  it("shows the combined benefit in a single line per dish", () => {
-    renderCart(
-      { cart: [{ ...cartItem("Tu Viandita", true), quantity: 2 }] },
-      { specials: [premio] },
-    )
+    const date = screen.getByText("Entrega: Lunes 14 de setiembre")
 
-    expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
-    ).toHaveTextContent("- $448")
-    expect(screen.queryByText("Premio (30%)")).not.toBeInTheDocument()
-    expect(screen.getAllByText(/^Beneficio GoGrow/)).toHaveLength(1)
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$112",
+    expect(screen.getAllByText(/^Entrega:/)).toHaveLength(1)
+    expect(screen.getByRole("heading", { name: "Tu carrito" })).toHaveProperty(
+      "nextElementSibling",
+      date,
     )
   })
 
-  it("shows one line per percentage when the meals of a dish differ", () => {
-    renderCart(
-      { cart: [{ ...cartItem("Tu Viandita", true), quantity: 3 }] },
-      { monthly_remaining: 1, specials: [premio] },
-    )
+  it("keeps a date on each dish when the cart spans several days", async () => {
+    await renderCart({
+      cart: [
+        cartItem("Tu Viandita", true, 1),
+        { ...cartItem("Tu Viandita", true, 2), date: "2026-09-15" },
+      ],
+    })
 
-    // 3 x 280: la primera con 80%, la segunda solo con el premio y la tercera
-    // a precio completo. 56 + 196 + 280 = 532.
     expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
-    ).toHaveTextContent("- $224")
+      screen.getByText("Entrega: Lunes 14 de setiembre"),
+    ).toBeInTheDocument()
     expect(
-      screen.getByText("Beneficio GoGrow (30%)").nextSibling,
-    ).toHaveTextContent("- $84")
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$532",
+      screen.getByText("Entrega: Martes 15 de setiembre"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: "Tu carrito" }).nextElementSibling,
+    ).toHaveProperty("tagName", "SECTION")
+  })
+})
+
+// IBP-006 CA10 — "Si no corresponde subsidio, el sistema muestra valor cero y
+// el motivo."
+describe("ConsumerCart without subsidy", () => {
+  const fullPrice = (quantity: number, subsidized = 0): Pricing => ({
+    subtotal: 301 * quantity,
+    discount: 0,
+    total: 301 * quantity,
+    lines: {
+      "1": {
+        subtotal: 301 * quantity,
+        discount: 0,
+        total: 301 * quantity,
+        tiers: [],
+      },
+    },
+    subsidizedQuantity: subsidized,
+    fullPriceQuantity: quantity - subsidized,
+  })
+
+  it("shows the GoGrow subsidy at zero for a dish without benefit", async () => {
+    await renderCart({
+      monthlyLimit: 0,
+      monthlyRemaining: 0,
+      pricing: fullPrice(1),
+    })
+
+    expect(screen.getByText("Subsidio GoGrow").nextSibling).toHaveTextContent(
+      "$0",
     )
   })
 
-  it("leaves the base alone when the special has no uses left", () => {
-    renderCart({}, { specials: [{ ...premio, remaining: 0 }] })
+  it("says the employee has no benefit instead of claiming they used it up", async () => {
+    await renderCart({
+      monthlyLimit: 0,
+      monthlyRemaining: 0,
+      pricing: fullPrice(1),
+    })
 
-    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$140",
+    expect(
+      screen.getByText(
+        "No tenés un beneficio asignado. La vianda de este pedido se cobra a precio completo.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Ya utilizaste/)).not.toBeInTheDocument()
+  })
+
+  it("says the monthly quota is used up when it had one", async () => {
+    await renderCart({
+      monthlyLimit: 20,
+      monthlyRemaining: 0,
+      pricing: fullPrice(2),
+    })
+
+    expect(
+      screen.getByText(
+        "Ya utilizaste las 20 viandas subsidiadas de este mes. Las 2 viandas de este pedido se cobran a precio completo.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("splits the order when only part of it is subsidized", async () => {
+    await renderCart({
+      monthlyLimit: 20,
+      monthlyRemaining: 1,
+      pricing: fullPrice(3, 1),
+    })
+
+    expect(
+      screen.getByText(
+        "Te queda 1 vianda subsidiada este mes. De este pedido, 1 con beneficio y 2 a precio completo.",
+      ),
+    ).toBeInTheDocument()
+  })
+})
+
+describe("ConsumerCart quantity", () => {
+  const twoDishes = (quantity: number): CartItem[] => [
+    { ...cartItem("Tu Viandita", true, 1), quantity },
+    cartItem("Tu Viandita", true, 2),
+  ]
+
+  it("changes the quantity of the dish whose counter was used", async () => {
+    const setQuantity = vi.fn()
+    await renderCart({ cart: twoDishes(3), setQuantity })
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Agregar una unidad de Plato 1" }),
     )
+    await userEvent.click(
+      screen.getByRole("button", { name: "Quitar una unidad de Plato 1" }),
+    )
+
+    expect(setQuantity).toHaveBeenNthCalledWith(1, "1-", 4)
+    expect(setQuantity).toHaveBeenNthCalledWith(2, "1-", 2)
+  })
+
+  it("turns the minus into a trash that removes the dish at quantity 1", async () => {
+    const remove = vi.fn()
+    const setQuantity = vi.fn()
+    await renderCart({ cart: twoDishes(2), remove, setQuantity })
+
+    expect(
+      screen.queryByRole("button", { name: "Quitar Plato 1" }),
+    ).not.toBeInTheDocument()
+    // El plato 2 tiene cantidad 1: ya muestra el tacho.
+    await userEvent.click(
+      screen.getByRole("button", { name: "Quitar Plato 2" }),
+    )
+
+    expect(remove).toHaveBeenCalledWith("2-")
+    expect(setQuantity).not.toHaveBeenCalled()
+  })
+
+  it("does not go above the remaining stock", async () => {
+    await renderCart({
+      cart: [{ ...cartItem("Tu Viandita", true), quantity: 5 }],
+    })
+
+    expect(
+      screen.getByRole("button", { name: "Agregar una unidad de Plato 1" }),
+    ).toBeDisabled()
+  })
+
+  it("disables the counters while the order is processing", async () => {
+    await renderCart({ cart: twoDishes(2), processing: true })
+
+    expect(
+      screen.getByRole("button", { name: "Quitar una unidad de Plato 1" }),
+    ).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: "Quitar Plato 2" }),
+    ).toBeDisabled()
   })
 })

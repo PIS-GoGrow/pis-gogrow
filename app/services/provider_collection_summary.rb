@@ -118,21 +118,14 @@ class ProviderCollectionSummary
           payable_amount: client_accounts.sum(&:payable_amount).to_f
         }
       end,
-      days: orders.group_by { it.schedule.date }
-                  .sort_by { |date, _| -date.jd }
-                  .map do |date, day_orders|
+      days: ConsumptionDays.call(orders) do |order|
         {
-          date: date.strftime("%d/%m"),
-          orders: day_orders.sort_by { it.consumer.user.name.downcase }.map do |order|
-            {
-              id: order.id,
-              consumer_name: order.consumer.user.name,
-              client_id: order.consumer.company.id,
-              client_name: order.consumer.company.name,
-              meals: order.amount,
-              amount: order.price.to_f
-            }
-          end
+          id: order.id,
+          consumer_name: order.consumer.user.name,
+          client_id: order.consumer.company.id,
+          client_name: order.consumer.company.name,
+          meals: order.amount,
+          amount: order.price.to_f
         }
       end
     }
@@ -196,6 +189,8 @@ class ProviderCollectionSummary
   end
 
   def amount_of(records)
+    # Los resúmenes usan el importe cobrable: subtotal para empleados y
+    # subtotal más IVA para las cuentas de empresa.
     records.sum(&:payable_amount).to_f
   end
 
@@ -225,24 +220,26 @@ class ProviderCollectionSummary
           .map { |(client, month), group_rows| build_group(client, month, group_rows) }
           .sort_by { [ -it.month.jd, it.client.name ] }
 
-      pending_accounts = grouped.reject(&:settled?).flat_map(&:rows).map(&:account)
-      if pending_accounts.any?
-        ActiveRecord::Associations::Preloader.new(records: pending_accounts, associations: :orders, scope: Order.confirmed).call
-        orders = pending_accounts.flat_map { it.orders.to_a }.uniq(&:id)
+      # El diálogo de Historial muestra las mismas viandas confirmadas que Pendientes.
+      # Se precargan todas las cuentas para no disparar consultas al abrirlo.
+      collection_accounts = grouped.flat_map(&:rows).map(&:account)
+      if collection_accounts.any?
+        ActiveRecord::Associations::Preloader.new(records: collection_accounts, associations: :orders, scope: Order.confirmed).call
+        orders = collection_accounts.flat_map { it.orders.to_a }.uniq(&:id)
         ActiveRecord::Associations::Preloader.new(records: orders, associations: [ { consumer: :user }, { schedule: :menu } ]).call if orders.any?
       end
 
       grouped.map do |group|
         group.with(
-          company_row: group.company_row && index_row(group.company_row, settled: group.settled?),
-          employee_rows: group.employee_rows.map { index_row(it, settled: group.settled?) }
+          company_row: group.company_row && index_row(group.company_row),
+          employee_rows: group.employee_rows.map { index_row(it) }
         )
       end
     end
   end
 
-  def index_row(row, settled:)
-    IndexAccountRow.new(account_row: row, orders: settled ? [] : row.orders)
+  def index_row(row)
+    IndexAccountRow.new(account_row: row, orders: row.orders)
   end
 
   def build_group(client, month, group_rows)

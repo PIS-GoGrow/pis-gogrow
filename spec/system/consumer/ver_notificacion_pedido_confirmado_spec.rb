@@ -43,7 +43,7 @@ RSpec.describe "Ver la notificación de pedido confirmado", type: :system do
 
     expect(page).to have_content(title)
     expect(page).to have_content(
-      "Tu pedido del #{I18n.l(order.schedule.date, format: :short)} fue confirmado por #{users(:provider_user).name}."
+      "Tu pedido del #{DateFormat.long(order.schedule.date, inline: true)} fue confirmado por #{users(:provider_user).name}."
     )
 
     click_button "Cerrar notificación"

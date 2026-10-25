@@ -34,13 +34,18 @@ class AccountSerializer < ApplicationSerializer
 
   typelize :string
   attribute :due_date do |account|
-    account.due_date.strftime("%d/%m/%y")
+    DateFormat.short(account.due_date)
   end
 
   typelize :boolean
   attribute :due_date_passed do |account|
     Date.current > account.due_date
   end
+
+  # Sigue el enum de Payment; escrito a mano porque collection_status es un
+  # método y no una columna de la que inferirlo.
+  typelize "'pending' | 'submitted' | 'approved' | 'rejected'"
+  attribute :collection_status, &:collection_status
 
   typelize :number
   attribute :orders_amount_sum do |account|
@@ -63,6 +68,7 @@ end
 #  amount      :decimal(10, 2)
 #  month       :date
 #  owner_type  :string           not null
+#  vat_rate    :decimal(3, 2)    default(0.0), not null
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  owner_id    :bigint           not null

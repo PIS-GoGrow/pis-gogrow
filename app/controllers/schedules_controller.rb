@@ -46,7 +46,8 @@ class SchedulesController < Provider::InertiaController
           publishable: (
             date.on_weekday? &&
             date >= Date.current &&
-            date <= maximum_publish_date
+            date <= maximum_publish_date &&
+            !provider.closed_on?(date)
           ),
           schedules: day_schedules.map do |schedule|
             ScheduleSerializer.new(schedule).to_inertia
@@ -105,6 +106,12 @@ class SchedulesController < Provider::InertiaController
       return
     end
 
+    if provider.closed_on?(date)
+      redirect_to schedules_path,
+                  inertia: { errors: { date: [ t("validations.publish_date_closed") ] } }
+      return
+    end
+
     unless valid_initial_stock?(items)
       redirect_to schedules_path,
                   inertia: { errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] } }
@@ -143,7 +150,7 @@ class SchedulesController < Provider::InertiaController
 
     Schedule.transaction do
       schedule.orders.where(status: [ :pending, :confirmed ]).each do |order|
-        order.withdraw!(by: Current.user)
+        order.reject_for_dish_change!(reason: :dish_unpublished, by: Current.user)
       end
 
       saved_menu = schedule.menu.saved_menu

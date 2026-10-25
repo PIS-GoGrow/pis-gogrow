@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import Profile from "./show"
 
 const patchMock = vi.fn()
+let currentRole = "provider"
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -15,7 +16,8 @@ vi.mock("@inertiajs/react", async () => {
     usePage: () => ({
       props: {
         auth: {
-          user: { name: "Proveedor Test" },
+          user: { name: "Proveedor Test", email: "proveedor@example.com" },
+          session: { role: currentRole },
         },
       },
     }),
@@ -65,10 +67,31 @@ describe("Settings Profiles Show Page", () => {
 
   beforeEach(() => {
     patchMock.mockClear()
+    currentRole = "provider"
+  })
+
+  it("shows RRHH email as read-only and hides account deletion", () => {
+    currentRole = "admin"
+
+    render(<Profile provider={null} phone="+59899123456" />)
+
+    expect(screen.getByLabelText("Correo electrónico")).toHaveValue(
+      "proveedor@example.com",
+    )
+    expect(screen.getByLabelText("Correo electrónico")).toHaveAttribute(
+      "readonly",
+    )
+    expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
+  })
+
+  it("renders the saved phone so it can be edited", () => {
+    render(<Profile provider={null} phone="+59899123456" />)
+
+    expect(screen.getByLabelText("Teléfono")).toHaveValue("+59899123456")
   })
 
   it("does not render home delivery settings when provider is null (consumer/admin)", () => {
-    render(<Profile provider={null} />)
+    render(<Profile provider={null} phone={null} />)
 
     expect(
       screen.queryByText("Editar información de pedidos"),
@@ -81,6 +104,7 @@ describe("Settings Profiles Show Page", () => {
   it("renders home delivery switch checked when provider.home_delivery is true", () => {
     render(
       <Profile
+        phone={null}
         provider={{
           id: 1,
           name: "Proveedor Test",
@@ -102,6 +126,7 @@ describe("Settings Profiles Show Page", () => {
   it("renders home delivery switch unchecked when provider.home_delivery is false", () => {
     render(
       <Profile
+        phone={null}
         provider={{
           id: 1,
           name: "Proveedor Test",
@@ -120,6 +145,7 @@ describe("Settings Profiles Show Page", () => {
   it("calls router.patch with home_delivery: false when clicked while checked", async () => {
     render(
       <Profile
+        phone={null}
         provider={{
           id: 1,
           name: "Proveedor Test",
@@ -146,6 +172,7 @@ describe("Settings Profiles Show Page", () => {
   it("calls router.patch with home_delivery: true when clicked while unchecked", async () => {
     render(
       <Profile
+        phone={null}
         provider={{
           id: 1,
           name: "Proveedor Test",

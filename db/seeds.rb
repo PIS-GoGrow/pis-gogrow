@@ -38,7 +38,11 @@ tu_viandita_user = User.create!(
 tu_viandita = Provider.create!(
   order_deadline: Time.current + 3.hours,
   home_delivery: true,
-  user: tu_viandita_user
+  user: tu_viandita_user,
+  bank_name: "Santander",
+  bank_account_type: :checking,
+  bank_account_number: "1150260",
+  bank_account_holder: "Tu Viandita S.A."
 )
 
 endulzate_user = User.create!(
@@ -51,7 +55,11 @@ endulzate_user = User.create!(
 endulzate = Provider.create!(
   order_deadline: Time.current + 3.hours,
   home_delivery: false,
-  user: endulzate_user
+  user: endulzate_user,
+  bank_name: "Banco Itaú",
+  bank_account_type: :savings,
+  bank_account_number: "1951234",
+  bank_account_holder: "Noelia Patricia Pinheiro"
 )
 
 menus = [
@@ -61,7 +69,7 @@ menus = [
     description: "Opción de carne o pollo",
     price: 300,
     option_groups_attributes: [
-      { name: "Salsas", limit: 1, options: [ "Mayonesa de ajo", "Ketchup" ] }
+      { name: "Salsa", limit: 1, options: [ "Mayonesa de ajo", "Ketchup" ] }
     ],
     day: 0,
     amount: 7
@@ -88,7 +96,7 @@ menus = [
     description: "Pasta fresca con salsa a elección",
     price: 320,
     option_groups_attributes: [
-      { name: "Salsas", limit: 1, options: [ "Filetto", "Bolognesa" ] }
+      { name: "Salsa", limit: 1, options: [ "Filetto", "Bolognesa" ] }
     ],
     day: 3,
     amount: 8
@@ -107,8 +115,8 @@ menus = [
     description: "Pasta rellena con opciones a elección",
     price: 300,
     option_groups_attributes: [
-      { name: "Rellenos", limit: 1, options: [ "Ricota y nuez", "Ricota y espinaca" ] },
-      { name: "Salsas", limit: 1, options: [ "Filetto", "Bolognesa", "Rosa" ] }
+      { name: "Relleno", limit: 1, options: [ "Ricota y nuez", "Ricota y espinaca" ] },
+      { name: "Salsa", limit: 1, options: [ "Filetto", "Bolognesa", "Rosa" ] }
     ],
     day: 0,
     amount: 8
@@ -252,10 +260,10 @@ order = Order.create!(
 order.apply_benefit! benefit, 1
 
 
-# Cuentas pendientes de pago de meses anteriores (para probar el historial de pagos)
+# Cuentas de meses anteriores para probar pagos pendientes e históricos.
 [
-  { provider: tu_viandita, months_ago: 2 },
-  { provider: tu_viandita, months_ago: 3 }
+  { provider: tu_viandita, months_ago: 1 },
+  { provider: tu_viandita, months_ago: 2 }
 ].each do |data|
   provider = data[:provider]
   menu = provider.menus.first
@@ -301,24 +309,20 @@ end
 # TuViandita queda con los cuatro estados repartidos en las dos pestañas:
 # - este mes (cuentas reales de los pedidos): el empleado informó su pago y la
 #   empresa todavía no, así que va a Pendientes;
-# - hace dos meses: la empresa pagó pero al empleado le rechazaron el
-#   comprobante, así que sigue en Pendientes;
+# - hace dos meses: la empresa envió su comprobante y al empleado le rechazaron
+#   el suyo, así que sigue en Pendientes;
 # - el mes pasado: todo confirmado, así que va al Historial.
 seed_payment(consumer.accounts.find_by!(provider: tu_viandita, month: Date.current.beginning_of_month), :submitted)
 
-{ 2.months.ago => [ :approved, :rejected ], 1.month.ago => [ :approved, :approved ] }.each do |date, (company_status, consumer_status)|
+{ 2.months.ago => [ :submitted, :rejected ], 1.month.ago => [ :approved, :approved ] }.each do |date, (company_status, consumer_status)|
   month = date.beginning_of_month
 
-  # find_or_create_by!, no create!: el mes "hace 2 meses" ya tiene cuenta de
-  # empresa y de empleado creadas por ensure_accounts! (las Order de más
-  # arriba), así que un create! directo pisaría el índice único. Se fuerza el
-  # amount para esta demo sin importar si la cuenta ya existía.
-  company_account = company.accounts.find_or_create_by!(provider: tu_viandita, month:)
-  company_account.update!(amount: 1_250.00)
+  # Las órdenes históricas de arriba ya crearon estas cuentas y calcularon sus
+  # montos. Acá solamente se agregan los comprobantes con distintos estados.
+  company_account = company.accounts.find_by!(provider: tu_viandita, month:)
   seed_payment(company_account, company_status)
 
-  consumer_account = consumer.accounts.find_or_create_by!(provider: tu_viandita, month:)
-  consumer_account.update!(amount: 1_250.00)
+  consumer_account = consumer.accounts.find_by!(provider: tu_viandita, month:)
   seed_payment(consumer_account, consumer_status)
 end
 

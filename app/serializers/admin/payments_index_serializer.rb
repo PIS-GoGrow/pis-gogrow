@@ -4,13 +4,25 @@
 # empresa se lee igual que la de un empleado, así que las dos pantallas
 # comparten el tipo Account.
 class Admin::PaymentsIndexSerializer < ApplicationSerializer
-  typelize accounts: "Account[]", history: "Account[]", total_debt: :number
-  typelize current_month: "{ amount: number; meals: number; limit: number | null }"
-  attributes :accounts, :history, :total_debt, :current_month
+  CONSUMPTION_DETAIL = "{ month: string; providers: Array<{ id: number; name: string; meals: number; " \
+                       "subtotal: number; vat_rate: number; vat_amount: number; payable_amount: number; paid: boolean; days: Array<{ date: string; " \
+                       "orders: Array<{ id: number; consumer_name: string; avatar_url: string | null; meals: number; " \
+                       "employee_amount: number; company_amount: number }> }> }> } | null"
 
-  typelize period: "{ orders: SimplifiedOrder[]; month: string; amount: number; tab: 'pending' | 'history' } | null"
-  typelize current_period: "{ orders: SimplifiedOrder[]; month: string; amount: number; tab: 'pending' | 'history' } | null"
-  attributes :period, :current_period
+  typelize accounts: "Account[]", history: "Account[]", total_debt: :number, total_meals: :number
+  attributes :accounts, :history, :total_debt, :total_meals
 
-  has_many :providers, resource: ProviderSerializer
+  typelize month: :string, current_month: :string
+  attributes :month, :current_month
+
+  typelize months: "Array<{ key: string; label: string }>"
+  attributes :months
+
+  typelize summary: "{ amount: number; meals: number; limit: number | null }"
+  attributes :summary
+
+  typelize consumption: CONSUMPTION_DETAIL
+  attributes :consumption
+
+  has_many :providers, resource: PaymentProviderSerializer
 end

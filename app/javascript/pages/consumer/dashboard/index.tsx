@@ -1,30 +1,24 @@
-import { Head, useForm, usePage } from "@inertiajs/react"
-import { useMemo, useState } from "react"
+import { Head, usePage } from "@inertiajs/react"
+import { useEffect, useMemo, useState } from "react"
 
 import useSessionStorage from "@/hooks/use-session-storage"
 import AppLayout from "@/layouts/app-layout"
-import { consumerDashboard, consumerOrders } from "@/routes"
+import { consumerDashboard } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
 
-import { ConsumerCart } from "./consumer-cart"
-import type {
-  CartItem,
-  DeliveryAddressOption,
-  Schedule,
-  Selections,
-} from "./consumer-types"
+import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
-import { OrderError } from "./order-error"
+import type { Pricing } from "./pricing"
 import { cartPricedItem, priceItems } from "./pricing"
 import { WeeklyMenu, today } from "./weekly-menu"
 
-type View = "menu" | "detail" | "cart" | "confirmation" | "error"
+type View = "menu" | "detail"
 
 export default function Index({
   week,
   schedules,
+  closures,
   benefit,
-  addresses,
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")
@@ -42,55 +36,51 @@ export default function Index({
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
   const [selections, setSelections] = useState<Selections>({})
-  const [address, setAddress] = useState(addresses[0]?.address ?? "")
-  const [unsavedAddresses, setUnsavedAddresses] = useState<
-    DeliveryAddressOption[]
-  >([])
+  const [editingCartId, setEditingCartId] = useState<string | null>(null)
 
-  const form = useForm({
-    address: "",
-    order_error: "",
-    items: [] as {
-      schedule_id: number
-      quantity: number
-      notes: string
-      options: { group_id: number; values: string[] }[]
-    }[],
-  })
-
+  // Un proveedor cerrado no tiene platos que mostrar, pero tiene que seguir en
+  // el filtro para poder ver por qué no hay menú.
   const providers = useMemo(
-    () => [...new Set(schedules.map((item) => item.menu.provider_name))],
-    [schedules],
+    () => [
+      ...new Set([
+        ...schedules.map((item) => item.menu.provider_name),
+        ...closures.map((closure) => closure.provider_name),
+      ]),
+    ],
+    [schedules, closures],
   )
 
   const visibleSchedules = schedules.filter((item) => item.date === date)
 
-  const pricing = priceItems(cart.map(cartPricedItem), benefit)
-
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
-  const addressOptions = [
-    ...addresses,
-    ...unsavedAddresses.filter(
-      (unsaved) => !addresses.some((item) => item.address === unsaved.address),
-    ),
-  ]
-
-  function addAddress(option: DeliveryAddressOption, saved: boolean) {
-    if (!saved) {
-      setUnsavedAddresses((items) => [
-        option,
-        ...items.filter((item) => item.address !== option.address),
-      ])
-    }
-    setAddress(option.address)
-  }
 
   function openDetail(item: Schedule) {
     setSelected(item)
-    setQuantity(1)
-    setNotes("")
-    setSelections({})
+    const existing = cart.find((c) => c.id === item.id)
+    if (existing) {
+      setEditingCartId(existing.cartId)
+      setQuantity(existing.quantity)
+      setNotes(existing.notes)
+      setSelections(existing.selections)
+    } else {
+      setEditingCartId(null)
+      setQuantity(1)
+      setNotes("")
+      setSelections({})
+    }
     setView("detail")
+  }
+
+  function handleBack() {
+    setEditingCartId(null)
+    setView("menu")
+  }
+
+  function handleRemoveFromCartAndBack() {
+    if (!editingCartId) return
+    setCart((items) => items.filter((item) => item.cartId !== editingCartId))
+    setEditingCartId(null)
+    setView("menu")
   }
 
   function addToCart() {
@@ -101,6 +91,40 @@ export default function Index({
     const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}`
 
     setCart((items) => {
+      if (editingCartId) {
+        const targetIndex = items.findIndex(
+          (item) => item.cartId === editingCartId,
+        )
+        if (targetIndex === -1) return items
+
+        const withoutCurrent = items.filter(
+          (item) => item.cartId !== editingCartId,
+        )
+        const duplicate = withoutCurrent.find((item) => item.cartId === cartId)
+        if (duplicate) {
+          return withoutCurrent.map((item) =>
+            item.cartId === cartId
+              ? {
+                  ...item,
+                  quantity: Math.min(item.remaining, item.quantity + quantity),
+                }
+              : item,
+          )
+        }
+
+        const updatedItem: CartItem = {
+          ...selected,
+          cartId,
+          quantity: Math.min(selected.remaining, quantity),
+          notes,
+          selections,
+        }
+
+        const next = [...items]
+        next[targetIndex] = updatedItem
+        return next
+      }
+
       const found = items.find((item) => item.cartId === cartId)
 
       return found
@@ -124,31 +148,41 @@ export default function Index({
           ]
     })
 
+    setEditingCartId(null)
     setView("menu")
   }
 
-  function confirm() {
-    if (!cart.length || form.processing || !address) return
+  const items = useMemo(() => cartPricedItem(cart), [cart])
+  const requestKey = useMemo(() => JSON.stringify(items), [items])
 
-    const items = cart.map((item) => ({
-      schedule_id: item.id,
-      quantity: item.quantity,
-      notes: item.notes,
-      options: Object.entries(item.selections).map(([groupId, values]) => ({
-        group_id: Number(groupId),
-        values,
-      })),
-    }))
+  // Guarda el resultado junto con el carrito para el que se calculó
+  const [priced, setPriced] = useState<{
+    key: string
+    pricing: Pricing | null
+  } | null>(null)
 
-    form.transform(() => ({ order: { address, items } }))
+  useEffect(() => {
+    if (items.length === 0) return
 
-    form.post(consumerOrders.create().url, {
-      preserveState: true,
-      preserveScroll: false,
-      onSuccess: () => setCart([]),
-      onError: () => setView("error"),
-    })
-  }
+    let cancelled = false
+
+    priceItems(items)
+      .then((pricing) => {
+        if (!cancelled) setPriced({ key: requestKey, pricing })
+      })
+      .catch(() => {
+        // Si falla, marcamos este carrito como resuelto, sin precio, para que loading no quede en true
+        if (!cancelled) setPriced({ key: requestKey, pricing: null })
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [items, requestKey])
+
+  const isEmpty = items.length === 0
+  const loading = !isEmpty && priced?.key !== requestKey
+  const pricing = isEmpty ? null : (priced?.pricing ?? null)
 
   return (
     <AppLayout
@@ -169,11 +203,12 @@ export default function Index({
             benefit={benefit}
             providers={providers}
             schedules={visibleSchedules}
+            closures={closures}
             cart={cart}
             count={count}
-            total={pricing.total}
+            loading={loading}
+            total={pricing?.total}
             openDetail={openDetail}
-            openCart={() => setView("cart")}
           />
         )}
         {view === "detail" && selected && (
@@ -185,44 +220,11 @@ export default function Index({
             selections={selections}
             setSelections={setSelections}
             setNotes={setNotes}
-            benefit={benefit}
             cart={cart}
-            back={() => setView("menu")}
+            back={handleBack}
             add={addToCart}
-          />
-        )}
-        {view === "cart" && (
-          <ConsumerCart
-            monthlyLimit={benefit.monthly_limit}
-            monthlyRemaining={benefit.monthly_remaining}
-            pricing={pricing}
-            cart={cart}
-            addresses={addressOptions}
-            address={address}
-            setAddress={setAddress}
-            onAddAddress={addAddress}
-            processing={form.processing}
-            error={form.errors.order_error}
-            back={() => setView("menu")}
-            confirm={confirm}
-            remove={(cartId) => {
-              setCart((items) => items.filter((item) => item.cartId !== cartId))
-              form.clearErrors()
-            }}
-          />
-        )}
-        {view === "error" && (
-          <OrderError
-            retry={() => {
-              form.clearErrors()
-              setView("cart")
-            }}
-            homeUrl={consumerDashboard.index().url}
-            error={
-              Array.isArray(form.errors.order_error)
-                ? form.errors.order_error[0]
-                : form.errors.order_error
-            }
+            editingCartId={editingCartId}
+            onRemove={editingCartId ? handleRemoveFromCartAndBack : undefined}
           />
         )}
       </div>

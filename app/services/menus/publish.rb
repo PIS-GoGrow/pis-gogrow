@@ -31,6 +31,7 @@ class Menus::Publish
     unless @date && @date >= Date.current && @date.on_weekday? && @date <= Calendar.new.maximum_publish_date
       @errors.add(:date, I18n.t("validations.menu_publish.invalid_date"))
     end
+    @errors.add(:date, I18n.t("validations.publish_date_closed")) if @date && @provider.closed_on?(@date)
 
     @menus = @provider.menus.saved.where(id: @menu_ids).to_a
     @errors.add(:menu_ids, I18n.t("validations.menu_publish.invalid_menus")) if @menus.empty? || @menus.size != @menu_ids.size

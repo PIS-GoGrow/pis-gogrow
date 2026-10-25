@@ -206,7 +206,8 @@ export default function CollectionGroupCard({
                       <CollectionAccountPanel
                         account={employee}
                         heading={settled ? "none" : "month"}
-                        detailMode={settled ? "link" : "dialog"}
+                        detailMode="dialog"
+                        settled={settled}
                         showPaymentHistory={
                           settled || employee.payments.length > 1
                         }
@@ -232,18 +233,20 @@ export default function CollectionGroupCard({
                 <CollectionAccountPanel
                   account={group.company}
                   heading={settled ? "paid_on" : "month"}
-                  detailMode={settled ? "link" : "dialog"}
+                  detailMode="dialog"
+                  settled={settled}
                   showPaymentHistory={
                     settled || group.company.payments.length > 1
                   }
                   showDownloadAll={settled}
                   aside={
-                    group.company.invoice && (
+                    group.company.invoice &&
+                    group.company.status !== "rejected" ? (
                       <StatusBadge
                         status={group.company.invoice.status}
                         kind="invoice"
                       />
-                    )
+                    ) : undefined
                   }
                 >
                   {(!settled || group.company.invoice) && (

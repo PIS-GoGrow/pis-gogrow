@@ -7,7 +7,7 @@ require "rails_helper"
 #
 # Criterio 3: "Los cambios de estado realizados por el proveedor se reflejan sin
 # alterar el historial anterior". El estado de un pago lo cambia el proveedor
-# desde /provider/collections, así que este archivo recorre el circuito completo --
+# desde /provider/cobros, así que este archivo recorre el circuito completo --
 # el empleado sube el comprobante, el proveedor lo aprueba o lo rechaza, y el
 # empleado vuelve a su historial en /accounts -- en vez de dar por hecho el
 # estado final con datos armados a mano.
@@ -91,13 +91,13 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     end
 
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
 
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     within(find("[role=tabpanel]")) do
-      expect(page).to have_content("Enviado")
+      expect(page).to have_content("En revisión")
     end
   end
 
@@ -111,7 +111,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     visit accounts_path
     within(find("[role=tabpanel]")) { click_on "Subir comprobante de pago" }
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", Rails.root.join("public/robots.txt"), make_visible: true)
+      attach_file("Comprobante", Rails.root.join("public/robots.txt"), make_visible: true)
       click_on "Subir comprobante de pago"
     end
 
@@ -147,7 +147,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     click_on users(:one).name
     expect(page).to have_content("300")
 
-    # El botón de Aprobar vive dentro del sheet del comprobante: hay que
+    # El botón de Confirmar vive dentro del sheet del comprobante: hay que
     # abrirlo primero (PaymentReviewSheet), al que se entra por "Revisar pago"
     # desde la fila del empleado.
     click_on "Revisar pago"
@@ -159,14 +159,14 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     sign_in employee
     visit accounts_path
     within(find("[role=tabpanel]")) do
-      expect(page).to have_no_content("Enviado")
+      expect(page).to have_no_content("En revisión")
     end
 
     find("[role=tab]", text: "Historial").click
     within(find("[role=tabpanel]")) do
       expect(page).to have_content(month_label(closed_month))
       expect(page).to have_content(month_label(previous_month))
-      expect(page).to have_content("Aceptado", count: 2)
+      expect(page).to have_content("Aprobado", count: 2)
       # El mes anterior conserva su propio importe: el pago nuevo no lo pisa.
       expect(page).to have_content("$300")
       expect(page).to have_content("$500")
@@ -195,12 +195,15 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     click_on users(:one).name
 
     # Mismo motivo que en el caso de arriba: primero hay que abrir el
-    # comprobante para llegar al botón de Rechazar, que abre a su vez el
+    # comprobante para llegar al botón de Reportar, que abre a su vez el
     # diálogo de motivo. Los dos quedan abiertos a la vez (role=dialog
     # matchea ambos), así que el segundo find se desambigua por texto.
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Rechazar" }
-    within(find("[role=dialog]", text: "Rechazar comprobante")) { click_on "Rechazar comprobante" }
+    within(find("[role=dialog]")) { click_on "Reportar" }
+    within(find("[role=dialog]", text: "Reportar un problema")) do
+      find('[data-testid="provider-payment-report-reason-incorrect_receipt"]').click
+      click_on "Continuar"
+    end
     expect(page).to have_content(I18n.t("pages.provider_collections.review.rejected_title"))
     click_on I18n.t("pages.provider_collections.review.done")
 
@@ -210,14 +213,14 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
 
     within(find("[role=tabpanel]")) do
       expect(page).to have_content("Rechazado")
-      expect(page).to have_content("La imagen está borrosa")
+      expect(page).to have_content("El comprobante no corresponde")
     end
 
     find("[role=tab]", text: "Historial").click
     within(find("[role=tabpanel]")) do
       expect(page).to have_content(month_label(previous_month))
       expect(page).to have_content("$500")
-      expect(page).to have_content("Aceptado", count: 1)
+      expect(page).to have_content("Aprobado", count: 1)
       # Un pago rechazado no entra al historial: sigue siendo deuda pendiente.
       expect(page).to have_no_content(month_label(closed_month))
     end

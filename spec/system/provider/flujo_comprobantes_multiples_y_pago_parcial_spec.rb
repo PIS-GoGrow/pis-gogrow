@@ -46,13 +46,13 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     end
 
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
 
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     within("[role=tabpanel]") do
-      expect(page).to have_content("Enviado")
+      expect(page).to have_content("En revisión")
     end
 
     # 2. El proveedor revisa el primer comprobante y lo rechaza con 'El pago es parcial'
@@ -65,11 +65,11 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     click_on employee_user.name
 
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Rechazar" }
+    within(find("[role=dialog]")) { click_on "Reportar" }
 
-    within(find("[role=dialog]", text: "Rechazar comprobante")) do
-      find("label", text: "El pago es parcial").click
-      click_on "Rechazar comprobante"
+    within(find("[role=dialog]", text: "Reportar un problema")) do
+      find('[data-testid="provider-payment-report-reason-partial_payment"]').click
+      click_on "Continuar"
     end
 
     expect(page).to have_content("Pago parcial registrado")
@@ -92,13 +92,13 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     end
 
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
 
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     within("[role=tabpanel]") do
-      expect(page).to have_content("Enviado")
+      expect(page).to have_content("En revisión")
       expect(page).to have_no_content(I18n.t("pages.accounts.show.partial_payment_warning"))
     end
 
@@ -118,7 +118,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     # 6. El proveedor revisa y aprueba el segundo comprobante
     click_on "Revisar pago"
     within(find("[role=dialog]")) { click_on "Aprobar" }
-    expect(page).to have_content("Cobro confirmado")
+    expect(page).to have_content("Cobro aprobado")
     click_on "Listo"
 
     # Para que el período completo pase a Historial, la cuenta de la empresa debe estar saldada
@@ -135,9 +135,8 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     within(history_card) { click_on "Empleados" }
     click_on employee_user.name
 
-    # En el historial con múltiples comprobantes aparece 'Ver comprobantes'
-    expect(page).to have_button("Ver comprobantes")
-    click_on "Ver comprobantes"
+    # El historial mantiene la lista visible y permite descargarla completa.
+    expect(page).to have_button("Descargar comprobantes")
 
     # Al desplegarlo muestra ambos comprobantes con botón de descarga individual
     expect(page).to have_content("Pago parcial")

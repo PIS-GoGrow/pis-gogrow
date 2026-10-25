@@ -100,7 +100,7 @@ RSpec.describe "Visualizar facturas de proveedores", type: :system do
     sign_in users(:provider_user), role: :provider
     visit provider_collections_path
     find("button", text: "Empresa").click
-    expect(page).to have_content("Por revisar")
+    expect(page).to have_content("En revisión")
     expect(page).to have_link("Ver factura factura-tuviandita.png")
     sign_out
 
@@ -109,7 +109,7 @@ RSpec.describe "Visualizar facturas de proveedores", type: :system do
     row = invoice_row("Provider User")
     expect(row).to have_content(/589[.,]5/)
     expect(row).to have_content(/#{I18n.l(account.month, format: "%B %Y")}/i)
-    expect(row).to have_content("Por revisar")
+    expect(row).to have_content("En revisión")
   end
 
   describe "permissions" do

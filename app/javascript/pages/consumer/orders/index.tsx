@@ -39,7 +39,7 @@ export default function Index({
   providers,
 }: ConsumerOrdersIndex) {
   const { t } = useTranslation()
-  const { formatDeliveryDate } = useFormatters()
+  const { formatLongDate } = useFormatters()
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -68,7 +68,7 @@ export default function Index({
         <section key={group.date ?? "undated"} className="grid gap-2">
           <h2 className="text-muted-foreground text-sm">
             {group.date
-              ? formatDeliveryDate(group.date)
+              ? formatLongDate(group.date)
               : t("pages.orders.index.no_date")}
           </h2>
 
@@ -79,25 +79,29 @@ export default function Index({
       ))
     )
 
-  const providersName = providers.map((provider) => provider.name)
-  const [activeProviders, setActiveProviders] = useState<Set<string>>(new Set())
+  const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
   const filtered_upcoming_orders =
     activeProviders.size === 0
       ? upcoming_orders
       : upcoming_orders.filter((order) =>
-          activeProviders.has(order.provider_name ?? ""),
+          order.provider_id == null
+            ? false
+            : activeProviders.has(order.provider_id),
         )
   const filtered_past_orders =
     activeProviders.size === 0
       ? past_orders
       : past_orders.filter((order) =>
-          activeProviders.has(order.provider_name ?? ""),
+          order.provider_id == null
+            ? false
+            : activeProviders.has(order.provider_id),
         )
   const filterLabel =
     activeProviders.size === 0
       ? "Todos"
-      : providersName
-          .filter((provider) => activeProviders.has(provider))
+      : providers
+          .filter((provider) => activeProviders.has(provider.id))
+          .map((provider) => provider.name)
           .join(", ")
 
   return (
@@ -108,12 +112,14 @@ export default function Index({
         <h1 className="text-2xl font-bold">{t("pages.orders.index.title")}</h1>
 
         <div className="flex items-center">
-          <span className="text-muted-foreground min-w-0 truncate text-sm">
+          <span className="text-foreground min-w-0 truncate text-sm font-medium">
             Proveedores:{" "}
-            <span className="text-foreground font-medium">{filterLabel}</span>
+            <span className="text-muted-foreground font-normal">
+              {filterLabel}
+            </span>
           </span>
           <ProviderFilterSheet
-            providers={providersName}
+            providers={providers}
             selectedProviders={activeProviders}
             onApply={setActiveProviders}
           />

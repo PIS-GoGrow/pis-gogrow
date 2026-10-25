@@ -76,11 +76,11 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   # Cada grupo es una <section> "Elegí tu <nombre>": buscar por el título evita
   # elegir la opción de otro grupo.
   def pick_option(group, option)
-    find("section", text: "Elegí tu #{group}").find("label", text: option).click
+    find("section", text: "Elegí tu/s #{group.downcase}").find("label", text: option).click
   end
 
   def open_cart
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
   end
 
@@ -115,9 +115,9 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     expect(page).to have_no_content(instead_of)
   end
 
-  # La confirmación redondea a pesos; las demás vistas usan el formato de moneda.
-  def confirmation_money(amount) = "$#{amount.round}"
-  def uyu(amount) = /#{amount.to_i},00/
+  # Formato único de moneda de toda la app (Account.format_amount / formatMoney).
+  def confirmation_money(amount) = Account.format_amount(amount)
+  def uyu(amount) = Account.format_amount(amount)
 
   describe "Pasos: P1 publica y edita, E1 pide y edita, P1 consulta" do
     it "deja el mismo pedido, importe, datos y estado en la confirmación, el historial y el proveedor" do
@@ -130,7 +130,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       open_menu(as: e1_user, day: tuesday)
       expect(page).to have_button("Agregar #{p1_wok.name}")
       click_button "Agregar #{p1_milanesa.name}"
-      within("section", text: "Elegí tu Guarnición") do
+      within("section", text: "Elegí tu/s guarnición") do
         expect(page).to have_css("[role=radio]", count: 2)
       end
       expect(page).to have_button("Agregar", exact: true, disabled: true)
@@ -187,7 +187,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       expect(page).to have_content("Sin sal, con limón")
       expect_chosen_garnish("Papas", instead_of: "Puré")
       expect(page).to have_content("Colonia 1370")
-      expect(page).to have_content("Por revisar")
+      expect(page).to have_content("Pendiente")
       expect(page).to have_content(confirmation_money(edited.price))
       expect(page).to have_content(confirmation_money(edited.discounted_price))
       sign_out
@@ -243,7 +243,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       expect(e2_order.reload).to be_pending
       visit provider_order_path(e2_order)
-      expect(page).to have_content("Por revisar")
+      expect(page).to have_content("Pendiente")
       expect(page).to have_button("Confirmar")
       expect(page).to have_button("Rechazar")
     end
@@ -586,8 +586,12 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e1_user, role: :consumer
 
       edit_order(order)
-      within("[role=dialog]") do
+      click_button "Ver mis direcciones"
+      within("[role=dialog]", text: "Mis direcciones") do
         find("label", text: "Colonia 1370").click
+        click_button "Seleccionar"
+      end
+      within("[role=dialog]", text: "Modificar pedido") do
         click_button "Guardar cambios"
       end
       expect(page).to have_content("Pedido actualizado")
@@ -632,17 +636,17 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   end
 
   describe "IBP-068: P1 cambia las modalidades y E1 solo elige las habilitadas" do
-    # El switch cambia al instante y queda deshabilitado mientras dura el PATCH:
-    # esperar el estado nuevo prueba que React ya hidrató, y esperar que se
-    # habilite otra vez, que el servidor respondió.
-    def turn_off_home_delivery
-      visit settings_profile_path
-      without_animations
-      switch = find("#home_delivery:not([disabled])")
-      switch.click
-      switch.click unless has_css?("#home_delivery[aria-checked=false]", wait: 1)
-      expect(page).to have_css("#home_delivery[aria-checked=false]")
-      expect(page).to have_css("#home_delivery:not([disabled])")
+    # Se llega a Entregas por el menú de usuario y Cuenta, no por URL: así se
+    # detectó el defecto 86e3mhpbb (Entregas no tenía enlace). El aviso prueba
+    # que el servidor guardó.
+    def choose_delivery(option)
+      visit_hydrated provider_dashboard_path
+      find("[data-sidebar=menu-button]", text: p1_user.name).click
+      find("[role=menuitem]", text: "Configuración").click
+      click_on "Entregas"
+      wait_for_hydration
+      find("label", text: option).click
+      expect(page).to have_content("Guardamos tu modalidad de entrega")
     end
 
     it "deja pedir solo en la oficina y no toca el pedido a domicilio ya creado" do
@@ -652,7 +656,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       # CA1 y CA2: P1 deja de entregar a domicilio desde su configuración.
       sign_in p1_user, role: :provider
-      turn_off_home_delivery
+      choose_delivery("Solo Oficinas")
       expect(p1.reload.home_delivery).to be(false)
       expect(providers(:endulzate).reload.home_delivery).to be(true)
       # CA4: la oficina sigue habilitada y el menú publicado sigue en pie.
@@ -680,6 +684,24 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       visit provider_order_path(order)
       expect(page).to have_content("Colonia 1370")
       expect(order.reload).to have_attributes(delivery_method: "home", address: "Colonia 1370")
+    end
+
+    it "vuelve a dejar pedir a domicilio cuando P1 lo habilita de nuevo" do
+      publish(p1_milanesa, tuesday)
+      p1.update!(home_delivery: false)
+
+      sign_in p1_user, role: :provider
+      choose_delivery("Oficinas y direcciones personalizadas")
+      expect(p1.reload.home_delivery).to be(true)
+      sign_out
+
+      open_menu(as: e1_user, day: tuesday)
+      add_to_cart(p1_milanesa)
+      open_cart
+      use_new_address(name: "Estudio", street: "Colonia 1370")
+      click_button "Confirmar pedido"
+      expect(page).to have_content("¡Pedido recibido!")
+      expect(e1.orders.sole).to have_attributes(delivery_method: "home", address: "Colonia 1370")
     end
   end
 

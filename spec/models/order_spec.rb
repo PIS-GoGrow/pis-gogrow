@@ -10,7 +10,7 @@ RSpec.describe Order, type: :model do
   it do
     expect(subject).to define_enum_for(:rejection_reason)
       .with_values(out_of_stock: 0, duplicate_order: 1, customer_request: 2, order_error: 3, other: 4, dish_modified: 5,
-                    dish_deleted: 6)
+                    dish_deleted: 6, dish_unpublished: 7)
       .with_prefix(:rejection_reason)
   end
 
@@ -410,6 +410,55 @@ RSpec.describe Order, type: :model do
       expect(orders(:upcoming_pending_today)).to be_cancellable
     end
 
+    context "when the provider's order deadline is set" do
+      let(:order) { orders(:upcoming_pending_today) }
+
+      before { order.schedule.menu.provider.update!(order_deadline: "12:00") }
+
+      it "lets a pending order be cancelled on its delivery day before the deadline" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 11, min: 59)) do
+          expect(order).to be_cancellable
+        end
+      end
+
+      it "blocks a pending order on its delivery day once the deadline passed" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 12)) do
+          expect(order).not_to be_cancellable
+          expect(order.cancellation_block_reason).to eq("order_deadline_passed")
+        end
+      end
+
+      it "does not cancel a pending order on its delivery day once the deadline passed" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(order.cancel(by: users(:one))).to be(false)
+          expect(order.reload).to be_pending
+        end
+      end
+
+      it "keeps the confirmed reason for a confirmed order after the deadline" do
+        order.update!(status: :confirmed)
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(order.cancellation_block_reason).to eq("confirmed_for_today")
+        end
+      end
+
+      it "still lets an order for a later day be cancelled after today's deadline" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(orders(:upcoming_pending_future)).to be_cancellable
+        end
+      end
+
+      it "keeps an order for today cancellable when the provider has no deadline configured" do
+        order.schedule.menu.provider.update!(order_deadline: nil)
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(order).to be_cancellable
+          expect(order.cancellation_block_reason).to be_nil
+        end
+      end
+    end
+
     it "lets a confirmed order be cancelled while its delivery day is still ahead" do
       expect(orders(:upcoming_confirmed_future)).to be_cancellable
     end
@@ -500,56 +549,57 @@ RSpec.describe Order, type: :model do
     end
   end
 
-  describe "#withdraw!" do
+  describe "#reject_for_dish_change!" do
     let(:provider_user) { users(:provider_user) }
 
-    it "cancels a pending order and records provider, time and previous status" do
+    it "rejects a pending order and records the provider, time and reason" do
       order = orders(:upcoming_pending_future)
 
-      expect(order.withdraw!(by: provider_user)).to be(true)
+      expect(order.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)).to be(true)
 
       order.reload
-      expect(order).to be_cancelled
-      expect(order.cancelled_by).to eq(provider_user)
-      expect(order.cancelled_at).to be_present
-      expect(order.status_before_cancellation).to eq("pending")
+      expect(order).to be_rejected
+      expect(order).to be_rejection_reason_dish_unpublished
+      expect(order.rejected_by).to eq(provider_user)
+      expect(order.rejected_at).to be_present
+      expect(order.cancelled_by).to be_nil
+      expect(order.cancelled_at).to be_nil
     end
 
-    it "cancels a confirmed order and records provider, time and previous status" do
+    it "rejects a confirmed order and records the provider, time and reason" do
       order = orders(:upcoming_confirmed_future)
 
-      expect(order.withdraw!(by: provider_user)).to be(true)
+      expect(order.reject_for_dish_change!(reason: :dish_deleted, by: provider_user)).to be(true)
 
       order.reload
-      expect(order).to be_cancelled
-      expect(order.cancelled_by).to eq(provider_user)
-      expect(order.cancelled_at).to be_present
-      expect(order.status_before_cancellation).to eq("confirmed")
+      expect(order).to be_rejected
+      expect(order).to be_rejection_reason_dish_deleted
+      expect(order.rejected_by).to eq(provider_user)
+      expect(order.rejected_at).to be_present
     end
 
-    it "allows withdrawing a confirmed order even on its delivery day" do
+    it "allows rejecting a confirmed order even on its delivery day" do
       order = orders(:upcoming_pending_today)
       order.update!(status: :confirmed)
 
-      expect(order.withdraw!(by: provider_user)).to be(true)
-      expect(order.reload).to be_cancelled
-      expect(order.status_before_cancellation).to eq("confirmed")
+      expect(order.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)).to be(true)
+      expect(order.reload).to be_rejected
     end
 
-    it "ignores withdrawal on an already cancelled order" do
+    it "ignores a provider rejection on an already cancelled order" do
       order = orders(:history_cancelled_future)
       original_cancelled_at = order.cancelled_at
       original_cancelled_by = order.cancelled_by
 
-      expect(order.withdraw!(by: provider_user)).to be(false)
+      expect(order.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)).to be(false)
       expect(order.reload.cancelled_at).to eq(original_cancelled_at)
       expect(order.cancelled_by).to eq(original_cancelled_by)
     end
 
-    it "ignores withdrawal on an already rejected order" do
+    it "ignores a provider rejection on an already rejected order" do
       order = orders(:history_rejected_future)
 
-      expect(order.withdraw!(by: provider_user)).to be(false)
+      expect(order.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)).to be(false)
       expect(order.reload).to be_rejected
     end
   end
@@ -764,6 +814,34 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "#subsidized_units_held" do
+    let(:consumer) { consumers(:one) }
+    let(:monthly_benefit) { consumer.benefits.current.monthly.first }
+
+    it "returns 0 when schedule delivery date is not in current month" do
+      order = orders(:upcoming_pending_future)
+      order.schedule.update!(date: Date.current.next_month.beginning_of_month)
+      expect(order.subsidized_units_held).to eq(0)
+    end
+
+    it "returns only the units that actually received the monthly benefit" do
+      order = orders(:upcoming_pending_today)
+      order.update_columns(amount: 3)
+      order.order_benefits.destroy_all
+      order.order_benefits.create!(benefit: monthly_benefit, benefit_used: 1)
+
+      expect(order.subsidized_units_held).to eq(1)
+    end
+
+    it "returns 0 when the order has no monthly benefit applied" do
+      order = orders(:upcoming_pending_today)
+      order.update_columns(amount: 2, discounted_price: order.price)
+      order.order_benefits.destroy_all
+
+      expect(order.subsidized_units_held).to eq(0)
+    end
+  end
+
   describe "#delivery_address_options" do
     let(:consumer) { consumers(:one) }
 
@@ -795,31 +873,6 @@ RSpec.describe Order, type: :model do
         label: I18n.t("pages.orders.addresses.current"),
         address: "Rambla Gandhi 123"
       )
-    end
-  end
-
-  describe "#reject_for_dish_change!" do
-    let(:order) { orders(:upcoming_confirmed_future) }
-
-    it "rejects confirmed order with dish_modified reason" do
-      expect(order.reject_for_dish_change!).to be(true)
-      expect(order.reload).to be_rejected
-      expect(order).to be_rejection_reason_dish_modified
-    end
-
-    it "does not reject pending, cancelled or already rejected orders" do
-      pending_order = orders(:upcoming_pending_today)
-      cancelled_order = orders(:history_cancelled_future)
-      rejected_order = orders(:history_rejected_future)
-
-      expect(pending_order.reject_for_dish_change!).to be(false)
-      expect(pending_order.reload).to be_pending
-
-      expect(cancelled_order.reject_for_dish_change!).to be(false)
-      expect(cancelled_order.reload).to be_cancelled
-
-      expect(rejected_order.reject_for_dish_change!).to be(false)
-      expect(rejected_order.reload).to be_rejected
     end
   end
 
@@ -866,6 +919,16 @@ RSpec.describe Order, type: :model do
       expect(missing).to be_empty
     end
 
+    it "notifies the provider when a new order is placed" do
+      order = orders(:upcoming_pending_today).dup
+      order.save!
+
+      notification = Notification.find_by!(event: "order_received", notifiable: order)
+
+      expect(notification).to have_attributes(user: order.provider.user, role: "provider", requires_action: false)
+      expect(notification.description).to start_with("#{order.consumer.user.name} pidió #{order.amount} de #{order.menu_name}")
+    end
+
     it "notifies the consumer when the provider rejects an order" do
       order = orders(:upcoming_pending_today)
 
@@ -908,7 +971,7 @@ RSpec.describe Order, type: :model do
       order = orders(:upcoming_confirmed_future)
 
       expect {
-        order.reject_for_dish_change!
+        order.reject_for_dish_change!(reason: :dish_modified, by: users(:provider_user))
       }.to change(Notification, :count).by(1)
 
       notification = Notification.order(:created_at).last
@@ -919,26 +982,26 @@ RSpec.describe Order, type: :model do
       expect(notification.description).to include("porque el plato fue modificado")
     end
 
-    it "notifies the consumer when the provider withdraws the dish" do
+    it "notifies the consumer with a rejection when the provider withdraws the dish" do
       order = orders(:upcoming_pending_future)
       provider_user = users(:provider_user)
 
       expect {
-        order.withdraw!(by: provider_user)
+        order.reject_for_dish_change!(reason: :dish_unpublished, by: provider_user)
       }.to change(Notification, :count).by(1)
 
       notification = Notification.order(:created_at).last
 
       expect(notification).to have_attributes(
         user: order.consumer.user,
-        event: "order_withdrawal",
+        event: "order_rejection",
         role: "consumer",
         requires_action: false,
         notifiable: order
       )
 
       expect(notification.description).to include(
-        "porque el plato dejó de estar disponible"
+        "porque el plato fue retirado del menú de ese día"
       )
     end
 
@@ -948,6 +1011,45 @@ RSpec.describe Order, type: :model do
       expect {
         order.cancel(by: order.consumer.user)
       }.not_to change(Notification, :count)
+    end
+
+    it "notifies the provider when the consumer cancels a confirmed order" do
+      order = orders(:upcoming_confirmed_future)
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.to change(Notification, :count).by(1)
+
+      notification = Notification.order(:created_at).last
+
+      expect(notification).to have_attributes(
+        user: order.provider.user,
+        event: "order_cancellation",
+        role: "provider",
+        requires_action: false,
+        notifiable: order,
+        title: "Un pedido fue cancelado"
+      )
+      expect(notification.description).to eq(
+        "El pedido de #{order.consumer.user.name} del #{DateFormat.long(order.schedule.date, inline: true)} " \
+        "de #{order.menu_name} fue cancelado."
+      )
+    end
+
+    it "does not notify the provider when the cancellation is refused" do
+      order = orders(:upcoming_pending_today)
+      order.update_columns(status: Order.statuses[:confirmed])
+
+      expect(order.cancel(by: order.consumer.user)).to be(false)
+      expect(Notification.where(event: "order_cancellation")).to be_empty
+    end
+
+    it "does not notify the provider when the provider cancels the order itself" do
+      order = orders(:upcoming_confirmed_future)
+
+      order.reject_for_dish_change!(reason: :dish_unpublished, by: order.provider.user)
+
+      expect(Notification.where(event: "order_cancellation")).to be_empty
     end
   end
 
@@ -976,7 +1078,7 @@ RSpec.describe Order, type: :model do
       order.decide(:confirmed)
 
       description = confirmation_notifications(order).first.description
-      expect(description).to include(I18n.l(order.schedule.date, format: :short))
+      expect(description).to include(DateFormat.long(order.schedule.date, inline: true))
       expect(description).to include(users(:provider_user).name)
     end
 
@@ -1039,7 +1141,7 @@ RSpec.describe Order, type: :model do
     end
 
     def place(quantity)
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: } ]).first
+      line = OrderPricing.new(consumer).call([ { schedule:, quantity: } ])[schedule.id]
       Order.reserve(
         consumer:, schedule:, quantity:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1118,7 +1220,7 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 1)
     end
     let(:order) do
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ]).first
+      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ])[schedule.id]
       Order.reserve(
         consumer:, schedule:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1159,7 +1261,7 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
     end
     let(:order) do
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ]).first
+      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ])[schedule.id]
       Order.reserve(
         consumer:, schedule:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1195,6 +1297,7 @@ end
 #  address                    :string
 #  amount                     :integer
 #  cancelled_at               :datetime
+#  delivery_date              :date
 #  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
 #  menu_description           :string
@@ -1203,6 +1306,8 @@ end
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  provider_name              :string
+#  rejected_at                :datetime
 #  rejection_details          :string
 #  rejection_reason           :integer
 #  selected_options           :jsonb            not null
@@ -1213,6 +1318,8 @@ end
 #  cancelled_by_id            :bigint
 #  consumer_id                :bigint           not null
 #  modified_by_id             :bigint
+#  provider_id                :bigint
+#  rejected_by_id             :bigint
 #  schedule_id                :bigint
 #
 # Indexes
@@ -1220,6 +1327,8 @@ end
 #  index_orders_on_cancelled_by_id  (cancelled_by_id)
 #  index_orders_on_consumer_id      (consumer_id)
 #  index_orders_on_modified_by_id   (modified_by_id)
+#  index_orders_on_provider_id      (provider_id)
+#  index_orders_on_rejected_by_id   (rejected_by_id)
 #  index_orders_on_schedule_id      (schedule_id)
 #
 # Foreign Keys
@@ -1227,5 +1336,7 @@ end
 #  fk_rails_...  (cancelled_by_id => users.id)
 #  fk_rails_...  (consumer_id => consumers.id)
 #  fk_rails_...  (modified_by_id => users.id)
+#  fk_rails_...  (provider_id => providers.id) ON DELETE => nullify
+#  fk_rails_...  (rejected_by_id => users.id) ON DELETE => nullify
 #  fk_rails_...  (schedule_id => schedules.id)
 #

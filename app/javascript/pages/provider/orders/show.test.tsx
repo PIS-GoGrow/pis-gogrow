@@ -72,12 +72,10 @@ describe("Provider::Orders Show Page", () => {
       screen.getByRole("heading", { name: "Detalle de pedido" }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText("Por revisar").closest("[data-status]"),
+      screen.getByText("Pendiente").closest("[data-status]"),
     ).toHaveAttribute("data-status", "pending")
     expect(screen.getByText("Pedido PED-1")).toBeInTheDocument()
-    expect(
-      screen.getByText("11 de septiembre de 2026 · 10:15"),
-    ).toBeInTheDocument()
+    expect(screen.getByText("11/09/26 · 10:15")).toBeInTheDocument()
   })
 
   it("muestra los datos del empleado y deja el teléfono como no disponible", () => {
@@ -107,7 +105,7 @@ describe("Provider::Orders Show Page", () => {
 
     expect(screen.getByText("Con salsa de soja")).toBeInTheDocument()
     expect(screen.getByText("Sin sal")).toBeInTheDocument()
-    expect(screen.getByText("15 de octubre de 2026")).toBeInTheDocument()
+    expect(screen.getByText("Jueves 15 de octubre")).toBeInTheDocument()
   })
 
   it("muestra lo que el empleado eligió del plato", () => {
@@ -145,7 +143,7 @@ describe("Provider::Orders Show Page", () => {
     )
 
     expect(screen.getByText("$600,50")).toBeInTheDocument()
-    expect(screen.getByText("Subsidio")).toBeInTheDocument()
+    expect(screen.getByText("Beneficio aplicado")).toBeInTheDocument()
     expect(screen.getByText("-$300,25")).toBeInTheDocument()
     expect(screen.getByText("Paga el empleado")).toBeInTheDocument()
     expect(screen.getByText("$300,25")).toBeInTheDocument()
@@ -159,7 +157,7 @@ describe("Provider::Orders Show Page", () => {
 
     rerender(<Show order={order({ subsidy: null, discounted_price: null })} />)
     expect(screen.getByText("Importe no disponible")).toBeInTheDocument()
-    expect(screen.queryByText("Subsidio")).not.toBeInTheDocument()
+    expect(screen.queryByText("Beneficio aplicado")).not.toBeInTheDocument()
   })
 
   it("muestra el motivo y el detalle de un rechazo", () => {
@@ -276,9 +274,9 @@ describe("Provider::Orders Show Page", () => {
     expect(
       screen.getByText("Paga el empleado").parentElement,
     ).toHaveTextContent("$234,56")
-    expect(screen.getByText("Subsidio").parentElement).toHaveTextContent(
-      "-$1.000",
-    )
+    expect(
+      screen.getByText("Beneficio aplicado").parentElement,
+    ).toHaveTextContent("-$1.000")
     expect(screen.queryByText("$3.703,68")).not.toBeInTheDocument()
   })
   it("rotula solo «Empleado» cuando no hay empresa", () => {

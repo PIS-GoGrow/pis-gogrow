@@ -6,9 +6,9 @@ class Consumer::DeliveryAddressesController < Consumer::InertiaController
     saved = save_for_later? ? delivery_address.save : delivery_address.valid?
 
     if saved
-      redirect_to dashboard_path, status: :see_other
+      redirect_to dashboard_cart_path, status: :see_other
     else
-      redirect_to dashboard_path, inertia: { errors: delivery_address.errors }, status: :see_other
+      redirect_to dashboard_cart_path, inertia: { errors: delivery_address.errors }, status: :see_other
     end
   end
 

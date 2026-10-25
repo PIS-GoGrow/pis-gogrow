@@ -3,14 +3,14 @@ import { X } from "lucide-react"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Button } from "@/components/ui/button"
+import { consumerDashboard } from "@/routes"
 
 interface Props {
   retry: () => void
-  homeUrl: string
   error?: string
 }
 
-export function OrderError({ retry, homeUrl, error }: Props) {
+export function OrderError({ retry, error }: Props) {
   return (
     <MobileCard>
       <div className="flex flex-1 flex-col items-center justify-center pb-16">
@@ -31,7 +31,7 @@ export function OrderError({ retry, homeUrl, error }: Props) {
         <Button
           type="button"
           onClick={retry}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground h-12 w-full"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground h-12 flex-1"
         >
           Reintentar
         </Button>
@@ -40,9 +40,9 @@ export function OrderError({ retry, homeUrl, error }: Props) {
           asChild
           type="button"
           variant="secondary"
-          className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 w-full"
+          className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 flex-1"
         >
-          <Link href={homeUrl} preserveState={false}>
+          <Link href={consumerDashboard.index().url} preserveState={false}>
             Volver a Menú
           </Link>
         </Button>

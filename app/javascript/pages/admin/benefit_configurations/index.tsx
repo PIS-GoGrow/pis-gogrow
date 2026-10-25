@@ -1,11 +1,12 @@
-import { Head } from "@inertiajs/react"
-import { AlertCircleIcon, PencilIcon } from "lucide-react"
+import { Head, Link } from "@inertiajs/react"
+import { AlertCircleIcon, ArrowLeft, PencilIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import DebtAlertCard from "@/components/benefit-configurations/debt-alert-card"
 import EditBenefitConfigurationForm from "@/components/benefit-configurations/edit-benefit-configuration-form"
 import SpecialSubsidiesSection from "@/components/benefit-configurations/special-subsidies-section"
+import Heading from "@/components/heading"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import {
@@ -17,7 +18,9 @@ import {
 } from "@/components/ui/card"
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import AppLayout from "@/layouts/app-layout"
-import { adminBenefitConfigurations } from "@/routes"
+import { formatLongDateInline } from "@/lib/dates"
+import { formatMoney } from "@/lib/money"
+import { adminAccount, adminBenefitConfigurations } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 import type { AdminBenefitConfigurationsIndex } from "@/types/serializers"
 
@@ -63,12 +66,22 @@ export default function Index({
       <Head title={title} />
 
       <div className="mx-auto grid w-full max-w-200 gap-6 p-5">
-        <div>
-          <h1 className="text-xl font-bold">{title}</h1>
-          <p className="text-muted-foreground text-sm">
-            {t("pages.admin.benefit_configurations.index.description")}
-          </p>
-        </div>
+        <Heading
+          title={title}
+          description={t(
+            "pages.admin.benefit_configurations.index.description",
+          )}
+          back={
+            <Button variant="ghost" size="icon" asChild>
+              <Link
+                href={adminAccount()}
+                aria-label={t("pages.admin.benefit_configurations.index.back")}
+              >
+                <ArrowLeft aria-hidden="true" />
+              </Link>
+            </Button>
+          }
+        />
 
         <Card>
           <CardHeader>
@@ -112,7 +125,7 @@ export default function Index({
                     <AlertTitle className="font-bold">
                       {t(
                         "pages.admin.benefit_configurations.index.current.pending_conflict.title_alt",
-                        { date: configurable_month },
+                        { date: formatLongDateInline(configurable_month) },
                       )}
                     </AlertTitle>
                     <AlertDescription>
@@ -120,8 +133,9 @@ export default function Index({
                         "pages.admin.benefit_configurations.index.current.pending_conflict.description",
                         {
                           subsidy_percentage: subsidy.subsidy_percentage,
-                          max_voucher_price:
-                            subsidy.benefit_rules[0]?.max_price,
+                          max_voucher_price: formatMoney(
+                            subsidy.benefit_rules[0]?.max_price ?? 0,
+                          ),
                           monthly_voucher_limit:
                             subsidy.benefit_rules[0]?.limit,
                         },
@@ -148,7 +162,10 @@ export default function Index({
                         )}
                       </dt>
                       <dd className="text-lg font-semibold">
-                        ≤${base_subsidy?.benefit_rules[0]?.max_price}
+                        ≤
+                        {formatMoney(
+                          base_subsidy?.benefit_rules[0]?.max_price ?? 0,
+                        )}
                       </dd>
                     </div>
                     <div className="flex items-center justify-between py-3">

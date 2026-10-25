@@ -49,9 +49,9 @@ module PaymentReminders
         user:,
         notifiable: account,
         description_data: {
-          amount: formatted_amount(account.amount),
+          amount: Account.format_amount(account.amount),
           provider: account.provider.user.name,
-          due_date: I18n.l(account.due_date, format: "%d/%m/%Y"),
+          due_date: DateFormat.long(account.due_date, inline: true),
           days: DAYS_BEFORE_DUE
         }
       )
@@ -74,17 +74,6 @@ module PaymentReminders
         notifiable: account,
         event:
       ).count >= MAX_REMINDERS_PER_EVENT
-    end
-
-    def formatted_amount(amount)
-      ActionController::Base.helpers.number_to_currency(
-        amount,
-        unit: "$",
-        format: "%u%n",
-        precision: amount.frac.zero? ? 0 : 2,
-        delimiter: ".",
-        separator: ","
-      )
     end
   end
 end

@@ -14,7 +14,6 @@ RSpec.describe "Resumen general del mes de RRHH", type: :system do
 
   let(:admin_user) { users(:admin) }
   let(:previous_month) { 1.month.ago.to_date.beginning_of_month }
-  let(:current_key) { Date.current.strftime("%Y-%m") }
   let(:previous_key) { previous_month.strftime("%Y-%m") }
 
   before { sign_in admin_user, role: :admin }
@@ -48,12 +47,24 @@ RSpec.describe "Resumen general del mes de RRHH", type: :system do
     expect(page).to have_no_content("4 de 40")
   end
 
-  it "opens the consumption detail of the month it is showing" do
+  it "opens the consumption detail of the month it is showing over the home" do
     visit admin_dashboard_path
 
     click_on "Ver detalle del consumo"
 
-    expect(page).to have_current_path(admin_payments_path(month: current_key))
+    within(:css, "[role='dialog']") do
+      expect(page).to have_content("Provider User: Consumo #{I18n.l(Date.current, format: :month_name_year).upcase_first}")
+    end
+    expect(page).to have_current_path(admin_dashboard_path)
+
+    click_on "Cerrar"
+    pick_month(previous_month)
+    click_on "Ver detalle del consumo"
+
+    within(:css, "[role='dialog']") do
+      expect(page).to have_content("Provider User: Consumo #{I18n.l(previous_month, format: :month_name_year).upcase_first}")
+    end
+    expect(page).to have_current_path(admin_dashboard_path(month: previous_key))
   end
 
   # El resumen es de la empresa del admin: la cuenta de otra empresa no cambia

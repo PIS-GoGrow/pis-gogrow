@@ -12,7 +12,7 @@ class Admin::ConsumerMonthSerializer < ApplicationSerializer
   typelize "'pending' | 'submitted' | 'approved' | 'rejected' | null"
   attribute :status, &:status
 
-  typelize "Array<{ name: string; amount: number; status: 'pending' | 'submitted' | 'approved' | 'rejected' }>"
+  typelize "Array<{ id: number; name: string; amount: number; status: 'pending' | 'submitted' | 'approved' | 'rejected' }>"
   attribute :providers do |row|
     row.providers.map(&:to_h)
   end

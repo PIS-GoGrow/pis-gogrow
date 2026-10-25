@@ -53,6 +53,7 @@ class Menus::Create
     case mode
     when "single"
       add_agenda_error(:invalid_date) unless date && date >= Date.current && date.on_weekday? && date <= Calendar.new.maximum_publish_date
+      add_agenda_error(:date_closed) if date && @menu.provider.closed_on?(date)
     when "weekly", "range"
       add_agenda_error(:invalid_date) unless starts_on && starts_on >= Date.current
       add_agenda_error(:invalid_range) if mode == "range" && !(ends_on && starts_on && ends_on >= starts_on)

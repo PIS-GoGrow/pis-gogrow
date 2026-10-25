@@ -2,6 +2,14 @@ import { router } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogFooter,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+} from "@/components/adaptable-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -11,14 +19,6 @@ import {
   FieldTitle,
 } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
 import { providerMenus } from "@/routes"
 import type { SavedMenu } from "@/types"
 
@@ -26,15 +26,15 @@ type ConfirmedOrders = "keep" | "reject"
 
 const OPTIONS: ConfirmedOrders[] = ["keep", "reject"]
 
-interface DeleteMenuSheetProps {
+interface DeleteMenuAdaptableDialogProps {
   menu: SavedMenu | null
   onClose: () => void
 }
 
-export default function DeleteMenuSheet({
+export default function DeleteMenuAdaptableDialog({
   menu,
   onClose,
-}: DeleteMenuSheetProps) {
+}: DeleteMenuAdaptableDialogProps) {
   const { t } = useTranslation()
   const key = "pages.schedules.index.saved.delete_sheet"
   const [confirmedOrders, setConfirmedOrders] =
@@ -64,23 +64,22 @@ export default function DeleteMenuSheet({
   }
 
   return (
-    <Sheet open={menu !== null} onOpenChange={(open) => !open && close()}>
-      <SheetContent
-        side="bottom"
-        showCloseButton={false}
-        className="mx-auto gap-0 rounded-t-3xl pb-[env(safe-area-inset-bottom)] md:max-w-xl"
-      >
-        <div className="bg-muted-foreground/30 mx-auto mt-3 h-1 w-10 rounded-full" />
-
-        <SheetHeader className="items-start px-6 pt-8 text-left">
-          <SheetTitle className="text-base">{t(`${key}.title`)}</SheetTitle>
-          <SheetDescription className="text-base">
+    <AdaptableDialog
+      open={menu !== null}
+      onOpenChange={(open) => !open && close()}
+    >
+      <AdaptableDialogContent showCloseButton={false} className="p-0">
+        <AdaptableDialogHeader className="items-start px-6 pt-8 text-left">
+          <AdaptableDialogTitle className="text-base">
+            {t(`${key}.title`)}
+          </AdaptableDialogTitle>
+          <AdaptableDialogDescription className="text-base">
             {hasConfirmed
               ? t(`${key}.description_orders`)
               : t(`${key}.description`)}
             {hasPending && ` ${t(`${key}.pending`)}`}
-          </SheetDescription>
-        </SheetHeader>
+          </AdaptableDialogDescription>
+        </AdaptableDialogHeader>
 
         {hasConfirmed && (
           <div className="px-6 pt-4">
@@ -113,7 +112,7 @@ export default function DeleteMenuSheet({
           </div>
         )}
 
-        <SheetFooter className="flex-row gap-3 px-6 pt-6 pb-6">
+        <AdaptableDialogFooter className="flex-row gap-3 px-6 pt-6 pb-6">
           <Button
             type="button"
             variant="secondary"
@@ -130,8 +129,8 @@ export default function DeleteMenuSheet({
           >
             {processing ? t(`${key}.deleting`) : t(`${key}.confirm`)}
           </Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </AdaptableDialogFooter>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }

@@ -1,15 +1,17 @@
+import { Tick01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { Link } from "@inertiajs/react"
-import { Check, X } from "lucide-react"
+import { X } from "lucide-react"
 import { useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Button } from "@/components/ui/button"
 import AppLayout from "@/layouts/app-layout"
+import { formatLongDate } from "@/lib/dates"
+import { formatMoney } from "@/lib/money"
 import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardConfirmation } from "@/types"
-
-import { money } from "./formatters"
 
 type Confirmation = ConsumerDashboardConfirmation
 
@@ -42,12 +44,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
   }, [orders])
 
   const deliveryDates = [...new Set(orders.map((item) => item.date))].map(
-    (date) =>
-      new Date(`${date}T12:00:00`).toLocaleDateString("es-UY", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-      }),
+    (date) => formatLongDate(date),
   )
 
   const primaryDelivery = deliveries[0]
@@ -79,7 +76,12 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
         </Button>
 
         <div className="bg-primary text-primary-foreground mx-auto flex size-20 items-center justify-center rounded-full">
-          <Check aria-hidden="true" className="size-10" strokeWidth={2.5} />
+          <HugeiconsIcon
+            icon={Tick01Icon}
+            size={40}
+            strokeWidth={2}
+            aria-hidden="true"
+          />
         </div>
 
         <h1 className="mt-3 text-center text-2xl font-bold">
@@ -91,7 +93,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
 
         <div className="border-border bg-muted mt-5 rounded-lg border p-4 text-sm">
           <p className="text-muted-foreground">Entrega</p>
-          <p className="mt-1 font-semibold capitalize">{deliveryDates[0]}</p>
+          <p className="mt-1 font-semibold">{deliveryDates[0]}</p>
           {primaryDelivery && (
             <p className="mt-1 font-medium">
               {t(
@@ -119,7 +121,7 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
                         <span className="font-medium">{item.name}</span>
                         <span className="text-muted-foreground">
                           {" "}
-                          | {money(item.discounted_price / item.quantity)}
+                          | {formatMoney(item.discounted_price / item.quantity)}
                         </span>
                       </p>
                       <span className="shrink-0 font-semibold">
@@ -134,14 +136,14 @@ export default function OrderConfirmation({ total, orders }: Confirmation) {
 
           <div className="border-border mt-4 border-t pt-4">
             <p className="text-muted-foreground">Monto a pagar</p>
-            <p className="mt-1 text-lg font-bold">{money(total)}</p>
+            <p className="mt-1 text-lg font-bold">{formatMoney(total)}</p>
           </div>
         </div>
 
         <BottomAction>
           <Button className="h-12 w-full" asChild>
             <Link href={consumerOrders.index()} prefetch>
-              Ver mis pedidos
+              Ir a Mis pedidos
             </Link>
           </Button>
         </BottomAction>

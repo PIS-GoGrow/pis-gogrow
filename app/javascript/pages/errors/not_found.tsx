@@ -8,12 +8,16 @@ import {
   consumerDashboard,
   home,
   providerDashboard,
+  providerSignIn,
   sessions,
 } from "@/routes"
 
 export default function NotFound() {
   const { t } = useTranslation()
-  const { auth } = usePage().props
+  const { props, url } = usePage()
+  const { auth } = props
+
+  const inProviderArea = url.startsWith("/provider")
 
   const destination = auth.session
     ? {
@@ -31,9 +35,14 @@ export default function NotFound() {
         },
       }[auth.session.role]
     : {
-        href: sessions.new(),
+        href: inProviderArea ? providerSignIn() : sessions.new(),
         label: t("pages.errors.not_found.sign_in"),
       }
+
+  let homeHref = home.index()
+  if (inProviderArea) {
+    homeHref = auth.session ? providerDashboard.index() : providerSignIn()
+  }
 
   return (
     <>
@@ -58,9 +67,7 @@ export default function NotFound() {
             <Link href={destination.href}>{destination.label}</Link>
           </Button>
           <Button asChild variant="secondary" className="h-12 w-full">
-            <Link href={home.index()}>
-              {t("pages.errors.not_found.back_home")}
-            </Link>
+            <Link href={homeHref}>{t("pages.errors.not_found.back_home")}</Link>
           </Button>
         </div>
       </main>

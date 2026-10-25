@@ -12,7 +12,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
-import { providerCollections } from "@/routes"
+import { providerCollections, providerDebtReminders } from "@/routes"
 import type { ProviderCollectionAccount } from "@/types"
 
 interface CollectionAccountPanelProps {
@@ -25,6 +25,7 @@ interface CollectionAccountPanelProps {
   children?: ReactNode
   showPaymentHistory?: boolean
   showDownloadAll?: boolean
+  settled?: boolean
   detailMode?: "dialog" | "link"
 }
 
@@ -35,6 +36,7 @@ export default function CollectionAccountPanel({
   children,
   showPaymentHistory = false,
   showDownloadAll = false,
+  settled = false,
   detailMode = "dialog",
 }: CollectionAccountPanelProps) {
   const { t } = useTranslation()
@@ -89,7 +91,7 @@ export default function CollectionAccountPanel({
         </p>
 
         {detailMode === "dialog" ? (
-          <CollectionAccountDetailDialog account={account} />
+          <CollectionAccountDetailDialog account={account} settled={settled} />
         ) : (
           <Link
             href={providerCollections.show(account.id)}
@@ -122,7 +124,7 @@ export default function CollectionAccountPanel({
         reminder.blocked_reason === "cooldown" ||
         reminder.blocked_reason === "limit_reached") && (
         <DebtReminderDialog
-          accountId={account.id}
+          action={providerDebtReminders.create(account.id).url}
           eligible={reminder.eligible}
           employeeName={account.owner_name}
           month={account.month}

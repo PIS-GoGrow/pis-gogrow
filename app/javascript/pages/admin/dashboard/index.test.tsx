@@ -1,4 +1,10 @@
-import { render, screen, waitFor, within } from "@testing-library/react"
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import type React from "react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -12,7 +18,7 @@ vi.mock("@inertiajs/react", async () => {
     ...actual,
     Head: () => null,
     usePage: () => ({
-      url: "/admin/dashboard",
+      url: "/rrhh/inicio",
       props: { locale: "es", auth: { user: { name: "Juan Pérez" } } },
     }),
   }
@@ -45,6 +51,7 @@ const props: AdminDashboardIndex = {
     pending: 3100,
     projected: 0,
   },
+  consumption: null,
   payment_month: "septiembre",
   payments: [
     { name: "Endulzate by Noe", amount: 2325, status: "approved" },
@@ -90,8 +97,44 @@ describe("Admin Dashboard Page", () => {
       screen.getByRole("combobox", { name: "Mes del resumen" }),
     ).toHaveTextContent("Este mes")
     expect(
-      screen.getByRole("link", { name: "Ver detalle del consumo" }),
-    ).toHaveAttribute("href", "/admin/payments?month=2026-10")
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    ).toBeDisabled()
+  })
+
+  // El panel se abre sobre el Inicio, sin ir a Pagos.
+  it("opens the consumption detail of the selected month over the home", () => {
+    render(
+      <AdminDashboard
+        {...props}
+        consumption={{
+          month: "Octubre 2026",
+          providers: [
+            {
+              id: 1,
+              name: "Tu Viandita",
+              meals: 45,
+              subtotal: 5425,
+              vat_rate: 0,
+              vat_amount: 0,
+              payable_amount: 5425,
+              paid: false,
+              days: [],
+            },
+          ],
+        }}
+      />,
+    )
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    )
+
+    expect(screen.getByRole("dialog")).toHaveTextContent(
+      "Tu Viandita: Consumo Octubre 2026",
+    )
+    expect(
+      screen.getByRole("heading", { name: /Hola, Juan/, hidden: true }),
+    ).toBeInTheDocument()
   })
 
   it("shows the meals alone when the month had no benefit configured", () => {
@@ -114,11 +157,11 @@ describe("Admin Dashboard Page", () => {
       name: "Tus pagos de septiembre",
     })
     expect(within(payments).getByText("Endulzate by Noe")).toBeInTheDocument()
-    expect(within(payments).getByText("Confirmado")).toBeInTheDocument()
+    expect(within(payments).getByText("Aprobado")).toBeInTheDocument()
     expect(within(payments).getByText("Pendiente")).toBeInTheDocument()
     expect(
       within(payments).getByRole("link", { name: "Ver pagos a proveedores" }),
-    ).toHaveAttribute("href", "/admin/payments")
+    ).toHaveAttribute("href", "/rrhh/pagos")
   })
 
   it("links the debt ranking to each employee and to the pending ones", () => {
@@ -129,12 +172,12 @@ describe("Admin Dashboard Page", () => {
     })
     expect(
       within(debts).getByRole("link", { name: "Martín Bonnet" }),
-    ).toHaveAttribute("href", "/admin/consumers/7")
+    ).toHaveAttribute("href", "/rrhh/empleados/7")
     expect(
       within(debts).getByRole("link", {
         name: "Ver empleados con saldos pendientes",
       }),
-    ).toHaveAttribute("href", "/admin/consumers?filter=pending")
+    ).toHaveAttribute("href", "/rrhh/empleados?filter=pending")
   })
 
   it("keeps the selected month when it opens the pending employees", () => {
@@ -144,7 +187,7 @@ describe("Admin Dashboard Page", () => {
       screen.getByRole("link", {
         name: "Ver empleados con saldos pendientes",
       }),
-    ).toHaveAttribute("href", "/admin/consumers?filter=pending&month=2026-09")
+    ).toHaveAttribute("href", "/rrhh/empleados?filter=pending&month=2026-09")
   })
 
   describe("photos in the debt ranking", () => {

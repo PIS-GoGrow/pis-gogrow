@@ -11,6 +11,14 @@ end
 RSpec.describe "Schedules", type: :request do
   fixtures :users, :providers, :menus, :schedules, :orders, :consumers
 
+  before do
+    original_create = Provider.method(:create!)
+    allow(Provider).to receive(:create!) do |*args, **kwargs, &block|
+      kwargs[:onboarding_completed_at] ||= Time.current
+      original_create.call(*args, **kwargs, &block)
+    end
+  end
+
   def sign_in_with_role(user, role:)
     session = user.sessions.create!(role: role)
     cookies[:session_token] =
@@ -22,7 +30,7 @@ RSpec.describe "Schedules", type: :request do
     JSON.parse(document.at_css('script[data-page="app"]').text)
   end
 
-  describe "GET /schedules" do
+  describe "GET /publicar-menu" do
     it "returns the current week for the provider" do
       user = users(:one)
       Provider.create!(user: user)
@@ -336,7 +344,7 @@ RSpec.describe "Schedules", type: :request do
     end
   end
 
-  describe "POST /schedules" do
+  describe "POST /publicar-menu" do
     it "publishes multiple menus for the selected date" do
       user = users(:one)
       provider = Provider.create!(user: user)
@@ -895,7 +903,74 @@ RSpec.describe "Schedules", type: :request do
       expect(response).to have_http_status(:redirect)
     end
   end
-  describe "PATCH /schedules/:id/availability" do
+
+  # IBP-087: un día con cierre programado no se puede publicar.
+  describe "scheduled closures of the provider" do
+    let(:provider_user) { users(:provider_user) }
+    let(:provider) { providers(:tuviandita) }
+    let(:menu) { menus(:milanesa) }
+    let(:week_start) { Date.current.next_week(:monday) }
+    let(:closed_date) { week_start + 2.days }
+    let(:open_date) { week_start + 3.days }
+    let(:closed_message) { I18n.t("validations.publish_date_closed") }
+
+    before do
+      Schedule.where(date: week_start..week_start + 4.days).destroy_all
+      sign_in(provider_user, role: :provider)
+    end
+
+    def close(owner, from, to = from)
+      owner.closures.create!(starts_on: from, ends_on: to, reason: "Vacaciones")
+    end
+
+    def publish(date, menus: [ menu ])
+      post schedules_path, params: { date: date.to_s, items: menus.map { { menu_id: it.id, amount: 10 } } }
+    end
+
+    it "marks a closed day as not publishable and leaves the others" do
+      close(provider, closed_date)
+
+      get schedules_path, params: { week_start: week_start.to_s }
+
+      days = inertia_page.dig("props", "days").to_h { [ it["date"], it["publishable"] ] }
+      expect(days[closed_date.to_s]).to be(false)
+      expect(days.except(closed_date.to_s).values).to all(be(true))
+    end
+
+    it "does not mark a day as closed for the closures of another provider" do
+      close(providers(:endulzate), closed_date)
+
+      get schedules_path, params: { week_start: week_start.to_s }
+
+      day = inertia_page.dig("props", "days").find { it["date"] == closed_date.to_s }
+      expect(day["publishable"]).to be(true)
+    end
+
+    it "does not publish a menu on a closed day and says why" do
+      close(provider, closed_date)
+
+      expect { publish(closed_date) }.not_to change(Schedule, :count)
+
+      expect(response).to redirect_to(schedules_path)
+      follow_redirect!
+      expect(inertia_page.dig("props", "errors", "date")).to eq([ closed_message ])
+    end
+
+    it "does not publish on the last day of a closure but does the day after" do
+      close(provider, closed_date - 1.day, closed_date)
+
+      expect { publish(closed_date) }.not_to change(Schedule, :count)
+      expect { publish(open_date) }.to change(Schedule, :count).by(1)
+    end
+
+    it "publishes on a day that only another provider closed" do
+      close(providers(:endulzate), closed_date)
+
+      expect { publish(closed_date) }.to change(Schedule, :count).by(1)
+    end
+  end
+
+  describe "PATCH /publicar-menu/:id/disponibilidad" do
     it "marks the publication as sold out and records who and when" do
       user = users(:one)
       provider = Provider.create!(user: user)
@@ -968,7 +1043,7 @@ RSpec.describe "Schedules", type: :request do
     end
   end
 
-  describe "DELETE /schedules/:id" do
+  describe "DELETE /publicar-menu/:id" do
     let(:provider_user) { users(:provider_user) }
     let(:provider) { providers(:tuviandita) }
     let(:menu) { menus(:milanesa) }
@@ -1068,7 +1143,7 @@ RSpec.describe "Schedules", type: :request do
         expect(other_schedule.reload.amount).to eq(5)
       end
 
-      it "cancela los pedidos pendientes y confirmados del plato quitado" do
+      it "rechaza los pedidos pendientes y confirmados del plato quitado" do
         schedule = menu.schedules.create!(date: target_date, amount: 10)
         pending_order = create_order(schedule, status: :pending)
         confirmed_order = create_order(schedule, status: :confirmed, amount: 2)
@@ -1077,14 +1152,14 @@ RSpec.describe "Schedules", type: :request do
         delete schedule_path(schedule)
 
         expect(pending_order.reload).to have_attributes(
-          status: "cancelled",
-          status_before_cancellation: "pending",
-          cancelled_by: provider_user
+          status: "rejected",
+          rejection_reason: "dish_unpublished",
+          rejected_by: provider_user
         )
         expect(confirmed_order.reload).to have_attributes(
-          status: "cancelled",
-          status_before_cancellation: "confirmed",
-          cancelled_by: provider_user
+          status: "rejected",
+          rejection_reason: "dish_unpublished",
+          rejected_by: provider_user
         )
       end
 

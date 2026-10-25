@@ -71,7 +71,7 @@ describe("CollectionAccountPanel", () => {
     const dialog = screen.getByRole("dialog")
     expect(within(dialog).getByLabelText("Monto total")).toHaveValue(976)
     expect(
-      within(dialog).getByText("Importe calculado del período: 976,00 UYU"),
+      within(dialog).getByText("Importe calculado del período: $976"),
     ).toBeInTheDocument()
   })
 
@@ -87,7 +87,7 @@ describe("CollectionAccountPanel", () => {
               status: "rejected",
               rejection_reason: "El pago es parcial",
               date: "09/10/26",
-              receipt_url: "/provider/payments/17/receipt",
+              receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "parcial.png",
               receipt_content_type: "image/png",
             },
@@ -97,7 +97,7 @@ describe("CollectionAccountPanel", () => {
     )
     expect(
       screen.getByRole("link", { name: "Descargar comprobante" }),
-    ).toHaveAttribute("href", "/provider/payments/17/receipt")
+    ).toHaveAttribute("href", "/provider/comprobantes/17/archivo")
     expect(
       screen.queryByRole("button", { name: "Revisar pago" }),
     ).not.toBeInTheDocument()
@@ -105,7 +105,7 @@ describe("CollectionAccountPanel", () => {
       screen.queryByRole("button", { name: "Aprobar" }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole("button", { name: "Rechazar" }),
+      screen.queryByRole("button", { name: "Reportar" }),
     ).not.toBeInTheDocument()
   })
   it.each(["consumer", "company"] as const)(
@@ -123,7 +123,7 @@ describe("CollectionAccountPanel", () => {
               payable_amount: source === "company" ? 976 : 800,
               status: "submitted",
               payment_id: 17,
-              receipt_url: "/provider/payments/17/receipt",
+              receipt_url: "/provider/comprobantes/17/archivo",
               receipt_content_type: "image/png",
             }}
           />
@@ -132,16 +132,14 @@ describe("CollectionAccountPanel", () => {
       await user.click(screen.getByRole("button", { name: "Revisar pago" }))
       const dialog = screen.getByRole("dialog", { name: "Comprobante" })
       expect(
-        within(dialog).getByText(
-          source === "company" ? "976,00 UYU" : "800,00 UYU",
-        ),
+        within(dialog).getByText(source === "company" ? "$976" : "$800"),
       ).toBeInTheDocument()
       expect(
         within(dialog).getByRole("button", { name: "Aprobar" }),
       ).toBeDisabled()
       expect(
         within(dialog).getByRole("link", { name: "Descargar comprobante" }),
-      ).toHaveAttribute("href", "/provider/payments/17/receipt")
+      ).toHaveAttribute("href", "/provider/comprobantes/17/archivo")
     },
   )
   it("shows a neutral due date for a pending account that is not overdue", () => {
@@ -168,7 +166,7 @@ describe("CollectionAccountPanel", () => {
 
     expect(screen.queryByText("Vence: 10/11/26")).not.toBeInTheDocument()
     expect(screen.getByText("Octubre 2026")).toBeInTheDocument()
-    expect(screen.getByText("800,00 UYU")).toBeInTheDocument()
+    expect(screen.getByText("$800")).toBeInTheDocument()
   })
 
   it("shows the payment date for an approved account in the history", () => {

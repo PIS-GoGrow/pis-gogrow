@@ -6,7 +6,7 @@ class Consumer::DashboardController < Consumer::InertiaController
     @week = week_data
     @schedules = schedule_data
     @benefit = benefit_data
-    @addresses = @consumer.delivery_address_options
+    @closures = ProviderClosure.upcoming.includes(provider: :user)
   end
 
   def confirmation
@@ -16,6 +16,13 @@ class Consumer::DashboardController < Consumer::InertiaController
 
     @total = order_confirmation[:total]
     @orders = order_confirmation[:orders]
+  end
+
+  def cart
+    @consumer = Current.user.consumer
+
+    @addresses = @consumer.delivery_address_options
+    @benefit = benefit_data
   end
 
   private
@@ -35,11 +42,11 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def schedule_data
-    schedules = Schedule.on_active_menus.includes(:orders, menu: [ :reviews, :option_groups, { provider: :user } ])
+    schedules = Schedule.on_active_menus.includes(:orders, menu: [ :reviews, :option_groups, { provider: [ :user, :closures ] } ])
                         .where(date: week_range)
                         .order(:date, :id)
 
-    schedules.map do |schedule|
+    schedules.reject(&:provider_closed?).map do |schedule|
       menu = schedule.menu
 
       {
@@ -75,13 +82,11 @@ class Consumer::DashboardController < Consumer::InertiaController
     pricing = OrderPricing.new(@consumer)
 
     {
-      limit: @consumer.monthly_benefit_available / 4,
-      used: @consumer.monthly_benefit_used_this_week,
-      percentage: pricing.base_percentage,
+      percentage: @consumer.monthly_benefit_percentage,
       monthly_limit: @consumer.monthly_benefit_available,
       monthly_used: @consumer.monthly_benefit_used_this_month,
       monthly_remaining: @consumer.remaining_monthly_benefit,
-      specials: pricing.special_benefits.map do |benefit|
+      specials: @consumer.special_benefits.map do |benefit|
         {
           id: benefit.id,
           name: benefit.description.to_s,

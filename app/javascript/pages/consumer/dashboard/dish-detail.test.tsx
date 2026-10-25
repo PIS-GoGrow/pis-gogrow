@@ -1,10 +1,9 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { CartItem, Schedule } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
-import type { Benefit } from "./pricing"
 
 // Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
 // plato, para tomar una decisión informada." Esta es la pantalla donde el
@@ -39,17 +38,6 @@ const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
   },
 })
 
-const benefit = (overrides: Partial<Benefit> = {}): Benefit => ({
-  limit: 5,
-  used: 0,
-  percentage: 0,
-  monthly_limit: 20,
-  monthly_used: 0,
-  monthly_remaining: 20,
-  specials: [],
-  ...overrides,
-})
-
 function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
   const defaults = {
     item: schedule(),
@@ -59,13 +47,24 @@ function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
     setNotes: vi.fn(),
     selections: {},
     setSelections: vi.fn(),
-    benefit: benefit(),
     cart: [] as CartItem[],
     back: vi.fn(),
     add: vi.fn(),
   }
   return render(<DishDetail {...defaults} {...props} />)
 }
+
+const mocks = vi.hoisted(() => ({ priceItems: vi.fn() }))
+
+vi.mock("@/pages/consumer/dashboard/pricing", () => ({
+  priceItems: mocks.priceItems,
+  cartPricedItem: (cart: { id: number; quantity: number }[]) =>
+    cart.map((item) => ({ schedule_id: item.id, quantity: item.quantity })),
+}))
+
+beforeEach(() => {
+  mocks.priceItems.mockResolvedValue(null) // o un fixture de Pricing
+})
 
 describe("DishDetail", () => {
   // Criterio 1
@@ -99,126 +98,32 @@ describe("DishDetail", () => {
     ).toBeInTheDocument()
   })
 
-  // Criterio 2: el desglose que decide la compra sale de los datos del plato y
-  // del beneficio, no de un valor fijo.
-  it("breaks down the price with the benefit applied", () => {
-    renderDetail({
-      quantity: 2,
-      benefit: benefit({ percentage: 50, monthly_remaining: 20 }),
-    })
-
-    expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
-      "$640",
-    )
-    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$320",
-    )
-  })
-
-  it("subsidises only the meals left in the monthly quota", () => {
-    renderDetail({
-      quantity: 3,
-      benefit: benefit({ percentage: 50, monthly_remaining: 1 }),
-    })
-
-    // 3 x 320 = 960, y el beneficio alcanza para una sola vianda: 160 de
-    // descuento, no 480.
-    expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
-      "$960",
-    )
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$800",
-    )
-  })
-
-  // IBP-037: el subsidio especial se suma al base desde el precio del plato,
-  // en la misma línea "Beneficio GoGrow" con el porcentaje combinado.
-  it("adds the special subsidy to the base one", () => {
-    renderDetail({
-      quantity: 1,
-      benefit: benefit({
-        percentage: 50,
-        specials: [
-          {
-            id: 7,
-            name: "Premio",
-            percentage: 30,
-            remaining: 2,
-            due_date: null,
-          },
-        ],
-      }),
-    })
-
-    expect(
-      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
-    ).toHaveTextContent("- $256")
-    expect(screen.queryByText("Premio (30%)")).not.toBeInTheDocument()
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$64",
-    )
-  })
-
-  it("leaves out a special that expires before the delivery date", () => {
-    renderDetail({
-      benefit: benefit({
-        specials: [
-          {
-            id: 7,
-            name: "Premio",
-            percentage: 30,
-            remaining: null,
-            due_date: "2026-09-15",
-          },
-        ],
-      }),
-    })
-
-    expect(screen.getByText("Beneficio GoGrow (0%)")).toBeInTheDocument()
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$320",
-    )
-  })
-
-  // Lo que ya está en el carrito gasta primero el cupo mensual.
-  it("prices the dish after what is already in the cart", () => {
-    renderDetail({
-      benefit: benefit({ percentage: 50, monthly_remaining: 1 }),
-      cart: [
-        {
-          ...schedule(),
-          id: 2,
-          cartId: "2-",
-          quantity: 1,
-          notes: "",
-          selections: {},
-        },
-      ],
-    })
-
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$320",
-    )
-  })
-
-  it("applies no discount when the employee has no benefit", () => {
-    renderDetail({
-      quantity: 2,
-      benefit: benefit({ percentage: 0, monthly_remaining: 0 }),
-    })
-
-    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
-      "$640",
-    )
-  })
-
   // Criterio 1, disponibilidad: el cupo restante es el techo de lo que se puede
   // pedir, y la pantalla lo respeta.
   it("does not let the quantity go past the remaining quota", () => {
     renderDetail({ item: { ...schedule(), remaining: 2 }, quantity: 2 })
 
     expect(screen.getByRole("button", { name: "Agregar uno" })).toBeDisabled()
+  })
+
+  it("marks the dish as added when it is already in the cart", () => {
+    const added: CartItem = {
+      ...schedule(),
+      cartId: "1-",
+      quantity: 1,
+      notes: "",
+      selections: {},
+    }
+
+    renderDetail({ cart: [added] })
+
+    expect(screen.getByText("Agregado")).toBeInTheDocument()
+  })
+
+  it("does not mark a dish that is not in the cart", () => {
+    renderDetail()
+
+    expect(screen.queryByText("Agregado")).not.toBeInTheDocument()
   })
 
   it("shows the real reviews of the dish", () => {
@@ -276,7 +181,6 @@ describe("DishDetail", () => {
         setNotes={vi.fn()}
         selections={{ 1: ["Ricota y nuez"] }}
         setSelections={vi.fn()}
-        benefit={benefit()}
         cart={[]}
         back={vi.fn()}
         add={add}
@@ -351,5 +255,89 @@ describe("DishDetail", () => {
     await user.click(screen.getByRole("button", { name: "Agregar" }))
 
     expect(add).toHaveBeenCalledOnce()
+  })
+
+  describe("when editing an already added dish", () => {
+    it("renders the 'Modificar' button and trash icon when quantity is 1", async () => {
+      const user = userEvent.setup()
+      const onRemove = vi.fn()
+      const add = vi.fn()
+      const cartItem: CartItem = {
+        ...schedule(),
+        cartId: "1-",
+        quantity: 1,
+        notes: "Sin sal",
+        selections: {},
+      }
+
+      renderDetail({
+        cart: [cartItem],
+        editingCartId: "1-",
+        quantity: 1,
+        notes: "Sin sal",
+        onRemove,
+        add,
+      })
+
+      expect(screen.getByText("Agregado")).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Modificar" }),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: "Agregar" }),
+      ).not.toBeInTheDocument()
+
+      const trashButton = screen.getByRole("button", { name: "Quitar" })
+      expect(trashButton).toBeInTheDocument()
+
+      await user.click(trashButton)
+      expect(onRemove).toHaveBeenCalledOnce()
+    })
+
+    it("allows modifying the dish and clicking 'Modificar'", async () => {
+      const user = userEvent.setup()
+      const add = vi.fn()
+      const cartItem: CartItem = {
+        ...schedule(),
+        cartId: "1-",
+        quantity: 1,
+        notes: "",
+        selections: {},
+      }
+
+      renderDetail({
+        cart: [cartItem],
+        editingCartId: "1-",
+        quantity: 2,
+        onRemove: vi.fn(),
+        add,
+      })
+
+      const modifyButton = screen.getByRole("button", { name: "Modificar" })
+      await user.click(modifyButton)
+      expect(add).toHaveBeenCalledOnce()
+    })
+
+    it("does not reduce the quota by the dish currently being edited", () => {
+      const cartItem: CartItem = {
+        ...schedule(),
+        cartId: "1-",
+        quantity: 2,
+        notes: "",
+        selections: {},
+      }
+
+      // Con remaining: 3 y 2 ya en el carrito para este ítem:
+      // Al editarlo, el tope debe ser 3 (no 3 - 2 = 1)
+      renderDetail({
+        item: { ...schedule(), remaining: 3 },
+        cart: [cartItem],
+        editingCartId: "1-",
+        quantity: 2,
+        onRemove: vi.fn(),
+      })
+
+      expect(screen.getByRole("button", { name: "Agregar uno" })).toBeEnabled()
+    })
   })
 })

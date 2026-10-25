@@ -1,7 +1,15 @@
-import { Link, usePage } from "@inertiajs/react"
+import { Link } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogFooter,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+} from "@/components/adaptable-dialog"
 import type { AgendaPayload } from "@/components/menus/menu-agenda-fields"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,14 +20,7 @@ import {
   FieldTitle,
 } from "@/components/ui/field"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet"
+import { formatLongDateInline, formatShortDate } from "@/lib/dates"
 import type { ProviderMenusEdit } from "@/types"
 
 export type EditScope = "day" | "saved"
@@ -27,7 +28,7 @@ export type ConfirmedOrders = "keep" | "reject"
 
 type Stage = "scope" | "period" | "orders" | "saved"
 
-interface EditMenuSheetProps {
+interface EditMenuAdaptableDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   saved: boolean
@@ -76,7 +77,7 @@ function Choice<T extends string>({
   )
 }
 
-export default function EditMenuSheet({
+export default function EditMenuAdaptableDialog({
   open,
   onOpenChange,
   saved,
@@ -86,32 +87,14 @@ export default function EditMenuSheet({
   scheduledDays,
   returnTo,
   onApply,
-}: EditMenuSheetProps) {
+}: EditMenuAdaptableDialogProps) {
   const { t } = useTranslation()
-  const { locale } = usePage().props
   const [scope, setScope] = useState<EditScope>("day")
   const [confirmedOrders, setConfirmedOrders] =
     useState<ConfirmedOrders>("keep")
   const [ordersStep, setOrdersStep] = useState(false)
 
   const key = "pages.provider_menus.edit.sheet"
-
-  // Mientras el proveedor completa la agenda la fecha puede estar vacía, y
-  // Intl.DateTimeFormat tira un RangeError con una fecha inválida.
-  const formatDate = (date: string, options: Intl.DateTimeFormatOptions) => {
-    const parsed = new Date(`${date}T00:00:00Z`)
-    if (!date || Number.isNaN(parsed.getTime())) return ""
-
-    return new Intl.DateTimeFormat(locale, {
-      ...options,
-      timeZone: "UTC",
-    }).format(parsed)
-  }
-
-  const formatDayMonth = (date: string) =>
-    formatDate(date, { day: "numeric", month: "long" })
-
-  const formatWeekday = (date: string) => formatDate(date, { weekday: "long" })
 
   function affectedDays(selectedScope: EditScope) {
     switch (agenda.mode) {
@@ -178,8 +161,8 @@ export default function EditMenuSheet({
       return {
         title: t(`${key}.range.title`),
         description: t(`${key}.range.description`, {
-          from: formatDayMonth(agenda.starts_on),
-          to: formatDayMonth(agenda.ends_on),
+          from: formatShortDate(agenda.starts_on),
+          to: formatShortDate(agenda.ends_on),
         }),
       }
     }
@@ -190,7 +173,7 @@ export default function EditMenuSheet({
       return {
         title: t(`${key}.from.title`),
         description: t(`${key}.from.description`, {
-          date: formatDayMonth(from),
+          date: formatLongDateInline(from),
         }),
       }
     }
@@ -242,26 +225,22 @@ export default function EditMenuSheet({
   )
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent
-        side="bottom"
-        showCloseButton={false}
-        className="mx-auto gap-0 rounded-t-3xl pb-[env(safe-area-inset-bottom)] md:max-w-xl"
-      >
-        <div className="bg-muted-foreground/30 mx-auto mt-3 h-1 w-10 rounded-full" />
-
-        <SheetHeader className="items-start px-6 pt-8 text-left">
-          <SheetTitle className="text-base">{header.title}</SheetTitle>
+    <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
+      <AdaptableDialogContent showCloseButton={false} className="p-0">
+        <AdaptableDialogHeader className="items-start px-6 pt-8 text-left">
+          <AdaptableDialogTitle className="text-base">
+            {header.title}
+          </AdaptableDialogTitle>
           {header.description ? (
-            <SheetDescription className="text-base">
+            <AdaptableDialogDescription className="text-base">
               {header.description}
-            </SheetDescription>
+            </AdaptableDialogDescription>
           ) : (
-            <SheetDescription className="sr-only">
+            <AdaptableDialogDescription className="sr-only">
               {header.title}
-            </SheetDescription>
+            </AdaptableDialogDescription>
           )}
-        </SheetHeader>
+        </AdaptableDialogHeader>
 
         {stage === "scope" && agenda.mode === "single" && (
           <div className="px-6 pt-4">
@@ -274,7 +253,7 @@ export default function EditMenuSheet({
                   value: "day",
                   title: t(`${key}.scope.day`),
                   description: t(`${key}.scope.day_description`, {
-                    date: `${formatWeekday(agenda.date)} ${formatDayMonth(agenda.date)}`,
+                    date: formatLongDateInline(agenda.date),
                   }),
                 },
                 {
@@ -291,7 +270,7 @@ export default function EditMenuSheet({
           <div className="px-6 pt-4">{ordersChoice}</div>
         )}
 
-        <SheetFooter
+        <AdaptableDialogFooter
           className={
             stage === "saved"
               ? "px-6 pt-6 pb-6"
@@ -319,8 +298,8 @@ export default function EditMenuSheet({
               {applyButton}
             </>
           )}
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </AdaptableDialogFooter>
+      </AdaptableDialogContent>
+    </AdaptableDialog>
   )
 }

@@ -1,9 +1,11 @@
 import { Head, Link, router, usePage } from "@inertiajs/react"
 import { ChevronRight } from "lucide-react"
-import type { ReactNode } from "react"
+import { type ReactNode, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
+import MonthSelect from "@/components/admin/month-select"
+import ConsumptionDetailDialog from "@/components/admin/payments/consumption-detail-dialog"
 import HeadingSmall from "@/components/heading-small"
 import NotificationBanners from "@/components/notification-banners"
 import PageContainer from "@/components/page-container"
@@ -17,13 +19,6 @@ import {
   CardHeader,
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
@@ -39,15 +34,19 @@ export default function AdminDashboard({
   current_month,
   months,
   summary,
+  consumption,
   payment_month,
   payments,
   debtors,
 }: AdminDashboardIndex) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney } = useFormatters()
   const getInitials = useInitials()
   const { auth } = usePage().props
   const firstName = auth.user.name.split(" ")[0]
+  // El panel del consumo se abre sobre el Inicio, con el mes del selector.
+  const [detailOpen, setDetailOpen] = useState(false)
+  const [providerId, setProviderId] = useState<number | null>(null)
 
   const progress = summary.meals_limit
     ? Math.min(100, (summary.meals / summary.meals_limit) * 100)
@@ -79,24 +78,13 @@ export default function AdminDashboard({
           <Card className="bg-muted/60 h-fit gap-4 rounded-lg py-4 shadow-none">
             <CardHeader className="grid-cols-[1fr_auto] grid-rows-1 items-center px-4">
               <CardDescription>{t(`${page}.benefit.title`)}</CardDescription>
-              <Select value={month} onValueChange={selectMonth}>
-                <SelectTrigger
-                  size="sm"
-                  aria-label={t(`${page}.month_label`)}
-                  className="bg-background dark:bg-background text-muted-foreground rounded-full border-none shadow-none"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent align="end">
-                  {months.map((option) => (
-                    <SelectItem key={option.key} value={option.key}>
-                      {option.key === current_month
-                        ? t(`${page}.this_month`)
-                        : option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MonthSelect
+                value={month}
+                currentMonth={current_month}
+                months={months}
+                onValueChange={selectMonth}
+                label={t(`${page}.month_label`)}
+              />
             </CardHeader>
 
             <CardContent className="space-y-4 px-4">
@@ -130,37 +118,39 @@ export default function AdminDashboard({
                 />
                 <Metric
                   label={t(`${page}.benefit.spending`)}
-                  value={formatMoneyShort(summary.spending)}
+                  value={formatMoney(summary.spending)}
                 />
               </div>
 
               <p className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-sm">
                 <span>
                   {t(`${page}.benefit.paid`, {
-                    amount: formatMoneyShort(summary.paid),
+                    amount: formatMoney(summary.paid),
                   })}
                 </span>
                 <span>
                   {t(`${page}.benefit.pending`, {
-                    amount: formatMoneyShort(summary.pending),
+                    amount: formatMoney(summary.pending),
                   })}
                 </span>
                 {summary.projected > 0 && (
                   <span>
                     {t(`${page}.benefit.projected`, {
-                      amount: formatMoneyShort(summary.projected),
+                      amount: formatMoney(summary.projected),
                     })}
                   </span>
                 )}
               </p>
 
               <Button
-                asChild
+                disabled={consumption === null}
+                onClick={() => {
+                  setProviderId(null)
+                  setDetailOpen(true)
+                }}
                 className="w-full bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
               >
-                <Link href={adminPayments.index({ query: { month } }).url}>
-                  {t(`${page}.benefit.view_detail`)}
-                </Link>
+                {t(`${page}.benefit.view_detail`)}
               </Button>
             </CardContent>
           </Card>
@@ -183,7 +173,7 @@ export default function AdminDashboard({
                       {payment.name}
                     </span>
                     <span className="font-semibold">
-                      {formatMoneyShort(payment.amount)}
+                      {formatMoney(payment.amount)}
                     </span>
                     <StatusBadge status={payment.status} kind="payment" />
                   </Row>
@@ -227,7 +217,7 @@ export default function AdminDashboard({
                       {debtor.name}
                     </Link>
                     <span className="font-semibold">
-                      {formatMoneyShort(debtor.amount)}
+                      {formatMoney(debtor.amount)}
                     </span>
                     <ConsumptionStatusBadge status={debtor.status} />
                   </Row>
@@ -236,6 +226,15 @@ export default function AdminDashboard({
             </Section>
           </div>
         </div>
+
+        <ConsumptionDetailDialog
+          detail={consumption}
+          providerId={providerId}
+          onProviderChange={setProviderId}
+          loading={false}
+          open={detailOpen}
+          onOpenChange={setDetailOpen}
+        />
       </PageContainer>
     </AppLayout>
   )

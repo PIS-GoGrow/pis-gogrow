@@ -28,6 +28,53 @@ configurations:
   company_payments:
     roles: [admin]
     configurable: true
+  employee_debts:
+    roles: [admin]
+    configurable: true
+
+  hr_pending_payments:
+    roles: [admin]
+    configurable: true
+
+  hr_rejected_receipts:
+    roles: [admin]
+    configurable: true
+
+  hr_partial_payments:
+    roles: [admin]
+    configurable: true
+
+  hr_pending_invoices:
+    roles: [admin]
+    configurable: true
+
+  hr_subsidy_changes:
+    roles: [admin]
+    configurable: true
+
+  hr_payment_reminders:
+    roles: [consumer]
+    configurable: false
+
+  provider_orders:
+    roles: [provider]
+    configurable: true
+
+  provider_payments:
+    roles: [provider]
+    configurable: true
+
+  order_cancellations:
+    roles: [provider]
+    configurable: true
+
+  menu_publication_reminders:
+    roles: [provider]
+    configurable: true
+
+  order_reminders:
+    roles: [consumer]
+    configurable: true
 
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
@@ -40,11 +87,6 @@ events:
     requires_action: false
 
   order_rejection:
-    configuration: order_updates
-    role: consumer
-    requires_action: false
-
-  order_withdrawal:
     configuration: order_updates
     role: consumer
     requires_action: false
@@ -69,6 +111,11 @@ events:
     role: consumer
     requires_action: false
 
+  employee_debt_overdue:
+    configuration: employee_debts
+    role: admin
+    requires_action: false
+
   company_payment_upcoming:
     configuration: company_payments
     role: admin
@@ -87,4 +134,34 @@ events:
   company_payment_approved:
     configuration: company_payments
     role: admin
+    requires_action: false
+
+  order_cancellation:
+    configuration: order_cancellations
+    role: provider
+    requires_action: false
+
+  provider_menu_unpublished:
+    configuration: menu_publication_reminders
+    role: provider
+    requires_action: true
+
+  hr_debt_payment_reminder:
+    configuration: hr_payment_reminders
+    role: consumer
+    requires_action: false
+
+  order_received:
+    configuration: provider_orders
+    role: provider
+    requires_action: false
+
+  payment_receipt_submitted:
+    configuration: provider_payments
+    role: provider
+    requires_action: false
+
+  order_deadline_reminder:
+    configuration: order_reminders
+    role: consumer
     requires_action: false

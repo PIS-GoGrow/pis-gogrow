@@ -19,7 +19,6 @@ import { useFormatters } from "@/hooks/use-formatters"
 import {
   type OrderFilters,
   filterOrders,
-  formatDayDate,
   groupByDate,
   hasActiveFilters,
   initialDate,
@@ -44,7 +43,7 @@ export default function ProviderOrderDays({
   filters,
 }: ProviderOrderDaysProps) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney, formatShortDate } = useFormatters()
   // undefined: el usuario todavía no eligió; null: cerró el día abierto.
   const [selected, setSelected] = useState<string | null | undefined>(undefined)
 
@@ -120,9 +119,9 @@ export default function ProviderOrderDays({
           >
             <CollapsibleTrigger className="group lg:data-[state=open]:bg-muted flex w-full items-center justify-between gap-2 p-3 text-left text-sm font-medium lg:col-start-1 lg:rounded-lg lg:border">
               {t("pages.provider_orders.index.day_summary", {
-                date: formatDayDate(day.date),
+                date: formatShortDate(day.date),
                 meals,
-                amount: formatMoneyShort(total),
+                amount: formatMoney(total),
               })}
               <ChevronDown
                 className="text-muted-foreground size-4 shrink-0 transition-transform group-data-[state=open]:rotate-180 lg:hidden"

@@ -36,6 +36,8 @@ describe("EditOrderSheet", () => {
     discounted_price: 250,
     cancellable: true,
     modifiable: true,
+    reviewable: false,
+    reviewed: false,
     selected_options: [],
   }
 
@@ -78,5 +80,185 @@ describe("EditOrderSheet", () => {
     )
 
     expect(screen.getByText("0/140")).toBeInTheDocument()
+  })
+
+  it("applies max-h-[90dvh] and overflow-y-auto to dialog content for scrollability", () => {
+    render(
+      <EditOrderSheet
+        order={baseOrder}
+        addresses={addresses}
+        optionGroups={[]}
+        maxQuantity={5}
+        editing={true}
+      />,
+    )
+
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveClass("max-h-[90dvh]")
+    expect(dialog).toHaveClass("overflow-y-auto")
+  })
+
+  it("renders customization option groups and their choices", () => {
+    const optionGroups: ConsumerOrdersShow["option_groups"] = [
+      {
+        id: 1,
+        name: "Salsa",
+        options: ["Filetto", "Bolognesa"],
+        limit: 1,
+        required: true,
+      },
+      {
+        id: 2,
+        name: "Relleno",
+        options: ["Ricota", "Espinaca"],
+        limit: 1,
+        required: false,
+      },
+    ]
+
+    render(
+      <EditOrderSheet
+        order={{
+          ...baseOrder,
+          selected_options: [
+            { group_id: 1, name: "Salsa", values: ["Filetto"] },
+          ],
+        }}
+        addresses={addresses}
+        optionGroups={optionGroups}
+        maxQuantity={5}
+        editing={true}
+      />,
+    )
+
+    expect(screen.getByText("Filetto")).toBeInTheDocument()
+    expect(screen.getByText("Bolognesa")).toBeInTheDocument()
+    expect(screen.getByText("Ricota")).toBeInTheDocument()
+    expect(screen.getByText("Espinaca")).toBeInTheDocument()
+  })
+
+  it("disables the submit button if a required option group has no selection", () => {
+    const optionGroups: ConsumerOrdersShow["option_groups"] = [
+      {
+        id: 1,
+        name: "Salsa",
+        options: ["Filetto", "Bolognesa"],
+        limit: 1,
+        required: true,
+      },
+    ]
+
+    render(
+      <EditOrderSheet
+        order={{
+          ...baseOrder,
+          selected_options: [],
+        }}
+        addresses={addresses}
+        optionGroups={optionGroups}
+        maxQuantity={5}
+        editing={true}
+      />,
+    )
+
+    const submitButton = screen.getByRole("button", { name: "Guardar cambios" })
+    expect(submitButton).toBeDisabled()
+  })
+
+  it("enables the submit button when required option groups are satisfied", () => {
+    const optionGroups: ConsumerOrdersShow["option_groups"] = [
+      {
+        id: 1,
+        name: "Salsa",
+        options: ["Filetto", "Bolognesa"],
+        limit: 1,
+        required: true,
+      },
+    ]
+
+    render(
+      <EditOrderSheet
+        order={{
+          ...baseOrder,
+          selected_options: [
+            { group_id: 1, name: "Salsa", values: ["Filetto"] },
+          ],
+        }}
+        addresses={addresses}
+        optionGroups={optionGroups}
+        maxQuantity={5}
+        editing={true}
+      />,
+    )
+
+    const submitButton = screen.getByRole("button", { name: "Guardar cambios" })
+    expect(submitButton).toBeEnabled()
+  })
+
+  describe("address rendering matching cart behavior", () => {
+    it("renders office and the selected custom address", () => {
+      const multipleAddresses: ConsumerOrdersShow["delivery_addresses"] = [
+        { id: "office", label: "Oficina", address: "18 de Julio 1006" },
+        { id: "home-1", label: "Casa", address: "Julio Herrera y Reissig 565" },
+        { id: "home-2", label: "Padres", address: "Bulevar Artigas 1234" },
+      ]
+
+      render(
+        <EditOrderSheet
+          order={{
+            ...baseOrder,
+            address: "Julio Herrera y Reissig 565",
+          }}
+          addresses={multipleAddresses}
+          optionGroups={[]}
+          maxQuantity={5}
+          editing={true}
+        />,
+      )
+
+      expect(screen.getByText("18 de Julio 1006")).toBeInTheDocument()
+      expect(
+        screen.getByText("Julio Herrera y Reissig 565"),
+      ).toBeInTheDocument()
+      expect(screen.queryByText("Bulevar Artigas 1234")).not.toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: /Ver mis direcciones/i }),
+      ).toBeInTheDocument()
+    })
+
+    it("does not render the saved addresses sheet button when there is only one custom address", () => {
+      const singleCustomAddress: ConsumerOrdersShow["delivery_addresses"] = [
+        { id: "office", label: "Oficina", address: "18 de Julio 1006" },
+        { id: "home-1", label: "Casa", address: "Julio Herrera y Reissig 565" },
+      ]
+
+      render(
+        <EditOrderSheet
+          order={baseOrder}
+          addresses={singleCustomAddress}
+          optionGroups={[]}
+          maxQuantity={5}
+          editing={true}
+        />,
+      )
+
+      expect(
+        screen.queryByRole("button", { name: /Ver mis direcciones/i }),
+      ).not.toBeInTheDocument()
+    })
+
+    it("never renders remaining stock message even with small maxQuantity", () => {
+      render(
+        <EditOrderSheet
+          order={baseOrder}
+          addresses={addresses}
+          optionGroups={[]}
+          maxQuantity={2}
+          editing={true}
+        />,
+      )
+
+      expect(screen.queryByText(/disponibles/i)).not.toBeInTheDocument()
+    })
   })
 })

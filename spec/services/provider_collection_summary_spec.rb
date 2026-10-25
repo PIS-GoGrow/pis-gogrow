@@ -114,7 +114,7 @@ RSpec.describe ProviderCollectionSummary do
     end
   end
 
-  it "keeps settled history metadata without loading or serializing its individual orders" do
+  it "preloads and serializes individual orders for settled history" do
     order = create_order(menu:, date: Date.current.prev_month.beginning_of_month + 8)
     order.accounts.each do |account|
       account.payments.create!(
@@ -131,14 +131,15 @@ RSpec.describe ProviderCollectionSummary do
     summary = described_class.new(provider:)
     group = summary.history.sole
     expect(summary.pending).to be_empty
-    expect(group.rows).to all(satisfy { !it.account.association(:orders).loaded? })
+    expect(group.rows).to all(satisfy { it.account.association(:orders).loaded? })
     serialized = nil
     expect(select_queries { serialized = Provider::CollectionGroupSerializer.new(group).to_h }).to be_empty
 
     expect(serialized).to include("total" => 200.0, "confirmed_total" => 200.0, "meals" => 2)
     expect(serialized["company"]["invoice"]).to include("id" => invoice.id, "total_amount" => 100.0)
     [ serialized["company"], *serialized["employees"] ].each do |row|
-      expect(row).to include("orders" => [], "amount" => 100.0, "status" => "approved", "meals" => 2)
+      expect(row).to include("amount" => 100.0, "status" => "approved", "meals" => 2)
+      expect(row["orders"].pluck("id")).to eq([ order.id ])
       expect(row["paid_on"]).to eq(Date.current.strftime("%d/%m/%y"))
       expect(row["payments"].sole).to include("status" => "approved", "receipt_content_type" => "image/png")
       expect(row["payments"].sole["receipt_url"]).to be_present
@@ -175,7 +176,7 @@ RSpec.describe ProviderCollectionSummary do
     expect(large_queries.size).to eq(small_queries.size)
   end
 
-  it "keeps individual order payloads empty and queries constant as settled historical orders increase" do
+  it "keeps queries constant as serialized settled historical orders increase" do
     month = Date.current.prev_month.beginning_of_month
     2.times { |day| create_order(menu:, date: month + day) }
     provider.accounts.each { it.payments.create!(provider:, status: :approved) }
@@ -187,10 +188,11 @@ RSpec.describe ProviderCollectionSummary do
     large_queries = select_queries { large_response = serialize_summary(described_class.new(provider:)) }
 
     expect(large_queries.size).to eq(small_queries.size)
-    expect(large_response["history"].sole["company"]["orders"]).to eq([])
     small_rows = [ small_response["history"].sole["company"], *small_response["history"].sole["employees"] ]
     large_rows = [ large_response["history"].sole["company"], *large_response["history"].sole["employees"] ]
-    expect(large_rows.map { it["orders"] }).to eq(small_rows.map { it["orders"] })
+    expect(small_rows.map { it["orders"].size }).to eq([ 2, 2 ])
+    expect(large_rows.map { it["orders"].size }).to eq([ 12, 12 ])
+    expect(large_rows.flat_map { it["orders"].pluck("id") }.uniq.size).to eq(12)
     expect(large_response["history"].sole).to include("total" => 2400.0, "meals" => 24)
   end
 
@@ -218,7 +220,7 @@ RSpec.describe ProviderCollectionSummary do
 
     expect(detail[:month]).to eq(I18n.l(Date.current.beginning_of_month, format: :month_name_year))
     expect(detail[:clients]).to eq([ { id: consumer.company.id, name: consumer.company.name, subtotal: 400.0, vat_amount: 0.0, payable_amount: 400.0 } ])
-    expect(detail[:days].pluck(:date)).to eq(dates.reverse.map { it.strftime("%d/%m") })
+    expect(detail[:days].pluck(:date)).to eq(dates.reverse.map { DateFormat.short(it) })
     expect(detail[:days].map { it[:orders].pluck(:id) }).to eq(orders.reverse.map { [ it.id ] })
     expect(detail_orders.sum { it[:amount] }).to eq(400.0)
     expect(detail_orders.sum { it[:meals] }).to eq(4)

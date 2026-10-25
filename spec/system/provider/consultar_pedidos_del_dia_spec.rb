@@ -13,7 +13,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
   let(:future_day) { Date.current + 3 }
 
   def day_label(date)
-    "Día: #{date.strftime('%d/%m')}"
+    "Día: #{DateFormat.short(date)}"
   end
 
   def open_day?(date)
@@ -65,7 +65,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
       expect(page).to have_content("Milanesa con papas fritas")
       expect(page).to have_content("x1")
       expect(page).to have_content("(Casa)")
-      expect(page).to have_content("Por revisar")
+      expect(page).to have_content("Pendiente")
     end
   end
 
@@ -94,7 +94,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
       expect(page).to have_css("[data-status='confirmed']")
       expect(page).to have_no_css("[data-status='pending'], [data-status='cancelled'], [data-status='rejected']")
 
-      click_on "Por revisar"
+      click_on "Pendiente"
 
       expect(page).to have_css("button", text: day_label(today))
       expect(page).to have_css("[data-status='pending']")

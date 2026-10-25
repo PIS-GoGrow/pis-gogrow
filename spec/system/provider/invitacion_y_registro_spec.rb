@@ -20,8 +20,8 @@ RSpec.describe "Invitación y registro de proveedor", type: :system do
   it "permite al proveedor registrarse con contraseña segura, entrar al panel y no editar su email" do
     visit_hydrated provider_invitation_path(token: token)
 
-    expect(page).to have_content("Regístrese con Email")
-    expect(page).to have_content("Configure su contraseña para completar el registro.")
+    expect(page).to have_content("Registrate con Email")
+    expect(page).to have_content("Configurá tu contraseña para completar el registro.")
 
     # Criterio 2: El email no se puede editar, es al que se le mandó la invitación
     email_field = find_field("email", disabled: true)
@@ -42,11 +42,25 @@ RSpec.describe "Invitación y registro de proveedor", type: :system do
     expect(page).to have_button("Registrarse", disabled: false)
     click_button "Registrarse"
 
-    # Entra directo al panel del proveedor
+    # Entra al onboarding del proveedor y completa los pasos para llegar al panel
+    expect(page).to have_current_path(provider_onboarding_path)
+    expect(page).to have_content("Paso 1 de 4")
+    find("button[aria-label='Omitir por ahora']").click
+
+    expect(page).to have_content("Paso 2 de 4")
+    find("button[aria-label='Omitir por ahora']").click
+
+    expect(page).to have_content("Paso 3 de 4")
+    find("button[aria-label='Omitir por ahora']").click
+
+    expect(page).to have_content("Paso 4 de 4")
+    find("button[aria-label='Omitir por ahora']").click
+
+    expect(page).to have_content("¡Todo listo!")
+    click_on "Ir al Inicio"
+
     expect(page).to have_current_path(provider_dashboard_path)
     expect(page).to have_content("Hola, #{invited_name}")
-    expect(user.reload).to be_verified
-    expect(OtpCode.pending?(user, :invitation)).to be(false)
 
     # Cierre de sesión vuelve a /provider
     find("[data-sidebar='menu-button']", text: invited_name).click

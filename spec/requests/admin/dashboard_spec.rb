@@ -11,7 +11,7 @@ RSpec.describe "Admin::Dashboard", type: :request do
   let(:previous_month) { 1.month.ago.to_date.beginning_of_month }
   let(:previous_key) { previous_month.strftime("%Y-%m") }
 
-  describe "GET /admin/dashboard" do
+  describe "GET /admin/inicio" do
     context "when visitor is unauthenticated" do
       it "redirects to the sign in page" do
         get admin_dashboard_path
@@ -49,7 +49,7 @@ RSpec.describe "Admin::Dashboard", type: :request do
         expect(response).to have_http_status(:ok)
         expect(inertia).to render_component("admin/dashboard/index")
         expect(inertia).to have_props(
-          today: I18n.l(Date.current, format: "%A %-d de %B").capitalize,
+          today: DateFormat.long(Date.current),
           month: current_key,
           current_month: current_key,
           summary: {
@@ -58,6 +58,16 @@ RSpec.describe "Admin::Dashboard", type: :request do
           }
         )
         expect(inertia.props[:months].pluck("key")).to eq([ current_key, previous_key ])
+      end
+
+      # "Ver detalle del consumo" abre este detalle sobre el Inicio.
+      it "sends the consumption detail of the selected month" do
+        get admin_dashboard_path, params: { month: previous_key }
+
+        expect(inertia.props[:consumption]).to include(
+          "month" => I18n.l(previous_month, format: :month_name_year).upcase_first
+        )
+        expect(inertia.props[:consumption]["providers"].sole).to include("subtotal" => 900.0, "days" => [])
       end
 
       it "shows the payments of the month before with their status" do

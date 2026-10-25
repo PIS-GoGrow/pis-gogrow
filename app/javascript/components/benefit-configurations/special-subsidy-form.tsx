@@ -230,7 +230,7 @@ export default function SpecialSubsidyForm({
   )
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       <FieldGroup className="gap-5">
         <div className="grid grid-cols-[1fr_auto] gap-3">
           <Field data-invalid={!!errors.name}>

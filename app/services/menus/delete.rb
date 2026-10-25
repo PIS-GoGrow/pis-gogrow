@@ -4,7 +4,7 @@
 # los pedidos cuelgan de la programación del plato, y sin ella el proveedor
 # dejaría de verlos. Se archiva, y de hoy en adelante:
 #
-# - los pedidos pendientes se cancelan,
+# - los pedidos pendientes se rechazan,
 # - los confirmados se mantienen o se rechazan según elija el proveedor,
 # - las programaciones sin pedidos confirmados se borran, y las que los
 #   mantienen quedan sin disponibilidad, para que nadie más pida ese plato.
@@ -23,8 +23,8 @@ class Menus::Delete
       ids = @saved.family_ids
 
       Schedule.where(menu_id: ids, date: Date.current..).includes(:orders).find_each do |schedule|
-        schedule.orders.select(&:pending?).each { it.withdraw!(by: @by) }
-        schedule.orders.select(&:confirmed?).each { it.reject_for_dish_change!(reason: :dish_deleted) } if @reject
+        schedule.orders.select(&:pending?).each { it.reject_for_dish_change!(reason: :dish_deleted, by: @by) }
+        schedule.orders.select(&:confirmed?).each { it.reject_for_dish_change!(reason: :dish_deleted, by: @by) } if @reject
 
         if schedule.orders.any?(&:confirmed?)
           schedule.set_availability(available: false, by: @by)

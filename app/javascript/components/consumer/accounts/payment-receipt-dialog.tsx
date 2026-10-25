@@ -1,36 +1,28 @@
 import { Form } from "@inertiajs/react"
 import { FileText, Trash2 } from "lucide-react"
 import type { ComponentProps } from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useId, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import {
   AdaptableDialog,
+  AdaptableDialogClose,
   AdaptableDialogContent,
   AdaptableDialogDescription,
+  AdaptableDialogFooter,
   AdaptableDialogHeader,
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
+import { FileInput } from "@/components/file-input"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldLabel,
 } from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Spinner } from "@/components/ui/spinner"
 import { consumerPayments } from "@/routes"
@@ -39,6 +31,9 @@ import type { Payment } from "@/types"
 interface PaymentReceiptDialogProps {
   accountId: number
   canUpload?: boolean
+  // Se muestra el botón pero deshabilitado, por ej. mientras hay un comprobante
+  // en revisión: la cuenta solo admite uno a la vez.
+  uploadDisabled?: boolean
   payments: Payment[]
   allowDelete?: boolean
   createAction?: ComponentProps<typeof Form>["action"]
@@ -50,17 +45,20 @@ type UploadResult = "success" | "error" | null
 export default function PaymentReceiptDialog({
   accountId,
   canUpload = true,
+  uploadDisabled = false,
   payments,
   allowDelete = true,
   createAction = consumerPayments.create(),
   destroyAction = consumerPayments.destroy,
 }: PaymentReceiptDialogProps) {
   const { t } = useTranslation()
+  const uploadHintId = useId()
   const receipts = payments.filter((payment) => payment.receipt_url)
   const [open, setOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [uploadResult, setUploadResult] = useState<UploadResult>(null)
+  const [fileMissing, setFileMissing] = useState(false)
 
   useEffect(() => {
     return () => {
@@ -74,6 +72,7 @@ export default function PaymentReceiptDialog({
     if (!nextOpen) {
       setSelectedFile(null)
       setPreviewUrl(null)
+      setFileMissing(false)
     }
   }
 
@@ -81,6 +80,14 @@ export default function PaymentReceiptDialog({
     const file = event.target.files?.[0] ?? null
     setSelectedFile(file)
     setPreviewUrl(file ? URL.createObjectURL(file) : null)
+    setFileMissing(false)
+  }
+
+  function handleBeforeUpload() {
+    if (selectedFile) return true
+
+    setFileMissing(true)
+    return false
   }
 
   function handleUploadSuccess() {
@@ -123,8 +130,8 @@ export default function PaymentReceiptDialog({
             {allowDelete &&
               (payment.status === "submitted" ||
                 payment.status === "rejected") && (
-                <Dialog>
-                  <DialogTrigger asChild>
+                <AdaptableDialog>
+                  <AdaptableDialogTrigger asChild>
                     <Button
                       aria-label={t("pages.accounts.show.receipt_remove")}
                       size="icon-sm"
@@ -132,26 +139,34 @@ export default function PaymentReceiptDialog({
                     >
                       <Trash2 aria-hidden="true" />
                     </Button>
-                  </DialogTrigger>
+                  </AdaptableDialogTrigger>
 
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>
+                  <AdaptableDialogContent
+                    showCloseButton={false}
+                    className="p-5 md:p-6"
+                  >
+                    <AdaptableDialogHeader className="p-0">
+                      <AdaptableDialogTitle>
                         {t("pages.accounts.show.receipt_remove_title")}
-                      </DialogTitle>
-                      <DialogDescription>
+                      </AdaptableDialogTitle>
+                      <AdaptableDialogDescription>
                         {t("pages.accounts.show.receipt_remove_description")}
-                      </DialogDescription>
-                    </DialogHeader>
+                      </AdaptableDialogDescription>
+                    </AdaptableDialogHeader>
 
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button type="button" variant="outline">
+                    <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
+                      <AdaptableDialogClose asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="max-md:flex-1"
+                        >
                           {t("common.cancel")}
                         </Button>
-                      </DialogClose>
+                      </AdaptableDialogClose>
                       <Form
                         action={destroyAction(payment.id)}
+                        className="max-md:flex-1"
                         method="delete"
                         options={{ preserveScroll: true }}
                       >
@@ -159,25 +174,32 @@ export default function PaymentReceiptDialog({
                           <Button
                             disabled={processing}
                             type="submit"
-                            variant="destructive"
+                            className="max-md:w-full"
                           >
                             {processing && <Spinner />}
                             {t("pages.accounts.show.receipt_remove_confirm")}
                           </Button>
                         )}
                       </Form>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
+                    </AdaptableDialogFooter>
+                  </AdaptableDialogContent>
+                </AdaptableDialog>
               )}
           </div>
         </div>
       ))}
 
-      <AdaptableDialog open={canUpload && open} onOpenChange={handleOpenChange}>
+      <AdaptableDialog
+        open={canUpload && !uploadDisabled && open}
+        onOpenChange={handleOpenChange}
+      >
         {canUpload && (
           <AdaptableDialogTrigger asChild>
-            <Button className="w-full">
+            <Button
+              className="w-full"
+              disabled={uploadDisabled}
+              aria-describedby={uploadDisabled ? uploadHintId : undefined}
+            >
               {t("pages.accounts.show.receipt")}
             </Button>
           </AdaptableDialogTrigger>
@@ -197,75 +219,91 @@ export default function PaymentReceiptDialog({
             action={createAction}
             className="grid min-w-0 gap-3 rounded-lg bg-zinc-100 p-3 dark:bg-zinc-900"
             errorBag={`payment-account-${accountId}`}
+            noValidate
+            onBefore={handleBeforeUpload}
             onError={handleUploadError}
             onSuccess={handleUploadSuccess}
             options={{ preserveScroll: true }}
             resetOnSuccess
           >
-            {({ errors, processing, progress }) => (
-              <>
-                {previewUrl && selectedFile && (
-                  <div className="bg-background overflow-hidden rounded-md border">
-                    {selectedFile.type.startsWith("image/") ? (
-                      <img
-                        src={previewUrl}
-                        alt={t("pages.accounts.show.receipt_preview")}
-                        className="max-h-72 w-full object-contain"
-                      />
-                    ) : (
-                      <iframe
-                        src={previewUrl}
-                        title={t("pages.accounts.show.receipt_preview")}
-                        className="h-72 w-full"
-                      />
-                    )}
-                    <p className="text-muted-foreground block max-w-full overflow-hidden border-t px-3 py-2 text-sm text-ellipsis whitespace-nowrap">
-                      {selectedFile.name}
-                    </p>
-                  </div>
-                )}
+            {({ errors, processing, progress }) => {
+              const receiptErrors = [
+                ...(fileMissing
+                  ? [t("pages.accounts.show.receipt_required")]
+                  : []),
+                ...(errors.receipt ?? []),
+              ]
 
-                <input
-                  name="payment[account_id]"
-                  type="hidden"
-                  value={accountId}
-                />
-                <Field data-invalid={Boolean(errors.receipt)}>
-                  <FieldLabel htmlFor={`payment-receipt-${accountId}`}>
-                    {t("pages.accounts.show.receipt_file")}
-                  </FieldLabel>
-                  <Input
-                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
-                    aria-invalid={Boolean(errors.receipt)}
+              return (
+                <>
+                  {previewUrl && selectedFile && (
+                    <div className="bg-background overflow-hidden rounded-md border">
+                      {selectedFile.type.startsWith("image/") ? (
+                        <img
+                          src={previewUrl}
+                          alt={t("pages.accounts.show.receipt_preview")}
+                          className="max-h-72 w-full object-contain"
+                        />
+                      ) : (
+                        <iframe
+                          src={previewUrl}
+                          title={t("pages.accounts.show.receipt_preview")}
+                          className="h-72 w-full"
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  <input
+                    name="payment[account_id]"
+                    type="hidden"
+                    value={accountId}
+                  />
+                  <Field data-invalid={receiptErrors.length > 0}>
+                    <FieldLabel htmlFor={`payment-receipt-${accountId}`}>
+                      {t("pages.accounts.show.receipt_file")}
+                    </FieldLabel>
+                    <FileInput
+                      accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                      aria-invalid={receiptErrors.length > 0}
+                      disabled={processing}
+                      fileName={selectedFile?.name}
+                      id={`payment-receipt-${accountId}`}
+                      name="payment[receipt]"
+                      onChange={handleFileChange}
+                    />
+                    <FieldDescription>
+                      {t("pages.accounts.show.receipt_formats")}
+                    </FieldDescription>
+                    <FieldError
+                      errors={receiptErrors.map((message) => ({ message }))}
+                    />
+                  </Field>
+
+                  {progress && <Progress value={progress.percentage} />}
+
+                  <Button
+                    className="w-full"
                     disabled={processing}
-                    id={`payment-receipt-${accountId}`}
-                    className="w-full min-w-0"
-                    name="payment[receipt]"
-                    onChange={handleFileChange}
-                    required
-                    type="file"
-                  />
-                  <FieldDescription>
-                    {t("pages.accounts.show.receipt_formats")}
-                  </FieldDescription>
-                  <FieldError
-                    errors={errors.receipt?.map((message) => ({ message }))}
-                  />
-                </Field>
-
-                {progress && <Progress value={progress.percentage} />}
-
-                <Button className="w-full" disabled={processing} type="submit">
-                  {processing && <Spinner />}
-                  {processing
-                    ? t("pages.accounts.show.receipt_uploading")
-                    : t("pages.accounts.show.receipt")}
-                </Button>
-              </>
-            )}
+                    type="submit"
+                  >
+                    {processing && <Spinner />}
+                    {processing
+                      ? t("pages.accounts.show.receipt_uploading")
+                      : t("pages.accounts.show.receipt")}
+                  </Button>
+                </>
+              )
+            }}
           </Form>
         </AdaptableDialogContent>
       </AdaptableDialog>
+
+      {canUpload && uploadDisabled && (
+        <p id={uploadHintId} className="text-muted-foreground text-sm">
+          {t("pages.accounts.show.receipt_under_review_hint")}
+        </p>
+      )}
 
       <AdaptableDialog
         open={uploadResult !== null}

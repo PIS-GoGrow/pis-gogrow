@@ -1,16 +1,19 @@
 import { ChevronLeft, Star } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import AddedBadge from "@/components/consumer/menus/added-badge"
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { formatMoney } from "@/lib/money"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
-import { money } from "./formatters"
 import { OrderSummary } from "./order-summary"
-import { type Benefit, cartPricedItem, priceItems } from "./pricing"
+import type { PricedLine } from "./pricing"
+import { cartPricedItem, lastUnitsLine, priceItems } from "./pricing"
 
 interface Props {
   item: Schedule
@@ -20,10 +23,11 @@ interface Props {
   setNotes: (value: string) => void
   selections: Selections
   setSelections: (value: Selections) => void
-  benefit: Benefit
   cart: CartItem[]
   back: () => void
   add: () => void
+  editingCartId?: string | null
+  onRemove?: () => void
 }
 
 export function DishDetail({
@@ -34,22 +38,76 @@ export function DishDetail({
   setNotes,
   selections,
   setSelections,
-  benefit,
   cart,
   back,
   add,
+  editingCartId,
+  onRemove,
 }: Props) {
   const { t } = useTranslation()
-  // El plato se agrega al final del carrito, así que lo que ya está ahí gasta
-  // primero el cupo y los usos de los beneficios.
-  const pricing = priceItems(
-    [
-      ...cart.map(cartPricedItem),
-      { key: "", date: item.date, price: item.menu.price, quantity },
-    ],
-    benefit,
+  const [line, setLine] = useState<PricedLine | null>(null)
+
+  const isEditing = Boolean(editingCartId ?? onRemove)
+
+  const inCart =
+    cartPricedItem(cart).find((i) => item.id === i.schedule_id)?.quantity ?? 0
+
+  const cartWithoutCurrent = useMemo(
+    () =>
+      editingCartId
+        ? cart.filter((c) => c.cartId !== editingCartId)
+        : cart.filter((c) => c.id !== item.id),
+    [cart, editingCartId, item.id],
   )
-  const line = pricing.lines[""]
+
+  const otherInCart = useMemo(
+    () =>
+      cartPricedItem(cartWithoutCurrent).find((i) => item.id === i.schedule_id)
+        ?.quantity ?? 0,
+    [cartWithoutCurrent, item.id],
+  )
+
+  const maxQuantity = item.remaining - (isEditing ? otherInCart : inCart)
+
+  useEffect(() => {
+    let cancelled = false
+
+    // Esperar 200 milisegundos para hacer la request, por si el usuario toca varias veces
+    // seguidas los botones de + o -.
+    const timeout = setTimeout(async () => {
+      try {
+        const cartToPrice = isEditing ? cartWithoutCurrent : cart
+        const result = await priceItems(
+          cartPricedItem([...cartToPrice, { ...item, quantity }]),
+        )
+        if (cancelled) return
+
+        const preLine = result.lines[String(item.id)]
+        const totalUnits = (isEditing ? otherInCart : inCart) + quantity
+
+        setLine(preLine ? lastUnitsLine(totalUnits, quantity, preLine) : null)
+      } finally {
+        // No hacer nada
+      }
+    }, 200)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeout)
+    }
+  }, [
+    cart,
+    item,
+    inCart,
+    isEditing,
+    cartWithoutCurrent,
+    otherInCart,
+    item.id,
+    item.date,
+    item.menu.price,
+    quantity,
+  ])
+
   const reviews = item.menu.reviews
   const choicesMissing = item.menu.option_groups.some(
     (group) => group.required && !selections[group.id]?.length,
@@ -68,12 +126,17 @@ export function DishDetail({
       >
         <ChevronLeft aria-hidden="true" className="size-5" />
       </Button>
-      <p className="text-muted-foreground text-xs">{item.menu.provider_name}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-muted-foreground text-xs">
+          {item.menu.provider_name}
+        </p>
+        {inCart > 0 && <AddedBadge />}
+      </div>
       <h1 className="mt-1 text-xl font-bold">{item.menu.name}</h1>
       <p className="text-muted-foreground mt-2 text-xs leading-5">
         {item.menu.description}
       </p>
-      <p className="mt-1 font-bold">{money(item.menu.price)}</p>
+      <p className="mt-1 font-bold">{formatMoney(item.menu.price)}</p>
       {item.orders_closed && (
         <p className="text-destructive mt-3 text-sm">
           {t("pages.consumer_dashboard.index.orders_closed")}
@@ -140,7 +203,7 @@ export function DishDetail({
           maxLength={140}
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
-          placeholder="Escribe las notas que necesites..."
+          placeholder="Escribí las notas que necesites..."
           className="mt-3 field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-xs"
         />
         <p className="text-muted-foreground text-right text-[10px]">
@@ -148,22 +211,26 @@ export function DishDetail({
         </p>
       </section>
       <OrderSummary
-        subtotal={line.subtotal}
-        total={line.total}
-        tiers={line.tiers}
+        loading={false}
+        subtotal={line?.subtotal}
+        total={line?.total}
+        tiers={line?.tiers}
       />
       <BottomAction className="flex">
         <QuantityInput
           value={quantity}
-          max={item.remaining}
+          max={maxQuantity}
           onChange={setQuantity}
+          onRemove={onRemove}
         />
         <Button
           disabled={addDisabled}
           onClick={add}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
         >
-          Agregar
+          {isEditing
+            ? t("pages.consumer_dashboard.index.modify")
+            : t("pages.consumer_dashboard.index.add")}
         </Button>
       </BottomAction>
     </MobileCard>

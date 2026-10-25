@@ -9,7 +9,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
   let(:provider_user) { users(:provider_user) }
   let(:provider) { providers(:tuviandita) }
 
-  describe "GET /provider/dashboard" do
+  describe "GET /provider/inicio" do
     context "sin sesión iniciada" do
       it "redirige al usuario a la pantalla de iniciar sesión" do
         get provider_dashboard_path
@@ -56,10 +56,58 @@ RSpec.describe "Provider::Dashboard", type: :request do
         get provider_dashboard_path
 
         expect(inertia).to have_props(
-          today: I18n.l(Date.current, format: "%A, %-d de %B").capitalize,
+          today: DateFormat.long(Date.current),
           order_deadline: "11:30",
           provider: { order_deadline: "11:30" }
         )
+      end
+
+      it "expone el progreso de completitud de la cuenta" do
+        get provider_dashboard_path
+
+        expect(inertia).to(have_props do |props|
+          props["sections_total"] == 4 &&
+            props["completed_sections_count"].is_a?(Integer)
+        end)
+      end
+
+      it "refleja exactamente 0 secciones completadas cuando ningún timestamp está configurado" do
+        provider.update_columns(
+          payment_details_configured_at: nil,
+          order_deadline_configured_at: nil,
+          deliveries_configured_at: nil,
+          notifications_configured_at: nil
+        )
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(completed_sections_count: 0, sections_total: 4)
+      end
+
+      it "refleja el conteo parcial (2/4) cuando dos secciones están configuradas" do
+        provider.update_columns(
+          payment_details_configured_at: Time.current,
+          order_deadline_configured_at: nil,
+          deliveries_configured_at: Time.current,
+          notifications_configured_at: nil
+        )
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(completed_sections_count: 2, sections_total: 4)
+      end
+
+      it "refleja 4 secciones completadas cuando la cuenta está 100% configurada" do
+        provider.update_columns(
+          payment_details_configured_at: Time.current,
+          order_deadline_configured_at: Time.current,
+          deliveries_configured_at: Time.current,
+          notifications_configured_at: Time.current
+        )
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(completed_sections_count: 4, sections_total: 4)
       end
 
       context "con la hora de cierre configurada" do
@@ -162,7 +210,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
   describe "notificaciones" do
     it "no muestra en la sesión de proveedor las notificaciones de empleado del mismo usuario" do
       user = users(:one)
-      Provider.create!(user:)
+      Provider.create!(user:, onboarding_completed_at: Time.current)
       configuration = Notification::Configuration.find_or_create_by!(key: "order_updates") do |record|
         record.roles = %w[consumer]
       end
@@ -181,6 +229,16 @@ RSpec.describe "Provider::Dashboard", type: :request do
       get provider_dashboard_path
 
       expect(inertia.props[:notifications]).to be_empty
+    end
+
+    it "le muestra al proveedor el aviso cuando un empleado cancela un pedido confirmado" do
+      order = orders(:upcoming_confirmed_future)
+      order.cancel(by: order.consumer.user)
+
+      sign_in provider_user, role: :provider
+      get provider_dashboard_path
+
+      expect(inertia.props[:notifications].pluck(:title)).to eq([ "Un pedido fue cancelado" ])
     end
   end
 end

@@ -1,8 +1,8 @@
-import { format, parseISO } from "date-fns"
+import { format, isSameDay, parseISO } from "date-fns"
 import { ChevronDown } from "lucide-react"
 import { useState } from "react"
 import type { Matcher } from "react-day-picker"
-import { es } from "react-day-picker/locale"
+import { enUS, es } from "react-day-picker/locale"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -12,12 +12,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { formatLongDate, formatShortDate } from "@/lib/dates"
+import { cn } from "@/lib/utils"
 
 const toDate = (iso: string) => (iso ? parseISO(iso) : undefined)
 const toIso = (date: Date) => format(date, "yyyy-MM-dd")
 
-const capitalize = (text: string) =>
-  text.replace(/(^|\s)\p{L}/gu, (letter) => letter.toUpperCase())
+const calendarFormatters = {
+  formatMonthDropdown: (date: Date) => format(date, "MMM", { locale: enUS }),
+  formatWeekdayName: (date: Date) => format(date, "EEEEEE", { locale: enUS }),
+}
 
 function disabledDays(min?: string, max?: string, weekdaysOnly?: boolean) {
   const matchers: Matcher[] = []
@@ -59,7 +63,7 @@ export function DatePicker({
             className="w-fit min-w-44 justify-between font-normal"
           >
             {selected
-              ? capitalize(format(selected, "MMMM d, yyyy", { locale: es }))
+              ? formatLongDate(value)
               : t("components.date_picker.placeholder")}
             <ChevronDown aria-hidden="true" className="text-muted-foreground" />
           </Button>
@@ -68,6 +72,8 @@ export function DatePicker({
           <Calendar
             mode="single"
             locale={es}
+            weekStartsOn={0}
+            formatters={calendarFormatters}
             captionLayout="dropdown"
             selected={selected}
             defaultMonth={selected ?? toDate(min ?? "")}
@@ -76,6 +82,77 @@ export function DatePicker({
               onChange(date ? toIso(date) : "")
               setOpen(false)
             }}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
+
+interface DateRangePickerProps {
+  id?: string
+  from: string
+  to: string
+  onChange: (from: string, to: string) => void
+  min?: string
+  className?: string
+}
+
+// "09/06/27 – 27/06/27": un rango se muestra con fechas cortas.
+function rangeLabel(start: Date, end?: Date) {
+  const short = (date: Date) => formatShortDate(toIso(date))
+
+  if (!end || isSameDay(start, end)) return short(start)
+  return `${short(start)} – ${short(end)}`
+}
+
+export function DateRangePicker({
+  id,
+  from,
+  to,
+  onChange,
+  min,
+  className,
+}: DateRangePickerProps) {
+  const { t } = useTranslation()
+  const start = toDate(from)
+  const end = toDate(to)
+
+  return (
+    <div>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            id={id}
+            type="button"
+            variant="outline"
+            className={cn(
+              "w-fit min-w-44 justify-between font-normal",
+              className,
+            )}
+          >
+            {start
+              ? rangeLabel(start, end)
+              : t("components.date_picker.range_placeholder")}
+            <ChevronDown aria-hidden="true" className="text-muted-foreground" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+          <Calendar
+            mode="range"
+            locale={es}
+            weekStartsOn={0}
+            formatters={calendarFormatters}
+            captionLayout="dropdown"
+            selected={{ from: start, to: end }}
+            defaultMonth={start ?? toDate(min ?? "")}
+            disabled={disabledDays(min)}
+            onSelect={(range) =>
+              onChange(
+                range?.from ? toIso(range.from) : "",
+                range?.to ? toIso(range.to) : "",
+              )
+            }
           />
         </PopoverContent>
       </Popover>

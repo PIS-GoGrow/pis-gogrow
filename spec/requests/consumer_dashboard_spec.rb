@@ -50,13 +50,30 @@ RSpec.describe "Consumer dashboard", type: :request do
     expect(inertia).to have_props { |props|
       props[:schedules].one? &&
         props[:schedules].first[:id] == schedule.id &&
-        props.dig(:benefit, :percentage) == 50 &&
-        props[:addresses].pluck(:label) == [ "Oficina", "Casa" ]
+        props.dig(:benefit, :percentage) == 50
     }
   end
+  it "renders the cart with its server props" do
+      travel_to(Time.zone.local(2026, 9, 14, 10))
+      Order.destroy_all
+      Schedule.delete_all
+      user = consumer_user
+      schedule = create_schedule
+      sign_in_as_consumer(user)
 
-  it "reports the five meal weekly allowance using delivery dates" do
-    # A fin de mes la semana siguiente cae en otro mes y sale del tope mensual.
+      get dashboard_cart_path
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to render_component("consumer/dashboard/cart")
+      expect(inertia).to have_props { |props|
+        props.dig(:benefit, :percentage) == 50 &&
+          props[:addresses].pluck(:label) == [ "Oficina", "Casa" ]
+      }
+    end
+
+  # La tarjeta "Tu consumo" muestra el mes contra el tope mensual: no hay tope
+  # semanal en los requisitos, y dividir el mensual entre 4 daba 0 con K < 4.
+  it "reports the monthly allowance using delivery dates" do
     travel_to(Time.zone.local(2026, 9, 14, 10))
     Order.destroy_all
     Schedule.delete_all
@@ -74,8 +91,6 @@ RSpec.describe "Consumer dashboard", type: :request do
     expect(user.consumer.benefits.first.amount).to eq(20)
     expect(inertia).to have_props(
       benefit: {
-        limit: 5,
-        used: 2,
         percentage: 50,
         monthly_limit: 20,
         monthly_used: 5,
@@ -180,7 +195,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   # El día concreto se elige en el browser sobre la semana que devuelve el
   # server, así que acá se verifica la ventana lunes–viernes y la forma de los
   # props; el filtrado por día se cubre en spec/system/consumer.
-  describe "GET /dashboard — consulting the menu by date (IBP-003)" do
+  describe "GET /menu-semanal — consulting the menu by date (IBP-003)" do
     fixtures :users, :consumers, :companies, :providers, :menus
 
     # Un lunes fijo: la pantalla arma la semana desde Date.current, así que sin
@@ -281,6 +296,99 @@ RSpec.describe "Consumer dashboard", type: :request do
       expect(by_id.fetch(available_dish.id)).to include(sold_out: false, remaining: 2)
     end
 
+    # IBP-087: el empleado no ve los platos del proveedor que cerró ese día, y
+    # sabe por qué: el cierre viaja aparte, con el motivo y el período.
+    describe "provider closures" do
+      def close(owner, from, to = from, reason: "Vacaciones")
+        owner.closures.create!(starts_on: from, ends_on: to, reason:)
+      end
+
+      def schedule_ids
+        inertia.props[:schedules].pluck(:id)
+      end
+
+      it "leaves out the dishes of the provider that closed that day and keeps the rest" do
+        closed_dish = publish(menus(:milanesa), monday)
+        open_dish = publish(menus(:sorrentinos), monday)
+        close(providers(:tuviandita), monday, monday + 1)
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(schedule_ids).to eq([ open_dish.id ])
+        expect(schedule_ids).not_to include(closed_dish.id)
+      end
+
+      it "leaves out only the closed days and not the rest of the week" do
+        before_closure = publish(menus(:milanesa), monday)
+        on_closure = publish(menus(:milanesa), monday + 1)
+        after_closure = publish(menus(:milanesa), monday + 2)
+        close(providers(:tuviandita), monday + 1)
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(schedule_ids).to contain_exactly(before_closure.id, after_closure.id)
+        expect(schedule_ids).not_to include(on_closure.id)
+      end
+
+      it "shows the dish again once the closure is deleted" do
+        dish = publish(menus(:milanesa), monday)
+        close(providers(:tuviandita), monday).destroy!
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(schedule_ids).to eq([ dish.id ])
+      end
+
+      it "sends the closures of every provider with the provider, the reason and the period" do
+        close(providers(:tuviandita), Date.new(2026, 9, 21), Date.new(2026, 10, 2), reason: "Vacaciones")
+        close(providers(:endulzate), Date.new(2026, 9, 14), reason: "Feriado")
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(inertia.props[:closures]).to contain_exactly(
+          a_hash_including(provider_name: users(:provider_user).name, reason: "Vacaciones",
+                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21/09/26 al 02/10/26"),
+          a_hash_including(provider_name: users(:other_provider_user).name, reason: "Feriado",
+                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14/09/26")
+        )
+      end
+
+      it "does not send closures that already ended" do
+        close(providers(:tuviandita), monday, monday + 1)
+        travel_to Time.zone.local(2026, 9, 16, 10)
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(inertia.props[:closures]).to eq([])
+      end
+
+      it "sends an empty list when nobody closed" do
+        sign_in users(:one)
+
+        get dashboard_path
+
+        expect(inertia.props[:closures]).to eq([])
+      end
+
+      it "loads the closures with a fixed number of queries, however many dishes there are" do
+        3.times { |day| publish(menus(:milanesa), monday + day) }
+        publish(menus(:sorrentinos), monday)
+        close(providers(:tuviandita), monday + 4)
+        sign_in users(:one)
+        queries = []
+        callback = ->(*, payload) { queries << payload[:sql] if payload[:sql].include?("provider_closures") }
+
+        ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { get dashboard_path }
+
+        expect(queries.size).to be <= 2
+      end
+    end
+
     it "does not count cancelled orders against the quota" do
       schedule = publish(menus(:milanesa), monday, amount: 1)
       order_for(schedule, 1).update!(status: :cancelled)
@@ -306,7 +414,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       publish(menus(:milanesa), monday)
       sign_in users(:one)
 
-      get dashboard_path
+      get dashboard_cart_path
 
       expect(inertia.props[:addresses].pluck(:id)).to eq([ "office" ])
     end
@@ -343,7 +451,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
       get dashboard_path
 
-      expect(inertia.props[:benefit]).to include(used: 0, monthly_used: 0)
+      expect(inertia.props[:benefit]).to include(monthly_used: 0)
     end
   end
 
@@ -353,7 +461,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   # Acá se verifica que el server entregue cada dato, y que lo ausente viaje
   # como ausente. Cómo se pinta eso en pantalla —y qué se muestra cuando falta—
   # se cubre en app/javascript/pages/consumer/dashboard/dish-detail.test.tsx.
-  describe "GET /dashboard — información de cada plato" do
+  describe "GET /menu-semanal — información de cada plato" do
     fixtures :users, :consumers, :companies, :providers, :menus, :reviews, :benefit_configurations, :benefits
 
     around do |example|
@@ -505,7 +613,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     OmniAuth.config.mock_auth[:google_oauth2] = nil
   end
 
-  describe "GET /dashboard during weekend" do
+  describe "GET /menu-semanal during weekend" do
     let(:consumer_user_record) { consumer_user }
     let(:saturday) { Time.zone.local(2026, 10, 3, 10, 0, 0) }
     let(:next_monday) { Date.new(2026, 10, 5) }
@@ -557,7 +665,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     end
   end
 
-  describe "GET /dashboard/confirmation" do
+  describe "GET /menu-semanal/confirmacion" do
     let(:user) { consumer_user }
     let(:consumer) { user.consumer }
 
@@ -724,7 +832,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
   # IBP-037: el carrito necesita los subsidios especiales vigentes para mostrar
   # el precio con base + especial antes de confirmar.
-  describe "GET /dashboard — subsidios especiales" do
+  describe "GET /menu-semanal — subsidios especiales" do
     around do |example|
       travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
     end

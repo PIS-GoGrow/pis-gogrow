@@ -15,22 +15,25 @@ class Admin::PaymentsController < Admin::InertiaController
     @history = serialize(settled, sums)
     @providers = Provider.eager_load(:user).order("LOWER(users.name)")
     @total_debt = unpaid.sum(&:payable_amount).to_f
-    @current_month = AdminMonthlySummary.new(company).then { { amount: it.spending, meals: it.meals, limit: it.meals_limit } }
-    @period = requested_month&.then { period_detail(accounts, it) }
-    @current_period = period_detail(accounts, Date.current.beginning_of_month)
+    @total_meals = unpaid.sum { sums.dig(it.id, :amount).to_i }
+
+    # La tarjeta "Tu consumo" muestra el mes de ?month=AAAA-MM, o el actual.
+    summary = AdminMonthlySummary.new(company, selected_month)
+    @month = summary.month.strftime("%Y-%m")
+    @current_month = Date.current.strftime("%Y-%m")
+    @months = month_options(summary.months)
+    @summary = { amount: summary.spending, meals: summary.meals, limit: summary.meals_limit }
+    @consumption = AdminConsumptionDetail.new(company, summary.month).to_h
   end
 
   # El find va sobre las cuentas de la empresa y no sobre Account: pedir la de
   # otra empresa tiene que ser un 404, no una cuenta ajena. Responde JSON
   # porque el detalle se abre en un panel sobre la lista, sin cambiar de página.
+  # Trae el mes entero y no solo la cuenta: el panel deja cambiar de proveedor.
   def show
     account = company.accounts.find(params[:id])
 
-    render json: {
-      orders: SimplifiedOrderSerializer.new(account.orders.confirmed.order(:created_at)).serializable_hash,
-      month: I18n.l(account.month, format: :month_year),
-      amount: account.payable_amount.to_f
-    }
+    render json: AdminConsumptionDetail.new(company, account.month).to_h
   end
 
   def create
@@ -47,6 +50,12 @@ class Admin::PaymentsController < Admin::InertiaController
       redirect_back fallback_location: admin_payments_path,
                     inertia: { errors: payment.errors.to_hash }, status: :see_other
     end
+  rescue ActiveRecord::RecordNotUnique
+    # Dos envíos simultáneos pasan la validación de Payment a la vez; el segundo
+    # lo frena el índice único de la tabla.
+    redirect_back fallback_location: admin_payments_path, inertia: {
+      errors: { receipt: [ t("activerecord.errors.models.payment.attributes.receipt.already_under_review") ] }
+    }, status: :see_other
   end
 
   def receipt
@@ -80,30 +89,6 @@ class Admin::PaymentsController < Admin::InertiaController
 
   def set_payment
     @payment = Payment.where(account: company.accounts).find(params[:id])
-  end
-
-  # El inicio de RR. HH. manda ?month=AAAA-MM para abrir el detalle de ese mes.
-  def requested_month
-    Date.strptime(params[:month].to_s, "%Y-%m")
-  rescue Date::Error
-    nil
-  end
-
-  # El detalle de un mes, en la pestaña donde está. Un mes puede tener cuentas
-  # con varios proveedores, así que el detalle las junta.
-  def period_detail(accounts, month)
-    period = accounts.select { it.month == month }
-    return if period.empty?
-
-    orders = Order.confirmed.joins(:order_accounts)
-                  .where(order_accounts: { account_id: period.map(&:id) }).order(:created_at)
-
-    {
-      orders: SimplifiedOrderSerializer.new(orders).serializable_hash,
-      month: I18n.l(month, format: :month_year),
-      amount: period.sum(&:payable_amount).to_f,
-      tab: period.all? { it.collection_status == "approved" } ? "history" : "pending"
-    }
   end
 
   def payment_params

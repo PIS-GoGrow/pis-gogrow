@@ -8,7 +8,7 @@ RSpec.describe "Provider payments", type: :request do
   before { host! "localhost" }
 
   def create_provider(email)
-    Provider.create!(user: User.create!(email:, name: "Provider", password: "password123456"))
+    Provider.create!(user: User.create!(email:, name: "Provider", password: "password123456"), onboarding_completed_at: Time.current)
   end
 
   def setup_submitted_payment
@@ -51,6 +51,84 @@ RSpec.describe "Provider payments", type: :request do
     expect(admin_user.notifications.active.sole).to have_attributes(event: "company_payment_approved", notifiable: account)
   end
 
+  it "approves the pending invoice when a company payment is approved" do
+    company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+    provider = create_provider("invoice-review-provider@gmail.com")
+    account = Account.create!(
+      owner: company,
+      provider:,
+      month: Date.current.prev_month,
+      amount: 500
+    )
+
+    invoice = account.invoices.build(
+      issued_on: Date.current,
+      total_amount: 500
+    )
+    invoice.file.attach(
+      io: StringIO.new("%PDF-1.4"),
+      filename: "factura.pdf",
+      content_type: "application/pdf"
+    )
+    invoice.save!
+
+    payment = account.payments.build(provider:, status: :submitted)
+    payment.receipt.attach(
+      io: StringIO.new("receipt"),
+      filename: "receipt.png",
+      content_type: "image/png"
+    )
+    payment.save!
+
+    sign_in(provider.user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "approved" }
+
+    expect(payment.reload).to be_approved
+    expect(invoice.reload).to be_approved
+  end
+
+  it "keeps the invoice pending when the company payment is rejected" do
+    company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+    provider = create_provider("invoice-reject-provider@gmail.com")
+    account = Account.create!(
+      owner: company,
+      provider:,
+      month: Date.current.prev_month,
+      amount: 500
+    )
+
+    invoice = account.invoices.build(
+      issued_on: Date.current,
+      total_amount: 500
+    )
+    invoice.file.attach(
+      io: StringIO.new("%PDF-1.4"),
+      filename: "factura.pdf",
+      content_type: "application/pdf"
+    )
+    invoice.save!
+
+    payment = account.payments.build(provider:, status: :submitted)
+    payment.receipt.attach(
+      io: StringIO.new("receipt"),
+      filename: "receipt.png",
+      content_type: "image/png"
+    )
+    payment.save!
+
+    sign_in(provider.user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: {
+            status: "rejected",
+            rejection_reason: "incorrect_receipt"
+          }
+
+    expect(payment.reload).to be_rejected
+    expect(invoice.reload).to be_pending
+  end
+
   it "does not approve a payment of the current month" do
     user, payment = setup_submitted_payment
     payment.account.update!(month: Date.current.beginning_of_month)
@@ -70,7 +148,8 @@ RSpec.describe "Provider payments", type: :request do
     payment.account.update!(month: Date.current.beginning_of_month)
     sign_in(user, role: :provider)
 
-    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: "Imagen borrosa" }
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "incorrect_receipt" }
 
     expect(payment.reload).to be_rejected
   end
@@ -79,10 +158,11 @@ RSpec.describe "Provider payments", type: :request do
     user, payment = setup_submitted_payment
     sign_in(user, role: :provider)
 
-    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: "Imagen borrosa" }
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "incorrect_receipt" }
 
     expect(payment.reload).to be_rejected
-    expect(payment.rejection_reason).to eq("Imagen borrosa")
+    expect(payment.rejection_reason).to eq("El comprobante no corresponde")
   end
 
   it "does not reject without a reason" do
@@ -91,7 +171,60 @@ RSpec.describe "Provider payments", type: :request do
 
     patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: " " }
 
+    expect(response).to have_http_status(:unprocessable_entity)
     expect(payment.reload).to be_submitted
+  end
+
+  it "does not accept a rejection reason outside the offered options" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "<script>alert(1)</script>" }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(payment.reload).to be_submitted
+    expect(payment.rejection_reason).to be_nil
+  end
+
+  it "stores a trimmed custom rejection reason" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: {
+            status: "rejected",
+            rejection_reason: "other",
+            rejection_details: "  El importe no coincide  "
+          }
+
+    expect(response).to redirect_to(provider_collections_path)
+    expect(payment.reload).to be_rejected
+    expect(payment.rejection_reason).to eq("El importe no coincide")
+  end
+
+  it "does not accept an empty custom rejection reason" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "other", rejection_details: "   " }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(payment.reload).to be_submitted
+    expect(payment.rejection_reason).to be_nil
+  end
+
+  it "does not accept an excessively long custom rejection reason" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "other", rejection_details: "a" * 501 }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(payment.reload).to be_submitted
+    expect(payment.rejection_reason).to be_nil
   end
 
   it "does not review a payment that was already reviewed" do
@@ -99,7 +232,7 @@ RSpec.describe "Provider payments", type: :request do
     sign_in(user, role: :provider)
     patch provider_payment_path(payment), params: { status: "approved" }
 
-    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: " otra vez" }
+    patch provider_payment_path(payment), params: { status: "rejected", rejection_reason: "other" }
 
     expect(response).to redirect_to(provider_collections_path)
     expect(payment.reload).to be_approved
@@ -190,29 +323,20 @@ RSpec.describe "Provider payments", type: :request do
     expect(payment.reload).to be_submitted
   end
 
-  it "handles partial payment rejection without notice and keeps account submitted if another payment is pending" do
-    user, first_payment = setup_submitted_payment
-    account = first_payment.account
-    second_payment = account.payments.build(provider: first_payment.provider, status: :submitted)
-    second_payment.receipt.attach(io: StringIO.new("receipt2"), filename: "receipt2.png", content_type: "image/png")
-    second_payment.save!
+  it "handles partial payment rejection without notice and leaves the account rejected until a new receipt arrives" do
+    user, payment = setup_submitted_payment
+    account = payment.account
 
     sign_in(user, role: :provider)
 
-    patch provider_payment_path(first_payment), params: { status: "rejected", rejection_reason: "El pago es parcial" }
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "partial_payment" }
 
     expect(response).to redirect_to(provider_collections_path)
     expect(response).to have_http_status(:see_other)
     expect(flash[:notice]).to be_nil
-    expect(first_payment.reload.rejection_reason).to eq("El pago es parcial")
-    expect(account.reload.collection_status).to eq("submitted")
-    expect(account.payment_pending_review).to eq(second_payment)
-
-    patch provider_payment_path(second_payment), params: { status: "approved" }
-
-    expect(response).to redirect_to(provider_collections_path)
-    expect(second_payment.reload).to be_approved
+    expect(payment.reload.rejection_reason).to eq("El pago es parcial")
     expect(account.reload.payment_pending_review).to be_nil
-    expect(account.collection_status).to eq("approved")
+    expect(account.collection_status).to eq("rejected")
   end
 end

@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from "lucide-react"
+import { Settings2 } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -10,27 +10,33 @@ import {
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import type { Provider } from "@/types"
 
-interface Props {
-  providers: string[]
-  selectedProviders: Set<string>
-  onApply: (providers: Set<string>) => void
+interface ProviderFilterOption<Id extends string | number> {
+  id: Id
+  name: Provider["name"]
 }
 
-export function ProviderFilterSheet({
+interface Props<Id extends string | number> {
+  providers: ProviderFilterOption<Id>[]
+  selectedProviders: Set<Id>
+  onApply: (providers: Set<Id>) => void
+}
+
+export function ProviderFilterSheet<Id extends string | number>({
   providers,
   selectedProviders,
   onApply,
-}: Props) {
+}: Props<Id>) {
   const [open, setOpen] = useState(false)
-  const [draftProviders, setDraftProviders] = useState<Set<string>>(new Set())
+  const [draftProviders, setDraftProviders] = useState<Set<Id>>(new Set())
 
-  function toggleProvider(provider: string) {
+  function toggleProvider(providerId: Id) {
     setDraftProviders((selected) => {
       const next = new Set(selected)
 
-      if (next.has(provider)) next.delete(provider)
-      else next.add(provider)
+      if (next.has(providerId)) next.delete(providerId)
+      else next.add(providerId)
 
       return next
     })
@@ -52,7 +58,7 @@ export function ProviderFilterSheet({
           aria-label="Filtrar por proveedores"
           className="border-border bg-card hover:bg-accent ml-auto size-9 shrink-0 rounded-full shadow-none"
         >
-          <SlidersHorizontal aria-hidden="true" className="size-4" />
+          <Settings2 aria-hidden="true" className="size-4" />
         </Button>
       </AdaptableDialogTrigger>
 
@@ -84,20 +90,20 @@ export function ProviderFilterSheet({
 
             {providers.map((provider) => (
               <div
-                key={provider}
+                key={provider.id}
                 className="flex h-12 items-center gap-3 rounded-sm px-2 py-3"
               >
                 <Checkbox
-                  id={`dashboard-filter-${provider}`}
-                  checked={draftProviders.has(provider)}
-                  onCheckedChange={() => toggleProvider(provider)}
+                  id={`dashboard-filter-${provider.id}`}
+                  checked={draftProviders.has(provider.id)}
+                  onCheckedChange={() => toggleProvider(provider.id)}
                   className="text-foreground data-[state=checked]:text-foreground size-4 rounded-none border-0 bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0 data-[state=checked]:border-transparent data-[state=checked]:bg-transparent dark:bg-transparent dark:data-[state=checked]:bg-transparent [&_svg]:size-4"
                 />
                 <Label
-                  htmlFor={`dashboard-filter-${provider}`}
+                  htmlFor={`dashboard-filter-${provider.id}`}
                   className="flex-1 cursor-pointer text-base leading-6 font-medium tracking-normal"
                 >
-                  {provider}
+                  {provider.name}
                 </Label>
               </div>
             ))}

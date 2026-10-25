@@ -333,28 +333,46 @@ RSpec.describe Account, type: :model do
       expect(account.payment_pending_review).to be_nil
     end
 
-    it "picks the oldest submitted payment when two were sent without reviewing either" do
-      older = create_payment(status: :submitted, created_at: 2.days.ago)
-      create_payment(status: :submitted, created_at: 1.day.ago)
+    it "is the submitted payment" do
+      submitted = create_payment(status: :submitted)
 
-      expect(account.payment_pending_review).to eq(older)
+      expect(account.payment_pending_review).to eq(submitted)
     end
 
-    it "still finds the submitted payment even if a newer one was already resolved" do
-      older = create_payment(status: :submitted, created_at: 2.days.ago)
-      create_payment(status: :approved, created_at: 1.day.ago)
+    it "is nil again once the submitted payment is resolved" do
+      submitted = create_payment(status: :submitted)
 
-      expect(account.payment_pending_review).to eq(older)
+      submitted.update!(status: :rejected, rejection_reason: "El pago es parcial")
+
+      expect(account.reload.payment_pending_review).to be_nil
+    end
+  end
+
+  describe ".format_amount" do
+    it "formats whole amounts without decimals" do
+      expect(described_class.format_amount(BigDecimal("750"))).to eq("$750")
     end
 
-    it "advances to the next submitted payment once the older one is resolved" do
-      older = create_payment(status: :submitted, created_at: 2.days.ago)
-      newer = create_payment(status: :submitted, created_at: 1.day.ago)
+    it "uses thousands and decimal separators for fractional amounts" do
+      expect(described_class.format_amount(BigDecimal("1250.5"))).to eq("$1.250,50")
+    end
 
-      expect(account.payment_pending_review).to eq(older)
+    it "formats zero" do
+      expect(described_class.format_amount(0)).to eq("$0")
+    end
 
-      older.update!(status: :rejected, rejection_reason: "El pago es parcial")
-      expect(account.reload.payment_pending_review).to eq(newer)
+    it "formats negative amounts correctly" do
+      expect(described_class.format_amount(BigDecimal("-1250"))).to eq("-$1.250")
+      expect(described_class.format_amount(BigDecimal("-440.25"))).to eq("-$440,25")
+    end
+
+    it "formats large numbers with multiple thousand separators" do
+      expect(described_class.format_amount(BigDecimal("1234567.89"))).to eq("$1.234.567,89")
+    end
+
+    it "accepts numeric strings and floats" do
+      expect(described_class.format_amount("440.25")).to eq("$440,25")
+      expect(described_class.format_amount(1250.5)).to eq("$1.250,50")
     end
   end
 
@@ -456,6 +474,7 @@ end
 #  amount      :decimal(10, 2)
 #  month       :date
 #  owner_type  :string           not null
+#  vat_rate    :decimal(3, 2)    default(0.0), not null
 #  created_at  :datetime         not null
 #  updated_at  :datetime         not null
 #  owner_id    :bigint           not null

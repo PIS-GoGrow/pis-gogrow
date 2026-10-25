@@ -7,7 +7,7 @@ class OrderSerializer < ApplicationSerializer
 
   typelize :string?
   attribute :date do |order|
-    order.schedule&.date&.iso8601
+    order.delivery_date&.iso8601
   end
 
   typelize :string?
@@ -18,7 +18,12 @@ class OrderSerializer < ApplicationSerializer
   # El proveedor no tiene nombre propio: se identifica por el del usuario dueño.
   typelize :string?
   attribute :provider_name do |order|
-    order.schedule&.menu&.provider&.user&.name
+    order.provider_name
+  end
+
+  typelize :number?
+  attribute :provider_id do |order|
+    order.provider_id
   end
 
   # to_f y no el decimal crudo: Alba serializa BigDecimal como string y el tipo
@@ -67,6 +72,16 @@ class OrderSerializer < ApplicationSerializer
   attribute :rejection_reason do |order|
     order.rejection_reason
   end
+
+  typelize :boolean
+  attribute :reviewable do |order|
+    order.reviewable?
+  end
+
+  typelize :boolean
+  attribute :reviewed do |order|
+    order.reviewed?
+  end
 end
 
 # == Schema Information
@@ -77,6 +92,7 @@ end
 #  address                    :string
 #  amount                     :integer
 #  cancelled_at               :datetime
+#  delivery_date              :date
 #  delivery_method            :integer          not null
 #  discounted_price           :decimal(10, 2)
 #  menu_description           :string
@@ -85,6 +101,8 @@ end
 #  modified_at                :datetime
 #  notes                      :string
 #  price                      :decimal(10, 2)
+#  provider_name              :string
+#  rejected_at                :datetime
 #  rejection_details          :string
 #  rejection_reason           :integer
 #  selected_options           :jsonb            not null
@@ -95,6 +113,8 @@ end
 #  cancelled_by_id            :bigint
 #  consumer_id                :bigint           not null
 #  modified_by_id             :bigint
+#  provider_id                :bigint
+#  rejected_by_id             :bigint
 #  schedule_id                :bigint
 #
 # Indexes
@@ -102,6 +122,8 @@ end
 #  index_orders_on_cancelled_by_id  (cancelled_by_id)
 #  index_orders_on_consumer_id      (consumer_id)
 #  index_orders_on_modified_by_id   (modified_by_id)
+#  index_orders_on_provider_id      (provider_id)
+#  index_orders_on_rejected_by_id   (rejected_by_id)
 #  index_orders_on_schedule_id      (schedule_id)
 #
 # Foreign Keys
@@ -109,5 +131,7 @@ end
 #  fk_rails_...  (cancelled_by_id => users.id)
 #  fk_rails_...  (consumer_id => consumers.id)
 #  fk_rails_...  (modified_by_id => users.id)
+#  fk_rails_...  (provider_id => providers.id) ON DELETE => nullify
+#  fk_rails_...  (rejected_by_id => users.id) ON DELETE => nullify
 #  fk_rails_...  (schedule_id => schedules.id)
 #

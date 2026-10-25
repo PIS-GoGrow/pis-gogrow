@@ -69,6 +69,36 @@ RSpec.describe Menus::Update do
     expect(schedule.menu.name).to eq("Milanesa napolitana")
   end
 
+  it "does not program a single day the provider closed, and changes nothing" do
+    providers(:tuviandita).closures.create!(starts_on: friday, ends_on: friday, reason: "Feriado")
+
+    result = update({ mode: "single", date: friday.iso8601, amount: 4 }, scope: "day")
+
+    expect(result.errors[:agenda]).to eq([ I18n.t("validations.menu_agenda.date_closed") ])
+    expect(Schedule.where(menu_id: menu.family_ids, date: friday)).to be_empty
+    expect(menu.reload.name).to eq("Milanesa")
+  end
+
+  it "still edits a closed day that was published before the closure" do
+    published = menu.schedules.create!(date: friday, amount: 5)
+    providers(:tuviandita).closures.create!(starts_on: friday, ends_on: friday, reason: "Feriado")
+
+    result = update({ mode: "single", date: friday.iso8601, amount: 4 }, scope: "day")
+
+    expect(result.errors).to be_empty
+    expect(Schedule.find_by(menu_id: menu.family_ids, date: friday).menu.name).to eq("Milanesa napolitana")
+    expect(published.reload.date).to eq(friday)
+  end
+
+  it "skips the closed days of a weekly agenda without failing" do
+    providers(:tuviandita).closures.create!(starts_on: next_monday, ends_on: next_monday, reason: "Feriado")
+
+    result = update({ mode: "weekly", weekdays: [ "1", "5" ], starts_on: wednesday.iso8601, amount: 6 })
+
+    expect(result.errors).to be_empty
+    expect(Schedule.where(menu_id: menu.family_ids).pluck(:date)).to contain_exactly(friday, Date.new(2030, 1, 18))
+  end
+
   it "applies a weekly agenda from its start and programs it" do
     update({ mode: "weekly", weekdays: [ "1", "5" ], starts_on: wednesday.iso8601, amount: 6 })
 
@@ -265,6 +295,34 @@ RSpec.describe Menus::Update do
           "description" => [ "Con papas", "Con queso" ]
         )
       end
+    end
+  end
+
+  describe "validaciones de agenda con repetición" do
+    it "rechaza actualizar a repetición semanal con weekdays vacío y no altera agendas" do
+      result = update({ mode: "weekly", starts_on: thursday.iso8601, weekdays: [], amount: 5 })
+
+      expect(result.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+      expect(menu.reload.agendas).to be_empty
+    end
+
+    it "rechaza actualizar a rango personalizado con weekdays vacío y no crea variantes ni agendas" do
+      result = update({
+        mode: "range",
+        starts_on: thursday.iso8601,
+        ends_on: friday.iso8601,
+        weekdays: [],
+        amount: 5
+      })
+
+      expect(result.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+      expect(menu.reload.variants).to be_empty
+    end
+
+    it "rechaza weekdays con días fuera del rango laboral 1..5" do
+      result = update({ mode: "weekly", starts_on: thursday.iso8601, weekdays: [ 0, 6 ], amount: 5 })
+
+      expect(result.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
     end
   end
 end

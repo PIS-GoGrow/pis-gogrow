@@ -1,44 +1,32 @@
 import { usePage } from "@inertiajs/react"
 
+import {
+  formatLongDate as formatLongDateValue,
+  formatLongDateInline as formatLongDateInlineValue,
+  formatShortDate,
+  formatShortDateTime,
+} from "@/lib/dates"
+import { formatMoney as formatMoneyValue } from "@/lib/money"
+
 // Fechas e importes siguen el locale de la app, igual que los textos: si el día
-// de mañana se agrega otro idioma, no hay que tocar los componentes.
+// de mañana se agrega otro idioma, no hay que tocar los componentes. El formato
+// de los importes está en lib/money.ts y el de las fechas en lib/dates.ts.
 export const useFormatters = () => {
   const { locale } = usePage().props
 
-  const formatMoney = (amount: number) =>
-    new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: "UYU",
-    }).format(amount)
+  const formatMoney = (amount: number | string) =>
+    formatMoneyValue(amount, locale)
 
-  // Con el locale "es" un número de cuatro cifras no lleva punto de miles por
-  // defecto, y el resumen por día tiene que verse "$2.400".
-  const formatMoneyShort = (amount: number) => {
-    const decimals = Number.isInteger(amount) ? 0 : 2
+  const formatLongDate = (date: string) => formatLongDateValue(date, locale)
 
-    return `$${new Intl.NumberFormat(locale, {
-      minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals,
-      useGrouping: "always",
-    }).format(amount)}`
+  const formatLongDateInline = (date: string) =>
+    formatLongDateInlineValue(date, locale)
+
+  return {
+    formatMoney,
+    formatLongDate,
+    formatLongDateInline,
+    formatShortDate,
+    formatShortDateTime,
   }
-
-  const formatDeliveryDate = (date: string) => {
-    const formatted = new Intl.DateTimeFormat(locale, {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    }).format(new Date(`${date}T00:00:00`))
-
-    return formatted.charAt(0).toLocaleUpperCase(locale) + formatted.slice(1)
-  }
-
-  const formatLongDate = (date: string) =>
-    new Intl.DateTimeFormat(locale, {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    }).format(new Date(`${date}T00:00:00`))
-
-  return { formatMoney, formatMoneyShort, formatDeliveryDate, formatLongDate }
 }

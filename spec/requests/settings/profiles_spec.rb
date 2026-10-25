@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Settings::Profiles", type: :request do
   fixtures :admins, :companies, :providers, :users
 
-  describe "GET /settings/profile" do
+  describe "GET /configuracion/perfil" do
     it "shows delivery settings only for the authenticated provider" do
       sign_in providers(:tuviandita).user, role: :provider
 
@@ -56,7 +56,7 @@ RSpec.describe "Settings::Profiles", type: :request do
     end
   end
 
-  describe "PATCH /settings/profile" do
+  describe "PATCH /configuracion/perfil" do
     it "updates only the authenticated provider's home delivery setting" do
       provider = providers(:tuviandita)
       other_provider = providers(:endulzate)
@@ -149,6 +149,52 @@ RSpec.describe "Settings::Profiles", type: :request do
       expect(response).to redirect_to(settings_profile_path)
       expect(provider.reload.home_delivery).to be(false)
       expect(provider.user.reload.roles).not_to include("admin")
+    end
+  end
+
+  describe "PATCH /configuracion/perfil as RRHH" do
+    it "no deja cambiar el email aunque venga en el pedido" do
+      admin = users(:admin)
+      sign_in admin, role: :admin
+
+      patch settings_profile_path, params: { name: "RRHH Nuevo", email: "otro@example.com" }
+
+      expect(response).to redirect_to(settings_profile_path)
+      expect(admin.reload).to have_attributes(name: "RRHH Nuevo", email: "admin@example.com")
+    end
+  end
+
+  describe "PATCH /configuracion/perfil phone" do
+    let(:user) { providers(:tuviandita).user }
+
+    before { sign_in user, role: :provider }
+
+    it "guarda el teléfono sin espacios ni guiones" do
+      patch settings_profile_path, params: { name: user.name, phone: "+598 99 123-456" }
+
+      expect(user.reload.phone).to eq("+59899123456")
+      follow_redirect!
+      expect(inertia).to have_props(phone: "+59899123456")
+    end
+
+    it "rechaza un teléfono inválido" do
+      patch settings_profile_path, params: { name: user.name, phone: "llamame" }
+
+      expect(user.reload.phone).to be_nil
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("phone")
+    end
+
+    it "registra el cambio de teléfono" do
+      patch settings_profile_path, params: { name: user.name, phone: "099123456" }
+
+      expect(user.audit_logs.sole.changeset).to eq("phone" => [ nil, "099123456" ])
+    end
+
+    it "registra el cambio de entregas a domicilio" do
+      patch settings_profile_path, params: { home_delivery: false }
+
+      expect(providers(:tuviandita).audit_logs.sole).to have_attributes(user:, changeset: { "home_delivery" => [ true, false ] })
     end
   end
 end

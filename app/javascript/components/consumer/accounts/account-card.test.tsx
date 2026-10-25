@@ -12,7 +12,7 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
     status: "submitted",
     rejection_reason: null,
     created_at: "2026-10-01T12:00:00Z",
-    receipt_url: "/payments/1/receipt",
+    receipt_url: "/comprobantes/1/archivo",
     receipt_filename: "receipt.png",
     receipt_uploaded_at: "01/10/26",
     ...overrides,
@@ -27,6 +27,7 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
     month: "Septiembre 2026",
     due_date: "10/10/26",
     due_date_passed: false,
+    collection_status: "pending",
     amount: 500,
     vat_amount: 0,
     payable_amount: 500,
@@ -46,6 +47,57 @@ function renderCard(account: Account) {
 }
 
 describe("AccountCard", () => {
+  it("disables uploading another receipt while one is under review", () => {
+    const account = makeAccount({
+      payments: [makePayment({ status: "submitted" })],
+    })
+
+    renderCard(account)
+
+    expect(screen.getByText("receipt.png")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeDisabled()
+    expect(
+      screen.getByText(/Ya hay un comprobante en revisión/),
+    ).toBeInTheDocument()
+  })
+
+  it("offers uploading another receipt once the previous one was rejected", () => {
+    const account = makeAccount({
+      payments: [
+        makePayment({
+          status: "rejected",
+          rejection_reason: "Comprobante ilegible",
+        }),
+      ],
+    })
+
+    renderCard(account)
+
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeEnabled()
+    expect(
+      screen.queryByText(/Ya hay un comprobante en revisión/),
+    ).not.toBeInTheDocument()
+  })
+
+  it("keeps the upload button enabled when an earlier payment was approved", () => {
+    const account = makeAccount({
+      payments: [makePayment({ status: "approved" })],
+    })
+
+    renderCard(account)
+
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeEnabled()
+    expect(
+      screen.queryByText(/Ya hay un comprobante en revisión/),
+    ).not.toBeInTheDocument()
+  })
+
   it("renders yellow warning when rejection reason is partial payment", () => {
     const payment = makePayment({
       status: "rejected",
@@ -97,6 +149,8 @@ describe("AccountCard", () => {
       screen.queryByText("Falta una parte del pago."),
     ).not.toBeInTheDocument()
     expect(screen.queryByText(/Rechazado:/)).not.toBeInTheDocument()
-    expect(screen.getByText("Enviado")).toBeInTheDocument()
+    // La tarjeta muestra "En revisión" dos veces: el estado de la cuenta y el
+    // del comprobante enviado.
+    expect(screen.getAllByText("En revisión")).toHaveLength(2)
   })
 })

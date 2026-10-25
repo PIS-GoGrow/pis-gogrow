@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Sessions", type: :request do
   fixtures :users
 
-  describe "GET /sign_in" do
+  describe "GET /iniciar-sesion" do
     it "renders the sign in page" do
       get sign_in_path
       expect(response).to have_http_status(:success)
@@ -17,7 +17,12 @@ RSpec.describe "Sessions", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    # El valor se fija acá y no se deja al entorno: quien tenga el login de prueba
+    # prendido en su .env vería este ejemplo fallar.
     it "hides the password form unless the test login is enabled" do
+      allow(ENV).to receive(:fetch).and_call_original
+      allow(ENV).to receive(:fetch).with("DEV_LOGIN_ENABLED", "false").and_return("false")
+
       get sign_in_path
 
       expect(inertia).to render_component("sessions/new")
@@ -34,7 +39,7 @@ RSpec.describe "Sessions", type: :request do
     end
   end
 
-  describe "POST /sign_in" do
+  describe "POST /iniciar-sesion" do
     context "with valid credentials" do
       it "signs in and sets a session cookie" do
         post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*" }
@@ -84,7 +89,7 @@ RSpec.describe "Sessions", type: :request do
     end
   end
 
-  describe "DELETE /sessions/:id" do
+  describe "DELETE /sesiones/:id" do
     it "destroys the session" do
       sign_in users(:one)
       session_record = users(:one).sessions.last
