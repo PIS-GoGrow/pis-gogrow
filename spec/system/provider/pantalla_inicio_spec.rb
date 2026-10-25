@@ -43,7 +43,7 @@ RSpec.describe "Pantalla de inicio del proveedor", type: :system do
     it "permite navegar a pedidos y regresar al inicio mediante la barra lateral" do
       within(sidebar) do
         expect(page).to have_link("Inicio")
-        expect(page).to have_link("Menús")
+        expect(page).to have_link("Gestión de Menú")
         expect(page).to have_link("Pedidos")
         expect(page).to have_link("Cobros")
 
@@ -60,6 +60,19 @@ RSpec.describe "Pantalla de inicio del proveedor", type: :system do
       click_on "Ver pedidos"
 
       expect(page).to have_current_path(provider_orders_path)
+    end
+
+    it "permite navegar a gestión de menú desde la barra lateral y visualiza los días publicados" do
+      menu = provider.menus.first
+      menu.schedules.create!(date: Date.current.next_occurring(:wednesday), amount: 5)
+
+      within(sidebar) do
+        click_on "Gestión de Menú"
+      end
+
+      expect(page).to have_current_path(schedules_path)
+      expect(page).to have_content("Gestión de Menú")
+      expect(page).to have_content("Publicado")
     end
   end
 
