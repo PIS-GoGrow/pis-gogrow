@@ -52,18 +52,24 @@ export function DishDetail({
   const { t } = useTranslation()
   const [pricing, setPricing] = useState<Pricing | null>(null)
   const line = pricing?.lines?.at(-1)
-  const specialBenefitIds = benefit.specials.map((b) => b.id)
-  const benefitHeld = specialBenefitIds.reduce(
-    (acc, id) => {
-      acc[id] =
+
+  const benefitHeld = benefit.specials.reduce(
+    (acc, benefit) => {
+      acc[benefit.id] =
         pricing?.lines?.slice(0, -1)?.reduce((acc, line) => {
-          return acc + (line.tiers.find((t) => t.id === id)?.quantity ?? 0)
+          return acc + (line.tiers.find((t) => t.id === benefit.id)?.quantity ?? 0)
         }, 0) ?? 0
 
       return acc
     },
     {} as Record<number, number>,
   )
+
+  // No dejamos seleccionar beneficios sin límite (se aplican siempre)
+  // No mostramos beneficios para los que ya no quedan unidades disponibles
+  const selectableBenefits =
+    benefit.specials.filter((b) => b.remaining !== null && b.remaining - benefitHeld[b.id] > 0)
+  const specialBenefitIds = selectableBenefits.map((b) => b.id)
 
   // Al principio, todos los beneficios están activados
   const [benefitIds, setBenefitIds] = useState<number[]>(specialBenefitIds)
@@ -242,50 +248,45 @@ export function DishDetail({
           {notes.length}/140
         </p>
       </section>
-      <section className="border-border grid gap-2 border-b py-4 text-sm">
-        {benefit.specials
-          .filter((benefit) => {
-            // No dejamos seleccionar beneficios sin límite (se aplican siempre)
-            // No mostramos beneficios para los que ya no quedan unidades disponibles
-            return (
-              benefit.remaining !== null &&
-              benefit.remaining - benefitHeld[benefit.id] > 0
-            )
-          })
-          .map((benefit) => (
-            <div key={benefit.id} className="flex justify-between">
-              <div className="flex">
-                <TicketPercent color="#29944c" className="mr-2" size="20" />
-                <p>
-                  {benefit.name} ({benefit.percentage}% off)
+      {
+        selectableBenefits.length > 0 && (
+          <section className="border-border grid gap-2 border-b py-4 text-sm">
+            {
+              selectableBenefits.map((benefit) => (
+                <div key={benefit.id} className="flex justify-between">
+                  <div className="flex">
+                    <TicketPercent color="#29944c" className="mr-2" size="20" />
+                    <p>
+                      {benefit.name} ({benefit.percentage}% off)
+                    </p>
+                  </div>
+
+                  <Field orientation="horizontal" className="max-w-fit">
+                    <Checkbox
+                      id={`benefit-checkbox-${benefit.id}`}
+                      name={`benefit-checkbox-${benefit.id}`}
+                      onCheckedChange={() => setChecked(benefit.id)}
+                      checked={benefitIds.includes(benefit.id)}
+                    />
+
+                    <FieldContent className="max-w-fit">
+                      <FieldLabel htmlFor={`benefit-checkbox-${benefit.id}`}>
+                        Aplicar
+                      </FieldLabel>
+                    </FieldContent>
+                  </Field>
+                </div>
+              ))}
+            {
+              unusedBenefits.length > 0 && (
+                <p className="text-sm">
+                  {t(`pages.consumer_dashboard.detail.reached_100.${unusedBenefits.length === 1 ? "one" : "other"}`,
+                    { benefits: unusedBenefits.join(", ") })}
                 </p>
-              </div>
-
-              <Field orientation="horizontal" className="max-w-fit">
-                <Checkbox
-                  id={`benefit-checkbox-${benefit.id}`}
-                  name={`benefit-checkbox-${benefit.id}`}
-                  onCheckedChange={() => setChecked(benefit.id)}
-                  checked={benefitIds.includes(benefit.id)}
-                />
-
-                <FieldContent className="max-w-fit">
-                  <FieldLabel htmlFor={`benefit-checkbox-${benefit.id}`}>
-                    Aplicar
-                  </FieldLabel>
-                </FieldContent>
-              </Field>
-            </div>
-          ))}
-        {
-          unusedBenefits.length > 0 && (
-            <p className="text-sm">
-              {t(`pages.consumer_dashboard.detail.reached_100.${unusedBenefits.length === 1 ? "one" : "other"}`,
-                { benefits: unusedBenefits.join(", ")})}
-            </p>
-          )
-        }
-      </section>
+              )
+            }
+          </section>
+      )}
       <OrderSummary
         loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede
         subtotal={line?.subtotal}

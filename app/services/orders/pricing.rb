@@ -167,17 +167,17 @@ class Orders::Pricing
   end
 
   def monthly_benefits
-    loaded_benefits.select { |b| b.monthly? }
+    @monthly_benefits ||= loaded_benefits.select { |b| b.monthly? }
   end
 
   def special_benefits
-    loaded_benefits.reject { |b| b.monthly? }
+    @special_benefits ||= loaded_benefits - monthly_benefits
   end
 
   def benefit_used
     @benefit_used ||= OrderBenefit
       .joins(:order)
-      .where(benefit_id: benefits.map(&:id))
+      .where(benefit_id: loaded_benefits.map(&:id))
       .where.not(orders: { status: [ :cancelled, :rejected ] })
       .group(:benefit_id)
       .sum(:benefit_used)
