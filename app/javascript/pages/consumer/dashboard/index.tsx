@@ -118,6 +118,7 @@ export default function Index({
           quantity: Math.min(selected.remaining, quantity),
           notes,
           selections,
+          benefits: benefitsSelected,
         }
 
         const next = [...items]

@@ -126,6 +126,7 @@ describe("DishDetail", () => {
       quantity: 1,
       notes: "",
       selections: {},
+      benefits: [],
     }
 
     renderDetail({ cart: [added] })
@@ -282,6 +283,7 @@ describe("DishDetail", () => {
         quantity: 1,
         notes: "Sin sal",
         selections: {},
+        benefits: [],
       }
 
       renderDetail({
@@ -317,6 +319,7 @@ describe("DishDetail", () => {
         quantity: 1,
         notes: "",
         selections: {},
+        benefits: [],
       }
 
       renderDetail({
@@ -339,6 +342,7 @@ describe("DishDetail", () => {
         quantity: 2,
         notes: "",
         selections: {},
+        benefits: [],
       }
 
       // Con remaining: 3 y 2 ya en el carrito para este ítem:

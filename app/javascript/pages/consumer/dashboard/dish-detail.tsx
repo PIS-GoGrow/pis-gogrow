@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react"
 import { ChevronLeft, Star, TicketPercent } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import AddedBadge from "@/components/consumer/menus/added-badge"
@@ -109,7 +109,10 @@ export function DishDetail({
       try {
         const cartToPrice = isEditing ? cartWithoutCurrent : cart
         const result = await priceItems(
-          cartPricedItem([...cartToPrice, { ...item, quantity, benefits: benefitIds }]),
+          cartPricedItem([
+            ...cartToPrice,
+            { ...item, quantity, benefits: benefitIds },
+          ]),
         )
         if (cancelled || !result?.lines) return
 
@@ -140,7 +143,9 @@ export function DishDetail({
     cart,
     item,
     inCart,
-    isEditing, cartWithoutCurrent, otherInCart,
+    isEditing,
+    cartWithoutCurrent,
+    otherInCart,
     item.id,
     item.date,
     item.menu.price,
