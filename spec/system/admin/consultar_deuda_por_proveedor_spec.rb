@@ -127,7 +127,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
       within(:css, "[role='dialog']") do
         click_on "Viandas"
         # Los tres pedidos confirmados caen en dos días: el más nuevo abre solo.
-        expect(page).to have_css("button", text: %r{\ADía: \d{2}/\d{2} \| Viandas: \d+ \| Monto: \$}, count: 2)
+        expect(page).to have_css("button", text: %r{\ADía: \d{2}/\d{2}/\d{2} \| Viandas: \d+ \| Monto: \$}, count: 2)
         all("button", text: "Día:").reject { it[:"aria-expanded"] == "true" }.each(&:click)
         expect(page).to have_selector("tbody tr", count: 3)
       end
@@ -142,7 +142,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
         expect(page).to have_content("Subtotal sin IVA")
         expect(page).to have_content("#{short_money(current_period.amount)} | 4 viandas")
         expect(page).to have_content("IVA (0%)")
-        expect(page).to have_content("Total pagado")
+        expect(page).to have_content("Total a pagar")
       end
     end
   end

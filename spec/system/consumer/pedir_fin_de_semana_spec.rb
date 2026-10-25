@@ -39,7 +39,7 @@ RSpec.describe "Pedir durante el fin de semana", type: :system do
       expect(page).to have_content("¡Pedido recibido!")
       expect(page).to have_content("Milanesa con papas fritas")
 
-      click_link "Ver mis pedidos"
+      click_link "Ir a Mis pedidos"
       expect(page).to have_current_path(orders_path)
     end
   end
@@ -51,6 +51,9 @@ RSpec.describe "Pedir durante el fin de semana", type: :system do
 
     consumer = consumers(:one)
     config = benefit_configurations(:monthly)
+    # El beneficio future de benefits.yml vence hoy + 10: según el día cae entre la
+    # entrega del 2/11 y el 30/11 y le gana al beneficio de noviembre de este test.
+    benefits(:future).destroy
     benefits(:monthly).update!(
       due_date: Date.new(2026, 10, 31),
       status: :current,

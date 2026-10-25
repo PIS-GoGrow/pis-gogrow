@@ -1,5 +1,5 @@
 import { Link } from "@inertiajs/react"
-import { Pencil, X } from "lucide-react"
+import { Pencil, Star, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import CancelOrderSheet from "@/components/orders/cancel-order-sheet"
@@ -15,7 +15,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useFormatters } from "@/hooks/use-formatters"
-import { consumerOrders } from "@/routes"
+import { consumerOrders, consumerReviews } from "@/routes"
 import type { Order } from "@/types"
 
 interface OrderCardProps {
@@ -30,6 +30,10 @@ export default function OrderCard({ order, section }: OrderCardProps) {
   // El empleado paga el precio ya subsidiado; el base se muestra al lado solo
   // cuando el subsidio efectivamente lo bajó.
   const charged = order.discounted_price ?? order.price
+
+  const notReceived =
+    order.status === "cancelled" || order.status === "rejected"
+  const addressKey = notReceived ? "cancelled_address" : `${section}_address`
 
   return (
     <Card className="hover:bg-accent/40 focus-within:ring-ring/50 relative gap-2 py-4 transition-colors focus-within:ring-[3px]">
@@ -51,14 +55,21 @@ export default function OrderCard({ order, section }: OrderCardProps) {
           </span>
         </CardTitle>
         <CardAction>
-          <StatusBadge status={order.status} />
+          <StatusBadge
+            status={order.status}
+            label={
+              section === "history" && order.status === "confirmed"
+                ? t("pages.orders.statuses.delivered")
+                : undefined
+            }
+          />
         </CardAction>
       </CardHeader>
 
       <CardContent className="flex items-baseline justify-between gap-3 px-4">
         <p className="text-muted-foreground text-sm">
           {order.address
-            ? t(`pages.orders.index.${section}_address`, {
+            ? t(`pages.orders.index.${addressKey}`, {
                 address: order.address,
                 delivery_method: t(
                   `pages.orders.delivery_methods.${order.delivery_method}`,
@@ -78,6 +89,42 @@ export default function OrderCard({ order, section }: OrderCardProps) {
 
       {/* El ::after de la tarjeta cubre todo para hacerla clickeable, así que
           las acciones necesitan quedar por encima para poder tocarlas. */}
+      {/* El botón se muestra en el historial: habilitado solo si el pedido se
+          puede calificar (confirmado, ya entregado y sin reseña). */}
+      {section === "history" && (
+        <CardFooter className="relative">
+          {order.reviewable ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              asChild
+            >
+              <Link href={consumerReviews.new(order.id)}>
+                <Star aria-hidden="true" />
+                {t("pages.orders.index.review")}
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full"
+              disabled
+            >
+              <Star aria-hidden="true" />
+              {t(
+                order.reviewed
+                  ? "pages.orders.index.reviewed"
+                  : "pages.orders.index.review",
+              )}
+            </Button>
+          )}
+        </CardFooter>
+      )}
+
       {section === "upcoming" && (
         <CardFooter className="relative grid grid-cols-2 items-start gap-2">
           {order.cancellable ? (

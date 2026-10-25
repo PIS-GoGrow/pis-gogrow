@@ -36,6 +36,9 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
 
     Order.destroy_all
     Schedule.delete_all
+    # El beneficio future de benefits.yml vence hoy + 10: según el día cae después del
+    # lunes del mes siguiente y le gana al beneficio que asignan los jobs.
+    benefits(:future).destroy
 
     benefits(:monthly).update!(
       due_date: Date.current.end_of_month,
@@ -73,7 +76,7 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
     fill_in "monthly_voucher_limit", with: "15"
 
     click_button "Programar Subsidio"
-    date = Calendar.new.configurable_month.strftime("%d/%m/%y")
+    date = DateFormat.long(Calendar.new.configurable_month, inline: true)
     expect(page).to have_content("Hay un cambio programado para el " + date, wait: 30)
 
     sign_out

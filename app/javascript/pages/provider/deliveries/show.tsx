@@ -22,11 +22,20 @@ type DeliveryOption = "office" | "home"
 
 const OPTIONS: DeliveryOption[] = ["office", "home"]
 
-export default function Deliveries({ provider }: ProviderDeliveriesShow) {
+export default function Deliveries({
+  provider,
+  deliveries_configured,
+}: ProviderDeliveriesShow) {
   const { t } = useTranslation()
   const [pending, setPending] = useState<DeliveryOption | null>(null)
   const page = "pages.provider_deliveries.show"
-  const selected = pending ?? (provider.home_delivery ? "home" : "office")
+  const selected =
+    pending ??
+    (deliveries_configured
+      ? provider.home_delivery
+        ? "home"
+        : "office"
+      : null)
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -62,7 +71,7 @@ export default function Deliveries({ provider }: ProviderDeliveriesShow) {
         }
       >
         <RadioGroup
-          value={selected}
+          value={selected ?? ""}
           onValueChange={(value) => save(value as DeliveryOption)}
           disabled={pending !== null}
           aria-label={t(`${page}.title`)}

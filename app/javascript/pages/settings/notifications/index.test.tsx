@@ -1,11 +1,16 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type React from "react"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+import { consumerProfiles } from "@/routes"
 
 import Notifications from "./index"
 
-const { patchMock } = vi.hoisted(() => ({ patchMock: vi.fn() }))
+const { patchMock, roleMock } = vi.hoisted(() => ({
+  patchMock: vi.fn(),
+  roleMock: { value: "admin" },
+}))
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -13,7 +18,9 @@ vi.mock("@inertiajs/react", async () => {
     ...actual,
     Head: () => null,
     router: { patch: patchMock },
-    usePage: () => ({ props: { auth: { session: { role: "admin" } } } }),
+    usePage: () => ({
+      props: { auth: { session: { role: roleMock.value } } },
+    }),
   }
 })
 
@@ -24,12 +31,29 @@ vi.mock("@/layouts/app-layout", () => ({
 }))
 
 vi.mock("@/layouts/settings/page-layout", () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
+  default: ({
+    children,
+    consumerMobileBackHref,
+    consumerMobileBackLabel,
+  }: {
+    children: React.ReactNode
+    consumerMobileBackHref?: string
+    consumerMobileBackLabel?: string
+  }) => (
+    <div>
+      {consumerMobileBackHref && (
+        <a href={consumerMobileBackHref}>{consumerMobileBackLabel}</a>
+      )}
+      {children}
+    </div>
   ),
 }))
 
-describe("RRHH notification preferences", () => {
+describe("Notification preferences", () => {
+  beforeEach(() => {
+    roleMock.value = "admin"
+  })
+
   it("shows the existing and newly approved categories", () => {
     render(<Notifications {...props()} />)
 
@@ -57,6 +81,16 @@ describe("RRHH notification preferences", () => {
       { subscribe: true },
       expect.objectContaining({ preserveScroll: true, preserveState: true }),
     )
+  })
+
+  it("links mobile consumers back to their account", () => {
+    roleMock.value = "consumer"
+
+    render(<Notifications {...props()} />)
+
+    expect(
+      screen.getByRole("link", { name: "Volver a Mi cuenta" }),
+    ).toHaveAttribute("href", consumerProfiles.show().url)
   })
 })
 

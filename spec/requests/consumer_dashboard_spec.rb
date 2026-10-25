@@ -71,8 +71,9 @@ RSpec.describe "Consumer dashboard", type: :request do
       }
     end
 
-  it "reports the five meal weekly allowance using delivery dates" do
-    # A fin de mes la semana siguiente cae en otro mes y sale del tope mensual.
+  # La tarjeta "Tu consumo" muestra el mes contra el tope mensual: no hay tope
+  # semanal en los requisitos, y dividir el mensual entre 4 daba 0 con K < 4.
+  it "reports the monthly allowance using delivery dates" do
     travel_to(Time.zone.local(2026, 9, 14, 10))
     Order.destroy_all
     Schedule.delete_all
@@ -90,8 +91,6 @@ RSpec.describe "Consumer dashboard", type: :request do
     expect(user.consumer.benefits.first.amount).to eq(20)
     expect(inertia).to have_props(
       benefit: {
-        limit: 5,
-        used: 2,
         percentage: 50,
         monthly_limit: 20,
         monthly_used: 5,
@@ -352,9 +351,9 @@ RSpec.describe "Consumer dashboard", type: :request do
 
         expect(inertia.props[:closures]).to contain_exactly(
           a_hash_including(provider_name: users(:provider_user).name, reason: "Vacaciones",
-                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21 de septiembre al 2 de octubre de 2026"),
+                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21/09/26 al 02/10/26"),
           a_hash_including(provider_name: users(:other_provider_user).name, reason: "Feriado",
-                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14 de septiembre de 2026")
+                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14/09/26")
         )
       end
 
@@ -452,7 +451,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
       get dashboard_path
 
-      expect(inertia.props[:benefit]).to include(used: 0, monthly_used: 0)
+      expect(inertia.props[:benefit]).to include(monthly_used: 0)
     end
   end
 

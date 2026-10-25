@@ -38,7 +38,7 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
   end
 
   def due_date_text(account)
-    I18n.l(account.due_date, format: "%d/%m/%Y")
+    DateFormat.long(account.due_date, inline: true)
   end
 
   context "con deuda en un solo proveedor" do
@@ -53,7 +53,7 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
         "Ya podés pagar $450,75 a #{account.provider.user.name}. " \
         "El vencimiento es el #{due_date_text(account)}. ¡Revisá el detalle de tu pago!"
       )
-      expect(due_date_text(account)).to start_with("10/")
+      expect(account.due_date.day).to eq(10)
     end
 
     it "sigue mostrándose mientras no paga y desaparece al presentar el comprobante" do
