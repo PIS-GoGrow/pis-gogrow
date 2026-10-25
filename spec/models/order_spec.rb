@@ -1227,7 +1227,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "records how many meals each benefit covered" do
-      order = place(3, benefits: [special.id])
+      order = place(3, benefits: [ special.id ])
 
       # 1ª base + premio (60), 2ª solo premio (210), 3ª a precio completo.
       expect(order.discounted_price).to eq(570)
@@ -1235,7 +1235,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "charges the company the base and the special subsidy once confirmed" do
-      order = place(3, benefits: [special.id])
+      order = place(3, benefits: [ special.id ])
       order.decide(:confirmed)
 
       expect(order.accounts.find { it.owner == consumer }.reload.amount).to eq(570)
@@ -1243,7 +1243,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "raises the quantity without spending its own uses twice" do
-      order = place(1, benefits: [special.id])
+      order = place(1, benefits: [ special.id ])
 
       expect(modify(order, 3)).to be(true)
 
@@ -1252,7 +1252,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "lowers the quantity and gives the uses back" do
-      order = place(3, benefits: [special.id])
+      order = place(3, benefits: [ special.id ])
 
       expect(modify(order, 1)).to be(true)
 
@@ -1295,7 +1295,7 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 1)
     end
     let(:order) do
-      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity: 1, benefits: [special.id] } ]).first.second
+      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity: 1, benefits: [ special.id ] } ]).first.second
       Order.reserve(
         consumer:, schedule:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1335,7 +1335,7 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
     end
     let(:order) do
-      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity: 1, benefits: [special.id] } ]).first.second
+      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity: 1, benefits: [ special.id ] } ]).first.second
       Order.reserve(
         consumer:, schedule:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
