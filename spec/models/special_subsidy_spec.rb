@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)", type: :model do
   include ActiveSupport::Testing::TimeHelpers
 
-  fixtures :users, :companies, :consumers, :benefit_configurations, :benefit_rules
+  fixtures :users, :companies, :consumers, :providers, :benefit_configurations, :benefit_rules
 
   let(:company) { companies(:gogrow) }
   let(:admin_user) { users(:admin) }
@@ -184,6 +184,90 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       configuration.reload
       expect(configuration).to have_attributes(name: "Cumpleaños", applies_to_all: true)
       expect(configuration.benefit_rules.map(&:class)).to eq([ BirthdayBenefit ])
+    end
+  end
+
+  describe "cupones" do
+    def save_coupon(configuration = company.benefit_configurations.new(created_by: admin_user), effective_from: "2026-05-12", **attrs)
+      save_special(
+        configuration,
+        name: "Cupón",
+        subsidy_percentage: 30,
+        applies_to_all: false,
+        consumer_ids: [ one.id ],
+        condition: { type: "gift", limit: 3, effective_from:, validity_amount: 1, validity_unit: "weeks" },
+        **attrs
+      )
+    end
+
+    it "se asigna al guardarlo solo a los empleados elegidos, con su porcentaje y su cantidad de platos" do
+      configuration = save_coupon
+
+      expect(one.benefits.find_by!(benefit_configuration: configuration))
+        .to have_attributes(percentage: 30, amount: 3, due_date: Date.new(2026, 5, 18), status: "current", description: "Cupón")
+      expect(other.benefits.where(benefit_configuration: configuration)).to be_empty
+    end
+
+    it "si empieza más adelante, no se asigna antes y lo asigna el job el día de inicio" do
+      configuration = save_coupon(effective_from: "2026-05-13")
+
+      expect(configuration.benefits).to be_empty
+
+      travel_to Date.new(2026, 5, 13)
+      BenefitAssignationJob.perform_now
+
+      expect(configuration.benefits.sole).to have_attributes(consumer: one, due_date: Date.new(2026, 5, 19), status: "current")
+    end
+
+    it "al sacar a un empleado de la lista le vence el cupón y los demás lo conservan" do
+      configuration = save_coupon(consumer_ids: [ one.id, other.id ])
+      benefit_one = one.benefits.find_by!(benefit_configuration: configuration)
+      benefit_other = other.benefits.find_by!(benefit_configuration: configuration)
+
+      save_coupon(configuration, consumer_ids: [ other.id ])
+
+      expect(benefit_one.reload).to be_expired
+      expect(benefit_other.reload).to be_current
+      expect(one.special_benefits).not_to include(benefit_one)
+    end
+
+    it "al sacarlo, los pedidos ya hechos conservan el descuento y los nuevos no lo reciben" do
+      configuration = save_coupon(consumer_ids: [ one.id, other.id ])
+      benefit = one.benefits.find_by!(benefit_configuration: configuration)
+      menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
+      today, tomorrow = [ Date.current, Date.tomorrow ].map { Schedule.create!(menu:, date: it, amount: 10) }
+      orders = [ today, tomorrow ].map do |schedule|
+        Order.reserve(consumer: one, schedule:, delivery_method: :office, address: nil, discounted_price: 210, benefits: { benefit => 1 })
+      end
+      orders.first.update!(status: :confirmed)
+
+      save_coupon(configuration, consumer_ids: [ other.id ])
+
+      orders.each { expect(it.reload).to have_attributes(discounted_price: 210, benefits: [ benefit ]) }
+      expect(OrderPricing.new(one).call([ { schedule: tomorrow, quantity: 1 } ])[tomorrow.id].benefits).not_to have_key(benefit)
+
+      configuration.deactivate!(by: admin_user)
+
+      orders.each { expect(it.reload.discounted_price).to eq(210) }
+    end
+
+    it "al eliminarlo vence para todos y no se vuelve a asignar" do
+      configuration = save_coupon(consumer_ids: [ one.id, other.id ])
+
+      configuration.deactivate!(by: admin_user)
+      BenefitAssignationJob.perform_now
+
+      expect(configuration.benefits.current).to be_empty
+      expect(configuration.benefits.map(&:consumer)).to contain_exactly(one, other)
+    end
+
+    it "para toda la empresa les llega a todos sus empleados y a nadie de otra empresa" do
+      stranger = Consumer.create!(company: Company.create!(name: "Otra", address: "Calle 1"), user: users(:two))
+
+      configuration = save_coupon(applies_to_all: true, consumer_ids: [])
+
+      expect(configuration.benefits.map(&:consumer)).to match_array(company.consumers)
+      expect(stranger.benefits).to be_empty
     end
   end
 
