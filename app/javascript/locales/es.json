@@ -1164,7 +1164,11 @@
             "description": "Deje todo listo para empezar a recibir pedidos.",
             "title": "Complete su cuenta"
           },
-          "title": "Inicio"
+          "title": "Inicio",
+          "top_rated": {
+            "empty": "Todavía no hay platos valorados.",
+            "title": "Mejor valorados"
+          }
         }
       },
       "provider_deliveries": {

@@ -41,6 +41,7 @@ export default function ProviderDashboard({
   month_orders_count,
   month_dishes_count,
   average_rating,
+  top_rated,
   completed_sections_count,
   sections_total,
 }: Props) {
@@ -230,6 +231,40 @@ export default function ProviderDashboard({
                   {t("pages.provider_dashboard.index.insights.generated")}
                 </p>
               </div>
+            </section>
+
+            <section className="space-y-3" aria-labelledby="top-rated-title">
+              <DashboardSectionButton
+                id="top-rated-title"
+                title={t("pages.provider_dashboard.index.top_rated.title")}
+              />
+              <Card className="dark:border-border dark:bg-muted gap-0 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] p-4 shadow-none">
+                {top_rated.length > 0 ? (
+                  <ul className="divide-border divide-y">
+                    {top_rated.map((dish) => (
+                      <li
+                        key={dish.name}
+                        className="flex items-center justify-between gap-2 py-2.5 text-sm first:pt-0 last:pb-0"
+                      >
+                        <span className="min-w-0 flex-1 truncate">
+                          {dish.name}
+                        </span>
+                        <span className="flex shrink-0 items-center gap-1 font-semibold">
+                          {dish.rating}
+                          <Star
+                            className="size-4 fill-current"
+                            aria-hidden="true"
+                          />
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    {t("pages.provider_dashboard.index.top_rated.empty")}
+                  </p>
+                )}
+              </Card>
             </section>
 
             <section className="space-y-3" aria-labelledby="payments-title">
