@@ -114,6 +114,35 @@ describe("OrderCard", () => {
     })
   })
 
+  describe("status badge rendering in upcoming vs history", () => {
+    it("renders 'Entregado' badge for confirmed orders in history section", () => {
+      const confirmedOrder: Order = {
+        ...baseOrder,
+        status: "confirmed",
+        cancellable: false,
+        cancellation_block_reason: "already_closed",
+      }
+
+      render(<OrderCard order={confirmedOrder} section="history" />)
+
+      expect(screen.getByText("Entregado")).toBeInTheDocument()
+      expect(screen.queryByText("Confirmado")).not.toBeInTheDocument()
+    })
+
+    it("renders 'Confirmado' badge for confirmed orders in upcoming section", () => {
+      const confirmedOrder: Order = {
+        ...baseOrder,
+        status: "confirmed",
+        cancellable: true,
+      }
+
+      render(<OrderCard order={confirmedOrder} section="upcoming" />)
+
+      expect(screen.getByText("Confirmado")).toBeInTheDocument()
+      expect(screen.queryByText("Entregado")).not.toBeInTheDocument()
+    })
+  })
+
   describe("cancellation after order deadline has passed", () => {
     it("disables the cancel button and explains the deadline passed reason", () => {
       const closedOrder: Order = {

@@ -55,7 +55,14 @@ export default function OrderCard({ order, section }: OrderCardProps) {
           </span>
         </CardTitle>
         <CardAction>
-          <StatusBadge status={order.status} />
+          <StatusBadge
+            status={order.status}
+            label={
+              section === "history" && order.status === "confirmed"
+                ? t("pages.orders.statuses.delivered")
+                : undefined
+            }
+          />
         </CardAction>
       </CardHeader>
 

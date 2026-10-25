@@ -34,10 +34,19 @@ RSpec.describe "Cancelar pedidos después de la hora de cierre e información de
     end
   end
 
-  describe "información de dirección en pedidos cancelados y rechazados del historial" do
-    it "muestra 'Lo pediste para:' en pedidos no recibidos y 'Lo recibiste en:' en confirmados" do
+  describe "información de dirección y estado en pedidos del historial" do
+    let(:confirmed_upcoming_order) { orders(:upcoming_confirmed_future) }
+
+    it "muestra 'Lo pediste para:' en cancelados/rechazados, 'Lo recibiste en:' y 'Entregado' en confirmados pasados" do
       sign_in consumer_user, role: :consumer
       visit_hydrated orders_path
+
+      # En próximos, un pedido confirmado dice "Confirmado"
+      upcoming_card = find("a[href='#{order_path(confirmed_upcoming_order)}']").ancestor("[data-slot='card']")
+      within upcoming_card do
+        expect(page).to have_content("Confirmado")
+        expect(page).to have_no_content("Entregado")
+      end
 
       find("button", text: "Historial").click
 
@@ -45,17 +54,21 @@ RSpec.describe "Cancelar pedidos después de la hora de cierre e información de
       within cancelled_card do
         expect(page).to have_content("Lo pediste para: #{cancelled_order.address}")
         expect(page).to have_no_content("Lo recibiste en:")
+        expect(page).to have_content("Cancelado")
       end
 
       rejected_card = find("a[href='#{order_path(rejected_order)}']").ancestor("[data-slot='card']")
       within rejected_card do
         expect(page).to have_content("Lo pediste para: #{rejected_order.address}")
         expect(page).to have_no_content("Lo recibiste en:")
+        expect(page).to have_content("Rechazado")
       end
 
       confirmed_card = find("a[href='#{order_path(confirmed_past_order)}']").ancestor("[data-slot='card']")
       within confirmed_card do
         expect(page).to have_content("Lo recibiste en: #{confirmed_past_order.address}")
+        expect(page).to have_content("Entregado")
+        expect(page).to have_no_content("Confirmado")
       end
     end
   end
