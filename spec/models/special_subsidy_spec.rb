@@ -208,15 +208,16 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       expect(other.benefits.where(benefit_configuration: configuration)).to be_empty
     end
 
-    it "si empieza más adelante, no se asigna antes y lo asigna el job el día de inicio" do
-      configuration = save_coupon(effective_from: "2026-05-13")
+    it "si empieza más adelante, se asigna al guardarlo y vale solo para entregas dentro del período" do
+      configuration = save_coupon(effective_from: "2026-05-14")
+      benefit = configuration.benefits.sole
+      menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
+      schedules = [ Date.new(2026, 5, 13), Date.new(2026, 5, 14), Date.new(2026, 5, 20), Date.new(2026, 5, 21) ].map { Schedule.create!(menu:, date: it, amount: 10) }
 
-      expect(configuration.benefits).to be_empty
+      pricing = OrderPricing.new(one).call(schedules.map { { schedule: it, quantity: 1 } })
 
-      travel_to Date.new(2026, 5, 13)
-      BenefitAssignationJob.perform_now
-
-      expect(configuration.benefits.sole).to have_attributes(consumer: one, due_date: Date.new(2026, 5, 19), status: "current")
+      expect(benefit).to have_attributes(consumer: one, starts_on: Date.new(2026, 5, 14), due_date: Date.new(2026, 5, 20), status: "current")
+      expect(schedules.map { pricing[it.id].benefits.key?(benefit) }).to eq([ false, true, true, false ])
     end
 
     it "al sacar a un empleado de la lista le vence el cupón y los demás lo conservan" do
@@ -249,6 +250,30 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       configuration.deactivate!(by: admin_user)
 
       orders.each { expect(it.reload.discounted_price).to eq(210) }
+    end
+
+    it "al modificar un pedido hecho antes de sacarlo, conserva el descuento de las viandas que tenía y no lo suma a las nuevas" do
+      configuration = save_coupon
+      benefit = one.benefits.find_by!(benefit_configuration: configuration)
+      menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
+      schedule = Schedule.create!(menu:, date: Date.tomorrow, amount: 10)
+      order = Order.reserve(consumer: one, schedule:, delivery_method: :office, address: nil, discounted_price: 210, benefits: { benefit => 1 })
+
+      configuration.deactivate!(by: admin_user)
+
+      expect(OrderPricing.new(one, modifiable_order: order).call([ { schedule:, quantity: 2 } ])[schedule.id].benefits).to include(benefit => 1)
+    end
+
+    it "les avisa solo a los empleados elegidos, una vez" do
+      configuration = save_coupon(consumer_ids: [ one.id ])
+      save_coupon(configuration, consumer_ids: [ one.id ], name: "Cupón editado")
+
+      expect(Notification.where(event: "coupon_assigned").sole).to have_attributes(
+        user: one.user,
+        role: "consumer",
+        title: "Recibiste un cupón",
+        description: "RR. HH. te dio el cupón Cupón: 30% de descuento en 3 viandas para entregas del 12/05/26 al 18/05/26."
+      )
     end
 
     it "al eliminarlo vence para todos y no se vuelve a asignar" do

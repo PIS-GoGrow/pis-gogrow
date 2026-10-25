@@ -82,6 +82,9 @@ class OrderPricing
   # que la orden modificable puede tenerlos.
   # nil significa usos ilimitados, como el de antigüedad.
   def remaining_uses(benefit)
+    # Un beneficio vencido solo llega acá si la orden modificable ya lo usaba: conserva
+    # lo que tenía, pero no cubre viandas nuevas.
+    return benefit_held.fetch(benefit.id, 0) if benefit.expired?
     return if benefit.amount.nil?
 
     [ benefit.amount - benefit_used.fetch(benefit.id, 0) + benefit_held.fetch(benefit.id, 0), 0 ].max
@@ -110,6 +113,7 @@ class OrderPricing
     @benefits ||= consumer
       .benefits
       .where.not(status: :expired)
+      .or(consumer.benefits.where(id: @modifiable_order&.order_benefits&.select(:benefit_id)))
       .order(percentage: :desc)
       .to_a
   end

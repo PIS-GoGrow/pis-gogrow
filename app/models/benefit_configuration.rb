@@ -119,6 +119,7 @@ class BenefitConfiguration < ApplicationRecord
       consumer.benefits.create!(
         amount: benefit_limit,
         due_date: benefit_deadline(consumer, date),
+        starts_on: benefit_start,
         percentage: subsidy_percentage,
         description: name,
         status: :current,
@@ -173,6 +174,7 @@ class BenefitConfiguration < ApplicationRecord
         benefit.update!(
           amount: benefit_limit,
           due_date: benefit_deadline(consumer, date),
+          starts_on: benefit_start,
           max_price: benefit_max_price,
           percentage: subsidy_percentage,
           description: name
@@ -321,6 +323,11 @@ class BenefitConfiguration < ApplicationRecord
       .map { |rule| rule.benefit_deadline consumer, date: }
       .filter { |deadline| !deadline.nil? }
       .min
+  end
+
+  # Devuelve el mayor inicio impuesto por las reglas. Si no hay, devuelve nil
+  def benefit_start
+    benefit_rules.filter_map(&:benefit_start).max
   end
 
   # Devuelve el menor max_price impuesto por las reglas. Si no hay, devuelve nil
