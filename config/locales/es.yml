@@ -1159,6 +1159,9 @@ es:
           rating: "Valoración"
           description: "Los hallazgos basados en las valoraciones estarán disponibles próximamente."
           generated: "Generado por IA"
+        top_rated:
+          title: "Mejor valorados"
+          empty: "Todavía no hay platos valorados."
         payments:
           title: "Resumen de cobros"
           pending: "Cobros pendientes"
