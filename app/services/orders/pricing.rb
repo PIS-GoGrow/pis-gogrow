@@ -145,10 +145,11 @@ class Orders::Pricing
   # El usuario solo puede seleccionar los beneficios del último grupo.
   def benefits_from_ids(benefit_ids)
     unlimited, limited = special_benefits .partition { |benefit| benefit.amount.nil? }
+    benefit_ids_num = benefit_ids.map { |n| n.to_i }
 
     monthly_benefits +
       unlimited +
-      limited.select { |benefit| benefit_ids.include? benefit.id.to_i }
+      limited.select { |benefit| benefit_ids_num.include? benefit.id }
   end
 
   def benefits
