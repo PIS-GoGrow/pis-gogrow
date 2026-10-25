@@ -11,7 +11,7 @@ RSpec.describe "Configuración de subsidios especiales por RRHH", type: :system 
   before do
     # Los fixtures gift y seniority son configuraciones sin MonthlyBenefit: para la
     # pantalla serían subsidios especiales sin nombre.
-    benefit_configurations(:gift, :seniority).each(&:destroy)
+    benefit_configurations(:gift, :gift2, :seniority).each(&:destroy)
     sign_in admin_user, role: :admin
   end
 
