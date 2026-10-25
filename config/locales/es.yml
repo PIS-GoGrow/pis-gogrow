@@ -21,7 +21,6 @@ es:
   flash:
     cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
-    order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
     order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
     order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     order_updated: "Pedido actualizado."
@@ -824,6 +823,10 @@ es:
           description: "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras."
           back: "Volver"
           confirm: "Cancelar pedido"
+        cancelled_dialog:
+          title: "Pedido cancelado"
+          description: "Podés hacer un nuevo pedido cuando quieras."
+          done: "Listo"
         cannot_cancel:
           confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar."
           already_closed: "Este pedido ya está cerrado."

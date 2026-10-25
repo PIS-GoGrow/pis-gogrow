@@ -16,6 +16,7 @@ export interface NavItem {
 export interface FlashData {
   alert?: string
   notice?: string
+  order_cancelled?: boolean
 }
 
 export * from "./serializers"

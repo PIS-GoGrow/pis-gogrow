@@ -144,7 +144,8 @@ class Consumer::OrdersController < Consumer::InertiaController
     order = @consumer.orders.find(params[:id])
 
     if order.cancel(by: Current.user)
-      redirect_to orders_path, notice: t("flash.order_cancelled"), status: :see_other
+      flash.inertia[:order_cancelled] = true
+      redirect_to orders_path, status: :see_other
     else
       redirect_to orders_path, alert: t("validations.order_not_cancellable"), status: :see_other
     end

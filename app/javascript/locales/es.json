@@ -862,6 +862,11 @@
             "description": "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras.",
             "title": "¿Cancelar pedido?"
           },
+          "cancelled_dialog": {
+            "description": "Podés hacer un nuevo pedido cuando quieras.",
+            "done": "Listo",
+            "title": "Pedido cancelado"
+          },
           "cannot_cancel": {
             "already_closed": "Este pedido ya está cerrado.",
             "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",

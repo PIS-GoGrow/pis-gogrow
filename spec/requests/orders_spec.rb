@@ -1193,7 +1193,7 @@ RSpec.describe "Orders", type: :request do
         expect(response).to redirect_to(orders_path)
 
         follow_redirect!
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_cancelled"))
+        expect(inertia).to have_flash(order_cancelled: true)
         expect(inertia.props[:past_orders].pluck(:id)).to include(order.id)
         expect(inertia.props[:upcoming_orders].pluck(:id)).not_to include(order.id)
       end
