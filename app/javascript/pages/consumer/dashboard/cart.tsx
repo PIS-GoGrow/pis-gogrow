@@ -59,6 +59,20 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
     form.clearErrors()
   }
 
+  function setQuantity(cartId: string, quantity: number) {
+    setCart((items) =>
+      items.map((item) =>
+        item.cartId === cartId
+          ? {
+              ...item,
+              quantity: Math.min(item.remaining, Math.max(1, quantity)),
+            }
+          : item,
+      ),
+    )
+    form.clearErrors()
+  }
+
   function confirm() {
     if (!cart.length || form.processing || !address) return
 
@@ -150,6 +164,7 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
             error={form.errors.order_error}
             confirm={confirm}
             remove={remove}
+            setQuantity={setQuantity}
           />
         )}
       </div>

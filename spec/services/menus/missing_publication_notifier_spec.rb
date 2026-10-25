@@ -28,7 +28,7 @@ RSpec.describe Menus::MissingPublicationNotifier do
       role: "provider",
       requires_action: true,
       title: "Publicá el menú del día",
-      description: "Todavía no publicaste un menú para el 9/1/2030."
+      description: "Todavía no publicaste un menú para el miércoles 9 de enero."
     )
   end
 
@@ -112,7 +112,7 @@ RSpec.describe Menus::MissingPublicationNotifier do
       event_key: :provider_menu_unpublished,
       user: provider.user,
       notifiable: provider,
-      description_data: { date: "9/1/2030" }
+      description_data: { date: "miércoles 9 de enero" }
     )
   end
 

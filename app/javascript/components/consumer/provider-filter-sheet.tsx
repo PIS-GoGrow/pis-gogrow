@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from "lucide-react"
+import { Settings2 } from "lucide-react"
 import { useState } from "react"
 
 import {
@@ -58,7 +58,7 @@ export function ProviderFilterSheet<Id extends string | number>({
           aria-label="Filtrar por proveedores"
           className="border-border bg-card hover:bg-accent ml-auto size-9 shrink-0 rounded-full shadow-none"
         >
-          <SlidersHorizontal aria-hidden="true" className="size-4" />
+          <Settings2 aria-hidden="true" className="size-4" />
         </Button>
       </AdaptableDialogTrigger>
 

@@ -10,7 +10,7 @@ class Provider::CollectionPaymentSerializer < ApplicationSerializer
 
   typelize :string
   attribute :date do |payment|
-    payment.created_at.strftime("%d/%m/%y")
+    DateFormat.short(payment.created_at)
   end
 
   typelize :string, nullable: true

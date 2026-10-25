@@ -4,7 +4,6 @@ import type { ProviderOrder } from "@/types"
 
 import {
   filterOrders,
-  formatDayDate,
   groupByDate,
   hasActiveFilters,
   initialDate,
@@ -193,11 +192,5 @@ describe("summarize", () => {
 
   it("devuelve ceros sin pedidos", () => {
     expect(summarize([])).toEqual({ meals: 0, total: 0 })
-  })
-})
-
-describe("formatDayDate", () => {
-  it("devuelve día y mes", () => {
-    expect(formatDayDate("2026-09-10")).toBe("10/09")
   })
 })

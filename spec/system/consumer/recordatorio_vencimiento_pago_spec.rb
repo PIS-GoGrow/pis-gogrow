@@ -44,7 +44,7 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
     expect(page).to have_content(title)
     expect(page).to have_content(
       "Te quedan 3 días para pagar $450,75 a #{account.provider.user.name}. " \
-      "Vence el #{I18n.l(account.due_date, format: '%d/%m/%Y')}. ¡Revisá el detalle de tu pago!"
+      "Vence el #{DateFormat.long(account.due_date, inline: true)}. ¡Revisá el detalle de tu pago!"
     )
   end
 

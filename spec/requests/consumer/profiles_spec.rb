@@ -47,7 +47,7 @@ RSpec.describe "Consumer::Profiles", type: :request do
           percentage: 50,
           monthly_limit: 20,
           max_price: 500.0,
-          due_date: I18n.l(benefits(:monthly).due_date, format: "%d/%m/%Y")
+          due_date: DateFormat.short(benefits(:monthly).due_date)
         )
       end
 

@@ -177,15 +177,22 @@ class Order < ApplicationRecord
   end
 
   # RN-12 y RN-13: un pedido pendiente de confirmación se cancela hasta el día de
-  # la entrega inclusive; uno ya confirmado, solo mientras la entrega siga siendo
-  # para un día futuro. Devuelve el motivo del bloqueo para que la pantalla lo
-  # explique. La fecha se mira en los dos estados porque esto es la única guarda
-  # del endpoint: que la pantalla esconda el botón no frena un PATCH directo.
+  # la entrega inclusive, pero ese mismo día solo hasta la hora de cierre del
+  # proveedor: pasada, él ya está preparando lo pedido. Uno ya confirmado, solo
+  # mientras la entrega siga siendo para un día futuro. Devuelve el motivo del
+  # bloqueo para que la pantalla lo explique. La fecha se mira en los dos
+  # estados porque esto es la única guarda del endpoint: que la pantalla esconda
+  # el botón no frena un PATCH directo.
   def cancellation_block_reason
     return "already_closed" unless pending? || confirmed?
     return "unavailable" if schedule.nil?
     return if schedule.date.after?(Date.current)
-    return if pending? && schedule.date.today?
+
+    if pending? && schedule.date.today?
+      return "order_deadline_passed" if schedule.order_deadline_passed?
+
+      return
+    end
 
     schedule.date.today? ? "confirmed_for_today" : "already_closed"
   end
@@ -373,7 +380,7 @@ class Order < ApplicationRecord
       user: consumer.user,
       notifiable: self,
       description_data: {
-        date: I18n.l(schedule.date, format: :short),
+        date: DateFormat.long(schedule.date, inline: true),
         provider: provider.user.name
       }
     )
@@ -388,7 +395,7 @@ class Order < ApplicationRecord
       notifiable: self,
       description_data: {
         consumer: consumer.user.name,
-        date: I18n.l(schedule.date, format: "%d/%m"),
+        date: DateFormat.long(schedule.date, inline: true),
         dish: menu_name
       }
     )
@@ -406,7 +413,7 @@ class Order < ApplicationRecord
         consumer: consumer.user.name,
         amount:,
         dish: menu_name,
-        date: I18n.l(schedule.date, format: :short)
+        date: DateFormat.long(schedule.date, inline: true)
       }
     )
   end
@@ -430,7 +437,7 @@ class Order < ApplicationRecord
   # Guarda los datos necesarios para notificar un rechazo aunque luego se elimine el schedule.
   def capture_rejection_notification_data
     @rejection_notification_data = {
-      date: I18n.l(delivery_date, format: :short),
+      date: DateFormat.long(delivery_date, inline: true),
       dish: menu_name,
       provider: provider_name
     }
