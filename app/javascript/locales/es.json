@@ -862,9 +862,11 @@
             "description": "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras.",
             "title": "¿Cancelar pedido?"
           },
+          "cancelled_address": "Lo pediste para: %{address} (%{delivery_method})",
           "cannot_cancel": {
             "already_closed": "Este pedido ya está cerrado.",
             "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",
+            "order_deadline_passed": "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
           },
           "history_address": "Lo recibiste en: %{address} (%{delivery_method})",
@@ -905,7 +907,6 @@
             "notes": "Notas",
             "notes_placeholder": "Sin salsa, sin cebolla…",
             "quantity": "Cantidad",
-            "remaining": "Quedan %{count} disponibles para esta fecha",
             "title": "Modificar pedido"
           },
           "no_notes": "Sin notas",
@@ -919,6 +920,7 @@
         "statuses": {
           "cancelled": "Cancelado",
           "confirmed": "Confirmado",
+          "delivered": "Entregado",
           "pending": "Pendiente",
           "rejected": "Rechazado"
         }
@@ -1479,6 +1481,7 @@
         "statuses": {
           "cancelled": "Cancelado",
           "confirmed": "Confirmado",
+          "delivered": "Entregado",
           "pending": "Pendiente",
           "rejected": "Rechazado"
         }
