@@ -7,16 +7,16 @@ import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
+import { Textarea } from "@/components/ui/textarea"
 import { formatMoney } from "@/lib/money"
+import type { ConsumerDashboardIndex } from "@/types"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { OrderSummary } from "./order-summary"
 import type { Pricing } from "./pricing"
 import { cartPricedItem, priceItems } from "./pricing"
-import type { ConsumerDashboardIndex } from "@/types"
 
 interface Props {
   item: Schedule
@@ -53,13 +53,17 @@ export function DishDetail({
   const [pricing, setPricing] = useState<Pricing | null>(null)
   const line = pricing?.lines?.at(-1)
   const specialBenefitIds = benefit.specials.map((b) => b.id)
-  const benefitHeld = specialBenefitIds.reduce((acc, id) => {
-    acc[id] = pricing?.lines?.slice(0, -1)?.reduce((acc, line) => {
-      return acc + (line.tiers.find((t) => t.id === id)?.quantity ?? 0)
-    }, 0) ?? 0
+  const benefitHeld = specialBenefitIds.reduce(
+    (acc, id) => {
+      acc[id] =
+        pricing?.lines?.slice(0, -1)?.reduce((acc, line) => {
+          return acc + (line.tiers.find((t) => t.id === id)?.quantity ?? 0)
+        }, 0) ?? 0
 
-    return acc
-  }, {} as Record<number, number>)
+      return acc
+    },
+    {} as Record<number, number>,
+  )
 
   // Al principio, todos los beneficios están activados
   const [benefitIds, setBenefitIds] = useState<number[]>(specialBenefitIds)
@@ -109,14 +113,23 @@ export function DishDetail({
       cancelled = true
       clearTimeout(timeout)
     }
-  }, [cart, item, inCart, isEditing, cartWithoutCurrent, otherInCart, item.id, item.date, item.menu.price, quantity, benefitIds])
+  }, [
+    cart,
+    item,
+    inCart,
+    isEditing, cartWithoutCurrent, otherInCart,
+    item.id,
+    item.date,
+    item.menu.price,
+    quantity,
+    benefitIds,
+  ])
 
   // Agrega/borra un beneficio para que se aplique a la orden
   function setChecked(benefitId: number) {
     if (benefitIds.includes(benefitId))
       setBenefitIds(benefitIds.filter((b) => b !== benefitId))
-    else
-      setBenefitIds(benefitIds.concat([benefitId]))
+    else setBenefitIds(benefitIds.concat([benefitId]))
   }
 
   const reviews = item.menu.reviews
@@ -221,15 +234,21 @@ export function DishDetail({
           {notes.length}/140
         </p>
       </section>
-      <section className="border-border border-b py-4 text-sm grid gap-2">
-        {
-          benefit.specials.filter((benefit) => {
-            return benefit.remaining === null || benefit.remaining - benefitHeld[benefit.id] > 0
-          }).map((benefit) => (
+      <section className="border-border grid gap-2 border-b py-4 text-sm">
+        {benefit.specials
+          .filter((benefit) => {
+            return (
+              benefit.remaining === null ||
+              benefit.remaining - benefitHeld[benefit.id] > 0
+            )
+          })
+          .map((benefit) => (
             <div key={benefit.id} className="flex justify-between">
               <div className="flex">
-                <TicketPercent color="#29944c" className="mr-2" size="20"/>
-                <p>{benefit.name} ({benefit.percentage}% off)</p>
+                <TicketPercent color="#29944c" className="mr-2" size="20" />
+                <p>
+                  {benefit.name} ({benefit.percentage}% off)
+                </p>
               </div>
 
               <Field orientation="horizontal" className="max-w-fit">
@@ -247,8 +266,7 @@ export function DishDetail({
                 </FieldContent>
               </Field>
             </div>
-          ))
-        }
+          ))}
       </section>
       <OrderSummary
         loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede

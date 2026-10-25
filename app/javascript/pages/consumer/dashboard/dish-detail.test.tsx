@@ -5,6 +5,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import type { CartItem, Schedule } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
 
+import type { ConsumerDashboardIndex } from "@/types"
+
+type Benefit = ConsumerDashboardIndex["benefit"]
+
 // Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
 // plato, para tomar una decisión informada." Esta es la pantalla donde el
 // empleado ve esa información antes de decidir.
@@ -38,6 +42,14 @@ const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
   },
 })
 
+const benefit: Benefit = {
+  percentage: 50,
+  monthly_limit: 20,
+  monthly_used: 0,
+  monthly_remaining: 20,
+  specials: [],
+}
+
 function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
   const defaults = {
     item: schedule(),
@@ -50,6 +62,7 @@ function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
     cart: [] as CartItem[],
     back: vi.fn(),
     add: vi.fn(),
+    benefit: benefit,
   }
   return render(<DishDetail {...defaults} {...props} />)
 }
@@ -184,6 +197,7 @@ describe("DishDetail", () => {
         cart={[]}
         back={vi.fn()}
         add={add}
+        benefit={benefit}
       />,
     )
 

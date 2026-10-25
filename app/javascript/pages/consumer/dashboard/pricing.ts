@@ -61,7 +61,7 @@ export const cartPricedItem = (items: Quantifiable[]): PricedItem[] => {
     return {
       schedule_id: item.id,
       quantity: item.quantity,
-        benefits: item.benefits,
+      benefits: item.benefits,
     }
   })
 }
