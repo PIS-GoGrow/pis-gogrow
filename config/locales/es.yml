@@ -1531,6 +1531,10 @@ es:
         added: "Agregado"
         add: "Agregar"
         modify: "Modificar"
+        reviews:
+          title: "Opiniones del plato"
+          empty: "Este plato aún no fue calificado."
+          anonymous: "Anónimo"
         closure:
           title_now: "%{provider} no está disponible"
           title_soon: "%{provider} no estará disponible"

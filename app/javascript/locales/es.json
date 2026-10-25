@@ -758,7 +758,12 @@
             "title_soon": "%{provider} no estará disponible"
           },
           "modify": "Modificar",
-          "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
+          "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy.",
+          "reviews": {
+            "anonymous": "Anónimo",
+            "empty": "Este plato aún no fue calificado.",
+            "title": "Opiniones del plato"
+          }
         },
         "options": {
           "choose": "Elegí tu/s %{name}",
