@@ -49,7 +49,8 @@ RSpec.describe "Pedidos del consumidor" do
 
     within("[role=dialog]") do
       expect(page).to have_content("Filtrar por proveedores")
-      expect(page).to have_field("Todos los proveedores", checked: true)
+      expect(page).to have_content("Todos los proveedores")
+      expect(page).to have_selector("#dashboard-filter-all[data-state='checked']")
       find("label", text: "Office Provider User").click
       click_button "Aplicar"
     end
