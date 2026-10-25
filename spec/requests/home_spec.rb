@@ -53,11 +53,11 @@ RSpec.describe "Home", type: :request do
     end
   end
 
-  describe "GET /proveedor" do
-    it "redirects to /provider to maintain route consistency" do
+  describe "GET /provider" do
+    it "redirects to /proveedor to maintain route consistency" do
       get provider_welcome_path
 
-      expect(response).to redirect_to("/provider")
+      expect(response).to redirect_to("/proveedor")
     end
   end
 

@@ -47,14 +47,14 @@ describe("ClosuresSection", () => {
       reason: "Vacaciones de invierno",
       starts_on: "2026-10-20",
       ends_on: "2026-10-22",
-      period: "20 al 22 de octubre de 2026",
+      period: "20/10/26 al 22/10/26",
     },
     {
       id: 2,
       reason: "Feriado",
       starts_on: "2026-11-02",
       ends_on: "2026-11-02",
-      period: "2 de noviembre de 2026",
+      period: "02/11/26",
     },
   ]
 
@@ -79,9 +79,9 @@ describe("ClosuresSection", () => {
     render(<ClosuresSection closures={sampleClosures} today="2026-10-12" />)
 
     expect(screen.getByText("Vacaciones de invierno")).toBeInTheDocument()
-    expect(screen.getByText("20 al 22 de octubre de 2026")).toBeInTheDocument()
+    expect(screen.getByText("20/10/26 al 22/10/26")).toBeInTheDocument()
     expect(screen.getByText("Feriado")).toBeInTheDocument()
-    expect(screen.getByText("2 de noviembre de 2026")).toBeInTheDocument()
+    expect(screen.getByText("02/11/26")).toBeInTheDocument()
   })
 
   it("abre el formulario para programar un nuevo cierre al hacer clic en 'Programar cierre'", () => {
@@ -128,7 +128,7 @@ describe("ClosuresSection", () => {
     fireEvent.click(deleteButtons[0])
 
     expect(routerDeleteMock).toHaveBeenCalledWith(
-      expect.stringContaining("/provider/closures/1"),
+      expect.stringContaining("/proveedor/cierres/1"),
       expect.objectContaining({ preserveScroll: true }),
     )
 

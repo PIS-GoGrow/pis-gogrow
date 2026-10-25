@@ -54,7 +54,7 @@ RSpec.describe "Notificación de vencimiento de pagos a proveedores", type: :sys
 
   def payment_description(verb)
     "El pago de GoGrow a #{provider.user.name} por #{period} " \
-      "(#{account.formatted_amount}) #{verb} el #{I18n.l(due_date)}. Revisá el detalle en Pagos."
+      "(#{account.formatted_amount}) #{verb} el #{DateFormat.long(due_date, inline: true)}. Revisá el detalle en Pagos."
   end
 
   it "avisa a RR.HH. tres días antes del vencimiento y no deja descartar el aviso" do

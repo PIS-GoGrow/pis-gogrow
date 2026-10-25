@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
 class Consumer::DashboardIndexSerializer < ApplicationSerializer
-  attributes :week, :schedules, :benefit, :addresses
+  attributes :week, :schedules, :benefit
 
   typelize week: "{ start_date: string; end_date: string; days: Array<{ date: string; weekday: string; day: number }> }"
   typelize schedules: "Array<{ id: number; date: string; remaining: number; sold_out: boolean; orders_closed: boolean; menu: { id: number; name: string; description: string | null; price: number; option_groups: Array<{ id: number; name: string; options: string[]; limit: number; required: boolean }>; provider_name: string; home_delivery: boolean; reviews: Array<{ id: number; description: string | null; rating: number | null; created_at: string }> } }>"
-  typelize benefit: "{ limit: number; used: number; percentage: number; monthly_limit: number; monthly_used: number; monthly_remaining: number; specials: Array<{ id: number; name: string; percentage: number; remaining: number | null; due_date: string | null }> }"
-  typelize addresses: "Array<{ id: string; label: string; address: string }>"
+  typelize benefit: "{ percentage: number; monthly_limit: number; monthly_used: number; monthly_remaining: number; specials: Array<{ id: number; name: string; percentage: number; remaining: number | null; due_date: string | null }>  }"
 
   has_many :closures, serializer: Consumer::ClosureSerializer
 end

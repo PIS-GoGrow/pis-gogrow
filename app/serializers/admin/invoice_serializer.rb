@@ -14,7 +14,7 @@ class Admin::InvoiceSerializer < ApplicationSerializer
 
   typelize :string
   attribute :issued_on do |invoice|
-    I18n.l(invoice.issued_on, format: "%d/%m/%y")
+    DateFormat.short(invoice.issued_on)
   end
 
   typelize :string

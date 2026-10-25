@@ -14,6 +14,7 @@ import AccountCard from "@/components/consumer/accounts/account-card"
 import OrdersTable from "@/components/consumer/accounts/orders-table"
 import PaymentHistoryCard from "@/components/consumer/accounts/payment-history-card"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
+import BankDetails from "@/components/payments/bank-details"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -26,18 +27,19 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
+import { formatMoney } from "@/lib/money"
 import { consumerAccounts } from "@/routes"
 import type {
   Account,
   BreadcrumbItem,
-  Provider,
+  PaymentProvider,
   SimplifiedOrder,
 } from "@/types"
 
 interface AccountProps {
   accounts: Account[]
   history_accounts: Account[]
-  providers: Provider[]
+  providers: PaymentProvider[]
   history: boolean
   current_month_debt: number
   current_month_ordered: number
@@ -99,6 +101,8 @@ export default function Index({
       </CardHeader>
 
       <CardContent className="grid gap-4">
+        <BankDetails provider={p} />
+
         {accountsJSX[p.id] ? (
           accountsJSX[p.id]
         ) : (
@@ -129,7 +133,7 @@ export default function Index({
               </Badge>
             </CardDescription>
             <CardTitle>
-              ${current_month_debt}
+              {formatMoney(current_month_debt)}
               <span className="text-zinc-500 dark:text-zinc-400">
                 {" | "}
                 {current_month_ordered}
@@ -170,7 +174,7 @@ export default function Index({
                       {t("pages.accounts.index.total_debt")}
                     </Badge>
                   </CardDescription>
-                  <CardTitle>${total_debt}</CardTitle>
+                  <CardTitle>{formatMoney(total_debt)}</CardTitle>
                 </CardHeader>
               </Card>
 

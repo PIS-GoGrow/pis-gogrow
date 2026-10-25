@@ -21,6 +21,7 @@ import type { ProviderClosure } from "@/types/serializers/ProviderClosure"
 interface ClosuresSectionProps {
   closures: ProviderClosure[]
   today: string
+  onboarding?: boolean
 }
 
 interface Range {
@@ -33,6 +34,7 @@ const page = "pages.provider_operational_settings.show.closures"
 export default function ClosuresSection({
   closures,
   today,
+  onboarding = false,
 }: ClosuresSectionProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -57,7 +59,8 @@ export default function ClosuresSection({
   }
 
   const handleDelete = (closure: ProviderClosure) => {
-    router.delete(providerClosures.destroy(closure.id).url, {
+    const url = providerClosures.destroy(closure.id).url
+    router.delete(onboarding ? `${url}?onboarding=true` : url, {
       preserveScroll: true,
       onStart: () => setDeletingId(closure.id),
       onFinish: () => setDeletingId(null),
@@ -158,6 +161,9 @@ export default function ClosuresSection({
                       </AdaptableDialogDescription>
                     </AdaptableDialogHeader>
                     <div className="flex flex-col gap-4 px-6 pb-6">
+                      {onboarding && (
+                        <input type="hidden" name="onboarding" value="true" />
+                      )}
                       <input
                         type="hidden"
                         name="starts_on"

@@ -240,12 +240,13 @@ export default function CollectionGroupCard({
                   }
                   showDownloadAll={settled}
                   aside={
-                    group.company.invoice && (
+                    group.company.invoice &&
+                    group.company.status !== "rejected" ? (
                       <StatusBadge
                         status={group.company.invoice.status}
                         kind="invoice"
                       />
-                    )
+                    ) : undefined
                   }
                 >
                   {(!settled || group.company.invoice) && (

@@ -1,32 +1,50 @@
+<% configured = 1.week.ago.to_fs(:db) %>
 tuviandita:
   user: provider_user
   home_delivery: true
-  onboarding_completed_at: <%= 1.week.ago.to_fs(:db) %>
+  onboarding_completed_at: <%= configured %>
+  payment_details_configured_at: <%= configured %>
+  order_deadline_configured_at: <%= configured %>
+  deliveries_configured_at: <%= configured %>
+  notifications_configured_at: <%= configured %>
 
 office_provider:
   user: office_provider_user
   home_delivery: false
-  onboarding_completed_at: <%= 1.week.ago.to_fs(:db) %>
+  onboarding_completed_at: <%= configured %>
+  payment_details_configured_at: <%= configured %>
+  order_deadline_configured_at: <%= configured %>
+  deliveries_configured_at: <%= configured %>
+  notifications_configured_at: <%= configured %>
 
 endulzate:
   user: other_provider_user
-  onboarding_completed_at: <%= 1.week.ago.to_fs(:db) %>
+  onboarding_completed_at: <%= configured %>
+  payment_details_configured_at: <%= configured %>
+  order_deadline_configured_at: <%= configured %>
+  deliveries_configured_at: <%= configured %>
+  notifications_configured_at: <%= configured %>
 
 # == Schema Information
 #
 # Table name: providers
 #
-#  id                  :bigint           not null, primary key
-#  bank_account_holder :string
-#  bank_account_number :string
-#  bank_account_type   :integer
-#  bank_name           :string
-#  home_delivery       :boolean          default(TRUE), not null
-#  order_deadline      :time
-#  created_at          :datetime         not null
-#  updated_at          :datetime         not null
-#  tax_id              :string
-#  user_id             :bigint
+#  id                            :bigint           not null, primary key
+#  bank_account_holder           :string
+#  bank_account_number           :string
+#  bank_account_type             :integer
+#  bank_name                     :string
+#  deliveries_configured_at      :datetime
+#  home_delivery                 :boolean          default(TRUE), not null
+#  notifications_configured_at   :datetime
+#  onboarding_completed_at       :datetime
+#  order_deadline                :time
+#  order_deadline_configured_at  :datetime
+#  payment_details_configured_at :datetime
+#  created_at                    :datetime         not null
+#  updated_at                    :datetime         not null
+#  tax_id                        :string
+#  user_id                       :bigint
 #
 # Indexes
 #

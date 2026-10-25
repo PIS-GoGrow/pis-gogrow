@@ -50,13 +50,30 @@ RSpec.describe "Consumer dashboard", type: :request do
     expect(inertia).to have_props { |props|
       props[:schedules].one? &&
         props[:schedules].first[:id] == schedule.id &&
-        props.dig(:benefit, :percentage) == 50 &&
-        props[:addresses].pluck(:label) == [ "Oficina", "Casa" ]
+        props.dig(:benefit, :percentage) == 50
     }
   end
+  it "renders the cart with its server props" do
+      travel_to(Time.zone.local(2026, 9, 14, 10))
+      Order.destroy_all
+      Schedule.delete_all
+      user = consumer_user
+      schedule = create_schedule
+      sign_in_as_consumer(user)
 
-  it "reports the five meal weekly allowance using delivery dates" do
-    # A fin de mes la semana siguiente cae en otro mes y sale del tope mensual.
+      get dashboard_cart_path
+
+      expect(response).to have_http_status(:success)
+      expect(inertia).to render_component("consumer/dashboard/cart")
+      expect(inertia).to have_props { |props|
+        props.dig(:benefit, :percentage) == 50 &&
+          props[:addresses].pluck(:label) == [ "Oficina", "Casa" ]
+      }
+    end
+
+  # La tarjeta "Tu consumo" muestra el mes contra el tope mensual: no hay tope
+  # semanal en los requisitos, y dividir el mensual entre 4 daba 0 con K < 4.
+  it "reports the monthly allowance using delivery dates" do
     travel_to(Time.zone.local(2026, 9, 14, 10))
     Order.destroy_all
     Schedule.delete_all
@@ -74,8 +91,6 @@ RSpec.describe "Consumer dashboard", type: :request do
     expect(user.consumer.benefits.first.amount).to eq(20)
     expect(inertia).to have_props(
       benefit: {
-        limit: 5,
-        used: 2,
         percentage: 50,
         monthly_limit: 20,
         monthly_used: 5,
@@ -180,7 +195,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   # El día concreto se elige en el browser sobre la semana que devuelve el
   # server, así que acá se verifica la ventana lunes–viernes y la forma de los
   # props; el filtrado por día se cubre en spec/system/consumer.
-  describe "GET /dashboard — consulting the menu by date (IBP-003)" do
+  describe "GET /menu-semanal — consulting the menu by date (IBP-003)" do
     fixtures :users, :consumers, :companies, :providers, :menus
 
     # Un lunes fijo: la pantalla arma la semana desde Date.current, así que sin
@@ -336,9 +351,9 @@ RSpec.describe "Consumer dashboard", type: :request do
 
         expect(inertia.props[:closures]).to contain_exactly(
           a_hash_including(provider_name: users(:provider_user).name, reason: "Vacaciones",
-                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21 de septiembre al 2 de octubre de 2026"),
+                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21/09/26 al 02/10/26"),
           a_hash_including(provider_name: users(:other_provider_user).name, reason: "Feriado",
-                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14 de septiembre de 2026")
+                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14/09/26")
         )
       end
 
@@ -399,7 +414,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       publish(menus(:milanesa), monday)
       sign_in users(:one)
 
-      get dashboard_path
+      get dashboard_cart_path
 
       expect(inertia.props[:addresses].pluck(:id)).to eq([ "office" ])
     end
@@ -436,7 +451,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
       get dashboard_path
 
-      expect(inertia.props[:benefit]).to include(used: 0, monthly_used: 0)
+      expect(inertia.props[:benefit]).to include(monthly_used: 0)
     end
   end
 
@@ -446,7 +461,7 @@ RSpec.describe "Consumer dashboard", type: :request do
   # Acá se verifica que el server entregue cada dato, y que lo ausente viaje
   # como ausente. Cómo se pinta eso en pantalla —y qué se muestra cuando falta—
   # se cubre en app/javascript/pages/consumer/dashboard/dish-detail.test.tsx.
-  describe "GET /dashboard — información de cada plato" do
+  describe "GET /menu-semanal — información de cada plato" do
     fixtures :users, :consumers, :companies, :providers, :menus, :reviews, :benefit_configurations, :benefits
 
     around do |example|
@@ -598,7 +613,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     OmniAuth.config.mock_auth[:google_oauth2] = nil
   end
 
-  describe "GET /dashboard during weekend" do
+  describe "GET /menu-semanal during weekend" do
     let(:consumer_user_record) { consumer_user }
     let(:saturday) { Time.zone.local(2026, 10, 3, 10, 0, 0) }
     let(:next_monday) { Date.new(2026, 10, 5) }
@@ -650,7 +665,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     end
   end
 
-  describe "GET /dashboard/confirmation" do
+  describe "GET /menu-semanal/confirmacion" do
     let(:user) { consumer_user }
     let(:consumer) { user.consumer }
 
@@ -817,7 +832,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
   # IBP-037: el carrito necesita los subsidios especiales vigentes para mostrar
   # el precio con base + especial antes de confirmar.
-  describe "GET /dashboard — subsidios especiales" do
+  describe "GET /menu-semanal — subsidios especiales" do
     around do |example|
       travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
     end

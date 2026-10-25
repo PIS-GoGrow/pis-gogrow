@@ -41,12 +41,16 @@
         "range_placeholder": "Elegí un rango"
       },
       "delete_account": {
-        "caution": "Procede con precaución, esta acción no se puede deshacer.",
-        "confirm_description": "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresa tu contraseña para confirmar que quieres eliminar tu cuenta definitivamente.",
-        "confirm_title": "¿Seguro que quieres eliminar tu cuenta?",
-        "description": "Elimina tu cuenta y todos sus datos",
+        "caution": "Procedé con precaución, esta acción no se puede deshacer.",
+        "confirm_description": "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresá tu contraseña para confirmar que querés eliminar tu cuenta definitivamente.",
+        "confirm_title": "¿Seguro/a que querés eliminar tu cuenta?",
+        "description": "Eliminá tu cuenta y todos tus datos",
         "title": "Eliminar cuenta",
         "warning": "Advertencia"
+      },
+      "file_input": {
+        "empty": "Sin archivos seleccionados",
+        "select": "Seleccionar archivo"
       },
       "month_select": {
         "this_month": "Este mes"
@@ -62,7 +66,8 @@
         "uppercase": "Al menos una mayúscula"
       },
       "settings_layout": {
-        "description": "Administra tu perfil y la configuración de tu cuenta",
+        "back_to_account": "Volver a Cuenta",
+        "description": "Administrá tu perfil y la configuración de tu cuenta",
         "title": "Configuración"
       }
     },
@@ -72,10 +77,10 @@
         "account": "Cuenta",
         "employees": "Empleados",
         "home": "Inicio",
-        "mobile_navigation": "Navegación de RRHH",
+        "mobile_navigation": "Navegación de RR. HH.",
         "payments": "Pagos"
       },
-      "benefit_configurations": "Beneficio general",
+      "benefit_configurations": "Subsidios",
       "change_to": "Cambiar a",
       "collections": "Cobros",
       "consumer": {
@@ -84,6 +89,7 @@
       "dashboard": "Panel",
       "invoices": "Facturas",
       "menu": "Menú de navegación",
+      "order_events": "Auditoría",
       "orders": "Mis pedidos",
       "payments": "Pagos",
       "platform": "Plataforma",
@@ -91,7 +97,7 @@
         "account": "Cuenta",
         "home": "Inicio",
         "menu": "Menú",
-        "menus": "Menús",
+        "menus": "Gestión de Menú",
         "mobile_navigation": "Navegación del proveedor",
         "orders": "Pedidos",
         "payments": "Cobros"
@@ -115,7 +121,7 @@
         "title": "Pagos a proveedores"
       },
       "debt_alerts": {
-        "description": "Recibí una notificación cuando tu deuda supere el monto definido por RRHH.",
+        "description": "Recibí una notificación cuando tu deuda supere el monto definido por RR. HH.",
         "title": "Alertas de deuda"
       },
       "employee_debts": {
@@ -154,6 +160,10 @@
         "description": "Recibí una notificación cuando un pedido sea cancelado por el cliente.",
         "title": "Cancelaciones"
       },
+      "order_reminders": {
+        "description": "Recibí un aviso para no olvidarte de pedir tu vianda.",
+        "title": "Recordatorios de pedidos"
+      },
       "order_updates": {
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
@@ -173,8 +183,8 @@
     },
     "notifications": {
       "company_payment_approved": {
-        "description": "%{provider} confirmó el pago de %{company} por %{period} (%{amount}).",
-        "title": "Pago confirmado"
+        "description": "%{provider} aprobó el pago de %{company} por %{period} (%{amount}).",
+        "title": "Pago aprobado"
       },
       "company_payment_overdue": {
         "description": "El pago de %{company} a %{provider} por %{period} (%{amount}) venció el %{due_date}. Revisá el detalle en Pagos.",
@@ -193,7 +203,7 @@
         "title": "Recordatorio de pago pendiente"
       },
       "debt_threshold_exceeded": {
-        "description": "Tu deuda es de $%{debt} y superó el límite de $%{threshold} definido por RRHH. Regularizá tus pagos para que este aviso desaparezca.",
+        "description": "Tu deuda es de %{debt} y superó el límite de %{threshold} definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca.",
         "title": "Tu deuda superó el monto límite"
       },
       "employee_debt_overdue": {
@@ -214,6 +224,10 @@
       "order_confirmation": {
         "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
         "title": "Tu pedido fue confirmado"
+      },
+      "order_deadline_reminder": {
+        "description": "¡No te quedes sin almuerzo! Todavía no pediste tu vianda de hoy.",
+        "title": "Recordatorio de pedido"
       },
       "order_received": {
         "description": "%{consumer} pidió %{amount} de %{dish} para el %{date}.",
@@ -279,7 +293,7 @@
           "receipt_error_action": "Entendido",
           "receipt_error_description": "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
           "receipt_error_title": "No se pudo subir el comprobante",
-          "receipt_file": "Seleccionar archivo",
+          "receipt_file": "Comprobante",
           "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
           "receipt_preview": "Vista previa del comprobante",
           "receipt_remove": "Eliminar comprobante",
@@ -287,6 +301,7 @@
           "receipt_remove_description": "Esta acción no se puede deshacer. Podés volver a subir el comprobante mientras el pago no esté aprobado.",
           "receipt_remove_title": "¿Eliminar comprobante?",
           "receipt_replace": "Reemplazar archivo",
+          "receipt_required": "Seleccioná el archivo del comprobante.",
           "receipt_sent_at": "Enviado: %{date}",
           "receipt_success_action": "Listo",
           "receipt_success_description": "Tu comprobante fue enviado correctamente y está pendiente de revisión.",
@@ -300,10 +315,10 @@
           "see_detail": "Ver detalle",
           "see_receipts": "Ver comprobantes",
           "spending": "Consumo",
-          "status_accepted": "Aceptado",
+          "status_accepted": "Aprobado",
           "status_pending": "Pendiente",
           "status_rejected": "Rechazado",
-          "status_submitted": "Enviado",
+          "status_submitted": "En revisión",
           "total": "Total"
         }
       },
@@ -312,12 +327,14 @@
           "more_options": "Más opciones",
           "notifications": "Notificaciones",
           "notifications_description": "Configurá qué alertas querés recibir",
+          "order_events": "Auditoría de pedidos",
+          "order_events_description": "Consultá quién creó o cambió cada pedido",
           "preferences": "Perfil y Apariencia",
           "preferences_description": "Gestioná tus datos personales y el tema de la aplicación",
           "settings": "Configuración",
           "sign_out": "Salir",
           "subsidies": "Subsidios",
-          "subsidies_description": "Gestioná los subsidios de tu compañía",
+          "subsidies_description": "Gestioná los subsidios de tu empresa",
           "title": "Cuenta"
         },
         "benefit_configurations": {
@@ -326,13 +343,13 @@
             "current": {
               "cancel": "Cancelar",
               "edit": "Editar",
-              "empty": "Todavía no configuraste el beneficio general.",
+              "empty": "Todavía no configuraste el subsidio base.",
               "max_voucher_price": "Cuando el precio por vianda es",
               "monthly_voucher_limit": "Hasta un límite por empleado de",
               "monthly_voucher_limit_unit": "viandas",
               "notice": "Los cambios se aplicarán el %{date}.",
               "pending_conflict": {
-                "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤$%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
+                "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
                 "keep": "Mantener el programado",
                 "replace": "Reemplazar por este",
                 "title": "Ya hay un cambio programado para el %{date}",
@@ -356,7 +373,7 @@
               "threshold": "Monto límite",
               "title": "Alerta de deuda"
             },
-            "description": "Gestioná los subsidios de tu compañía",
+            "description": "Gestioná los subsidios de tu empresa",
             "special": {
               "add": "Agregar",
               "applies_to": "Aplicado a",
@@ -430,6 +447,7 @@
             "empty_description": "Todavía no hay empleados en la organización.",
             "empty_title": "Sin empleados",
             "filter_label": "Filtrar empleados",
+            "month_label": "Mes de los saldos",
             "no_consumption": "Sin consumos",
             "no_results_description": "Probá con otro nombre o correo, o cambiá el filtro.",
             "no_results_title": "No se encontraron empleados",
@@ -446,6 +464,29 @@
             "consumption": "Consumo",
             "date": "Fecha",
             "employee": "Empleado",
+            "filters": {
+              "all_providers": "Todos",
+              "all_statuses": "Todos",
+              "apply": "Aplicar",
+              "cancel": "Cancelar",
+              "clear": "Limpiar filtros",
+              "empty_description": "Probá cambiando o limpiando los filtros.",
+              "empty_title": "No hay consumos que coincidan",
+              "open": "Filtrar historial",
+              "provider_chip": "Proveedor: %{provider}",
+              "providers": "Proveedores:",
+              "remove_provider": "Quitar filtro de proveedor %{provider}",
+              "remove_status": "Quitar filtro de estado",
+              "remove_subsidy": "Quitar filtro de subsidio",
+              "status": "Estado de pago",
+              "status_chip": "Estado: %{status}",
+              "subsidy": "Subsidio aplicado",
+              "subsidy_all": "Todos los consumos",
+              "subsidy_chip": "Subsidio: %{subsidy}",
+              "subsidy_with": "Con subsidio aplicado",
+              "subsidy_without": "Sin subsidio aplicado",
+              "title": "Filtros del historial"
+            },
             "history": "Historial de consumo",
             "history_empty_description": "Este empleado todavía no realizó ningún pedido de viandas.",
             "history_empty_title": "Sin consumos",
@@ -458,6 +499,7 @@
             "month_detail_description": "Pedidos confirmados del mes, con lo que cubre la empresa y lo que paga el empleado.",
             "no_provider": "Sin proveedor",
             "orders_empty": "No hay pedidos confirmados en este mes.",
+            "orders_empty_title": "Sin consumos",
             "provider": "Proveedor",
             "quantity": "Cant.",
             "reminder": {
@@ -485,6 +527,7 @@
             "this_month": "Este mes",
             "title": "Detalle del empleado",
             "total": "Total: %{amount}",
+            "total_label": "Total",
             "view_month": "Ver el detalle de %{month}",
             "year_label": "Año"
           }
@@ -536,6 +579,63 @@
             "view": "Ver"
           }
         },
+        "order_events": {
+          "index": {
+            "action": "Acción",
+            "actions": {
+              "cancelled": "Cancelación",
+              "confirmed": "Confirmación",
+              "created": "Creación",
+              "modified": "Modificación",
+              "price_changed": "Cambio económico",
+              "rejected": "Rechazo"
+            },
+            "actor": "Actor",
+            "after": "Nuevo",
+            "before": "Anterior",
+            "changes": "Cambio",
+            "description": "Cada creación y cambio de un pedido, con quién lo hizo. El registro no se puede editar ni borrar.",
+            "empty_description": "Cuando se cree o cambie un pedido, va a quedar registrado acá.",
+            "empty_title": "No hay eventos",
+            "empty_value": "—",
+            "fields": {
+              "address": "Dirección",
+              "amount": "Cantidad",
+              "delivery_method": "Entrega",
+              "discounted_price": "Precio a cobrar",
+              "notes": "Notas",
+              "price": "Precio de lista",
+              "rejection_details": "Detalle del rechazo",
+              "rejection_reason": "Motivo de rechazo",
+              "selected_options": "Opciones",
+              "status": "Estado"
+            },
+            "filters": {
+              "action": "Acción",
+              "actor": "Actor",
+              "actor_placeholder": "Nombre",
+              "all": "Todas",
+              "all_roles": "Todos",
+              "apply": "Filtrar",
+              "clear": "Limpiar",
+              "dates": "Fechas",
+              "order": "Pedido",
+              "order_placeholder": "PED-123",
+              "role": "Rol"
+            },
+            "occurred_at": "Fecha y hora",
+            "order": "Pedido",
+            "role": "Rol",
+            "roles": {
+              "admin": "RR. HH.",
+              "consumer": "Empleado",
+              "provider": "Proveedor"
+            },
+            "system": "Sistema",
+            "title": "Auditoría de pedidos",
+            "truncated": "Se muestran los %{shown} eventos más recientes de %{total}. Usá los filtros para acotar la búsqueda."
+          }
+        },
         "payments": {
           "index": {
             "bank": {
@@ -559,7 +659,8 @@
               "quantity": "Cant.",
               "subtotal": "Subtotal sin IVA",
               "title": "%{provider}: Consumo %{month}",
-              "total": "Total pagado",
+              "total_due": "Total a pagar",
+              "total_paid": "Total pagado",
               "user": "Usuario",
               "vat": "IVA (%{rate}%)"
             },
@@ -598,9 +699,21 @@
       },
       "cart": {
         "add_address": "Agregar",
-        "benefit": "Beneficio GoGrow (%{percentage}%)",
+        "benefit": "Subsidio Base (%{percentage}%)",
+        "decrease": "Quitar una unidad de %{name}",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
+        "increase": "Agregar una unidad de %{name}",
+        "monthly": {
+          "full_price_one": "La vianda de este pedido se cobra a precio completo.",
+          "full_price_other": "Las %{count} viandas de este pedido se cobran a precio completo.",
+          "no_benefit": "No tenés un beneficio asignado.",
+          "remaining_one": "Te queda 1 vianda subsidiada este mes.",
+          "remaining_other": "Te quedan %{count} viandas subsidiadas este mes.",
+          "split": "De este pedido, %{subsidized} con beneficio y %{full} a precio completo.",
+          "used_up_one": "Ya utilizaste la vianda subsidiada de este mes.",
+          "used_up_other": "Ya utilizaste las %{count} viandas subsidiadas de este mes."
+        },
         "my_addresses": "Ver mis direcciones",
         "new_address": {
           "apartment": "Piso / Apartamento (opcional)",
@@ -613,6 +726,7 @@
           "submit": "Agregar",
           "title": "Agregar una dirección"
         },
+        "no_benefit": "Subsidio GoGrow",
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
         "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
@@ -627,7 +741,15 @@
         "total": "Monto a pagar"
       },
       "consumer_dashboard": {
+        "benefit_card": {
+          "period": "Este mes",
+          "title": "Tu consumo",
+          "unit": "viandas pedidas",
+          "used": "%{used} de %{limit}"
+        },
         "index": {
+          "add": "Agregar",
+          "added": "Agregado",
           "closure": {
             "description": "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}",
             "dismiss": "Cerrar aviso",
@@ -635,10 +757,11 @@
             "title_now": "%{provider} no está disponible",
             "title_soon": "%{provider} no estará disponible"
           },
+          "modify": "Modificar",
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy."
         },
         "options": {
-          "choose": "Elegí tu %{name}",
+          "choose": "Elegí tu/s %{name}",
           "limit": "Podés elegir hasta %{count}",
           "optional": "Opcional",
           "required": "Obligatorio"
@@ -654,6 +777,9 @@
           "monthly_limit": "Viandas subsidiadas por mes",
           "monthly_remaining": "Te quedan este mes",
           "no_benefit": "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa.",
+          "notifications": "Notificaciones",
+          "notifications_description": "Configurá qué alertas querés recibir",
+          "settings": "Configuración",
           "sign_out": "Salir",
           "title": "Mi cuenta"
         }
@@ -736,9 +862,11 @@
             "description": "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras.",
             "title": "¿Cancelar pedido?"
           },
+          "cancelled_address": "Lo pediste para: %{address} (%{delivery_method})",
           "cannot_cancel": {
             "already_closed": "Este pedido ya está cerrado.",
             "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",
+            "order_deadline_passed": "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
           },
           "history_address": "Lo recibiste en: %{address} (%{delivery_method})",
@@ -751,6 +879,8 @@
           "no_price": "Importe no disponible",
           "no_provider": "Proveedor no disponible",
           "quantity": "x%{count}",
+          "review": "Calificar vianda",
+          "reviewed": "Vianda calificada",
           "title": "Mis pedidos",
           "upcoming_address": "Lo recibís en: %{address} (%{delivery_method})",
           "upcoming_empty_description": "No tenés viandas en camino.",
@@ -777,20 +907,20 @@
             "notes": "Notas",
             "notes_placeholder": "Sin salsa, sin cebolla…",
             "quantity": "Cantidad",
-            "remaining": "Quedan %{count} disponibles para esta fecha",
             "title": "Modificar pedido"
           },
           "no_notes": "Sin notas",
           "notes": "Notas",
           "quantity": "Cantidad",
           "rejection_reason": "Motivo de rechazo",
-          "subsidy": "Subsidio aplicado",
+          "subsidy": "Beneficio aplicado",
           "title": "Detalle del pedido",
           "total": "Importe final"
         },
         "statuses": {
           "cancelled": "Cancelado",
           "confirmed": "Confirmado",
+          "delivered": "Entregado",
           "pending": "Pendiente",
           "rejected": "Rechazado"
         }
@@ -799,6 +929,7 @@
         "show": {
           "deliveries": "Entregas",
           "deliveries_description": "Elegí dónde realizás tus entregas",
+          "incomplete": "Incompleto",
           "notifications": "Notificaciones",
           "notifications_description": "Configurá qué alertas querés recibir",
           "operational_settings": "Configuración operativa",
@@ -814,10 +945,10 @@
       },
       "provider_collections": {
         "group": {
-          "awaiting_one": "%{count} cobro pendiente de confirmación",
-          "awaiting_other": "%{count} cobros pendientes de confirmación",
+          "awaiting_one": "%{count} en revisión",
+          "awaiting_other": "%{count} cobros en revisión",
           "company": "Empresa",
-          "confirmed": "%{amount} en cobros confirmados",
+          "confirmed": "%{amount} en cobros aprobados",
           "detail": "Ver detalle",
           "detail_dialog": {
             "amount": "Monto",
@@ -863,7 +994,7 @@
           "delivered_meals_other": "%{count} viandas entregadas",
           "empty_history_all": "Todavía no hay meses cobrados por completo.",
           "empty_history_client": "Todavía no hay meses cobrados por completo de este cliente.",
-          "empty_history_title": "Sin cobros confirmados",
+          "empty_history_title": "Sin cobros aprobados",
           "empty_pending_all": "Por ahora no hay deudas pendientes de ningún cliente seleccionado. Volvé a consultar el mes que viene.",
           "empty_pending_client": "Por ahora no hay deudas pendientes de este cliente. Volvé a consultar el mes que viene.",
           "empty_pending_title": "Sin deudas pendientes",
@@ -892,7 +1023,6 @@
           "download": "Descargar factura",
           "file_label": "Archivo de la factura",
           "formats": "PDF, JPG o PNG de hasta 10 MB.",
-          "no_file": "Sin archivos seleccionados",
           "preview": "Ver factura %{name}",
           "rejected_hint": "La factura fue rechazada. Podés subir una nueva.",
           "remove": {
@@ -901,10 +1031,9 @@
             "title": "¿Eliminar la factura?",
             "trigger": "Eliminar factura"
           },
-          "select_file": "Seleccionar archivo",
           "statuses": {
             "approved": "Aprobada",
-            "pending": "Por revisar",
+            "pending": "En revisión",
             "rejected": "Rechazada"
           },
           "upload": "Subir factura",
@@ -913,6 +1042,7 @@
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
         "partial_payment_badge": "Pago parcial",
+        "receipt_sent_at": "Comprobante enviado el %{date}",
         "reminder": {
           "back": "Volver",
           "confirm": {
@@ -937,15 +1067,15 @@
           "trigger": "Recordar pago pendiente"
         },
         "review": {
-          "approved_description": "El cobro fue confirmado correctamente. Se notificará al usuario.",
-          "approved_title": "Cobro confirmado",
+          "approved_description": "El cobro fue aprobado correctamente. Se notificará al usuario.",
+          "approved_title": "Cobro aprobado",
           "back": "Volver",
-          "check_receipt": "Comprobá el importe, la cuenta y el concepto del comprobante antes de confirmar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo.",
-          "confirm": "Confirmar",
-          "confirming": "Confirmando…",
+          "check_receipt": "Comprobá el importe, la cuenta y el concepto del comprobante antes de aprobar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo.",
+          "confirm": "Aprobar",
+          "confirming": "Aprobando…",
           "continue": "Continuar",
           "continuing": "Continuando…",
-          "current_month_restriction": "Todavía no podés confirmar este comprobante porque la cuenta corresponde al mes en curso. Podrás confirmarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo.",
+          "current_month_restriction": "Todavía no podés aprobar este comprobante porque la cuenta corresponde al mes en curso. Podrás aprobarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo.",
           "details_label": "Describir el motivo",
           "details_placeholder": "Describir el motivo",
           "done": "Listo",
@@ -983,7 +1113,7 @@
           "title": "Cobro a %{name}"
         },
         "statuses": {
-          "approved": "Confirmado",
+          "approved": "Aprobado",
           "pending": "Pendiente",
           "rejected": "Rechazado",
           "submitted": "En revisión"
@@ -1028,8 +1158,8 @@
             "total": "Deuda total"
           },
           "profile": {
-            "description": "La configuración de los pasos estará disponible próximamente.",
-            "title": "Completá tu cuenta"
+            "description": "Deje todo listo para empezar a recibir pedidos.",
+            "title": "Complete su cuenta"
           },
           "title": "Inicio"
         }
@@ -1084,7 +1214,8 @@
               "4": "J",
               "5": "V"
             },
-            "weekdays_label": "Días de la semana"
+            "weekdays_label": "Días de la semana",
+            "weekdays_required": "Elegí al menos un día de lunes a viernes."
           },
           "back": "Volver",
           "sheet": {
@@ -1161,6 +1292,7 @@
             "title": "Opciones"
           },
           "price": "Precio",
+          "price_positive": "Tiene que ser mayor que 0.",
           "required": "No puede estar vacío.",
           "update": "Modificar",
           "updating": "Guardando..."
@@ -1205,7 +1337,7 @@
         "continue": "Continuar",
         "done": {
           "cta": "Ir al Inicio",
-          "description": "Tu cuenta ya está configurada y podés empezar a recibir pedidos.",
+          "description": "Su cuenta ya está configurada y puede empezar a recibir pedidos.",
           "title": "¡Todo listo!"
         },
         "finish": "Finalizar",
@@ -1213,23 +1345,19 @@
         "skip": "Omitir por ahora",
         "steps": {
           "1": {
-            "description": "Ingresá los datos de la cuenta donde vas a recibir los pagos de tus pedidos.",
+            "description": "Ingrese los datos de la cuenta donde recibirá los pagos de sus pedidos.",
             "title": "Datos de cobro"
           },
           "2": {
-            "description": "Definí hasta qué hora recibís pedidos cada día.",
-            "order_deadline": "Hora de cierre",
-            "order_deadline_description": "Después de esta hora no se reciben más pedidos del día.",
-            "title": "Hora de cierre"
+            "description": "Defina hasta qué hora recibe pedidos y qué días no estará disponible.",
+            "title": "Configure sus pedidos"
           },
           "3": {
-            "description": "Elegí si aceptás direcciones de entrega personalizadas además de las oficinas.",
-            "home_delivery": "Direcciones personalizadas",
-            "home_delivery_description": "Aceptás pedidos con direcciones de entrega además de las oficinas.",
-            "title": "Entregas"
+            "description": "Elija dónde realiza sus entregas y si acepta direcciones personalizadas.",
+            "title": "Configure sus entregas"
           },
           "4": {
-            "description": "Elegí qué alertas querés recibir sobre tus pedidos y pagos.",
+            "description": "Elija qué alertas desea recibir sobre sus pedidos y pagos.",
             "title": "Notificaciones"
           }
         }
@@ -1241,6 +1369,7 @@
           "back": "Volver a Cuenta",
           "closing_time": "Hora de cierre",
           "closing_time_description": "Hasta qué hora recibís pedidos.",
+          "closing_time_placeholder": "Seleccione una hora",
           "closures": {
             "cancel": "Cancelar",
             "date_range": "Rango de fechas",
@@ -1248,12 +1377,6 @@
             "description": "Días en los que no recibís pedidos.",
             "edit": "Editar cierre %{reason}",
             "edit_title": "Editar cierre",
-            "period": {
-              "other_year": "%{from} al %{to}",
-              "same_month": "%{from_day} al %{to_day_month} de %{year}",
-              "same_year": "%{from_day_month} al %{to_day_month} de %{year}",
-              "single": "%{date}"
-            },
             "reason": "Motivo",
             "reason_placeholder": "Vacaciones",
             "save": "Guardar cambios",
@@ -1320,7 +1443,7 @@
           "status_filters": {
             "all": "Todos",
             "confirmed": "Confirmados",
-            "pending": "Por revisar"
+            "pending": "Pendiente"
           },
           "tabs": {
             "history": "Historial",
@@ -1351,14 +1474,15 @@
           "phone_unavailable": "No disponible",
           "rejection_details": "Detalle del rechazo",
           "rejection_reason": "Motivo de rechazo",
-          "subsidy": "Subsidio",
+          "subsidy": "Beneficio aplicado",
           "title": "Pedido %{code}",
           "total": "Total"
         },
         "statuses": {
           "cancelled": "Cancelado",
           "confirmed": "Confirmado",
-          "pending": "Por revisar",
+          "delivered": "Entregado",
+          "pending": "Pendiente",
           "rejected": "Rechazado"
         }
       },
@@ -1416,6 +1540,29 @@
           "title": "Iniciar sesión"
         }
       },
+      "reviews": {
+        "error": {
+          "close": "Volver a Pedidos",
+          "description": "No pudimos guardar tu opinión.\nIntentá nuevamente más tarde.",
+          "title": "¡Ups! Algo salió mal"
+        },
+        "new": {
+          "back": "Volver",
+          "counter": "%{count}/200",
+          "experience": "Contá tu experiencia",
+          "placeholder": "Compartí tu opinión con tus compañeros de GoGrow…",
+          "question": "¿Qué te pareció?",
+          "rating_label": "Puntuación",
+          "star": "%{count} estrellas",
+          "submit": "Enviar",
+          "title": "Calificá tu vianda"
+        },
+        "thanks": {
+          "close": "Cerrar",
+          "description": "Tu opinión ayudará a tus compañeros de GoGrow a elegir su próxima vianda.",
+          "title": "¡Gracias por tu opinión!"
+        }
+      },
       "schedules": {
         "index": {
           "add_dishes": "Agregar platos",
@@ -1437,6 +1584,7 @@
             "title": "No se encontraron resultados"
           },
           "previous_week": "Semana anterior",
+          "published": "Publicado",
           "remove": {
             "button": "Quitar",
             "cancel": "Cancelar",
@@ -1505,18 +1653,19 @@
           "title": "Configuración de apariencia"
         },
         "email": {
-          "description": "Actualiza tu dirección de correo y verifícala",
+          "description": "Actualizá tu dirección de correo y verificala",
           "heading": "Actualizar correo electrónico",
-          "resend": "Haz clic aquí para reenviar el correo de verificación.",
+          "resend": "Hacé clic aquí para reenviar el correo de verificación.",
           "title": "Configuración de correo",
           "unverified": "Tu dirección de correo no está verificada."
         },
         "notifications": {
           "back": "Volver a Cuenta",
+          "back_to_account": "Volver a Mi cuenta",
           "description": "Configurá qué alertas querés recibir por WhatsApp",
           "heading": "Notificaciones",
           "preferences_description": "Activá o desactivá las categorías de avisos que querés recibir.",
-          "preferences_heading": "Preferencias de RRHH",
+          "preferences_heading": "Preferencias de RR. HH.",
           "title": "Notificaciones"
         },
         "password": {
@@ -1543,7 +1692,7 @@
         "sessions": {
           "active_since": "Activa desde: %{time}",
           "current": "Actual",
-          "description": "Administra tus sesiones activas en todos los dispositivos",
+          "description": "Administrá tus sesiones activas en todos los dispositivos",
           "ip": "IP: %{address}",
           "log_out": "Cerrar sesión",
           "title": "Sesiones"

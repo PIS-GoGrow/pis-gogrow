@@ -34,7 +34,7 @@ export default function SavedMenusList({
   onDelete,
 }: SavedMenusListProps) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney } = useFormatters()
   const [search, setSearch] = useState("")
   // Al editar un plato desde acá, se vuelve a esta pestaña.
   const returnTo = schedules.index({ query: { tab: "saved" } }).url
@@ -115,7 +115,7 @@ export default function SavedMenusList({
                   >
                     {menu.name}{" "}
                     <span className="text-muted-foreground">
-                      | {formatMoneyShort(menu.price ?? 0)}
+                      | {formatMoney(menu.price ?? 0)}
                     </span>
                   </Link>
                 </CardTitle>

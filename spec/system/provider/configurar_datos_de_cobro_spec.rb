@@ -6,7 +6,7 @@ require "rails_helper"
 # preferencias de notificación de mi perfil para gestionar mi cuenta."
 #
 # Criterio 1 (datos de cobro), criterio 3 (validación y persistencia) y criterio 4
-# (auditoría y restricción de rol) sobre /provider/payment_details.
+# (auditoría y restricción de rol) sobre /provider/datos-de-cobro.
 #
 # La validación por campo y los valores límite del formato de tax_id también están
 # cubiertos a nivel request en spec/requests/provider/payment_details_spec.rb; acá
@@ -22,6 +22,8 @@ RSpec.describe "Configurar los datos de cobro del proveedor" do
   def choose_account_type(label)
     find_by_id("bank_account_type").click
     find("[role=option]", exact_text: label).click
+    expect(page).not_to have_css("[role=option]", visible: true, wait: 5)
+    expect(page).not_to have_css("[data-radix-popper-content-wrapper]", visible: true, wait: 5)
   end
 
   def fill_valid_details(tax_id: "212345670012", number: "001234567-00001")

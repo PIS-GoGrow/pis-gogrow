@@ -5,6 +5,7 @@ import {
   ClipboardList,
   CreditCard,
   FileText,
+  History,
   LayoutGrid,
   Package,
   Percent,
@@ -28,6 +29,7 @@ import {
 import {
   adminBenefitConfigurations,
   adminInvoices,
+  adminOrderEvents,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
@@ -54,7 +56,7 @@ export function AppSidebar() {
         icon: LayoutGrid,
       },
       {
-        title: "Menús",
+        title: t("nav.provider.menus"),
         href: schedules.index().url,
         icon: CalendarPlus,
       },
@@ -80,6 +82,11 @@ export function AppSidebar() {
         title: t("nav.invoices"),
         href: adminInvoices.index().url,
         icon: FileText,
+      },
+      {
+        title: t("nav.order_events"),
+        href: adminOrderEvents.index().url,
+        icon: History,
       },
     ],
     consumer: [

@@ -97,22 +97,24 @@ describe("ProviderOrderDays", () => {
   it("abre hoy y resume sus viandas y su monto", () => {
     renderDays()
 
-    const today = dayButton("06/10")
+    const today = dayButton("06/10/26")
 
-    expect(today).toHaveTextContent("Día: 06/10 | Viandas: 3 | Monto: $1.000")
+    expect(today).toHaveTextContent(
+      "Día: 06/10/26 | Viandas: 3 | Monto: $1.000",
+    )
     expect(today).toHaveAttribute("aria-expanded", "true")
     expect(screen.getByText("Bruno Pérez - GoGrow")).toBeInTheDocument()
     expect(
       screen.queryByText("Camila Herrera - GoGrow"),
     ).not.toBeInTheDocument()
-    expect(dayButton("07/10")).toHaveAttribute("aria-expanded", "false")
+    expect(dayButton("07/10/26")).toHaveAttribute("aria-expanded", "false")
   })
 
   it("muestra hoy aunque no tenga pedidos", () => {
     renderDays({ orders: [orders[2]] })
 
-    expect(dayButton("06/10")).toHaveTextContent(
-      "Día: 06/10 | Viandas: 0 | Monto: $0",
+    expect(dayButton("06/10/26")).toHaveTextContent(
+      "Día: 06/10/26 | Viandas: 0 | Monto: $0",
     )
     expect(screen.getByText("No hay pedidos")).toBeInTheDocument()
   })
@@ -121,20 +123,20 @@ describe("ProviderOrderDays", () => {
     const user = userEvent.setup()
     renderDays()
 
-    await user.click(dayButton("07/10"))
+    await user.click(dayButton("07/10/26"))
 
     expect(screen.getByText("Camila Herrera - GoGrow")).toBeInTheDocument()
     expect(screen.queryByText("Bruno Pérez - GoGrow")).not.toBeInTheDocument()
-    expect(dayButton("06/10")).toHaveAttribute("aria-expanded", "false")
+    expect(dayButton("06/10/26")).toHaveAttribute("aria-expanded", "false")
   })
 
   it("cierra el día abierto al tocarlo en una pantalla chica", async () => {
     const user = userEvent.setup()
     renderDays()
 
-    await user.click(dayButton("06/10"))
+    await user.click(dayButton("06/10/26"))
 
-    expect(dayButton("06/10")).toHaveAttribute("aria-expanded", "false")
+    expect(dayButton("06/10/26")).toHaveAttribute("aria-expanded", "false")
   })
 
   it("no cierra el día elegido en una pantalla de escritorio", async () => {
@@ -144,9 +146,9 @@ describe("ProviderOrderDays", () => {
     } as MediaQueryList)
     renderDays()
 
-    await user.click(dayButton("06/10"))
+    await user.click(dayButton("06/10/26"))
 
-    expect(dayButton("06/10")).toHaveAttribute("aria-expanded", "true")
+    expect(dayButton("06/10/26")).toHaveAttribute("aria-expanded", "true")
   })
 
   it("deja los botones visibles y habilita cada uno según el estado del pedido", () => {
@@ -165,7 +167,7 @@ describe("ProviderOrderDays", () => {
   it("muestra el estado y la modalidad de cada pedido", () => {
     renderDays()
 
-    expect(screen.getByText("Por revisar")).toBeInTheDocument()
+    expect(screen.getByText("Pendiente")).toBeInTheDocument()
     expect(screen.getByText("Confirmado")).toBeInTheDocument()
     expect(
       screen.getByText("Enviar a: Av. 18 de Julio 1006 (Oficina)"),
@@ -178,8 +180,8 @@ describe("ProviderOrderDays", () => {
   it("filtra por estado y recalcula el resumen del día", () => {
     renderDays({ filters: { ...noFilters, status: "confirmed" } })
 
-    expect(dayButton("06/10")).toHaveTextContent(
-      "Día: 06/10 | Viandas: 1 | Monto: $400",
+    expect(dayButton("06/10/26")).toHaveTextContent(
+      "Día: 06/10/26 | Viandas: 1 | Monto: $400",
     )
     expect(screen.queryByText("Bruno Pérez - GoGrow")).not.toBeInTheDocument()
     expect(screen.getByText("Matías Rodríguez - GoGrow")).toBeInTheDocument()
@@ -231,8 +233,8 @@ describe("ProviderOrderDays", () => {
     it("abre el día más reciente y no agrega hoy", () => {
       renderDays({ orders: past, period: "history" })
 
-      expect(dayButton("05/10")).toHaveAttribute("aria-expanded", "true")
-      expect(dayButton("03/10")).toHaveAttribute("aria-expanded", "false")
+      expect(dayButton("05/10/26")).toHaveAttribute("aria-expanded", "true")
+      expect(dayButton("03/10/26")).toHaveAttribute("aria-expanded", "false")
       expect(
         screen.queryByRole("button", { name: /Día: 06\/10/ }),
       ).not.toBeInTheDocument()

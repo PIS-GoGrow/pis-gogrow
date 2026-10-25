@@ -72,11 +72,11 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   # Cada grupo es una <section> con el título "Elegí tu <nombre>". Buscar por ese
   # título y no por el texto de la opción evita elegir la de otro grupo.
   def pick_option(group_name, option)
-    find("section", text: "Elegí tu #{group_name}").find("label", text: option).click
+    find("section", text: "Elegí tu/s #{group_name.downcase}").find("label", text: option).click
   end
 
   def checked_option(group_name)
-    find("section", text: "Elegí tu #{group_name}")
+    find("section", text: "Elegí tu/s #{group_name.downcase}")
       .find("label:has([role=radio][aria-checked=true])").text
   end
 
@@ -85,7 +85,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   end
 
   def open_cart
-    first(:button, "Ver carrito").click
+    click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
   end
 
@@ -127,12 +127,12 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
     it "muestra cada grupo del plato con las opciones que definió el proveedor" do
       open_dish(sorrentinos)
 
-      within("section", text: "Elegí tu Salsa") do
+      within("section", text: "Elegí tu/s salsa") do
         expect(page).to have_css("[role=radio]", count: 2)
         expect(page).to have_content("Filetto")
         expect(page).to have_content("Bolognesa")
       end
-      within("section", text: "Elegí tu Relleno") do
+      within("section", text: "Elegí tu/s relleno") do
         expect(page).to have_css("[role=radio]", count: 2)
         expect(page).to have_content("Ricota y nuez")
         expect(page).to have_content("Espinaca y queso")
@@ -152,7 +152,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
     it "no ofrece opciones de otro plato ni opciones que el proveedor no cargó" do
       open_dish(sorrentinos)
 
-      expect(page).to have_no_content("Elegí tu Extras")
+      expect(page).to have_no_content("Elegí tu/s extras")
       expect(page).to have_no_content("Papaya")
       expect(page).to have_no_content("Arándanos")
       expect(page).to have_no_content("Limón")
@@ -160,7 +160,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       # El mismo grupo sí existe en el otro plato: no es que el dato no exista.
       click_button "Volver"
       open_dish(milanesa)
-      expect(page).to have_content("Elegí tu Extras")
+      expect(page).to have_content("Elegí tu/s extras")
       expect(page).to have_content("Papaya")
     end
 
@@ -171,13 +171,13 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       pick_option("Extras", "Papaya")
       pick_option("Extras", "Arándanos")
 
-      within("section", text: "Elegí tu Extras") do
+      within("section", text: "Elegí tu/s extras") do
         expect(find("[role=checkbox][aria-label='Limón']")).to be_disabled
       end
 
       pick_option("Extras", "Papaya")
 
-      within("section", text: "Elegí tu Extras") do
+      within("section", text: "Elegí tu/s extras") do
         expect(find("[role=checkbox][aria-label='Limón']")).not_to be_disabled
       end
     end
@@ -271,8 +271,8 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
 
       it "deja pedir el plato sin elegir nada de ese grupo" do
         open_dish(sorrentinos)
-        expect(find("section", text: "Elegí tu Salsa")).to have_content("Opcional")
-        expect(find("section", text: "Elegí tu Relleno")).to have_content("Obligatorio")
+        expect(find("section", text: "Elegí tu/s salsa")).to have_content("Opcional")
+        expect(find("section", text: "Elegí tu/s relleno")).to have_content("Obligatorio")
 
         pick_option("Relleno", "Ricota y nuez")
         expect(page).to have_button("Agregar", disabled: false)
@@ -292,7 +292,7 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
         expect(checked_option("Salsa")).to eq("Bolognesa")
 
         pick_option("Salsa", "Bolognesa")
-        expect(find("section", text: "Elegí tu Salsa")).to have_no_selector("[role=radio][aria-checked=true]")
+        expect(find("section", text: "Elegí tu/s salsa")).to have_no_selector("[role=radio][aria-checked=true]")
       end
 
       it "deja quitar la opción elegida al modificar el pedido" do

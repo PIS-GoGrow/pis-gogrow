@@ -18,7 +18,7 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
     }
   end
 
-  describe "GET /provider/payment_details" do
+  describe "GET /provider/datos-de-cobro" do
     it "muestra los datos de cobro del proveedor" do
       provider.update!(bank_name: "Itaú", bank_account_type: :checking)
       sign_in provider.user, role: :provider
@@ -37,6 +37,14 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    it "no deja entrar a RRHH" do
+      sign_in users(:admin), role: :admin
+
+      get provider_payment_details_path
+
+      expect(response).to redirect_to(root_path)
+    end
+
     it "pide iniciar sesión sin una sesión activa" do
       get provider_payment_details_path
 
@@ -44,7 +52,7 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
     end
   end
 
-  describe "PATCH /provider/payment_details" do
+  describe "PATCH /provider/datos-de-cobro" do
     before { sign_in provider.user, role: :provider }
 
     it "guarda los datos y persisten al volver a entrar" do
@@ -55,6 +63,23 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
       expect(inertia).to have_flash(notice: "Datos de cobro actualizados")
       expect(inertia).to have_props { |props| props["provider"]["tax_id"] == "212345670012" }
       expect(provider.reload).to have_attributes(bank_name: "BROU", bank_account_type: "savings", bank_account_holder: "Tu Vianda SRL")
+    end
+
+    it "marca payment_details_configured_at al guardar los datos correctamente" do
+      provider.update_column(:payment_details_configured_at, nil)
+
+      expect do
+        patch provider_payment_details_path, params: valid_params
+      end.to change { provider.reload.payment_details_configured_at }.from(nil)
+    end
+
+    it "preserva el timestamp previo de payment_details_configured_at (idempotente)" do
+      existing_timestamp = 3.days.ago.change(usec: 0)
+      provider.update_column(:payment_details_configured_at, existing_timestamp)
+
+      patch provider_payment_details_path, params: valid_params
+
+      expect(provider.reload.payment_details_configured_at).to eq(existing_timestamp)
     end
 
     it "registra quién hizo el cambio y los valores anterior y nuevo" do
@@ -72,18 +97,26 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
       expect(providers(:endulzate).reload.bank_name).to be_nil
     end
 
-    it "exige todos los datos" do
+    it "exige todos los datos y no marca el timestamp si faltan campos obligatorios" do
+      provider.update_column(:payment_details_configured_at, nil)
+
       patch provider_payment_details_path, params: { provider: { bank_name: "BROU" } }
 
+      expect(response).to redirect_to(provider_payment_details_path)
+      expect(provider.reload.payment_details_configured_at).to be_nil
       follow_redirect!
       expect(inertia.props[:errors].keys).to include("bank_account_type", "bank_account_number", "bank_account_holder", "tax_id")
       expect(provider.reload.bank_name).to be_nil
       expect(provider.audit_logs).to be_empty
     end
 
-    it "rechaza un RUT o CI con una cantidad de dígitos inválida" do
+    it "rechaza un RUT o CI con una cantidad de dígitos inválida sin marcar timestamp" do
+      provider.update_column(:payment_details_configured_at, nil)
+
       patch provider_payment_details_path, params: valid_params.deep_merge(provider: { tax_id: "12345" })
 
+      expect(response).to redirect_to(provider_payment_details_path)
+      expect(provider.reload.payment_details_configured_at).to be_nil
       follow_redirect!
       expect(inertia.props[:errors]).to include("tax_id" => [ "no es válido" ])
     end
@@ -104,14 +137,27 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
     end
   end
 
-  describe "PATCH /provider/payment_details con otro rol" do
-    it "no deja que RRHH cambie los datos" do
+  describe "PATCH /provider/datos-de-cobro con otro rol" do
+    it "no deja que un consumidor cambie los datos ni marque timestamp" do
+      provider.update_column(:payment_details_configured_at, nil)
+      sign_in users(:one), role: :consumer
+
+      patch provider_payment_details_path, params: valid_params
+
+      expect(response).to redirect_to(root_path)
+      expect(provider.reload.bank_name).to be_nil
+      expect(provider.reload.payment_details_configured_at).to be_nil
+    end
+
+    it "no deja que RRHH cambie los datos ni marque timestamp" do
+      provider.update_column(:payment_details_configured_at, nil)
       sign_in users(:admin), role: :admin
 
       patch provider_payment_details_path, params: valid_params
 
       expect(response).to redirect_to(root_path)
       expect(provider.reload.bank_name).to be_nil
+      expect(provider.reload.payment_details_configured_at).to be_nil
     end
   end
 end

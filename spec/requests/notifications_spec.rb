@@ -46,7 +46,7 @@ RSpec.describe "Notifications", type: :request do
     )
   end
 
-  describe "PATCH /notifications/:id/close" do
+  describe "PATCH /notificaciones/:id/cerrar" do
     it "closes an active dismissable notification belonging to the current user" do
       notification = create_notification(user:)
       sign_in(user)

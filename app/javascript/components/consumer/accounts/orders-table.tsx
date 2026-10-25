@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { formatMoney } from "@/lib/money"
 import type { SimplifiedOrder } from "@/types"
 
 interface AccountProps {
@@ -51,7 +52,9 @@ export default function OrdersTable({ orders, month, amount }: AccountProps) {
                 <TableCell>{order.date}</TableCell>
                 <TableCell>{truncate(String(order.menu_name))}</TableCell>
                 <TableCell>{order.amount}</TableCell>
-                <TableCell className="text-right">{order.price}</TableCell>
+                <TableCell className="text-right">
+                  {formatMoney(order.price ?? 0)}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
@@ -60,7 +63,9 @@ export default function OrdersTable({ orders, month, amount }: AccountProps) {
               <TableCell colSpan={3}>
                 {t("pages.accounts.show.total")}
               </TableCell>
-              <TableCell className="text-right">{amount}</TableCell>
+              <TableCell className="text-right">
+                {formatMoney(amount)}
+              </TableCell>
             </TableRow>
           </TableFooter>
         </Table>

@@ -11,7 +11,7 @@ RSpec.describe "Admin::Dashboard", type: :request do
   let(:previous_month) { 1.month.ago.to_date.beginning_of_month }
   let(:previous_key) { previous_month.strftime("%Y-%m") }
 
-  describe "GET /admin/dashboard" do
+  describe "GET /admin/inicio" do
     context "when visitor is unauthenticated" do
       it "redirects to the sign in page" do
         get admin_dashboard_path
@@ -49,7 +49,7 @@ RSpec.describe "Admin::Dashboard", type: :request do
         expect(response).to have_http_status(:ok)
         expect(inertia).to render_component("admin/dashboard/index")
         expect(inertia).to have_props(
-          today: I18n.l(Date.current, format: "%A %-d de %B").capitalize,
+          today: DateFormat.long(Date.current),
           month: current_key,
           current_month: current_key,
           summary: {

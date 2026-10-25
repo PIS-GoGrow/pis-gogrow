@@ -51,7 +51,7 @@ RSpec.describe CompanyPaymentNotifications do
           role: "admin",
           requires_action: true,
           title: "Se acerca el vencimiento de un pago",
-          description: "El pago de GoGrow a Other Provider User por agosto 2026 ($4.500) vence el 10/9/2026. Revisá el detalle en Pagos."
+          description: "El pago de GoGrow a Other Provider User por agosto 2026 ($4.500) vence el jueves 10 de septiembre. Revisá el detalle en Pagos."
         )
       end
     end
@@ -76,7 +76,7 @@ RSpec.describe CompanyPaymentNotifications do
 
       expect(active_events(admin_user)).to eq([ "company_payment_overdue" ])
       expect(admin_user.notifications.active.find_by!(notifiable: account).description)
-        .to eq("El pago de GoGrow a Other Provider User por agosto 2026 ($4.500) venció el 10/9/2026. Revisá el detalle en Pagos.")
+        .to eq("El pago de GoGrow a Other Provider User por agosto 2026 ($4.500) venció el jueves 10 de septiembre. Revisá el detalle en Pagos.")
     end
 
     it "no avisa por cuentas con un comprobante enviado, aprobado o rechazado" do
@@ -139,8 +139,8 @@ RSpec.describe CompanyPaymentNotifications do
       expect(notification).to have_attributes(
         event: "company_payment_approved",
         requires_action: false,
-        title: "Pago confirmado",
-        description: "Other Provider User confirmó el pago de GoGrow por agosto 2026 ($4.500)."
+        title: "Pago aprobado",
+        description: "Other Provider User aprobó el pago de GoGrow por agosto 2026 ($4.500)."
       )
     end
 

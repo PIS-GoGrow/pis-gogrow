@@ -8,6 +8,7 @@ import PaymentReceiptDialog from "./payment-receipt-dialog"
 
 let triggerSuccess: (() => void) | undefined
 let triggerError: (() => void) | undefined
+let triggerBefore: (() => boolean) | undefined
 
 interface MockFormProps {
   children?:
@@ -19,6 +20,7 @@ interface MockFormProps {
       }) => React.ReactNode)
   action?: string | { url?: string; method?: string }
   method?: string
+  onBefore?: () => boolean
   onSuccess?: () => void
   onError?: () => void
   className?: string
@@ -32,6 +34,7 @@ vi.mock("@inertiajs/react", async () => {
       children,
       action,
       method,
+      onBefore,
       onSuccess,
       onError,
       className,
@@ -46,9 +49,11 @@ vi.mock("@inertiajs/react", async () => {
 
       if (
         actionUrl &&
-        (actionUrl === "/payments" || actionUrl.endsWith("/payments")) &&
+        (actionUrl === "/comprobantes" ||
+          actionUrl.endsWith("/comprobantes")) &&
         method !== "delete"
       ) {
+        triggerBefore = onBefore
         triggerSuccess = onSuccess
         triggerError = onError
       }
@@ -88,6 +93,7 @@ describe("PaymentReceiptDialog", () => {
     vi.clearAllMocks()
     triggerSuccess = undefined
     triggerError = undefined
+    triggerBefore = undefined
     URL.createObjectURL = createObjectURLMock
     URL.revokeObjectURL = revokeObjectURLMock
   })
@@ -189,7 +195,7 @@ describe("PaymentReceiptDialog", () => {
 
     expect(screen.getByText("En revisión")).toBeInTheDocument()
     expect(screen.getByText("Rechazado")).toBeInTheDocument()
-    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
   })
 
   it("shows delete button for submitted and rejected receipts, but NOT for approved", () => {
@@ -209,14 +215,14 @@ describe("PaymentReceiptDialog", () => {
   it("asks for confirmation before deleting a receipt", async () => {
     const user = userEvent.setup()
     const destroyAction = vi.fn((paymentId: number) => ({
-      url: `/admin/payments/${paymentId}`,
+      url: `/admin/pagos/${paymentId}`,
       method: "delete" as const,
     }))
 
     render(
       <PaymentReceiptDialog
         accountId={42}
-        createAction={{ url: "/admin/payments", method: "post" }}
+        createAction={{ url: "/admin/pagos", method: "post" }}
         destroyAction={destroyAction}
         payments={[submittedPayment, rejectedPayment, approvedPayment]}
       />,
@@ -257,14 +263,14 @@ describe("PaymentReceiptDialog", () => {
     ).not.toBeInTheDocument()
     expect(screen.getByText("En revisión")).toBeInTheDocument()
     expect(screen.getByText("Rechazado")).toBeInTheDocument()
-    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
   })
 
   it("keeps uploading available when a receipt is approved", () => {
     render(<PaymentReceiptDialog accountId={42} payments={[approvedPayment]} />)
 
     expect(screen.getByText("comprobante_banco_3.jpg")).toBeInTheDocument()
-    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Subir comprobante de pago" }),
     ).toBeInTheDocument()
@@ -286,7 +292,7 @@ describe("PaymentReceiptDialog", () => {
     expect(
       screen.getByText("Adjuntá el comprobante correspondiente a este pago."),
     ).toBeInTheDocument()
-    expect(screen.getByLabelText("Seleccionar archivo")).toBeInTheDocument()
+    expect(screen.getByLabelText("Comprobante")).toBeInTheDocument()
   })
 
   it("displays preview when an image file is selected", async () => {
@@ -297,7 +303,7 @@ describe("PaymentReceiptDialog", () => {
       screen.getByRole("button", { name: "Subir comprobante de pago" }),
     )
 
-    const fileInput = screen.getByLabelText("Seleccionar archivo")
+    const fileInput = screen.getByLabelText("Comprobante")
     const testFile = new File(["dummy content"], "mi_comprobante.png", {
       type: "image/png",
     })
@@ -312,6 +318,35 @@ describe("PaymentReceiptDialog", () => {
       "blob:http://localhost/mock-preview",
     )
     expect(screen.getByText("mi_comprobante.png")).toBeInTheDocument()
+  })
+
+  it("asks for the file next to the field instead of submitting without one", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} />)
+
+    await user.click(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    )
+
+    let submitted: boolean | undefined
+    act(() => {
+      submitted = triggerBefore?.()
+    })
+
+    expect(submitted).toBe(false)
+    expect(
+      screen.getByText("Seleccioná el archivo del comprobante."),
+    ).toBeInTheDocument()
+
+    await user.upload(
+      screen.getByLabelText("Comprobante"),
+      new File(["dummy content"], "mi_comprobante.png", { type: "image/png" }),
+    )
+
+    expect(
+      screen.queryByText("Seleccioná el archivo del comprobante."),
+    ).not.toBeInTheDocument()
+    expect(triggerBefore?.()).toBe(true)
   })
 
   it("shows success sheet when upload succeeds", async () => {

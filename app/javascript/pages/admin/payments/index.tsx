@@ -4,13 +4,13 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import MonthSelect from "@/components/admin/month-select"
-import BankDetails from "@/components/admin/payments/bank-details"
 import ConsumptionDetailDialog, {
   type ConsumptionDetail,
 } from "@/components/admin/payments/consumption-detail-dialog"
 import PeriodCard from "@/components/admin/payments/period-card"
 import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
+import BankDetails from "@/components/payments/bank-details"
 import Stat from "@/components/stat"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -42,7 +42,7 @@ export default function Index({
   consumption,
 }: AdminPaymentsIndex) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney } = useFormatters()
 
   const [open, setOpen] = useState(false)
   const [detail, setDetail] = useState<ConsumptionDetail | null>(null)
@@ -123,7 +123,7 @@ export default function Index({
               label={t("pages.admin.payments.index.month_label")}
             />
           }
-          value={formatMoneyShort(summary.amount)}
+          value={formatMoney(summary.amount)}
           detail={`| ${meals}`}
           className="lg:max-w-[50%]"
           action={
@@ -167,7 +167,7 @@ export default function Index({
               }
               value={
                 <>
-                  {formatMoneyShort(total_debt)}{" "}
+                  {formatMoney(total_debt)}{" "}
                   <span className="text-lg">
                     {t("pages.admin.payments.index.pending_meals", {
                       count: total_meals,

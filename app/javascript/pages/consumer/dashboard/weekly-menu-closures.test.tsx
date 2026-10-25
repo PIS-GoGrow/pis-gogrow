@@ -12,7 +12,7 @@ vi.mock("@inertiajs/react", async () => {
 
   return {
     ...actual,
-    usePage: () => ({ url: "/dashboard", props: { notifications: [] } }),
+    usePage: () => ({ url: "/menu-semanal", props: { notifications: [] } }),
   }
 })
 
@@ -46,7 +46,7 @@ const closure = (
   reason: "Vacaciones",
   starts_on: "2027-06-09",
   ends_on: "2027-06-27",
-  period: "9 al 27 de junio de 2027",
+  period: "09/06/27 al 27/06/27",
   ...overrides,
 })
 
@@ -60,8 +60,6 @@ function renderMenu(
       date={date}
       setDate={vi.fn()}
       benefit={{
-        limit: 5,
-        used: 2,
         percentage: 50,
         monthly_limit: 20,
         monthly_used: 2,
@@ -74,8 +72,8 @@ function renderMenu(
       cart={[]}
       count={0}
       total={0}
+      loading={false}
       openDetail={vi.fn()}
-      openCart={vi.fn()}
       {...props}
     />,
   )
@@ -102,7 +100,7 @@ describe("WeeklyMenu closures", () => {
     ).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Sus viandas no estarán disponibles del 9 al 27 de junio de 2027. Motivo: Vacaciones",
+        "Sus viandas no estarán disponibles del 09/06/27 al 27/06/27. Motivo: Vacaciones",
       ),
     ).toBeInTheDocument()
     expect(screen.getByText("Wok de verduras + arroz")).toBeInTheDocument()
@@ -205,7 +203,7 @@ describe("WeeklyMenu closures", () => {
 
     expect(
       screen.getByText(
-        "Tu Viandita no recibirá pedidos del 9 al 27 de junio de 2027.",
+        "Tu Viandita no recibirá pedidos del 09/06/27 al 27/06/27.",
       ),
     ).toBeInTheDocument()
   })
@@ -249,7 +247,7 @@ describe("WeeklyMenu closures", () => {
     expect(screen.getByText("Menú no disponible")).toBeInTheDocument()
     expect(
       screen.getByText(
-        "Tu Viandita no recibirá pedidos del 9 al 27 de junio de 2027.",
+        "Tu Viandita no recibirá pedidos del 09/06/27 al 27/06/27.",
       ),
     ).toBeInTheDocument()
   })

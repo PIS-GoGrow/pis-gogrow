@@ -54,7 +54,7 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
     end
 
     within(find("[role=dialog]")) do
-      attach_file("Seleccionar archivo", receipt_file)
+      attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
 
@@ -71,7 +71,7 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
     click_on "Revisar pago"
 
     if decision == :approve
-      within(find("[role=dialog]")) { click_on "Confirmar" }
+      within(find("[role=dialog]")) { click_on "Aprobar" }
       expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     else
       within(find("[role=dialog]")) { click_on "Reportar" }
@@ -103,7 +103,7 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
 
     expect(page).to have_content(approved_title)
     expect(page).to have_content(
-      "#{provider_user.name} confirmó el pago de GoGrow por " \
+      "#{provider_user.name} aprobó el pago de GoGrow por " \
         "#{I18n.l(account.month, format: :month_name_year).downcase} (#{account.formatted_amount})."
     )
   end

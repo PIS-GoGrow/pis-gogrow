@@ -59,7 +59,7 @@ export default function ConsumptionDetailDialog({
   onOpenChange,
 }: ConsumptionDetailDialogProps) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney } = useFormatters()
   const getInitials = useInitials()
 
   const providers = detail?.providers ?? []
@@ -143,7 +143,7 @@ export default function ConsumptionDetailDialog({
                       {t(`${page}.subtotal`)}
                     </dt>
                     <dd>
-                      {formatMoneyShort(provider.subtotal)}{" "}
+                      {formatMoney(provider.subtotal)}{" "}
                       <span className="text-muted-foreground">
                         |{" "}
                         {t("pages.admin.payments.index.meals", {
@@ -157,14 +157,18 @@ export default function ConsumptionDetailDialog({
                     <dt className="text-muted-foreground text-sm">
                       {t(`${page}.vat`, { rate: provider.vat_rate })}
                     </dt>
-                    <dd>{formatMoneyShort(provider.vat_amount)}</dd>
+                    <dd>{formatMoney(provider.vat_amount)}</dd>
                   </div>
                   <Separator />
                   <div className="grid gap-1">
                     <dt className="text-muted-foreground text-sm">
-                      {t(`${page}.total`)}
+                      {t(
+                        provider.paid
+                          ? `${page}.total_paid`
+                          : `${page}.total_due`,
+                      )}
                     </dt>
-                    <dd>{formatMoneyShort(provider.payable_amount)}</dd>
+                    <dd>{formatMoney(provider.payable_amount)}</dd>
                   </div>
                 </dl>
               </TabsContent>
@@ -177,7 +181,7 @@ export default function ConsumptionDetailDialog({
                   days={provider.days}
                   mealsOf={(order: DetailOrder) => order.meals}
                   amountOf={(order: DetailOrder) => order.company_amount}
-                  formatAmount={formatMoneyShort}
+                  formatAmount={formatMoney}
                   emptyLabel={t(`${page}.empty`)}
                 >
                   {(orders) => (
@@ -216,10 +220,10 @@ export default function ConsumptionDetailDialog({
                               {order.meals}
                             </TableCell>
                             <TableCell className="text-right">
-                              {formatMoneyShort(order.employee_amount)}
+                              {formatMoney(order.employee_amount)}
                             </TableCell>
                             <TableCell className="text-right">
-                              {formatMoneyShort(order.company_amount)}
+                              {formatMoney(order.company_amount)}
                             </TableCell>
                           </TableRow>
                         ))}

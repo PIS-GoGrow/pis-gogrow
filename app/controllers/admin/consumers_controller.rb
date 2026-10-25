@@ -2,8 +2,13 @@
 
 class Admin::ConsumersController < Admin::InertiaController
   def index
-    @consumers = AdminConsumerSummary.rows_for(company, month: selected_month)
+    month = selected_month.beginning_of_month
+
+    @consumers = AdminConsumerSummary.rows_for(company, month:)
     @filter = params[:filter].presence_in(%w[all pending]) || "all"
+    @month = month.strftime("%Y-%m")
+    @current_month = Date.current.strftime("%Y-%m")
+    @months = month_options(AdminMonthlySummary.new(company, month).months)
   end
 
   # El find va sobre los empleados de la empresa del admin y no sobre Consumer:
@@ -29,7 +34,7 @@ class Admin::ConsumersController < Admin::InertiaController
       eligible: eligibility.eligible?,
       amount: eligibility.amount.to_f,
       remaining: eligibility.remaining,
-      next_available_at: eligibility.next_available_at&.in_time_zone(Time.zone)&.strftime("%d/%m/%Y a las %H:%M"),
+      next_available_at: DateFormat.long_with_time(eligibility.next_available_at&.in_time_zone(Time.zone), inline: true),
       blocked_reason: eligibility.reason&.to_s
     }
   end

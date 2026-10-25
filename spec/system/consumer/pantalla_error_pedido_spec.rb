@@ -36,11 +36,8 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
   end
 
   def open_cart
-    if page.has_css?("button.fixed", text: "Ver carrito", visible: true)
-      find("button.fixed", text: "Ver carrito").click
-    else
-      find("aside button", text: "Ver carrito").click
-    end
+    click_link "Ver carrito"
+    expect(page).to have_current_path(dashboard_cart_path)
     expect(page).to have_content("Tu carrito")
   end
 

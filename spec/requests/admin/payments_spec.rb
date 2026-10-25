@@ -32,7 +32,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "GET /admin/payments" do
+  describe "GET /admin/pagos" do
     it "redirects to sign in without a session" do
       get admin_payments_path
 
@@ -148,11 +148,22 @@ RSpec.describe "Admin::Payments", type: :request do
         )
         expect(period["providers"].sole).to include(
           "id" => providers(:tuviandita).id, "name" => "Provider User", "meals" => 4,
-          "subtotal" => 601.0, "vat_rate" => 0.0, "vat_amount" => 0.0, "payable_amount" => 601.0
+          "subtotal" => 601.0, "vat_rate" => 0.0, "vat_amount" => 0.0, "payable_amount" => 601.0, "paid" => false
         )
         expect(period["providers"].sole["days"].flat_map { it["orders"] }.pluck("id")).to contain_exactly(
           orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id, orders(:other_consumer_upcoming).id
         )
+      end
+
+      # IBP-032 CA3: el detalle rotula el total como pagado solo con el pago aprobado.
+      it "marks the detail as paid only once the payment is approved" do
+        account = accounts(:gogrow_tuviandita_current)
+        payment = account.payments.build(provider: account.provider, status: :approved)
+        payment.save!(validate: false)
+
+        get admin_payments_path, params: { month: Date.current.strftime("%Y-%m") }
+
+        expect(inertia.props[:consumption]["providers"].sole).to include("paid" => true)
       end
 
       it "splits what the employee pays from what GoGrow pays in each order" do
@@ -230,7 +241,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "GET /admin/payments/:id" do
+  describe "GET /admin/pagos/:id" do
     it "redirects to sign in without a session" do
       get admin_payment_path(accounts(:gogrow_tuviandita_current))
 
@@ -263,7 +274,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "POST /admin/payments" do
+  describe "POST /admin/pagos" do
     let(:account) { accounts(:gogrow_tuviandita_current) }
 
     it "creates a submitted payment with a receipt for the company account" do
@@ -450,7 +461,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "GET /admin/payments/:id/receipt" do
+  describe "GET /admin/pagos/:id/archivo" do
     let(:account) { accounts(:gogrow_tuviandita_current) }
 
     it "allows HR to access a receipt from its company account" do
@@ -501,7 +512,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
   end
 
-  describe "DELETE /admin/payments/:id" do
+  describe "DELETE /admin/pagos/:id" do
     let(:account) { accounts(:gogrow_tuviandita_current) }
 
     def payment_with_receipt(status:, rejection_reason: nil)

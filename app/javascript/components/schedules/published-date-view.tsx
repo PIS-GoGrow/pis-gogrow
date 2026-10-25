@@ -32,7 +32,7 @@ function PublishedScheduleRow({
   returnTo: string
 }) {
   const { t } = useTranslation()
-  const { formatMoneyShort } = useFormatters()
+  const { formatMoney } = useFormatters()
   const [processing, setProcessing] = useState(false)
 
   function handleAvailabilityChange(available: boolean) {
@@ -72,14 +72,14 @@ function PublishedScheduleRow({
             >
               {schedule.menu.name}{" "}
               <span className="text-muted-foreground">
-                | {formatMoneyShort(schedule.menu.price ?? 0)}
+                | {formatMoney(schedule.menu.price ?? 0)}
               </span>
             </Link>
           ) : (
             <>
               {schedule.menu.name}{" "}
               <span className="text-muted-foreground">
-                | {formatMoneyShort(schedule.menu.price ?? 0)}
+                | {formatMoney(schedule.menu.price ?? 0)}
               </span>
             </>
           )}

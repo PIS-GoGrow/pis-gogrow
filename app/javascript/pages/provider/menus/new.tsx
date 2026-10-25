@@ -1,8 +1,6 @@
 import { Head, Link } from "@inertiajs/react"
-import { format, parseISO } from "date-fns"
 import { ChevronLeft } from "lucide-react"
 import { useState } from "react"
-import { es } from "react-day-picker/locale"
 import { useTranslation } from "react-i18next"
 
 import {
@@ -18,6 +16,7 @@ import SavedMenusTab from "@/components/menus/saved-menus-tab"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
+import { formatLongDateInline } from "@/lib/dates"
 import { providerMenus as menusRoutes, schedules } from "@/routes"
 import type { BreadcrumbItem, ProviderMenusNew } from "@/types"
 
@@ -127,9 +126,7 @@ export default function New(props: ProviderMenusNew) {
             <AdaptableDialogDescription className="text-base">
               {addedDate
                 ? t(`${key}.added.description_date`, {
-                    date: format(parseISO(addedDate), "EEEE d 'de' MMMM", {
-                      locale: es,
-                    }),
+                    date: formatLongDateInline(addedDate),
                   })
                 : t(`${key}.added.description`)}
             </AdaptableDialogDescription>

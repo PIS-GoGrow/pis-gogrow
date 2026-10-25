@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/card"
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import AppLayout from "@/layouts/app-layout"
+import { formatLongDateInline } from "@/lib/dates"
+import { formatMoney } from "@/lib/money"
 import { adminAccount, adminBenefitConfigurations } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
 import type { AdminBenefitConfigurationsIndex } from "@/types/serializers"
@@ -123,7 +125,7 @@ export default function Index({
                     <AlertTitle className="font-bold">
                       {t(
                         "pages.admin.benefit_configurations.index.current.pending_conflict.title_alt",
-                        { date: configurable_month },
+                        { date: formatLongDateInline(configurable_month) },
                       )}
                     </AlertTitle>
                     <AlertDescription>
@@ -131,8 +133,9 @@ export default function Index({
                         "pages.admin.benefit_configurations.index.current.pending_conflict.description",
                         {
                           subsidy_percentage: subsidy.subsidy_percentage,
-                          max_voucher_price:
-                            subsidy.benefit_rules[0]?.max_price,
+                          max_voucher_price: formatMoney(
+                            subsidy.benefit_rules[0]?.max_price ?? 0,
+                          ),
                           monthly_voucher_limit:
                             subsidy.benefit_rules[0]?.limit,
                         },
@@ -159,7 +162,10 @@ export default function Index({
                         )}
                       </dt>
                       <dd className="text-lg font-semibold">
-                        ≤${base_subsidy?.benefit_rules[0]?.max_price}
+                        ≤
+                        {formatMoney(
+                          base_subsidy?.benefit_rules[0]?.max_price ?? 0,
+                        )}
                       </dd>
                     </div>
                     <div className="flex items-center justify-between py-3">

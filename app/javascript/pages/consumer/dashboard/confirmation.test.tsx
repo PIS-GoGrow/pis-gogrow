@@ -86,11 +86,17 @@ describe("OrderConfirmation Page", () => {
   })
 
   it("contains a link to view consumer orders", () => {
-    render(<OrderConfirmation total={450} orders={sampleOrders} />)
+    const { container } = render(
+      <OrderConfirmation total={450} orders={sampleOrders} />,
+    )
 
-    const ordersLink = screen.getByRole("link", { name: "Ver mis pedidos" })
+    const tickContainer = container.querySelector(".bg-primary.rounded-full")
+    expect(tickContainer).toBeInTheDocument()
+    expect(tickContainer?.querySelector("svg")).toBeInTheDocument()
+
+    const ordersLink = screen.getByRole("link", { name: "Ir a Mis pedidos" })
     expect(ordersLink).toBeInTheDocument()
-    expect(ordersLink).toHaveAttribute("href", "/orders")
+    expect(ordersLink).toHaveAttribute("href", "/pedidos")
   })
 
   it("renders a close button linking back to the dashboard", () => {
@@ -98,7 +104,7 @@ describe("OrderConfirmation Page", () => {
 
     const closeButton = screen.getByRole("link", { name: "Cerrar" })
     expect(closeButton).toBeInTheDocument()
-    expect(closeButton).toHaveAttribute("href", "/dashboard")
+    expect(closeButton).toHaveAttribute("href", "/menu-semanal")
   })
 
   it("handles orders with different delivery methods and providers", () => {

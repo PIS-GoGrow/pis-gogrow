@@ -18,7 +18,7 @@ vi.mock("@inertiajs/react", async () => {
     ...actual,
     Head: () => null,
     usePage: () => ({
-      url: "/admin/dashboard",
+      url: "/rrhh/inicio",
       props: { locale: "es", auth: { user: { name: "Juan Pérez" } } },
     }),
   }
@@ -117,6 +117,7 @@ describe("Admin Dashboard Page", () => {
               vat_rate: 0,
               vat_amount: 0,
               payable_amount: 5425,
+              paid: false,
               days: [],
             },
           ],
@@ -156,11 +157,11 @@ describe("Admin Dashboard Page", () => {
       name: "Tus pagos de septiembre",
     })
     expect(within(payments).getByText("Endulzate by Noe")).toBeInTheDocument()
-    expect(within(payments).getByText("Confirmado")).toBeInTheDocument()
+    expect(within(payments).getByText("Aprobado")).toBeInTheDocument()
     expect(within(payments).getByText("Pendiente")).toBeInTheDocument()
     expect(
       within(payments).getByRole("link", { name: "Ver pagos a proveedores" }),
-    ).toHaveAttribute("href", "/admin/payments")
+    ).toHaveAttribute("href", "/rrhh/pagos")
   })
 
   it("links the debt ranking to each employee and to the pending ones", () => {
@@ -171,12 +172,12 @@ describe("Admin Dashboard Page", () => {
     })
     expect(
       within(debts).getByRole("link", { name: "Martín Bonnet" }),
-    ).toHaveAttribute("href", "/admin/consumers/7")
+    ).toHaveAttribute("href", "/rrhh/empleados/7")
     expect(
       within(debts).getByRole("link", {
         name: "Ver empleados con saldos pendientes",
       }),
-    ).toHaveAttribute("href", "/admin/consumers?filter=pending")
+    ).toHaveAttribute("href", "/rrhh/empleados?filter=pending")
   })
 
   it("keeps the selected month when it opens the pending employees", () => {
@@ -186,7 +187,7 @@ describe("Admin Dashboard Page", () => {
       screen.getByRole("link", {
         name: "Ver empleados con saldos pendientes",
       }),
-    ).toHaveAttribute("href", "/admin/consumers?filter=pending&month=2026-09")
+    ).toHaveAttribute("href", "/rrhh/empleados?filter=pending&month=2026-09")
   })
 
   describe("photos in the debt ranking", () => {

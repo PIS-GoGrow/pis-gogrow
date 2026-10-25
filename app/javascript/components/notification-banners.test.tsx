@@ -97,7 +97,7 @@ describe("NotificationBanners", () => {
 
     expect(mocks.patch).toHaveBeenCalledWith(
       expect.objectContaining({
-        url: "/notifications/42/close",
+        url: "/notificaciones/42/cerrar",
         method: "patch",
       }),
       {},

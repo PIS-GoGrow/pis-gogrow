@@ -63,7 +63,7 @@ function DetailLine({
 
 export default function Show({ order }: ProviderOrdersShow) {
   const { t } = useTranslation()
-  const { formatMoneyShort, formatLongDate } = useFormatters()
+  const { formatMoney, formatLongDate, formatShortDate } = useFormatters()
 
   // Solo lo que el empleado eligió: los pedidos anteriores a la personalización
   // no tienen elección.
@@ -113,7 +113,7 @@ export default function Show({ order }: ProviderOrdersShow) {
                 {t("pages.provider_orders.show.title", { code })}
               </h3>
               <p className="text-muted-foreground text-sm">
-                {`${formatLongDate(order.created_on)} · ${order.time}`}
+                {`${formatShortDate(order.created_on)} · ${order.time}`}
               </p>
             </div>
 
@@ -204,20 +204,20 @@ export default function Show({ order }: ProviderOrdersShow) {
                   <Separator />
                   {order.subsidy != null && (
                     <DetailLine label={t("pages.provider_orders.show.subsidy")}>
-                      -{formatMoneyShort(order.subsidy)}
+                      -{formatMoney(order.subsidy)}
                     </DetailLine>
                   )}
                   <DetailLine label={t("pages.provider_orders.show.charged")}>
                     {order.discounted_price == null
                       ? t("pages.provider_orders.show.no_price")
-                      : formatMoneyShort(order.discounted_price)}
+                      : formatMoney(order.discounted_price)}
                   </DetailLine>
                   <div className="flex items-baseline justify-between gap-4">
                     <span className="text-muted-foreground text-sm">
                       {t("pages.provider_orders.show.total")}
                     </span>
                     <span className="text-lg font-semibold">
-                      {formatMoneyShort(order.price)}
+                      {formatMoney(order.price)}
                     </span>
                   </div>
                 </CardContent>

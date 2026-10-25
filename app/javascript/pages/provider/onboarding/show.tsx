@@ -4,15 +4,20 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import ClosingTimeSection from "@/components/provider/closing-time-section"
+import ClosuresSection from "@/components/provider/closures-section"
 import { Button } from "@/components/ui/button"
 import {
   Field,
+  FieldContent,
   FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
+  FieldTitle,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
   SelectContent,
@@ -27,13 +32,37 @@ import type { ProviderOnboardingShow } from "@/types/serializers/ProviderOnboard
 const TOTAL_STEPS = 4
 const PAGE = "pages.provider_onboarding"
 
+const REQUIRED_STEP_1_FIELDS = [
+  "provider[bank_name]",
+  "provider[bank_account_type]",
+  "provider[bank_account_number]",
+  "provider[bank_account_holder]",
+  "provider[tax_id]",
+] as const
+
+function step1Complete(provider: ProviderOnboardingShow["provider"]) {
+  return [
+    provider.bank_name,
+    provider.bank_account_type,
+    provider.bank_account_number,
+    provider.bank_account_holder,
+    provider.tax_id,
+  ].every((value) => (value ?? "").toString().trim() !== "")
+}
+
 export default function Onboarding({
   provider,
   step,
   notification_configurations,
   subscribed_keys,
+  closures,
+  today,
+  order_deadline_passed_today,
 }: ProviderOnboardingShow) {
   const { t } = useTranslation()
+  const [canContinue, setCanContinue] = useState(() =>
+    step === "1" ? step1Complete(provider) : true,
+  )
 
   if (step === "done") {
     return (
@@ -53,6 +82,21 @@ export default function Onboarding({
   }
 
   const current = Number(step)
+
+  function handleStep1Change(event: React.FormEvent<HTMLDivElement>) {
+    if (current !== 1) return
+
+    const form = event.currentTarget.closest("form")
+    if (!form) return
+
+    const data = new FormData(form)
+    setCanContinue(
+      REQUIRED_STEP_1_FIELDS.every((name) => {
+        const value = data.get(name)
+        return typeof value === "string" && value.trim() !== ""
+      }),
+    )
+  }
 
   function skip() {
     router.patch(
@@ -82,7 +126,19 @@ export default function Onboarding({
           onSkip={skip}
         />
       ) : current === 3 ? (
-        <DeliveriesStep homeDelivery={provider.home_delivery} onSkip={skip} />
+        <DeliveriesStep
+          homeDelivery={provider.home_delivery}
+          configured={provider.deliveries_configured}
+          onSkip={skip}
+        />
+      ) : current === 2 ? (
+        <OrderConfigStep
+          provider={provider}
+          closures={closures}
+          today={today}
+          orderDeadlinePassedToday={order_deadline_passed_today}
+          onSkip={skip}
+        />
       ) : (
         <Form
           action={providerOnboarding.update()}
@@ -92,15 +148,15 @@ export default function Onboarding({
           {({ errors, processing }) => (
             <>
               <input type="hidden" name="step" value={current} />
-              <div className="flex-1">
-                {current === 1 && (
-                  <PaymentDetailsFields provider={provider} errors={errors} />
-                )}
-                {current === 2 && (
-                  <OrderDeadlineFields provider={provider} errors={errors} />
-                )}
+              <div className="flex-1" onChange={handleStep1Change}>
+                <PaymentDetailsFields provider={provider} errors={errors} />
               </div>
-              <Footer processing={processing} isLast={false} onSkip={skip} />
+              <Footer
+                processing={processing}
+                isLast={false}
+                canContinue={canContinue}
+                onSkip={skip}
+              />
             </>
           )}
         </Form>
@@ -181,10 +237,12 @@ function StepIntro({ step }: { step: number }) {
 function Footer({
   processing,
   isLast,
+  canContinue,
   onSkip,
 }: {
   processing: boolean
   isLast: boolean
+  canContinue: boolean
   onSkip: () => void
 }) {
   const { t } = useTranslation()
@@ -195,7 +253,7 @@ function Footer({
         type="submit"
         name="commit"
         value="continue"
-        disabled={processing}
+        disabled={processing || !canContinue}
         className="w-full"
       >
         {isLast ? t(`${PAGE}.finish`) : t(`${PAGE}.continue`)}
@@ -217,11 +275,13 @@ function ControlledFooter({
   isLast,
   onContinue,
   onSkip,
+  canContinue = true,
 }: {
   processing: boolean
   isLast: boolean
   onContinue: () => void
   onSkip: () => void
+  canContinue?: boolean
 }) {
   const { t } = useTranslation()
 
@@ -229,7 +289,7 @@ function ControlledFooter({
     <div className="flex flex-col gap-2">
       <Button
         type="button"
-        disabled={processing}
+        disabled={processing || !canContinue}
         onClick={onContinue}
         className="w-full"
       >
@@ -349,56 +409,77 @@ function PaymentDetailsFields({
   )
 }
 
-function OrderDeadlineFields({
+function OrderConfigStep({
   provider,
-  errors,
-}: {
-  provider: ProviderOnboardingShow["provider"]
-  errors: Record<string, ErrorValue>
-}) {
-  const { t } = useTranslation()
-
-  return (
-    <>
-      <StepIntro step={2} />
-      <FieldGroup>
-        <Field data-invalid={!!errors.order_deadline}>
-          <FieldLabel htmlFor="order_deadline">
-            {t(`${PAGE}.steps.2.order_deadline`)}
-          </FieldLabel>
-          <Input
-            id="order_deadline"
-            name="order_deadline"
-            type="time"
-            defaultValue={provider.order_deadline ?? ""}
-            aria-invalid={!!errors.order_deadline}
-          />
-          <FieldDescription>
-            {t(`${PAGE}.steps.2.order_deadline_description`)}
-          </FieldDescription>
-          <FieldError>{errors.order_deadline}</FieldError>
-        </Field>
-      </FieldGroup>
-    </>
-  )
-}
-
-function DeliveriesStep({
-  homeDelivery,
+  closures,
+  today,
+  orderDeadlinePassedToday,
   onSkip,
 }: {
-  homeDelivery: boolean
+  provider: ProviderOnboardingShow["provider"]
+  closures: ProviderOnboardingShow["closures"]
+  today: string
+  orderDeadlinePassedToday: boolean
   onSkip: () => void
 }) {
-  const { t } = useTranslation()
-  const [enabled, setEnabled] = useState(homeDelivery)
   const [processing, setProcessing] = useState(false)
 
   function submit() {
     setProcessing(true)
     router.patch(
       providerOnboarding.update().url,
-      { step: 3, commit: "continue", home_delivery: enabled },
+      { step: 2, commit: "continue" },
+      { preserveScroll: true, onFinish: () => setProcessing(false) },
+    )
+  }
+
+  return (
+    <>
+      <div className="flex-1">
+        <StepIntro step={2} />
+        <div className="flex flex-col gap-4">
+          <ClosingTimeSection
+            orderDeadline={provider.order_deadline}
+            orderDeadlinePassedToday={orderDeadlinePassedToday}
+            onboarding
+          />
+          <ClosuresSection closures={closures} today={today} onboarding />
+        </div>
+      </div>
+      <ControlledFooter
+        processing={processing}
+        isLast={false}
+        onContinue={submit}
+        onSkip={onSkip}
+        canContinue={!!provider.order_deadline}
+      />
+    </>
+  )
+}
+
+function DeliveriesStep({
+  homeDelivery,
+  configured,
+  onSkip,
+}: {
+  homeDelivery: boolean
+  configured: boolean
+  onSkip: () => void
+}) {
+  const { t } = useTranslation()
+  const [selected, setSelected] = useState<"office" | "home" | null>(
+    configured ? (homeDelivery ? "home" : "office") : null,
+  )
+  const [processing, setProcessing] = useState(false)
+  const deliveries = "pages.provider_deliveries.show"
+
+  function submit() {
+    if (!selected) return
+
+    setProcessing(true)
+    router.patch(
+      providerOnboarding.update().url,
+      { step: 3, commit: "continue", home_delivery: selected === "home" },
       { preserveScroll: true, onFinish: () => setProcessing(false) },
     )
   }
@@ -407,21 +488,33 @@ function DeliveriesStep({
     <>
       <div className="flex-1">
         <StepIntro step={3} />
-        <div className="flex items-center justify-between rounded-lg border p-4">
-          <div className="pr-4">
-            <p className="font-medium">{t(`${PAGE}.steps.3.home_delivery`)}</p>
-            <p className="text-muted-foreground text-sm">
-              {t(`${PAGE}.steps.3.home_delivery_description`)}
-            </p>
-          </div>
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
-        </div>
+        <RadioGroup
+          value={selected ?? ""}
+          onValueChange={(value) => setSelected(value as "office" | "home")}
+          aria-label={t(`${PAGE}.steps.3.title`)}
+          className="gap-3"
+        >
+          {(["office", "home"] as const).map((option) => (
+            <FieldLabel key={option} htmlFor={`delivery-${option}`}>
+              <Field orientation="horizontal">
+                <RadioGroupItem value={option} id={`delivery-${option}`} />
+                <FieldContent>
+                  <FieldTitle>{t(`${deliveries}.${option}.title`)}</FieldTitle>
+                  <FieldDescription>
+                    {t(`${deliveries}.${option}.description`)}
+                  </FieldDescription>
+                </FieldContent>
+              </Field>
+            </FieldLabel>
+          ))}
+        </RadioGroup>
       </div>
       <ControlledFooter
         processing={processing}
         isLast={false}
         onContinue={submit}
         onSkip={onSkip}
+        canContinue={selected !== null}
       />
     </>
   )
@@ -470,7 +563,7 @@ function NotificationsStep({
         <div className="grid gap-2">
           {configurations.map(({ id, key, title, description }) => (
             <div key={id} className="flex border-b py-3">
-              <div className="w-[90%] pr-5">
+              <div className="min-w-0 flex-1 pr-5">
                 <p className="font-medium">{title}</p>
                 <p className="text-muted-foreground text-sm">{description}</p>
               </div>
