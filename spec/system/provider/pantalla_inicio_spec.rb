@@ -64,7 +64,10 @@ RSpec.describe "Pantalla de inicio del proveedor", type: :system do
 
     it "permite navegar a gestión de menú desde la barra lateral y visualiza los días publicados" do
       menu = provider.menus.first
-      menu.schedules.create!(date: Date.current.next_occurring(:wednesday), amount: 5)
+      wednesday = Date.current.next_occurring(:wednesday)
+      # La fixture schedules(:future) cae en hoy + 3, que es este miércoles si se corre un domingo.
+      Schedule.where(date: wednesday).destroy_all
+      menu.schedules.create!(date: wednesday, amount: 5)
 
       within(sidebar) do
         click_on "Gestión de Menú"
