@@ -2,10 +2,10 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import type { ConsumerDashboardIndex } from "@/types"
+
 import type { CartItem, Schedule } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
-
-import type { ConsumerDashboardIndex } from "@/types"
 
 type Benefit = ConsumerDashboardIndex["benefit"]
 

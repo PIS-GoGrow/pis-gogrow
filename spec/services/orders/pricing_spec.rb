@@ -74,7 +74,7 @@ RSpec.describe Orders::Pricing do
         base = base!
         special = special!
 
-        line = price(1, selected: [special])
+        line = price(1, selected: [ special ])
 
         expect(line).to have_attributes(price: 300, discounted_price: 60)
         expect(line.benefits).to eq([ [ base, Orders::Pricing::BenefitUsed.new(1, 150) ], [ special, Orders::Pricing::BenefitUsed.new(1, 90) ] ].to_h)
@@ -98,7 +98,7 @@ RSpec.describe Orders::Pricing do
         base = base!(amount: 1)
         special = special!(amount: 1)
 
-        line = price(3, selected: [special])
+        line = price(3, selected: [ special ])
 
         # 1ª con 80% (60), 2ª y 3ª a precio completo.
         expect(line.discounted_price).to eq(660)
@@ -131,7 +131,7 @@ RSpec.describe Orders::Pricing do
         base = base!
         special = special!(percentage: 100)
 
-        line = price(1, selected: [special])
+        line = price(1, selected: [ special ])
 
         expect(line.discounted_price).to eq(0)
         expect(line.benefits).to eq({ base => Orders::Pricing::BenefitUsed.new(1, 150), special => Orders::Pricing::BenefitUsed.new(1, 150) })
@@ -142,7 +142,7 @@ RSpec.describe Orders::Pricing do
         gift = special!(percentage: 40, amount: 1)
         seniority = special!(percentage: 30, configuration: benefit_configurations(:seniority))
 
-        line = price(1, selected: [gift])
+        line = price(1, selected: [ gift ])
 
         # 50% + 30% = 80% todavía no alcanza: el de 40% hace falta aunque se pase.
         expect(line.discounted_price).to eq(0)
@@ -154,7 +154,7 @@ RSpec.describe Orders::Pricing do
         gift = special!(percentage: 40)
         gift2 = special!(percentage: 25, configuration: benefit_configurations(:gift2))
 
-        line = price(1, selected: [gift, gift2])
+        line = price(1, selected: [ gift, gift2 ])
 
         expect(line.discounted_price).to eq(0)
         expect(line.benefits).to eq([ [ base, Orders::Pricing::BenefitUsed.new(1, 180) ], [ gift, Orders::Pricing::BenefitUsed.new(1, 120) ] ].to_h)
@@ -165,7 +165,7 @@ RSpec.describe Orders::Pricing do
         special = special!(percentage: 40, amount: 1)
         unused = special!(percentage: 25, amount: 3, configuration: benefit_configurations(:gift2))
 
-        place!(1, selected: [special, unused])
+        place!(1, selected: [ special, unused ])
 
         expect(described_class.new(consumer.reload).remaining_uses(special)).to eq(0)
         expect(described_class.new(consumer.reload).remaining_uses(unused)).to eq(3)
@@ -175,7 +175,7 @@ RSpec.describe Orders::Pricing do
         base = base!(percentage: 100, amount: 1)
         special = special!(percentage: 60, amount: 1)
 
-        line = price(2, selected: [special])
+        line = price(2, selected: [ special ])
 
         # Una vianda queda gratis con el base; el especial cubre la otra (40% a pagar).
         expect(line.benefits).to eq({ base => Orders::Pricing::BenefitUsed.new(1, 300), special => Orders::Pricing::BenefitUsed.new(1, 180) })
@@ -187,7 +187,7 @@ RSpec.describe Orders::Pricing do
       it "applies a limited benefit to the first meal" do
         special = special!(amount: 1)
 
-        result = price_cart([ cheap_schedule, 1, [special] ], [ schedule, 1, [special] ])
+        result = price_cart([ cheap_schedule, 1, [ special ] ], [ schedule, 1, [ special ] ])
 
         expect(result.first.second).to have_attributes(discounted_price: 70, benefits: { special => Orders::Pricing::BenefitUsed.new(1, 30) })
         expect(result.second.second).to have_attributes(discounted_price: 300, benefits: {})
@@ -196,7 +196,7 @@ RSpec.describe Orders::Pricing do
       it "spreads the uses over the first units" do
         special = special!(amount: 2)
 
-        result = price_cart([ schedule, 1, [special] ], [ cheap_schedule, 2, [special] ])
+        result = price_cart([ schedule, 1, [ special ] ], [ cheap_schedule, 2, [ special ] ])
 
         # 1 milanesa (300) y 1 de las 2 ensaladas (100) con 30%: 210 y 70 + 100.
         expect(result.second.second.discounted_price).to eq(170)
@@ -210,7 +210,7 @@ RSpec.describe Orders::Pricing do
         base = base!(percentage: 30)
         gift = special!(percentage: 100)
 
-        line = price(1, selected: [gift])
+        line = price(1, selected: [ gift ])
 
         expect(line.benefits).to eq({ base => Orders::Pricing::BenefitUsed.new(1, 90), gift => Orders::Pricing::BenefitUsed.new(1, 210) })
         expect(line.discounted_price).to eq(0)
@@ -228,7 +228,7 @@ RSpec.describe Orders::Pricing do
         base = base!(percentage: 20)
         gift = special!(percentage: 60, amount: 1)
 
-        result = price_cart([ cheap_schedule, 1, [gift] ], [ schedule, 1, [gift] ])
+        result = price_cart([ cheap_schedule, 1, [ gift ] ], [ schedule, 1, [ gift ] ])
 
         expect(result.first.second).to have_attributes(discounted_price: 20, benefits: { gift => Orders::Pricing::BenefitUsed.new(1, 60), base => Orders::Pricing::BenefitUsed.new(1, 20) })
         expect(result.second.second).to have_attributes(discounted_price: 240, benefits: { base => Orders::Pricing::BenefitUsed.new(1, 60) })
@@ -239,13 +239,13 @@ RSpec.describe Orders::Pricing do
       it "applies nothing when the price exceeds the max_price of the benefit" do
         special = special!(max_price: 299)
 
-        expect(price(1, selected: [special])).to have_attributes(discounted_price: 300, benefits: {})
+        expect(price(1, selected: [ special ])).to have_attributes(discounted_price: 300, benefits: {})
       end
 
       it "applies the benefit when the price is exactly its max_price" do
         special = special!(max_price: 300)
 
-        expect(price(1, selected: [special]).discounted_price).to eq(210)
+        expect(price(1, selected: [ special ]).discounted_price).to eq(210)
       end
 
       it "also respects the max_price of the base benefit" do
@@ -258,7 +258,7 @@ RSpec.describe Orders::Pricing do
         base = base!
         special = special!(max_price: 200)
 
-        line = price(1, selected: [special])
+        line = price(1, selected: [ special ])
 
         expect(line.discounted_price).to eq(150)
         expect(line.benefits).to eq([ [ base, Orders::Pricing::BenefitUsed.new(1, 150) ] ].to_h)
@@ -267,7 +267,7 @@ RSpec.describe Orders::Pricing do
       it "evaluates the max_price meal by meal" do
         special = special!(max_price: 150)
 
-        result = price_cart([ schedule, 1, [special] ], [ cheap_schedule, 1, [special] ])
+        result = price_cart([ schedule, 1, [ special ] ], [ cheap_schedule, 1, [ special ] ])
 
         expect(result.first.second).to have_attributes(discounted_price: 300, benefits: {})
         expect(result.second.second).to have_attributes(discounted_price: 70, benefits: { special => Orders::Pricing::BenefitUsed.new(1, 30) })
@@ -276,7 +276,7 @@ RSpec.describe Orders::Pricing do
       it "doesn't spend a use on a meal the benefit can't cover" do
         special = special!(amount: 1, max_price: 150)
 
-        result = price_cart([ schedule, 1, [special] ], [ cheap_schedule, 1, [special] ])
+        result = price_cart([ schedule, 1, [ special ] ], [ cheap_schedule, 1, [ special ] ])
 
         # La milanesa se saltea por max_price y el uso queda para la ensalada.
         expect(result.first.second.discounted_price).to eq(300)
@@ -313,9 +313,9 @@ RSpec.describe Orders::Pricing do
     describe "with a modifiable order" do
       it "gives back to the modified order the uses it already holds" do
         special = special!(amount: 2)
-        order = place!(1, selected: [special])
+        order = place!(1, selected: [ special ])
 
-        line = price(3, selected: [special], modifiable_order: order)
+        line = price(3, selected: [ special ], modifiable_order: order)
 
         expect(line.discounted_price).to eq(720)
         expect(line.benefits).to eq({ special => Orders::Pricing::BenefitUsed.new(2, 180) })
@@ -323,9 +323,9 @@ RSpec.describe Orders::Pricing do
 
       it "doesn't give them back when no order is being modified" do
         special = special!(amount: 2)
-        place!(1, selected: [special])
+        place!(1, selected: [ special ])
 
-        expect(price(3, selected: [special]).discounted_price).to eq(810)
+        expect(price(3, selected: [ special ]).discounted_price).to eq(810)
       end
     end
   end
@@ -333,8 +333,8 @@ RSpec.describe Orders::Pricing do
   describe "#remaining_uses" do
     it "counts pending and confirmed orders" do
       special = special!(amount: 2)
-      place!(1, selected: [special], status: :pending)
-      place!(1, selected: [special], status: :confirmed)
+      place!(1, selected: [ special ], status: :pending)
+      place!(1, selected: [ special ], status: :confirmed)
 
       expect(described_class.new(consumer).remaining_uses(special)).to eq(0)
       expect(price(1).discounted_price).to eq(300)
@@ -342,8 +342,8 @@ RSpec.describe Orders::Pricing do
 
     it "gives back the uses of cancelled and rejected orders" do
       special = special!(amount: 2)
-      place!(1, selected: [special], status: :cancelled)
-      place!(1, selected: [special], status: :rejected)
+      place!(1, selected: [ special ], status: :cancelled)
+      place!(1, selected: [ special ], status: :rejected)
 
       expect(described_class.new(consumer).remaining_uses(special)).to eq(2)
     end
@@ -356,7 +356,7 @@ RSpec.describe Orders::Pricing do
 
     it "counts the uses held by the modifiable order as available" do
       special = special!(amount: 2)
-      order = place!(2, selected: [special])
+      order = place!(2, selected: [ special ])
 
       expect(described_class.new(consumer).remaining_uses(special)).to eq(0)
       expect(described_class.new(consumer, modifiable_order: order).remaining_uses(special)).to eq(2)
@@ -379,7 +379,7 @@ RSpec.describe Orders::Pricing do
     it "leaves out specials that already expired or have no uses left" do
       base!
       special = special!(amount: 1)
-      place!(1, selected: [special])
+      place!(1, selected: [ special ])
       special!(due_date: Date.new(2026, 9, 13), configuration: benefit_configurations(:seniority))
 
       expect(described_class.new(consumer.reload).summary).to have_attributes(total: 50, specials: [])

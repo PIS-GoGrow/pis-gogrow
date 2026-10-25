@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Orders
   # Crea las órdenes de un carrito de forma atómica.
   class Place

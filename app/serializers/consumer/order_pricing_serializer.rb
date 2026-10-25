@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class Consumer::OrderPricingSerializer
   def initialize(items, pricings)
     @items = items
