@@ -6,7 +6,7 @@ class Consumer::ProfilesController < Consumer::InertiaController
   def show
     consumer = Current.user.consumer
     benefit = consumer.current_monthly_benefit
-    pricing = OrderPricing.new(consumer)
+    pricing = Orders::Pricing.new(consumer)
     @benefit_summary = pricing.summary
     @coupons = consumer.special_benefits.includes(benefit_configuration: :benefit_rules).select(&:coupon?).map do |coupon|
       {
