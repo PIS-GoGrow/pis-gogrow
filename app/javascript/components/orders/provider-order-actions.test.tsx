@@ -29,20 +29,40 @@ describe("ProviderOrderActions", () => {
   })
 
   it("lets a confirmed order be rejected but not confirmed again", () => {
-    render(<ProviderOrderActions order={{ id: 1, status: "confirmed" }} />)
+    render(
+      <ProviderOrderActions
+        order={{ id: 1, status: "confirmed", rejectable: true }}
+      />,
+    )
 
     expect(screen.getByRole("button", { name: /rechazar/i })).toBeEnabled()
     expect(screen.getByRole("button", { name: /confirmar/i })).toBeDisabled()
   })
 
+  it("disables both buttons on a confirmed order that is no longer rejectable", () => {
+    render(
+      <ProviderOrderActions
+        order={{ id: 9, status: "confirmed", rejectable: false }}
+        keepVisible
+      />,
+    )
+
+    expect(screen.getByRole("button", { name: /rechazar/i })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /confirmar/i })).toBeDisabled()
+  })
+
   it("renders nothing when the order is cancelled or rejected", () => {
     const { container: cancelledContainer } = render(
-      <ProviderOrderActions order={{ id: 2, status: "cancelled" }} />,
+      <ProviderOrderActions
+        order={{ id: 2, status: "cancelled", rejectable: false }}
+      />,
     )
     expect(cancelledContainer).toBeEmptyDOMElement()
 
     const { container: rejectedContainer } = render(
-      <ProviderOrderActions order={{ id: 3, status: "rejected" }} />,
+      <ProviderOrderActions
+        order={{ id: 3, status: "rejected", rejectable: false }}
+      />,
     )
     expect(rejectedContainer).toBeEmptyDOMElement()
   })
@@ -51,7 +71,7 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
-        order={{ id: 7, status: "cancelled" }}
+        order={{ id: 7, status: "cancelled", rejectable: false }}
         keepVisible
       />,
     )
@@ -71,7 +91,7 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
-        order={{ id: 42, status: "pending" }}
+        order={{ id: 42, status: "pending", rejectable: true }}
         keepVisible
         stackOnMobile
       />,
@@ -90,7 +110,10 @@ describe("ProviderOrderActions", () => {
   })
   it("keeps the buttons enabled on a pending order when keepVisible is set", () => {
     render(
-      <ProviderOrderActions order={{ id: 8, status: "pending" }} keepVisible />,
+      <ProviderOrderActions
+        order={{ id: 8, status: "pending", rejectable: true }}
+        keepVisible
+      />,
     )
 
     expect(screen.getByRole("button", { name: /confirmar/i })).toBeEnabled()
@@ -98,7 +121,11 @@ describe("ProviderOrderActions", () => {
   })
 
   it("renders confirm and reject buttons for pending orders", () => {
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        order={{ id: 42, status: "pending", rejectable: true }}
+      />,
+    )
 
     expect(
       screen.getByRole("button", { name: /confirmar/i }),
@@ -110,7 +137,11 @@ describe("ProviderOrderActions", () => {
 
   it("sends confirm patch when clicking confirm", async () => {
     const user = userEvent.setup()
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        order={{ id: 42, status: "pending", rejectable: true }}
+      />,
+    )
 
     await user.click(screen.getByRole("button", { name: /confirmar/i }))
 
@@ -123,7 +154,11 @@ describe("ProviderOrderActions", () => {
 
   it("opens reject confirmation dialog with confirm button disabled until reason is chosen", async () => {
     const user = userEvent.setup()
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        order={{ id: 42, status: "pending", rejectable: true }}
+      />,
+    )
 
     await user.click(screen.getByRole("button", { name: /rechazar/i }))
 
@@ -146,7 +181,11 @@ describe("ProviderOrderActions", () => {
 
   it("triggers reject patch with reason when selecting a predefined reason", async () => {
     const user = userEvent.setup()
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        order={{ id: 42, status: "pending", rejectable: true }}
+      />,
+    )
 
     await user.click(screen.getByRole("button", { name: /rechazar/i }))
 
@@ -170,7 +209,11 @@ describe("ProviderOrderActions", () => {
 
   it("requires text details when 'Otro motivo' is selected before enabling reject button", async () => {
     const user = userEvent.setup()
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        order={{ id: 42, status: "pending", rejectable: true }}
+      />,
+    )
 
     await user.click(screen.getByRole("button", { name: /rechazar/i }))
 
@@ -208,7 +251,7 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
-        order={{ id: 42, status: "pending" }}
+        order={{ id: 42, status: "pending", rejectable: true }}
         keepVisible
       />,
     )
@@ -242,7 +285,7 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
-        order={{ id: 42, status: "pending" }}
+        order={{ id: 42, status: "pending", rejectable: true }}
         keepVisible
       />,
     )
@@ -272,7 +315,11 @@ describe("ProviderOrderActions", () => {
   it("allows cancelling out of the reject dialog without sending a request", async () => {
     const user = userEvent.setup()
 
-    render(<ProviderOrderActions order={{ id: 42, status: "pending" }} />)
+    render(
+      <ProviderOrderActions
+        order={{ id: 42, status: "pending", rejectable: true }}
+      />,
+    )
 
     await user.click(screen.getByRole("button", { name: /rechazar/i }))
     expect(

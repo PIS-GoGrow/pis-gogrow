@@ -17,6 +17,14 @@ interface OptionChoicesProps {
   setValues: (values: string[]) => void
 }
 
+const neutralName = (name: string) => {
+  const lower = name.toLocaleLowerCase("es")
+
+  if (lower.endsWith("s")) return lower
+
+  return `${lower}/${/[aeiouáéíóú]$/.test(lower) ? "s" : "es"}`
+}
+
 export default function OptionChoices({
   group,
   values,
@@ -28,7 +36,9 @@ export default function OptionChoices({
     <section className="border-border border-b py-5">
       <div className="flex items-baseline justify-between gap-2">
         <h2 className="text-xs font-semibold">
-          {t("pages.consumer_dashboard.options.choose", { name: group.name })}
+          {t("pages.consumer_dashboard.options.choose", {
+            name: neutralName(group.name),
+          })}
         </h2>
         <span className="text-muted-foreground shrink-0 text-[10px]">
           {t(

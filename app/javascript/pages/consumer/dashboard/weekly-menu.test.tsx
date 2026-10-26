@@ -28,8 +28,6 @@ vi.mock("@inertiajs/react", async () => {
 })
 
 const defaultBenefit: ConsumerDashboardIndex["benefit"] = {
-  limit: 5,
-  used: 0,
   percentage: 50,
   monthly_limit: 20,
   monthly_used: 0,
@@ -51,6 +49,8 @@ const sampleSchedule: Schedule = {
     option_groups: [],
     provider_name: "Tu Viandita",
     home_delivery: true,
+    rating_average: null,
+    rating_count: 0,
     reviews: [],
   },
 }

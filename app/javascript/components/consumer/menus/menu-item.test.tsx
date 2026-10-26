@@ -60,10 +60,12 @@ describe("MenuItem", () => {
   it("shows the quantity already added instead of the add icon", () => {
     render(<MenuItem {...props} soldOut={false} addedQuantity={2} />)
 
-    expect(screen.getByText("• Agregado")).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Agregar Milanesa con papas fritas" }),
-    ).toHaveTextContent("2")
+    expect(screen.getByText("Agregado")).toBeInTheDocument()
+    const button = screen.getByRole("button", {
+      name: "Agregar Milanesa con papas fritas",
+    })
+    expect(button).toHaveTextContent("2")
+    expect(button).toHaveClass("bg-blue-700", "text-white")
   })
 
   it("shows the provider and the price next to the dish", () => {
@@ -71,5 +73,14 @@ describe("MenuItem", () => {
 
     expect(screen.getByText("Tu Viandita")).toBeInTheDocument()
     expect(screen.getByText(/\$300/)).toBeInTheDocument()
+  })
+
+  it("calls onSelect when clicking the dish card", async () => {
+    const user = userEvent.setup()
+    const onSelect = vi.fn()
+    render(<MenuItem {...props} soldOut={false} onSelect={onSelect} />)
+
+    await user.click(screen.getByText("Milanesa con papas fritas"))
+    expect(onSelect).toHaveBeenCalledOnce()
   })
 })

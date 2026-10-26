@@ -23,6 +23,10 @@ describe("ProviderFilterSheet", () => {
     expect(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     ).toBeInTheDocument()
+    const icon = screen
+      .getByRole("button", { name: "Filtrar por proveedores" })
+      .querySelector("svg")
+    expect(icon).toHaveClass("lucide-settings-2")
   })
 
   it("opens filter sheet and displays providers and 'Todos'", async () => {
@@ -91,6 +95,30 @@ describe("ProviderFilterSheet", () => {
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
     expect(onApply).toHaveBeenCalledWith(new Set())
+  })
+
+  it("allows selecting only one provider in single selection mode", async () => {
+    const user = userEvent.setup()
+    const onApply = vi.fn()
+
+    render(
+      <ProviderFilterSheet
+        providers={providers}
+        selectedProviders={new Set<number>()}
+        onApply={onApply}
+        selectionMode="single"
+        allProvidersLabel="Todos los proveedores"
+      />,
+    )
+
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+    await user.click(screen.getByLabelText("TuViandita"))
+    await user.click(screen.getByLabelText("Chef Express"))
+    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+
+    expect(onApply).toHaveBeenCalledWith(new Set([2]))
   })
 
   it("discards changes when clicking Cancelar", async () => {

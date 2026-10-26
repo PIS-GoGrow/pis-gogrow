@@ -28,6 +28,56 @@ RSpec.describe Payment, type: :model do
     expect(described_class.new.status).to eq("pending")
   end
 
+  # El recordatorio manual del proveedor quedaba activo para siempre después de
+  # aprobarse el pago, y como requiere acción el empleado tampoco podía cerrarlo.
+  describe "the provider's manual debt reminder" do
+    before do
+      Notification::Configuration.find_or_create_by!(key: "provider_payment_reminders") do |configuration|
+        configuration.roles = [ "consumer" ]
+      end
+    end
+
+    it "stays open while the receipt is under review" do
+      reminder = manual_reminder
+      payment_with_receipt(status: :submitted).save!
+
+      expect(reminder.reload.closed_at).to be_nil
+    end
+
+    it "closes when the payment is approved" do
+      reminder = manual_reminder
+      payment = payment_with_receipt(status: :submitted)
+      payment.save!
+
+      payment.approve
+
+      expect(reminder.reload.closed_at).to be_present
+    end
+
+    it "stays open when the payment is rejected" do
+      reminder = manual_reminder
+      payment = payment_with_receipt(status: :submitted)
+      payment.save!
+
+      payment.reject_with("El comprobante no corresponde")
+
+      expect(reminder.reload.closed_at).to be_nil
+    end
+
+    def manual_reminder
+      Notifier.call(
+        event_key: "debt_payment_reminder",
+        user: consumer.user,
+        notifiable: account,
+        description_data: {
+          amount: "$500",
+          provider: provider.user.name,
+          period: "octubre de 2026"
+        }
+      )
+    end
+  end
+
   describe "the provider notification" do
     let(:notifications) { Notification.where(event: "payment_receipt_submitted", user: provider.user) }
 

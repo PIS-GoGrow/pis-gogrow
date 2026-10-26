@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
-import type { AdminPaymentProvider } from "@/types"
+import type { PaymentProvider } from "@/types"
 
 interface BankDetailsProps {
-  provider: AdminPaymentProvider
+  provider: PaymentProvider
 }
 
 const page = "pages.admin.payments.index.bank"

@@ -37,10 +37,11 @@ vi.mock("@/layouts/app-layout", () => ({
   ),
 }))
 
-const renderPage = (homeDelivery: boolean) =>
+const renderPage = (homeDelivery: boolean, configured = true) =>
   render(
     <Deliveries
       provider={{ id: 1, name: "Tu Viandita", home_delivery: homeDelivery }}
+      deliveries_configured={configured}
     />,
   )
 
@@ -92,6 +93,14 @@ describe("Provider Deliveries Show Page", () => {
     renderPage(false)
 
     expect(screen.getByRole("radio", { name: /Solo Oficinas/ })).toBeChecked()
+  })
+
+  it("does not preselect any option when deliveries are not configured", () => {
+    renderPage(true, false)
+
+    for (const radio of screen.getAllByRole("radio")) {
+      expect(radio).not.toBeChecked()
+    }
   })
 
   it("saves office only as soon as it is selected", async () => {

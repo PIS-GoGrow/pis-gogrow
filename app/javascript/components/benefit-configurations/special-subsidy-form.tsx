@@ -3,6 +3,7 @@ import { XIcon } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { DatePicker } from "@/components/date-picker"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -230,7 +231,7 @@ export default function SpecialSubsidyForm({
   )
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       <FieldGroup className="gap-5">
         <div className="grid grid-cols-[1fr_auto] gap-3">
           <Field data-invalid={!!errors.name}>
@@ -492,16 +493,12 @@ export default function SpecialSubsidyForm({
                     "pages.admin.benefit_configurations.index.special.form.effective_from",
                   )}
                 </FieldLabel>
-                <Input
+                <DatePicker
                   id="condition_effective_from"
-                  name="effective_from"
-                  type="date"
                   min={today}
-                  className="w-44"
                   value={condition.effective_from}
-                  aria-invalid={!!errors.effective_from}
-                  onChange={(event) =>
-                    setCondition({ effective_from: event.target.value })
+                  onChange={(effective_from) =>
+                    setCondition({ effective_from })
                   }
                 />
               </Field>

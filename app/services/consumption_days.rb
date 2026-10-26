@@ -10,7 +10,7 @@ class ConsumptionDays
           .sort_by { |date, _| -date.jd }
           .map do |date, day_orders|
       {
-        date: date.strftime("%d/%m"),
+        date: DateFormat.short(date),
         orders: day_orders.sort_by { it.consumer.user.name.downcase }.map(&row)
       }
     end

@@ -21,6 +21,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
+import { formatLongDateInline } from "@/lib/dates"
 import {
   providerMenuImports,
   providerMenus,
@@ -48,12 +49,6 @@ interface SchedulesIndexProps {
   tab: "week" | "saved"
   selected_date: string | null
   today: string
-}
-
-function weekdayName(isoDate: string) {
-  return new Intl.DateTimeFormat("es-UY", { weekday: "long" }).format(
-    new Date(`${isoDate}T00:00:00`),
-  )
 }
 
 function normalize(text: string) {
@@ -150,12 +145,12 @@ export default function Index({
                     <>
                       <EmptyTitle>
                         {t("pages.schedules.index.empty.title", {
-                          day: weekdayName(selectedDay.date),
+                          day: formatLongDateInline(selectedDay.date),
                         })}
                       </EmptyTitle>
                       <EmptyDescription>
                         {t("pages.schedules.index.empty.description", {
-                          day: weekdayName(selectedDay.date),
+                          day: formatLongDateInline(selectedDay.date),
                         })}
                       </EmptyDescription>
                     </>

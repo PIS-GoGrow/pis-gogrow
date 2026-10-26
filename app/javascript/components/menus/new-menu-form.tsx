@@ -18,6 +18,7 @@ import EditMenuAdaptableDialog, {
 import MenuAgendaFields, {
   type AgendaDraft,
   agendaPayload,
+  agendaProblem,
   cwday,
   firstPublishedDate,
   initialAgenda,
@@ -57,15 +58,6 @@ interface MenuFormProps {
   edit?: ProviderMenusEdit
   create?: ProviderMenusNew
   onCreated?: (publishedDate: string | null) => void
-}
-
-function agendaIsComplete(agenda: AgendaDraft) {
-  if (agenda.weekdays.length === 0) return true
-  if (agenda.mode === "single") return agenda.date !== ""
-  if (agenda.mode === "range")
-    return agenda.starts_on !== "" && agenda.ends_on >= agenda.starts_on
-
-  return agenda.starts_on !== ""
 }
 
 export default function MenuForm({
@@ -197,19 +189,21 @@ export default function MenuForm({
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    for (const field of ["name", "price", "description"] as const) {
-      if (data[field].trim() === "") {
-        setError(field, [t(`${key}.required`)])
-        return
-      }
-    }
+    const emptyFields = (["name", "price", "description"] as const).filter(
+      (field) => data[field].trim() === "",
+    )
+    emptyFields.forEach((field) => setError(field, [t(`${key}.required`)]))
 
-    if (agenda && !agendaIsComplete(agenda)) {
-      setAgendaError(t("pages.provider_menus.edit.agenda.incomplete"))
-      return
-    }
+    const priceNotPositive =
+      data.price.trim() !== "" && !(Number(data.price) > 0)
+    if (priceNotPositive) setError("price", [t(`${key}.price_positive`)])
 
-    setAgendaError(null)
+    const problem = agenda ? agendaProblem(agenda) : null
+    setAgendaError(
+      problem ? t(`pages.provider_menus.edit.agenda.${problem}`) : null,
+    )
+
+    if (emptyFields.length > 0 || priceNotPositive || problem !== null) return
 
     if (edit) {
       transform((formData) => ({ menu: menuPayload(formData) }))
@@ -288,6 +282,7 @@ export default function MenuForm({
     <>
       <form
         onSubmit={handleSubmit}
+        noValidate
         className={menu ? "mx-auto w-full max-w-3xl" : undefined}
       >
         <div className="flex flex-col gap-4">

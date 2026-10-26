@@ -6,7 +6,7 @@ import type { ConsumerDashboardIndex } from "@/types"
 
 import { ConsumerCart } from "./consumer-cart"
 import type { CartItem, DeliveryAddressOption } from "./consumer-types"
-import { cartPricedItem, priceItems } from "./pricing"
+import { type Pricing, cartPricedItem, priceItems } from "./pricing"
 
 type Benefit = ConsumerDashboardIndex["benefit"]
 
@@ -63,13 +63,13 @@ const cartItem = (
     option_groups: [],
     provider_name: providerName,
     home_delivery: homeDelivery,
+    rating_average: null,
+    rating_count: 0,
     reviews: [],
   },
 })
 
 const benefit: Benefit = {
-  limit: 5,
-  used: 0,
   percentage: 50,
   monthly_limit: 20,
   monthly_used: 0,
@@ -106,6 +106,7 @@ async function renderCart(
     back: vi.fn(),
     confirm: vi.fn(),
     remove: vi.fn(),
+    setQuantity: vi.fn(),
   }
   return render(<ConsumerCart {...defaults} {...props} />)
 }
@@ -217,5 +218,178 @@ describe("ConsumerCart delivery address", () => {
         "Endulzate by Noe, Dulce Sur y La Olla entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
       ),
     ).toBeInTheDocument()
+  })
+})
+
+describe("ConsumerCart delivery date", () => {
+  it("shows a single delivery date under the title instead of on every dish", async () => {
+    await renderCart({
+      cart: [
+        cartItem("Tu Viandita", true, 1),
+        cartItem("Tu Viandita", true, 2),
+      ],
+    })
+
+    const date = screen.getByText("Entrega: Lunes 14 de setiembre")
+
+    expect(screen.getAllByText(/^Entrega:/)).toHaveLength(1)
+    expect(screen.getByRole("heading", { name: "Tu carrito" })).toHaveProperty(
+      "nextElementSibling",
+      date,
+    )
+  })
+
+  it("keeps a date on each dish when the cart spans several days", async () => {
+    await renderCart({
+      cart: [
+        cartItem("Tu Viandita", true, 1),
+        { ...cartItem("Tu Viandita", true, 2), date: "2026-09-15" },
+      ],
+    })
+
+    expect(
+      screen.getByText("Entrega: Lunes 14 de setiembre"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText("Entrega: Martes 15 de setiembre"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("heading", { name: "Tu carrito" }).nextElementSibling,
+    ).toHaveProperty("tagName", "SECTION")
+  })
+})
+
+// IBP-006 CA10 — "Si no corresponde subsidio, el sistema muestra valor cero y
+// el motivo."
+describe("ConsumerCart without subsidy", () => {
+  const fullPrice = (quantity: number, subsidized = 0): Pricing => ({
+    subtotal: 301 * quantity,
+    discount: 0,
+    total: 301 * quantity,
+    lines: {
+      "1": {
+        subtotal: 301 * quantity,
+        discount: 0,
+        total: 301 * quantity,
+        tiers: [],
+      },
+    },
+    subsidizedQuantity: subsidized,
+    fullPriceQuantity: quantity - subsidized,
+  })
+
+  it("shows the GoGrow subsidy at zero for a dish without benefit", async () => {
+    await renderCart({
+      monthlyLimit: 0,
+      monthlyRemaining: 0,
+      pricing: fullPrice(1),
+    })
+
+    expect(screen.getByText("Subsidio GoGrow").nextSibling).toHaveTextContent(
+      "$0",
+    )
+  })
+
+  it("says the employee has no benefit instead of claiming they used it up", async () => {
+    await renderCart({
+      monthlyLimit: 0,
+      monthlyRemaining: 0,
+      pricing: fullPrice(1),
+    })
+
+    expect(
+      screen.getByText(
+        "No tenés un beneficio asignado. La vianda de este pedido se cobra a precio completo.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Ya utilizaste/)).not.toBeInTheDocument()
+  })
+
+  it("says the monthly quota is used up when it had one", async () => {
+    await renderCart({
+      monthlyLimit: 20,
+      monthlyRemaining: 0,
+      pricing: fullPrice(2),
+    })
+
+    expect(
+      screen.getByText(
+        "Ya utilizaste las 20 viandas subsidiadas de este mes. Las 2 viandas de este pedido se cobran a precio completo.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("splits the order when only part of it is subsidized", async () => {
+    await renderCart({
+      monthlyLimit: 20,
+      monthlyRemaining: 1,
+      pricing: fullPrice(3, 1),
+    })
+
+    expect(
+      screen.getByText(
+        "Te queda 1 vianda subsidiada este mes. De este pedido, 1 con beneficio y 2 a precio completo.",
+      ),
+    ).toBeInTheDocument()
+  })
+})
+
+describe("ConsumerCart quantity", () => {
+  const twoDishes = (quantity: number): CartItem[] => [
+    { ...cartItem("Tu Viandita", true, 1), quantity },
+    cartItem("Tu Viandita", true, 2),
+  ]
+
+  it("changes the quantity of the dish whose counter was used", async () => {
+    const setQuantity = vi.fn()
+    await renderCart({ cart: twoDishes(3), setQuantity })
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Agregar una unidad de Plato 1" }),
+    )
+    await userEvent.click(
+      screen.getByRole("button", { name: "Quitar una unidad de Plato 1" }),
+    )
+
+    expect(setQuantity).toHaveBeenNthCalledWith(1, "1-", 4)
+    expect(setQuantity).toHaveBeenNthCalledWith(2, "1-", 2)
+  })
+
+  it("turns the minus into a trash that removes the dish at quantity 1", async () => {
+    const remove = vi.fn()
+    const setQuantity = vi.fn()
+    await renderCart({ cart: twoDishes(2), remove, setQuantity })
+
+    expect(
+      screen.queryByRole("button", { name: "Quitar Plato 1" }),
+    ).not.toBeInTheDocument()
+    // El plato 2 tiene cantidad 1: ya muestra el tacho.
+    await userEvent.click(
+      screen.getByRole("button", { name: "Quitar Plato 2" }),
+    )
+
+    expect(remove).toHaveBeenCalledWith("2-")
+    expect(setQuantity).not.toHaveBeenCalled()
+  })
+
+  it("does not go above the remaining stock", async () => {
+    await renderCart({
+      cart: [{ ...cartItem("Tu Viandita", true), quantity: 5 }],
+    })
+
+    expect(
+      screen.getByRole("button", { name: "Agregar una unidad de Plato 1" }),
+    ).toBeDisabled()
+  })
+
+  it("disables the counters while the order is processing", async () => {
+    await renderCart({ cart: twoDishes(2), processing: true })
+
+    expect(
+      screen.getByRole("button", { name: "Quitar una unidad de Plato 1" }),
+    ).toBeDisabled()
+    expect(
+      screen.getByRole("button", { name: "Quitar Plato 2" }),
+    ).toBeDisabled()
   })
 })
