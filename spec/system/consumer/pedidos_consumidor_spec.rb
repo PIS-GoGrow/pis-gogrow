@@ -88,6 +88,55 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_content("Milanesa con papas fritas")
   end
 
+  it "filtra el historial con varios proveedores sin mezclar pedidos y respetando el orden por fecha de entrega" do
+    office = providers(:office_provider)
+    endulzate = providers(:endulzate)
+    # Sin schedule para que la fecha de entrega la ponga el test y no la fixture.
+    {
+      history_confirmed_past: [ office, "Ensalada de quinoa", 30 ],
+      history_pending_past: [ office, "Tarta de verduras", 2 ],
+      history_without_schedule: [ endulzate, "Budín de limón", 10 ]
+    }.each do |fixture, (provider, menu_name, days_ago)|
+      orders(fixture).update_columns(
+        schedule_id: nil,
+        delivery_date: Date.current - days_ago,
+        provider_id: provider.id,
+        provider_name: provider.user.name,
+        menu_name: menu_name
+      )
+    end
+
+    visit orders_path
+    find("[role=tab]", text: "Historial").click
+    history = find("[role=tabpanel]", text: "Proveedores:")
+
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{office.id}").click
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("Proveedores: Office Provider User")
+    expect(history).to have_content("Tarta de verduras")
+    expect(history).to have_content("Ensalada de quinoa")
+    expect(history).to have_no_content("Budín de limón")
+    expect(history).to have_no_content("Milanesa con papas fritas")
+    expect(history).to have_no_content("No hay pedidos de este proveedor")
+    expect(history.text.index("Tarta de verduras")).to be < history.text.index("Ensalada de quinoa")
+
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-all").click
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("Proveedores: Todos los proveedores")
+    expect(history).to have_content("Budín de limón")
+    expect(history).to have_content("Milanesa con papas fritas")
+    positions = [ "Tarta de verduras", "Budín de limón", "Ensalada de quinoa" ].map { |name| history.text.index(name) }
+    expect(positions).to eq(positions.sort)
+  end
+
   it "muestra el estado vacío del historial para un proveedor sin pedidos anteriores" do
     selected = providers(:endulzate)
     orders(:upcoming_pending_future).update_columns(provider_id: selected.id, provider_name: selected.user.name)
