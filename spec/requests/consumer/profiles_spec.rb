@@ -74,6 +74,20 @@ RSpec.describe "Consumer::Profiles", type: :request do
         expect(inertia.props[:benefit_summary]).to include("total" => 100, "base" => 50)
       end
 
+      it "lists the employee's coupons with how many meals are left" do
+        coupon = consumers(:one).benefits.create!(
+          benefit_configuration: benefit_configurations(:gift), description: "Cupón", percentage: 30,
+          amount: 3, starts_on: Date.current, due_date: Date.current + 5.days
+        )
+        OrderBenefit.create!(order: orders(:upcoming_pending_future), benefit: coupon, benefit_used: 1)
+
+        get profile_path
+
+        expect(inertia).to have_props(
+          coupons: [ { id: coupon.id, name: "Cupón", percentage: 30, remaining: 2, period: DateFormat.short_range(Date.current, Date.current + 5.days) } ]
+        )
+      end
+
       it "reports how many subsidized meals are left this month" do
         get profile_path
 

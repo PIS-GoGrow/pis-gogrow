@@ -80,7 +80,7 @@ export function DishDetail({
         const result = await priceItems(
           cartPricedItem([...cartToPrice, { ...item, quantity }]),
         )
-        if (cancelled) return
+        if (cancelled || !result?.lines) return
 
         const preLine = result.lines[String(item.id)]
         const totalUnits = (isEditing ? otherInCart : inCart) + quantity

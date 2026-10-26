@@ -1272,14 +1272,15 @@ RSpec.describe Order, type: :model do
       expect(order.order_benefits.pluck(:benefit_id)).to contain_exactly(base.id, seniority.id)
     end
 
-    it "drops a special that no longer applies" do
+    it "keeps a special removed after the order was placed, only for the meals it already covered" do
       order = place(1)
       benefit_configurations(:gift).deactivate!(by: users(:admin))
 
-      modify(order, 1)
+      modify(order, 2)
 
-      expect(order.reload.discounted_price).to eq(150)
-      expect(order.order_benefits.pluck(:benefit_id)).to contain_exactly(base.id)
+      # 1ª base + premio (60), 2ª a precio completo aunque al premio le quedaba un uso.
+      expect(order.reload.discounted_price).to eq(360)
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
     end
   end
 
@@ -1359,6 +1360,45 @@ RSpec.describe Order, type: :model do
           quantity: 0, discounted_price: 100, benefits: { special => 1 }
         )
       }.not_to change(OrderBenefit, :count)
+    end
+  end
+
+  describe "auditing modifications" do
+    let(:order) { orders(:upcoming_pending_future) }
+    let(:user) { users(:one) }
+
+    before do
+      Current.session = user.sessions.create!(role: :consumer)
+    end
+
+    after do
+      Current.reset
+    end
+
+    it "records an audit log with previous and new values when modifying audited attributes" do
+      delivery = { delivery_method: "home", address: "Av. Italia 1234" }
+      order.modify(by: user, quantity: 2, notes: "Sin cebolla", delivery:)
+
+      log = order.audit_logs.sole
+      expect(log.user).to eq(user)
+      expect(log.changeset).to include(
+        "amount" => [ 1, 2 ],
+        "address" => [ "Julio Herrera y Reissig 565", "Av. Italia 1234" ],
+        "notes" => [ nil, "Sin cebolla" ]
+      )
+    end
+
+    it "does not record an audit log when state changes" do
+      expect {
+        order.decide(:confirmed)
+        order.cancel(by: user)
+      }.not_to change(order.audit_logs, :count)
+    end
+
+    it "does not record an audit log when modify fails validation" do
+      delivery = { delivery_method: "home", address: "" }
+      expect(order.modify(by: user, quantity: 1, notes: "a" * 141, delivery:)).to be(false)
+      expect(order.audit_logs).to be_empty
     end
   end
 end
