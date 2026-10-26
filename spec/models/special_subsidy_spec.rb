@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)", type: :model do
   include ActiveSupport::Testing::TimeHelpers
 
-  fixtures :users, :companies, :consumers, :benefit_configurations, :benefit_rules
+  fixtures :users, :companies, :consumers, :providers, :benefit_configurations, :benefit_rules
 
   let(:company) { companies(:gogrow) }
   let(:admin_user) { users(:admin) }
@@ -53,13 +53,29 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       expect(configuration.benefit_rules.first.errors[:deadline_days]).to be_present
     end
 
-    it "calcula la fecha límite del premio sumando la validez a la fecha de inicio" do
+    it "calcula la fecha límite del cupón como el último día de la validez" do
       configuration = save_special(condition: { type: "gift", limit: 3, effective_from: "2026-06-01", validity_amount: 1, validity_unit: "months" })
 
       rule = configuration.benefit_rules.first
       expect(rule).to be_a(GiftBenefit)
-      expect(rule.deadline_date).to eq(Date.new(2026, 7, 1))
+      expect(rule.deadline_date).to eq(Date.new(2026, 6, 30))
       expect(configuration.special_condition).to include(type: "gift", effective_from: Date.new(2026, 6, 1), validity_amount: 1, validity_unit: "months")
+    end
+
+    it "da un cupón de una semana que se usa siete días" do
+      configuration = save_special(condition: { type: "gift", limit: 3, effective_from: "2026-05-18", validity_amount: 1, validity_unit: "weeks" })
+
+      expect(configuration.benefit_rules.first.deadline_date).to eq(Date.new(2026, 5, 24))
+      expect(configuration.special_condition).to include(validity_amount: 1, validity_unit: "weeks")
+    end
+
+    it "acepta un cupón de un solo día" do
+      configuration = save_special(condition: { type: "gift", limit: 1, effective_from: "2026-05-12", validity_amount: 1, validity_unit: "days" })
+
+      expect(configuration).to be_persisted
+      expect(configuration.benefit_rules.first.deadline_date).to eq(Date.new(2026, 5, 12))
+      expect(configuration.special_condition).to include(validity_amount: 1, validity_unit: "days")
+      expect(one.benefits.find_by!(benefit_configuration: configuration).due_date).to eq(Date.new(2026, 5, 12))
     end
 
     it "rechaza un premio que empieza en el pasado" do
@@ -168,6 +184,115 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       configuration.reload
       expect(configuration).to have_attributes(name: "Cumpleaños", applies_to_all: true)
       expect(configuration.benefit_rules.map(&:class)).to eq([ BirthdayBenefit ])
+    end
+  end
+
+  describe "cupones" do
+    def save_coupon(configuration = company.benefit_configurations.new(created_by: admin_user), effective_from: "2026-05-12", **attrs)
+      save_special(
+        configuration,
+        name: "Cupón",
+        subsidy_percentage: 30,
+        applies_to_all: false,
+        consumer_ids: [ one.id ],
+        condition: { type: "gift", limit: 3, effective_from:, validity_amount: 1, validity_unit: "weeks" },
+        **attrs
+      )
+    end
+
+    it "se asigna al guardarlo solo a los empleados elegidos, con su porcentaje y su cantidad de platos" do
+      configuration = save_coupon
+
+      expect(one.benefits.find_by!(benefit_configuration: configuration))
+        .to have_attributes(percentage: 30, amount: 3, due_date: Date.new(2026, 5, 18), status: "current", description: "Cupón")
+      expect(other.benefits.where(benefit_configuration: configuration)).to be_empty
+    end
+
+    it "si empieza más adelante, se asigna al guardarlo y vale solo para entregas dentro del período" do
+      configuration = save_coupon(effective_from: "2026-05-14")
+      benefit = configuration.benefits.sole
+      menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
+      schedules = [ Date.new(2026, 5, 13), Date.new(2026, 5, 14), Date.new(2026, 5, 20), Date.new(2026, 5, 21) ].map { Schedule.create!(menu:, date: it, amount: 10) }
+
+      pricing = OrderPricing.new(one).call(schedules.map { { schedule: it, quantity: 1 } })
+
+      expect(benefit).to have_attributes(consumer: one, starts_on: Date.new(2026, 5, 14), due_date: Date.new(2026, 5, 20), status: "current")
+      expect(schedules.map { pricing[it.id].benefits.key?(benefit) }).to eq([ false, true, true, false ])
+    end
+
+    it "al sacar a un empleado de la lista le vence el cupón y los demás lo conservan" do
+      configuration = save_coupon(consumer_ids: [ one.id, other.id ])
+      benefit_one = one.benefits.find_by!(benefit_configuration: configuration)
+      benefit_other = other.benefits.find_by!(benefit_configuration: configuration)
+
+      save_coupon(configuration, consumer_ids: [ other.id ])
+
+      expect(benefit_one.reload).to be_expired
+      expect(benefit_other.reload).to be_current
+      expect(one.special_benefits).not_to include(benefit_one)
+    end
+
+    it "al sacarlo, los pedidos ya hechos conservan el descuento y los nuevos no lo reciben" do
+      configuration = save_coupon(consumer_ids: [ one.id, other.id ])
+      benefit = one.benefits.find_by!(benefit_configuration: configuration)
+      menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
+      today, tomorrow = [ Date.current, Date.tomorrow ].map { Schedule.create!(menu:, date: it, amount: 10) }
+      orders = [ today, tomorrow ].map do |schedule|
+        Order.reserve(consumer: one, schedule:, delivery_method: :office, address: nil, discounted_price: 210, benefits: { benefit => 1 })
+      end
+      orders.first.update!(status: :confirmed)
+
+      save_coupon(configuration, consumer_ids: [ other.id ])
+
+      orders.each { expect(it.reload).to have_attributes(discounted_price: 210, benefits: [ benefit ]) }
+      expect(OrderPricing.new(one).call([ { schedule: tomorrow, quantity: 1 } ])[tomorrow.id].benefits).not_to have_key(benefit)
+
+      configuration.deactivate!(by: admin_user)
+
+      orders.each { expect(it.reload.discounted_price).to eq(210) }
+    end
+
+    it "al modificar un pedido hecho antes de sacarlo, conserva el descuento de las viandas que tenía y no lo suma a las nuevas" do
+      configuration = save_coupon
+      benefit = one.benefits.find_by!(benefit_configuration: configuration)
+      menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
+      schedule = Schedule.create!(menu:, date: Date.tomorrow, amount: 10)
+      order = Order.reserve(consumer: one, schedule:, delivery_method: :office, address: nil, discounted_price: 210, benefits: { benefit => 1 })
+
+      configuration.deactivate!(by: admin_user)
+
+      expect(OrderPricing.new(one, modifiable_order: order).call([ { schedule:, quantity: 2 } ])[schedule.id].benefits).to include(benefit => 1)
+    end
+
+    it "les avisa solo a los empleados elegidos, una vez" do
+      configuration = save_coupon(consumer_ids: [ one.id ])
+      save_coupon(configuration, consumer_ids: [ one.id ], name: "Cupón editado")
+
+      expect(Notification.where(event: "coupon_assigned").sole).to have_attributes(
+        user: one.user,
+        role: "consumer",
+        title: "Recibiste un cupón",
+        description: "RR. HH. te dio el cupón Cupón: 30% de descuento en 3 viandas para entregas del 12/05/26 al 18/05/26."
+      )
+    end
+
+    it "al eliminarlo vence para todos y no se vuelve a asignar" do
+      configuration = save_coupon(consumer_ids: [ one.id, other.id ])
+
+      configuration.deactivate!(by: admin_user)
+      BenefitAssignationJob.perform_now
+
+      expect(configuration.benefits.current).to be_empty
+      expect(configuration.benefits.map(&:consumer)).to contain_exactly(one, other)
+    end
+
+    it "para toda la empresa les llega a todos sus empleados y a nadie de otra empresa" do
+      stranger = Consumer.create!(company: Company.create!(name: "Otra", address: "Calle 1"), user: users(:two))
+
+      configuration = save_coupon(applies_to_all: true, consumer_ids: [])
+
+      expect(configuration.benefits.map(&:consumer)).to match_array(company.consumers)
+      expect(stranger.benefits).to be_empty
     end
   end
 
