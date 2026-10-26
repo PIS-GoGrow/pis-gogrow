@@ -470,15 +470,15 @@ describe("benefits message and lines", () => {
               name: "Descuento día del padre",
               percentage: 30,
               quantity: 1,
-              discount: 96
+              discount: 96,
             },
             {
               id: 5,
               name: "Descuento sorpresa",
               percentage: 20,
               quantity: 1,
-              discount: 64
-            }
+              discount: 64,
+            },
           ],
         },
       ],
