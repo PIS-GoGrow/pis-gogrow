@@ -359,3 +359,53 @@ describe("DishDetail", () => {
     })
   })
 })
+
+describe("benefit specials", () => {
+  const special = (
+    overrides: Partial<Benefit["specials"][number]> = {},
+  ): Benefit["specials"][number] => ({
+    id: 3,
+    name: "Descuento día del padre",
+    percentage: 30,
+    remaining: 5,
+    due_date: null,
+    ...overrides,
+  })
+
+  it("shows the special and its checkbox when it has remaining units", () => {
+    const s = special({ remaining: 5 })
+
+    renderDetail({ benefit: { ...benefit, specials: [s] } })
+
+    expect(screen.getByText(/Descuento día del padre/)).toBeInTheDocument()
+
+    const checkbox = screen.getByRole("checkbox", { name: "Aplicar" })
+    expect(checkbox).toHaveAttribute("id", `benefit-checkbox-${s.id}`)
+  })
+
+  it("does not show the special when its remaining is zero", () => {
+    const s = special({ remaining: 0 })
+
+    renderDetail({ benefit: { ...benefit, specials: [s] } })
+
+    expect(
+      screen.queryByText(/Descuento día del padre/),
+    ).not.toBeInTheDocument()
+    expect(
+      document.getElementById(`benefit-checkbox-${s.id}`),
+    ).not.toBeInTheDocument()
+  })
+
+  it("does not show a special without limit (remaining null)", () => {
+    const s = special({ remaining: null })
+
+    renderDetail({ benefit: { ...benefit, specials: [s] } })
+
+    expect(
+      screen.queryByText(/Descuento día del padre/),
+    ).not.toBeInTheDocument()
+    expect(
+      document.getElementById(`benefit-checkbox-${s.id}`),
+    ).not.toBeInTheDocument()
+  })
+})

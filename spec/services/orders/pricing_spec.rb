@@ -189,9 +189,9 @@ RSpec.describe Orders::Pricing do
         seniority = special!(percentage: 30, configuration: benefit_configurations(:seniority))
 
         pricing = price_cart(
-          [ schedule, 6, [special, special2] ],
-          [ cheap_schedule, 2, [special2] ],
-          [ schedule, 1, [special] ]
+          [ schedule, 6, [ special, special2 ] ],
+          [ cheap_schedule, 2, [ special2 ] ],
+          [ schedule, 1, [ special ] ]
         )
         expect(pricing.first.second.discounted_price).to eq(225)
         expect(pricing.first.second.benefits).to eq({
