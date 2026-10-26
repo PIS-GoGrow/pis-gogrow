@@ -19,7 +19,7 @@ es:
     consumer: "Consumidor"
     admin: "Admin"
   flash:
-    cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
+    cart_confirmed: "Pedido realizado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
     order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
     order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
@@ -75,6 +75,7 @@ es:
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
+    order_not_rejectable: "No se puede rechazar un pedido confirmado cuya fecha de entrega ya pasó."
     invalid_code: "Código incorrecto."
     invalid_email: "Ingresá un correo válido."
     password_required: "Ingresá una contraseña."
@@ -166,6 +167,11 @@ es:
     hr_debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
       description: "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos."
+    coupon_assigned:
+      title: "Recibiste un cupón"
+      description:
+        one: "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} vianda para entregas del %{period}."
+        other: "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} viandas para entregas del %{period}."
   notification_configurations:
     provider_orders:
       title: "Pedidos nuevos"
@@ -218,6 +224,9 @@ es:
     order_reminders:
       title: "Recordatorios de pedidos"
       description: "Recibí un aviso para no olvidarte de pedir tu vianda."
+    coupons:
+      title: "Cupones"
+      description: "Avisos cuando RR. HH. te da un cupón."
   activerecord:
     errors:
       models:
@@ -330,7 +339,7 @@ es:
     change_to: "Cambiar a"
     provider:
       home: "Inicio"
-      menus: "Menús"
+      menus: "Gestión de Menú"
       menu: "Menú"
       orders: "Pedidos"
       payments: "Cobros"
@@ -561,7 +570,7 @@ es:
               seniority: "Antigüedad"
               birthday: "Cumpleaños"
               onboarding: "Onboarding"
-              gift: "Premio"
+              gift: "Cupón"
             form:
               add_title: "Agregar subsidio especial"
               edit_title: "Modificar subsidio especial"
@@ -809,9 +818,14 @@ es:
         upcoming_empty_description: "No tenés viandas en camino."
         history_empty_title: "No tenés pedidos anteriores"
         history_empty_description: "Tus pedidos completados aparecerán aquí."
+        history_filtered_empty_title: "No hay pedidos de este proveedor"
+        history_filtered_empty_description: "No tenés pedidos anteriores realizados a este proveedor."
+        providers_label: "Proveedores:"
+        all_providers: "Todos los proveedores"
         quantity: "x%{count}"
         upcoming_address: "Lo recibís en: %{address} (%{delivery_method})"
         history_address: "Lo recibiste en: %{address} (%{delivery_method})"
+        cancelled_address: "Lo pediste para: %{address} (%{delivery_method})"
         no_date: "Sin fecha de entrega"
         no_price: "Importe no disponible"
         base_price: "Precio base: %{amount}"
@@ -826,6 +840,7 @@ es:
           confirm: "Cancelar pedido"
         cannot_cancel:
           confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar."
+          order_deadline_passed: "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
         review: "Calificar vianda"
@@ -851,7 +866,6 @@ es:
           address: "Dirección de entrega"
           notes: "Notas"
           notes_placeholder: "Sin salsa, sin cebolla…"
-          remaining: "Quedan %{count} disponibles para esta fecha"
           back: "Volver"
           confirm: "Guardar cambios"
         cannot_edit:
@@ -868,6 +882,7 @@ es:
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
+        delivered: "Entregado"
       delivery_methods:
         office: "Oficina"
         home: "Domicilio"
@@ -1076,6 +1091,7 @@ es:
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
+        delivered: "Entregado"
       index:
         title: "Pedidos"
         tabs:
@@ -1169,6 +1185,7 @@ es:
         title: "Gestión de Menú"
         week_range: "%{from} - %{to}, %{month}"
         previous_week: "Semana anterior"
+        published: "Publicado"
         next_week: "Semana siguiente"
         availability:
           toggle_label: "En stock"
@@ -1306,6 +1323,7 @@ es:
           starts_on: "Desde"
           ends_on: "Hasta"
           incomplete: "Completá las fechas."
+          weekdays_required: "Elegí al menos un día de lunes a viernes."
         sheet:
           back: "Volver"
           apply: "Aplicar cambios"
@@ -1417,6 +1435,10 @@ es:
         meals_one: "%{count} vianda"
         meals_other: "%{count} viandas"
         no_benefit: "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa."
+        coupons: "Mis cupones"
+        coupon_discount: "%{percentage}% de descuento"
+        coupon_remaining: "Te quedan"
+        coupon_period: "Para entregas del"
         settings: "Configuración"
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
