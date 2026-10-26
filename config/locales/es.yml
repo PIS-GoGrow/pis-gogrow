@@ -259,8 +259,8 @@ es:
           attributes:
             receipt:
               required: "debe adjuntarse para enviar el pago"
-              invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
-              too_large: "no puede superar los 10 MB"
+              invalid_content_type: "El archivo debe ser PDF, JPG o PNG."
+              too_large: "El archivo no puede superar los 10 MB."
               already_under_review: "Ya hay un comprobante en revisión para esta cuenta. Esperá a que se resuelva para enviar otro."
             rejection_reason:
               blank: "es obligatorio para rechazar un comprobante"
@@ -1175,6 +1175,9 @@ es:
           rating: "Valoración"
           description: "Los hallazgos basados en las valoraciones estarán disponibles próximamente."
           generated: "Generado por IA"
+        top_rated:
+          title: "Mejor valorados"
+          empty: "Todavía no hay platos valorados."
         payments:
           title: "Resumen de cobros"
           pending: "Cobros pendientes"
@@ -1553,6 +1556,10 @@ es:
         added: "Agregado"
         add: "Agregar"
         modify: "Modificar"
+        reviews:
+          title: "Opiniones del plato"
+          empty: "Este plato aún no fue calificado."
+          anonymous: "Anónimo"
         closure:
           title_now: "%{provider} no está disponible"
           title_soon: "%{provider} no estará disponible"
