@@ -121,6 +121,34 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     expect(consumers(:one).accounts.find_by!(provider:).payments).to be_empty
   end
 
+  it "shows an error notification and saves nothing when the receipt exceeds 10 MB" do
+    confirmed_order(
+      consumer: consumers(:one), provider:, month: closed_month,
+      quantity: 2, discounted_price: 300
+    )
+    sign_in employee
+
+    visit accounts_path
+    within(find("[role=tabpanel]")) { click_on "Subir comprobante de pago" }
+
+    Tempfile.create([ "comprobante-grande", ".pdf" ]) do |file|
+      file.binmode
+      file.write("x" * (10.megabytes + 1))
+      file.rewind
+
+      within(find("[role=dialog]")) do
+        attach_file("Comprobante", file.path, make_visible: true)
+        click_on "Subir comprobante de pago"
+      end
+
+      expect(page).to have_content(I18n.t("pages.accounts.show.receipt_error_title"), wait: 30)
+      expect(page).to have_content(I18n.t("activerecord.errors.models.payment.attributes.receipt.too_large"))
+      expect(page).to have_button(I18n.t("pages.accounts.show.receipt_error_action"))
+    end
+
+    expect(consumers(:one).accounts.find_by!(provider:).payments).to be_empty
+  end
+
   # Criterio 3 -- aprobado
   it "moves the account to the history once the provider approves, leaving the previous payment untouched" do
     previous_payment(
