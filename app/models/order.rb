@@ -204,16 +204,29 @@ class Order < ApplicationRecord
     cancellation_block_reason.nil?
   end
 
+  # Solo los confirmados suman a la deuda de la cuenta, así que un confirmado
+  # cuya entrega ya pasó no se rechaza: cambiaría un monto que ya se cobró. Sin
+  # fecha de entrega no hay forma de saberlo y se trata igual que uno pasado.
+  def rejectable?
+    pending? || (confirmed? && delivery_date.present? && !delivery_date.before?(Date.current))
+  end
+
   # Confirmar solo corre sobre pedidos pendientes; rechazar también sobre los
   # confirmados, porque el proveedor puede no poder cumplir lo que aceptó. Un
   # pedido cancelado o ya rechazado no se toca: pisaría la cancelación del
   # empleado. El lock es por el doble envío, igual que en cancel.
   def decide(status, reason: nil, details: nil, by: nil)
     with_lock do
-      return false unless pending? || (confirmed? && status.to_s == "rejected")
+      rejecting = status.to_s == "rejected"
+      return false unless pending? || (confirmed? && rejecting)
+
+      if rejecting && !rejectable?
+        errors.add(:base, I18n.t("validations.order_not_rejectable"))
+        return false
+      end
 
       attrs = { status: status }
-      if status.to_s == "rejected"
+      if rejecting
         attrs[:rejection_reason] = reason
         attrs[:rejection_details] = details
         attrs[:rejected_at] = Time.current

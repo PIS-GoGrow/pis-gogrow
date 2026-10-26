@@ -26,6 +26,7 @@ function order(overrides: Partial<ProviderOrder>): ProviderOrder {
     consumer_company: "GoGrow",
     menu_name: "Milanesa de pollo",
     address: "Av. 18 de Julio 1006",
+    rejectable: true,
     ...overrides,
   }
 }
