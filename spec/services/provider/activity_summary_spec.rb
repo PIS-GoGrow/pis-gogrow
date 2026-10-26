@@ -7,7 +7,7 @@ RSpec.describe Provider::ActivitySummary do
 
   let(:provider) { providers(:tuviandita) }
   let(:month) { Date.new(2026, 6, 1) }
-  let(:summary) { described_class.new(provider, month) }
+  let(:summary) { described_class.new(provider, month.all_month) }
 
   def dish(name, provider: self.provider, base_menu: nil)
     Menu.create!(provider:, base_menu:, name:, description: "Casero", price: 300)
@@ -146,17 +146,54 @@ RSpec.describe Provider::ActivitySummary do
     end
   end
 
-  describe ".months" do
-    it "va del mes de la primera entrega del proveedor al actual, el más nuevo primero" do
-      order(menus(:milanesa), Date.current.prev_month(2).change(day: 20))
+  describe "con un rango que no es un mes" do
+    it "cuenta los pedidos de un rango de varios días que cruza de mes" do
+      milanesa = menus(:milanesa)
+      order(milanesa, Date.new(2026, 6, 1))
+      order(milanesa, Date.new(2026, 6, 2))
+      order(milanesa, Date.new(2026, 6, 30))
+      order(milanesa, Date.new(2026, 7, 4))
+      order(milanesa, Date.new(2026, 7, 5))
 
-      expect(described_class.months(provider)).to eq(
-        [ Date.current.beginning_of_month, Date.current.prev_month.beginning_of_month, Date.current.prev_month(2).beginning_of_month ]
-      )
+      expect(described_class.new(provider, Date.new(2026, 6, 2)..Date.new(2026, 7, 4)).orders_count).to eq(3)
     end
 
-    it "ofrece solo el mes actual a un proveedor sin pedidos" do
-      expect(described_class.months(provider)).to eq([ Date.current.beginning_of_month ])
+    it "cuenta los pedidos y las reseñas de un solo día" do
+      milanesa = menus(:milanesa)
+      day = Date.new(2026, 6, 10)
+      order(milanesa, day)
+      order(milanesa, day + 1)
+      review(milanesa, 5, day.in_time_zone.change(hour: 12))
+      review(milanesa, 1, (day + 1).in_time_zone)
+      summary = described_class.new(provider, day..day)
+
+      expect([ summary.orders_count, summary.average_rating ]).to eq([ 1, 5.0 ])
+    end
+
+    it "toma las reseñas del primer día desde las 00:00 y las del último hasta las 23:59 de Montevideo" do
+      milanesa = menus(:milanesa)
+      from = Date.new(2026, 6, 2)
+      to = Date.new(2026, 7, 4)
+      review(milanesa, 5, from.in_time_zone)
+      review(milanesa, 3, to.in_time_zone.change(hour: 23, min: 59))
+      review(milanesa, 1, from.in_time_zone - 1.minute)
+      review(milanesa, 1, (to + 1).in_time_zone)
+
+      expect(described_class.new(provider, from..to).average_rating).to eq(4.0)
+    end
+  end
+
+  describe ".first_delivery_date" do
+    it "es la primera fecha de entrega de los pedidos del proveedor" do
+      order(menus(:milanesa), Date.new(2026, 4, 20))
+      order(menus(:milanesa), Date.new(2026, 5, 3))
+      order(dish("Torta", provider: providers(:endulzate)), Date.new(2026, 1, 2))
+
+      expect(described_class.first_delivery_date(provider)).to eq(Date.new(2026, 4, 20))
+    end
+
+    it "es nil para un proveedor sin pedidos" do
+      expect(described_class.first_delivery_date(providers(:office_provider))).to be_nil
     end
   end
 end

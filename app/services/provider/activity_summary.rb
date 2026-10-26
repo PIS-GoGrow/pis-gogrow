@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-# Resumen de la actividad de un proveedor en un mes: lo usan los Hallazgos y el
-# Inicio, así que los números de las dos pantallas salen siempre del mismo
-# cálculo. El mes de un pedido es el de su entrega, igual que en el listado de
-# Pedidos.
+# Resumen de la actividad de un proveedor en un rango de fechas: lo usan los
+# Hallazgos y el Inicio, así que los números de las dos pantallas salen siempre
+# del mismo cálculo. La fecha de un pedido es la de su entrega, igual que en el
+# listado de Pedidos.
 #
 # Un plato es la familia del plato guardado: las variantes se cuentan con él.
 class Provider::ActivitySummary
@@ -13,21 +13,13 @@ class Provider::ActivitySummary
   DELIVERY_DATE = Arel.sql("COALESCE(schedules.date, orders.delivery_date)")
   DISH_ID = Arel.sql("COALESCE(menus.base_menu_id, menus.id)")
 
-  attr_reader :month
-
-  # Del mes de la primera entrega del proveedor al actual, el más nuevo primero.
-  def self.months(provider)
-    current = Date.current.beginning_of_month
-    first = provider.orders.left_joins(:schedule).minimum(DELIVERY_DATE)&.beginning_of_month || current
-    first = current if first > current
-    span = (current.year * 12 + current.month) - (first.year * 12 + first.month)
-
-    (0..span).map { current << it }
+  def self.first_delivery_date(provider)
+    provider.orders.left_joins(:schedule).minimum(DELIVERY_DATE)
   end
 
-  def initialize(provider, month)
+  def initialize(provider, range)
     @provider = provider
-    @month = month.beginning_of_month
+    @range = range
   end
 
   def orders_count
@@ -71,18 +63,18 @@ class Provider::ActivitySummary
   private
 
   def orders
-    @provider.orders.left_joins(:schedule).where(DELIVERY_DATE.between(@month.all_month))
+    @provider.orders.left_joins(:schedule).where(DELIVERY_DATE.between(@range))
   end
 
   def valid_orders
     orders.where.not(status: [ :cancelled, :rejected ])
   end
 
-  # Las reseñas no tienen fecha de entrega: cuentan en el mes en que se
-  # escribieron. Las que no tienen puntaje no entran en ningún promedio.
+  # Las reseñas no tienen fecha de entrega: cuentan el día en que se escribieron.
+  # Las que no tienen puntaje no entran en ningún promedio.
   def rated_reviews
     Review.joins(:menu)
-          .where(menus: { provider_id: @provider.id }, created_at: @month.in_time_zone.all_month)
+          .where(menus: { provider_id: @provider.id }, created_at: @range.first.in_time_zone..@range.last.in_time_zone.end_of_day)
           .where.not(rating: nil)
   end
 

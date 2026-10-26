@@ -8,8 +8,12 @@ RSpec.describe "Provider::Insights", type: :request do
 
   let(:provider) { providers(:tuviandita) }
   let(:month) { Date.current.prev_month(2).beginning_of_month }
-  let(:period) { month.strftime("%Y-%m") }
-  let(:current_period) { Date.current.strftime("%Y-%m") }
+  let(:default_from) { Date.current.beginning_of_month.iso8601 }
+  let(:default_to) { Date.current.end_of_month.iso8601 }
+
+  def range(from, to)
+    { desde: from.iso8601, hasta: to.iso8601 }
+  end
 
   def dish(name, provider: self.provider)
     Menu.create!(provider:, name:, description: "Casero", price: 300)
@@ -71,26 +75,36 @@ RSpec.describe "Provider::Insights", type: :request do
         Review.create!(menu: lasagna, rating: 5, created_at: month.next_month.in_time_zone)
       end
 
-      it "muestra el mes actual por defecto y ofrece los meses desde la primera entrega" do
+      it "muestra el mes actual por defecto, con sus límites y los presets" do
         get provider_insights_path
 
+        today = Date.current
         expect(inertia).to render_component("provider/insights/index")
         expect(inertia).to have_props(
-          period: current_period,
-          current_period:,
-          periods: [
-            { key: current_period, label: I18n.l(Date.current, format: "%B %Y").capitalize },
-            { key: Date.current.prev_month.strftime("%Y-%m"), label: I18n.l(Date.current.prev_month, format: "%B %Y").capitalize },
-            { key: period, label: I18n.l(month, format: "%B %Y").capitalize }
+          from: default_from,
+          to: default_to,
+          default_from:,
+          default_to:,
+          min: month.iso8601,
+          max: default_to,
+          month_label: I18n.l(today, format: "%B %Y").capitalize,
+          presets: [
+            { key: "today", from: today.iso8601, to: today.iso8601 },
+            { key: "yesterday", from: today.yesterday.iso8601, to: today.yesterday.iso8601 },
+            { key: "this_week", from: today.beginning_of_week(:sunday).iso8601, to: today.iso8601 },
+            { key: "this_month", from: default_from, to: default_to },
+            { key: "last_month", from: today.prev_month.beginning_of_month.iso8601, to: today.prev_month.end_of_month.iso8601 }
           ]
         )
       end
 
-      it "calcula el período elegido solo con los pedidos y reseñas del proveedor en ese mes" do
-        get provider_insights_path(period:)
+      it "calcula un mes completo solo con los pedidos y reseñas del proveedor, sin los de otro proveedor" do
+        get provider_insights_path(range(month, month.end_of_month))
 
         expect(inertia).to have_props(
-          period:,
+          from: month.iso8601,
+          to: month.end_of_month.iso8601,
+          month_label: I18n.l(month, format: "%B %Y").capitalize,
           orders_count: 3,
           dishes_count: 2,
           average_rating: 4.5,
@@ -105,8 +119,20 @@ RSpec.describe "Provider::Insights", type: :request do
         )
       end
 
+      it "calcula un rango custom que cruza de mes, sin etiqueta de mes" do
+        get provider_insights_path(range(month + 1, month.next_month))
+
+        expect(inertia).to have_props(
+          from: (month + 1).iso8601,
+          to: month.next_month.iso8601,
+          month_label: nil,
+          orders_count: 3,
+          average_rating: 4.7
+        )
+      end
+
       it "cuenta los mismos pedidos que el listado de Pedidos para ese mes" do
-        get provider_insights_path(period:)
+        get provider_insights_path(range(month, month.end_of_month))
         orders_count = inertia.props[:orders_count]
 
         get provider_orders_path
@@ -117,24 +143,40 @@ RSpec.describe "Provider::Insights", type: :request do
         expect(orders_count).to eq(listed)
       end
 
-      %w[2026-13 septiembre 2026-9].each do |invalid|
-        it "vuelve al mes actual con el período #{invalid.inspect}" do
-          get provider_insights_path(period: invalid)
+      [
+        { desde: "2026-13-01", hasta: "2026-13-05" },
+        { desde: "septiembre", hasta: "octubre" },
+        { desde: "2026-09-01" }
+      ].each do |invalid|
+        it "vuelve al mes actual con #{invalid.inspect}" do
+          get provider_insights_path(invalid)
 
-          expect(inertia).to have_props(period: current_period)
+          expect(inertia).to have_props(from: default_from, to: default_to)
         end
       end
 
-      it "vuelve al mes actual con un período futuro" do
-        get provider_insights_path(period: Date.current.next_month.strftime("%Y-%m"))
+      it "vuelve al mes actual con un rango invertido" do
+        get provider_insights_path(desde: (month + 5).iso8601, hasta: month.iso8601)
 
-        expect(inertia).to have_props(period: current_period)
+        expect(inertia).to have_props(from: default_from, to: default_to)
       end
 
-      it "vuelve al mes actual con un período anterior a la primera entrega" do
-        get provider_insights_path(period: month.prev_month.strftime("%Y-%m"))
+      it "recorta a los límites un rango que empieza antes de la primera entrega y termina después del mes actual" do
+        get provider_insights_path(range(month.prev_month, Date.current.next_month.end_of_month))
 
-        expect(inertia).to have_props(period: current_period)
+        expect(inertia).to have_props(from: month.iso8601, to: default_to, month_label: nil)
+      end
+
+      it "vuelve al mes actual con un rango entero después del mes actual" do
+        get provider_insights_path(range(Date.current.next_month, Date.current.next_month + 3))
+
+        expect(inertia).to have_props(from: default_from, to: default_to)
+      end
+
+      it "vuelve al mes actual con un rango entero antes de la primera entrega" do
+        get provider_insights_path(range(month.prev_month, month - 1))
+
+        expect(inertia).to have_props(from: default_from, to: default_to)
       end
     end
 
@@ -144,8 +186,10 @@ RSpec.describe "Provider::Insights", type: :request do
       get provider_insights_path
 
       expect(inertia).to have_props(
-        period: current_period,
-        periods: [ { key: current_period, label: I18n.l(Date.current, format: "%B %Y").capitalize } ],
+        from: default_from,
+        to: default_to,
+        min: default_from,
+        max: default_to,
         orders_count: 0,
         dishes_count: 0,
         average_rating: nil,

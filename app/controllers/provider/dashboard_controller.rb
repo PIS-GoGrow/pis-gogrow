@@ -8,7 +8,7 @@ class Provider::DashboardController < Provider::InertiaController
            .where(menus: { provider_id: @provider.id })
            .where(schedules: { date: Date.current })
            .where.not(status: [ :cancelled, :rejected ])
-    month = Provider::ActivitySummary.new(@provider, Date.current)
+    month = Provider::ActivitySummary.new(@provider, Date.current.all_month)
 
     @today = DateFormat.long(Date.current)
     @today_orders_count = today_orders.count
