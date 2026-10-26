@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import type { Pricing } from "./pricing"
+
 import type { ConsumerDashboardIndex } from "@/types"
 
 import type { CartItem, Schedule } from "./consumer-types"
@@ -407,5 +409,89 @@ describe("benefit specials", () => {
     expect(
       document.getElementById(`benefit-checkbox-${s.id}`),
     ).not.toBeInTheDocument()
+  })
+})
+
+describe("benefits message and lines", () => {
+  it("shows the 'reached 100' message when the last line has no tier for a selectable special", async () => {
+    const special = {
+      id: 3,
+      name: "Descuento día del padre",
+      percentage: 30,
+      remaining: 5,
+      due_date: null,
+    }
+
+    mocks.priceItems.mockResolvedValue({
+      subtotal: 320,
+      discount: 0,
+      total: 320,
+      subsidizedQuantity: 0,
+      fullPriceQuantity: 1,
+      lines: [
+        {
+          subtotal: 320,
+          discount: 0,
+          total: 320,
+          tiers: [], // ningún tier con id 3: el beneficio no se usó
+        },
+      ],
+    } satisfies Pricing)
+
+    renderDetail({ benefit: { ...benefit, specials: [special] } })
+
+    const message = `Se llegó al 100%, no se aplicará el beneficio ${special.name}`
+
+    expect(await screen.findByText(message)).toBeInTheDocument()
+  })
+
+  it("does not show the 'reached 100' message, but shows benefit lines", async () => {
+    const special = {
+      id: 3,
+      name: "Descuento día del padre",
+      percentage: 30,
+      remaining: 5,
+      due_date: null,
+    }
+
+    mocks.priceItems.mockResolvedValue({
+      subtotal: 320,
+      discount: 160,
+      total: 160,
+      subsidizedQuantity: 1,
+      fullPriceQuantity: 0,
+      lines: [
+        {
+          subtotal: 320,
+          discount: 0,
+          total: 320,
+          tiers: [
+            {
+              id: 3,
+              name: "Descuento día del padre",
+              percentage: 30,
+              quantity: 1,
+              discount: 96
+            },
+            {
+              id: 5,
+              name: "Descuento sorpresa",
+              percentage: 20,
+              quantity: 1,
+              discount: 64
+            }
+          ],
+        },
+      ],
+    } satisfies Pricing)
+
+    renderDetail({ benefit: { ...benefit, specials: [special] } })
+
+    expect(await screen.findByText("- $96")).toBeInTheDocument()
+    expect(await screen.findByText("- $64")).toBeInTheDocument()
+
+    const message = `Se llegó al 100%, no se aplicará el beneficio ${special.name}`
+
+    expect(screen.queryByText(message)).not.toBeInTheDocument()
   })
 })
