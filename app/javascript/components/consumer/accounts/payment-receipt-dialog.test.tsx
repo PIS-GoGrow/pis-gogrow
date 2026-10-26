@@ -8,8 +8,7 @@ import PaymentReceiptDialog from "./payment-receipt-dialog"
 
 let triggerSuccess: (() => void) | undefined
 let triggerError:
-  | ((errors: Record<string, string | string[]>) => void)
-  | undefined
+  ((errors: Record<string, string | string[]>) => void) | undefined
 let triggerBefore: (() => boolean) | undefined
 
 interface MockFormProps {
