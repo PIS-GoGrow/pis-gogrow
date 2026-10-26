@@ -12,7 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import AppLayout from "@/layouts/app-layout"
 import { providerMenuImports, schedules } from "@/routes"
@@ -50,7 +49,8 @@ export default function New({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t(`${key}.title`)} />
 
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-6 p-5">
+      {/* pb-24 en celular: abajo está la barra de navegación. */}
+      <div className="mx-auto flex w-full max-w-xl flex-col gap-6 p-5 pb-24 md:pb-5">
         <div className="relative flex h-9 items-center justify-center">
           <Button
             variant="ghost"
@@ -88,12 +88,29 @@ export default function New({
           </CardContent>
         </Card>
 
+        {/*
+          El input va escondido y se abre desde la etiqueta: el control nativo
+          muestra su texto en el idioma del navegador ("Choose File"), que no
+          es el de la aplicación.
+        */}
         <div className="flex flex-col gap-2">
           <Label htmlFor="file">{t(`${key}.file_label`)}</Label>
-          <Input
+          <div className="flex items-center gap-3">
+            <Button variant="outline" className="h-11 shrink-0" asChild>
+              <label htmlFor="file">
+                <FileSpreadsheet aria-hidden="true" />
+                {t(`${key}.choose`)}
+              </label>
+            </Button>
+            <span className="text-muted-foreground truncate text-sm">
+              {form.data.file?.name ?? t(`${key}.no_file`)}
+            </span>
+          </div>
+          <input
             id="file"
             type="file"
             accept=".xlsx,.csv,.ods"
+            className="sr-only"
             onChange={(event) =>
               form.setData("file", event.target.files?.[0] ?? null)
             }
@@ -163,19 +180,13 @@ export default function New({
           </Alert>
         ) : null}
 
+        {/*
+          Con la vista previa en orden, lo que sigue es confirmar: ese pasa a
+          ser el botón principal y revisar de nuevo queda en segundo plano.
+        */}
         <div className="flex flex-col gap-3">
-          <Button
-            className="h-11"
-            disabled={!form.data.file || form.processing}
-            onClick={() => send(providerMenuImports.create().url)}
-          >
-            <Upload aria-hidden="true" />
-            {t(`${key}.preview_button`)}
-          </Button>
-
           {shown?.can_import ? (
             <Button
-              variant="secondary"
               className="h-11"
               disabled={!form.data.file || form.processing}
               onClick={() => send(providerMenuImports.confirm().url)}
@@ -183,6 +194,16 @@ export default function New({
               {t(`${key}.preview.confirm`)}
             </Button>
           ) : null}
+
+          <Button
+            variant={shown?.can_import ? "outline" : "default"}
+            className="h-11"
+            disabled={!form.data.file || form.processing}
+            onClick={() => send(providerMenuImports.create().url)}
+          >
+            <Upload aria-hidden="true" />
+            {t(`${key}.preview_button`)}
+          </Button>
         </div>
       </div>
     </AppLayout>

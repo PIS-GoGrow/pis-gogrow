@@ -1060,9 +1060,11 @@
       "provider_menu_imports": {
         "new": {
           "back": "Volver al menú",
+          "choose": "Elegir planilla",
           "file_error": "No se pudo leer la planilla",
           "file_label": "Tu planilla",
           "limits": "Hasta %{rows} platos por planilla y %{size} MB por archivo. Se aceptan .xlsx, .csv y .ods.",
+          "no_file": "Todavía no elegiste ningún archivo",
           "preview": {
             "confirm": "Confirmar importación",
             "counts": "%{create} para crear · %{update} para actualizar",

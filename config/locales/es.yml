@@ -1328,6 +1328,8 @@ es:
         limits: "Hasta %{rows} platos por planilla y %{size} MB por archivo. Se aceptan .xlsx, .csv y .ods."
         template: "Descargar plantilla"
         file_label: "Tu planilla"
+        choose: "Elegir planilla"
+        no_file: "Todavía no elegiste ningún archivo"
         preview_button: "Ver qué se va a importar"
         file_error: "No se pudo leer la planilla"
         preview:
