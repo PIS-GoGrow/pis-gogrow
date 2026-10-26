@@ -16,7 +16,7 @@ RSpec.describe "Rechazo de pedidos pasados por el proveedor", type: :system do
   end
 
   it "muestra deshabilitados los botones de acción para un pedido confirmado pasado en el historial" do
-    visit provider_orders_path
+    visit_hydrated provider_orders_path
     without_animations
 
     click_on "Historial"
@@ -32,7 +32,7 @@ RSpec.describe "Rechazo de pedidos pasados por el proveedor", type: :system do
   end
 
   it "muestra deshabilitado el botón de rechazar en el detalle de un pedido confirmado pasado" do
-    visit provider_order_path(confirmed_past_order)
+    visit_hydrated provider_order_path(confirmed_past_order)
     without_animations
 
     expect(page).to have_content("Detalle de pedido")
@@ -41,7 +41,7 @@ RSpec.describe "Rechazo de pedidos pasados por el proveedor", type: :system do
   end
 
   it "mantiene habilitado el rechazo para pedidos confirmados futuros" do
-    visit provider_order_path(confirmed_future_order)
+    visit_hydrated provider_order_path(confirmed_future_order)
     without_animations
 
     expect(page).to have_content("Detalle de pedido")
