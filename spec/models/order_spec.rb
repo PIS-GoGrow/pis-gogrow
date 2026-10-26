@@ -668,6 +668,48 @@ RSpec.describe Order, type: :model do
       expect(order.reload).to be_confirmed
     end
 
+    it "rejects a confirmed order whose delivery is today" do
+      order = orders(:upcoming_pending_today)
+      order.update!(status: :confirmed)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(true)
+      expect(order.reload).to be_rejected
+    end
+
+    it "refuses to reject a confirmed order whose delivery date has passed" do
+      order = orders(:history_confirmed_past)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order.errors[:base]).to eq([ I18n.t("validations.order_not_rejectable") ])
+      expect(order.reload).to be_confirmed
+      expect(order.rejected_at).to be_nil
+    end
+
+    it "still rejects a pending order whose delivery date has passed" do
+      order = orders(:history_pending_past)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(true)
+      expect(order.reload).to be_rejected
+    end
+
+    it "preserves accounts balances and does not sync amounts when refusing to reject past confirmed order" do
+      order = orders(:history_confirmed_past)
+      accounts = order.accounts
+      original_amounts = accounts.map(&:amount)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order.accounts.reload.map(&:amount)).to eq(original_amounts)
+    end
+
+    it "refuses to reject a confirmed order without a delivery date" do
+      order = orders(:history_without_schedule)
+      order.update_columns(status: Order.statuses[:confirmed], delivery_date: nil)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order.errors[:base]).to eq([ I18n.t("validations.order_not_rejectable") ])
+      expect(order.reload).to be_confirmed
+    end
+
     it "refuses to confirm an already confirmed order and returns false" do
       order = orders(:upcoming_confirmed_future)
 
@@ -694,6 +736,38 @@ RSpec.describe Order, type: :model do
 
       expect(order.decide(:confirmed)).to be(false)
       expect(order.reload).to be_rejected
+    end
+  end
+
+  describe "#rejectable?" do
+    it "is true for pending orders, even when their delivery date has passed" do
+      expect(orders(:upcoming_pending_today)).to be_rejectable
+      expect(orders(:history_pending_past)).to be_rejectable
+    end
+
+    it "is true for a confirmed order delivered today or later" do
+      expect(orders(:upcoming_confirmed_future)).to be_rejectable
+
+      today = orders(:upcoming_pending_today)
+      today.update!(status: :confirmed)
+      expect(today).to be_rejectable
+    end
+
+    it "is false for a confirmed order whose delivery date has passed" do
+      expect(orders(:history_confirmed_past)).not_to be_rejectable
+    end
+
+    it "is false for a confirmed order without a delivery date" do
+      order = orders(:history_without_schedule)
+      order.status = :confirmed
+
+      expect(order.delivery_date).to be_nil
+      expect(order).not_to be_rejectable
+    end
+
+    it "is false for cancelled and rejected orders" do
+      expect(orders(:history_cancelled_future)).not_to be_rejectable
+      expect(orders(:history_rejected_future)).not_to be_rejectable
     end
   end
 
@@ -1286,6 +1360,45 @@ RSpec.describe Order, type: :model do
           quantity: 0, discounted_price: 100, benefits: { special => 1 }
         )
       }.not_to change(OrderBenefit, :count)
+    end
+  end
+
+  describe "auditing modifications" do
+    let(:order) { orders(:upcoming_pending_future) }
+    let(:user) { users(:one) }
+
+    before do
+      Current.session = user.sessions.create!(role: :consumer)
+    end
+
+    after do
+      Current.reset
+    end
+
+    it "records an audit log with previous and new values when modifying audited attributes" do
+      delivery = { delivery_method: "home", address: "Av. Italia 1234" }
+      order.modify(by: user, quantity: 2, notes: "Sin cebolla", delivery:)
+
+      log = order.audit_logs.sole
+      expect(log.user).to eq(user)
+      expect(log.changeset).to include(
+        "amount" => [ 1, 2 ],
+        "address" => [ "Julio Herrera y Reissig 565", "Av. Italia 1234" ],
+        "notes" => [ nil, "Sin cebolla" ]
+      )
+    end
+
+    it "does not record an audit log when state changes" do
+      expect {
+        order.decide(:confirmed)
+        order.cancel(by: user)
+      }.not_to change(order.audit_logs, :count)
+    end
+
+    it "does not record an audit log when modify fails validation" do
+      delivery = { delivery_method: "home", address: "" }
+      expect(order.modify(by: user, quantity: 1, notes: "a" * 141, delivery:)).to be(false)
+      expect(order.audit_logs).to be_empty
     end
   end
 end

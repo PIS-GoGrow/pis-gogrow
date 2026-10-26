@@ -75,6 +75,7 @@ es:
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
+    order_not_rejectable: "No se puede rechazar un pedido confirmado cuya fecha de entrega ya pasó."
     invalid_code: "Código incorrecto."
     invalid_email: "Ingresá un correo válido."
     password_required: "Ingresá una contraseña."
