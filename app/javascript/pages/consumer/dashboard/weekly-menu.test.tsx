@@ -50,6 +50,8 @@ const sampleSchedule: Schedule = {
     option_groups: [],
     provider_name: "Tu Viandita",
     home_delivery: true,
+    rating_average: null,
+    rating_count: 0,
     reviews: [],
   },
 }

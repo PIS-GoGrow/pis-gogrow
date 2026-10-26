@@ -1175,6 +1175,9 @@ es:
           rating: "Valoración"
           description: "Los hallazgos basados en las valoraciones estarán disponibles próximamente."
           generated: "Generado por IA"
+        top_rated:
+          title: "Mejor valorados"
+          empty: "Todavía no hay platos valorados."
         payments:
           title: "Resumen de cobros"
           pending: "Cobros pendientes"
@@ -1564,6 +1567,10 @@ es:
           title: "Menú no disponible"
           all: "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde."
           filtered: "No encontramos viandas disponibles entre los proveedores seleccionados. Volvé a consultar más tarde."
+        reviews:
+          title: "Opiniones del plato"
+          empty: "Este plato aún no fue calificado."
+          anonymous: "Anónimo"
         closure:
           title_now: "%{provider} no está disponible"
           title_soon: "%{provider} no estará disponible"

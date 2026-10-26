@@ -63,6 +63,8 @@ const schedules: ConsumerDashboardIndex["schedules"] = [26, 27].flatMap((day) =>
       provider_name: provider.name,
       option_groups: [],
       home_delivery: true,
+      rating_average: null,
+      rating_count: 0,
       reviews: [],
     },
   })),
@@ -153,6 +155,57 @@ describe("Consumer menu provider filter navigation", () => {
       </ConsumerMenuFilterProvider>,
     )
     expect(screen.getByText(`Plato 3 d\u00eda 26`)).toBeInTheDocument()
+  })
+
+  it("preserves reviews and provider selection through dish detail without changing the cart", async () => {
+    const user = userEvent.setup()
+    const reviewedSchedule = {
+      ...schedules[0],
+      menu: {
+        ...schedules[0].menu,
+        rating_average: 4.5,
+        rating_count: 2,
+        reviews: [
+          {
+            id: 1,
+            author: "Ana",
+            rating: 5,
+            description: "Excelente almuerzo",
+            created_at: "2026-10-25",
+          },
+          {
+            id: 2,
+            author: "Luis",
+            rating: 4,
+            description: "Muy buena comida",
+            created_at: "2026-10-25",
+          },
+        ],
+      },
+    }
+    render(
+      <Index
+        {...props}
+        schedules={[reviewedSchedule, ...schedules.slice(1)]}
+      />,
+    )
+    const cartBefore = window.sessionStorage.getItem("cart")
+    await applyFilter(user)
+    expectFilteredDay(26)
+    await user.click(
+      screen.getByRole("button", { name: "Agregar Plato 1 d\u00eda 26" }),
+    )
+    expect(
+      screen.getByRole("heading", { name: "Opiniones del plato" }),
+    ).toBeInTheDocument()
+    expect(screen.getByText("4.5 (2)")).toBeInTheDocument()
+    expect(screen.getByText("Ana")).toBeInTheDocument()
+    expect(screen.getByText("Excelente almuerzo")).toBeInTheDocument()
+    expect(screen.getByText("Luis")).toBeInTheDocument()
+    expect(screen.getByText("Muy buena comida")).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: "Volver" }))
+    expectFilteredDay(26)
+    expect(window.sessionStorage.getItem("cart")).toBe(cartBefore)
   })
 
   it("keeps multiple provider IDs after detail navigation and day changes", async () => {

@@ -68,6 +68,8 @@ function schedule(
       option_groups: [],
       provider_name: provider.name,
       home_delivery: true,
+      rating_average: null,
+      rating_count: 0,
       reviews: [],
     },
   }
