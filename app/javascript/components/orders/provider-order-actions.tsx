@@ -93,7 +93,10 @@ export default function ProviderOrderActions({
         // Inertia considera exitosa la visita aunque el servidor haya rechazado
         // la decisión: el flash de error es lo que distingue los dos casos.
         onSuccess: (page) => {
-          if (!page.flash.alert) {
+          const hasAlert =
+            (page.props as { flash?: { alert?: string } })?.flash?.alert ??
+            page.flash?.alert
+          if (!hasAlert) {
             setOpen(false)
             setReason("")
             setDetails("")

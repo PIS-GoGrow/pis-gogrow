@@ -1288,6 +1288,45 @@ RSpec.describe Order, type: :model do
       }.not_to change(OrderBenefit, :count)
     end
   end
+
+  describe "auditing modifications" do
+    let(:order) { orders(:upcoming_pending_future) }
+    let(:user) { users(:one) }
+
+    before do
+      Current.session = user.sessions.create!(role: :consumer)
+    end
+
+    after do
+      Current.reset
+    end
+
+    it "records an audit log with previous and new values when modifying audited attributes" do
+      delivery = { delivery_method: "home", address: "Av. Italia 1234" }
+      order.modify(by: user, quantity: 2, notes: "Sin cebolla", delivery:)
+
+      log = order.audit_logs.sole
+      expect(log.user).to eq(user)
+      expect(log.changeset).to include(
+        "amount" => [ 1, 2 ],
+        "address" => [ "Julio Herrera y Reissig 565", "Av. Italia 1234" ],
+        "notes" => [ nil, "Sin cebolla" ]
+      )
+    end
+
+    it "does not record an audit log when state changes" do
+      expect {
+        order.decide(:confirmed)
+        order.cancel(by: user)
+      }.not_to change(order.audit_logs, :count)
+    end
+
+    it "does not record an audit log when modify fails validation" do
+      delivery = { delivery_method: "home", address: "" }
+      expect(order.modify(by: user, quantity: 1, notes: "a" * 141, delivery:)).to be(false)
+      expect(order.audit_logs).to be_empty
+    end
+  end
 end
 
 # == Schema Information

@@ -6,6 +6,8 @@
 # la cuenta se le asigna automáticamente. Las cuentas de una orden no deberían
 # asignarse manualmente.
 class Order < ApplicationRecord
+  include Auditable
+
   # La migración 20260911234117 usa el modelo Order, así que al reconstruir la
   # base desde cero el enum se evalúa antes de que exista su columna.
   attribute :delivery_method, :integer
@@ -32,6 +34,7 @@ class Order < ApplicationRecord
   # El pedido conserva el plato tal como estaba al pedirlo: editarlo después no
   # tiene que reescribir el historial.
   before_create :snapshot_order_context
+  audits :amount, :delivery_method, :address, :notes, :selected_options, :price, :discounted_price
 
   belongs_to :consumer
   belongs_to :schedule
