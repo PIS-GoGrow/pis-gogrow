@@ -35,7 +35,10 @@ export default function CancelOrderSheet({ order }: CancelOrderSheetProps) {
         // Inertia considera exitosa la visita aunque el servidor haya rechazado
         // la cancelación: el flash de error es lo que distingue los dos casos.
         onSuccess: (page) => {
-          if (!page.flash.alert) setOpen(false)
+          const hasAlert =
+            (page.props as { flash?: { alert?: string } })?.flash?.alert ??
+            page.flash?.alert
+          if (!hasAlert) setOpen(false)
         },
         onFinish: () => setProcessing(false),
       },

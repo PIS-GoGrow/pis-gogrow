@@ -4,7 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Provider::Deliveries", type: :request do
-  fixtures :users, :consumers, :companies, :providers, :menus, :schedules, :orders
+  fixtures :users, :consumers, :companies, :providers, :menus, :schedules, :orders, :admins
 
   let(:provider) { providers(:tuviandita) }
 
@@ -23,6 +23,14 @@ RSpec.describe "Provider::Deliveries", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    it "redirects admins to the root page" do
+      sign_in users(:admin), role: :admin
+
+      get provider_deliveries_path
+
+      expect(response).to redirect_to(root_path)
+    end
+
     it "shows the signed-in provider's delivery setting" do
       sign_in users(:office_provider_user), role: :provider
 
@@ -30,6 +38,24 @@ RSpec.describe "Provider::Deliveries", type: :request do
 
       expect(inertia).to render_component("provider/deliveries/show")
       expect(inertia).to have_props { |props| props["provider"]["home_delivery"] == false }
+    end
+
+    it "exposes deliveries_configured prop as false when deliveries_configured_at is nil" do
+      provider.update_column(:deliveries_configured_at, nil)
+      sign_in users(:provider_user), role: :provider
+
+      get provider_deliveries_path
+
+      expect(inertia).to have_props(deliveries_configured: false)
+    end
+
+    it "exposes deliveries_configured prop as true when deliveries_configured_at is present" do
+      provider.update_column(:deliveries_configured_at, Time.current)
+      sign_in users(:provider_user), role: :provider
+
+      get provider_deliveries_path
+
+      expect(inertia).to have_props(deliveries_configured: true)
     end
   end
 
@@ -50,6 +76,15 @@ RSpec.describe "Provider::Deliveries", type: :request do
       expect(provider.reload.home_delivery).to be(true)
     end
 
+    it "redirects an admin to the home page without touching any provider" do
+      sign_in users(:admin), role: :admin
+
+      patch provider_deliveries_path, params: { home_delivery: false }
+
+      expect(response).to redirect_to(root_path)
+      expect(provider.reload.home_delivery).to be(true)
+    end
+
     context "as a provider" do
       before { sign_in users(:provider_user), role: :provider }
 
@@ -61,6 +96,44 @@ RSpec.describe "Provider::Deliveries", type: :request do
         follow_redirect!
         expect(inertia).to have_props { |props| props["provider"]["home_delivery"] == false }
         expect(inertia).to have_flash(notice: I18n.t("flash.deliveries_updated"))
+      end
+
+      it "marks deliveries_configured_at upon updating home_delivery" do
+        provider.update_column(:deliveries_configured_at, nil)
+
+        expect do
+          patch provider_deliveries_path, params: { home_delivery: false }
+        end.to change { provider.reload.deliveries_configured_at }.from(nil)
+      end
+
+      it "preserves existing deliveries_configured_at timestamp (idempotent)" do
+        existing_timestamp = 3.days.ago.change(usec: 0)
+        provider.update_column(:deliveries_configured_at, existing_timestamp)
+
+        patch provider_deliveries_path, params: { home_delivery: false }
+
+        expect(provider.reload.deliveries_configured_at).to eq(existing_timestamp)
+      end
+
+      it "ignores unpermitted injected attributes" do
+        patch provider_deliveries_path, params: {
+          home_delivery: false,
+          is_admin: true,
+          deliveries_configured_at: 1.year.from_now
+        }
+
+        expect(response).to redirect_to(provider_deliveries_path)
+        expect(provider.reload.home_delivery).to be(false)
+      end
+
+      it "redirects with inertia errors and does not mark timestamp if update fails" do
+        provider.update_column(:deliveries_configured_at, nil)
+        allow_any_instance_of(Provider).to receive(:update).and_return(false)
+
+        patch provider_deliveries_path, params: { home_delivery: false }
+
+        expect(response).to redirect_to(provider_deliveries_path)
+        expect(provider.reload.deliveries_configured_at).to be_nil
       end
 
       it "turns home delivery back on" do

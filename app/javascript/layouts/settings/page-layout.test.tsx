@@ -42,8 +42,28 @@ describe("SettingsPageLayout", () => {
     ).toHaveAttribute("href", "/rrhh/cuenta")
   })
 
-  it("preserves the existing settings layout for other roles", () => {
+  it("renders provider settings as a standalone page with account navigation", () => {
     role = "provider"
+
+    render(
+      <SettingsPageLayout
+        title="Notificaciones"
+        description="Configurá qué alertas querés recibir"
+      >
+        <div>Opciones</div>
+      </SettingsPageLayout>,
+    )
+
+    expect(
+      screen.queryByTestId("settings-sidebar-layout"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("link", { name: "Volver a Cuenta" }),
+    ).toHaveAttribute("href", "/proveedor/cuenta")
+  })
+
+  it("preserves the settings sidebar for employees", () => {
+    role = "consumer"
 
     render(
       <SettingsPageLayout

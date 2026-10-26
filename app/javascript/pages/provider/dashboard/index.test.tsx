@@ -37,6 +37,8 @@ describe("Provider Dashboard Page", () => {
     month_orders_count: 42,
     month_dishes_count: 8,
     average_rating: 4.8,
+    completed_sections_count: 3,
+    sections_total: 4,
     provider: {
       order_deadline: "11:30",
     },

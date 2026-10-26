@@ -4,6 +4,13 @@ class Provider < ApplicationRecord
   include SyncsUserRoles
   include Auditable
 
+  CONFIGURABLE_SECTIONS = {
+    payment_details: :payment_details_configured_at,
+    operational_settings: :order_deadline_configured_at,
+    deliveries: :deliveries_configured_at,
+    notifications: :notifications_configured_at
+  }.freeze
+
   enum :bank_account_type, { savings: 0, checking: 1 }, prefix: :bank_account, validate: { allow_nil: true }
 
   has_many :menus, dependent: :destroy
@@ -29,6 +36,25 @@ class Provider < ApplicationRecord
     onboarding_completed_at.present?
   end
 
+  def incomplete_sections
+    section_completeness.reject { |_, complete| complete }.keys.map(&:to_s)
+  end
+
+  def completed_sections_count
+    section_completeness.values.count(true)
+  end
+
+  def total_sections_count
+    section_completeness.size
+  end
+
+  def mark_section_configured!(section)
+    column = CONFIGURABLE_SECTIONS.fetch(section.to_sym)
+    return if self[column].present?
+
+    update!(column => Time.current)
+  end
+
   def delivery_methods
     home_delivery? ? Order.delivery_methods.keys : [ "office" ]
   end
@@ -51,24 +77,34 @@ class Provider < ApplicationRecord
   def closed_on?(date)
     closures.any? { it.covers?(date) }
   end
+
+  private
+
+  def section_completeness
+    CONFIGURABLE_SECTIONS.transform_values { |column| self[column].present? }
+  end
 end
 
 # == Schema Information
 #
 # Table name: providers
 #
-#  id                      :bigint           not null, primary key
-#  bank_account_holder     :string
-#  bank_account_number     :string
-#  bank_account_type       :integer
-#  bank_name               :string
-#  home_delivery           :boolean          default(TRUE), not null
-#  onboarding_completed_at :datetime
-#  order_deadline          :time
-#  created_at              :datetime         not null
-#  updated_at              :datetime         not null
-#  tax_id                  :string
-#  user_id                 :bigint
+#  id                            :bigint           not null, primary key
+#  bank_account_holder           :string
+#  bank_account_number           :string
+#  bank_account_type             :integer
+#  bank_name                     :string
+#  deliveries_configured_at      :datetime
+#  home_delivery                 :boolean          default(TRUE), not null
+#  notifications_configured_at   :datetime
+#  onboarding_completed_at       :datetime
+#  order_deadline                :time
+#  order_deadline_configured_at  :datetime
+#  payment_details_configured_at :datetime
+#  created_at                    :datetime         not null
+#  updated_at                    :datetime         not null
+#  tax_id                        :string
+#  user_id                       :bigint
 #
 # Indexes
 #

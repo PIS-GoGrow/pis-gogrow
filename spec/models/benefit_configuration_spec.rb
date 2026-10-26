@@ -263,7 +263,7 @@ RSpec.describe BenefitConfiguration, type: :model do
       expect(consumers(:one).benefits.first.due_date).to eq(Date.current + 1)
     end
 
-    it "does not apply gift benefits to associated consumers when out of date" do
+    it "applies gift benefits that start later, usable from their start date" do
       benefit_configuration = build_configuration
       benefit_configuration.benefit_rules.new(
         type: GiftBenefit.name,
@@ -275,8 +275,10 @@ RSpec.describe BenefitConfiguration, type: :model do
       benefit_configuration.consumers = [ consumers(:one) ]
 
       benefit_configuration.apply_to_all_consumers
-      expect(consumers(:one).benefits.count).to eq(0)
+      expect(consumers(:one).benefits.sole).to have_attributes(starts_on: Date.current + 1, due_date: Date.current + 1)
+    end
 
+    it "does not apply gift benefits to associated consumers when out of date" do
       benefit_configuration = build_configuration
       benefit_configuration.benefit_rules.new(
         type: GiftBenefit.name,

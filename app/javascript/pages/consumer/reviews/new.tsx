@@ -25,7 +25,7 @@ const MAX_DESCRIPTION = 200
 
 export default function New({ order }: ConsumerReviewsNew) {
   const { t } = useTranslation()
-  const { formatDeliveryDate } = useFormatters()
+  const { formatLongDate } = useFormatters()
   const [rating, setRating] = useState(0)
   const [description, setDescription] = useState("")
 
@@ -42,7 +42,7 @@ export default function New({ order }: ConsumerReviewsNew) {
 
   const subtitle = [
     order.provider_name,
-    order.date && formatDeliveryDate(order.date).replace(",", ""),
+    order.date && formatLongDate(order.date),
   ]
     .filter(Boolean)
     .join(" · ")
