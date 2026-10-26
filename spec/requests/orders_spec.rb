@@ -45,6 +45,17 @@ RSpec.describe "Orders", type: :request do
         )
       end
 
+      it "serializes upcoming orders with cancellation_block_reason when provider deadline passed" do
+        order = orders(:upcoming_pending_today)
+        order.schedule.menu.provider.update!(order_deadline: "12:00")
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 14, min: 0)) do
+          get orders_path
+          serialized_order = inertia.props[:upcoming_orders].find { it[:id] == order.id }
+          expect(serialized_order).to include(cancellable: false, cancellation_block_reason: "order_deadline_passed")
+        end
+      end
+
       it "exposes the data needed to follow an order" do
         get orders_path
 
@@ -168,6 +179,21 @@ RSpec.describe "Orders", type: :request do
         get order_path(orders(:other_consumer_upcoming))
 
         expect(response).to have_http_status(:not_found)
+      end
+
+      it "exposes cancellation props accurately before and after the provider deadline" do
+        order = orders(:upcoming_pending_today)
+        order.schedule.menu.provider.update!(order_deadline: "12:00")
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 11, min: 30)) do
+          get order_path(order)
+          expect(inertia.props[:order]).to include(cancellable: true, cancellation_block_reason: nil)
+        end
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 14, min: 0)) do
+          get order_path(order)
+          expect(inertia.props[:order]).to include(cancellable: false, cancellation_block_reason: "order_deadline_passed")
+        end
       end
 
       it "exposes what the edit form needs on a pending order" do
@@ -483,6 +509,7 @@ RSpec.describe "Orders", type: :request do
       follow_redirect!
       expect(inertia).to render_component("consumer/dashboard/confirmation")
       expect(inertia).to have_flash(notice: I18n.t("flash.cart_confirmed"))
+      expect(inertia).to have_flash(notice: "Pedido realizado. Tus platos quedaron reservados.")
       expect(inertia).to have_props(total: 300.0)
       expect(inertia).to have_props(orders: [
           {
@@ -1181,6 +1208,15 @@ RSpec.describe "Orders", type: :request do
       expect(orders(:upcoming_pending_future).reload).to be_pending
     end
 
+    it "rejects an admin session attempting to cancel a consumer order" do
+      sign_in users(:admin), role: :admin
+
+      patch cancel_consumer_order_path(orders(:upcoming_pending_future))
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:upcoming_pending_future).reload).to be_pending
+    end
+
     context "when signed in as an employee" do
       before { sign_in users(:one) }
 
@@ -1190,6 +1226,7 @@ RSpec.describe "Orders", type: :request do
         patch cancel_consumer_order_path(order)
 
         expect(order.reload).to be_cancelled
+        expect(order.audit_logs).to be_empty
         expect(response).to redirect_to(orders_path)
 
         follow_redirect!
@@ -1214,6 +1251,20 @@ RSpec.describe "Orders", type: :request do
         patch cancel_consumer_order_path(order)
 
         expect(order.reload).to be_confirmed
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
+      end
+
+      it "refuses a direct request against a pending order after the provider's deadline on its delivery day" do
+        order = orders(:upcoming_pending_today)
+        order.schedule.menu.provider.update!(order_deadline: "12:00")
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          patch cancel_consumer_order_path(order)
+        end
+
+        expect(order.reload).to be_pending
 
         follow_redirect!
         expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
@@ -1255,6 +1306,12 @@ RSpec.describe "Orders", type: :request do
 
         follow_redirect!
         expect(inertia).to have_flash(alert: I18n.t("validations.order_not_cancellable"))
+      end
+
+      it "returns 404 when attempting to cancel a non-existent order id" do
+        patch cancel_consumer_order_path(id: 999_999)
+
+        expect(response).to have_http_status(:not_found)
       end
     end
   end
@@ -1339,12 +1396,18 @@ RSpec.describe "Orders", type: :request do
           [ { group_id: group.id, values: values }, { group_id: other_group.id, values: [ "Ricota y nuez" ] } ]
         end
 
-        it "changes the options the employee picked" do
+        it "changes the options the employee picked and logs previous and new values in audit_logs" do
           patch order_path(order), params: update_params(options: options_params([ "Bolognesa" ]))
 
           expect(order.reload.selected_options).to include(
             { "group_id" => group.id, "name" => "Salsa", "values" => [ "Bolognesa" ] }
           )
+
+          log = order.audit_logs.sole
+          expect(log.user).to eq(users(:one))
+          before_options, after_options = log.changeset["selected_options"]
+          expect(before_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          expect(after_options.find { it["group_id"] == group.id }["values"]).to eq([ "Bolognesa" ])
         end
 
         it "removes the choice of an optional group" do
@@ -1368,6 +1431,7 @@ RSpec.describe "Orders", type: :request do
           patch order_path(order), params: update_params(options: options_params([ "Carbonara" ]))
 
           expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          expect(order.audit_logs).to be_empty
           follow_redirect!
           expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
         end
@@ -1376,6 +1440,7 @@ RSpec.describe "Orders", type: :request do
           patch order_path(order), params: update_params(options: options_params([ "Filetto", "Bolognesa" ]))
 
           expect(order.reload.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          expect(order.audit_logs).to be_empty
           follow_redirect!
           expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
         end
@@ -1413,6 +1478,31 @@ RSpec.describe "Orders", type: :request do
 
           expect(order.reload).to have_attributes(modified_by: users(:one), modified_at: Time.current)
         end
+      end
+
+      it "logs the previous and new values of what changed" do
+        patch order_path(order), params: update_params(quantity: 2, notes: "Sin cebolla")
+
+        log = order.audit_logs.sole
+        expect(log.user).to eq(users(:one))
+        expect(log.changeset).to include("amount" => [ 1, 2 ], "notes" => [ nil, "Sin cebolla" ])
+      end
+
+      it "logs delivery method and address changes in audit_logs" do
+        patch order_path(order), params: update_params(address: "18 de Julio 1006")
+
+        log = order.audit_logs.sole
+        expect(log.user).to eq(users(:one))
+        expect(log.changeset).to include(
+          "delivery_method" => [ "home", "office" ],
+          "address" => [ "Julio Herrera y Reissig 565", "18 de Julio 1006" ]
+        )
+      end
+
+      it "logs nothing when the modification is rejected" do
+        patch order_path(order), params: update_params(quantity: 0)
+
+        expect(order.audit_logs).to be_empty
       end
 
       # El saldo del tope mensual ya descuenta la unidad de esta orden, así que al
@@ -1582,6 +1672,7 @@ RSpec.describe "Orders", type: :request do
 
         expect(response).to have_http_status(:not_found)
         expect(other.reload.amount).to eq(1)
+        expect(other.audit_logs).to be_empty
       end
 
       it "refuses invalid quantity formats bypassing interface" do
@@ -1589,6 +1680,7 @@ RSpec.describe "Orders", type: :request do
           patch order_path(order), params: update_params(quantity: invalid_qty)
 
           expect(order.reload.amount).to eq(1)
+          expect(order.audit_logs).to be_empty
           follow_redirect!
           expect(inertia).to have_flash(alert: I18n.t("validations.invalid_quantity"))
         end
@@ -1604,22 +1696,26 @@ RSpec.describe "Orders", type: :request do
       end
 
       it "refuses notes exceeding 140 characters and preserves the previous notes" do
-        order.update!(notes: "Nota previa")
+        order.update_columns(notes: "Nota previa")
         oversized_notes = "a" * 141
 
-        patch order_path(order), params: update_params(notes: oversized_notes)
+        expect {
+          patch order_path(order), params: update_params(notes: oversized_notes)
+        }.not_to change(order.audit_logs, :count)
 
         expect(order.reload.notes).to eq("Nota previa")
         follow_redirect!
         expect(flash[:alert]).to include("140")
       end
 
-      it "allows clearing notes by sending an empty string or nil" do
-        order.update!(notes: "Nota previa")
+      it "allows clearing notes by sending an empty string or nil and logs the change" do
+        order.update_columns(notes: "Nota previa")
 
         patch order_path(order), params: update_params(notes: "")
 
         expect(order.reload.notes).to be_nil
+        log = order.audit_logs.sole
+        expect(log.changeset).to include("notes" => [ "Nota previa", nil ])
         follow_redirect!
         expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
       end

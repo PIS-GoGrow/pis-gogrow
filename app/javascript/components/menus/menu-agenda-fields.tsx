@@ -75,6 +75,26 @@ export function initialAgenda(
   }
 }
 
+// Qué falta para poder guardar la agenda, o null si está lista. Un plato sin
+// ningún día ("No repetir" sin elegir día) se guarda sin publicar, pero repetir
+// toda la semana o en un rango sin días no tiene sentido: hay que elegir uno.
+export function agendaProblem(
+  draft: AgendaDraft,
+): "weekdays_required" | "incomplete" | null {
+  if (draft.mode !== "single" && draft.weekdays.length === 0)
+    return "weekdays_required"
+  if (draft.weekdays.length === 0) return null
+
+  const complete =
+    draft.mode === "single"
+      ? draft.date !== ""
+      : draft.mode === "range"
+        ? draft.starts_on !== "" && draft.ends_on >= draft.starts_on
+        : draft.starts_on !== ""
+
+  return complete ? null : "incomplete"
+}
+
 export function agendaPayload(draft: AgendaDraft): AgendaPayload {
   if (draft.weekdays.length === 0) return { mode: "none" }
 

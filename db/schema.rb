@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -123,6 +123,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_120001) do
     t.date "due_date"
     t.decimal "max_price", precision: 10, scale: 2
     t.integer "percentage"
+    t.date "starts_on"
     t.integer "status"
     t.datetime "updated_at", null: false
     t.index ["benefit_configuration_id"], name: "index_benefits_on_benefit_configuration_id"
