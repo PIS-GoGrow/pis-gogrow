@@ -22,8 +22,8 @@ class Payment < ApplicationRecord
   validate :only_one_submitted_per_account, if: :submitted?
 
   after_update_commit :close_debt_reminder, if: -> { saved_change_to_status? && approved? }
-  after_save_commit :close_automatic_payment_reminders,
-                    if: :should_close_automatic_payment_reminders?
+  after_save_commit :close_payment_reminders,
+                    if: :should_close_payment_reminders?
 
   def approve
     transaction do
@@ -114,12 +114,12 @@ class Payment < ApplicationRecord
     errors.add(:receipt, :already_under_review) if others.exists?
   end
 
-  def should_close_automatic_payment_reminders?
+  def should_close_payment_reminders?
     saved_change_to_status? && (submitted? || approved?)
   end
 
-  def close_automatic_payment_reminders
-    PaymentReminders::CloseActive.call(account:)
+  def close_payment_reminders
+    PaymentReminders::CloseActive.call(account:, settled: approved?)
   end
 end
 
