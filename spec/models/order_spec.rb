@@ -692,6 +692,24 @@ RSpec.describe Order, type: :model do
       expect(order.reload).to be_rejected
     end
 
+    it "preserves accounts balances and does not sync amounts when refusing to reject past confirmed order" do
+      order = orders(:history_confirmed_past)
+      accounts = order.accounts
+      original_amounts = accounts.map(&:amount)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order.accounts.reload.map(&:amount)).to eq(original_amounts)
+    end
+
+    it "refuses to reject a confirmed order without a delivery date" do
+      order = orders(:history_without_schedule)
+      order.update_columns(status: Order.statuses[:confirmed], delivery_date: nil)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order.errors[:base]).to eq([ I18n.t("validations.order_not_rejectable") ])
+      expect(order.reload).to be_confirmed
+    end
+
     it "refuses to confirm an already confirmed order and returns false" do
       order = orders(:upcoming_confirmed_future)
 
