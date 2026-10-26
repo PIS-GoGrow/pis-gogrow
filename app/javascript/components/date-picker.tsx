@@ -89,12 +89,22 @@ export function DatePicker({
   )
 }
 
+export interface DateRangePreset {
+  label: string
+  from: string
+  to: string
+}
+
 interface DateRangePickerProps {
   id?: string
   from: string
   to: string
   onChange: (from: string, to: string) => void
   min?: string
+  max?: string
+  presets?: DateRangePreset[]
+  commitOnComplete?: boolean
+  label?: string
   className?: string
 }
 
@@ -112,15 +122,45 @@ export function DateRangePicker({
   to,
   onChange,
   min,
+  max,
+  presets,
+  commitOnComplete,
+  label,
   className,
 }: DateRangePickerProps) {
   const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const [pendingStart, setPendingStart] = useState<Date>()
   const start = toDate(from)
   const end = toDate(to)
 
+  function apply(newFrom: string, newTo: string) {
+    setPendingStart(undefined)
+    setOpen(false)
+    onChange(newFrom, newTo)
+  }
+
+  function handleOpenChange(next: boolean) {
+    if (!next && pendingStart) {
+      apply(toIso(pendingStart), toIso(pendingStart))
+      return
+    }
+    setOpen(next)
+  }
+
+  function selectDay(day: Date) {
+    if (!pendingStart) {
+      setPendingStart(day)
+      return
+    }
+    const [first, last] =
+      day < pendingStart ? [day, pendingStart] : [pendingStart, day]
+    apply(toIso(first), toIso(last))
+  }
+
   return (
     <div>
-      <Popover>
+      <Popover open={open} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <Button
             id={id}
@@ -131,9 +171,10 @@ export function DateRangePicker({
               className,
             )}
           >
-            {start
-              ? rangeLabel(start, end)
-              : t("components.date_picker.range_placeholder")}
+            {label ??
+              (start
+                ? rangeLabel(start, end)
+                : t("components.date_picker.range_placeholder"))}
             <ChevronDown aria-hidden="true" className="text-muted-foreground" />
           </Button>
         </PopoverTrigger>
@@ -144,16 +185,39 @@ export function DateRangePicker({
             weekStartsOn={0}
             formatters={calendarFormatters}
             captionLayout="dropdown"
-            selected={{ from: start, to: end }}
+            selected={
+              pendingStart ? { from: pendingStart } : { from: start, to: end }
+            }
             defaultMonth={start ?? toDate(min ?? "")}
-            disabled={disabledDays(min)}
-            onSelect={(range) =>
-              onChange(
-                range?.from ? toIso(range.from) : "",
-                range?.to ? toIso(range.to) : "",
-              )
+            disabled={disabledDays(min, max)}
+            onSelect={(range, day) =>
+              commitOnComplete
+                ? selectDay(day)
+                : onChange(
+                    range?.from ? toIso(range.from) : "",
+                    range?.to ? toIso(range.to) : "",
+                  )
             }
           />
+          {presets && (
+            <div className="flex flex-wrap gap-2 border-t p-3">
+              {presets.map((preset) => (
+                <Button
+                  key={preset.label}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  disabled={
+                    (!!min && preset.to < min) || (!!max && preset.from > max)
+                  }
+                  onClick={() => apply(preset.from, preset.to)}
+                >
+                  {preset.label}
+                </Button>
+              ))}
+            </div>
+          )}
         </PopoverContent>
       </Popover>
     </div>
