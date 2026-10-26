@@ -200,7 +200,7 @@ export function DateRangePicker({
             }
           />
           {presets && (
-            <div className="flex flex-wrap gap-2 border-t p-3">
+            <div className="flex w-0 min-w-full flex-wrap gap-2 border-t p-3">
               {presets.map((preset) => (
                 <Button
                   key={preset.label}
