@@ -181,6 +181,58 @@ RSpec.describe Orders::Pricing do
         expect(line.benefits).to eq({ base => Orders::Pricing::BenefitUsed.new(1, 300), special => Orders::Pricing::BenefitUsed.new(1, 180) })
         expect(line.discounted_price).to eq(120)
       end
+
+      it "applies multiple benefits on a complex order" do
+        base = base!(percentage: 50, amount: 3)
+        special = special!(percentage: 30, amount: 2)
+        special2 = special!(percentage: 25, amount: 7, configuration: benefit_configurations(:gift2))
+        seniority = special!(percentage: 30, configuration: benefit_configurations(:seniority))
+
+        pricing = price_cart(
+          [ schedule, 6, [special, special2] ],
+          [ cheap_schedule, 2, [special2] ],
+          [ schedule, 1, [special] ]
+        )
+        expect(pricing.first.second.discounted_price).to eq(225)
+        expect(pricing.first.second.benefits).to eq({
+          base => Orders::Pricing::BenefitUsed.new(3, 450),
+          special => Orders::Pricing::BenefitUsed.new(2, 180),
+          special2 => Orders::Pricing::BenefitUsed.new(6, 405),
+          seniority => Orders::Pricing::BenefitUsed.new(6, 540)
+        })
+        expect(pricing.second.second.discounted_price).to eq(115)
+        expect(pricing.second.second.benefits).to eq({
+          special2 => Orders::Pricing::BenefitUsed.new(1, 25),
+          seniority => Orders::Pricing::BenefitUsed.new(2, 60)
+        })
+        expect(pricing.third.second.discounted_price).to eq(210)
+        expect(pricing.third.second.benefits).to eq({
+          seniority => Orders::Pricing::BenefitUsed.new(1, 90)
+        })
+      end
+    end
+
+    describe "selection" do
+      it "respects user-selected benefits" do
+        base!
+        special = special!(percentage: 20, amount: 1)
+        unused = special!(percentage: 20, amount: 2, configuration: benefit_configurations(:gift2))
+
+        place!(1, selected: [ special ])
+
+        expect(described_class.new(consumer.reload).remaining_uses(special)).to eq(0)
+        expect(described_class.new(consumer.reload).remaining_uses(unused)).to eq(2)
+      end
+
+      it "respects user-selected benefits, but applies unlimited benefits anyway" do
+        base!
+        special = special!(percentage: 20, amount: 1)
+        used = special!(percentage: 20, amount: nil, configuration: benefit_configurations(:gift2))
+
+        line = price(1, selected: [ special ])
+
+        expect(line.discounted_price).to eq(30)
+      end
     end
 
     describe "applies benefits to first meals" do

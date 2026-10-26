@@ -82,7 +82,7 @@ class Orders::Pricing
             discount: benefit_used[benefit].discount + [ benefit.percentage, 100 - pct_sum[unit] ].min / 100.0 * schedule.price
           ]
           pct_sum[unit] += benefit.percentage
-          coverage[unit] << j
+          coverage[unit] << benefit
         end
 
         benefit_left[benefit] -= benefit_used[benefit].units_used if benefit_left[benefit]
