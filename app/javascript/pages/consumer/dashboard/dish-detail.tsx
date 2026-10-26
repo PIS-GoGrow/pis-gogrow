@@ -8,6 +8,7 @@ import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { formatShortDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
@@ -109,6 +110,8 @@ export function DishDetail({
   ])
 
   const reviews = item.menu.reviews
+  const ratingAverage = item.menu.rating_average
+  const ratingCount = item.menu.rating_count
   const choicesMissing = item.menu.option_groups.some(
     (group) => group.required && !selections[group.id]?.length,
   )
@@ -153,46 +156,50 @@ export function DishDetail({
         />
       ))}
       <section className="border-border border-b py-5">
-        <div className="flex justify-between text-sm font-medium">
-          <h2>Opiniones del plato</h2>
-          <span className="text-xs leading-4">
-            <Star className="fill-foreground mr-1 inline size-3" />
-            {reviews[0]?.rating ?? "4.8"}
-          </span>
+        <div className="flex items-center justify-between text-sm font-medium">
+          <h2>{t("pages.consumer_dashboard.index.reviews.title")}</h2>
+          {ratingCount > 0 && ratingAverage !== null && (
+            <span className="text-xs leading-4">
+              <Star className="fill-foreground mr-1 inline size-3" />
+              {ratingAverage.toFixed(1)} ({ratingCount})
+            </span>
+          )}
         </div>
-        <div className="mt-3 flex gap-4 overflow-x-auto">
-          {(reviews.length
-            ? reviews
-            : [
-                {
-                  id: 0,
-                  rating: 5,
-                  description:
-                    "Los sorrentinos llegaron muy ricos y con mucho sabor.",
-                },
-              ]
-          ).map((review, index) => (
-            <article
-              key={review.id}
-              className="border-border bg-muted flex h-[136px] w-[280px] shrink-0 flex-col gap-3 rounded-md border p-4"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm leading-5 font-medium">
-                    {index ? "Pedro" : "Lucía"}
-                  </span>
-                  <span className="text-muted-foreground text-xs leading-4">
-                    28/07/26
-                  </span>
+        {ratingCount > 0 ? (
+          <div className="mt-3 flex gap-4 overflow-x-auto">
+            {reviews.map((review) => (
+              <article
+                key={review.id}
+                className="border-border bg-muted flex min-h-[136px] w-[280px] shrink-0 flex-col gap-3 rounded-md border p-4"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm leading-5 font-medium">
+                      {review.author ??
+                        t("pages.consumer_dashboard.index.reviews.anonymous")}
+                    </span>
+                    <span className="text-muted-foreground text-xs leading-4">
+                      {formatShortDate(review.created_at)}
+                    </span>
+                  </div>
+                  <p className="text-xs leading-4">
+                    {"★".repeat(review.rating)}
+                    <span className="text-muted-foreground">
+                      {"★".repeat(5 - review.rating)}
+                    </span>
+                  </p>
                 </div>
-                <p className="text-xs leading-4">
-                  {"★".repeat(Math.round(review.rating ?? 5))}
-                </p>
-              </div>
-              <p className="text-xs leading-4">{review.description}</p>
-            </article>
-          ))}
-        </div>
+                {review.description && (
+                  <p className="text-xs leading-4">{review.description}</p>
+                )}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground mt-3 text-xs leading-5">
+            {t("pages.consumer_dashboard.index.reviews.empty")}
+          </p>
+        )}
       </section>
       <section className="border-border border-b py-4">
         <label htmlFor="notes" className="text-xs font-semibold">

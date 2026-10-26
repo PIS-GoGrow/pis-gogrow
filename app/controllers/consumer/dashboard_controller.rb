@@ -42,12 +42,16 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def schedule_data
-    schedules = Schedule.on_active_menus.includes(:orders, menu: [ :reviews, :option_groups, { provider: [ :user, :closures ] } ])
+    schedules = Schedule.on_active_menus.includes(:orders, menu: [ { reviews: { consumer: :user } }, :option_groups, { provider: [ :user, :closures ] } ])
                         .where(date: week_range)
                         .order(:date, :id)
 
     schedules.reject(&:provider_closed?).map do |schedule|
       menu = schedule.menu
+      # Solo las reseñas con puntaje válido cuentan como valoración: alimentan el
+      # promedio, el conteo y la lista. Las que llegaron sin puntaje no son una
+      # "reseña publicada" (IBP-012).
+      rated_reviews = menu.reviews.select { |review| (1..5).cover?(review.rating) }
 
       {
         id: schedule.id,
@@ -65,9 +69,12 @@ class Consumer::DashboardController < Consumer::InertiaController
           end,
           provider_name: menu.provider_name,
           home_delivery: menu.provider.home_delivery?,
-          reviews: menu.reviews.first(4).map do |review|
+          rating_average: rated_reviews.any? ? (rated_reviews.sum(&:rating).to_f / rated_reviews.size).round(1) : nil,
+          rating_count: rated_reviews.size,
+          reviews: rated_reviews.first(4).map do |review|
             {
               id: review.id,
+              author: review.consumer&.user&.name&.split&.first,
               description: review.description,
               rating: review.rating,
               created_at: review.created_at.to_date.iso8601

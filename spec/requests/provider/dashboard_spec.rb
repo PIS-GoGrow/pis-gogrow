@@ -192,7 +192,8 @@ RSpec.describe "Provider::Dashboard", type: :request do
         # tuviandita solo tiene el menú milanesa en fixtures (sin reseñas)
         expect(inertia).to have_props(
           month_dishes_count: provider.menus.count,
-          average_rating: nil
+          average_rating: nil,
+          top_rated: []
         )
 
         # Ahora agregamos una reseña para el plato del proveedor actual
@@ -203,6 +204,24 @@ RSpec.describe "Provider::Dashboard", type: :request do
         expect(inertia).to have_props(
           average_rating: 5.0
         )
+      end
+
+      it "expone los platos mejor valorados ordenados por promedio, sin las reseñas sin puntaje" do
+        # milanesa: promedio 4.5
+        Review.create!(menu: menus(:milanesa), rating: 4)
+        Review.create!(menu: menus(:milanesa), rating: 5)
+
+        wok = Menu.create!(provider:, name: "Wok de verduras", description: "Salteado de verduras", price: 150)
+        Review.create!(menu: wok, rating: 5)
+        # Una reseña sin puntaje no es una valoración: no cuenta para el promedio.
+        Review.create!(menu: wok, rating: nil, description: "sin puntaje")
+
+        get provider_dashboard_path
+
+        expect(inertia.props[:top_rated]).to eq([
+          { "name" => "Wok de verduras", "rating" => 5.0 },
+          { "name" => "Milanesa con papas fritas", "rating" => 4.5 }
+        ])
       end
     end
   end
