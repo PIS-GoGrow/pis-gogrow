@@ -12,7 +12,8 @@ RSpec.describe Notification::Configuration do
           "provider_payment_reminders",
           "automatic_payment_reminders",
           "debt_alerts",
-          "hr_payment_reminders"
+          "hr_payment_reminders",
+          "coupons"
         )
       expect(described_class.for_role(:admin).pluck(:key)).to contain_exactly(
         "company_payments",

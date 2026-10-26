@@ -4,9 +4,16 @@ import { useTranslation } from "react-i18next"
 
 import BenefitSummaryCard from "@/components/benefit-summary-card"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
+import ListItemCard from "@/components/list-item-card"
 import PageContainer from "@/components/page-container"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
@@ -25,6 +32,7 @@ function Row({ label, value }: { label: string; value: string }) {
 export default function Show({
   benefit,
   benefit_summary,
+  coupons,
 }: ConsumerProfilesShow) {
   const { t } = useTranslation()
   const { auth } = usePage().props
@@ -112,6 +120,41 @@ export default function Show({
             </dl>
           )}
         </section>
+
+        {coupons.length > 0 && (
+          <section aria-labelledby="coupons-title">
+            <h3 id="coupons-title" className="mb-3 text-xl font-bold">
+              {t(`${page}.coupons`)}
+            </h3>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {coupons.map((coupon) => (
+                <ListItemCard key={coupon.id}>
+                  <CardHeader>
+                    <CardTitle>{coupon.name}</CardTitle>
+                    <CardDescription>
+                      {t(`${page}.coupon_discount`, {
+                        percentage: coupon.percentage,
+                      })}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <dl className="border-t">
+                      <Row
+                        label={t(`${page}.coupon_remaining`)}
+                        value={t(`${page}.meals`, { count: coupon.remaining })}
+                      />
+                      <Row
+                        label={t(`${page}.coupon_period`)}
+                        value={coupon.period}
+                      />
+                    </dl>
+                  </CardContent>
+                </ListItemCard>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section
           aria-labelledby="consumer-settings-title"

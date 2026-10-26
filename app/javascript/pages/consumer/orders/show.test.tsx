@@ -181,6 +181,34 @@ describe("Consumer::Orders Show Page", () => {
     expect(screen.getByRole("button", { name: /Editar/i })).toBeDisabled()
   })
 
+  it("displays block reason when pending order is past order deadline", () => {
+    const closedPendingOrder: Order = {
+      ...baseOrder,
+      status: "pending",
+      cancellable: false,
+      cancellation_block_reason: "order_deadline_passed",
+      modifiable: false,
+      modification_block_reason: "already_closed",
+    }
+
+    render(
+      <Show
+        order={closedPendingOrder}
+        delivery_addresses={deliveryAddresses}
+        max_quantity={5}
+        option_groups={[]}
+        editing={false}
+      />,
+    )
+
+    expect(
+      screen.getByText(
+        "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()
+  })
+
   it("renders long notes without spaces with text wrapping styling to prevent overflow", () => {
     const longNote = "a".repeat(140)
     const orderWithLongNote: Order = {
