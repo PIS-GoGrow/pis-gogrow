@@ -32,7 +32,7 @@ RSpec.describe "Asignar un cupón a empleados", type: :system do
     click_button "Agregar Milanesa al pan" unless page.has_button?("Volver", wait: 2)
   end
 
-  it "RRHH crea el cupón y solo el empleado elegido lo ve y lo usa" do
+  it "RRHH crea el cupón y solo el empleado elegido recibe el aviso, lo usa y lo ve en su cuenta" do
     sign_in users(:admin), role: :admin
     visit admin_benefit_configurations_path
     without_animations
@@ -51,7 +51,7 @@ RSpec.describe "Asignar un cupón a empleados", type: :system do
     pick_date "#condition_effective_from", Date.current, opens_at: @real_today
 
     within("[role=dialog]") do
-      fill_in "condition_limit", with: "1"
+      fill_in "condition_limit", with: "2"
       fill_in "condition_validity_amount", with: "1"
       choose_option "Unidad de validez", "semanas"
       click_button "Agregar"
@@ -61,23 +61,41 @@ RSpec.describe "Asignar un cupón a empleados", type: :system do
     expect(page).to have_content("Premio del mes")
     expect(page).to have_content("Cupón")
 
+    period = DateFormat.short_range(Date.current, Date.current + 6)
+
     sign_in users(:one), role: :consumer
+    visit dashboard_path
+    expect(page).to have_content("Recibiste un cupón")
+    expect(page).to have_content("RR. HH. te dio el cupón Premio del mes: 30% de descuento en 2 viandas para entregas del #{period}.")
+
     open_dish
 
     # 300 con 50% base (- $150) y 30% de cupón (- $90): paga 60.
     expect(find("span", text: "Premio del mes (30%)", exact_text: true).sibling("span")).to have_text("- $90")
     expect(find("span", text: "Monto a pagar", exact_text: true).sibling("span")).to have_text("$60")
+    click_button "Agregar"
+    click_link "Ver carrito"
+    click_button "Confirmar pedido"
+    expect(page).to have_content("¡Pedido recibido!")
 
     visit profile_path
     within(find("section[aria-labelledby=benefit-title]")) do
       expect(find("dt", text: "Premio del mes").find(:xpath, "following-sibling::dd")).to have_text("30%")
     end
+    within(find("section[aria-labelledby=coupons-title]")) do
+      expect(page).to have_content("Premio del mes")
+      expect(page).to have_content("30% de descuento")
+      expect(find("dt", text: "Te quedan").find(:xpath, "following-sibling::dd")).to have_text("1 vianda")
+      expect(find("dt", text: "Para entregas del").find(:xpath, "following-sibling::dd")).to have_text(period)
+    end
 
     sign_in users(:other_consumer_user), role: :consumer
     open_dish
 
+    expect(page).to have_no_content("Recibiste un cupón")
     expect(page).to have_no_content("Premio del mes")
     visit profile_path
+    expect(page).to have_no_content("Mis cupones")
     expect(page).to have_no_content("Premio del mes")
   end
 end
