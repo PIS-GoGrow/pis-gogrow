@@ -1198,14 +1198,15 @@ RSpec.describe Order, type: :model do
       expect(order.order_benefits.pluck(:benefit_id)).to contain_exactly(base.id, seniority.id)
     end
 
-    it "drops a special that no longer applies" do
+    it "keeps a special removed after the order was placed, only for the meals it already covered" do
       order = place(1)
       benefit_configurations(:gift).deactivate!(by: users(:admin))
 
-      modify(order, 1)
+      modify(order, 2)
 
-      expect(order.reload.discounted_price).to eq(150)
-      expect(order.order_benefits.pluck(:benefit_id)).to contain_exactly(base.id)
+      # 1ª base + premio (60), 2ª a precio completo aunque al premio le quedaba un uso.
+      expect(order.reload.discounted_price).to eq(360)
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
     end
   end
 
