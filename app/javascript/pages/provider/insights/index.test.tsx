@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type React from "react"
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import ProviderInsights from "./index"
 
@@ -34,23 +34,23 @@ vi.mock("@/layouts/app-layout", () => ({
   ),
 }))
 
-// El Select de Radix usa APIs de puntero y de scroll que jsdom no trae.
-beforeAll(() => {
-  Element.prototype.hasPointerCapture = () => false
-  Element.prototype.releasePointerCapture = () => undefined
-  Element.prototype.scrollIntoView = () => undefined
-})
-
 beforeEach(() => routerGet.mockClear())
 
 describe("Provider Insights Page", () => {
   const defaultProps = {
-    period: "2026-09",
-    current_period: "2026-10",
-    periods: [
-      { key: "2026-10", label: "Octubre 2026" },
-      { key: "2026-09", label: "Septiembre 2026" },
-      { key: "2026-08", label: "Agosto 2026" },
+    from: "2026-10-01",
+    to: "2026-10-31",
+    default_from: "2026-10-01",
+    default_to: "2026-10-31",
+    min: "2026-06-15",
+    max: "2026-10-31",
+    month_label: "Octubre 2026",
+    presets: [
+      { key: "today" as const, from: "2026-10-25", to: "2026-10-25" },
+      { key: "yesterday" as const, from: "2026-10-24", to: "2026-10-24" },
+      { key: "this_week" as const, from: "2026-10-25", to: "2026-10-25" },
+      { key: "this_month" as const, from: "2026-10-01", to: "2026-10-31" },
+      { key: "last_month" as const, from: "2026-09-01", to: "2026-09-30" },
     ],
     orders_count: 84,
     dishes_count: 15,
@@ -74,8 +74,8 @@ describe("Provider Insights Page", () => {
     expect(
       screen.getByRole("link", { name: "Volver al inicio" }),
     ).toHaveAttribute("href", "/proveedor/inicio")
-    expect(screen.getByRole("combobox", { name: "Período" })).toHaveTextContent(
-      "Septiembre 2026",
+    expect(screen.getByRole("button", { name: "Período" })).toHaveTextContent(
+      "Octubre 2026",
     )
   })
 
@@ -134,29 +134,89 @@ describe("Provider Insights Page", () => {
     expect(screen.queryByRole("listitem")).not.toBeInTheDocument()
   })
 
-  it("navega al período elegido conservando el scroll", async () => {
+  it("muestra un rango custom con el formato de rango", () => {
+    render(
+      <ProviderInsights
+        {...defaultProps}
+        from="2026-08-02"
+        to="2026-09-04"
+        month_label={undefined}
+      />,
+    )
+
+    expect(screen.getByRole("button", { name: "Período" })).toHaveTextContent(
+      "02/08/26 – 04/09/26",
+    )
+  })
+
+  it("ofrece los presets en orden y navega al rango del preset", async () => {
     const user = userEvent.setup()
     render(<ProviderInsights {...defaultProps} />)
 
-    await user.click(screen.getByRole("combobox", { name: "Período" }))
-    await user.click(screen.getByRole("option", { name: "Agosto 2026" }))
+    await user.click(screen.getByRole("button", { name: "Período" }))
+    const presets = ["Hoy", "Ayer", "Esta semana", "Este mes", "Mes pasado"]
+    for (const label of presets) {
+      expect(screen.getByRole("button", { name: label })).toBeInTheDocument()
+    }
+    await user.click(screen.getByRole("button", { name: "Mes pasado" }))
 
-    expect(routerGet).toHaveBeenCalledWith(
-      "/proveedor/inicio/hallazgos?period=2026-08",
+    expect(routerGet).toHaveBeenCalledExactlyOnceWith(
+      "/proveedor/inicio/hallazgos?desde=2026-09-01&hasta=2026-09-30",
+      {},
+      { preserveScroll: true },
+    )
+    expect(
+      screen.queryByRole("button", { name: "Hoy" }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("vuelve a la ruta sin parámetros con el rango por defecto", async () => {
+    const user = userEvent.setup()
+    render(
+      <ProviderInsights
+        {...defaultProps}
+        from="2026-09-01"
+        to="2026-09-30"
+        month_label="Septiembre 2026"
+      />,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Período" }))
+    await user.click(screen.getByRole("button", { name: "Este mes" }))
+
+    expect(routerGet).toHaveBeenCalledExactlyOnceWith(
+      "/proveedor/inicio/hallazgos",
       {},
       { preserveScroll: true },
     )
   })
 
-  it("vuelve a la ruta sin parámetro al elegir el mes actual", async () => {
+  it("navega una sola vez, recién al elegir el inicio y el fin del rango", async () => {
     const user = userEvent.setup()
     render(<ProviderInsights {...defaultProps} />)
 
-    await user.click(screen.getByRole("combobox", { name: "Período" }))
-    await user.click(screen.getByRole("option", { name: "Octubre 2026" }))
+    await user.click(screen.getByRole("button", { name: "Período" }))
+    await user.click(screen.getByRole("button", { name: /, 12 de octubre/ }))
+    expect(routerGet).not.toHaveBeenCalled()
+    await user.click(screen.getByRole("button", { name: /, 5 de octubre/ }))
 
-    expect(routerGet).toHaveBeenCalledWith(
-      "/proveedor/inicio/hallazgos",
+    expect(routerGet).toHaveBeenCalledExactlyOnceWith(
+      "/proveedor/inicio/hallazgos?desde=2026-10-05&hasta=2026-10-12",
+      {},
+      { preserveScroll: true },
+    )
+  })
+
+  it("toma el inicio como rango de un día si se cierra el calendario sin el fin", async () => {
+    const user = userEvent.setup()
+    render(<ProviderInsights {...defaultProps} />)
+
+    await user.click(screen.getByRole("button", { name: "Período" }))
+    await user.click(screen.getByRole("button", { name: /, 12 de octubre/ }))
+    await user.keyboard("{Escape}")
+
+    expect(routerGet).toHaveBeenCalledExactlyOnceWith(
+      "/proveedor/inicio/hallazgos?desde=2026-10-12&hasta=2026-10-12",
       {},
       { preserveScroll: true },
     )

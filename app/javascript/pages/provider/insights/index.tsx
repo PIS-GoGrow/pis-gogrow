@@ -3,6 +3,7 @@ import { ChevronLeft, Star, Utensils } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import { DateRangePicker } from "@/components/date-picker"
 import PageContainer from "@/components/page-container"
 import AiInsightCard from "@/components/provider/ai-insight-card"
 import InsightsMetrics from "@/components/provider/insights-metrics"
@@ -15,13 +16,6 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import AppLayout from "@/layouts/app-layout"
 import { providerDashboard, providerInsights } from "@/routes"
 import type { BreadcrumbItem, ProviderInsightsIndex } from "@/types"
@@ -29,9 +23,14 @@ import type { BreadcrumbItem, ProviderInsightsIndex } from "@/types"
 const page = "pages.provider_insights.index"
 
 export default function ProviderInsights({
-  period,
-  current_period,
-  periods,
+  from,
+  to,
+  default_from,
+  default_to,
+  min,
+  max,
+  month_label,
+  presets,
   orders_count,
   dishes_count,
   average_rating,
@@ -48,11 +47,11 @@ export default function ProviderInsights({
     { title: t(`${page}.title`), href: providerInsights.index().url },
   ]
 
-  function selectPeriod(key: string) {
+  function selectRange(desde: string, hasta: string) {
+    const isDefault = desde === default_from && hasta === default_to
+
     router.get(
-      providerInsights.index({
-        query: key === current_period ? {} : { period: key },
-      }).url,
+      providerInsights.index({ query: isDefault ? {} : { desde, hasta } }).url,
       {},
       { preserveScroll: true },
     )
@@ -83,21 +82,21 @@ export default function ProviderInsights({
           >
             {t(`${page}.period`)}
           </Label>
-          <Select value={period} onValueChange={selectPeriod}>
-            <SelectTrigger
-              id="insights-period"
-              className="bg-card dark:bg-card text-muted-foreground dark:border-border h-9 rounded-lg border-[#E8E8E8] px-3 shadow-none"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent align="end">
-              {periods.map((option) => (
-                <SelectItem key={option.key} value={option.key}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <DateRangePicker
+            id="insights-period"
+            from={from}
+            to={to}
+            min={min}
+            max={max}
+            label={month_label}
+            commitOnComplete
+            presets={presets.map((preset) => ({
+              ...preset,
+              label: t(`${page}.presets.${preset.key}`),
+            }))}
+            className="bg-card dark:bg-card text-muted-foreground dark:border-border hover:text-muted-foreground h-9 min-w-0 gap-1.5 rounded-lg border-[#E8E8E8] px-3 shadow-none"
+            onChange={selectRange}
+          />
         </div>
 
         <InsightsMetrics

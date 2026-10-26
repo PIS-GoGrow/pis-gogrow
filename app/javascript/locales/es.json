@@ -1205,6 +1205,13 @@
           "empty_reviews": "Todavía no hay reseñas en este período",
           "orders_count": "x%{count}",
           "period": "Período",
+          "presets": {
+            "last_month": "Mes pasado",
+            "this_month": "Este mes",
+            "this_week": "Esta semana",
+            "today": "Hoy",
+            "yesterday": "Ayer"
+          },
           "title": "Hallazgos",
           "top_dishes": "Platos más pedidos",
           "top_rated_dishes": "Mejor valorados"
