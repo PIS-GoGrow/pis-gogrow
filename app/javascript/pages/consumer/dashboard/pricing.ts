@@ -31,7 +31,10 @@ export interface Pricing {
 }
 
 // No hace ningún cálculo: Obtiene los precios de la orden desde el backend
-export async function priceItems(items: PricedItem[]): Promise<Pricing> {
+export async function priceItems(
+  items: PricedItem[],
+  orderId?: number,
+): Promise<Pricing> {
   const response = await fetch(pricingOrders().url, {
     method: "POST",
     headers: {
@@ -42,7 +45,7 @@ export async function priceItems(items: PricedItem[]): Promise<Pricing> {
         document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
           ?.content ?? "",
     },
-    body: JSON.stringify({ items }),
+    body: JSON.stringify({ items, order_id: orderId }),
     credentials: "same-origin",
   })
 

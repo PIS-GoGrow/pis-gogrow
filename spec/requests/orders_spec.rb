@@ -196,18 +196,67 @@ RSpec.describe "Orders", type: :request do
         end
       end
 
-      it "exposes what the edit form needs on a pending order" do
-        get order_path(orders(:upcoming_pending_future))
+      it "explains why an order the provider confirmed cannot be modified" do
+        get order_path(orders(:upcoming_confirmed_future))
 
-        expect(inertia.props[:order]).to include(modifiable: true, modification_block_reason: nil)
+        expect(inertia.props[:order]).to include(modifiable: false, modification_block_reason: "already_confirmed")
+      end
+
+      it "redirects users with a non-consumer role to root" do
+        sign_in users(:provider_user)
+        get order_path(orders(:upcoming_confirmed_future))
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "serializes rejection reason and rejection details on a rejected order" do
+        rejected = orders(:history_rejected_future)
+        rejected.update_columns(rejection_reason: Order.rejection_reasons[:other], rejection_details: "Sin insumos disponibles")
+
+        get order_path(rejected)
+
+        expect(inertia.props[:order]).to include(
+          status: "rejected",
+          rejection_reason: "other",
+          rejection_details: "Sin insumos disponibles"
+        )
+      end
+    end
+  end
+
+  describe "GET /pedidos/:id/editar" do
+    it "redirects visitors to the sign in page" do
+      get edit_order_path(orders(:upcoming_pending_future))
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    context "when signed in as an employee" do
+      before { sign_in users(:one) }
+
+      it "does not expose another employee's order" do
+        get edit_order_path(orders(:other_consumer_upcoming))
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "sends an order that can no longer be modified back to its detail" do
+        get edit_order_path(orders(:upcoming_confirmed_future))
+
+        expect(response).to redirect_to(order_path(orders(:upcoming_confirmed_future)))
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_modifiable"))
+      end
+
+      it "exposes what the edit form needs on a pending order" do
+        get edit_order_path(orders(:upcoming_pending_future))
+
+        expect(inertia).to render_component("consumer/orders/edit")
         # El cupo libre de la fecha más la unidad que este pedido ya ocupa.
-        expect(inertia.props[:max_quantity]).to eq(7)
+        expect(inertia.props[:schedule]).to include(remaining: 7, sold_out: false, orders_closed: false)
         expect(inertia.props[:delivery_addresses].map { it[:address] }).to eq([ "18 de Julio 1006", "Julio Herrera y Reissig 565" ])
       end
 
-      # IBP-022: el detalle manda los grupos del plato y lo que el empleado eligió,
-      # que son los dos datos que el diálogo de modificación necesita para no
-      # empezar con la pantalla vacía.
+      # IBP-022: la pantalla de modificación manda los grupos del plato y lo que
+      # el empleado eligió, para no empezar con la pantalla vacía.
       it "exposes the groups of the dish and the options the employee picked" do
         order = Order.create!(
           consumer: consumers(:one),
@@ -220,9 +269,9 @@ RSpec.describe "Orders", type: :request do
           selected_options: selection_for(schedules(:sorrentinos_today).menu)
         )
 
-        get order_path(order)
+        get edit_order_path(order)
 
-        expect(inertia.props[:option_groups]).to eq(
+        expect(inertia.props[:schedule][:menu][:option_groups]).to eq(
           [
             { "id" => menu_option_groups(:salsa_sorrentinos).id, "name" => "Salsa", "options" => [ "Filetto", "Bolognesa" ], "limit" => 1, "required" => true },
             { "id" => menu_option_groups(:relleno_sorrentinos).id, "name" => "Relleno", "options" => [ "Ricota y nuez", "Espinaca y queso" ], "limit" => 1, "required" => true }
@@ -251,9 +300,9 @@ RSpec.describe "Orders", type: :request do
           ]
         )
 
-        get order_path(order)
+        get edit_order_path(order)
 
-        expect(inertia.props[:option_groups]).to include(
+        expect(inertia.props[:schedule][:menu][:option_groups]).to include(
           hash_including("name" => "Salsa", "required" => false),
           hash_including("name" => "Relleno", "required" => true)
         )
@@ -262,9 +311,9 @@ RSpec.describe "Orders", type: :request do
       # Un plato sin grupos no tiene nada que elegir: la lista llega vacía y el
       # pedido no carga ninguna selección.
       it "exposes no groups for a dish that offers none" do
-        get order_path(orders(:upcoming_pending_future))
+        get edit_order_path(orders(:upcoming_pending_future))
 
-        expect(inertia.props[:option_groups]).to eq([])
+        expect(inertia.props[:schedule][:menu][:option_groups]).to eq([])
         expect(inertia.props[:order][:selected_options]).to eq([])
       end
 
@@ -273,51 +322,9 @@ RSpec.describe "Orders", type: :request do
         # Más vieja que el resto: si no, pasa a ser la "última usada" y ya está entre las opciones.
         order.update_columns(address: "Colonia 1370, Apto 4", delivery_method: Order.delivery_methods[:home], created_at: 1.year.ago)
 
-        get order_path(order)
+        get edit_order_path(order)
 
         expect(inertia.props[:delivery_addresses].last).to include(id: "current", label: "Dirección actual", address: "Colonia 1370, Apto 4")
-      end
-
-      it "explains why an order the provider confirmed cannot be modified" do
-        get order_path(orders(:upcoming_confirmed_future))
-
-        expect(inertia.props[:order]).to include(modifiable: false, modification_block_reason: "already_confirmed")
-      end
-
-      it "redirects users with a non-consumer role to root" do
-        sign_in users(:provider_user)
-        get order_path(orders(:upcoming_confirmed_future))
-        expect(response).to redirect_to(root_path)
-      end
-
-      it "sets editing to true when edit=1 param is provided" do
-        get order_path(orders(:upcoming_pending_future), params: { edit: "1" })
-
-        expect(inertia.props[:editing]).to be(true)
-      end
-
-      it "sets editing to false when edit param is absent or not 1" do
-        get order_path(orders(:upcoming_pending_future))
-        expect(inertia.props[:editing]).to be(false)
-
-        get order_path(orders(:upcoming_pending_future), params: { edit: "0" })
-        expect(inertia.props[:editing]).to be(false)
-
-        get order_path(orders(:upcoming_pending_future), params: { edit: "true" })
-        expect(inertia.props[:editing]).to be(false)
-      end
-
-      it "serializes rejection reason and rejection details on a rejected order" do
-        rejected = orders(:history_rejected_future)
-        rejected.update_columns(rejection_reason: Order.rejection_reasons[:other], rejection_details: "Sin insumos disponibles")
-
-        get order_path(rejected)
-
-        expect(inertia.props[:order]).to include(
-          status: "rejected",
-          rejection_reason: "other",
-          rejection_details: "Sin insumos disponibles"
-        )
       end
     end
   end

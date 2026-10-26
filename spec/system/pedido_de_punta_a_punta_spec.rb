@@ -105,7 +105,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   end
 
   def edit_order(order)
-    visit order_path(order, edit: 1)
+    visit edit_order_path(order)
   end
 
   # Las dos vistas del pedido muestran solo lo elegido, no todo lo que ofrece el plato.
@@ -154,12 +154,10 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       # E1 abre Mis pedidos y edita el pedido: cantidad, opción y nota.
       visit orders_path
       within(find("[data-slot=card]", text: "Milanesa al pan")) { click_link "Editar" }
-      within("[role=dialog]") do
-        click_button "Agregar uno"
-        pick_option("Guarnición", "Papas")
-        fill_in "notes", with: "Sin sal, con limón"
-        click_button "Guardar cambios"
-      end
+      click_button "Agregar uno"
+      pick_option("Guarnición", "Papas")
+      fill_in "notes", with: "Sin sal, con limón"
+      click_button "Guardar cambios"
       expect(page).to have_content("Pedido actualizado")
 
       edited = Order.find(order.id)
@@ -254,10 +252,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e2_user, role: :consumer
 
       edit_order(e2_order)
-      within("[role=dialog]") do
-        click_button "Agregar uno"
-        click_button "Guardar cambios"
-      end
+      click_button "Agregar uno"
+      click_button "Guardar cambios"
 
       expect(page).to have_content("Este plato ya no está disponible para la fecha seleccionada.")
       expect(e2_order.reload.amount).to eq(1)
@@ -297,7 +293,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       edit_order(e1_order)
 
-      within("[role=dialog]") { expect(page).to have_button("Agregar uno", disabled: true) }
+      expect(page).to have_button("Agregar uno", disabled: true)
     end
 
     it "refleja para el empleado el stock que el proveedor sube en un menú publicado" do
@@ -387,10 +383,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in p1_user, role: :provider
       visit edit_provider_menu_path(p1_milanesa)
       click_button "Editar Guarnición"
-      within("[role=dialog]") do
-        fill_in "group-options", with: "Ensalada, Boniato", fill_options: { clear: :backspace }
-        click_button "Modificar"
-      end
+      fill_in "group-options", with: "Ensalada, Boniato", fill_options: { clear: :backspace }
+      click_button "Modificar"
       click_button "Modificar"
       click_button "Aplicar cambios"
       expect(page).to have_content("¡Plato modificado!")
@@ -431,11 +425,9 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       fill_in "description", with: "Con fideos de arroz", fill_options: { clear: :backspace }
       fill_in "price", with: "320", fill_options: { clear: :backspace }
       click_button "Agregar", exact: true
-      within("[role=dialog]") do
-        fill_in "group-name", with: "Salsa"
-        fill_in "group-options", with: "Soja, Agridulce"
-        click_button "Agregar"
-      end
+      fill_in "group-name", with: "Salsa"
+      fill_in "group-options", with: "Soja, Agridulce"
+      click_button "Agregar"
       save_with_simple_confirmation
 
       expect(page).to have_content("¡Plato modificado!")
@@ -508,11 +500,9 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       "con alternativas duplicadas" => [ "Salsa", "Soja, soja" ]
     }.each do |label, (name, options)|
       it "no deja agregar un grupo #{label}" do
-        within("[role=dialog]") do
-          fill_in "group-name", with: name
-          fill_in "group-options", with: options
-          expect(page).to have_button("Agregar", disabled: true)
-        end
+        fill_in "group-name", with: name
+        fill_in "group-options", with: options
+        expect(page).to have_button("Agregar", disabled: true)
       end
     end
   end
@@ -591,9 +581,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
         find("label", text: "Colonia 1370").click
         click_button "Seleccionar"
       end
-      within("[role=dialog]", text: "Modificar pedido") do
-        click_button "Guardar cambios"
-      end
+      click_button "Guardar cambios"
       expect(page).to have_content("Pedido actualizado")
       expect(order.reload).to have_attributes(delivery_method: "home", address: "Colonia 1370")
       sign_out
@@ -626,12 +614,10 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
         click_link "Editar"
       end
 
-      within("[role=dialog]") do
-        fill_in "notes", with: "a" * 141
+      fill_in "notes", with: "a" * 141
 
-        expect(find_field("notes").value.length).to eq(140)
-        expect(page).to have_content("140/140")
-      end
+      expect(find_field("notes").value.length).to eq(140)
+      expect(page).to have_content("140/140")
     end
   end
 

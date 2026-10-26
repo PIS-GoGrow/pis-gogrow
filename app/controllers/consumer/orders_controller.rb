@@ -18,23 +18,20 @@ class Consumer::OrdersController < Consumer::InertiaController
   def show
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
+    @order = @consumer.orders.preload(:review).find(params[:id])
+  end
+
+  def edit
     @order = @consumer.orders.preload(
-      :review, schedule: { menu: [ :option_groups, { provider: :user } ] }
+      :review, schedule: { menu: [ { reviews: { consumer: :user } }, :option_groups, { provider: :user } ] }
     ).find(params[:id])
 
-    @delivery_addresses = @order.delivery_address_options @consumer
-    @max_quantity = @order.max_quantity
-    @editing = params[:edit] == "1"
+    return redirect_to order_path(@order), alert: t("validations.order_not_modifiable") unless @order.modifiable?
 
-    @option_groups = @order.schedule&.menu&.option_groups.to_a.map do |group|
-      {
-        id: group.id,
-        name: group.name,
-        options: group.options,
-        limit: group.limit,
-        required: group.required
-      }
-    end
+    # El cupo libre ya descuenta lo que este pedido reservó, y el plazo lo
+    # resolvió modifiable?: el plato se muestra con lo que el pedido puede tener.
+    @schedule = dish_data(@order.schedule).merge(remaining: @order.max_quantity, sold_out: false, orders_closed: false)
+    @delivery_addresses = @order.delivery_address_options @consumer
   end
 
   def create
@@ -134,7 +131,7 @@ class Consumer::OrdersController < Consumer::InertiaController
     if modified
       redirect_to order_path(order), notice: t("flash.order_updated"), status: :see_other
     else
-      redirect_to order_path(order),
+      redirect_to order.modifiable? ? edit_order_path(order) : order_path(order),
                   alert: order.errors.full_messages.first || t("validations.order_not_modifiable"),
                   status: :see_other
     end
@@ -169,7 +166,9 @@ class Consumer::OrdersController < Consumer::InertiaController
       { schedule:, quantity: item[:quantity].to_i } if schedule
     end.compact!
 
-    @pricing = OrderPricing.new(@consumer).call(requested_items)
+    # Al modificar, lo que el pedido ya tiene reservado vuelve a estar disponible.
+    modifiable_order = @consumer.orders.find_by(id: params[:order_id])
+    @pricing = OrderPricing.new(@consumer, modifiable_order:).call(requested_items)
 
     render json: to_pricing(requested_items, @pricing)
   end
@@ -225,7 +224,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def reject_update(order, reason)
-    redirect_to order_path(order), alert: t("validations.#{reason}"), status: :see_other
+    redirect_to edit_order_path(order), alert: t("validations.#{reason}"), status: :see_other
   end
 
   def reject_order(reason)

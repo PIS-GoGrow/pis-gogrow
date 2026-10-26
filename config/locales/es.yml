@@ -862,19 +862,14 @@ es:
         no_notes: "Sin notas"
         edit: "Editar"
         rejection_reason: "Motivo de rechazo"
-        edit_dialog:
-          title: "Modificar pedido"
-          description: "Podés cambiar la cantidad, las opciones del plato, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo."
-          quantity: "Cantidad"
-          address: "Dirección de entrega"
-          notes: "Notas"
-          notes_placeholder: "Sin salsa, sin cebolla…"
-          back: "Volver"
-          confirm: "Guardar cambios"
         cannot_edit:
           already_confirmed: "El proveedor ya confirmó este pedido, así que no se puede modificar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede modificar."
+      edit:
+        title: "Modificar pedido"
+        address: "Dirección de entrega"
+        save: "Guardar cambios"
       addresses:
         office: "Oficina"
         home: "Casa"
