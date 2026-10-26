@@ -11,6 +11,7 @@ class Provider::DashboardIndexSerializer < ApplicationSerializer
     :month_orders_count,
     :month_dishes_count,
     :average_rating,
+    :top_rated,
     :completed_sections_count,
     :sections_total
 
@@ -24,6 +25,7 @@ class Provider::DashboardIndexSerializer < ApplicationSerializer
   typelize month_orders_count: :number
   typelize month_dishes_count: :number
   typelize average_rating: :number?
+  typelize top_rated: "Array<{ name: string; rating: number }>"
   typelize completed_sections_count: :number
   typelize sections_total: :number
 
