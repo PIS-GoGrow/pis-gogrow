@@ -169,6 +169,18 @@ RSpec.describe "Provider::Invoices", type: :request do
       }.not_to change(Invoice, :count)
 
       expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
+    end
+
+    it "returns not found when account_id does not exist" do
+      sign_in provider_user, role: :provider
+
+      expect {
+        post provider_invoices_path, params: invoice_params(account_id: 999_999)
+      }.not_to change(Invoice, :count)
+
+      expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
     end
 
     it "does not find the account of an employee" do
@@ -177,6 +189,7 @@ RSpec.describe "Provider::Invoices", type: :request do
       post provider_invoices_path, params: invoice_params(account_id: accounts(:one_tuviandita_current).id)
 
       expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
     end
   end
 
@@ -215,6 +228,18 @@ RSpec.describe "Provider::Invoices", type: :request do
       }.not_to change(Invoice, :count)
 
       expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
+    end
+
+    it "returns not found when deleting a non-existent invoice" do
+      sign_in provider_user, role: :provider
+
+      expect {
+        delete provider_invoice_path(id: 999_999)
+      }.not_to change(Invoice, :count)
+
+      expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
     end
   end
 
@@ -245,6 +270,24 @@ RSpec.describe "Provider::Invoices", type: :request do
       sign_in provider_user, role: :provider
 
       get file_provider_invoice_path(invoice)
+
+      expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
+    end
+
+    it "returns not found when requesting a non-existent invoice file" do
+      sign_in provider_user, role: :provider
+
+      get file_provider_invoice_path(id: 999_999)
+
+      expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
+    end
+
+    it "returns not found when invoice ID is non-numeric" do
+      sign_in provider_user, role: :provider
+
+      get "/proveedor/facturas/invalido/archivo"
 
       expect(response).to have_http_status(:not_found)
       expect(inertia).to render_component("errors/not_found")

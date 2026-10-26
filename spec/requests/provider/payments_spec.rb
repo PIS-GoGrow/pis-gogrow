@@ -297,7 +297,53 @@ RSpec.describe "Provider payments", type: :request do
     get receipt_provider_payment_path(payment)
 
     expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
     expect(payment.reload).to be_rejected
+  end
+
+  it "returns 404 when opening a non-existent receipt file" do
+    user, _payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    get receipt_provider_payment_path(id: 999_999)
+
+    expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
+  end
+
+  it "returns 404 when receipt ID is non-numeric" do
+    user, _payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    get "/proveedor/comprobantes/invalido/archivo"
+
+    expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
+  end
+
+  it "returns 404 when reviewing a non-existent payment without altering data" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    expect {
+      patch provider_payment_path(id: 999_999), params: { status: "approved" }
+    }.not_to change { payment.reload.status }
+
+    expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
+  end
+
+  it "returns 404 when reviewing a payment belonging to another provider" do
+    _user, payment = setup_submitted_payment
+    other = create_provider("other-review-provider@gmail.com")
+    sign_in(other.user, role: :provider)
+
+    expect {
+      patch provider_payment_path(payment), params: { status: "approved" }
+    }.not_to change { payment.reload.status }
+
+    expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
   end
 
   it "redirects a consumer trying to review a payment" do
