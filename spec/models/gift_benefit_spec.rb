@@ -54,16 +54,15 @@ RSpec.describe GiftBenefit, type: :model do
       expect(rule.applicable_to?(consumer, date: Date.new(2025, 12, 31))).to be true
     end
 
-    it "es false el día anterior a effective_from" do
-      expect(rule.applicable_to?(consumer, date: Date.new(2025, 12, 19))).to be false
+    it "es true antes de effective_from, para poder pedir por adelantado" do
+      expect(rule.applicable_to?(consumer, date: Date.new(2025, 12, 19))).to be true
     end
 
     it "es false el día siguiente a deadline_date" do
       expect(rule.applicable_to?(consumer, date: Date.new(2026, 1, 1))).to be false
     end
 
-    it "es false lejos del rango, antes y después" do
-      expect(rule.applicable_to?(consumer, date: Date.new(2025, 1, 1))).to be false
+    it "es false lejos después del rango" do
       expect(rule.applicable_to?(consumer, date: Date.new(2027, 6, 15))).to be false
     end
 
@@ -75,8 +74,8 @@ RSpec.describe GiftBenefit, type: :model do
         expect(rule.applicable_to?(consumer, date: Date.new(2025, 7, 1))).to be true
       end
 
-      it "es false el día anterior y el siguiente" do
-        expect(rule.applicable_to?(consumer, date: Date.new(2025, 6, 30))).to be false
+      it "es true el día anterior y false el siguiente" do
+        expect(rule.applicable_to?(consumer, date: Date.new(2025, 6, 30))).to be true
         expect(rule.applicable_to?(consumer, date: Date.new(2025, 7, 2))).to be false
       end
     end
@@ -91,7 +90,7 @@ RSpec.describe GiftBenefit, type: :model do
       end
 
       it "respeta los extremos" do
-        expect(rule.applicable_to?(consumer, date: Date.new(2025, 12, 27))).to be false
+        expect(rule.applicable_to?(consumer, date: Date.new(2025, 12, 27))).to be true
         expect(rule.applicable_to?(consumer, date: Date.new(2026, 1, 5))).to be true
         expect(rule.applicable_to?(consumer, date: Date.new(2026, 1, 6))).to be false
       end
@@ -109,8 +108,7 @@ RSpec.describe GiftBenefit, type: :model do
     end
 
     context "el año no influye (las fechas son absolutas, no anuales)" do
-      it "no se aplica en la misma fecha de otro año" do
-        expect(rule.applicable_to?(consumer, date: Date.new(2024, 12, 25))).to be false
+      it "no se aplica en la misma fecha del año siguiente" do
         expect(rule.applicable_to?(consumer, date: Date.new(2026, 12, 25))).to be false
       end
     end
@@ -136,9 +134,9 @@ RSpec.describe GiftBenefit, type: :model do
         end
       end
 
-      it "es false si hoy está antes o después del rango" do
+      it "es true si hoy está antes del rango y false si está después" do
         travel_to Date.new(2025, 12, 1) do
-          expect(rule.applicable_to?(consumer)).to be false
+          expect(rule.applicable_to?(consumer)).to be true
         end
         travel_to Date.new(2026, 2, 1) do
           expect(rule.applicable_to?(consumer)).to be false

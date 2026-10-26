@@ -34,7 +34,7 @@ const disabledStyle =
   "disabled:border-transparent disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none"
 
 interface ProviderOrderActionsProps {
-  order: Pick<ProviderOrder, "id" | "status">
+  order: Pick<ProviderOrder, "id" | "status" | "rejectable">
   className?: string
   keepVisible?: boolean
   stackOnMobile?: boolean
@@ -53,7 +53,7 @@ export default function ProviderOrderActions({
   const [details, setDetails] = useState("")
 
   const canConfirm = order.status === "pending"
-  const canDecideReject = canConfirm || order.status === "confirmed"
+  const canDecideReject = order.rejectable
 
   if (!canDecideReject && !keepVisible) return null
 
@@ -93,7 +93,10 @@ export default function ProviderOrderActions({
         // Inertia considera exitosa la visita aunque el servidor haya rechazado
         // la decisión: el flash de error es lo que distingue los dos casos.
         onSuccess: (page) => {
-          if (!page.flash.alert) {
+          const hasAlert =
+            (page.props as { flash?: { alert?: string } })?.flash?.alert ??
+            page.flash?.alert
+          if (!hasAlert) {
             setOpen(false)
             setReason("")
             setDetails("")

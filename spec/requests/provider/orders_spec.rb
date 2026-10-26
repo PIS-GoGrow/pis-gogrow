@@ -90,6 +90,22 @@ RSpec.describe "Provider::Orders", type: :request do
       )
     end
 
+    it "flags which orders the provider can still reject" do
+      sign_in users(:provider_user), role: :provider
+
+      get provider_orders_path
+
+      props = inertia.props.deep_symbolize_keys
+      upcoming = props[:upcoming_orders].index_by { it[:id] }
+      past = props[:past_orders].index_by { it[:id] }
+
+      expect(upcoming[orders(:upcoming_pending_today).id]).to include(rejectable: true)
+      expect(upcoming[orders(:upcoming_confirmed_future).id]).to include(rejectable: true)
+      expect(upcoming[orders(:history_cancelled_future).id]).to include(rejectable: false)
+      expect(past[orders(:history_pending_past).id]).to include(rejectable: true)
+      expect(past[orders(:history_confirmed_past).id]).to include(rejectable: false)
+    end
+
     it "lists the past orders of the signed-in provider, most recent delivery first" do
       other_provider_order
       older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10, amount: 5)
@@ -232,6 +248,16 @@ RSpec.describe "Provider::Orders", type: :request do
           "address" => "Colonia 1370, Apto 4", "delivery_method" => "home"
         }
       }
+    end
+
+    it "serializes rejectable flag as false for a past confirmed order and true for upcoming" do
+      sign_in users(:provider_user), role: :provider
+
+      get provider_order_path(orders(:history_confirmed_past))
+      expect(inertia).to have_props { |props| props["order"]["rejectable"] == false }
+
+      get provider_order_path(orders(:upcoming_confirmed_future))
+      expect(inertia).to have_props { |props| props["order"]["rejectable"] == true }
     end
 
     it "sends historical dish details and totals rather than the edited menu values" do
@@ -595,6 +621,85 @@ RSpec.describe "Provider::Orders", type: :request do
 
       expect(order.reload).to be_rejected
       expect(order.rejection_reason).to eq("out_of_stock")
+    end
+
+    it "leaves a confirmed order whose delivery date has passed as it was" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_confirmed_past)
+
+      patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+
+      expect(order.reload).to be_confirmed
+      expect(order.rejected_at).to be_nil
+
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_not_rejectable"))
+    end
+
+    it "blocks rejecting a past confirmed order even with invalid or missing params" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_confirmed_past)
+
+      [ {}, { reason: nil }, { reason: "invalid_reason" }, { reason: 12345 } ].each do |invalid_params|
+        patch reject_provider_order_path(order), params: invalid_params
+
+        expect(order.reload).to be_confirmed
+        expect(order.rejected_at).to be_nil
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_rejectable"))
+      end
+    end
+
+    it "preserves accounts amounts and database records when rejection of past confirmed order is rejected" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_confirmed_past)
+      accounts = order.accounts
+      original_amounts = accounts.map(&:amount)
+
+      expect {
+        patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+      }.not_to change(OrderEvent, :count)
+
+      expect(order.accounts.reload.map(&:amount)).to eq(original_amounts)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "leaves a confirmed order without delivery date as it was" do
+      sign_in users(:provider_user), role: :provider
+      order = orders(:history_without_schedule)
+      order.update_columns(status: Order.statuses[:confirmed], delivery_date: nil, provider_id: providers(:tuviandita).id)
+
+      patch reject_provider_order_path(order), params: { reason: "out_of_stock" }
+
+      expect(order.reload).to be_confirmed
+      follow_redirect!
+      expect(inertia).to have_flash(alert: I18n.t("validations.order_not_rejectable"))
+    end
+
+    it "redirects unauthenticated requests to sign in" do
+      patch reject_provider_order_path(orders(:history_confirmed_past)), params: { reason: "out_of_stock" }
+
+      expect(response).to redirect_to(provider_sign_in_path)
+      expect(orders(:history_confirmed_past).reload).to be_confirmed
+    end
+
+    it "denies consumer role access to reject provider orders" do
+      sign_in users(:one), role: :consumer
+
+      patch reject_provider_order_path(orders(:history_confirmed_past)), params: { reason: "out_of_stock" }
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:history_confirmed_past).reload).to be_confirmed
+    end
+
+    it "denies admin role access to reject provider orders" do
+      sign_in users(:admin), role: :admin
+
+      patch reject_provider_order_path(orders(:history_confirmed_past)), params: { reason: "out_of_stock" }
+
+      expect(response).to redirect_to(root_path)
+      expect(orders(:history_confirmed_past).reload).to be_confirmed
     end
 
     it "leaves an order that is no longer pending as it was" do

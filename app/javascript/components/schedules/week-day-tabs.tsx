@@ -10,6 +10,7 @@ import { schedules as schedulesRoutes } from "@/routes"
 interface Day {
   date: string
   publishable: boolean
+  schedules: unknown[]
 }
 
 interface WeekDayTabsProps {
@@ -130,12 +131,17 @@ export default function WeekDayTabs({
             key={day.date}
             value={day.date}
             className={cn(
-              "data-[state=on]:bg-primary data-[state=on]:text-primary-foreground flex h-12 flex-1 flex-col items-center justify-center gap-0 rounded-lg border text-sm leading-tight",
+              "group data-[state=on]:bg-primary data-[state=on]:text-primary-foreground flex h-14 flex-1 flex-col items-center justify-center gap-0 rounded-lg border text-sm leading-tight",
               !day.publishable && "text-muted-foreground",
             )}
           >
             <span>{format(day.date, { weekday: "short" })}</span>
             <span>{Number(day.date.slice(8))}</span>
+            {day.schedules.length > 0 && (
+              <span className="group-data-[state=on]:text-primary-foreground text-[10px] leading-none font-medium text-green-600 dark:text-green-400">
+                {t("pages.schedules.index.published")}
+              </span>
+            )}
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
