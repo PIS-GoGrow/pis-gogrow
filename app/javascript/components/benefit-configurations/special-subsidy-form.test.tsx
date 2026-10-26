@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type React from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { Employee, SpecialSubsidy } from "@/types/serializers"
 
@@ -62,11 +62,10 @@ const gift: SpecialSubsidy = {
   },
 }
 
-function localDateString(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-    2,
-    "0",
-  )}-${String(date.getDate()).padStart(2, "0")}`
+function dayButton(day: number) {
+  return within(screen.getByRole("grid")).getByRole("button", {
+    name: new RegExp(` ${day} de octubre de 2026`),
+  })
 }
 
 function renderForm(subsidy?: SpecialSubsidy) {
@@ -97,7 +96,9 @@ describe("SpecialSubsidyForm", () => {
   it("shows only the fields of the selected condition", () => {
     renderForm(gift)
 
-    expect(screen.getByLabelText(/disponible desde/i)).toHaveValue("2099-01-10")
+    expect(screen.getByLabelText(/disponible desde/i)).toHaveTextContent(
+      "Enero 10, 2099",
+    )
     expect(screen.getByLabelText(/cantidad de/i)).toHaveValue(3)
     expect(screen.getByLabelText("Validez")).toHaveValue(2)
     expect(screen.queryByLabelText(/es mayor a/i)).not.toBeInTheDocument()
@@ -134,24 +135,43 @@ describe("SpecialSubsidyForm", () => {
     expect(screen.getByRole("button", { name: "Modificar" })).toBeDisabled()
   })
 
-  it("does not allow a past effective date for a gift", () => {
-    renderForm(gift)
-
-    const effectiveFrom = screen.getByLabelText(/disponible desde/i)
-
-    const today = localDateString(new Date())
-
-    const yesterdayDate = new Date()
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1)
-    const yesterday = localDateString(yesterdayDate)
-
-    expect(effectiveFrom).toHaveAttribute("min", today)
-
-    fireEvent.change(effectiveFrom, {
-      target: { value: yesterday },
+  describe("effective date calendar", () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ["Date"] })
+      vi.setSystemTime(new Date(2026, 9, 23, 12))
     })
 
-    expect(screen.getByRole("button", { name: "Modificar" })).toBeDisabled()
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    const upcomingGift: SpecialSubsidy = {
+      ...gift,
+      condition: { ...gift.condition!, effective_from: "2026-10-25" },
+    }
+
+    it("does not allow a past effective date for a gift", async () => {
+      const user = userEvent.setup()
+      renderForm(upcomingGift)
+
+      await user.click(screen.getByLabelText(/disponible desde/i))
+
+      expect(dayButton(22)).toBeDisabled()
+      expect(dayButton(23)).toBeEnabled()
+    })
+
+    it("sets the effective date picked in the calendar", async () => {
+      const user = userEvent.setup()
+      renderForm(upcomingGift)
+
+      await user.click(screen.getByLabelText(/disponible desde/i))
+      await user.click(dayButton(28))
+
+      expect(screen.getByLabelText(/disponible desde/i)).toHaveTextContent(
+        "Octubre 28, 2026",
+      )
+      expect(screen.getByRole("button", { name: "Modificar" })).toBeEnabled()
+    })
   })
 
   it("requires at least one employee when selecting employees", async () => {

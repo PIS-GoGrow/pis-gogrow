@@ -119,6 +119,7 @@ class BenefitConfiguration < ApplicationRecord
       consumer.benefits.create!(
         amount: benefit_limit,
         due_date: benefit_deadline(consumer, date),
+        starts_on: benefit_start,
         percentage: subsidy_percentage,
         description: name,
         status: :current,
@@ -173,6 +174,7 @@ class BenefitConfiguration < ApplicationRecord
         benefit.update!(
           amount: benefit_limit,
           due_date: benefit_deadline(consumer, date),
+          starts_on: benefit_start,
           max_price: benefit_max_price,
           percentage: subsidy_percentage,
           description: name
@@ -219,7 +221,7 @@ class BenefitConfiguration < ApplicationRecord
     when BirthdayBenefit, OnboardingBenefit
       { type: rule.is_a?(BirthdayBenefit) ? "birthday" : "onboarding", limit: rule.limit, **validity_in_days(rule.deadline_days) }
     when GiftBenefit
-      { type: "gift", limit: rule.limit, effective_from: rule.effective_from, **validity_between(rule.effective_from, rule.deadline_date) }
+      { type: "gift", limit: rule.limit, effective_from: rule.effective_from, **validity_between(rule.effective_from, rule.deadline_date&.next_day) }
     end
   end
 
@@ -239,7 +241,7 @@ class BenefitConfiguration < ApplicationRecord
 
   # Una semana son 7 días y un mes, 30: la validez de cumpleaños y onboarding se
   # guarda como deadline_days. La del premio se suma a la fecha de inicio en el
-  # calendario, porque tiene una fecha límite real.
+  # calendario, porque tiene una fecha límite real, que es el último día de uso.
   def special_rule_attributes(condition)
     amount = condition[:validity_amount].presence&.to_i
     unit = condition[:validity_unit].presence_in(%w[days weeks months])
@@ -259,7 +261,7 @@ class BenefitConfiguration < ApplicationRecord
         type: GiftBenefit.name,
         limit: condition[:limit],
         effective_from:,
-        deadline_date: (effective_from.advance(unit.to_sym => amount) if effective_from && amount && unit)
+        deadline_date: (effective_from.advance(unit.to_sym => amount).prev_day if effective_from && amount && unit)
       }
     end
   end
@@ -321,6 +323,11 @@ class BenefitConfiguration < ApplicationRecord
       .map { |rule| rule.benefit_deadline consumer, date: }
       .filter { |deadline| !deadline.nil? }
       .min
+  end
+
+  # Devuelve el mayor inicio impuesto por las reglas. Si no hay, devuelve nil
+  def benefit_start
+    benefit_rules.filter_map(&:benefit_start).max
   end
 
   # Devuelve el menor max_price impuesto por las reglas. Si no hay, devuelve nil

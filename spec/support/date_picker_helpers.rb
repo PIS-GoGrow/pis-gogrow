@@ -21,9 +21,16 @@ module DatePickerHelpers
   def day_button(date)
     plain = day_label(date)
 
-    all("button.rdp-day").find do |button|
-      button[:'aria-label'].to_s.delete_prefix("Hoy, ").split(", seleccionado").first == plain
+    3.times do
+      btn = all("button.rdp-day").find do |button|
+        button[:'aria-label'].to_s.delete_prefix("Hoy, ").split(", seleccionado").first == plain
+      end
+      return btn if btn
+
+      sleep 0.05
     end
+
+    nil
   end
 
   # Marca un día de la semana y espera a que quede marcado.
@@ -99,18 +106,49 @@ module DatePickerHelpers
     expect(page).to have_no_css(OPEN_CALENDAR)
   end
 
-  # El calendario abre en el mes de `opens_at`; hay que navegar hasta el mes del
-  # día buscado.
-  def show_month(date, opens_at)
-    visible = opens_at.beginning_of_month
+  # Obtiene el mes actualmente visible en el calendario leyendo los controles
+  # nativos o las celdas del mes en el DOM.
+  def visible_month
+    year, month = page.evaluate_script(<<~JS)
+      (() => {
+        const cal = document.querySelector(#{OPEN_CALENDAR.to_json})
+        if (!cal) return null
+        const monthSelect = cal.querySelector('select.rdp-months_dropdown')
+        const yearSelect = cal.querySelector('select.rdp-years_dropdown')
+        if (monthSelect && yearSelect) {
+          return [parseInt(yearSelect.value, 10), parseInt(monthSelect.value, 10) + 1]
+        }
+        const cell = cal.querySelector('td[role=gridcell]:not([data-outside=true])')
+        if (cell && cell.dataset.month) {
+          const parts = cell.dataset.month.split('-')
+          return [parseInt(parts[0], 10), parseInt(parts[1], 10)]
+        }
+        return null
+      })()
+    JS
+    Date.new(year, month, 1) if year && month
+  end
+
+  # Navega hasta el mes del día buscado basándose en el mes que realmente está
+  # a la vista en el calendario.
+  def show_month(date, opens_at = Date.current)
     target = date.beginning_of_month
 
     24.times do
+      visible = visible_month || opens_at.beginning_of_month
       return true if visible == target
 
       forward = visible < target
       find("button[aria-label='Ir al mes #{forward ? 'siguiente' : 'anterior'}']").click
-      visible = visible >> (forward ? 1 : -1)
+
+      expected = visible >> (forward ? 1 : -1)
+      Timeout.timeout(Capybara.default_max_wait_time) do
+        loop do
+          break if visible_month == expected
+
+          sleep 0.05
+        end
+      end
     end
 
     false
