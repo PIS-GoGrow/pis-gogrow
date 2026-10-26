@@ -76,6 +76,10 @@ configurations:
     roles: [consumer]
     configurable: true
 
+  coupons:
+    roles: [consumer]
+    configurable: false
+
 # En esta lista se definen los eventos que generan notificaciones. Para agregar
 # uno, hay que especificar una de las claves de configuración de arriba en el
 # atributo configuration, especificar un único rol de los que están disponibles
@@ -163,5 +167,10 @@ events:
 
   order_deadline_reminder:
     configuration: order_reminders
+    role: consumer
+    requires_action: false
+
+  coupon_assigned:
+    configuration: coupons
     role: consumer
     requires_action: false

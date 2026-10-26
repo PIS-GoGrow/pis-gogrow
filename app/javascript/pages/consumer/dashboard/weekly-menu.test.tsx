@@ -76,6 +76,8 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
       date: "2026-10-12",
       setDate: vi.fn(),
       benefit: defaultBenefit,
+      activeProviders: new Set<number>(),
+      setActiveProviders: vi.fn(),
       providers: [{ id: 1, name: "Tu Viandita", order_deadline: null }],
       schedules: [sampleSchedule],
       closures: [],

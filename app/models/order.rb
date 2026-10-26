@@ -6,6 +6,8 @@
 # la cuenta se le asigna automáticamente. Las cuentas de una orden no deberían
 # asignarse manualmente.
 class Order < ApplicationRecord
+  include Auditable
+
   # La migración 20260911234117 usa el modelo Order, así que al reconstruir la
   # base desde cero el enum se evalúa antes de que exista su columna.
   attribute :delivery_method, :integer
@@ -32,6 +34,7 @@ class Order < ApplicationRecord
   # El pedido conserva el plato tal como estaba al pedirlo: editarlo después no
   # tiene que reescribir el historial.
   before_create :snapshot_order_context
+  audits :amount, :delivery_method, :address, :notes, :selected_options, :price, :discounted_price
 
   belongs_to :consumer
   belongs_to :schedule
@@ -201,16 +204,29 @@ class Order < ApplicationRecord
     cancellation_block_reason.nil?
   end
 
+  # Solo los confirmados suman a la deuda de la cuenta, así que un confirmado
+  # cuya entrega ya pasó no se rechaza: cambiaría un monto que ya se cobró. Sin
+  # fecha de entrega no hay forma de saberlo y se trata igual que uno pasado.
+  def rejectable?
+    pending? || (confirmed? && delivery_date.present? && !delivery_date.before?(Date.current))
+  end
+
   # Confirmar solo corre sobre pedidos pendientes; rechazar también sobre los
   # confirmados, porque el proveedor puede no poder cumplir lo que aceptó. Un
   # pedido cancelado o ya rechazado no se toca: pisaría la cancelación del
   # empleado. El lock es por el doble envío, igual que en cancel.
   def decide(status, reason: nil, details: nil, by: nil)
     with_lock do
-      return false unless pending? || (confirmed? && status.to_s == "rejected")
+      rejecting = status.to_s == "rejected"
+      return false unless pending? || (confirmed? && rejecting)
+
+      if rejecting && !rejectable?
+        errors.add(:base, I18n.t("validations.order_not_rejectable"))
+        return false
+      end
 
       attrs = { status: status }
-      if status.to_s == "rejected"
+      if rejecting
         attrs[:rejection_reason] = reason
         attrs[:rejection_details] = details
         attrs[:rejected_at] = Time.current

@@ -1,6 +1,7 @@
 import { Head, usePage } from "@inertiajs/react"
 import { useEffect, useMemo, useState } from "react"
 
+import { useConsumerMenuFilter } from "@/hooks/consumer-menu-filter"
 import useSessionStorage from "@/hooks/use-session-storage"
 import AppLayout from "@/layouts/app-layout"
 import { consumerDashboard } from "@/routes"
@@ -29,6 +30,7 @@ export default function Index({
     week.days[0]?.date ??
     ""
   const [date, setDate] = useState(initialDate)
+  const { activeProviders, setActiveProviders } = useConsumerMenuFilter()
   const [selected, setSelected] = useState<Schedule | null>(null)
   // Guardamos el carrito en sessionStorage. Así, se persiste si el consumidor
   // recarga la página o navega por la aplicación, pero se borra si cierra la
@@ -191,6 +193,8 @@ export default function Index({
             setDate={setDate}
             benefit={benefit}
             providers={providers}
+            activeProviders={activeProviders}
+            setActiveProviders={setActiveProviders}
             schedules={visibleSchedules}
             closures={closures}
             cart={cart}

@@ -1,12 +1,30 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type React from "react"
+import { useState } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { ConsumerDashboardIndex } from "@/types"
 
 import type { Schedule } from "./consumer-types"
 import { WeeklyMenu } from "./weekly-menu"
+
+type MenuProps = Omit<
+  Parameters<typeof WeeklyMenu>[0],
+  "activeProviders" | "setActiveProviders"
+>
+
+function ControlledWeeklyMenu(props: MenuProps) {
+  const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
+
+  return (
+    <WeeklyMenu
+      {...props}
+      activeProviders={activeProviders}
+      setActiveProviders={setActiveProviders}
+    />
+  )
+}
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -63,9 +81,7 @@ const benefit: ConsumerDashboardIndex["benefit"] = {
   specials: [],
 }
 
-function menuProps(
-  overrides: Partial<Parameters<typeof WeeklyMenu>[0]> = {},
-): Parameters<typeof WeeklyMenu>[0] {
+function menuProps(overrides: Partial<MenuProps> = {}): MenuProps {
   return {
     name: "Sofía",
     date: "2026-10-26",
@@ -98,9 +114,126 @@ describe("WeeklyMenu provider filter", () => {
     window.sessionStorage.clear()
   })
 
+  it("shows only dishes from multiple selected provider IDs and deselects individually", async () => {
+    const user = userEvent.setup()
+    const thirdProvider = { id: 3, name: "La Cocina", order_deadline: null }
+    const thirdSchedule = schedule(3, thirdProvider)
+    thirdSchedule.menu.name = "Ensalada de quinoa"
+    render(
+      <ControlledWeeklyMenu
+        {...menuProps({
+          providers: [...providers, thirdProvider],
+          schedules: [
+            schedule(1, providers[0]),
+            schedule(2, providers[1]),
+            thirdSchedule,
+          ],
+        })}
+      />,
+    )
+
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+    await user.click(screen.getByLabelText("La Cocina"))
+    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+
+    expectFilterLabel("Tu Viandita, Endulzate by Noe")
+    expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
+    expect(screen.getByText("Tarta de verduras")).toBeInTheDocument()
+    expect(screen.queryByText("Ensalada de quinoa")).not.toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+    await user.click(screen.getByLabelText("Tu Viandita"))
+    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+
+    expectFilterLabel("Endulzate by Noe")
+    expect(screen.queryByText("Milanesa con papas")).not.toBeInTheDocument()
+    expect(screen.getByText("Tarta de verduras")).toBeInTheDocument()
+    expect(screen.queryByText("Ensalada de quinoa")).not.toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+    await user.click(screen.getByLabelText("Todos"))
+    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+
+    expectFilterLabel("Todos")
+    expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
+    expect(screen.getByText("Tarta de verduras")).toBeInTheDocument()
+    expect(screen.getByText("Ensalada de quinoa")).toBeInTheDocument()
+  })
+
+  it("keeps all offers unrestricted when every provider is selected and a new one appears", async () => {
+    const user = userEvent.setup()
+    const firstProps = menuProps()
+    const { rerender } = render(<ControlledWeeklyMenu {...firstProps} />)
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+    await user.click(screen.getByLabelText("Endulzate by Noe"))
+    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+    expect(screen.queryByText("Tarta de verduras")).not.toBeInTheDocument()
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+    await user.click(screen.getByLabelText("Endulzate by Noe"))
+    expect(screen.getByLabelText("Todos")).toBeChecked()
+    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+    const newProvider = { id: 3, name: "Nuevo proveedor", order_deadline: null }
+    const newSchedule = schedule(3, newProvider)
+    newSchedule.menu.name = "Nueva oferta"
+    rerender(
+      <ControlledWeeklyMenu
+        {...firstProps}
+        providers={[...providers, newProvider]}
+        schedules={[...firstProps.schedules, newSchedule]}
+      />,
+    )
+    expectFilterLabel("Todos")
+    expect(screen.getByText("Nueva oferta")).toBeInTheDocument()
+    expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
+    expect(screen.getByText("Tarta de verduras")).toBeInTheDocument()
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+    screen
+      .getAllByRole("checkbox")
+      .forEach((checkbox) => expect(checkbox).toBeChecked())
+  })
+
+  it("filters providers by ID even when their names match", async () => {
+    const user = userEvent.setup()
+    const sameNameProviders = providers.map((provider) => ({
+      ...provider,
+      name: "Mismo nombre",
+    }))
+    render(
+      <ControlledWeeklyMenu
+        {...menuProps({
+          providers: sameNameProviders,
+          schedules: [
+            schedule(1, sameNameProviders[0]),
+            schedule(2, sameNameProviders[1]),
+          ],
+        })}
+      />,
+    )
+
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedores" }),
+    )
+    await user.click(screen.getAllByLabelText("Mismo nombre")[1])
+    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+
+    expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
+    expect(screen.queryByText("Tarta de verduras")).not.toBeInTheDocument()
+  })
   it("shows every provider by default and filters by one provider", async () => {
     const user = userEvent.setup()
-    render(<WeeklyMenu {...menuProps()} />)
+    render(<ControlledWeeklyMenu {...menuProps()} />)
 
     expectFilterLabel("Todos")
     expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
@@ -109,7 +242,7 @@ describe("WeeklyMenu provider filter", () => {
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
-    await user.click(screen.getByLabelText("Tu Viandita"))
+    await user.click(screen.getByLabelText("Endulzate by Noe"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
     expectFilterLabel("Tu Viandita")
@@ -120,16 +253,16 @@ describe("WeeklyMenu provider filter", () => {
   it("keeps the provider filter when the selected day changes", async () => {
     const user = userEvent.setup()
     const firstProps = menuProps()
-    const { rerender } = render(<WeeklyMenu {...firstProps} />)
+    const { rerender } = render(<ControlledWeeklyMenu {...firstProps} />)
 
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
-    await user.click(screen.getByLabelText("Tu Viandita"))
+    await user.click(screen.getByLabelText("Endulzate by Noe"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
     rerender(
-      <WeeklyMenu
+      <ControlledWeeklyMenu
         {...firstProps}
         date="2026-10-27"
         schedules={[
@@ -146,12 +279,12 @@ describe("WeeklyMenu provider filter", () => {
 
   it("removes the filter by applying Todos", async () => {
     const user = userEvent.setup()
-    render(<WeeklyMenu {...menuProps()} />)
+    render(<ControlledWeeklyMenu {...menuProps()} />)
 
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
-    await user.click(screen.getByLabelText("Tu Viandita"))
+    await user.click(screen.getByLabelText("Endulzate by Noe"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
@@ -166,7 +299,7 @@ describe("WeeklyMenu provider filter", () => {
 
   it("distinguishes the unfiltered and filtered empty states", async () => {
     const user = userEvent.setup()
-    render(<WeeklyMenu {...menuProps({ schedules: [] })} />)
+    render(<ControlledWeeklyMenu {...menuProps({ schedules: [] })} />)
 
     expect(
       screen.getByText(

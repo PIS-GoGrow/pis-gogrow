@@ -120,6 +120,10 @@
         "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
         "title": "Pagos a proveedores"
       },
+      "coupons": {
+        "description": "Avisos cuando RR. HH. te da un cupón.",
+        "title": "Cupones"
+      },
       "debt_alerts": {
         "description": "Recibí una notificación cuando tu deuda supere el monto definido por RR. HH.",
         "title": "Alertas de deuda"
@@ -197,6 +201,13 @@
       "company_payment_upcoming": {
         "description": "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos.",
         "title": "Se acerca el vencimiento de un pago"
+      },
+      "coupon_assigned": {
+        "description": {
+          "one": "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} vianda para entregas del %{period}.",
+          "other": "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} viandas para entregas del %{period}."
+        },
+        "title": "Recibiste un cupón"
       },
       "debt_payment_reminder": {
         "description": "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}.",
@@ -382,7 +393,7 @@
               "condition": "Condición",
               "conditions": {
                 "birthday": "Cumpleaños",
-                "gift": "Premio",
+                "gift": "Cupón",
                 "onboarding": "Onboarding",
                 "seniority": "Antigüedad"
               },
@@ -770,7 +781,7 @@
             "cancel": "Cancelar",
             "label": "Proveedores:",
             "open": "Filtrar por proveedores",
-            "title": "Filtrar por Proveedores"
+            "title": "Filtrar por proveedores"
           }
         },
         "options": {
@@ -783,6 +794,10 @@
       "consumer_profiles": {
         "show": {
           "benefit": "Mi beneficio",
+          "coupon_discount": "%{percentage}% de descuento",
+          "coupon_period": "Para entregas del",
+          "coupon_remaining": "Te quedan",
+          "coupons": "Mis cupones",
           "due_date": "Vigente hasta",
           "max_price": "Tope por vianda",
           "meals_one": "%{count} vianda",
@@ -867,6 +882,7 @@
           "office": "Oficina"
         },
         "index": {
+          "all_providers": "Todos los proveedores",
           "base_price": "Precio base: %{amount}",
           "cancel": "Cancelar",
           "cancel_dialog": {
@@ -885,12 +901,15 @@
           "history_address": "Lo recibiste en: %{address} (%{delivery_method})",
           "history_empty_description": "Tus pedidos completados aparecerán aquí.",
           "history_empty_title": "No tenés pedidos anteriores",
+          "history_filtered_empty_description": "No tenés pedidos anteriores realizados a este proveedor.",
+          "history_filtered_empty_title": "No hay pedidos de este proveedor",
           "history_tab": "Historial",
           "no_address": "Sin dirección de entrega",
           "no_date": "Sin fecha de entrega",
           "no_menu": "Plato no disponible",
           "no_price": "Importe no disponible",
           "no_provider": "Proveedor no disponible",
+          "providers_label": "Proveedores:",
           "quantity": "x%{count}",
           "review": "Calificar vianda",
           "reviewed": "Vianda calificada",

@@ -1,6 +1,5 @@
 import { Link } from "@inertiajs/react"
 import { UtensilsCrossed } from "lucide-react"
-import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
@@ -32,6 +31,8 @@ interface Props {
   date: string
   setDate: (value: string) => void
   benefit: ConsumerDashboardIndex["benefit"]
+  activeProviders: Set<number>
+  setActiveProviders: (providers: Set<number>) => void
   providers: ConsumerDashboardIndex["providers"]
   schedules: Schedule[]
   closures: ConsumerClosure[]
@@ -55,6 +56,8 @@ export function WeeklyMenu({
   setDate,
   benefit,
   providers,
+  activeProviders,
+  setActiveProviders,
   schedules,
   closures,
   cart,
@@ -64,7 +67,6 @@ export function WeeklyMenu({
   openDetail,
 }: Props) {
   const { t } = useTranslation()
-  const [activeProviderId, setActiveProviderId] = useState<number | null>(null)
   // Se guarda en la sesión para que el aviso no vuelva al entrar a un plato y
   // volver al menú. Cada aviso (el de antes del cierre y el de durante) se
   // cierra por separado: la clave lleva el tipo y el id del cierre.
@@ -73,18 +75,20 @@ export function WeeklyMenu({
     [],
   )
   const currentDate = today()
-  const activeProvider = providers.find(
-    (provider) => provider.id === activeProviderId,
-  )
+
   const filteredSchedules =
-    activeProviderId === null
+    activeProviders.size === 0
       ? schedules
-      : schedules.filter(
-          (schedule) => schedule.menu.provider_id === activeProviderId,
+      : schedules.filter((schedule) =>
+          activeProviders.has(schedule.menu.provider_id),
         )
   const filterLabel =
-    activeProvider?.name ??
-    t("pages.consumer_dashboard.index.provider_filter.all")
+    activeProviders.size === 0
+      ? t("pages.consumer_dashboard.index.provider_filter.all")
+      : providers
+          .filter((provider) => activeProviders.has(provider.id))
+          .map((provider) => provider.name)
+          .join(", ")
   const soonClosures = closures.filter(
     (closure) =>
       closure.starts_on > date && !dismissed.includes(`soon-${closure.id}`),
@@ -93,7 +97,7 @@ export function WeeklyMenu({
     (closure) =>
       closure.starts_on <= date &&
       date <= closure.ends_on &&
-      (activeProviderId === null || closure.provider_id === activeProviderId),
+      (activeProviders.size === 0 || activeProviders.has(closure.provider_id)),
   )
   const closedBanners = closedToday.filter(
     (closure) => !dismissed.includes(`now-${closure.id}`),
@@ -151,17 +155,9 @@ export function WeeklyMenu({
               </span>
               <ProviderFilterSheet
                 providers={providers}
-                selectedProviders={
-                  activeProviderId === null
-                    ? new Set<number>()
-                    : new Set([activeProviderId])
-                }
-                selectionMode="single"
-                onApply={(selectedProviders) =>
-                  setActiveProviderId(
-                    selectedProviders.values().next().value ?? null,
-                  )
-                }
+                selectedProviders={activeProviders}
+                selectionMode="multiple"
+                onApply={setActiveProviders}
               />
             </div>
 
@@ -175,9 +171,18 @@ export function WeeklyMenu({
                     {t("pages.consumer_dashboard.index.empty.title")}
                   </EmptyTitle>
                   <EmptyDescription>
-                    {activeProviderId === null
-                      ? t("pages.consumer_dashboard.index.empty.all")
-                      : t("pages.consumer_dashboard.index.empty.filtered")}
+                    {activeProviders.size > 0 && closedToday.length > 0
+                      ? closedToday
+                          .map((closure) =>
+                            t("pages.consumer_dashboard.index.closure.empty", {
+                              provider: closure.provider_name,
+                              period: closure.period,
+                            }),
+                          )
+                          .join(" ")
+                      : activeProviders.size === 0
+                        ? t("pages.consumer_dashboard.index.empty.all")
+                        : t("pages.consumer_dashboard.index.empty.filtered")}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
