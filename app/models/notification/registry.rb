@@ -89,7 +89,9 @@ class Notification::Registry
           raise InvalidRegistry, "#{key}: rol #{role} no incluido en #{configuration_key}"
         end
 
-        requires_action = attrs.fetch(:requires_action)
+        requires_action = attrs.fetch(:requires_action)  do
+          raise InvalidRegistry, "#{key}: falta el campo requires_action"
+        end
 
         content_sid = attrs.fetch(:content_sid) do
           raise InvalidRegistry, "#{key}: falta content_sid, el identificador de la plantilla de Twilio"

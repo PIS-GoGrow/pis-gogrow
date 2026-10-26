@@ -201,3 +201,6 @@ events:
     configuration: coupons
     role: consumer
     requires_action: false
+    content_sid:
+      one: HXc77b0e6dd5fbdc92dafb769a1c7620db
+      other: HXc77b0e6dd5fbdc92dafb769a1c7620db
