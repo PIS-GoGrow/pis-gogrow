@@ -1273,7 +1273,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "keeps a special removed after the order was placed, only for the meals it already covered" do
-      order = place(1)
+      order = place(1, benefits: [ special.id ])
       benefit_configurations(:gift).deactivate!(by: users(:admin))
 
       modify(order, 2)
