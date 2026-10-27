@@ -3,8 +3,7 @@
 require "csv"
 
 # Arma el archivo con los pedidos que el proveedor está viendo en Pedidos. Los
-# filtros repiten la semántica de filterOrders (lib/provider-orders.ts) y el
-# texto de búsqueda usa los mismos campos que provider-order-days.tsx: si
+# filtros repiten filterOrders y searchableText (lib/provider-orders.ts): si
 # cambia uno, tiene que cambiar el otro, o el archivo deja de coincidir con la
 # pantalla.
 class Provider::OrdersExport
