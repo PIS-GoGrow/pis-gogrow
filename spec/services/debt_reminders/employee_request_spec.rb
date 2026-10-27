@@ -31,6 +31,25 @@ RSpec.describe DebtReminders::EmployeeRequest do
       end
     end
 
+    it "nombra a los proveedores a los que les debe" do
+      travel_to overdue_day do
+        notification = described_class.call(consumer:, requested_by: admin_user)
+
+        expect(notification.description).to include("con Other Provider User y Provider User.")
+      end
+    end
+
+    it "nombra una sola vez al proveedor que tiene varias cuentas vencidas" do
+      consumer.accounts.create!(provider: providers(:tuviandita), month: 2.months.ago.beginning_of_month, amount: 300)
+
+      travel_to overdue_day do
+        notification = described_class.call(consumer:, requested_by: admin_user)
+
+        expect(notification.description).to include("con Other Provider User y Provider User.")
+        expect(notification.description).to include("$1.250,75")
+      end
+    end
+
     it "no deja reclamarle a un empleado de otra empresa" do
       other_company = Company.create!(name: "Otra empresa", address: "Rincón 500")
       other_user = User.create!(name: "Ajeno", email: "ajeno@example.com", password: "Secret1*3*5*")

@@ -38,6 +38,24 @@ RSpec.describe DebtReminders::EmployeeEligibility do
     end
   end
 
+  describe "#provider_names" do
+    it "nombra a cada proveedor con deuda vencida, una sola vez y en orden" do
+      consumer.accounts.create!(provider: providers(:tuviandita), month: 2.months.ago.beginning_of_month, amount: 300)
+
+      travel_to overdue_day do
+        expect(described_class.new(consumer:).provider_names).to eq([ "Other Provider User", "Provider User" ])
+      end
+    end
+
+    it "usa un genérico cuando el proveedor se quedó sin usuario" do
+      providers(:endulzate).update_columns(user_id: nil)
+
+      travel_to overdue_day do
+        expect(described_class.new(consumer:).provider_names).to eq([ "Provider User", "un proveedor" ])
+      end
+    end
+  end
+
   describe "#reason" do
     it "no bloquea cuando hay deuda vencida y nunca se mandó un recordatorio" do
       travel_to overdue_day do
