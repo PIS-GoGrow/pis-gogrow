@@ -34,7 +34,7 @@ class WhatsappSenderJob < ApplicationJob
 
     from = ENV.fetch("TWILIO_PHONE")
     content_sid = Notification::Registry.content_sid(notification.event, count: notification.description_data[:count])
-    status_callback = "https://statistical-predicted-proceed-parcel.trycloudflare.com/twilio-callback"
+    status_callback = ENV.fetch("TWILIO_STATUS_CALLBACK_URL", nil) || Rails.application.routes.url_helpers.twilio_callback_url
 
     message = client.messages.create(
       from:,
