@@ -30,7 +30,7 @@ class Consumer < ApplicationRecord
     if debt <= threshold
       alert&.close!
     elsif alert
-      alert.update!(description: I18n.t!("notifications.debt_threshold_exceeded.description", **data))
+      alert.update!(description_data: data)
     else
       Notifier.call(event_key: :debt_threshold_exceeded, user:, notifiable: self, description_data: data)
     end
