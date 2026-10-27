@@ -21,18 +21,26 @@ interface Props<Id extends string | number> {
   providers: ProviderFilterOption<Id>[]
   selectedProviders: Set<Id>
   onApply: (providers: Set<Id>) => void
+  selectionMode?: "multiple" | "single"
+  allProvidersLabel?: string
 }
 
 export function ProviderFilterSheet<Id extends string | number>({
   providers,
   selectedProviders,
   onApply,
+  selectionMode = "multiple",
+  allProvidersLabel = "Todos",
 }: Props<Id>) {
   const [open, setOpen] = useState(false)
   const [draftProviders, setDraftProviders] = useState<Set<Id>>(new Set())
 
   function toggleProvider(providerId: Id) {
     setDraftProviders((selected) => {
+      if (selectionMode === "single") {
+        return selected.has(providerId) ? new Set() : new Set([providerId])
+      }
+
       const next = new Set(selected)
 
       if (next.has(providerId)) next.delete(providerId)
@@ -84,7 +92,7 @@ export function ProviderFilterSheet<Id extends string | number>({
                 htmlFor="dashboard-filter-all"
                 className="flex-1 cursor-pointer text-base leading-6 font-medium tracking-normal"
               >
-                Todos
+                {allProvidersLabel}
               </Label>
             </div>
 

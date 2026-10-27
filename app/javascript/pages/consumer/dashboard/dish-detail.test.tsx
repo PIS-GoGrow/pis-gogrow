@@ -13,16 +13,6 @@ type Benefit = ConsumerDashboardIndex["benefit"]
 // Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
 // plato, para tomar una decisión informada." Esta es la pantalla donde el
 // empleado ve esa información antes de decidir.
-//
-// TODO(integración): falta corregir el bloque de opiniones antes de poder
-// testear qué se muestra cuando un plato no tiene reseñas. Hoy la pantalla
-// fabrica una reseña de ejemplo, un puntaje 4.8, un autor ("Pedro"/"Lucía") y
-// una fecha fija, ninguno de los cuales sale de los datos — y Review ni
-// siquiera tiene columna de autor. Está registrado como defecto
-// (DEFECT-detalle-plato-reseñas-inventadas): no se fija acá el comportamiento
-// actual como si fuera el correcto. Historia, criterio 3: "si un dato opcional
-// no fue informado, la interfaz no muestra información engañosa ni valores
-// inventados".
 
 const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
   id: 1,
@@ -38,6 +28,8 @@ const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
     option_groups: [],
     provider_name: "Endulzate by Noe",
     home_delivery: true,
+    rating_average: null,
+    rating_count: 0,
     reviews: [],
     ...overrides,
   },
@@ -141,12 +133,17 @@ describe("DishDetail", () => {
     expect(screen.queryByText("Agregado")).not.toBeInTheDocument()
   })
 
+  // IBP-012, criterio 1: cada reseña publicada muestra su autor, su fecha, su
+  // puntaje y su texto, todos saliendo de los datos (no inventados).
   it("shows the real reviews of the dish", () => {
     renderDetail({
       item: schedule({
+        rating_average: 5,
+        rating_count: 1,
         reviews: [
           {
             id: 7,
+            author: "Lucía",
             description: "La salsa filetto es la mejor",
             rating: 5,
             created_at: "2026-09-15",
@@ -156,6 +153,63 @@ describe("DishDetail", () => {
     })
 
     expect(screen.getByText("La salsa filetto es la mejor")).toBeInTheDocument()
+    expect(screen.getByText("Lucía")).toBeInTheDocument()
+    expect(screen.getByText("15/09/26")).toBeInTheDocument()
+  })
+
+  // IBP-012, criterio 1: el promedio y la cantidad de valoraciones, con el
+  // conteo de todas las válidas aunque se muestren solo algunas reseñas.
+  it("shows the average rating and the number of ratings", () => {
+    renderDetail({
+      item: schedule({
+        rating_average: 4.8,
+        rating_count: 5,
+        reviews: [
+          {
+            id: 1,
+            author: "Pedro",
+            description: "Muy ricos",
+            rating: 5,
+            created_at: "2026-09-20",
+          },
+        ],
+      }),
+    })
+
+    expect(screen.getByText("4.8 (5)")).toBeInTheDocument()
+  })
+
+  // IBP-012, criterio 3: cuando la reseña no tiene autor conocido, no se inventa
+  // uno ni se filtra el null — se muestra "Anónimo".
+  it("shows an anonymous author when the review has none", () => {
+    renderDetail({
+      item: schedule({
+        rating_average: 4,
+        rating_count: 1,
+        reviews: [
+          {
+            id: 3,
+            author: null,
+            description: "Porción generosa",
+            rating: 4,
+            created_at: "2026-09-05",
+          },
+        ],
+      }),
+    })
+
+    expect(screen.getByText("Anónimo")).toBeInTheDocument()
+  })
+
+  // IBP-012, criterio 4: sin valoraciones se informa claramente, sin promedio ni
+  // reseñas inventadas.
+  it("states clearly when the dish has no ratings yet", () => {
+    const { container } = renderDetail()
+
+    expect(
+      screen.getByText("Este plato aún no fue calificado."),
+    ).toBeInTheDocument()
+    expect(container.textContent).not.toMatch(/4\.8|null|undefined|NaN/)
   })
 
   const groups = [

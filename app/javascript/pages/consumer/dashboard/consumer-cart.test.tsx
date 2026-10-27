@@ -64,6 +64,8 @@ const cartItem = (
     option_groups: [],
     provider_name: providerName,
     home_delivery: homeDelivery,
+    rating_average: null,
+    rating_count: 0,
     reviews: [],
   },
 })
