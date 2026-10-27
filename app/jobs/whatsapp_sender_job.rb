@@ -25,26 +25,33 @@ class WhatsappSenderJob < ApplicationJob
     notification.update! failed: true
   end
 
-  def perform(notification, event_key, title_data, description_data, phone)
+  def perform(notification)
     return if Rails.env.development? && ENV["TWILIO_DELIVERY_ENABLED"] != "true"
 
-    return if notification.whatsapp_sent_at.present?
+    return if notification.whatsapp_sent_at.present? && !notification.failed
 
     Rails.logger.info("Enviando notificación (notification #{notification.id})")
 
     from = ENV.fetch("TWILIO_PHONE")
-    content_sid = Notification::Registry.content_sid(event_key, count: description_data[:count])
+    content_sid = Notification::Registry.content_sid(notification.event, count: notification.description_data[:count])
+    status_callback = "https://statistical-predicted-proceed-parcel.trycloudflare.com/twilio-callback"
 
     message = client.messages.create(
-        from:,
-        content_sid:,
-        to: "whatsapp:#{phone}",
-        content_variables: content_variables(title_data, description_data)
+      from:,
+      content_sid:,
+      to: "whatsapp:#{notification.user.phone}",
+      content_variables: content_variables(notification.title_data, notification.description_data),
+      status_callback:
     )
 
     Rails.logger.info("Enviado mensaje (SID #{message.sid})")
 
-    notification.update! whatsapp_sent_at: Time.current, failed: false
+    notification.update!(
+      whatsapp_sent_at: Time.current,
+      failed: false,
+      twilio_sid: message.sid,
+      send_attempts: notification.send_attempts + 1
+    )
   rescue Twilio::REST::RestError => e
     klass = transient?(e) ? TransientTwilioError : PermanentTwilioError
     raise klass, "#{e.status_code}/#{e.code}: #{e.error_message}"

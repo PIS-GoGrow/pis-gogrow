@@ -244,7 +244,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_152258) do
   create_table "notifications", force: :cascade do |t|
     t.datetime "closed_at"
     t.datetime "created_at", null: false
-    t.string "description"
+    t.datetime "delivered_at"
+    t.json "description_data"
     t.string "event", null: false
     t.boolean "failed"
     t.bigint "notifiable_id", null: false
@@ -252,13 +253,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_152258) do
     t.bigint "notification_configuration_id", null: false
     t.boolean "requires_action", null: false
     t.string "role", null: false
-    t.string "title"
+    t.integer "send_attempts", default: 0
+    t.json "title_data"
+    t.string "twilio_sid"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.datetime "whatsapp_sent_at"
     t.index ["notifiable_type", "notifiable_id", "event", "user_id"], name: "index_notifications_one_active_per_event", unique: true, where: "(closed_at IS NULL)"
     t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
     t.index ["notification_configuration_id"], name: "index_notifications_on_notification_configuration_id"
+    t.index ["twilio_sid"], name: "index_notifications_on_twilio_sid"
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
