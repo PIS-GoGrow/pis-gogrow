@@ -49,6 +49,22 @@ RSpec.describe "Admin::DebtReminders", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
+    it "devuelve 404 ante un ID de empleado inexistente" do
+      sign_in admin_user, role: :admin
+
+      post admin_consumer_debt_reminders_path(consumer_id: 999_999)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "devuelve 404 ante un parámetro de ruta inválido" do
+      sign_in admin_user, role: :admin
+
+      post "/rrhh/empleados/bypass/recordatorios-de-deuda"
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     context "cuando lo manda Recursos Humanos" do
       before { sign_in admin_user, role: :admin }
 
@@ -66,6 +82,27 @@ RSpec.describe "Admin::DebtReminders", type: :request do
           expect(notification.user).to eq(consumer.user)
           expect(notification.event).to eq(DebtReminders::EmployeeEligibility::EVENT)
           expect(notification.notifiable).to eq(consumer)
+          expect(notification.description).to include("con Other Provider User y Provider User.")
+          expect(notification.description).to include("$950,75")
+        end
+      end
+
+      it "expone la notificación con los proveedores en las props de Inertia para el empleado" do
+        travel_to overdue_day do
+          post admin_consumer_debt_reminders_path(consumer),
+               headers: { "HTTP_REFERER" => admin_consumer_path(consumer) }
+
+          sign_in consumer.user, role: :consumer
+          get dashboard_path
+
+          expect(response).to have_http_status(:ok)
+          expect(inertia.props[:notifications]).to include(
+            hash_including(
+              "title" => I18n.t("notifications.#{DebtReminders::EmployeeEligibility::EVENT}.title"),
+              "requires_action" => false,
+              "description" => a_string_including("con Other Provider User y Provider User.")
+            )
+          )
         end
       end
 

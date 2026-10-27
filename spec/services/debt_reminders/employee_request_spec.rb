@@ -39,6 +39,28 @@ RSpec.describe DebtReminders::EmployeeRequest do
       end
     end
 
+    it "nombra a un único proveedor cuando solo le debe a ese" do
+      accounts(:one_endulzate_current).destroy!
+
+      travel_to overdue_day do
+        notification = described_class.call(consumer:, requested_by: admin_user)
+
+        expect(notification.description).to include("con Provider User.")
+        expect(notification.description).not_to include(" y ")
+      end
+    end
+
+    it "usa el genérico en la descripción cuando el proveedor no tiene nombre" do
+      accounts(:one_endulzate_current).destroy!
+      providers(:tuviandita).update_columns(user_id: nil)
+
+      travel_to overdue_day do
+        notification = described_class.call(consumer:, requested_by: admin_user)
+
+        expect(notification.description).to include("con un proveedor. Podés verlos en tus pagos.")
+      end
+    end
+
     it "nombra una sola vez al proveedor que tiene varias cuentas vencidas" do
       consumer.accounts.create!(provider: providers(:tuviandita), month: 2.months.ago.beginning_of_month, amount: 300)
 
