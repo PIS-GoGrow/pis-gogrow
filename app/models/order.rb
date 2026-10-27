@@ -403,11 +403,13 @@ class Order < ApplicationRecord
   end
 
   def notify_cancelled
-    return unless provider&.user
+    target_provider = provider
+    return unless target_provider&.user
+    return if target_provider.closed_on?(Date.current)
 
     Notifier.call(
       event_key: :order_cancellation,
-      user: provider.user,
+      user: target_provider.user,
       notifiable: self,
       description_data: {
         consumer: consumer.user.name,
