@@ -435,6 +435,21 @@ RSpec.describe "Provider::Menus", type: :request do
         get edit_provider_menu_path(menus(:sorrentinos))
 
         expect(response).to have_http_status(:not_found)
+        expect(inertia).to render_component("errors/not_found")
+      end
+
+      it "returns not found when attempting to edit a non-existent dish" do
+        get edit_provider_menu_path(id: 999_999)
+
+        expect(response).to have_http_status(:not_found)
+        expect(inertia).to render_component("errors/not_found")
+      end
+
+      it "returns not found when dish ID is a non-numeric string" do
+        get "/proveedor/platos/invalido/editar"
+
+        expect(response).to have_http_status(:not_found)
+        expect(inertia).to render_component("errors/not_found")
       end
 
       it "edits the dish as it is programmed on the day it was opened from" do
@@ -927,6 +942,16 @@ RSpec.describe "Provider::Menus", type: :request do
       end.not_to change(Menu, :count)
 
       expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
+    end
+
+    it "returns not found when attempting to delete a non-existent dish" do
+      expect do
+        delete provider_menu_path(id: 999_999)
+      end.not_to change(Menu, :count)
+
+      expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
     end
   end
 

@@ -1,5 +1,6 @@
 import { Settings2 } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import {
   AdaptableDialog,
@@ -10,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
+import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 import type { Provider } from "@/types"
 
 interface ProviderFilterOption<Id extends string | number> {
@@ -21,19 +24,37 @@ interface Props<Id extends string | number> {
   providers: ProviderFilterOption<Id>[]
   selectedProviders: Set<Id>
   onApply: (providers: Set<Id>) => void
+  selectionMode?: "multiple" | "single"
+  allProvidersLabel?: string
 }
 
 export function ProviderFilterSheet<Id extends string | number>({
   providers,
   selectedProviders,
   onApply,
+  selectionMode = "multiple",
+  allProvidersLabel,
 }: Props<Id>) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [draftProviders, setDraftProviders] = useState<Set<Id>>(new Set())
 
+  const allProvidersSelected =
+    draftProviders.size === 0 ||
+    (selectionMode === "multiple" &&
+      providers.every((provider) => draftProviders.has(provider.id)))
+
   function toggleProvider(providerId: Id) {
     setDraftProviders((selected) => {
-      const next = new Set(selected)
+      if (selectionMode === "single") {
+        return selected.has(providerId) ? new Set() : new Set([providerId])
+      }
+
+      const next = new Set(
+        selected.size === 0
+          ? providers.map((provider) => provider.id)
+          : selected,
+      )
 
       if (next.has(providerId)) next.delete(providerId)
       else next.add(providerId)
@@ -55,7 +76,7 @@ export function ProviderFilterSheet<Id extends string | number>({
           type="button"
           variant="outline"
           size="icon"
-          aria-label="Filtrar por proveedores"
+          aria-label={t("pages.consumer_dashboard.index.provider_filter.open")}
           className="border-border bg-card hover:bg-accent ml-auto size-9 shrink-0 rounded-full shadow-none"
         >
           <Settings2 aria-hidden="true" className="size-4" />
@@ -65,70 +86,96 @@ export function ProviderFilterSheet<Id extends string | number>({
       <AdaptableDialogContent
         showCloseButton={false}
         data-provider-filter-sheet
-        className="p-5"
+        className="flex max-h-[90dvh] flex-col gap-5 overflow-hidden p-5"
       >
-        <div className="flex flex-col gap-5">
-          <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
-            Filtrar por proveedores
-          </AdaptableDialogTitle>
+        <div
+          aria-hidden="true"
+          className="bg-border mx-auto -mt-3 h-1 w-12 shrink-0 rounded-full md:hidden"
+        />
+        <AdaptableDialogTitle className="shrink-0 text-base leading-6 font-semibold tracking-normal">
+          {t("pages.consumer_dashboard.index.provider_filter.title")}
+        </AdaptableDialogTitle>
 
-          <div className="flex flex-col">
-            <div className="flex h-12 items-center gap-3 rounded-sm px-2 py-3">
-              <Checkbox
-                id="dashboard-filter-all"
-                checked={draftProviders.size === 0}
-                onCheckedChange={() => setDraftProviders(new Set())}
-                className="text-foreground data-[state=checked]:text-foreground size-4 rounded-none border-0 bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0 data-[state=checked]:border-transparent data-[state=checked]:bg-transparent dark:bg-transparent dark:data-[state=checked]:bg-transparent [&_svg]:size-4"
-              />
-              <Label
-                htmlFor="dashboard-filter-all"
-                className="flex-1 cursor-pointer text-base leading-6 font-medium tracking-normal"
-              >
-                Todos
-              </Label>
-            </div>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <div
+            className={cn(
+              "border-border bg-card flex min-h-12 shrink-0 items-center gap-3 rounded-lg border p-3",
+              allProvidersSelected && "border-primary bg-muted",
+            )}
+          >
+            <Checkbox
+              id="dashboard-filter-all"
+              checked={allProvidersSelected}
+              onCheckedChange={() => setDraftProviders(new Set())}
+              className="border-input bg-background text-primary data-[state=checked]:bg-background dark:data-[state=checked]:bg-background [&_[data-slot=checkbox-indicator]]:bg-primary flex items-center justify-center rounded-full shadow-none [&_[data-slot=checkbox-indicator]]:size-2 [&_[data-slot=checkbox-indicator]]:rounded-full [&_svg]:hidden"
+            />
+            <Label
+              htmlFor="dashboard-filter-all"
+              className="min-w-0 flex-1 cursor-pointer text-base leading-6 font-medium tracking-normal wrap-anywhere"
+            >
+              {allProvidersLabel ??
+                t("pages.consumer_dashboard.index.provider_filter.all")}
+            </Label>
+          </div>
 
+          <Separator className="my-2 shrink-0" />
+          <div
+            data-provider-filter-list
+            className="flex min-h-0 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain p-1"
+          >
             {providers.map((provider) => (
               <div
                 key={provider.id}
-                className="flex h-12 items-center gap-3 rounded-sm px-2 py-3"
+                className={cn(
+                  "border-border bg-card flex min-h-12 shrink-0 items-center gap-3 rounded-lg border p-3",
+                  (draftProviders.has(provider.id) ||
+                    (selectionMode === "multiple" && allProvidersSelected)) &&
+                    "border-primary bg-muted",
+                )}
               >
                 <Checkbox
                   id={`dashboard-filter-${provider.id}`}
-                  checked={draftProviders.has(provider.id)}
+                  checked={
+                    draftProviders.has(provider.id) ||
+                    (selectionMode === "multiple" && allProvidersSelected)
+                  }
                   onCheckedChange={() => toggleProvider(provider.id)}
-                  className="text-foreground data-[state=checked]:text-foreground size-4 rounded-none border-0 bg-transparent shadow-none focus-visible:border-transparent focus-visible:ring-0 data-[state=checked]:border-transparent data-[state=checked]:bg-transparent dark:bg-transparent dark:data-[state=checked]:bg-transparent [&_svg]:size-4"
+                  className="border-input bg-background text-primary data-[state=checked]:bg-background dark:data-[state=checked]:bg-background [&_[data-slot=checkbox-indicator]]:bg-primary flex items-center justify-center rounded-full shadow-none [&_[data-slot=checkbox-indicator]]:size-2 [&_[data-slot=checkbox-indicator]]:rounded-full [&_svg]:hidden"
                 />
                 <Label
                   htmlFor={`dashboard-filter-${provider.id}`}
-                  className="flex-1 cursor-pointer text-base leading-6 font-medium tracking-normal"
+                  className="min-w-0 flex-1 cursor-pointer text-base leading-6 font-medium tracking-normal wrap-anywhere"
                 >
                   {provider.name}
                 </Label>
               </div>
             ))}
           </div>
+        </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <Button
-              type="button"
-              variant="secondary"
-              className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 rounded-lg text-base font-medium shadow-none"
-              onClick={() => setOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-lg text-base font-medium shadow-none"
-              onClick={() => {
-                onApply(new Set(draftProviders))
-                setOpen(false)
-              }}
-            >
-              Aplicar
-            </Button>
-          </div>
+        <div className="grid shrink-0 grid-cols-2 gap-3">
+          <Button
+            type="button"
+            variant="secondary"
+            className="bg-secondary text-secondary-foreground hover:bg-secondary/80 hover:text-secondary-foreground h-12 rounded-lg text-base font-medium shadow-none"
+            onClick={() => setOpen(false)}
+          >
+            {t("pages.consumer_dashboard.index.provider_filter.cancel")}
+          </Button>
+          <Button
+            type="button"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-lg text-base font-medium shadow-none"
+            onClick={() => {
+              onApply(
+                selectionMode === "multiple" && allProvidersSelected
+                  ? new Set()
+                  : new Set(draftProviders),
+              )
+              setOpen(false)
+            }}
+          >
+            {t("pages.consumer_dashboard.index.provider_filter.apply")}
+          </Button>
         </div>
       </AdaptableDialogContent>
     </AdaptableDialog>
