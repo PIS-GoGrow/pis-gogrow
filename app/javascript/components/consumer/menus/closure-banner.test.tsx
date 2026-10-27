@@ -8,6 +8,7 @@ import ClosureBanner from "./closure-banner"
 describe("ClosureBanner", () => {
   const closure: ConsumerClosure = {
     id: 1,
+    provider_id: 1,
     provider_name: "Tu Vianda SRL",
     period: "20/10/26 al 22/10/26",
     reason: "Vacaciones de invierno",

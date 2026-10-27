@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
-import { DateRangePicker } from "./date-picker"
+import { DatePicker, DateRangePicker } from "./date-picker"
 
 // Figma "Date Picker": el botón muestra "09/06/27 – 27/06/27".
 function renderRange(from: string, to: string) {
@@ -50,5 +50,23 @@ describe("DateRangePicker", () => {
 
     expect(button).toHaveTextContent("09/06/27")
     expect(button).not.toHaveTextContent("–")
+  })
+})
+
+describe("DatePicker", () => {
+  it("keeps the selected calendar day as ISO while displaying the unified date", async () => {
+    const user = userEvent.setup()
+    const onChange = vi.fn()
+    render(<DatePicker value="2026-10-25" onChange={onChange} />)
+
+    expect(screen.getByRole("button")).toHaveTextContent(
+      "Domingo 25 de octubre",
+    )
+    await user.click(screen.getByRole("button"))
+    await user.click(
+      screen.getByRole("button", { name: / 28 de octubre de 2026/ }),
+    )
+
+    expect(onChange).toHaveBeenCalledExactlyOnceWith("2026-10-28")
   })
 })
