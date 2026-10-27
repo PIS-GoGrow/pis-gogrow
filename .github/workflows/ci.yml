@@ -80,6 +80,10 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3]
 
     services:
       postgres:
@@ -114,9 +118,13 @@ jobs:
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost/rails_inertia_base_test
-        run: bin/rails db:test:prepare spec
+        # Sorted, then dealt round-robin, so the system specs spread across shards.
+        run: |
+          bin/rails db:test:prepare
+          bin/rspec $(find spec -name '*_spec.rb' | sort | awk -v shard=${{ matrix.shard }} 'NR % 4 == shard')
 
       - name: Check generated types are fresh
+        if: matrix.shard == 0
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost/rails_inertia_base_test
@@ -127,6 +135,7 @@ jobs:
           test -z "$(git ls-files --others --exclude-standard -- app/javascript/routes app/javascript/types/serializers)"
 
       - name: Check exported translations are fresh
+        if: matrix.shard == 0
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost/rails_inertia_base_test
