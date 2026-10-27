@@ -54,20 +54,23 @@ class Notification < ApplicationRecord
 
   # Determina si mandarle o no una notificación por WhatsApp al usuario.
   # Si el usuario no tiene un teléfono configurado, no la enviamos.
+  # Si ya intentamos muchas veces, no la enviamos.
   # Si le estamos mandando una notificación a un proveedor que está cerrado en el día
   # de hoy, no la enviamos.
   # Si la configuración no es configurable, la enviamos. Si sí, nos fijamos si el
   # usuario la tiene configurada.
   def send_to_user?
-    return false unless user.phone
+    return false unless user.phone.present?
 
     return false if send_attempts >= MAX_SEND_ATTEMPTS
+
+    return false if closed_at
 
     return false if role == "provider" && user.provider&.closed_on?(Date.current)
 
     return true unless notification_configuration.configurable
 
-    notification_configuration.users.pluck(:id).include? user.id
+    notification_configuration.users.exists? user.id
   end
 
   def title
@@ -81,7 +84,6 @@ class Notification < ApplicationRecord
   private
 
   def role_belongs_to_user
-    user.sync_roles!
     errors.add(:role, :invalid) unless user&.roles&.include?(role.to_s)
   end
 

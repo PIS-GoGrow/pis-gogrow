@@ -19,7 +19,7 @@ class TwilioCallbacksController < ApplicationController
 
       # send_to_user? ya tiene en cuenta la cantidad máxima de reintentos posibles
       # WhatsappSenderJob actualiza la cantidad de envíos
-      if NO_RETRY_CODES.exclude?(callback_params[:ErrorCode]) && notification.send_to_user?
+      if NO_RETRY_CODES.exclude?(callback_params[:ErrorCode]) && @notification.send_to_user?
         WhatsappSenderJob.perform_later(@notification)
       end
     end
@@ -35,6 +35,7 @@ class TwilioCallbacksController < ApplicationController
 
   def set_notification
     @notification = Notification.find_by(twilio_sid: callback_params[:MessageSid])
+
     head :ok unless @notification
   end
 
