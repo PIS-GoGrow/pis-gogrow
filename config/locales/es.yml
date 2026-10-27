@@ -166,7 +166,8 @@ es:
       description: "Todavía no publicaste un menú para el %{date}."
     hr_debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
-      description: "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos."
+      description: "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos con %{providers}. Podés verlos en tus pagos."
+      unknown_provider: "un proveedor"
     coupon_assigned:
       title: "Recibiste un cupón"
       description:
