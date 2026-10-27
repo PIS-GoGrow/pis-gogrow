@@ -7,7 +7,7 @@ require "inertia_rails/rspec"
 # personalizada cuando el proveedor lo permita para recibir el pedido fuera de
 # la oficina."
 RSpec.describe "Delivery addresses", type: :request do
-  fixtures :users, :consumers, :companies
+  fixtures :users, :consumers, :companies, :providers
 
   def address_params(save_for_later: true, **attributes)
     { delivery_address: { name: "Flora Café", street: "Canelones 892", apartment: "Apto 3", save_for_later:, **attributes } }
@@ -28,6 +28,30 @@ RSpec.describe "Delivery addresses", type: :request do
 
   context "when signed in as an employee" do
     before { sign_in users(:one) }
+
+    def home_order(address:)
+      menu = Menu.create!(
+        provider: providers(:tuviandita),
+        name: "Milanesa",
+        description: "Plato de prueba",
+        price: 300
+      )
+
+      schedule = Schedule.create!(
+        menu:,
+        date: Date.current + 1.day,
+        amount: 5
+      )
+
+      Order.create!(
+        consumer: consumers(:one),
+        schedule:,
+        amount: 1,
+        price: 300,
+        address:,
+        delivery_method: :home
+      )
+    end
 
     it "saves the address in the employee profile for future orders" do
       expect { post delivery_addresses_path, params: address_params }.to change(DeliveryAddress, :count).by(1)
@@ -69,6 +93,234 @@ RSpec.describe "Delivery addresses", type: :request do
       expect(inertia.props[:errors]).to include(
         street: [ I18n.t("activerecord.errors.models.delivery_address.attributes.street.blank") ]
       )
+    end
+
+    describe "GET /direcciones-de-entrega" do
+      it "lists the office and the employee saved addresses" do
+        own_address = consumers(:one).saved_addresses.create!(
+          name: "Flora Café",
+          street: "Canelones 892",
+          apartment: "Apto 3"
+        )
+
+        get delivery_addresses_path
+
+        expect(response).to have_http_status(:success)
+        expect(inertia).to render_component("consumer/delivery_addresses/index")
+        expect(inertia.props[:office_address]).to eq(consumers(:one).company.address)
+
+        expect(inertia.props[:delivery_addresses]).to include(
+          a_hash_including(
+            id: own_address.id,
+            name: "Flora Café",
+            street: "Canelones 892",
+            apartment: "Apto 3",
+            address: "Canelones 892, Apto 3"
+          )
+        )
+      end
+
+      it "does not list another employee's addresses" do
+        own_address = consumers(:one).saved_addresses.create!(
+          name: "Casa",
+          street: "Ellauri 1234"
+        )
+
+        other_address = consumers(:other).saved_addresses.create!(
+          name: "Casa ajena",
+          street: "Rivera 2000"
+        )
+
+        get delivery_addresses_path
+
+        ids = inertia.props[:delivery_addresses].pluck(:id)
+
+        expect(ids).to include(own_address.id)
+        expect(ids).not_to include(other_address.id)
+      end
+    end
+
+    describe "PATCH /direcciones-de-entrega/:id" do
+      it "updates one of the employee addresses" do
+        address = consumers(:one).saved_addresses.create!(
+          name: "Casa",
+          street: "Ellauri 1234"
+        )
+
+        patch delivery_address_path(address), params: {
+          delivery_address: {
+            name: "Casa nueva",
+            street: "Rivera 2000",
+            apartment: "Apto 4"
+          }
+        }
+
+        expect(response).to redirect_to(delivery_addresses_path)
+        expect(address.reload).to have_attributes(
+          name: "Casa nueva",
+          street: "Rivera 2000",
+          apartment: "Apto 4"
+        )
+      end
+
+      it "does not allow updating another employee's address" do
+        address = consumers(:other).saved_addresses.create!(
+          name: "Casa ajena",
+          street: "Rivera 2000"
+        )
+
+        patch delivery_address_path(address), params: {
+          delivery_address: {
+            name: "Modificada",
+            street: "Colonia 1500",
+            apartment: ""
+          }
+        }
+
+        expect(response).to have_http_status(:not_found)
+        expect(address.reload).to have_attributes(
+          name: "Casa ajena",
+          street: "Rivera 2000"
+        )
+      end
+
+      it "keeps previous orders with their original address" do
+        address = consumers(:one).saved_addresses.create!(
+          name: "Casa",
+          street: "Ellauri 1234",
+          apartment: "Apto 2"
+        )
+
+        original_address = address.full_address
+        order = home_order(address: original_address)
+
+        patch delivery_address_path(address), params: {
+          delivery_address: {
+            name: "Casa nueva",
+            street: "Rivera 2000",
+            apartment: "Apto 4"
+          }
+        }
+
+        expect(response).to redirect_to(delivery_addresses_path)
+        expect(address.reload.full_address).to eq("Rivera 2000, Apto 4")
+        expect(order.reload.address).to eq(original_address)
+      end
+
+      it "returns validation errors for invalid data" do
+        address = consumers(:one).saved_addresses.create!(
+          name: "Casa",
+          street: "Ellauri 1234"
+        )
+
+        patch delivery_address_path(address), params: {
+          delivery_address: {
+            name: "",
+            street: "Canelones",
+            apartment: ""
+          }
+        }
+
+        expect(response).to redirect_to(delivery_addresses_path)
+
+        follow_redirect!
+
+        expect(inertia.props[:errors]).to include(
+          name: [
+            I18n.t(
+              "activerecord.errors.models.delivery_address.attributes.name.blank"
+            )
+          ],
+          street: [
+            I18n.t(
+              "activerecord.errors.models.delivery_address.attributes.street.invalid"
+            )
+          ]
+        )
+
+        expect(address.reload).to have_attributes(
+          name: "Casa",
+          street: "Ellauri 1234"
+        )
+      end
+    end
+
+    describe "DELETE /direcciones-de-entrega/:id" do
+      it "deletes one of the employee addresses" do
+        address = consumers(:one).saved_addresses.create!(
+          name: "Casa",
+          street: "Ellauri 1234"
+        )
+
+        expect {
+          delete delivery_address_path(address)
+        }.to change(DeliveryAddress, :count).by(-1)
+
+        expect(response).to redirect_to(delivery_addresses_path)
+      end
+
+      it "does not allow deleting another employee's address" do
+        address = consumers(:other).saved_addresses.create!(
+          name: "Casa ajena",
+          street: "Rivera 2000"
+        )
+
+        expect {
+          delete delivery_address_path(address)
+        }.not_to change(DeliveryAddress, :count)
+
+        expect(response).to have_http_status(:not_found)
+        expect(address.reload).to be_persisted
+      end
+
+      it "keeps previous orders with their original address" do
+        address = consumers(:one).saved_addresses.create!(
+          name: "Casa",
+          street: "Ellauri 1234",
+          apartment: "Apto 2"
+        )
+
+        original_address = address.full_address
+        order = home_order(address: original_address)
+
+        delete delivery_address_path(address)
+
+        expect(response).to redirect_to(delivery_addresses_path)
+        expect(DeliveryAddress.exists?(address.id)).to be(false)
+        expect(order.reload.address).to eq(original_address)
+      end
+    end
+
+    describe "POST /direcciones-de-entrega from address management" do
+      it "saves an address from the address management page" do
+        expect {
+          post delivery_addresses_path,
+              params: address_params(save_for_later: false).merge(source: "addresses")
+        }.to change(consumers(:one).saved_addresses, :count).by(1)
+
+        expect(response).to redirect_to(delivery_addresses_path)
+
+        expect(consumers(:one).saved_addresses.last).to have_attributes(
+          name: "Flora Café",
+          street: "Canelones 892",
+          apartment: "Apto 3"
+        )
+      end
+
+      it "returns to address management with validation errors" do
+        post delivery_addresses_path,
+            params: address_params(
+              save_for_later: false,
+              name: "",
+              street: ""
+            ).merge(source: "addresses")
+
+        expect(response).to redirect_to(delivery_addresses_path)
+
+        follow_redirect!
+
+        expect(inertia.props[:errors]).to include(:name, :street)
+      end
     end
   end
 end

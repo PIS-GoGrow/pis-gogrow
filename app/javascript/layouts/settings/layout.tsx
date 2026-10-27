@@ -14,6 +14,7 @@ import {
   settingsPasswords,
   settingsProfiles,
   settingsSessions,
+  consumerDeliveryAddresses,
 } from "@/routes"
 import type { NavItem } from "@/types"
 
@@ -62,6 +63,15 @@ export default function SettingsLayout({
       href: settingsNotifications.index().url,
       icon: null,
     },
+    ...(isConsumer
+      ? [
+          {
+            title: t("nav.settings.addresses"),
+            href: consumerDeliveryAddresses.index().url,
+            icon: null,
+          },
+        ]
+      : []),
   ]
 
   return (

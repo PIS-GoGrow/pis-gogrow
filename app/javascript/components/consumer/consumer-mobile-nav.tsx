@@ -14,6 +14,7 @@ import {
   consumerOrders,
   consumerProfiles,
   settingsNotifications,
+  consumerDeliveryAddresses,
 } from "@/routes"
 
 const links = [
@@ -41,6 +42,7 @@ const links = [
     href: consumerProfiles.show().url,
     activePrefixes: [
       consumerProfiles.show().url,
+      consumerDeliveryAddresses.index().url,
       settingsNotifications.index().url,
     ],
   },

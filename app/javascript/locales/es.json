@@ -103,6 +103,7 @@
         "payments": "Cobros"
       },
       "settings": {
+        "addresses": "Direcciones",
         "appearance": "Apariencia",
         "email": "Correo electrónico",
         "notifications": "Notificaciones",
@@ -731,7 +732,7 @@
           "cancel": "Cancelar",
           "description": "Ingresá dónde querés recibir el pedido.",
           "name": "Nombre",
-          "name_placeholder": "Ej: Oficina, Casa, etc.",
+          "name_placeholder": "Ej: Casa, Gimnasio, etc.",
           "save_for_later": "Guardar esta dirección para futuros pedidos",
           "street": "Dirección",
           "submit": "Agregar",
@@ -796,8 +797,43 @@
           "required": "Obligatorio"
         }
       },
+      "consumer_delivery_addresses": {
+        "delete": {
+          "back": "Volver",
+          "deleting": "Eliminando...",
+          "description": "Esta dirección no podrá recuperarse. Podés agregar una nueva cuando quieras.",
+          "done": "Listo",
+          "submit": "Eliminar dirección",
+          "success_description": "La dirección se eliminó correctamente.",
+          "success_title": "Dirección eliminada",
+          "title": "¿Eliminar %{name}?"
+        },
+        "form": {
+          "apartment": "Piso/Apartamento (opcional)",
+          "cancel": "Cancelar",
+          "create": "Agregar",
+          "create_title": "Agregar una dirección",
+          "delete": "Eliminar",
+          "description": "Completá los datos de la dirección de entrega",
+          "edit_title": "Editar dirección",
+          "name": "Nombre",
+          "name_placeholder": "Ej: Casa, Gimnasio, etc.",
+          "street": "Dirección",
+          "update": "Guardar cambios"
+        },
+        "index": {
+          "add": "Agregar dirección",
+          "back": "Volver a Cuenta",
+          "description": "Gestioná tus direcciones de entrega",
+          "edit": "Editar %{name}",
+          "office": "Oficina",
+          "title": "Direcciones"
+        }
+      },
       "consumer_profiles": {
         "show": {
+          "addresses": "Direcciones",
+          "addresses_description": "Gestioná tus direcciones de entrega",
           "benefit": "Mi beneficio",
           "coupon_discount": "%{percentage}% de descuento",
           "coupon_period": "Para entregas del",
