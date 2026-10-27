@@ -34,6 +34,8 @@ const schedule: Schedule = {
     option_groups: [],
     provider_name: "Endulzate by Noe",
     home_delivery: true,
+    rating_average: null,
+    rating_count: 0,
     reviews: [],
   },
 }
