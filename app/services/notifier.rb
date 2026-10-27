@@ -21,12 +21,12 @@ class Notifier
       event: event.key,
       requires_action: event.requires_action,
       notifiable:,
-      title: I18n.t!("notifications.#{event.key}.title", **title_data),
-      description: I18n.t!("notifications.#{event.key}.description", **description_data)
+      title_data: title_data,
+      description_data: description_data
     )
 
     if notification.send_to_user?
-      WhatsappSenderJob.perform_later(notification, event_key, title_data, description_data, user.phone)
+      WhatsappSenderJob.perform_later(notification)
     end
 
     notification
