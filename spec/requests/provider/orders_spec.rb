@@ -723,4 +723,127 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(other_provider_order.reload).to be_pending
     end
   end
+
+  describe "GET /provider/pedidos/exportar" do
+    def exported
+      CSV.parse(response.body.force_encoding("UTF-8").delete_prefix("\uFEFF"), col_sep: ";")
+    end
+
+    def exported_ids
+      exported[1..-2].map { it.first.delete_prefix("PED-").to_i }
+    end
+
+    def ids(*names)
+      names.map { orders(it).id }
+    end
+
+    it "redirects to sign in without a session" do
+      get export_provider_orders_path
+
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    %i[consumer admin].each do |role|
+      it "redirects an active #{role} session to the home page" do
+        sign_in(users(role == :consumer ? :one : :admin), role:)
+
+        get export_provider_orders_path
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.no_permission"))
+      end
+    end
+
+    it "exports the upcoming orders of every status by default, in the screen's order" do
+      other_provider_order
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path
+
+      expect(exported_ids).to match_array(
+        ids(:upcoming_pending_today, :upcoming_pending_future, :upcoming_confirmed_future,
+          :history_cancelled_future, :history_rejected_future, :other_consumer_upcoming)
+      )
+      expect(exported_ids.first).to eq(orders(:upcoming_pending_today).id)
+    end
+
+    it "exports the past orders with periodo=historial" do
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(periodo: "historial")
+
+      expect(exported_ids).to match_array(ids(:history_confirmed_past, :history_pending_past))
+      expect(response.headers["Content-Disposition"]).to include("_historial_")
+    end
+
+    it "keeps only the orders matching the status, delivery and search filters" do
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(estado: "confirmed")
+      expect(exported_ids).to match_array(ids(:upcoming_confirmed_future, :other_consumer_upcoming))
+
+      get export_provider_orders_path(estado: "pending", entrega: "home")
+      expect(exported_ids).to match_array(ids(:upcoming_pending_today, :upcoming_pending_future))
+
+      get export_provider_orders_path(entrega: "office")
+      expect(exported_ids).to eq(ids(:upcoming_confirmed_future))
+
+      get export_provider_orders_path(busqueda: "BULEVÁR artigas")
+      expect(exported_ids).to eq(ids(:other_consumer_upcoming))
+
+      get export_provider_orders_path(busqueda: "herrera rechazado")
+      expect(exported_ids).to eq(ids(:history_rejected_future))
+    end
+
+    it "falls back to the defaults with invalid values" do
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(periodo: "todo", estado: "cancelled", entrega: "drone")
+
+      expect(exported_ids.size).to eq(6)
+      expect(response.headers["Content-Disposition"]).to include("_proximos_")
+    end
+
+    it "never exports orders of another provider" do
+      other_provider_order
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(busqueda: "sorrentinos")
+      expect(exported_ids).to be_empty
+
+      sign_in users(:other_provider_user), role: :provider
+
+      get export_provider_orders_path
+      expect(exported_ids).to eq([ other_provider_order.id ])
+    end
+
+    it "sends a named CSV with the operational columns, no contact data and matching totals" do
+      users(:one).update!(phone: "099123456")
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(estado: "pending")
+
+      today = Date.current
+      expect(response.media_type).to eq("text/csv")
+      expect(response.headers["Content-Type"]).to include("charset=utf-8")
+      expect(response.headers["Content-Disposition"]).to include(
+        "attachment",
+        "pedidos_provider-user_proximos_#{today.iso8601}_al_#{(today + 3).iso8601}_generado_#{today.iso8601}_1200.csv"
+      )
+      expect(response.body.b).to start_with("\uFEFF".b)
+      expect(exported.first).to eq([
+        "Código", "Fecha de entrega", "Hora del pedido", "Estado", "Empleado", "Empresa", "Plato",
+        "Opciones", "Cantidad", "Entrega", "Dirección", "Notas", "Monto"
+      ])
+      expect(response.body).not_to include("one@example.com", "099123456")
+
+      rows = exported[1..-2]
+      expect(exported.last).to eq([
+        "Total", nil, nil, nil, nil, nil, nil, nil,
+        rows.sum { it[8].to_i }.to_s, nil, nil, nil,
+        format("%.2f", rows.sum { it[12].tr(",", ".").to_d }).tr(".", ",")
+      ])
+      expect(exported.last[12]).to eq("601,00")
+    end
+  end
 end

@@ -7,6 +7,20 @@ class Provider::OrdersController < Provider::InertiaController
     @past_orders = orders_in(:history)
   end
 
+  def export
+    period = params[:periodo] == "historial" ? :history : :upcoming
+    export = Provider::OrdersExport.new(
+      orders_in(period),
+      provider: Current.user.provider,
+      period:,
+      status: params[:estado],
+      delivery: params[:entrega],
+      search: params[:busqueda]
+    )
+
+    send_data export.to_csv, type: "text/csv; charset=utf-8", disposition: "attachment", filename: export.filename
+  end
+
   # El find va sobre los pedidos del proveedor y no sobre Order: pedir el de
   # otro proveedor tiene que ser un 404, no una página ajena.
   def show

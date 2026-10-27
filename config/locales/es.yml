@@ -306,6 +306,23 @@ es:
       order:
         rejection_reason: "Motivo"
         rejection_details: "Detalle del motivo"
+  exports:
+    provider_orders:
+      columns:
+        code: "Código"
+        delivery_date: "Fecha de entrega"
+        time: "Hora del pedido"
+        status: "Estado"
+        consumer: "Empleado"
+        company: "Empresa"
+        dish: "Plato"
+        options: "Opciones"
+        amount: "Cantidad"
+        delivery_method: "Entrega"
+        address: "Dirección"
+        notes: "Notas"
+        price: "Monto"
+      total: "Total"
   user_mailer:
     greeting: "Hola,"
     support: "¿Tenés dudas o necesitás ayuda? Respondé este correo y nuestro equipo de soporte te va a ayudar a resolverlo."

@@ -62,6 +62,7 @@ Rails.application.routes.draw do
       post :publish, on: :collection, path: "publicar"
     end
     resources :orders, path: "pedidos", only: [ :index, :show ] do
+      get :export, on: :collection, path: "exportar"
       member do
         patch :confirm, path: "confirmar"
         patch :reject, path: "rechazar"
