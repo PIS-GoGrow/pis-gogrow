@@ -60,6 +60,7 @@ const cartItem = (
     name: `Plato ${id}`,
     description: null,
     price: 280,
+    provider_id: id,
     option_groups: [],
     provider_name: providerName,
     home_delivery: homeDelivery,

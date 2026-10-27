@@ -97,7 +97,7 @@ describe("SpecialSubsidyForm", () => {
     renderForm(gift)
 
     expect(screen.getByLabelText(/disponible desde/i)).toHaveTextContent(
-      "Enero 10, 2099",
+      "Sábado 10 de enero",
     )
     expect(screen.getByLabelText(/cantidad de/i)).toHaveValue(3)
     expect(screen.getByLabelText("Validez")).toHaveValue(2)
@@ -168,7 +168,7 @@ describe("SpecialSubsidyForm", () => {
       await user.click(dayButton(28))
 
       expect(screen.getByLabelText(/disponible desde/i)).toHaveTextContent(
-        "Octubre 28, 2026",
+        "Miércoles 28 de octubre",
       )
       expect(screen.getByRole("button", { name: "Modificar" })).toBeEnabled()
     })

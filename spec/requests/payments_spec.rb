@@ -28,6 +28,16 @@ RSpec.describe "Payments", type: :request do
     )
   end
 
+  def oversized_receipt
+    Tempfile.create([ "comprobante-grande", ".png" ]) do |file|
+      file.binmode
+      file.write("x" * (10.megabytes + 1))
+      file.rewind
+
+      yield Rack::Test::UploadedFile.new(file.path, "image/png", original_filename: "comprobante-grande.png")
+    end
+  end
+
   def account_page_headers
     { "HTTP_REFERER" => accounts_url }
   end
@@ -372,6 +382,74 @@ RSpec.describe "Payments", type: :request do
     follow_redirect!
     expect(inertia).to have_props(
       errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.invalid_content_type") ] }
+    )
+  end
+
+  it "sends back the errors and persists nothing when the receipt exceeds 10 MB" do
+    user, account, = setup_payment_account
+    sign_in(user, role: :consumer)
+
+    oversized_receipt do |receipt|
+      expect {
+        post payments_path, params: {
+          payment: { account_id: account.id, receipt: }
+        }, headers: account_page_headers
+      }.not_to change(Payment, :count)
+    end
+
+    expect(response).to redirect_to(accounts_path)
+    expect(account.reload.payments).to be_empty
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.too_large") ] }
+    )
+  end
+
+  it "rejects updating a rejected payment when the replacement receipt has an invalid format" do
+    user, account, provider = setup_payment_account
+    payment = account.payments.create!(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
+    payment.receipt.attach(io: StringIO.new("old receipt"), filename: "old.png", content_type: "image/png")
+    original_blob_id = payment.receipt.blob_id
+    sign_in(user, role: :consumer)
+
+    text_file = Rack::Test::UploadedFile.new(
+      Rails.root.join("public/robots.txt"),
+      "text/plain",
+      original_filename: "comprobante.txt"
+    )
+
+    patch payment_path(payment), params: {
+      payment: { receipt: text_file }
+    }, headers: account_page_headers
+
+    expect(response).to redirect_to(accounts_path)
+    expect(payment.reload).to be_rejected
+    expect(payment.receipt.blob_id).to eq(original_blob_id)
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.invalid_content_type") ] }
+    )
+  end
+
+  it "rejects updating a rejected payment when the replacement receipt exceeds 10 MB" do
+    user, account, provider = setup_payment_account
+    payment = account.payments.create!(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
+    payment.receipt.attach(io: StringIO.new("old receipt"), filename: "old.png", content_type: "image/png")
+    original_blob_id = payment.receipt.blob_id
+    sign_in(user, role: :consumer)
+
+    oversized_receipt do |receipt|
+      patch payment_path(payment), params: {
+        payment: { receipt: }
+      }, headers: account_page_headers
+    end
+
+    expect(response).to redirect_to(accounts_path)
+    expect(payment.reload).to be_rejected
+    expect(payment.receipt.blob_id).to eq(original_blob_id)
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.too_large") ] }
     )
   end
 
