@@ -6,7 +6,7 @@ import {
 } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ComponentProps, ReactNode } from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ConsumerMenuFilterProvider } from "@/hooks/consumer-menu-filter"
 import type { ConsumerDashboardIndex } from "@/types"
@@ -107,6 +107,8 @@ function expectFilteredDay(day: number) {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] })
+  vi.setSystemTime(new Date(2026, 9, 26, 12))
   window.sessionStorage.clear()
   vi.clearAllMocks()
   vi.mocked(priceItems).mockImplementation((items) => {
@@ -120,6 +122,10 @@ beforeEach(() => {
       fullPriceQuantity: 0,
     })
   })
+})
+
+afterEach(() => {
+  vi.useRealTimers()
 })
 
 describe("Consumer menu provider filter navigation", () => {
