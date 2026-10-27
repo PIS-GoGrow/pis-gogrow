@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from "@inertiajs/react"
-import { ChevronRight, Clock3 } from "lucide-react"
+import { ChevronRight, Clock3, Star } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import NotificationBanners from "@/components/notification-banners"
