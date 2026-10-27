@@ -273,22 +273,27 @@ function DashboardSectionButton({
 }: {
   id: string
   title: string
-  href: string
+  href?: string
 }) {
+  const content = (
+    <>
+      <span className="group-hover:underline">{title}</span>
+      <ChevronRight
+        className="size-4 transition-transform group-hover:translate-x-0.5"
+        aria-hidden="true"
+      />
+    </>
+  )
+
   return (
     <h3 id={id}>
       <Button
-        asChild
+        asChild={!!href}
+        type={href ? undefined : "button"}
         variant="ghost"
         className="group hover:text-foreground h-auto w-full cursor-pointer justify-between p-0 text-base font-semibold hover:bg-transparent has-[>svg]:px-0"
       >
-        <Link href={href}>
-          <span className="group-hover:underline">{title}</span>
-          <ChevronRight
-            className="size-4 transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
-        </Link>
+        {href ? <Link href={href}>{content}</Link> : content}
       </Button>
     </h3>
   )
