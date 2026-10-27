@@ -1500,6 +1500,7 @@
           "empty_filtered_description": "No tenés pedidos que coincidan con los filtros.",
           "empty_history_description": "Todavía no tenés pedidos anteriores.",
           "empty_title": "No hay pedidos",
+          "export": "Exportar pedidos",
           "no_address": "Sin dirección de entrega",
           "quantity": "x%{count}",
           "search_label": "Buscar pedidos",

@@ -1150,6 +1150,7 @@ es:
         code: "PED-%{id}"
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"
+        export: "Exportar pedidos"
       show:
         heading: "Detalle de pedido"
         title: "Pedido %{code}"

@@ -1,18 +1,21 @@
 import { Head } from "@inertiajs/react"
-import { Search } from "lucide-react"
+import { Download, Search } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import DeliveryFilterSheet from "@/components/orders/delivery-filter-sheet"
 import ProviderOrderDays from "@/components/orders/provider-order-days"
 import PageContainer from "@/components/page-container"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
 import {
   type DeliveryFilter,
   type StatusFilter,
+  filterOrders,
   ordersColumns,
+  searchableText,
 } from "@/lib/provider-orders"
 import { cn } from "@/lib/utils"
 import { providerOrders } from "@/routes"
@@ -33,6 +36,20 @@ export default function Index({
   const [status, setStatus] = useState<StatusFilter>("all")
   const [delivery, setDelivery] = useState<DeliveryFilter>("all")
   const [search, setSearch] = useState("")
+
+  const orders = period === "upcoming" ? upcoming_orders : past_orders
+  const filters = { status, delivery, search }
+  const visible = filterOrders(orders, filters, (order) =>
+    searchableText(order, t),
+  )
+  const exportUrl = providerOrders.export({
+    query: {
+      periodo: period === "history" ? "historial" : undefined,
+      estado: status === "all" ? undefined : status,
+      entrega: delivery === "all" ? undefined : delivery,
+      busqueda: search.trim() || undefined,
+    },
+  }).url
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -116,10 +133,24 @@ export default function Index({
 
         <ProviderOrderDays
           key={period}
-          orders={period === "upcoming" ? upcoming_orders : past_orders}
+          orders={orders}
           today={today}
           period={period}
-          filters={{ status, delivery, search }}
+          filters={filters}
+          footer={
+            visible.length > 0 && (
+              <Button
+                asChild
+                variant="secondary"
+                className="h-11.5 w-full rounded-md"
+              >
+                <a href={exportUrl} download>
+                  <Download aria-hidden="true" />
+                  {t("pages.provider_orders.index.export")}
+                </a>
+              </Button>
+            )
+          }
         />
       </PageContainer>
     </AppLayout>
