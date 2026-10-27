@@ -14,6 +14,9 @@ class Provider::OnboardingController < Provider::InertiaController
         .joins(:notification_configuration_users)
         .where(notification_configuration_users: { user_id: Current.user.id })
         .pluck(:key)
+    @closures = provider.closures.upcoming
+    @today = Date.current.iso8601
+    @order_deadline_passed_today = provider.order_deadline_passed_today?
   end
 
   def update
@@ -58,7 +61,9 @@ class Provider::OnboardingController < Provider::InertiaController
     provider.assign_attributes(
       params.expect(provider: [ :bank_name, :bank_account_type, :bank_account_number, :bank_account_holder, :tax_id ])
     )
-    save_or_redirect provider.save(context: :payment_details), 1
+    saved = provider.save(context: :payment_details)
+    provider.mark_section_configured!(:payment_details) if saved
+    save_or_redirect saved, 1
   end
 
   def save_order_deadline
@@ -76,7 +81,9 @@ class Provider::OnboardingController < Provider::InertiaController
   end
 
   def save_deliveries
-    save_or_redirect provider.update(home_delivery: ActiveModel::Type::Boolean.new.cast(params[:home_delivery])), 3
+    saved = provider.update(home_delivery: ActiveModel::Type::Boolean.new.cast(params[:home_delivery]))
+    provider.mark_section_configured!(:deliveries) if saved
+    save_or_redirect saved, 3
   end
 
   def save_notifications
@@ -93,6 +100,7 @@ class Provider::OnboardingController < Provider::InertiaController
       end
     end
 
+    provider.mark_section_configured!(:notifications)
     true
   end
 

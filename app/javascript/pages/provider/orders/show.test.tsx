@@ -59,6 +59,7 @@ function order(overrides: Partial<ProviderOrderDetail> = {}) {
     remaining_amount: 8,
     rejection_reason: null,
     rejection_details: null,
+    rejectable: true,
   }
 
   return { ...base, ...overrides }
@@ -75,9 +76,7 @@ describe("Provider::Orders Show Page", () => {
       screen.getByText("Pendiente").closest("[data-status]"),
     ).toHaveAttribute("data-status", "pending")
     expect(screen.getByText("Pedido PED-1")).toBeInTheDocument()
-    expect(
-      screen.getByText("11 de septiembre de 2026 · 10:15"),
-    ).toBeInTheDocument()
+    expect(screen.getByText("11/09/26 · 10:15")).toBeInTheDocument()
   })
 
   it("muestra los datos del empleado y deja el teléfono como no disponible", () => {
@@ -107,7 +106,7 @@ describe("Provider::Orders Show Page", () => {
 
     expect(screen.getByText("Con salsa de soja")).toBeInTheDocument()
     expect(screen.getByText("Sin sal")).toBeInTheDocument()
-    expect(screen.getByText("15 de octubre de 2026")).toBeInTheDocument()
+    expect(screen.getByText("Jueves 15 de octubre")).toBeInTheDocument()
   })
 
   it("muestra lo que el empleado eligió del plato", () => {
@@ -169,6 +168,7 @@ describe("Provider::Orders Show Page", () => {
           status: "rejected",
           rejection_reason: "other",
           rejection_details: "Cerrado por reformas",
+          rejectable: false,
         })}
       />,
     )
@@ -229,6 +229,7 @@ describe("Provider::Orders Show Page", () => {
           status: "rejected",
           rejection_reason: "out_of_stock",
           rejection_details: null,
+          rejectable: false,
         })}
       />,
     )
@@ -307,7 +308,14 @@ describe("Provider::Orders Show Page", () => {
   })
 
   it("deja los botones a la vista, deshabilitados, en un pedido cancelado", () => {
-    render(<Show order={order({ status: "cancelled" })} />)
+    render(<Show order={order({ status: "cancelled", rejectable: false })} />)
+
+    expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
+    expect(screen.getByRole("button", { name: "Rechazar" })).toBeDisabled()
+  })
+
+  it("deshabilita Rechazar en un pedido confirmado que ya no se puede rechazar", () => {
+    render(<Show order={order({ status: "confirmed", rejectable: false })} />)
 
     expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
     expect(screen.getByRole("button", { name: "Rechazar" })).toBeDisabled()

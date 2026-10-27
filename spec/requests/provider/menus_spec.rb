@@ -253,6 +253,45 @@ RSpec.describe "Provider::Menus", type: :request do
         )
       end
 
+      it "does not create the dish when weekly repetition has empty weekdays via parameter bypass" do
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [] }
+          }
+        end.not_to change(Menu, :count)
+
+        expect(response).to redirect_to(new_provider_menu_path)
+        follow_redirect!
+        expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+      end
+
+      it "does not create the dish when range repetition has empty weekdays via parameter bypass" do
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "range", starts_on: "2030-01-10", ends_on: "2030-01-15", weekdays: [] }
+          }
+        end.not_to change(Menu, :count)
+
+        expect(response).to redirect_to(new_provider_menu_path)
+        follow_redirect!
+        expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+      end
+
+      it "rejects weekly repetition with non-weekday numbers or malformed types via parameter bypass" do
+        expect do
+          post provider_menus_path, params: {
+            menu: dish,
+            agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [ 0, 6, 7 ] }
+          }
+        end.not_to change(Menu, :count)
+
+        expect(response).to redirect_to(new_provider_menu_path)
+        follow_redirect!
+        expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+      end
+
       # IBP-054: los bordes del rango, de a un dato inválido por vez.
       def program_single_day(date, amount: 6)
         post provider_menus_path, params: {
@@ -396,6 +435,21 @@ RSpec.describe "Provider::Menus", type: :request do
         get edit_provider_menu_path(menus(:sorrentinos))
 
         expect(response).to have_http_status(:not_found)
+        expect(inertia).to render_component("errors/not_found")
+      end
+
+      it "returns not found when attempting to edit a non-existent dish" do
+        get edit_provider_menu_path(id: 999_999)
+
+        expect(response).to have_http_status(:not_found)
+        expect(inertia).to render_component("errors/not_found")
+      end
+
+      it "returns not found when dish ID is a non-numeric string" do
+        get "/proveedor/platos/invalido/editar"
+
+        expect(response).to have_http_status(:not_found)
+        expect(inertia).to render_component("errors/not_found")
       end
 
       it "edits the dish as it is programmed on the day it was opened from" do
@@ -740,7 +794,33 @@ RSpec.describe "Provider::Menus", type: :request do
 
       expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa)))
       follow_redirect!
-      expect(inertia.props[:errors]).to have_key(:agenda)
+      expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+    end
+
+    it "rejects range agenda with empty weekdays array via parameter bypass" do
+      expect do
+        patch provider_menu_path(menus(:milanesa)), params: {
+          menu: { name: "Milanesa con puré", description: "Clásica", price: 320 },
+          agenda: { mode: "range", weekdays: [], starts_on: Date.current.iso8601, ends_on: (Date.current + 5.days).iso8601, amount: 8 }
+        }
+      end.not_to change { menus(:milanesa).reload.variants.count }
+
+      expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa)))
+      follow_redirect!
+      expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
+    end
+
+    it "rejects repetition agenda with weekdays outside 1..5 via parameter bypass" do
+      expect do
+        patch provider_menu_path(menus(:milanesa)), params: {
+          menu: { name: "Milanesa con puré", description: "Clásica", price: 320 },
+          agenda: { mode: "weekly", weekdays: [ 0, 6 ], starts_on: Date.current.iso8601, amount: 8 }
+        }
+      end.not_to change { menus(:milanesa).reload.agendas.count }
+
+      expect(response).to redirect_to(edit_provider_menu_path(menus(:milanesa)))
+      follow_redirect!
+      expect(inertia.props[:errors][:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
     end
 
     it "rejects weekly agenda with non-positive amount via parameter bypass" do
@@ -862,6 +942,16 @@ RSpec.describe "Provider::Menus", type: :request do
       end.not_to change(Menu, :count)
 
       expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
+    end
+
+    it "returns not found when attempting to delete a non-existent dish" do
+      expect do
+        delete provider_menu_path(id: 999_999)
+      end.not_to change(Menu, :count)
+
+      expect(response).to have_http_status(:not_found)
+      expect(inertia).to render_component("errors/not_found")
     end
   end
 

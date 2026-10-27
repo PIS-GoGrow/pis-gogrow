@@ -63,7 +63,7 @@ function DetailLine({
 
 export default function Show({ order }: ProviderOrdersShow) {
   const { t } = useTranslation()
-  const { formatMoney, formatLongDate } = useFormatters()
+  const { formatMoney, formatLongDate, formatShortDate } = useFormatters()
 
   // Solo lo que el empleado eligió: los pedidos anteriores a la personalización
   // no tienen elección.
@@ -113,7 +113,7 @@ export default function Show({ order }: ProviderOrdersShow) {
                 {t("pages.provider_orders.show.title", { code })}
               </h3>
               <p className="text-muted-foreground text-sm">
-                {`${formatLongDate(order.created_on)} · ${order.time}`}
+                {`${formatShortDate(order.created_on)} · ${order.time}`}
               </p>
             </div>
 

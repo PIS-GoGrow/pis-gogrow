@@ -62,6 +62,7 @@ Todas las pantallas con sesión iniciada comparten el mismo esqueleto. Las medid
 | Separaciones | `PageContainer` | `mb-8` entre el encabezado y el contenido, y `gap-4` entre cada hijo directo |
 | Título de la pestaña del navegador | `<Head title>` | El mismo texto que `title` |
 | Breadcrumbs | `breadcrumbs` de `AppLayout` | Al menos la sección actual |
+| Calificaciones: viewport y acciones inferiores | `ReviewPage` + `ReviewActions`, en `components/reviews/` | Contenido desplazable, acciones visibles y espacio seguro inferior; respeta el teclado mediante `visualViewport` |
 | Lista de tarjetas | `grid gap-4 md:grid-cols-2` | 1 columna en móvil, 2 desde tablet |
 | Cada ítem de la lista | `ListItemCard` | Tarjeta compacta: `py-4` y `gap-4`, con `px-4` en sus partes |
 | Lista vacía | `Empty className="border"` con `EmptyMedia variant="icon"` | Ver [Empty](#empty) |

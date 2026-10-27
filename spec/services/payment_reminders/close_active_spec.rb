@@ -52,10 +52,45 @@ RSpec.describe PaymentReminders::CloseActive do
     expect(due_soon.reload.closed_at).to be_present
   end
 
-  it "does not close the provider manual debt reminder" do
-    notification = Notifier.call(
+  it "does not close the provider manual debt reminder while the receipt is under review" do
+    notification = manual_reminder
+
+    described_class.call(account:)
+
+    expect(notification.reload.closed_at).to be_nil
+  end
+
+  it "closes the provider manual debt reminder once the payment is settled" do
+    notification = manual_reminder
+
+    described_class.call(account:, settled: true)
+
+    expect(notification.reload.closed_at).to be_present
+  end
+
+  it "only closes reminders for the specific account" do
+    other_account = accounts(:one_endulzate_current)
+    other_notification = manual_reminder(account: other_account)
+    target_notification = manual_reminder(account:)
+
+    described_class.call(account:, settled: true)
+
+    expect(target_notification.reload.closed_at).to be_present
+    expect(other_notification.reload.closed_at).to be_nil
+  end
+
+  it "safely does nothing when the account belongs to a company" do
+    company_account = accounts(:gogrow_tuviandita_current)
+
+    expect {
+      described_class.call(account: company_account, settled: true)
+    }.not_to raise_error
+  end
+
+  def manual_reminder(account: self.account)
+    Notifier.call(
       event_key: "debt_payment_reminder",
-      user:,
+      user: account.owner.user,
       notifiable: account,
       description_data: {
         amount: "$1.500",
@@ -63,9 +98,5 @@ RSpec.describe PaymentReminders::CloseActive do
         period: "octubre de 2026"
       }
     )
-
-    described_class.call(account:)
-
-    expect(notification.reload.closed_at).to be_nil
   end
 end

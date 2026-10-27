@@ -28,8 +28,6 @@ vi.mock("@inertiajs/react", async () => {
 })
 
 const defaultBenefit: ConsumerDashboardIndex["benefit"] = {
-  limit: 5,
-  used: 0,
   percentage: 50,
   monthly_limit: 20,
   monthly_used: 0,
@@ -48,9 +46,12 @@ const sampleSchedule: Schedule = {
     name: "Milanesa con papas fritas",
     description: "Clásica milanesa de carne",
     price: 350,
+    provider_id: 1,
     option_groups: [],
     provider_name: "Tu Viandita",
     home_delivery: true,
+    rating_average: null,
+    rating_count: 0,
     reviews: [],
   },
 }
@@ -77,7 +78,9 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
       date: "2026-10-12",
       setDate: vi.fn(),
       benefit: defaultBenefit,
-      providers: ["Tu Viandita"],
+      activeProviders: new Set<number>(),
+      setActiveProviders: vi.fn(),
+      providers: [{ id: 1, name: "Tu Viandita", order_deadline: null }],
       schedules: [sampleSchedule],
       closures: [],
       cart: [],

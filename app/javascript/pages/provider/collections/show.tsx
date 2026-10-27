@@ -164,7 +164,12 @@ export default function Show({
           ) : (
             <dl className="grid gap-2 text-sm">
               {payments.map((payment) => (
-                <Row key={payment.id} label={payment.date}>
+                <Row
+                  key={payment.id}
+                  label={t("pages.provider_collections.receipt_sent_at", {
+                    date: payment.date,
+                  })}
+                >
                   <div className="flex items-center gap-1.5">
                     {payment.rejection_reason ===
                       PARTIAL_PAYMENT_REJECTION_REASON && (

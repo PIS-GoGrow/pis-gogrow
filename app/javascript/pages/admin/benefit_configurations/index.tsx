@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/card"
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import AppLayout from "@/layouts/app-layout"
+import { formatLongDateInline } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
 import { adminAccount, adminBenefitConfigurations } from "@/routes"
 import type { BreadcrumbItem } from "@/types"
@@ -124,7 +125,7 @@ export default function Index({
                     <AlertTitle className="font-bold">
                       {t(
                         "pages.admin.benefit_configurations.index.current.pending_conflict.title_alt",
-                        { date: configurable_month },
+                        { date: formatLongDateInline(configurable_month) },
                       )}
                     </AlertTitle>
                     <AlertDescription>

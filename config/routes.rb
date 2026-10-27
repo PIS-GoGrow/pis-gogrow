@@ -97,14 +97,20 @@ Rails.application.routes.draw do
 
     resources :orders, path: "pedidos", only: [ :index, :show, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer, path: "cancelar"
+      resource :review, only: [ :new, :create ], path: "calificacion", path_names: { new: "nueva" }
       post :pricing, on: :collection, as: :pricing
     end
+
+    # Las pantallas de resultado no necesitan el pedido: solo informan el envío.
+    get "calificacion/gracias", to: "reviews#thanks", as: :review_thanks
+    get "calificacion/error", to: "reviews#error", as: :review_error
 
     resources :payments, path: "comprobantes", only: [ :create, :update, :destroy ] do
       get :receipt, on: :member, path: "archivo"
     end
 
-    resources :accounts, path: "pagos", only: [ :index, :show ]
+    get "payments", to: "accounts#index", as: :accounts
+    resources :accounts, only: [ :show ]
   end
 
   namespace :admin, path: "rrhh" do
@@ -122,6 +128,7 @@ Rails.application.routes.draw do
     resources :invoices, path: "facturas", only: [ :index ] do
       get :file, on: :member, path: "archivo"
     end
+    resources :order_events, path: "auditoria", only: [ :index ]
     resources :payments, path: "pagos", only: [ :index, :show, :create, :destroy ] do
       get :receipt, on: :member, path: "archivo"
     end

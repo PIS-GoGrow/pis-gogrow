@@ -10,6 +10,7 @@ import AppLayout from "@/layouts/app-layout"
 import {
   adminAccount,
   adminBenefitConfigurations,
+  adminOrderEvents,
   adminPreferences,
   sessions,
   settingsNotifications,
@@ -30,6 +31,11 @@ export default function AdminAccount() {
       title: t(`${account}.subsidies`),
       description: t(`${account}.subsidies_description`),
       href: adminBenefitConfigurations.index().url,
+    },
+    {
+      title: t(`${account}.order_events`),
+      description: t(`${account}.order_events_description`),
+      href: adminOrderEvents.index().url,
     },
     {
       title: t(`${account}.notifications`),

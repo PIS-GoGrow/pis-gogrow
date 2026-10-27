@@ -74,10 +74,11 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(response).to have_http_status(:ok)
       expect(inertia).to render_component("consumer/dashboard/index")
 
-      expect(inertia.props).to include(:week, :schedules, :benefit)
+      expect(inertia.props).to include(:week, :schedules, :benefit, :providers)
       expect(inertia.props[:week]).to include(:start_date, :end_date, :days)
       expect(inertia.props[:schedules]).to be_an(Array)
       expect(inertia.props[:benefit]).to include(:percentage, :monthly_remaining)
+      expect(inertia.props[:providers]).to all(include(:id, :name))
 
       if inertia.props[:schedules].any?
         first_schedule = inertia.props[:schedules].first
@@ -93,6 +94,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
           :id,
           :name,
           :price,
+          :provider_id,
           :provider_name,
           :home_delivery
         )
@@ -357,7 +359,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(inertia).to render_component("consumer/dashboard/cart")
       expect(inertia.props).to include(:benefit, :addresses)
       expect(inertia.props[:benefit]).to include(
-        :limit, :used, :percentage, :monthly_limit, :monthly_used, :monthly_remaining, :specials
+        :percentage, :monthly_limit, :monthly_used, :monthly_remaining, :specials
       )
       expect(inertia.props[:addresses]).to be_an(Array)
     end
@@ -494,6 +496,81 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(order.discounted_price).to eq(schedule.menu.price)
       expect(order.order_benefits).to be_empty
       expect(consumer.remaining_monthly_benefit).to eq(10)
+    end
+  end
+
+  describe "GET /menu-semanal/confirmacion - Control de acceso, casos borde y props de Inertia" do
+    let(:own_order) { orders(:upcoming_pending_future) }
+    let(:other_order) { orders(:other_consumer_upcoming) }
+
+    it "redirige al inicio de sesión cuando un visitante no autenticado intenta acceder a la confirmación" do
+      get dashboard_confirmation_path(confirmed_order_ids: [ own_order.id ])
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "rechaza el acceso a la confirmación para usuarios con rol provider redirigiendo a la raíz" do
+      sign_in provider_user, role: :provider
+      get dashboard_confirmation_path(confirmed_order_ids: [ own_order.id ])
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "rechaza el acceso a la confirmación para usuarios con rol admin redirigiendo a la raíz" do
+      sign_in admin_user, role: :admin
+      get dashboard_confirmation_path(confirmed_order_ids: [ own_order.id ])
+      expect(response).to redirect_to(root_path)
+    end
+
+    context "cuando el usuario es un empleado autenticado" do
+      before do
+        sign_in consumer_user, role: :consumer
+      end
+
+      it "redirige al dashboard cuando no se pasan confirmed_order_ids" do
+        get dashboard_confirmation_path
+        expect(response).to redirect_to(dashboard_path)
+      end
+
+      it "redirige al dashboard cuando confirmed_order_ids es un array vacío" do
+        get dashboard_confirmation_path(confirmed_order_ids: [])
+        expect(response).to redirect_to(dashboard_path)
+      end
+
+      it "redirige al dashboard cuando confirmed_order_ids contiene strings no numéricos o inyecciones" do
+        get dashboard_confirmation_path(confirmed_order_ids: [ "invalido", "<script>alert(1)</script>" ])
+        expect(response).to redirect_to(dashboard_path)
+      end
+
+      it "redirige al dashboard cuando los IDs de pedidos pertenecen a otro empleado" do
+        get dashboard_confirmation_path(confirmed_order_ids: [ other_order.id ])
+        expect(response).to redirect_to(dashboard_path)
+      end
+
+      it "redirige al dashboard cuando se mezcla un pedido propio con uno ajeno (aislamiento atómico)" do
+        get dashboard_confirmation_path(confirmed_order_ids: [ own_order.id, other_order.id ])
+        expect(response).to redirect_to(dashboard_path)
+      end
+
+      it "renderiza el componente consumer/dashboard/confirmation con las props exactas" do
+        get dashboard_confirmation_path(confirmed_order_ids: [ own_order.id ])
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to render_component("consumer/dashboard/confirmation")
+
+        expect(inertia.props).to include(:total, :orders)
+        expect(inertia.props[:total]).to eq(own_order.discounted_price.to_f)
+
+        order_data = inertia.props[:orders].first
+        expect(order_data).to include(
+          id: own_order.id,
+          date: own_order.schedule.date.iso8601,
+          address: own_order.address,
+          delivery_method: own_order.delivery_method,
+          provider_name: own_order.schedule.menu.provider_name,
+          name: own_order.menu_name,
+          quantity: own_order.amount,
+          discounted_price: own_order.discounted_price.to_f
+        )
+      end
     end
   end
 end
