@@ -74,10 +74,11 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(response).to have_http_status(:ok)
       expect(inertia).to render_component("consumer/dashboard/index")
 
-      expect(inertia.props).to include(:week, :schedules, :benefit)
+      expect(inertia.props).to include(:week, :schedules, :benefit, :providers)
       expect(inertia.props[:week]).to include(:start_date, :end_date, :days)
       expect(inertia.props[:schedules]).to be_an(Array)
       expect(inertia.props[:benefit]).to include(:percentage, :monthly_remaining)
+      expect(inertia.props[:providers]).to all(include(:id, :name))
 
       if inertia.props[:schedules].any?
         first_schedule = inertia.props[:schedules].first
@@ -93,6 +94,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
           :id,
           :name,
           :price,
+          :provider_id,
           :provider_name,
           :home_delivery
         )

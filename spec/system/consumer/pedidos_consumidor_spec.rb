@@ -66,6 +66,20 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_content("Ensalada de quinoa")
     expect(page).not_to have_content("Milanesa con papas fritas")
 
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{providers(:endulzate).id}").click
+      expect(page).to have_selector("#dashboard-filter-#{providers(:office_provider).id}[data-state='unchecked']")
+      expect(page).to have_selector("#dashboard-filter-#{providers(:endulzate).id}[data-state='checked']")
+      find("#dashboard-filter-#{providers(:endulzate).id}").click
+      expect(page).to have_selector("#dashboard-filter-all[data-state='checked']")
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("Proveedores: Todos los proveedores")
+    expect(page).to have_content("Ensalada de quinoa")
+    expect(page).to have_content("Milanesa con papas fritas")
+
     refresh
     find("[role=tab]", text: "Historial").click
     expect(page).to have_content("Proveedores: Todos los proveedores")
