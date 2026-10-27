@@ -103,6 +103,34 @@ RSpec.describe Payment, type: :model do
       expect(notifications).to be_empty
     end
 
+    it "notifies the provider when the closure is scheduled for future dates" do
+      provider.closures.create!(
+        starts_on: Date.current + 2.days,
+        ends_on: Date.current + 5.days,
+        reason: "Vacaciones futuras"
+      )
+
+      payment_with_receipt.save!
+
+      expect(notifications.active.count).to eq(1)
+    end
+
+    it "does not notify the provider when a rejected payment receipt is re-submitted while closed" do
+      payment = payment_with_receipt(status: :rejected, rejection_reason: "Ilegible").tap(&:save!)
+
+      provider.closures.create!(
+        starts_on: Date.current,
+        ends_on: Date.current,
+        reason: "Cierre temporal"
+      )
+
+      expect {
+        payment.update!(status: :submitted)
+      }.not_to change(Notification, :count)
+
+      expect(notifications).to be_empty
+    end
+
     it "keeps a single active notification when the receipt is sent again" do
       payment = payment_with_receipt.tap(&:save!)
       payment.reject_with("Ilegible")

@@ -75,6 +75,47 @@ RSpec.describe "Payments", type: :request do
     expect(ActiveStorage::Attachment.find_by(record: payment, name: "receipt")).to be_present
   end
 
+  it "does not notify the provider when a receipt is submitted while the provider is closed" do
+    user, account, provider = setup_payment_account
+    provider.update!(onboarding_completed_at: Time.current)
+    provider.closures.create!(
+      starts_on: Date.current,
+      ends_on: Date.current,
+      reason: "Cierre programado"
+    )
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.not_to change(Notification, :count)
+
+    expect(response).to redirect_to(accounts_path)
+
+    sign_in(provider.user, role: :provider)
+    get provider_dashboard_path
+    expect(response).to have_http_status(:ok)
+    expect(inertia.props[:notifications].map { |n| n["title"] || n[:title] }).not_to include(I18n.t("notifications.payment_receipt_submitted.title"))
+  end
+
+  it "notifies the provider and sets inertia props when a receipt is submitted while the provider is open" do
+    user, account, provider = setup_payment_account
+    provider.update!(onboarding_completed_at: Time.current)
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.to change { Notification.where(event: "payment_receipt_submitted", user: provider.user).count }.by(1)
+
+    sign_in(provider.user, role: :provider)
+    get provider_dashboard_path
+    expect(response).to have_http_status(:ok)
+    expect(inertia.props[:notifications].map { |n| n["title"] || n[:title] }).to include(I18n.t("notifications.payment_receipt_submitted.title"))
+  end
+
   it "updates an existing rejected payment with a new receipt" do
     user, account, provider = setup_payment_account
     payment = account.payments.create!(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
