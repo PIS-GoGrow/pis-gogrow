@@ -3,8 +3,8 @@
 FactoryBot.define do
   factory :notification do
     user { nil }
-    title { "MyString" }
-    description { "MyString" }
+    title_data { { name: "Ana" } }
+    description_data { { order: "1234", total: "$ 500" } }
     requires_action { false }
   end
 end

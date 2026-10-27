@@ -7,7 +7,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
 
   include ActiveJob::TestHelper
 
-  EVENT_KEY = :order_created
+  EVENT_KEY = :order_confirmation
   CONTENT_SID = "HX0123456789abcdef".freeze
   PHONE = "+59899123456".freeze
   MAX_ATTEMPTS = 6 # 1 intento + 5 reintentos (retry_on attempts: 6)
@@ -36,14 +36,16 @@ RSpec.describe WhatsappSenderJob, type: :job do
     Data.define(:sid)
   end
 
-  let(:title_data) { { name: "Ana" } }
-  let(:description_data) { { order: "1234", total: "$ 500" } }
+  let(:title_data) { {} }
+  let(:description_data) { { date: "12/12", provider: "TuViandita" } }
 
   let(:notification) do
     create(
       :notification,
       user: users(:one),
       event: EVENT_KEY.to_s,
+      title_data:,
+      description_data:,
       role: users(:one).roles[0],
       notifiable: orders(:upcoming_pending_future),
       notification_configuration: Notification::Configuration.find_by!(key: "order_updates")
@@ -51,6 +53,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
   end
 
   before do
+    users(:one).update phone: PHONE
     Notification::Registry.set_data([
       {},
       {
@@ -98,11 +101,11 @@ RSpec.describe WhatsappSenderJob, type: :job do
   end
 
   def perform_now_job
-    described_class.perform_now(notification, EVENT_KEY.to_s, title_data, description_data, PHONE)
+    described_class.perform_now(notification)
   end
 
   def perform_later_job
-    described_class.perform_later(notification, EVENT_KEY.to_s, title_data, description_data, PHONE)
+    described_class.perform_later(notification)
   end
 
   describe "envío exitoso" do
@@ -134,7 +137,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
 
       variables = JSON.parse(messages.calls.first.fetch(:content_variables))
       expect(variables).to eq(
-        "title_name" => "Ana", "description_order" => "1234", "description_total" => "$ 500"
+        "description_date" => "12/12", "description_provider" => "TuViandita"
       )
       expect(variables.keys).to all(match(/\A(title_|description_).+\z/))
     end

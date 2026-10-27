@@ -22,26 +22,14 @@ RSpec.describe Notification, type: :model do
       event: "order_confirmation",
       requires_action: false,
       notifiable: order,
-      title: "Tu pedido fue confirmado",
-      description: "Tu pedido fue confirmado."
+      title_data: {},
+      description_data: {}
     )
   end
 
   describe "validaciones" do
     it "es válido con todos los atributos requeridos" do
       expect(notification).to be_valid
-    end
-
-    it "requiere presencia de title" do
-      notification.title = nil
-      expect(notification).not_to be_valid
-      expect(notification.errors[:title]).to be_present
-    end
-
-    it "requiere presencia de description" do
-      notification.description = nil
-      expect(notification).not_to be_valid
-      expect(notification.errors[:description]).to be_present
     end
 
     it "invalida si el rol no pertenece al usuario" do
@@ -54,6 +42,8 @@ RSpec.describe Notification, type: :model do
       notification.event = "evento_inexistente"
       expect(notification).not_to be_valid
       expect(notification.errors[:event]).to be_present
+      expect(notification.errors[:title]).to be_present
+      expect(notification.errors[:description]).to be_present
     end
   end
 
@@ -121,11 +111,64 @@ RSpec.describe Notification, type: :model do
         event: "order_confirmation",
         requires_action: false,
         notifiable: order,
-        title: "Otro título",
-        description: "Otra descripción"
+        title_data: {},
+        description_data: {}
       )
 
       expect { duplicate.save(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
+    end
+  end
+
+  describe "send_to_user" do
+    before do
+      configuration.users << consumer_user
+      consumer_user.phone = "+59898123456"
+    end
+
+    it "deja pasar una notificación válida" do
+      expect(notification.send_to_user?).to be(true)
+    end
+
+    it "previene enviar notificaciones cuando el usuario no tiene teléfono" do
+      consumer_user.phone = nil
+
+      expect(notification.send_to_user?).to be(false)
+    end
+
+    it "previene enviar notificaciones cuando se hicieron muchos intentos" do
+      notification.send_attempts = Notification::MAX_SEND_ATTEMPTS
+
+      expect(notification.send_to_user?).to be(false)
+    end
+
+    it "previene enviar notificaciones cuando la configuración está desactivada" do
+      configuration.users.destroy consumer_user
+
+      expect(notification.send_to_user?).to be(false)
+    end
+
+    it "envía cuando la configuración no es configurable" do
+      configuration.users.destroy consumer_user
+      configuration.configurable = false
+
+      expect(notification.send_to_user?).to be(true)
+    end
+
+    it "previene enviar notificaciones cuando fue cerrada" do
+      notification.closed_at = Time.current
+
+      expect(notification.send_to_user?).to be(false)
+    end
+
+    it "previene enviar notificaciones a un proveedor cerrado" do
+      notification.user = users(:provider_user)
+      users(:provider_user).provider.closures.create!(
+        starts_on: Date.current,
+        ends_on: Date.current,
+        reason: "Motivo"
+      )
+
+      expect(notification.send_to_user?).to be(false)
     end
   end
 end

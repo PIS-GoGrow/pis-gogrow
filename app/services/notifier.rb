@@ -12,8 +12,6 @@ class Notifier
     event = Notification::Registry.event!(event_key)
     configuration = find_configuration_for! event
 
-    # I18n.t! lanza I18n::MissingTranslationData si falta la traducción, en vez de
-    # guardar un texto tipo "translation missing: ..." en la notificación.
     notification = Notification.create!(
       notification_configuration: configuration,
       user:,

@@ -55,6 +55,7 @@ class Notification < ApplicationRecord
   # Determina si mandarle o no una notificación por WhatsApp al usuario.
   # Si el usuario no tiene un teléfono configurado, no la enviamos.
   # Si ya intentamos muchas veces, no la enviamos.
+  # Si ya cerró manual o automáticamente la notificación, no la enviamos.
   # Si le estamos mandando una notificación a un proveedor que está cerrado en el día
   # de hoy, no la enviamos.
   # Si la configuración no es configurable, la enviamos. Si sí, nos fijamos si el
@@ -74,16 +75,17 @@ class Notification < ApplicationRecord
   end
 
   def title
-    I18n.t!("notifications.#{event}.title", **title_data&.transform_keys(&:to_sym))
+    I18n.t("notifications.#{event}.title", default: nil, **title_data&.transform_keys(&:to_sym))
   end
 
   def description
-    I18n.t!("notifications.#{event}.description", **description_data&.transform_keys(&:to_sym))
+    I18n.t("notifications.#{event}.description", default: nil, **description_data&.transform_keys(&:to_sym))
   end
 
   private
 
   def role_belongs_to_user
+    user.sync_roles!
     errors.add(:role, :invalid) unless user&.roles&.include?(role.to_s)
   end
 
