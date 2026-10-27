@@ -586,8 +586,12 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e1_user, role: :consumer
 
       edit_order(order)
-      within("[role=dialog]") do
+      click_button "Ver mis direcciones"
+      within("[role=dialog]", text: "Mis direcciones") do
         find("label", text: "Colonia 1370").click
+        click_button "Seleccionar"
+      end
+      within("[role=dialog]", text: "Modificar pedido") do
         click_button "Guardar cambios"
       end
       expect(page).to have_content("Pedido actualizado")
@@ -607,7 +611,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       open_menu(as: e1_user, day: tuesday)
       click_button "Agregar #{p1_milanesa.name}"
 
-      fill_in "notes", with: "a" * 141
+      fill_in "notes", with: "a" * 141, fill_options: { rapid: false }
 
       expect(find_field("notes").value.length).to eq(140)
     end
@@ -623,7 +627,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       end
 
       within("[role=dialog]") do
-        fill_in "notes", with: "a" * 141
+        fill_in "notes", with: "a" * 141, fill_options: { rapid: false }
 
         expect(find_field("notes").value.length).to eq(140)
         expect(page).to have_content("140/140")

@@ -6,6 +6,8 @@
 # la cuenta se le asigna automáticamente. Las cuentas de una orden no deberían
 # asignarse manualmente.
 class Order < ApplicationRecord
+  include Auditable
+
   # La migración 20260911234117 usa el modelo Order, así que al reconstruir la
   # base desde cero el enum se evalúa antes de que exista su columna.
   attribute :delivery_method, :integer
@@ -32,6 +34,7 @@ class Order < ApplicationRecord
   # El pedido conserva el plato tal como estaba al pedirlo: editarlo después no
   # tiene que reescribir el historial.
   before_create :snapshot_order_context
+  audits :amount, :delivery_method, :address, :notes, :selected_options, :price, :discounted_price
 
   belongs_to :consumer
   belongs_to :schedule
@@ -177,15 +180,22 @@ class Order < ApplicationRecord
   end
 
   # RN-12 y RN-13: un pedido pendiente de confirmación se cancela hasta el día de
-  # la entrega inclusive; uno ya confirmado, solo mientras la entrega siga siendo
-  # para un día futuro. Devuelve el motivo del bloqueo para que la pantalla lo
-  # explique. La fecha se mira en los dos estados porque esto es la única guarda
-  # del endpoint: que la pantalla esconda el botón no frena un PATCH directo.
+  # la entrega inclusive, pero ese mismo día solo hasta la hora de cierre del
+  # proveedor: pasada, él ya está preparando lo pedido. Uno ya confirmado, solo
+  # mientras la entrega siga siendo para un día futuro. Devuelve el motivo del
+  # bloqueo para que la pantalla lo explique. La fecha se mira en los dos
+  # estados porque esto es la única guarda del endpoint: que la pantalla esconda
+  # el botón no frena un PATCH directo.
   def cancellation_block_reason
     return "already_closed" unless pending? || confirmed?
     return "unavailable" if schedule.nil?
     return if schedule.date.after?(Date.current)
-    return if pending? && schedule.date.today?
+
+    if pending? && schedule.date.today?
+      return "order_deadline_passed" if schedule.order_deadline_passed?
+
+      return
+    end
 
     schedule.date.today? ? "confirmed_for_today" : "already_closed"
   end
@@ -194,16 +204,29 @@ class Order < ApplicationRecord
     cancellation_block_reason.nil?
   end
 
+  # Solo los confirmados suman a la deuda de la cuenta, así que un confirmado
+  # cuya entrega ya pasó no se rechaza: cambiaría un monto que ya se cobró. Sin
+  # fecha de entrega no hay forma de saberlo y se trata igual que uno pasado.
+  def rejectable?
+    pending? || (confirmed? && delivery_date.present? && !delivery_date.before?(Date.current))
+  end
+
   # Confirmar solo corre sobre pedidos pendientes; rechazar también sobre los
   # confirmados, porque el proveedor puede no poder cumplir lo que aceptó. Un
   # pedido cancelado o ya rechazado no se toca: pisaría la cancelación del
   # empleado. El lock es por el doble envío, igual que en cancel.
   def decide(status, reason: nil, details: nil, by: nil)
     with_lock do
-      return false unless pending? || (confirmed? && status.to_s == "rejected")
+      rejecting = status.to_s == "rejected"
+      return false unless pending? || (confirmed? && rejecting)
+
+      if rejecting && !rejectable?
+        errors.add(:base, I18n.t("validations.order_not_rejectable"))
+        return false
+      end
 
       attrs = { status: status }
-      if status.to_s == "rejected"
+      if rejecting
         attrs[:rejection_reason] = reason
         attrs[:rejection_details] = details
         attrs[:rejected_at] = Time.current

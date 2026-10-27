@@ -52,6 +52,7 @@ function order(overrides: Partial<ProviderOrder>): ProviderOrder {
     consumer_company: "GoGrow",
     menu_name: "Milanesa de pollo",
     address: "Av. 18 de Julio 1006",
+    rejectable: true,
     ...overrides,
   }
 }
@@ -133,6 +134,30 @@ describe("Provider orders page", () => {
 
     expect(screen.getByText("Ana Gómez - GoGrow")).toBeInTheDocument()
     expect(screen.queryByText("Bruno Pérez - GoGrow")).not.toBeInTheDocument()
+  })
+
+  it("muestra deshabilitado el botón de rechazar para un pedido confirmado pasado en el historial", async () => {
+    const user = userEvent.setup()
+    render(
+      <Index
+        today={TODAY}
+        upcoming_orders={upcoming}
+        past_orders={[
+          order({
+            id: 99,
+            status: "confirmed",
+            rejectable: false,
+            date: "2026-10-05",
+            consumer_name: "Ana Gómez",
+          }),
+        ]}
+      />,
+    )
+
+    await user.click(screen.getByRole("tab", { name: "Historial" }))
+
+    expect(screen.getByRole("button", { name: /rechazar/i })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /confirmar/i })).toBeDisabled()
   })
 
   it("mantiene los filtros al cambiar de pestaña", async () => {
