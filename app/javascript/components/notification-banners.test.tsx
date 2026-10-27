@@ -106,4 +106,52 @@ describe("NotificationBanners", () => {
       }),
     )
   })
+
+  it("renders the dismissable alert icon with currentColor stroke to support dark mode", () => {
+    mocks.notifications.push({
+      id: 5,
+      title: "Tu pedido fue cancelado",
+      description: "Tu pedido no podrá ser entregado.",
+      requires_action: false,
+    })
+
+    const { container } = render(<NotificationBanners />)
+
+    const svg = container.querySelector("svg")
+    expect(svg).toBeInTheDocument()
+
+    const strokedElements = svg?.querySelectorAll("[stroke]") ?? []
+    expect(strokedElements.length).toBeGreaterThan(0)
+
+    strokedElements.forEach((el) => {
+      expect(el.getAttribute("stroke")).toBe("currentColor")
+      expect(el.getAttribute("stroke")).not.toBe("#0A0A0A")
+    })
+  })
+
+  it("applies theme-adaptive classes on dark mode and keeps currentColor on dismissable alert icon", () => {
+    document.documentElement.classList.add("dark")
+
+    mocks.notifications.push({
+      id: 6,
+      title: "Notificación descartable en modo oscuro",
+      description: "Descripción visible.",
+      requires_action: false,
+    })
+
+    const { container } = render(<NotificationBanners />)
+
+    const alert = container.querySelector("[role='alert']")
+    expect(alert).toHaveClass("text-foreground")
+
+    const svg = alert?.querySelector("svg")
+    expect(svg).toBeInTheDocument()
+
+    const strokedElements = svg?.querySelectorAll("[stroke]") ?? []
+    strokedElements.forEach((el) => {
+      expect(el.getAttribute("stroke")).toBe("currentColor")
+    })
+
+    document.documentElement.classList.remove("dark")
+  })
 })

@@ -17,7 +17,7 @@ export default function NotFound() {
   const { props, url } = usePage()
   const { auth } = props
 
-  const inProviderArea = url.startsWith("/provider")
+  const inProviderArea = url.startsWith("/proveedor")
 
   const destination = auth.session
     ? {
