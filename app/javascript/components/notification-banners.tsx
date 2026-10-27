@@ -58,21 +58,21 @@ function DismissableAlertIcon({ className }: { className?: string }) {
         cx="7.41667"
         cy="7.41667"
         r="6.66667"
-        stroke="#0A0A0A"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M7.4165 4.75V7.75"
-        stroke="#0A0A0A"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
         d="M7.4165 10.0757V10.0824"
-        stroke="#0A0A0A"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
