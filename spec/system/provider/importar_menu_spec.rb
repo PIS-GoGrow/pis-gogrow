@@ -55,7 +55,7 @@ RSpec.describe "Importar menú desde planilla", type: :system do
     }.to change { provider.menus.saved.count }.by(2)
 
     # Verifica mensaje de éxito y datos persistidos
-    expect(page).to have_content("Se importaron 3 platos al menú.")
+    expect(page).to have_content(I18n.t("flash.menu_imported", count: 3))
 
     expect(provider.menus.saved.find_by(name: "Milanesa con papas fritas").price).to eq(320)
     expect(provider.menus.saved.find_by(name: "Sorrentinos")).to be_present
