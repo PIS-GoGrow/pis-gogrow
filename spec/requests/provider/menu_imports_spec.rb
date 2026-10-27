@@ -91,5 +91,93 @@ RSpec.describe "Provider::MenuImports", type: :request do
 
       expect(inertia.props[:preview][:can_import]).to be(false)
     end
+
+    it "maneja el intento de confirmación sin archivo o con parámetro inválido (bypass de interfaz)" do
+      expect do
+        post provider_confirm_menu_import_path, params: { file: "bypass_string" }
+      end.not_to change { Menu.count }
+
+      preview = inertia.props[:preview]
+      expect(preview[:can_import]).to be(false)
+      expect(preview[:error]).to eq(I18n.t("validations.menu_import.file.unsupported_format"))
+    end
+
+    it "mantiene la integridad en la base si falla el guardado de un plato y devuelve el error" do
+      allow(Menus::Create).to receive(:new).and_wrap_original do |original, **arguments|
+        original.call(**arguments).tap do |service|
+          next unless arguments[:attributes][:name] == "Ensalada César"
+
+          allow(service).to receive(:call) { service.errors.add(:base, "error de validación") && false }
+        end
+      end
+
+      expect do
+        post provider_confirm_menu_import_path, params: { file: upload }
+      end.not_to change { Menu.count }
+
+      preview = inertia.props[:preview]
+      expect(preview[:can_import]).to be(false)
+      failed_entry = preview[:entries].find { it[:name] == "Ensalada César" }
+      expect(failed_entry[:errors]).to include("error de validación")
+    end
+  end
+
+  describe "control de acceso por rol y estado" do
+    context "sin iniciar sesión" do
+      it "redirige al inicio de sesión" do
+        sign_out
+
+        get provider_menu_import_path
+        expect(response).to redirect_to(provider_sign_in_path)
+
+        post provider_menu_import_preview_path, params: { file: upload }
+        expect(response).to redirect_to(provider_sign_in_path)
+
+        post provider_confirm_menu_import_path, params: { file: upload }
+        expect(response).to redirect_to(provider_sign_in_path)
+      end
+    end
+
+    context "como admin" do
+      it "no permite acceder y redirige" do
+        sign_in users(:admin), role: :admin
+
+        get provider_menu_import_path
+        expect(response).to have_http_status(:redirect)
+
+        post provider_menu_import_preview_path, params: { file: upload }
+        expect(response).to have_http_status(:redirect)
+
+        post provider_confirm_menu_import_path, params: { file: upload }
+        expect(response).to have_http_status(:redirect)
+      end
+    end
+
+    context "como consumer" do
+      it "no permite previsualizar ni confirmar" do
+        sign_in users(:one), role: :consumer
+
+        post provider_menu_import_preview_path, params: { file: upload }
+        expect(response).to have_http_status(:redirect)
+
+        post provider_confirm_menu_import_path, params: { file: upload }
+        expect(response).to have_http_status(:redirect)
+      end
+    end
+
+    context "como proveedor sin onboarding completado" do
+      it "redirige al wizard de onboarding" do
+        providers(:tuviandita).update!(onboarding_completed_at: nil)
+
+        get provider_menu_import_path
+        expect(response).to redirect_to(provider_onboarding_path)
+
+        post provider_menu_import_preview_path, params: { file: upload }
+        expect(response).to redirect_to(provider_onboarding_path)
+
+        post provider_confirm_menu_import_path, params: { file: upload }
+        expect(response).to redirect_to(provider_onboarding_path)
+      end
+    end
   end
 end

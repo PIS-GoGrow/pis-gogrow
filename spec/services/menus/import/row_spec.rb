@@ -104,8 +104,20 @@ RSpec.describe Menus::Import::Row do
     end
 
     it "rechaza un cupo que no es entero positivo" do
-      [ "0", "media docena", "" ].each do |value|
+      [ "0", "-5", "20.5", "media docena", "" ].each do |value|
         expect(row("cupo" => value).errors).to include(I18n.t("validations.menu_import.amount"))
+      end
+    end
+
+    it "rechaza un cupo que supera el máximo permitido" do
+      expect(row("cupo" => (Schedule::MAX_AMOUNT + 1).to_s).errors)
+        .to include(I18n.t("validations.menu_import.amount"))
+    end
+
+    it "rechaza celdas de opciones con formato inválido o vacías" do
+      [ "Salsa=", "=filetto", "Salsa" ].each do |cell|
+        expect(row("opciones_1" => cell).errors)
+          .to include(I18n.t("validations.menu_import.options", cell: cell))
       end
     end
 
