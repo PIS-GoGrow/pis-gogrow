@@ -163,10 +163,10 @@ RSpec.describe "Aplicar y desaplicar un cupón al pedir", type: :system do
     expect(Order.last.order_benefits.pluck(:benefit_id)).to contain_exactly(benefits(:monthly).id)
   end
 
-  # El aislamiento entre empleados ya está cubierto por
-  # `spec/system/admin/asignar_cupon_spec.rb` ("solo el empleado elegido recibe el
-  # aviso…"): otro consumidor no ve el cupón ni el bloque "Mis cupones".
-  it "no deja que un proveedor entre al menú del empleado a usar cupones" do
+# El aislamiento entre empleados ya está cubierto por
+# `spec/system/admin/asignar_cupon_spec.rb` ("solo el empleado elegido recibe el
+# aviso…"): otro consumidor no ve el cupón ni el bloque "Mis cupones".
+it "no deja que un proveedor entre al menú del empleado a usar cupones" do
     assign_coupon
 
     sign_in users(:provider_user), role: :provider
