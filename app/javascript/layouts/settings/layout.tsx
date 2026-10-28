@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import {
+  consumerDeliveryAddresses,
   settingsAppearance,
   settingsEmails,
   settingsNotifications,
@@ -62,6 +63,15 @@ export default function SettingsLayout({
       href: settingsNotifications.index().url,
       icon: null,
     },
+    ...(isConsumer
+      ? [
+          {
+            title: t("nav.settings.addresses"),
+            href: consumerDeliveryAddresses.index().url,
+            icon: null,
+          },
+        ]
+      : []),
   ]
 
   return (

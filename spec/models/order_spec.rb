@@ -1110,6 +1110,56 @@ RSpec.describe Order, type: :model do
       )
     end
 
+    it "does not notify the provider when the consumer cancels a confirmed order while the provider is closed" do
+      order = orders(:upcoming_confirmed_future)
+
+      order.provider.closures.create!(
+        starts_on: Date.current,
+        ends_on: Date.current,
+        reason: "Vacaciones"
+      )
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.not_to change(Notification, :count)
+
+      expect(
+        Notification.where(
+          event: "order_cancellation",
+          user: order.provider.user,
+          notifiable: order
+        )
+      ).to be_empty
+    end
+
+    it "notifies the provider when the consumer cancels a confirmed order while the provider is open" do
+      order = orders(:upcoming_confirmed_future)
+
+      order.provider.closures.create!(
+        starts_on: Date.current + 2.days,
+        ends_on: Date.current + 4.days,
+        reason: "Vacaciones futuras"
+      )
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.to change { Notification.where(event: "order_cancellation", user: order.provider.user).count }.by(1)
+    end
+
+    it "does not notify the provider when the cancellation occurs during a multi-day closure including today" do
+      order = orders(:upcoming_confirmed_future)
+
+      order.provider.closures.create!(
+        starts_on: Date.current,
+        ends_on: Date.current + 2.days,
+        reason: "Obras"
+      )
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.not_to change(Notification, :count)
+    end
+
     it "does not notify the provider when the cancellation is refused" do
       order = orders(:upcoming_pending_today)
       order.update_columns(status: Order.statuses[:confirmed])

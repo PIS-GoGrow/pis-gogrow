@@ -63,6 +63,30 @@ describe("NotificationBanners", () => {
     ).toBeInTheDocument()
   })
 
+  it("renders an HR debt payment reminder naming multiple creditors", () => {
+    mocks.notifications.push({
+      id: 2,
+      title: "Recordatorio de pago pendiente",
+      description:
+        "Recursos Humanos te recuerda que tenés $950,75 en pagos vencidos con Tu Viandita y Endulzate. Podés verlos en tus pagos.",
+      requires_action: false,
+    })
+
+    render(<NotificationBanners />)
+
+    expect(
+      screen.getByText("Recordatorio de pago pendiente"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Recursos Humanos te recuerda que tenés $950,75 en pagos vencidos con Tu Viandita y Endulzate. Podés verlos en tus pagos.",
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Cerrar notificación" }),
+    ).toBeInTheDocument()
+  })
+
   it("renders a notification that requires action without a close button", () => {
     mocks.notifications.push({
       id: 2,

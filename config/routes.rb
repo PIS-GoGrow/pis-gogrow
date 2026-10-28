@@ -80,6 +80,7 @@ Rails.application.routes.draw do
     resource :order_deadline, path: "limite-de-pedidos", only: [ :update ]
     resources :closures, path: "cierres", only: [ :create, :update, :destroy ]
     get "inicio", to: "dashboard#index", as: :dashboard
+    get "inicio/hallazgos", to: "insights#index", as: :insights
     resources :payments, path: "comprobantes", only: [ :update ] do
       get :receipt, on: :member, path: "archivo"
     end
@@ -97,7 +98,9 @@ Rails.application.routes.draw do
     get "menu-semanal/error", to: "dashboard#error", as: :dashboard_error
 
     resources :menus, path: "menu-del-dia", only: [ :index ]
-    resources :delivery_addresses, path: "direcciones-de-entrega", only: [ :create ]
+    resources :delivery_addresses,
+              path: "direcciones-de-entrega",
+              only: %i[index create update destroy]
 
     resources :orders, path: "pedidos", only: [ :index, :show, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer, path: "cancelar"

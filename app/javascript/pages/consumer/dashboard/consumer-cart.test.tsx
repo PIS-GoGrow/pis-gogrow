@@ -158,7 +158,7 @@ describe("ConsumerCart delivery address", () => {
 
     expect(within(sheet).getByLabelText("Nombre")).toHaveAttribute(
       "placeholder",
-      "Ej: Oficina, Casa, etc.",
+      "Ej: Casa, Gimnasio, etc.",
     )
     expect(within(sheet).getByLabelText("Dirección")).toBeInTheDocument()
     expect(

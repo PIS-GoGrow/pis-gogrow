@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 import {
   consumerAccounts,
   consumerDashboard,
+  consumerDeliveryAddresses,
   consumerOrders,
   consumerProfiles,
   settingsNotifications,
@@ -41,6 +42,7 @@ const links = [
     href: consumerProfiles.show().url,
     activePrefixes: [
       consumerProfiles.show().url,
+      consumerDeliveryAddresses.index().url,
       settingsNotifications.index().url,
     ],
   },

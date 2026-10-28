@@ -71,7 +71,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
     click_button "Agregar hora de cierre"
     find_by_id("order_deadline").click
-    find("[role='option']", exact_text: "12:30").click
+    choose_time("12:30")
     click_button "Guardar cambios"
 
     expect(page).to have_content("¡Hora de cierre guardada!")

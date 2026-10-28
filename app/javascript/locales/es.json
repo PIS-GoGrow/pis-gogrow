@@ -21,6 +21,9 @@
       "sign_up": "Registrarse"
     },
     "components": {
+      "ai_insight_card": {
+        "generated": "Generado por IA"
+      },
       "appearance": {
         "dark": "Oscuro",
         "light": "Claro",
@@ -51,6 +54,11 @@
       "file_input": {
         "empty": "Sin archivos seleccionados",
         "select": "Seleccionar archivo"
+      },
+      "insights_metrics": {
+        "dishes": "Platos",
+        "orders": "Pedidos",
+        "rating": "Valoración"
       },
       "month_select": {
         "this_month": "Este mes"
@@ -103,6 +111,7 @@
         "payments": "Cobros"
       },
       "settings": {
+        "addresses": "Direcciones",
         "appearance": "Apariencia",
         "email": "Correo electrónico",
         "notifications": "Notificaciones",
@@ -225,8 +234,9 @@
         "title": "Hay empleados con pagos pendientes"
       },
       "hr_debt_payment_reminder": {
-        "description": "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos.",
-        "title": "Recordatorio de pago pendiente"
+        "description": "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos con %{providers}. Podés verlos en tus pagos.",
+        "title": "Recordatorio de pago pendiente",
+        "unknown_provider": "un proveedor"
       },
       "order_cancellation": {
         "description": "El pedido de %{consumer} del %{date} de %{dish} fue cancelado.",
@@ -731,7 +741,7 @@
           "cancel": "Cancelar",
           "description": "Ingresá dónde querés recibir el pedido.",
           "name": "Nombre",
-          "name_placeholder": "Ej: Oficina, Casa, etc.",
+          "name_placeholder": "Ej: Casa, Gimnasio, etc.",
           "save_for_later": "Guardar esta dirección para futuros pedidos",
           "street": "Dirección",
           "submit": "Agregar",
@@ -796,8 +806,43 @@
           "required": "Obligatorio"
         }
       },
+      "consumer_delivery_addresses": {
+        "delete": {
+          "back": "Volver",
+          "deleting": "Eliminando...",
+          "description": "Esta dirección no podrá recuperarse. Podés agregar una nueva cuando quieras.",
+          "done": "Listo",
+          "submit": "Eliminar dirección",
+          "success_description": "La dirección se eliminó correctamente.",
+          "success_title": "Dirección eliminada",
+          "title": "¿Eliminar %{name}?"
+        },
+        "form": {
+          "apartment": "Piso/Apartamento (opcional)",
+          "cancel": "Cancelar",
+          "create": "Agregar",
+          "create_title": "Agregar una dirección",
+          "delete": "Eliminar",
+          "description": "Completá los datos de la dirección de entrega",
+          "edit_title": "Editar dirección",
+          "name": "Nombre",
+          "name_placeholder": "Ej: Casa, Gimnasio, etc.",
+          "street": "Dirección",
+          "update": "Guardar cambios"
+        },
+        "index": {
+          "add": "Agregar dirección",
+          "back": "Volver a Cuenta",
+          "description": "Gestioná tus direcciones de entrega",
+          "edit": "Editar %{name}",
+          "office": "Oficina",
+          "title": "Direcciones"
+        }
+      },
       "consumer_profiles": {
         "show": {
+          "addresses": "Direcciones",
+          "addresses_description": "Gestioná tus direcciones de entrega",
           "benefit": "Mi beneficio",
           "coupon_discount": "%{percentage}% de descuento",
           "coupon_period": "Para entregas del",
@@ -1164,10 +1209,7 @@
           "greeting": "Hola, %{name} 👋",
           "insights": {
             "description": "Los hallazgos basados en las valoraciones estarán disponibles próximamente.",
-            "dishes": "Platos",
             "generated": "Generado por IA",
-            "orders": "Pedidos",
-            "rating": "Valoración",
             "title": "Hallazgos del mes"
           },
           "order_deadline": {
@@ -1218,6 +1260,25 @@
             "title": "Solo Oficinas"
           },
           "title": "Entregas"
+        }
+      },
+      "provider_insights": {
+        "index": {
+          "back": "Volver al inicio",
+          "empty_orders": "Todavía no hay pedidos en este período",
+          "empty_reviews": "Todavía no hay reseñas en este período",
+          "orders_count": "x%{count}",
+          "period": "Período",
+          "presets": {
+            "last_month": "Mes pasado",
+            "this_month": "Este mes",
+            "this_week": "Esta semana",
+            "today": "Hoy",
+            "yesterday": "Ayer"
+          },
+          "title": "Hallazgos",
+          "top_dishes": "Platos más pedidos",
+          "top_rated_dishes": "Mejor valorados"
         }
       },
       "provider_invitations": {
