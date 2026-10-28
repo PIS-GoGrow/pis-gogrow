@@ -35,7 +35,7 @@ RSpec.describe "Importar menú desde planilla", type: :system do
 
     expect(page).to have_current_path(provider_menu_import_path)
     expect(page).to have_content("Descargá la plantilla")
-    expect(page).to have_link("Descargar plantilla", href: "/plantillas/menu.csv")
+    expect(page).to have_link("Descargar plantilla", href: "/plantillas/menu.xlsx")
   end
 
   it "corrige la fila con error en la misma pantalla e importa el resto" do

@@ -40,7 +40,7 @@ RSpec.describe "Provider::MenuImports", type: :request do
 
       expect(inertia.component).to eq("provider/menu_imports/new")
       expect(inertia.props[:preview]).to be_nil
-      expect(inertia.props[:template_path]).to eq("/plantillas/menu.csv")
+      expect(inertia.props[:template_path]).to eq("/plantillas/menu.xlsx")
       expect(inertia.props[:formats]).to eq([ ".xlsx", ".xls", ".csv", ".ods" ])
     end
 
@@ -48,7 +48,7 @@ RSpec.describe "Provider::MenuImports", type: :request do
       get provider_menu_import_path
 
       expect(inertia.props).to include(
-        template_path: "/plantillas/menu.csv",
+        template_path: "/plantillas/menu.xlsx",
         formats: [ ".xlsx", ".xls", ".csv", ".ods" ],
         max_rows: 200,
         max_size_mb: 5,

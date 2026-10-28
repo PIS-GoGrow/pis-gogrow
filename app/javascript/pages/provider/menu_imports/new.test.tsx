@@ -75,7 +75,7 @@ describe("Pantalla de importar platos", () => {
   const user = userEvent.setup()
 
   const props: ProviderMenuImportsNew = {
-    template_path: "/plantillas/menu.csv",
+    template_path: "/plantillas/menu.xlsx",
     formats: [".xlsx", ".xls", ".csv", ".ods"],
     max_rows: 200,
     max_size_mb: 5,
@@ -126,7 +126,7 @@ describe("Pantalla de importar platos", () => {
     ).toBeInTheDocument()
 
     const link = screen.getByRole("link", { name: "Descargar plantilla" })
-    expect(link).toHaveAttribute("href", "/plantillas/menu.csv")
+    expect(link).toHaveAttribute("href", "/plantillas/menu.xlsx")
     expect(link).toHaveAttribute("download")
   })
 

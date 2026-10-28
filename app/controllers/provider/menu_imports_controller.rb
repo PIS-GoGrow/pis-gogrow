@@ -7,7 +7,7 @@
 # Ver docs/importar-menu.md.
 class Provider::MenuImportsController < Provider::InertiaController
   PAGE = "provider/menu_imports/new"
-  TEMPLATE_PATH = "/plantillas/menu.csv"
+  TEMPLATE_PATH = "/plantillas/menu.xlsx"
 
   before_action :set_instructions
 
