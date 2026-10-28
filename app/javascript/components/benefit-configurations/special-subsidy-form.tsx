@@ -155,79 +155,96 @@ export default function SpecialSubsidyForm({
   }
 
   const limitAndValidity = (
-    <>
-      <Field orientation="horizontal" data-invalid={!!errors.limit}>
-        <FieldLabel htmlFor="condition_limit" className="font-normal">
-          {t(
-            "pages.admin.benefit_configurations.index.special.form.limit_prefix",
-          )}
-        </FieldLabel>
-        <Input
-          id="condition_limit"
-          name="limit"
-          type="number"
-          min="1"
-          className="w-20"
-          value={condition.limit}
-          aria-invalid={!!errors.limit}
-          onChange={(event) =>
-            setCondition({ limit: toNumber(event.target.value) })
-          }
-        />
-        <span className="text-muted-foreground text-sm">
-          {t(
-            "pages.admin.benefit_configurations.index.special.form.limit_suffix",
-          )}
-        </span>
-      </Field>
-      <FieldError errors={fieldErrors("limit")} />
-
-      <Field orientation="horizontal" data-invalid={!!errors.validity_amount}>
-        <FieldLabel htmlFor="condition_validity_amount" className="font-normal">
-          {t("pages.admin.benefit_configurations.index.special.form.validity")}
-        </FieldLabel>
-        <Input
-          id="condition_validity_amount"
-          name="validity_amount"
-          type="number"
-          min="1"
-          className="w-20"
-          value={condition.validity_amount}
-          aria-invalid={!!errors.validity_amount}
-          onChange={(event) =>
-            setCondition({ validity_amount: toNumber(event.target.value) })
-          }
-        />
-        <Select
-          name="validity_unit"
-          value={condition.validity_unit}
-          onValueChange={(value) =>
-            setCondition({
-              validity_unit: value as typeof condition.validity_unit,
-            })
-          }
+    <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
+        <Field
+          orientation="horizontal"
+          className="w-fit max-w-full flex-wrap gap-2 [&>[data-slot=field-label]]:flex-none"
+          data-invalid={!!errors.limit}
         >
-          <SelectTrigger
-            className="w-32"
-            aria-label={t(
-              "pages.admin.benefit_configurations.index.special.form.validity_unit",
+          <FieldLabel htmlFor="condition_limit" className="font-normal">
+            {t(
+              "pages.admin.benefit_configurations.index.special.form.limit_prefix",
             )}
+          </FieldLabel>
+          <Input
+            id="condition_limit"
+            name="limit"
+            type="number"
+            min="1"
+            className="w-20"
+            value={condition.limit}
+            aria-invalid={!!errors.limit}
+            onChange={(event) =>
+              setCondition({ limit: toNumber(event.target.value) })
+            }
+          />
+          <span className="text-sm">
+            {t(
+              "pages.admin.benefit_configurations.index.special.form.limit_suffix",
+            )}
+          </span>
+        </Field>
+        <FieldError errors={fieldErrors("limit")} />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <Field
+          orientation="horizontal"
+          className="w-fit max-w-full flex-wrap gap-2 [&>[data-slot=field-label]]:flex-none"
+          data-invalid={!!errors.validity_amount}
+        >
+          <FieldLabel
+            htmlFor="condition_validity_amount"
+            className="font-normal"
           >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {(["days", "weeks", "months"] as const).map((unit) => (
-              <SelectItem key={unit} value={unit}>
-                {t(
-                  `pages.admin.benefit_configurations.index.special.form.validity_units.${unit}`,
-                )}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <FieldError errors={fieldErrors("validity_amount")} />
-    </>
+            {t(
+              "pages.admin.benefit_configurations.index.special.form.validity",
+            )}
+          </FieldLabel>
+          <Input
+            id="condition_validity_amount"
+            name="validity_amount"
+            type="number"
+            min="1"
+            className="w-20"
+            value={condition.validity_amount}
+            aria-invalid={!!errors.validity_amount}
+            onChange={(event) =>
+              setCondition({ validity_amount: toNumber(event.target.value) })
+            }
+          />
+          <Select
+            name="validity_unit"
+            value={condition.validity_unit}
+            onValueChange={(value) =>
+              setCondition({
+                validity_unit: value as typeof condition.validity_unit,
+              })
+            }
+          >
+            <SelectTrigger
+              className="w-28"
+              aria-label={t(
+                "pages.admin.benefit_configurations.index.special.form.validity_unit",
+              )}
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(["days", "weeks", "months"] as const).map((unit) => (
+                <SelectItem key={unit} value={unit}>
+                  {t(
+                    `pages.admin.benefit_configurations.index.special.form.validity_units.${unit}`,
+                  )}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <FieldError errors={fieldErrors("validity_amount")} />
+      </div>
+    </div>
   )
 
   return (
@@ -420,10 +437,20 @@ export default function SpecialSubsidyForm({
                 )}
               />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent
+              position="popper"
+              align="start"
+              sideOffset={4}
+              collisionPadding={16}
+              className="max-h-[min(16rem,var(--radix-select-content-available-height))] w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]"
+            >
               {(["seniority", "birthday", "onboarding", "gift"] as const).map(
                 (type) => (
-                  <SelectItem key={type} value={type}>
+                  <SelectItem
+                    key={type}
+                    value={type}
+                    className="whitespace-normal"
+                  >
                     {t(
                       `pages.admin.benefit_configurations.index.special.conditions.${type}`,
                     )}

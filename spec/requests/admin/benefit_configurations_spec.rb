@@ -295,15 +295,15 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    it "accepts valid boundary values (1% subsidy, 100% subsidy, 0 monthly limit, decimal price)" do
+    it "accepts valid boundary values (1% subsidy, integer price, monthly limit of 1)" do
       post admin_benefit_configurations_path, params: {
-        benefit_configuration: { subsidy_percentage: 1, max_voucher_price: 99.99, monthly_voucher_limit: 1 }
+        benefit_configuration: { subsidy_percentage: 1, max_voucher_price: 99, monthly_voucher_limit: 1 }
       }
 
       expect(response).to redirect_to(admin_benefit_configurations_path)
       config = BenefitConfiguration.last
       expect(config.subsidy_percentage).to eq(1)
-      expect(config.benefit_rules.first.max_price).to eq(99.99)
+      expect(config.benefit_rules.first.max_price).to eq(99)
       expect(config.benefit_rules.first.limit).to eq(1)
     end
 
@@ -375,7 +375,14 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
         expect(inertia.props[:errors][:benefit_configuration]).to have_key(:subsidy_percentage)
       end
 
-      it "rechaza precios máximos o límites negativos en las reglas" do
+      it "rechaza precios máximos decimales o negativos y límites negativos en las reglas" do
+        post admin_benefit_configurations_path, params: {
+          benefit_configuration: { subsidy_percentage: 50, max_voucher_price: 150.5, monthly_voucher_limit: 20 }
+        }
+
+        follow_redirect!
+        expect(inertia.props[:errors][:benefit_rules].first).to have_key(:max_price)
+
         post admin_benefit_configurations_path, params: {
           benefit_configuration: { subsidy_percentage: 50, max_voucher_price: -10, monthly_voucher_limit: -5 }
         }

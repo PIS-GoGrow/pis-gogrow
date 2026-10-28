@@ -37,7 +37,7 @@ vi.mock("@inertiajs/react", async () => {
 describe("EditBenefitConfigurationForm", () => {
   const defaultValues = {
     subsidy_percentage: 50 as const,
-    max_voucher_price: 150 as const,
+    max_voucher_price: "500.0" as const,
     monthly_voucher_limit: 20 as const,
   }
 
@@ -68,7 +68,13 @@ describe("EditBenefitConfigurationForm", () => {
     expect(screen.getByLabelText(/se descuenta/i)).toHaveValue(50)
     expect(
       screen.getByLabelText(/cuando el precio por vianda es/i),
-    ).toHaveValue(150)
+    ).toHaveValue(500)
+    expect(
+      screen.getByLabelText(/cuando el precio por vianda es/i),
+    ).toHaveAttribute("step", "1")
+    expect(
+      screen.getByLabelText(/cuando el precio por vianda es/i),
+    ).toHaveAttribute("inputmode", "numeric")
     expect(
       screen.getByLabelText(/hasta un límite por empleado de/i),
     ).toHaveValue(20)
