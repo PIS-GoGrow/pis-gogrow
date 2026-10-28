@@ -1,37 +1,38 @@
 import { Copy, Pencil, RefreshCw, TriangleAlert, Undo2, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import type { Dish, DishStatus } from "@/lib/menu-import"
 import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 
-// El estado se lee de un vistazo por el color del borde y del punto, y la línea
-// de abajo dice qué se puede hacer con el plato.
-const STYLES: Record<
+// El estado se lee de un vistazo por el color del borde y del badge, manteniendo
+// consistencia entre el modo claro y oscuro.
+export const STATUS_STYLES: Record<
   DishStatus,
-  { border: string; dot: string; text: string }
+  { border: string; badge: string; dot: string }
 > = {
   new: {
     border: "border-green-200 dark:border-green-900",
-    dot: "bg-green-600",
-    text: "text-green-700 dark:text-green-400",
+    badge: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300",
+    dot: "bg-green-500",
   },
   updated: {
     border: "border-green-200 dark:border-green-900",
-    dot: "bg-green-600",
-    text: "text-green-700 dark:text-green-400",
+    badge: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300",
+    dot: "bg-green-500",
   },
   error: {
     border: "border-red-200 dark:border-red-900",
+    badge: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
     dot: "bg-red-500",
-    text: "text-red-700 dark:text-red-400",
   },
   exists: {
     border: "border-amber-200 dark:border-amber-900",
+    badge: "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
     dot: "bg-amber-500",
-    text: "text-amber-700 dark:text-amber-400",
   },
 }
 
@@ -56,7 +57,7 @@ export default function DishCard({
 }: DishCardProps) {
   const { t } = useTranslation()
   const key = "pages.provider_menu_imports.new.card"
-  const style = STYLES[status]
+  const style = STATUS_STYLES[status]
 
   return (
     <div className={cn("rounded-xl border p-4", style.border)}>
@@ -65,10 +66,11 @@ export default function DishCard({
           {dish.name.trim() || t(`${key}.unnamed`)}
         </span>
 
-        <span
+        <Badge
+          variant="outline"
           className={cn(
-            "flex shrink-0 items-center gap-1.5 text-xs font-medium",
-            style.text,
+            "gap-1.5 border-transparent font-medium",
+            style.badge,
           )}
         >
           <span
@@ -76,7 +78,7 @@ export default function DishCard({
             className={cn("size-1.5 rounded-full", style.dot)}
           />
           {t(`${key}.${status}`)}
-        </span>
+        </Badge>
       </div>
 
       {dish.description.trim() && (

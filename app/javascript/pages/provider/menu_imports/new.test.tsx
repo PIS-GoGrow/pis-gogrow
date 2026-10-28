@@ -190,9 +190,28 @@ describe("Pantalla de importar platos", () => {
     render(<New {...props} preview={preview} />)
 
     expect(screen.getByText("platos.csv")).toBeInTheDocument()
-    expect(screen.getByText("1 Nuevo")).toBeInTheDocument()
-    expect(screen.getByText("1 Error")).toBeInTheDocument()
-    expect(screen.getByText("1 Ya existe")).toBeInTheDocument()
+
+    const nuevoSummary = screen.getByText("1 Nuevo")
+    const errorSummary = screen.getByText("1 Error")
+    const existsSummary = screen.getByText("1 Ya existe")
+
+    expect(nuevoSummary).toBeInTheDocument()
+    expect(errorSummary).toBeInTheDocument()
+    expect(existsSummary).toBeInTheDocument()
+
+    // Los badges del resumen tienen los colores de fondo consistentes en claro y oscuro
+    expect(nuevoSummary).toHaveClass("bg-green-50", "dark:bg-green-950")
+    expect(errorSummary).toHaveClass("bg-red-50", "dark:bg-red-950")
+    expect(existsSummary).toHaveClass("bg-amber-50", "dark:bg-amber-950")
+
+    // Los badges de las tarjetas tienen exactamente el mismo color de fondo que el resumen
+    const nuevoBadge = screen.getByText("Nuevo")
+    const errorBadge = screen.getByText("Error")
+    const existsBadge = screen.getByText("Ya existe")
+
+    expect(nuevoBadge).toHaveClass("bg-green-50", "dark:bg-green-950")
+    expect(errorBadge).toHaveClass("bg-red-50", "dark:bg-red-950")
+    expect(existsBadge).toHaveClass("bg-amber-50", "dark:bg-amber-950")
 
     expect(screen.getByText("Tarta de jamón y queso")).toBeInTheDocument()
     expect(
