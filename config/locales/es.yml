@@ -359,6 +359,7 @@ es:
       sessions: "Sesiones"
       appearance: "Apariencia"
       notifications: "Notificaciones"
+      addresses: "Direcciones"
     payments: "Pagos"
     collections: "Cobros"
     consumer:
@@ -1405,7 +1406,7 @@ es:
         title: "Agregar una dirección"
         description: "Ingresá dónde querés recibir el pedido."
         name: "Nombre"
-        name_placeholder: "Ej: Oficina, Casa, etc."
+        name_placeholder: "Ej: Casa, Gimnasio, etc."
         street: "Dirección"
         apartment: "Piso / Apartamento (opcional)"
         save_for_later: "Guardar esta dirección para futuros pedidos"
@@ -1465,6 +1466,8 @@ es:
         settings: "Configuración"
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
+        addresses: "Direcciones"
+        addresses_description: "Gestioná tus direcciones de entrega"
     provider_accounts:
       show:
         title: "Cuenta"
@@ -1693,6 +1696,35 @@ es:
         preferences_description: "Activá o desactivá las categorías de avisos que querés recibir."
         back: "Volver a Cuenta"
         back_to_account: "Volver a Mi cuenta"
+    consumer_delivery_addresses:
+      index:
+        title: "Direcciones"
+        description: "Gestioná tus direcciones de entrega"
+        back: "Volver a Cuenta"
+        office: "Oficina"
+        add: "Agregar dirección"
+        edit: "Editar %{name}"
+      form:
+        create_title: "Agregar una dirección"
+        edit_title: "Editar dirección"
+        description: "Completá los datos de la dirección de entrega"
+        name: "Nombre"
+        name_placeholder: "Ej: Casa, Gimnasio, etc."
+        street: "Dirección"
+        apartment: "Piso/Apartamento (opcional)"
+        cancel: "Cancelar"
+        create: "Agregar"
+        update: "Guardar cambios"
+        delete: "Eliminar"
+      delete:
+        title: "¿Eliminar %{name}?"
+        description: "Esta dirección no podrá recuperarse. Podés agregar una nueva cuando quieras."
+        back: "Volver"
+        submit: "Eliminar dirección"
+        deleting: "Eliminando..."
+        success_title: "Dirección eliminada"
+        success_description: "La dirección se eliminó correctamente."
+        done: "Listo"
   date:
     formats:
       default: "%d/%m/%y"
