@@ -30,6 +30,7 @@ import {
   Field,
   FieldContent,
   FieldDescription,
+  FieldError,
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -196,6 +197,7 @@ export default function MenuForm({
 
     const groupToSave: OptionGroupDraft = {
       ...draft,
+      options: draftOptions.join(", "),
       limit: Math.min(draft.limit, draftOptions.length),
     }
 
@@ -349,6 +351,7 @@ export default function MenuForm({
                 id="name"
                 type="text"
                 name="name"
+                aria-invalid={!!errors.name?.length}
                 placeholder={t(`${key}.name_placeholder`)}
                 value={data.name}
                 onChange={(e) => {
@@ -356,9 +359,7 @@ export default function MenuForm({
                   clearErrors("name")
                 }}
               />
-              {!!errors.name?.length && (
-                <FieldDescription>{errors.name}</FieldDescription>
-              )}
+              <FieldError>{errors.name}</FieldError>
             </Field>
 
             <Field data-invalid={!!errors.price?.length} className="w-24">
@@ -382,6 +383,7 @@ export default function MenuForm({
                   min="0.01"
                   step="0.01"
                   name="price"
+                  aria-invalid={!!errors.price?.length}
                   className="[appearance:textfield] pl-6 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   value={data.price}
                   onChange={(e) => {
@@ -390,9 +392,7 @@ export default function MenuForm({
                   }}
                 />
               </div>
-              {!!errors.price?.length && (
-                <FieldDescription>{errors.price}</FieldDescription>
-              )}
+              <FieldError>{errors.price}</FieldError>
             </Field>
           </div>
 
@@ -406,6 +406,7 @@ export default function MenuForm({
             <Textarea
               id="description"
               name="description"
+              aria-invalid={!!errors.description?.length}
               placeholder={t(`${key}.description_placeholder`)}
               value={data.description}
               className="min-h-24 resize-none"
@@ -415,9 +416,7 @@ export default function MenuForm({
               }}
             />
 
-            {!!errors.description?.length && (
-              <FieldDescription>{errors.description}</FieldDescription>
-            )}
+            <FieldError>{errors.description}</FieldError>
           </Field>
 
           <div className="flex flex-col gap-3">

@@ -7,7 +7,8 @@ import type { Payment } from "@/types"
 import PaymentReceiptDialog from "./payment-receipt-dialog"
 
 let triggerSuccess: (() => void) | undefined
-let triggerError: (() => void) | undefined
+let triggerError:
+  ((errors: Record<string, string | string[]>) => void) | undefined
 let triggerBefore: (() => boolean) | undefined
 
 interface MockFormProps {
@@ -22,7 +23,7 @@ interface MockFormProps {
   method?: string
   onBefore?: () => boolean
   onSuccess?: () => void
-  onError?: () => void
+  onError?: (errors: Record<string, string | string[]>) => void
   className?: string
 }
 
@@ -386,7 +387,7 @@ describe("PaymentReceiptDialog", () => {
 
     expect(triggerError).toBeDefined()
     act(() => {
-      triggerError?.()
+      triggerError?.({})
     })
 
     expect(
@@ -404,6 +405,112 @@ describe("PaymentReceiptDialog", () => {
 
     expect(
       screen.queryByText("No se pudo subir el comprobante"),
+    ).not.toBeInTheDocument()
+  })
+
+  it("shows the server's reason when the receipt is rejected", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} />)
+
+    await user.click(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    )
+
+    act(() => {
+      triggerError?.({ receipt: ["El archivo debe ser PDF, JPG o PNG."] })
+    })
+
+    expect(
+      await screen.findByText("El archivo debe ser PDF, JPG o PNG."),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(
+        "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
+      ),
+    ).not.toBeInTheDocument()
+  })
+
+  it("shows the server's reason when the receipt exceeds the maximum size", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} />)
+
+    await user.click(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    )
+
+    act(() => {
+      triggerError?.({ receipt: ["El archivo no puede superar los 10 MB."] })
+    })
+
+    expect(
+      await screen.findByText("El archivo no puede superar los 10 MB."),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText(
+        "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
+      ),
+    ).not.toBeInTheDocument()
+  })
+
+  it("handles receipt errors sent as a single string instead of an array", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} />)
+
+    await user.click(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    )
+
+    act(() => {
+      triggerError?.({ receipt: "El archivo no puede superar los 10 MB." })
+    })
+
+    expect(
+      await screen.findByText("El archivo no puede superar los 10 MB."),
+    ).toBeInTheDocument()
+  })
+
+  it("falls back to generic error message when server errors do not contain receipt", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} />)
+
+    await user.click(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    )
+
+    act(() => {
+      triggerError?.({ other: ["Error inesperado"] })
+    })
+
+    expect(
+      await screen.findByText("No se pudo subir el comprobante"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("clears the specific error message when the result dialog is dismissed", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} />)
+
+    await user.click(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    )
+
+    act(() => {
+      triggerError?.({ receipt: ["El archivo debe ser PDF, JPG o PNG."] })
+    })
+
+    expect(
+      await screen.findByText("El archivo debe ser PDF, JPG o PNG."),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Entendido" }))
+
+    expect(
+      screen.queryByText("El archivo debe ser PDF, JPG o PNG."),
     ).not.toBeInTheDocument()
   })
 })

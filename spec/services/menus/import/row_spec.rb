@@ -88,8 +88,19 @@ RSpec.describe Menus::Import::Row do
       expect(row("precio" => "gratis").errors).to eq([ I18n.t("validations.menu_import.price") ])
     end
 
+    it "rechaza celdas de opciones con formato inválido o vacías" do
+      [ "Salsa=", "=filetto", "Salsa" ].each do |cell|
+        expect(row("opciones_1" => cell).errors)
+          .to include(I18n.t("validations.menu_import.options", cell: cell))
+      end
+    end
+
     it "junta todo lo que falta en la misma fila" do
       expect(row("nombre" => "", "precio" => "").errors.size).to eq(2)
+    end
+
+    it "conserva el número de fila para poder señalarla" do
+      expect(row(number: 12).number).to eq(12)
     end
   end
 
