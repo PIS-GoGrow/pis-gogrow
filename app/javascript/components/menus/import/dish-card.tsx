@@ -68,10 +68,7 @@ export default function DishCard({
 
         <Badge
           variant="outline"
-          className={cn(
-            "gap-1.5 border-transparent font-medium",
-            style.badge,
-          )}
+          className={cn("gap-1.5 border-transparent font-medium", style.badge)}
         >
           <span
             aria-hidden="true"

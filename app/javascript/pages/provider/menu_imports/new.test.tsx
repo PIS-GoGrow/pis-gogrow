@@ -28,15 +28,19 @@ vi.mock("@inertiajs/react", async () => {
     ),
     router: { get: routerGet, post: routerPost },
     useForm: (initialData: Record<string, unknown> = {}) => {
-      const [formData, setFormData] = React.useState<Record<string, unknown>>(() => ({
-        ...initialData,
-        ...currentFormData,
-      }))
+      const [formData, setFormData] = React.useState<Record<string, unknown>>(
+        () => ({
+          ...initialData,
+          ...currentFormData,
+        }),
+      )
       return {
         data: formData,
         setData: (
-          keyOrFn: string | ((prev: Record<string, unknown>) => Record<string, unknown>),
-          value?: unknown
+          keyOrFn:
+            | string
+            | ((prev: Record<string, unknown>) => Record<string, unknown>),
+          value?: unknown,
         ) => {
           if (typeof keyOrFn === "string") {
             if (keyOrFn === "file") currentFormData.file = value as File | null
