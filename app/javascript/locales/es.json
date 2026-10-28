@@ -613,6 +613,7 @@
             },
             "actor": "Actor",
             "after": "Nuevo",
+            "back": "Volver a Cuenta",
             "before": "Anterior",
             "changes": "Cambio",
             "description": "Cada creación y cambio de un pedido, con quién lo hizo. El registro no se puede editar ni borrar.",
@@ -659,6 +660,7 @@
         },
         "payments": {
           "index": {
+            "all_providers": "Todos",
             "bank": {
               "account_number": "Nº de cuenta: %{number}",
               "copied": "Número de cuenta copiado",
@@ -667,6 +669,7 @@
               "holder": "Beneficiario: %{holder}",
               "missing": "Este proveedor todavía no cargó sus datos de cobro."
             },
+            "confirmed": "Confirmado",
             "detail": {
               "company": "GoGrow",
               "description": "Lo que la empresa le paga al proveedor en el mes y los pedidos confirmados de cada día.",
@@ -685,9 +688,12 @@
               "user": "Usuario",
               "vat": "IVA (%{rate}%)"
             },
+            "download_invoice": "Descargar factura",
+            "download_receipt": "Descargar comprobante de pago",
             "due": "Vence: %{date}",
             "empty_history_description": "Cuando termines de pagar un período, va a aparecer acá.",
             "empty_history_title": "Todavía no hay períodos pagados",
+            "filter_providers": "Filtrar por proveedor",
             "history_tab": "Historial",
             "meals_one": "%{count} vianda",
             "meals_other": "%{count} viandas",
@@ -700,11 +706,13 @@
             "pending_meals_other": "(%{count} viandas)",
             "pending_payments": "Pagos pendientes",
             "pending_tab": "Pendientes",
+            "providers_filter": "Proveedores:",
             "section": "Pagos",
             "see_detail": "Ver detalle",
             "spending": "Tu consumo",
             "title": "Pagos",
             "total_debt": "Deuda total",
+            "total_paid": "Total pagado",
             "view_detail": "Ver detalle del consumo"
           }
         },

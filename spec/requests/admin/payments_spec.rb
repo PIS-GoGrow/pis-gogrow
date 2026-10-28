@@ -80,6 +80,27 @@ RSpec.describe "Admin::Payments", type: :request do
         expect(inertia.props[:history].pluck(:id)).to contain_exactly(accounts(:gogrow_tuviandita_previous).id)
       end
 
+      it "lets HR download the invoice and the receipt of a confirmed period" do
+        account = accounts(:gogrow_tuviandita_previous)
+        payment = payments(:gogrow_previous_approved)
+        payment.receipt.attach(receipt_upload)
+        invoice = account.invoices.create!(issued_on: Date.current, total_amount: 900, file: receipt_upload(filename: "factura.png"))
+
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole).to include(
+          paid_on: DateFormat.short(payment.created_at),
+          receipt_download_url: receipt_admin_payment_path(payment),
+          invoice_download_url: file_admin_invoice_path(invoice, download: 1)
+        )
+      end
+
+      it "offers no invoice to download until the provider sends it" do
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole[:invoice_download_url]).to be_nil
+      end
+
       # Con un comprobante viejo sin revisar, el período sigue en revisión
       # aunque haya otro aprobado después: es la regla de Account#collection_status,
       # la misma que usa el inicio de RR. HH. Desde IBP-019 la app ya no deja

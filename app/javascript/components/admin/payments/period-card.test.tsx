@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import { Sheet } from "@/components/ui/sheet"
-import type { Account, Payment } from "@/types"
+import type { AdminAccount, Payment } from "@/types"
 
 import PeriodCard from "./period-card"
 
@@ -27,7 +27,7 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
   }
 }
 
-function makeAccount(overrides: Partial<Account> = {}): Account {
+function makeAccount(overrides: Partial<AdminAccount> = {}): AdminAccount {
   return {
     id: 10,
     provider_id: 1,
@@ -46,10 +46,14 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
   }
 }
 
-function renderCard(account: Account) {
+function renderCard(account: AdminAccount, providerName?: string) {
   return render(
     <Sheet>
-      <PeriodCard account={account} onOpenDetail={vi.fn()} />
+      <PeriodCard
+        account={account}
+        providerName={providerName}
+        onOpenDetail={vi.fn()}
+      />
     </Sheet>,
   )
 }
@@ -92,19 +96,60 @@ describe("PeriodCard", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("keeps the upload button enabled when an earlier receipt was approved", () => {
-    const account = makeAccount({
+  it("shows the due date in the header next to the status", () => {
+    renderCard(makeAccount())
+
+    const header = document.querySelector("[data-slot='card-header']")
+    expect(header).toHaveTextContent("Vence: 10/10/26")
+    expect(header?.querySelector("[data-status='pending']")).toBeInTheDocument()
+  })
+
+  // Historia IBP-061 y diseño de Figma del Historial de RR. HH.
+  describe("when the payment was confirmed", () => {
+    const paid = makeAccount({
       collection_status: "approved",
+      paid_on: "05/09/26",
       payments: [makePayment({ status: "approved" })],
+      invoice_download_url: "/rrhh/facturas/3/archivo?download=1",
+      receipt_download_url: "/rrhh/pagos/1/archivo",
     })
 
-    renderCard(account)
+    it("does not offer to upload another receipt", () => {
+      renderCard(paid, "TuViandita")
 
-    expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeEnabled()
-    expect(
-      screen.queryByText(/Ya hay un comprobante en revisión/),
-    ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+      ).not.toBeInTheDocument()
+    })
+
+    it("shows the payment date, provider, period and total paid", () => {
+      renderCard(paid, "TuViandita")
+
+      expect(screen.getByText("05/09/26")).toBeInTheDocument()
+      expect(screen.getByText("Confirmado")).toBeInTheDocument()
+      expect(
+        screen.getByText("TuViandita: Septiembre 2026"),
+      ).toBeInTheDocument()
+      expect(screen.getByText("Total pagado")).toBeInTheDocument()
+    })
+
+    it("downloads the invoice and the payment receipt", () => {
+      renderCard(paid, "TuViandita")
+
+      expect(
+        screen.getByRole("link", { name: "Descargar factura" }),
+      ).toHaveAttribute("href", "/rrhh/facturas/3/archivo?download=1")
+      expect(
+        screen.getByRole("link", { name: "Descargar comprobante de pago" }),
+      ).toHaveAttribute("href", "/rrhh/pagos/1/archivo")
+    })
+
+    it("leaves out the invoice download while the provider has not sent it", () => {
+      renderCard({ ...paid, invoice_download_url: undefined }, "TuViandita")
+
+      expect(
+        screen.queryByRole("link", { name: "Descargar factura" }),
+      ).not.toBeInTheDocument()
+    })
   })
 })
