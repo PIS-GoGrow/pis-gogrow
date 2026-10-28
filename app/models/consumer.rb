@@ -107,7 +107,10 @@ class Consumer < ApplicationRecord
 
   # Se espera que no se incluyan direcciones blank acá
   def delivery_addresses
-    [ address, company.address ].compact_blank
+    [
+      company.address,
+      *saved_addresses.map(&:full_address)
+    ].compact_blank
   end
 
   # La modalidad se deriva de la dirección elegida: la de la oficina es entrega en
@@ -125,17 +128,30 @@ class Consumer < ApplicationRecord
   # pidió, que es la que el carrito muestra junto a la oficina.
   def delivery_address_options
     last_used = orders.home.order(created_at: :desc).pick(:address)
+
     saved = saved_addresses.order(created_at: :desc).map do |delivery_address|
-      { id: "address-#{delivery_address.id}", label: delivery_address.name, address: delivery_address.full_address }
+      {
+        id: "address-#{delivery_address.id}",
+        label: delivery_address.name,
+        address: delivery_address.full_address
+      }
     end
+
     custom = [
-      { id: "home", label: I18n.t("pages.orders.addresses.home"), address: },
       *saved,
-      { id: "last_used", label: I18n.t("pages.orders.addresses.last_used"), address: last_used }
+      {
+        id: "last_used",
+        label: I18n.t("pages.orders.addresses.last_used"),
+        address: last_used
+      }
     ]
 
     [
-      { id: "office", label: I18n.t("pages.orders.addresses.office"), address: company.address },
+      {
+        id: "office",
+        label: I18n.t("pages.orders.addresses.office"),
+        address: company.address
+      },
       *custom.partition { it[:address] == last_used }.flatten
     ].select { it[:address].present? }.uniq { it[:address] }
   end

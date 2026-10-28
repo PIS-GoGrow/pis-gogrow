@@ -21,6 +21,9 @@
       "sign_up": "Registrarse"
     },
     "components": {
+      "ai_insight_card": {
+        "generated": "Generado por IA"
+      },
       "appearance": {
         "dark": "Oscuro",
         "light": "Claro",
@@ -51,6 +54,11 @@
       "file_input": {
         "empty": "Sin archivos seleccionados",
         "select": "Seleccionar archivo"
+      },
+      "insights_metrics": {
+        "dishes": "Platos",
+        "orders": "Pedidos",
+        "rating": "Valoración"
       },
       "month_select": {
         "this_month": "Este mes"
@@ -103,6 +111,7 @@
         "payments": "Cobros"
       },
       "settings": {
+        "addresses": "Direcciones",
         "appearance": "Apariencia",
         "email": "Correo electrónico",
         "notifications": "Notificaciones",
@@ -732,7 +741,7 @@
           "cancel": "Cancelar",
           "description": "Ingresá dónde querés recibir el pedido.",
           "name": "Nombre",
-          "name_placeholder": "Ej: Oficina, Casa, etc.",
+          "name_placeholder": "Ej: Casa, Gimnasio, etc.",
           "save_for_later": "Guardar esta dirección para futuros pedidos",
           "street": "Dirección",
           "submit": "Agregar",
@@ -804,8 +813,43 @@
           "required": "Obligatorio"
         }
       },
+      "consumer_delivery_addresses": {
+        "delete": {
+          "back": "Volver",
+          "deleting": "Eliminando...",
+          "description": "Esta dirección no podrá recuperarse. Podés agregar una nueva cuando quieras.",
+          "done": "Listo",
+          "submit": "Eliminar dirección",
+          "success_description": "La dirección se eliminó correctamente.",
+          "success_title": "Dirección eliminada",
+          "title": "¿Eliminar %{name}?"
+        },
+        "form": {
+          "apartment": "Piso/Apartamento (opcional)",
+          "cancel": "Cancelar",
+          "create": "Agregar",
+          "create_title": "Agregar una dirección",
+          "delete": "Eliminar",
+          "description": "Completá los datos de la dirección de entrega",
+          "edit_title": "Editar dirección",
+          "name": "Nombre",
+          "name_placeholder": "Ej: Casa, Gimnasio, etc.",
+          "street": "Dirección",
+          "update": "Guardar cambios"
+        },
+        "index": {
+          "add": "Agregar dirección",
+          "back": "Volver a Cuenta",
+          "description": "Gestioná tus direcciones de entrega",
+          "edit": "Editar %{name}",
+          "office": "Oficina",
+          "title": "Direcciones"
+        }
+      },
       "consumer_profiles": {
         "show": {
+          "addresses": "Direcciones",
+          "addresses_description": "Gestioná tus direcciones de entrega",
           "benefit": "Mi beneficio",
           "coupon_discount": "%{percentage}% de descuento",
           "coupon_period": "Para entregas del",
@@ -1172,10 +1216,7 @@
           "greeting": "Hola, %{name} 👋",
           "insights": {
             "description": "Los hallazgos basados en las valoraciones estarán disponibles próximamente.",
-            "dishes": "Platos",
             "generated": "Generado por IA",
-            "orders": "Pedidos",
-            "rating": "Valoración",
             "title": "Hallazgos del mes"
           },
           "order_deadline": {
@@ -1228,12 +1269,101 @@
           "title": "Entregas"
         }
       },
+      "provider_insights": {
+        "index": {
+          "back": "Volver al inicio",
+          "empty_orders": "Todavía no hay pedidos en este período",
+          "empty_reviews": "Todavía no hay reseñas en este período",
+          "orders_count": "x%{count}",
+          "period": "Período",
+          "presets": {
+            "last_month": "Mes pasado",
+            "this_month": "Este mes",
+            "this_week": "Esta semana",
+            "today": "Hoy",
+            "yesterday": "Ayer"
+          },
+          "title": "Hallazgos",
+          "top_dishes": "Platos más pedidos",
+          "top_rated_dishes": "Mejor valorados"
+        }
+      },
       "provider_invitations": {
         "show": {
           "description": "Configurá tu contraseña para completar el registro.",
           "heading": "Registrate con Email",
           "submit": "Registrarse",
           "title": "Registro de proveedor"
+        }
+      },
+      "provider_menu_imports": {
+        "new": {
+          "back": "Volver al menú",
+          "blocked": "Corregí o quitá los platos con error para poder importar.",
+          "cancel": "Cancelar",
+          "card": {
+            "duplicate": "Duplicar",
+            "edit": "Editar",
+            "error": "Error",
+            "exists": "Ya existe",
+            "exists_warning": "Este plato no se importará a menos que elijas una de las siguientes acciones.",
+            "new": "Nuevo",
+            "no_price": "Precio: -",
+            "price": "Precio: %{price}",
+            "remove": "Quitar",
+            "reset": "Reestablecer",
+            "unnamed": "Sin nombre",
+            "update": "Actualizar",
+            "updated": "Actualizado"
+          },
+          "download": {
+            "action": "Descargar plantilla",
+            "description": "Completá una fila por plato sin modificar los encabezados. Incluye un ejemplo con opciones.",
+            "title": "Descargá la plantilla"
+          },
+          "edit": {
+            "title": "Editar plato"
+          },
+          "file_error": "No se pudo leer la planilla",
+          "import": "Importar platos",
+          "imported": {
+            "again": "Seguir importando",
+            "back": "Volver a Menú",
+            "description": "Los platos importados ya están disponibles en Platos guardados.",
+            "title": "¡Platos importados!"
+          },
+          "intro": "Importá varios platos a la vez y agregalos al menú cuando quieras.",
+          "nothing": "Elegí al menos un plato para importar.",
+          "summary": {
+            "error_one": "%{count} Error",
+            "error_other": "%{count} Errores",
+            "exists_one": "%{count} Ya existe",
+            "exists_other": "%{count} Ya existen",
+            "new_one": "%{count} Nuevo",
+            "new_other": "%{count} Nuevos",
+            "title": "Resumen",
+            "updated_one": "%{count} Actualizado",
+            "updated_other": "%{count} Actualizados"
+          },
+          "title": "Importar platos",
+          "update_dialog": {
+            "apply": "Aplicar cambios",
+            "back": "Volver",
+            "description": "Este plato se actualizará en tus platos guardados.",
+            "keep": "Mantener los pedidos confirmados",
+            "keep_description": "Los pedidos afectados que están confirmados no se modificarán.",
+            "reject": "Rechazar los pedidos confirmados",
+            "reject_description": "Los pedidos afectados que están confirmados se cancelarán.",
+            "title": "¿Actualizar el plato guardado?"
+          },
+          "upload": {
+            "action": "Subir archivo",
+            "choose": "Seleccionar archivo",
+            "description": "Soporta %{formats} hasta %{size} MB",
+            "empty": "Sin archivos seleccionados",
+            "remove": "Quitar el archivo",
+            "title": "Subí tu archivo"
+          }
         }
       },
       "provider_menus": {

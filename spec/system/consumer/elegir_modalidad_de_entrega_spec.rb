@@ -31,7 +31,14 @@ RSpec.describe "Elegir la modalidad de entrega como empleado" do
 
   let(:monday) { Date.current.beginning_of_week(:monday) }
   let(:office_address) { companies(:gogrow).address }
-  let(:home_address) { consumers(:one).address }
+  let!(:home_delivery_address) do
+    consumers(:one).saved_addresses.create!(
+      name: "Casa",
+      street: consumers(:one).address
+    )
+  end
+
+  let(:home_address) { home_delivery_address.full_address }
 
   before do
     OrderBenefit.delete_all
