@@ -44,6 +44,23 @@ RSpec.describe "Provider::MenuImports", type: :request do
       expect(inertia.props[:formats]).to eq([ ".xlsx", ".xls", ".csv", ".ods" ])
     end
 
+    it "envía todas las props requeridas por la pantalla con sus valores por defecto" do
+      get provider_menu_import_path
+
+      expect(inertia.props).to include(
+        template_path: "/plantillas/menu.csv",
+        formats: [ ".xlsx", ".xls", ".csv", ".ods" ],
+        max_rows: 200,
+        max_size_mb: 5,
+        preview: nil,
+        imported: nil,
+        row_errors: {},
+        today: Date.current.iso8601
+      )
+      expect(inertia.props[:maximum_publish_date]).to be_present
+      expect(inertia.props[:saved_menus]).to be_an(Array)
+    end
+
     it "trae los platos guardados, para cruzarlos por nombre con la planilla" do
       get provider_menu_import_path
 
@@ -143,6 +160,30 @@ RSpec.describe "Provider::MenuImports", type: :request do
 
     it "no escribe nada si la lista llega manipulada" do
       expect { post provider_confirm_menu_import_path, params: { entries: "bypass" } }
+        .not_to change { Menu.count }
+
+      expect(inertia.props[:imported]).to be_nil
+    end
+
+    it "no persiste si el precio es negativo y devuelve el error asignado a la tarjeta" do
+      params = { entries: [ entry(key: "c", price: "-100") ] }
+
+      expect { post provider_confirm_menu_import_path, params: }.not_to change { Menu.count }
+
+      expect(inertia.props[:row_errors].keys).to eq([ "c" ])
+      expect(inertia.props[:imported]).to be_nil
+    end
+
+    it "devuelve 404 si se intenta actualizar un plato con ID inexistente" do
+      params = { entries: [ entry(action: "update", menu_id: 999_999) ] }
+
+      post provider_confirm_menu_import_path, params: params
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "no guarda ningún plato si la lista de entries llega vacía" do
+      expect { post provider_confirm_menu_import_path, params: { entries: [] } }
         .not_to change { Menu.count }
 
       expect(inertia.props[:imported]).to be_nil

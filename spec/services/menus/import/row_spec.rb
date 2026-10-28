@@ -69,6 +69,13 @@ RSpec.describe Menus::Import::Row do
 
       expect(errors).to eq([ I18n.t("validations.menu_import.duplicated_options", name: "Salsa") ])
     end
+    it "limpia espacios en blanco alrededor del nombre y las opciones" do
+      groups = row("opciones_1" => "  Proteína * = carne ,  pollo  ").option_groups
+
+      expect(groups).to eq([
+        { name: "Proteína", options: [ "carne", "pollo" ], required: true, limit: 1 }
+      ])
+    end
   end
 
   describe "lo que falta en la fila" do
@@ -82,10 +89,12 @@ RSpec.describe Menus::Import::Row do
 
     it "pide un precio mayor que cero" do
       expect(row("precio" => "0").errors).to eq([ I18n.t("validations.menu_import.price") ])
+      expect(row("precio" => "-15").errors).to eq([ I18n.t("validations.menu_import.price") ])
     end
 
-    it "pide un precio que sea un número" do
+    it "pide un precio que sea un número sin símbolos" do
       expect(row("precio" => "gratis").errors).to eq([ I18n.t("validations.menu_import.price") ])
+      expect(row("precio" => "$320").errors).to eq([ I18n.t("validations.menu_import.price") ])
     end
 
     it "rechaza celdas de opciones con formato inválido o vacías" do

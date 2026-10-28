@@ -92,6 +92,21 @@ RSpec.describe Menus::Import::Save do
         .to have_attributes(weekdays: [ 1, 3 ], starts_on: next_monday)
     end
 
+    it "actualiza los grupos de opciones conservando el id de los que ya existían" do
+      group = milanesa.option_groups.create!(name: "Cocción", options: [ "A punto", "Cocida" ], required: true, limit: 1)
+      new_groups = [
+        { name: "Cocción", options: [ "Jugosa", "Cocida" ], required: true, limit: 1 },
+        { name: "Guarnición", options: [ "Papas", "Puré" ], required: false, limit: 1 }
+      ]
+
+      update(option_groups: new_groups)
+
+      milanesa.reload
+      expect(milanesa.option_groups.find_by(name: "Cocción").id).to eq(group.id)
+      expect(milanesa.option_groups.find_by(name: "Cocción").options).to eq([ "Jugosa", "Cocida" ])
+      expect(milanesa.option_groups.find_by(name: "Guarnición")).to be_present
+    end
+
     it "no toca un plato de otro proveedor" do
       expect { save(entry(action: "update", menu_id: menus(:sorrentinos).id)) }
         .to raise_error(ActiveRecord::RecordNotFound)

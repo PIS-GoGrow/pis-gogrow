@@ -236,4 +236,27 @@ describe("Pantalla de importar platos", () => {
 
     expect(screen.getByText("¡Platos importados!")).toBeInTheDocument()
   })
+
+  it("al tocar Duplicar en un plato existente lo pasa a nuevo y actualiza el resumen", async () => {
+    render(<New {...props} preview={preview} />)
+
+    expect(screen.getByText("1 Nuevo")).toBeInTheDocument()
+    expect(screen.getByText("1 Ya existe")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Duplicar" }))
+
+    expect(screen.getByText("2 Nuevos")).toBeInTheDocument()
+    expect(screen.queryByText("1 Ya existe")).not.toBeInTheDocument()
+  })
+
+  it("al tocar Actualizar en un plato existente sin pedidos confirmados lo pasa a actualizado", async () => {
+    render(<New {...props} preview={preview} />)
+
+    expect(screen.getByText("1 Ya existe")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Actualizar" }))
+
+    expect(screen.getByText("1 Actualizado")).toBeInTheDocument()
+    expect(screen.queryByText("1 Ya existe")).not.toBeInTheDocument()
+  })
 })

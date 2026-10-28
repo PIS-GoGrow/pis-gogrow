@@ -64,10 +64,10 @@ RSpec.describe "Importar menú desde planilla", type: :system do
     expect(page).to have_content("2 Nuevos")
     expect(page).to have_button("Importar platos", disabled: false)
 
-    expect { click_on "Importar platos" }
-      .to change { provider.menus.saved.count }.by(2)
-
+    initial_count = provider.menus.saved.count
+    click_on "Importar platos"
     expect(page).to have_content("¡Platos importados!")
+    expect(provider.menus.saved.count).to eq(initial_count + 2)
     expect(provider.menus.saved.find_by(name: "Budín de zanahoria").price).to eq(240)
   ensure
     FileUtils.rm_f(csv) if csv
@@ -88,8 +88,10 @@ RSpec.describe "Importar menú desde planilla", type: :system do
     expect(page).to have_no_content("Budín de zanahoria")
     expect(page).to have_button("Importar platos", disabled: false)
 
-    expect { click_on "Importar platos" }
-      .to change { provider.menus.saved.count }.by(1)
+    initial_count = provider.menus.saved.count
+    click_on "Importar platos"
+    expect(page).to have_content("¡Platos importados!")
+    expect(provider.menus.saved.count).to eq(initial_count + 1)
   ensure
     FileUtils.rm_f(csv) if csv
   end
@@ -103,13 +105,45 @@ RSpec.describe "Importar menú desde planilla", type: :system do
     expect(page).to have_content("1 Ya existe")
     expect(page).to have_content("Este plato no se importará a menos que elijas una de las siguientes acciones.")
 
-    expect { click_on "Importar platos" }
-      .to change { provider.menus.saved.count }.by(2)
-
+    initial_count = provider.menus.saved.count
+    click_on "Importar platos"
     expect(page).to have_content("¡Platos importados!")
+    expect(provider.menus.saved.count).to eq(initial_count + 2)
     expect(provider.menus.where(name: "Milanesa con papas fritas").count).to eq(1)
     expect(provider.menus.saved.find_by(name: "Sorrentinos")).to be_present
     expect(provider.menus.saved.find_by(name: "Ensalada César")).to be_present
+  end
+
+  it "actualiza el plato existente cuando el proveedor elige Actualizar" do
+    visit_hydrated provider_menu_import_path
+    upload(template)
+
+    within(card("Milanesa con papas fritas")) { click_on "Actualizar" }
+
+    expect(page).to have_content("¿Actualizar el plato guardado?")
+    click_on "Aplicar cambios"
+
+    expect(page).to have_content("1 Actualizado")
+    expect(page).to have_content("2 Nuevos")
+
+    click_on "Importar platos"
+    expect(page).to have_content("¡Platos importados!")
+
+    expect(provider.menus.find_by(name: "Milanesa con papas fritas").price).to eq(320)
+  end
+
+  it "duplica el plato existente cuando el proveedor elige Duplicar" do
+    visit_hydrated provider_menu_import_path
+    upload(template)
+
+    within(card("Milanesa con papas fritas")) { click_on "Duplicar" }
+
+    expect(page).to have_content("3 Nuevos")
+
+    expect {
+      click_on "Importar platos"
+      expect(page).to have_content("¡Platos importados!")
+    }.to change { provider.menus.where(name: "Milanesa con papas fritas").count }.by(1)
   end
 
   it "avisa cuando el archivo no es una planilla" do
