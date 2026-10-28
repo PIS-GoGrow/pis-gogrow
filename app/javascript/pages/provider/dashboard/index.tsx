@@ -1,34 +1,27 @@
 import { Head, Link, usePage } from "@inertiajs/react"
-import { ChevronRight, Clock3, Sparkles, Star } from "lucide-react"
-import type { ReactNode } from "react"
+import { ChevronRight, Clock3, Star } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import NotificationBanners from "@/components/notification-banners"
 import PageContainer from "@/components/page-container"
+import AiInsightCard from "@/components/provider/ai-insight-card"
+import DashboardMetric from "@/components/provider/dashboard-metric"
+import InsightsMetrics from "@/components/provider/insights-metrics"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import AppLayout from "@/layouts/app-layout"
-import { cn } from "@/lib/utils"
 import {
   providerAccount,
   providerCollections,
   providerDashboard,
+  providerInsights,
   providerOperationalSettings,
   providerOrders,
 } from "@/routes"
 import type { BreadcrumbItem, ProviderDashboardIndex } from "@/types"
 
 type Props = ProviderDashboardIndex
-
-interface DashboardMetricProps {
-  icon?: ReactNode
-  label: string
-  value: number | string
-  variant?: "default" | "destructive"
-  valueFirst?: boolean
-  className?: string
-}
 
 export default function ProviderDashboard({
   today,
@@ -195,42 +188,16 @@ export default function ProviderDashboard({
               <DashboardSectionButton
                 id="insights-title"
                 title={t("pages.provider_dashboard.index.insights.title")}
+                href={providerInsights.index().url}
               />
-              <div className="grid grid-cols-3 gap-2">
-                <DashboardMetric
-                  className="dark:border-border dark:bg-muted rounded-xl border border-[#E8E8E8] bg-[#F5F5F5] px-2 py-4"
-                  label={t("pages.provider_dashboard.index.insights.orders")}
-                  value={month_orders_count}
-                  valueFirst
-                />
-                <DashboardMetric
-                  className="dark:border-border dark:bg-muted rounded-xl border border-[#E8E8E8] bg-[#F5F5F5] px-2 py-4"
-                  label={t("pages.provider_dashboard.index.insights.dishes")}
-                  value={month_dishes_count}
-                  valueFirst
-                />
-                <DashboardMetric
-                  className="dark:border-border dark:bg-muted rounded-xl border border-[#E8E8E8] bg-[#F5F5F5] px-2 py-4"
-                  icon={
-                    <Star className="size-5 fill-current" aria-hidden="true" />
-                  }
-                  label={t("pages.provider_dashboard.index.insights.rating")}
-                  value={average_rating ?? "—"}
-                  valueFirst
-                />
-              </div>
-              <div className="space-y-3 rounded-xl border border-violet-300 bg-gradient-to-br from-[#FCFAFF] to-[#EEF6FF] p-4 text-sm dark:border-violet-900 dark:from-violet-950/30 dark:to-slate-900/30">
-                <p>
-                  {t("pages.provider_dashboard.index.insights.description")}
-                </p>
-                <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-                  <Sparkles
-                    className="size-4 shrink-0 text-violet-500"
-                    aria-hidden="true"
-                  />
-                  {t("pages.provider_dashboard.index.insights.generated")}
-                </p>
-              </div>
+              <InsightsMetrics
+                orders={month_orders_count}
+                dishes={month_dishes_count}
+                rating={average_rating}
+              />
+              <AiInsightCard>
+                {t("pages.provider_dashboard.index.insights.description")}
+              </AiInsightCard>
             </section>
 
             <section className="space-y-3" aria-labelledby="top-rated-title">
@@ -329,38 +296,5 @@ function DashboardSectionButton({
         {href ? <Link href={href}>{content}</Link> : content}
       </Button>
     </h3>
-  )
-}
-
-function DashboardMetric({
-  icon,
-  label,
-  value,
-  variant = "default",
-  valueFirst = false,
-  className,
-}: DashboardMetricProps) {
-  const valueContent = (
-    <p className="flex items-center justify-center gap-1 text-2xl font-semibold tracking-tight">
-      {icon}
-      {value}
-    </p>
-  )
-
-  return (
-    <div className={cn("min-w-0", valueFirst && "text-center", className)}>
-      {valueFirst && valueContent}
-      <p
-        className={cn(
-          valueFirst ? "text-sm" : "text-muted-foreground text-sm",
-          variant === "destructive" && "text-destructive",
-        )}
-      >
-        {label}
-      </p>
-      {!valueFirst && (
-        <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
-      )}
-    </div>
   )
 }
