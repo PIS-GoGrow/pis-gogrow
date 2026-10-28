@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import type React from "react"
+import React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { ProviderMenuImportsNew } from "@/types"
@@ -27,14 +27,32 @@ vi.mock("@inertiajs/react", async () => {
       </a>
     ),
     router: { get: routerGet, post: routerPost },
-    useForm: () => ({
-      data: currentFormData,
-      setData: (key: string, value: unknown) => {
-        if (key === "file") currentFormData.file = value as File | null
-      },
-      post: postMock,
-      processing: false,
-    }),
+    useForm: (initialData: Record<string, unknown> = {}) => {
+      const [formData, setFormData] = React.useState<Record<string, unknown>>(() => ({
+        ...initialData,
+        ...currentFormData,
+      }))
+      return {
+        data: formData,
+        setData: (
+          keyOrFn: string | ((prev: Record<string, unknown>) => Record<string, unknown>),
+          value?: unknown
+        ) => {
+          if (typeof keyOrFn === "string") {
+            if (keyOrFn === "file") currentFormData.file = value as File | null
+            setFormData((prev) => ({ ...prev, [keyOrFn]: value }))
+          } else if (typeof keyOrFn === "function") {
+            setFormData(keyOrFn)
+          }
+        },
+        post: postMock,
+        processing: false,
+        errors: {},
+        setError: vi.fn(),
+        clearErrors: vi.fn(),
+        transform: vi.fn(),
+      }
+    },
   }
 })
 
@@ -258,5 +276,99 @@ describe("Pantalla de importar platos", () => {
 
     expect(screen.getByText("1 Actualizado")).toBeInTheDocument()
     expect(screen.queryByText("1 Ya existe")).not.toBeInTheDocument()
+  })
+
+  it("al tocar Actualizar en un plato con pedidos confirmados abre el modal y permite rechazar pedidos", async () => {
+    const propsWithOrders = {
+      ...props,
+      saved_menus: [
+        {
+          id: 1,
+          name: "Milanesa con papas fritas",
+          confirmed_orders: 4,
+          agenda: NO_AGENDA,
+        },
+      ],
+    }
+
+    render(<New {...propsWithOrders} preview={preview} />)
+
+    // Quitar la fila con error para habilitar la importación
+    await user.click(screen.getAllByRole("button", { name: "Quitar" })[1])
+
+    await user.click(screen.getByRole("button", { name: "Actualizar" }))
+
+    // El diálogo se muestra anunciando la actualización
+    expect(
+      screen.getByText("¿Actualizar el plato guardado?"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText("Rechazar los pedidos confirmados"),
+    ).toBeInTheDocument()
+
+    // Seleccionar la opción de rechazar
+    await user.click(screen.getByLabelText(/Rechazar los pedidos confirmados/))
+    await user.click(screen.getByRole("button", { name: "Aplicar cambios" }))
+
+    expect(screen.getByText("1 Actualizado")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Importar platos" }))
+
+    const [, payload] = routerPost.mock.calls[0] as [
+      string,
+      { entries: { action: string; confirmed_orders: string }[] },
+    ]
+    const updatedEntry = payload.entries.find((e) => e.action === "update")
+    expect(updatedEntry?.confirmed_orders).toBe("reject")
+  })
+
+  it("al editar un plato nuevo y ponerle el nombre de uno guardado pasa a Ya existe", async () => {
+    render(<New {...props} preview={preview} />)
+
+    // Editar la primera tarjeta ("Tarta de jamón y queso" que es Nuevo)
+    await user.click(screen.getAllByRole("button", { name: "Editar" })[0])
+
+    expect(screen.getByText("Editar plato")).toBeInTheDocument()
+    const nameInput = screen.getByLabelText(/Nombre del plato/)
+    await user.clear(nameInput)
+    await user.type(nameInput, "Milanesa con papas fritas")
+
+    await user.click(screen.getByRole("button", { name: "Modificar" }))
+
+    // Ahora la tarjeta pasa a Ya existe y el resumen se actualiza
+    expect(screen.getByText("2 Ya existen")).toBeInTheDocument()
+    expect(screen.queryByText("1 Nuevo")).not.toBeInTheDocument()
+  })
+
+  it("al editar un plato que Ya existe y cambiarle el nombre a uno no guardado pasa a Nuevo", async () => {
+    render(<New {...props} preview={preview} />)
+
+    // Editar "Milanesa con papas fritas" (tercera tarjeta en preview, índice 2)
+    await user.click(screen.getAllByRole("button", { name: "Editar" })[2])
+
+    expect(screen.getByText("Editar plato")).toBeInTheDocument()
+    const nameInput = screen.getByLabelText(/Nombre del plato/)
+    await user.clear(nameInput)
+    await user.type(nameInput, "Milanesa napolitana artesanal")
+
+    await user.click(screen.getByRole("button", { name: "Modificar" }))
+
+    expect(screen.getByText("2 Nuevos")).toBeInTheDocument()
+    expect(screen.queryByText("1 Ya existe")).not.toBeInTheDocument()
+  })
+
+  it("si solo hay platos que Ya existen y no se toma acción, el botón Importar platos está deshabilitado", () => {
+    const onlyExistingPreview = {
+      ...preview,
+      entries: [entry(4, "Milanesa con papas fritas")],
+    }
+
+    render(<New {...props} preview={onlyExistingPreview} />)
+
+    expect(screen.getByText("1 Ya existe")).toBeInTheDocument()
+    // Como no hay platos nuevos ni actualizados, no hay nada que importar
+    expect(
+      screen.getByRole("button", { name: "Importar platos" }),
+    ).toBeDisabled()
   })
 })

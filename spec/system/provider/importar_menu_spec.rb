@@ -146,6 +146,44 @@ RSpec.describe "Importar menú desde planilla", type: :system do
     }.to change { provider.menus.where(name: "Milanesa con papas fritas").count }.by(1)
   end
 
+  it "cambia de estado entre Nuevo y Ya existe al editar el nombre del plato" do
+    visit_hydrated provider_menu_import_path
+    upload(template)
+
+    # Editar un plato Nuevo ("Sorrentinos") y ponerle el nombre de uno guardado ("Milanesa con papas fritas")
+    within(card("Sorrentinos")) { click_on "Editar" }
+    expect(page).to have_content("Editar plato")
+    find("#name").set("Milanesa con papas fritas")
+    click_on "Modificar"
+
+    expect(page).to have_content("1 Nuevo")
+    expect(page).to have_content("2 Ya existen")
+
+    # Editar un plato Ya existe ("Milanesa con papas fritas") y ponerle un nombre nuevo
+    all("div.rounded-xl", text: "Milanesa con papas fritas").first.click_button("Editar")
+    expect(page).to have_content("Editar plato")
+    find("#name").set("Milanesa napolitana artesanal")
+    click_on "Modificar"
+
+    expect(page).to have_content("2 Nuevos")
+    expect(page).to have_content("1 Ya existe")
+  end
+
+  it "deshabilita el botón de importar si solo hay platos que Ya existen y no se tomó acción" do
+    csv = write_file(<<~CSV)
+      nombre,descripcion,precio
+      Milanesa con papas fritas,Con papas,320
+    CSV
+
+    visit_hydrated provider_menu_import_path
+    upload(csv)
+
+    expect(page).to have_content("1 Ya existe")
+    expect(page).to have_button("Importar platos", disabled: true)
+  ensure
+    FileUtils.rm_f(csv) if csv
+  end
+
   it "avisa cuando el archivo no es una planilla" do
     pdf = write_file("no soy una planilla", extension: ".pdf")
 
