@@ -2,19 +2,19 @@
 
 require "rails_helper"
 
-# Historia IBP-079: "Como EMPLEADO, quiero aplicar mis cupones al realizar un
-# pedido y que se muestre el descuento."
-# AC1: puedo aplicar un cupón a un pedido.
-# AC2: puedo desaplicar un cupón a un pedido.
-#
-# TODO(integración): falta implementar desaplicar el cupón de un pedido YA
-# confirmado desde "Mi pedido". `EditOrderSheet` no tiene control de beneficios y
-# `Consumer::OrdersController#update` solo acepta quantity, notes, address y
-# options, aunque `Order#modify` ya recalcula y reemplaza beneficios
-# (`Order#replace_benefits!`). Cuando el formulario envíe los beneficios
-# elegidos, convertir este comentario en el escenario "desaplico el cupón de un
-# pedido confirmado, se me devuelven los usos y el importe vuelve al precio con
-# subsidio base".
+  # Historia IBP-079: "Como EMPLEADO, quiero aplicar mis cupones al realizar un
+  # pedido y que se muestre el descuento."
+  # AC1: puedo aplicar un cupón a un pedido.
+  # AC2: puedo desaplicar un cupón a un pedido.
+  #
+  # TODO(integración): falta implementar desaplicar el cupón de un pedido YA
+  # confirmado desde "Mi pedido". `EditOrderSheet` no tiene control de beneficios y
+  # `Consumer::OrdersController#update` solo acepta quantity, notes, address y
+  # options, aunque `Order#modify` ya recalcula y reemplaza beneficios
+  # (`Order#replace_benefits!`). Cuando el formulario envíe los beneficios
+  # elegidos, convertir este comentario en el escenario "desaplico el cupón de un
+  # pedido confirmado, se me devuelven los usos y el importe vuelve al precio con
+  # subsidio base".
 RSpec.describe "Aplicar y desaplicar un cupón al pedir", type: :system do
   fixtures :users, :companies, :admins, :consumers, :providers,
            :benefit_configurations, :benefit_rules, :benefits, :orders
