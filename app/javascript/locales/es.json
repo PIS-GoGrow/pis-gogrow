@@ -1218,31 +1218,72 @@
       "provider_menu_imports": {
         "new": {
           "back": "Volver al menú",
-          "choose": "Elegir planilla",
-          "file_error": "No se pudo leer la planilla",
-          "file_label": "Tu planilla",
-          "limits": "Hasta %{rows} platos por planilla y %{size} MB por archivo. Se aceptan .xlsx, .csv y .ods.",
-          "no_file": "Todavía no elegiste ningún archivo",
-          "preview": {
-            "confirm": "Confirmar importación",
-            "counts": "%{create} para crear · %{update} para actualizar",
-            "create": "Nuevo",
-            "errors_description": "No se importa ningún plato hasta que todas las filas estén bien.",
-            "errors_title": "Hay que corregir la planilla",
-            "row": "Fila %{number}",
-            "title": "Vista previa",
+          "blocked": "Corregí o quitá los platos con error para poder importar.",
+          "cancel": "Cancelar",
+          "card": {
+            "duplicate": "Duplicar",
+            "edit": "Editar",
+            "error": "Error",
+            "exists": "Ya existe",
+            "exists_warning": "Este plato no se importará a menos que elijas una de las siguientes acciones.",
+            "new": "Nuevo",
+            "no_price": "Precio: -",
+            "price": "Precio: %{price}",
+            "remove": "Quitar",
+            "reset": "Reestablecer",
+            "row": "Fila %{number} de la planilla",
             "unnamed": "Sin nombre",
-            "update": "Actualiza"
+            "update": "Actualizar",
+            "updated": "Actualizado"
           },
-          "preview_button": "Ver qué se va a importar",
-          "steps": {
-            "download": "Descargá la plantilla y abrila con Excel, Google Sheets o LibreOffice.",
-            "fill": "Una fila por plato: marcá con una x los días en que se ofrece y poné el cupo por día.",
-            "title": "Cómo importar tu menú",
-            "upload": "Subí la planilla y revisá la vista previa antes de confirmar."
+          "download": {
+            "action": "Descargar plantilla",
+            "description": "Completá una fila por plato sin modificar los encabezados. Incluye un ejemplo con opciones.",
+            "title": "Descargá la plantilla"
           },
-          "template": "Descargar plantilla",
-          "title": "Importar platos"
+          "edit": {
+            "title": "Editar plato"
+          },
+          "file_error": "No se pudo leer la planilla",
+          "import": "Importar platos",
+          "imported": {
+            "again": "Seguir importando",
+            "back": "Volver a Menú",
+            "description": "Los platos importados ya están disponibles en Platos guardados.",
+            "title": "¡Platos importados!"
+          },
+          "intro": "Importá varios platos a la vez y agregalos al menú cuando quieras.",
+          "nothing": "Elegí al menos un plato para importar.",
+          "summary": {
+            "error_one": "%{count} Error",
+            "error_other": "%{count} Errores",
+            "exists_one": "%{count} Ya existe",
+            "exists_other": "%{count} Ya existen",
+            "new_one": "%{count} Nuevo",
+            "new_other": "%{count} Nuevos",
+            "title": "Resumen",
+            "updated_one": "%{count} Actualizado",
+            "updated_other": "%{count} Actualizados"
+          },
+          "title": "Importar platos",
+          "update_dialog": {
+            "apply": "Aplicar cambios",
+            "back": "Volver",
+            "description": "Este plato se actualizará en tus platos guardados.",
+            "keep": "Mantener los pedidos confirmados",
+            "keep_description": "Los pedidos afectados que están confirmados no se modificarán.",
+            "reject": "Rechazar los pedidos confirmados",
+            "reject_description": "Los pedidos afectados que están confirmados se cancelarán.",
+            "title": "¿Actualizar el plato guardado?"
+          },
+          "upload": {
+            "action": "Subir archivo",
+            "choose": "Seleccionar archivo",
+            "description": "Soporta %{formats} hasta %{size} MB",
+            "empty": "Sin archivos seleccionados",
+            "remove": "Quitar el archivo",
+            "title": "Subí tu archivo"
+          }
         }
       },
       "provider_menus": {

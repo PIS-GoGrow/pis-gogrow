@@ -6,81 +6,108 @@ RSpec.describe Menus::Import::Save do
   fixtures :users, :providers, :menus, :menu_option_groups, :schedules
 
   let(:provider) { providers(:tuviandita) }
-  let(:template) { Rails.root.join("public/plantillas/menu.csv") }
   let(:next_monday) { Date.current.next_week(:monday) }
 
-  def save(path = template)
-    plan = Menus::Import::Plan.new(provider:, path:).tap(&:call)
-    described_class.new(provider:, plan:, by: users(:provider_user)).tap(&:call)
+  # Una entrada como la manda la vista previa, ya revisada por el proveedor.
+  def entry(**values)
+    {
+      key: "a",
+      action: "create",
+      name: "Sorrentinos",
+      description: "Sorrentinos caseros",
+      price: "380",
+      option_groups: [],
+      agenda: { mode: "none" },
+      confirmed_orders: "keep"
+    }.merge(values)
   end
 
-  it "crea los platos que el proveedor no tenía, con sus grupos de opciones" do
-    expect { save }.to change { provider.menus.saved.count }.by(2)
-
-    menu = provider.menus.saved.find_by!(name: "Sorrentinos")
-    expect(menu.price).to eq(380)
-    expect(menu.description).to eq("Sorrentinos caseros con salsa a elección")
-    expect(menu.option_groups.map { [ it.name, it.options, it.required, it.limit ] }).to eq([
-      [ "Relleno", [ "ricota y nuez", "jamón y queso" ], true, 1 ],
-      [ "Salsa", [ "filetto", "bolognesa", "crema" ], false, 1 ]
-    ])
+  def service(*entries)
+    described_class.new(provider:, entries:, by: users(:provider_user))
   end
 
-  it "programa cada plato en los días que la planilla marcó" do
-    save
+  def save(*entries) = service(*entries).tap(&:call)
 
-    agenda = provider.menus.saved.find_by!(name: "Sorrentinos").current_agenda
-    expect(agenda).to have_attributes(weekdays: [ 2, 4 ], starts_on: next_monday, ends_on: nil, amount: 15)
-  end
-
-  it "actualiza el plato que ya estaba guardado en lugar de duplicarlo" do
-    save
-
-    expect(menus(:milanesa).reload).to have_attributes(
-      price: 320,
-      description: "Milanesa con guarnición de papas",
-      modified_by: users(:provider_user)
-    )
-    expect(provider.menus.saved.where(name: "Milanesa con papas fritas").count).to eq(1)
-  end
-
-  it "le deja al plato que se actualiza los grupos de la planilla" do
-    menu = provider.menus.create!(
-      name: "Sorrentinos", description: "Con salsa", price: 300,
-      option_groups_attributes: [
-        { name: "Salsa", options: [ "Filetto" ], limit: 1 },
-        { name: "Postre", options: [ "Flan" ], limit: 1 }
+  describe "los platos nuevos" do
+    it "los crea con sus grupos de opciones" do
+      groups = [
+        { name: "Relleno", options: [ "ricota y nuez", "jamón y queso" ], required: true, limit: 1 },
+        { name: "Salsa", options: [ "filetto", "crema" ], required: false, limit: 2 }
       ]
-    )
-    salsa = menu.option_groups.find_by!(name: "Salsa")
 
-    save
+      expect { save(entry(option_groups: groups)) }.to change { provider.menus.saved.count }.by(1)
 
-    groups = menu.reload.option_groups.order(:name)
-    expect(groups.map(&:name)).to eq(%w[Relleno Salsa])
-    # El grupo que ya existía conserva su id: los pedidos hechos siguen
-    # cruzando la elección del empleado con el grupo.
-    expect(groups.find_by(name: "Salsa")).to have_attributes(id: salsa.id, options: [ "filetto", "bolognesa", "crema" ])
-  end
-
-  it "no guarda nada si una fila falla al guardarse" do
-    allow(Menus::Create).to receive(:new).and_wrap_original do |original, **arguments|
-      original.call(**arguments).tap do |service|
-        next unless arguments[:attributes][:name] == "Ensalada César"
-
-        allow(service).to receive(:call) { service.errors.add(:base, "sin stock") && false }
-      end
+      menu = provider.menus.saved.find_by!(name: "Sorrentinos")
+      expect(menu.price).to eq(380)
+      expect(menu.option_groups.map { [ it.name, it.options, it.required, it.limit ] }).to eq([
+        [ "Relleno", [ "ricota y nuez", "jamón y queso" ], true, 1 ],
+        [ "Salsa", [ "filetto", "crema" ], false, 2 ]
+      ])
     end
 
-    importer = nil
-    expect { importer = save }.not_to change { Menu.count }
-    expect(importer.errors).to eq(11 => [ "sin stock" ])
+    it "los deja sin programar: la planilla no trae agenda" do
+      save(entry)
+
+      menu = provider.menus.saved.find_by!(name: "Sorrentinos")
+      expect(menu.schedules).to be_empty
+      expect(menu.current_agenda).to be_nil
+    end
+
+    it "los programa si el proveedor les puso agenda al editarlos" do
+      agenda = { mode: "weekly", weekdays: [ 2, 4 ], starts_on: next_monday.to_s, ends_on: nil }
+
+      save(entry(agenda:))
+
+      expect(provider.menus.saved.find_by!(name: "Sorrentinos").current_agenda)
+        .to have_attributes(weekdays: [ 2, 4 ], starts_on: next_monday, ends_on: nil)
+    end
+
+    it "crea un plato que se llama igual que uno guardado, si eso fue lo que eligió" do
+      expect { save(entry(name: "Milanesa con papas fritas")) }
+        .to change { provider.menus.saved.where(name: "Milanesa con papas fritas").count }.by(1)
+    end
   end
 
-  it "no guarda nada si el plan tiene errores" do
-    path = Rails.root.join("tmp", "incompleto.csv")
-    File.write(path, "nombre,descripcion,precio,cupo,lunes\nMilanesa,Con papas,,20,x\n")
+  describe "los platos que se actualizan" do
+    let(:milanesa) { menus(:milanesa) }
 
-    expect { save(path) }.not_to change { Menu.count }
+    def update(**values)
+      save(entry(action: "update", menu_id: milanesa.id, name: milanesa.name, **values))
+    end
+
+    it "pisa el plato guardado en lugar de duplicarlo" do
+      expect { update(description: "Con guarnición de papas", price: "420") }
+        .not_to change { provider.menus.saved.count }
+
+      expect(milanesa.reload).to have_attributes(price: 420, description: "Con guarnición de papas")
+    end
+
+    it "le devuelve la agenda que ya tenía cuando la vista previa la manda igual" do
+      milanesa.agendas.create!(weekdays: [ 1, 3 ], starts_on: next_monday)
+      agenda = { mode: "weekly", weekdays: [ 1, 3 ], starts_on: next_monday.to_s, ends_on: nil }
+
+      update(agenda:)
+
+      expect(milanesa.reload.current_agenda)
+        .to have_attributes(weekdays: [ 1, 3 ], starts_on: next_monday)
+    end
+
+    it "no toca un plato de otro proveedor" do
+      expect { save(entry(action: "update", menu_id: menus(:sorrentinos).id)) }
+        .to raise_error(ActiveRecord::RecordNotFound)
+    end
+  end
+
+  describe "cuando una fila falla al guardar" do
+    it "no escribe ninguna y devuelve el error en la tarjeta que lo produjo" do
+      failed = service(entry(key: "a"), entry(key: "b", name: "Tarta", price: "0"))
+
+      expect { expect(failed.call).to be(false) }.not_to change { provider.menus.saved.count }
+      expect(failed.errors.keys).to eq([ "b" ])
+    end
+  end
+
+  it "no hace nada con una lista vacía" do
+    expect(service.call).to be(false)
   end
 end

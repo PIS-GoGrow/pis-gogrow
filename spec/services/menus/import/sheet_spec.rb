@@ -13,6 +13,7 @@ RSpec.describe Menus::Import::Sheet do
     sheet = described_class.new(path: Rails.root.join("public/plantillas/menu.csv"))
 
     expect(sheet.rows.size).to eq(3)
+    expect(sheet.headers.first(4)).to eq(%w[nombre descripcion precio opciones_1])
 
     _number, first = sheet.rows.first
     expect(first["nombre"]).to eq("Milanesa con papas fritas")
@@ -65,15 +66,34 @@ RSpec.describe Menus::Import::Sheet do
     expect(row.keys).to eq(%w[nombre precio])
   end
 
-  it "acepta los tres formatos de la planilla" do
-    %w[menu.xlsx menu.csv menu.ods].each do |name|
+  it "acepta los formatos que exporta una planilla de cálculo" do
+    %w[menu.xlsx menu.xls menu.csv menu.ods].each do |name|
       expect { described_class.new(path: "/tmp/#{name}") }.not_to raise_error
     end
   end
 
   it "rechaza un formato que no se puede leer" do
-    expect { described_class.new(path: "/tmp/menu.xls") }
+    expect { described_class.new(path: "/tmp/menu.pdf") }
       .to raise_error(described_class::UnsupportedFormat)
+  end
+
+  it "lee un .xls, que es lo que exporta Excel por defecto en muchas instalaciones" do
+    book = Spreadsheet::Workbook.new
+    page = book.create_worksheet
+    page.row(0).concat %w[nombre descripcion precio]
+    page.row(1).concat [ "Milanesa", "Con papas", "320" ]
+    path = Rails.root.join("tmp", "sheet_spec.xls")
+    book.write(path)
+
+    _number, row = described_class.new(path: path).rows.sole
+
+    expect(row).to eq("nombre" => "Milanesa", "descripcion" => "Con papas", "precio" => "320")
+  end
+
+  it "ignora el BOM con el que Excel guarda los CSV" do
+    path = write("﻿nombre,precio\nMilanesa,320\n", name: "bom.csv")
+
+    expect(described_class.new(path: path).headers).to eq(%w[nombre precio])
   end
 
   it "usa el nombre original para decidir el formato, no el del archivo temporal" do

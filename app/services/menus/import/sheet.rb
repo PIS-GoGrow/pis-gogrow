@@ -6,9 +6,10 @@ module Menus
     # el número de línea para poder señalar los errores donde el proveedor los
     # ve. Ver docs/importar-menu.md.
     class Sheet
-      EXTENSIONS = { ".xlsx" => :xlsx, ".csv" => :csv, ".ods" => :ods }.freeze
+      EXTENSIONS = { ".xlsx" => :xlsx, ".xls" => :xls, ".csv" => :csv, ".ods" => :ods }.freeze
       MAX_ROWS = 200
       HELP_PREFIX = "#"
+      BOM = "﻿"
 
       class UnsupportedFormat < StandardError; end
       class Unreadable < StandardError; end
@@ -57,8 +58,10 @@ module Menus
         raise Unreadable
       end
 
+      # Excel guarda los CSV con un BOM al principio. Sin sacarlo, el primer
+      # encabezado no sería "nombre" y la planilla parecería incompleta.
       def normalize(values)
-        values.map { it.to_s.strip.downcase }
+        values.map { it.to_s.delete_prefix(BOM).strip.downcase }
       end
 
       def blank?(values)

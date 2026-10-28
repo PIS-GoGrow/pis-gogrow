@@ -2,67 +2,52 @@
 
 module Menus
   module Import
-    # Lo que la planilla va a hacer, antes de tocar nada: una entrada por fila,
-    # con la acción que le toca —crear el plato o actualizar el del mismo
-    # nombre— y sus errores. Es lo que muestra la vista previa y lo que guarda
-    # Menus::Import::Save. Ver docs/importar-menu.md.
+    # Lo que la planilla propone, antes de tocar nada: una entrada por fila con
+    # sus datos y sus errores.
+    #
+    # No decide nada más. Con qué plato guardado coincide cada fila y qué se
+    # crea, se actualiza o se ignora se resuelve en la vista previa, donde el
+    # proveedor todavía puede cambiarle el nombre a un plato. Así un error en
+    # una fila no lo obliga a volver a la planilla. Ver docs/importar-menu.md.
     class Plan
-      REQUIRED_COLUMNS = %w[nombre descripcion precio cupo].freeze
-      MAX_SIZE = 2.megabytes
+      REQUIRED_COLUMNS = %w[nombre descripcion precio].freeze
+      MAX_SIZE = 5.megabytes
 
-      Entry = Data.define(:number, :name, :action, :errors, :row, :menu) do
+      Entry = Data.define(:number, :name, :description, :price, :option_groups, :errors) do
         def valid? = errors.empty?
       end
 
       attr_reader :entries, :error
 
-      def initialize(provider:, path:, filename: nil)
-        @provider = provider
+      def initialize(path:, filename: nil)
         @path = path.to_s
         @filename = filename
         @entries = []
       end
 
+      # Devuelve si la planilla se pudo leer. Que una fila traiga errores no es
+      # un problema del archivo: se muestra y se corrige en la vista previa.
       def call
         @error = file_error
         @entries = build_entries unless @error
-        valid?
+        @error.nil?
       end
-
-      # Todo o nada: con un solo error no se importa ninguna fila.
-      def valid? = @error.nil? && @entries.any? && @entries.all?(&:valid?)
-
-      def to_create = @entries.select { it.action == :create }
-      def to_update = @entries.select { it.action == :update }
-      def failed = @entries.reject(&:valid?)
 
       private
 
       def build_entries
-        seen = []
-
         sheet.rows.map do |number, values|
           row = Row.new(number:, values:)
-          key = row.name.downcase
-          repeated = key.present? && seen.include?(key)
-          seen << key
-          menu = saved_menus[key]
 
           Entry.new(
             number:,
             name: row.name,
-            action: menu ? :update : :create,
-            errors: row.errors + (repeated ? [ message(:duplicated_name, name: row.name) ] : []),
-            row:,
-            menu:
+            description: row.description,
+            price: row.price,
+            option_groups: row.option_groups,
+            errors: row.errors
           )
         end
-      end
-
-      # Un plato que el proveedor ya tiene guardado se actualiza; la coincidencia
-      # es por nombre, sin importar mayúsculas ni espacios de más.
-      def saved_menus
-        @saved_menus ||= @provider.menus.saved.index_by { it.name.to_s.strip.downcase }
       end
 
       # Problemas del archivo entero, que dejan la vista previa sin nada que

@@ -114,8 +114,11 @@ gem "omniauth-google-oauth2"
 gem "omniauth-rails_csrf_protection"
 
 # Lee las planillas que el proveedor importa: cubre xlsx, ods y csv con la
-# misma interfaz (ver docs/importar-menu.md).
+# misma interfaz (ver docs/importar-menu.md). roo 3 no trae el .xls anterior
+# a 2007, que sigue siendo lo que exporta Excel por defecto en muchas
+# instalaciones: eso lo agrega roo-xls.
 gem "roo", "~> 3.0"
+gem "roo-xls", "~> 2.0"
 
 gem "sentry-ruby", "~> 6.5"
 gem "sentry-rails", "~> 6.5"

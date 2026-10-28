@@ -2,15 +2,16 @@
 
 module Menus
   module Import
-    # Una fila de la planilla traducida a lo que espera Menus::Create: los
-    # atributos del plato y la agenda con la que se programa. Valida acá lo que
-    # el modelo no puede explicar con el número de fila a la vista.
+    # Una fila de la planilla traducida a los atributos que espera Menus::Create.
+    # La planilla no trae agenda: días, cupo y fechas se ajustan después desde la
+    # aplicación, así que acá solo se valida lo que la fila misma puede explicar.
     # Ver docs/importar-menu.md.
     class Row
-      WEEKDAYS = { "lunes" => 1, "martes" => 2, "miercoles" => 3, "jueves" => 4, "viernes" => 5 }.freeze
       OPTION_COLUMNS = (1..10).map { "opciones_#{it}" }.freeze
-      MARKED = %w[x si sí true 1].freeze
       REQUIRED_MARK = "*"
+      # Cuántas opciones puede elegir el empleado en un grupo. La planilla no lo
+      # pregunta para no pedirle una columna más al proveedor: se ajusta desde la
+      # aplicación, donde el grupo se ve entero.
       DEFAULT_LIMIT = 1
 
       attr_reader :number
@@ -22,22 +23,20 @@ module Menus
 
       def name = text("nombre")
 
+      def description = text("descripcion")
+
+      def price = decimal("precio")
+
       def valid? = errors.empty?
 
       # Un mensaje por problema, ya redactado: la vista previa los muestra tal
-      # cual junto al número de fila.
+      # cual en la tarjeta del plato, con el motivo a la vista para que el
+      # proveedor sepa qué corregir sin abrirla.
       def errors
         @errors ||= [
           (message(:name) if name.blank?),
-          (message(:description) if text("descripcion").blank?),
+          (message(:description) if description.blank?),
           (message(:price) unless price&.positive?),
-          (message(:amount) unless amount&.positive? && amount <= Schedule::MAX_AMOUNT),
-          (message(:weekdays) if weekdays.empty?),
-          (message(:limit) unless limit.positive?),
-          (message(:starts_on) if @values["desde"].present? && starts_on.nil?),
-          (message(:ends_on) if @values["hasta"].present? && ends_on.nil?),
-          (message(:range) if ends_on && starts_on && ends_on < starts_on),
-          (message(:past) if starts_on && starts_on < Date.current),
           *option_errors
         ].compact
       end
@@ -45,24 +44,10 @@ module Menus
       def attributes
         {
           name: name,
-          description: text("descripcion"),
+          description: description,
           price: price,
           option_groups_attributes: option_groups
         }
-      end
-
-      def agenda
-        {
-          mode: ends_on ? "range" : "weekly",
-          starts_on: (starts_on || default_start).to_s,
-          ends_on: ends_on&.to_s,
-          amount: amount,
-          weekdays: weekdays
-        }
-      end
-
-      def weekdays
-        WEEKDAYS.filter_map { |column, number| number if marked?(@values[column]) }
       end
 
       def option_groups
@@ -72,20 +57,6 @@ module Menus
       private
 
       def text(column) = @values[column].to_s.strip
-
-      def price = decimal("precio")
-
-      def amount = integer("cupo")
-
-      def limit = integer("limite") || DEFAULT_LIMIT
-
-      def starts_on = date("desde")
-
-      def ends_on = date("hasta")
-
-      # Sin fecha, la semana próxima: importar un menú es planificar lo que
-      # viene, no pisar lo que ya está publicado.
-      def default_start = Date.current.next_week(:monday)
 
       def option_cells
         OPTION_COLUMNS.filter_map { |column| text(column).presence }
@@ -116,10 +87,8 @@ module Menus
 
         return if name.empty? || options.empty?
 
-        { name: name, options: options, required: required, limit: [ limit, options.size ].min }
+        { name: name, options: options, required: required, limit: [ DEFAULT_LIMIT, options.size ].min }
       end
-
-      def marked?(value) = MARKED.include?(value.to_s.strip.downcase)
 
       def decimal(column)
         value = @values[column]
@@ -127,24 +96,6 @@ module Menus
 
         BigDecimal(text(column))
       rescue ArgumentError, TypeError
-        nil
-      end
-
-      def integer(column)
-        value = @values[column]
-        return value.to_i if value.is_a?(Numeric)
-
-        Integer(text(column))
-      rescue ArgumentError, TypeError
-        nil
-      end
-
-      def date(column)
-        value = @values[column]
-        return value.to_date if value.respond_to?(:to_date) && !value.is_a?(String)
-
-        Date.iso8601(text(column))
-      rescue Date::Error, NoMethodError
         nil
       end
     end
