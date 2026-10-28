@@ -68,7 +68,7 @@ describe("Admin::Invoices Index Page", () => {
 
     expect(screen.getByRole("link", { name: "Ver" })).toHaveAttribute(
       "href",
-      "/rrhh/facturas/7/archivo",
+      "/rrhh/facturas/7/archivo/factura.pdf",
     )
     expect(
       screen.getByRole("link", { name: "Descargar factura.pdf" }),

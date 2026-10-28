@@ -128,6 +128,16 @@ RSpec.describe "Admin::Invoices", type: :request do
       expect(response.headers["Content-Disposition"]).to start_with("inline")
     end
 
+    # El navegador titula la pestaña con el último tramo de la URL.
+    it "serves it under its file name" do
+      sign_in users(:admin), role: :admin
+
+      get file_admin_invoice_path(invoice, filename: "factura.png")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Content-Disposition"]).to start_with("inline")
+    end
+
     it "lets HR download it" do
       sign_in users(:admin), role: :admin
 
