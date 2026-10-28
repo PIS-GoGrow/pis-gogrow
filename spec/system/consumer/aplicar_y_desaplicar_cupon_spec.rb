@@ -26,13 +26,13 @@ RSpec.describe "Aplicar y desaplicar un cupón al pedir", type: :system do
   end
 
   around do |example|
-    # El navegador no ve travel_to: el menú abre en el día real.
+# El navegador no ve travel_to: el menú abre en el día real.
     travel_to(Date.current.next_occurring(:monday).noon) { example.run }
   end
 
   before do
-    # gift2 y seniority son subsidios especiales sin nombre que la pantalla de
-    # RRHH mostraría vacíos; gift queda como el cupón de esta historia.
+# gift2 y seniority son subsidios especiales sin nombre que la pantalla de
+# RRHH mostraría vacíos; gift queda como el cupón de esta historia.
     benefit_configurations(:gift2, :seniority).each(&:destroy)
     benefits(:monthly).update!(percentage: 50, amount: 20,
                                due_date: Date.current.end_of_month, status: :current)
@@ -40,8 +40,8 @@ RSpec.describe "Aplicar y desaplicar un cupón al pedir", type: :system do
   end
 
   def assign_coupon(amount: 2)
-    # El nombre que se muestra en el resumen de descuentos sale de la
-    # configuración (`order_pricing_serializer.rb`), no del cupón.
+# El nombre que se muestra en el resumen de descuentos sale de la
+# configuración (`order_pricing_serializer.rb`), no del cupón.
     configuration = benefit_configurations(:gift)
     configuration.update!(name: "Premio del mes")
     @coupon = consumer.benefits.create!(
@@ -76,7 +76,7 @@ RSpec.describe "Aplicar y desaplicar un cupón al pedir", type: :system do
 
     expect(coupon_checkbox[:"data-state"]).to eq("checked")
 
-    # 300 con 50% base (- $150) y 30% de cupón (- $90): paga 60.
+# 300 con 50% base (- $150) y 30% de cupón (- $90): paga 60.
     expect(tier("Subsidio Base (50%)")).to have_text("- $150")
     expect(tier("Premio del mes (30%)")).to have_text("- $90")
     expect(tier("Monto a pagar")).to have_text("$60")
@@ -85,8 +85,8 @@ RSpec.describe "Aplicar y desaplicar un cupón al pedir", type: :system do
     click_link "Ver carrito"
     expect(tier("Monto a pagar")).to have_text("$60")
 
-    # El carrito vive en sessionStorage: al recargar, el cupón elegido tiene que
-    # seguir viajando al cálculo del servidor.
+# El carrito vive en sessionStorage: al recargar, el cupón elegido tiene que
+# seguir viajando al cálculo del servidor.
     page.refresh
     expect(tier("Monto a pagar")).to have_text("$60")
 
@@ -118,7 +118,7 @@ RSpec.describe "Aplicar y desaplicar un cupón al pedir", type: :system do
     coupon_checkbox.click
     expect(coupon_checkbox[:"data-state"]).to eq("unchecked")
 
-    # 300 con 50% base (- $150), sin el cupón: paga 150.
+# 300 con 50% base (- $150), sin el cupón: paga 150.
     expect(page).to have_no_text("Premio del mes (30%)")
     expect(tier("Subsidio Base (50%)")).to have_text("- $150")
     expect(tier("Monto a pagar")).to have_text("$150")
