@@ -43,10 +43,11 @@ export default function Index({
       <SettingsPageLayout
         title={t(`${page}.title`)}
         description={t(`${page}.description`)}
+        titleVariant="prominent"
         consumerMobileBackHref={consumerProfiles.show().url}
         consumerMobileBackLabel={t(`${page}.back`)}
       >
-        <div className="grid w-full gap-3">
+        <div className="grid w-full gap-3 pb-36 md:pb-0">
           {office_address && (
             <Card className="h-[66px] gap-0 rounded-[10px] py-0 shadow-none">
               <CardContent className="flex h-full items-center justify-between gap-3 px-3 py-0">
@@ -78,6 +79,7 @@ export default function Index({
                 </div>
 
                 <AddressFormSheet
+                  key={`${address.id}-${address.name}-${address.address}`}
                   address={address}
                   onDelete={setDeletingAddress}
                 >
@@ -96,11 +98,13 @@ export default function Index({
               </CardContent>
             </Card>
           ))}
+        </div>
 
+        <div className="fixed bottom-[88px] left-1/2 z-20 w-[354px] max-w-[calc(100vw-2rem)] -translate-x-1/2 md:static md:w-full md:translate-x-0 md:mt-2">
           <AddressFormSheet>
             <Button
               type="button"
-              className="mt-2 h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90"
+              className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90"
             >
               {t(`${page}.add`)}
             </Button>
