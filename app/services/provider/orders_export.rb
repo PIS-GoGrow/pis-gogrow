@@ -1,13 +1,14 @@
 # frozen_string_literal: true
 
-require "csv"
-
 # Arma el archivo con los pedidos que el proveedor está viendo en Pedidos. Los
 # filtros repiten filterOrders y searchableText (lib/provider-orders.ts): si
 # cambia uno, tiene que cambiar el otro, o el archivo deja de coincidir con la
 # pantalla.
 class Provider::OrdersExport
   COLUMNS = %i[code delivery_date time status consumer company dish options amount delivery_method address notes price].freeze
+  # Los textos van siempre como :string: lo que escriben los empleados nunca se
+  # tiene que abrir como una fórmula.
+  TYPES = %i[string date string string string string string string integer string string string float].freeze
 
   def initialize(orders, provider:, period:, status: nil, delivery: nil, search: nil)
     @all_orders = orders
@@ -22,14 +23,29 @@ class Provider::OrdersExport
     @orders ||= @all_orders.select { visible?(it) }
   end
 
-  # El BOM y el punto y coma son para que Excel en español lo abra en columnas
-  # y con las tildes bien.
-  def to_csv
-    "\uFEFF" + CSV.generate(col_sep: ";") do |csv|
-      csv << COLUMNS.map { I18n.t("exports.provider_orders.columns.#{it}") }
-      orders.each { csv << row(it) }
-      csv << total_row
+  def to_xlsx
+    package = Axlsx::Package.new
+    styles = package.workbook.styles
+    bold = styles.add_style(b: true)
+    date = styles.add_style(format_code: "dd/mm/yyyy")
+    money = styles.add_style(format_code: "#,##0.00")
+    total_money = styles.add_style(b: true, format_code: "#,##0.00")
+    row_styles = COLUMNS.map { { delivery_date: date, price: money }[it] }
+    total_styles = COLUMNS.map { it == :price ? total_money : bold }
+
+    package.workbook.add_worksheet(name: "Pedidos", escape_formulas: true) do |sheet|
+      sheet.add_row COLUMNS.map { I18n.t("exports.provider_orders.columns.#{it}") }, style: bold
+      orders.each { sheet.add_row row(it), types: TYPES, style: row_styles }
+      sheet.add_row total_row, types: TYPES, style: total_styles
+      sheet.sheet_view.pane do |pane|
+        pane.state = :frozen
+        pane.y_split = 1
+        pane.top_left_cell = "A2"
+        pane.active_pane = :bottom_left
+      end
     end
+
+    package.to_stream.read
   end
 
   def filename
@@ -38,7 +54,7 @@ class Provider::OrdersExport
     period = @period == :history ? "historial" : "proximos"
     generated = Time.current.strftime("%Y-%m-%d_%H%M")
 
-    [ "pedidos", @provider.user.name.parameterize, period, range, "generado", generated ].compact.join("_") + ".csv"
+    [ "pedidos", @provider.user.name.parameterize, period, range, "generado", generated ].compact.join("_") + ".xlsx"
   end
 
   private
@@ -72,18 +88,18 @@ class Provider::OrdersExport
   def row(order)
     [
       code(order),
-      order.delivery_date&.strftime("%d/%m/%Y"),
+      order.delivery_date,
       order.created_at.strftime("%H:%M"),
       status_label(order),
-      cell(order.consumer.user.name),
-      cell(order.consumer.company&.name),
-      cell(order.menu_name),
-      cell(options(order)),
+      order.consumer.user.name,
+      order.consumer.company&.name,
+      order.menu_name,
+      options(order),
       order.amount,
       delivery_label(order),
-      cell(address(order)),
-      cell(order.notes),
-      money(order.price)
+      address(order),
+      order.notes,
+      order.price
     ]
   end
 
@@ -91,7 +107,7 @@ class Provider::OrdersExport
     cells = Array.new(COLUMNS.size)
     cells[0] = I18n.t("exports.provider_orders.total")
     cells[COLUMNS.index(:amount)] = orders.sum { it.amount.to_i }
-    cells[COLUMNS.index(:price)] = money(orders.sum { it.price.to_d })
+    cells[COLUMNS.index(:price)] = orders.sum { it.price.to_d }
     cells
   end
 
@@ -113,15 +129,5 @@ class Provider::OrdersExport
 
   def delivery_label(order)
     I18n.t("pages.provider_orders.index.delivery_methods.#{order.delivery_method}")
-  end
-
-  def money(amount)
-    format("%.2f", amount.to_d).tr(".", ",")
-  end
-
-  # Lo escriben los empleados: sin esto, unas notas que empiezan con "=" se
-  # abren en Excel como una fórmula.
-  def cell(value)
-    value.to_s.start_with?("=", "+", "-", "@") ? "'#{value}" : value
   end
 end

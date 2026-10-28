@@ -18,7 +18,7 @@ class Provider::OrdersController < Provider::InertiaController
       search: params[:busqueda]
     )
 
-    send_data export.to_csv, type: "text/csv; charset=utf-8", disposition: "attachment", filename: export.filename
+    send_data export.to_xlsx, type: Mime[:xlsx], disposition: "attachment", filename: export.filename
   end
 
   # El find va sobre los pedidos del proveedor y no sobre Order: pedir el de
