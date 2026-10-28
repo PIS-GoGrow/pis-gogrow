@@ -134,13 +134,7 @@ class Consumer::OrdersController < Consumer::InertiaController
       quantity: update_params[:quantity].to_i,
       notes: update_params[:notes],
       delivery:,
-<<<<<<< Updated upstream
       selected_options: selected_options_for(order.schedule&.menu, update_params[:options])
-=======
-      discount_percentage: benefit_percentage,
-      selected_options: selected_options_for(order.schedule&.menu, update_params[:options]),
-      remaining_subsidized: benefit_percentage.positive? ? consumer.remaining_monthly_benefit : 0
->>>>>>> Stashed changes
     )
 
     if modified

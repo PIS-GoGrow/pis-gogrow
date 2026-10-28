@@ -114,16 +114,9 @@ class Order < ApplicationRecord
     address:,
     quantity: 1,
     notes: nil,
-<<<<<<< Updated upstream
     discounted_price: nil,
     selected_options: [],
     benefits: {}
-=======
-    discount_percentage: 0,
-    subsidized_quantity: nil,
-    selected_options: [],
-    benefits:
->>>>>>> Stashed changes
   )
     price = schedule.menu.price * quantity
 
