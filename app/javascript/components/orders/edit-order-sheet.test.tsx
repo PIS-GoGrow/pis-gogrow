@@ -1,25 +1,42 @@
 import { render, screen } from "@testing-library/react"
-import { describe, expect, it, vi } from "vitest"
+import userEvent from "@testing-library/user-event"
+import { useState } from "react"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { ConsumerOrdersShow, Order } from "@/types"
 
 import EditOrderSheet from "./edit-order-sheet"
 
+const { patch, visit, cancel } = vi.hoisted(() => ({
+  patch: vi.fn(),
+  visit: vi.fn(),
+  cancel: vi.fn(),
+}))
+
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
-    useForm: (initialValues: unknown) => ({
-      data: initialValues as Record<string, unknown>,
-      setData: vi.fn(),
-      patch: vi.fn(),
-      processing: false,
-      transform: vi.fn(),
-    }),
+    router: { visit, patch: cancel },
+    useForm: (initialValues: Record<string, unknown>) => {
+      const [data, setFormData] = useState(initialValues)
+      return {
+        data,
+        setData: (key: string, value: unknown) =>
+          setFormData((previous) => ({ ...previous, [key]: value })),
+        patch,
+        processing: false,
+        transform: vi.fn(),
+      }
+    },
   }
 })
 
 describe("EditOrderSheet", () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   const baseOrder: Order = {
     id: 1,
     status: "pending",
@@ -161,7 +178,7 @@ describe("EditOrderSheet", () => {
       />,
     )
 
-    const submitButton = screen.getByRole("button", { name: "Guardar cambios" })
+    const submitButton = screen.getByRole("button", { name: "Modificar" })
     expect(submitButton).toBeDisabled()
   })
 
@@ -191,7 +208,7 @@ describe("EditOrderSheet", () => {
       />,
     )
 
-    const submitButton = screen.getByRole("button", { name: "Guardar cambios" })
+    const submitButton = screen.getByRole("button", { name: "Modificar" })
     expect(submitButton).toBeEnabled()
   })
 
@@ -259,6 +276,140 @@ describe("EditOrderSheet", () => {
       )
 
       expect(screen.queryByText(/disponibles/i)).not.toBeInTheDocument()
+    })
+  })
+
+  describe("modifying", () => {
+    // El patch real redirige y llama a onSuccess con la página nueva; sin
+    // alerta, el cambio se guardó.
+    const succeed = () =>
+      patch.mockImplementation(
+        (_url: string, options: { onSuccess: (page: unknown) => void }) =>
+          options.onSuccess({ props: {}, flash: {} }),
+      )
+
+    const renderSheet = (order: Partial<Order> = {}, editing = true) =>
+      render(
+        <EditOrderSheet
+          order={{ ...baseOrder, ...order }}
+          addresses={addresses}
+          optionGroups={[]}
+          maxQuantity={5}
+          editing={editing}
+        />,
+      )
+
+    it("shows the dish, its provider and its status", () => {
+      renderSheet({ status: "confirmed" })
+
+      expect(
+        screen.getByRole("heading", { name: "Milanesa Napolitana" }),
+      ).toBeInTheDocument()
+      expect(screen.getByText("TuViandita")).toBeInTheDocument()
+      expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    })
+
+    it("saves a pending order without asking and then confirms it was modified", async () => {
+      succeed()
+      renderSheet()
+
+      await userEvent.click(screen.getByRole("button", { name: "Agregar uno" }))
+      await userEvent.click(screen.getByRole("button", { name: "Modificar" }))
+
+      expect(patch).toHaveBeenCalledOnce()
+      expect(screen.getByText("Pedido modificado")).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "Te notificaremos cuando el proveedor confirme tu pedido.",
+        ),
+      ).toBeInTheDocument()
+    })
+
+    it("does not let a confirmed order be submitted without changes", () => {
+      renderSheet({ status: "confirmed" })
+
+      expect(screen.getByRole("button", { name: "Modificar" })).toBeDisabled()
+    })
+
+    it("asks before adding units to a confirmed order", async () => {
+      succeed()
+      renderSheet({ status: "confirmed" })
+
+      await userEvent.click(screen.getByRole("button", { name: "Agregar uno" }))
+      await userEvent.click(screen.getByRole("button", { name: "Modificar" }))
+
+      expect(screen.getByText("¿Agregar más unidades?")).toBeInTheDocument()
+      expect(patch).not.toHaveBeenCalled()
+
+      await userEvent.click(
+        screen.getByRole("button", { name: "Aumentar pedido" }),
+      )
+
+      expect(patch).toHaveBeenCalledOnce()
+      expect(screen.getByText("Pedido modificado")).toBeInTheDocument()
+    })
+
+    it("warns that changing other details of a confirmed order reorders it", async () => {
+      renderSheet({ status: "confirmed" })
+
+      await userEvent.type(screen.getByRole("textbox", { name: "Notas" }), "!")
+      await userEvent.click(screen.getByRole("button", { name: "Modificar" }))
+
+      expect(screen.getByText("¿Modificar el pedido?")).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole("button", { name: "Volver" }))
+
+      expect(screen.getByRole("textbox", { name: "Notas" })).toHaveValue(
+        "Nota inicial!",
+      )
+      expect(patch).not.toHaveBeenCalled()
+    })
+
+    it("goes back to the order list when it was opened from there", async () => {
+      renderSheet({}, true)
+
+      await userEvent.click(screen.getByRole("button", { name: "Volver" }))
+
+      expect(visit).toHaveBeenCalledWith("/pedidos", { replace: true })
+    })
+
+    it("returns to the order list after a modification opened from there", async () => {
+      succeed()
+      renderSheet({}, true)
+
+      await userEvent.click(screen.getByRole("button", { name: "Modificar" }))
+      await userEvent.click(screen.getByRole("button", { name: "Listo" }))
+
+      expect(visit).toHaveBeenCalledWith("/pedidos", { replace: true })
+    })
+
+    it("stays on the order detail when it was opened from there", async () => {
+      succeed()
+      renderSheet({}, false)
+
+      await userEvent.click(screen.getByRole("button", { name: "Editar" }))
+      await userEvent.click(screen.getByRole("button", { name: "Modificar" }))
+      await userEvent.click(screen.getByRole("button", { name: "Listo" }))
+
+      expect(visit).toHaveBeenCalledWith("/pedidos/1", {
+        replace: true,
+      })
+    })
+
+    it("asks to cancel the order from the quantity's trash button", async () => {
+      renderSheet()
+
+      await userEvent.click(
+        screen.getByRole("button", { name: "Cancelar pedido" }),
+      )
+
+      expect(screen.getByText("¿Cancelar pedido?")).toBeInTheDocument()
+
+      await userEvent.click(
+        screen.getByRole("button", { name: "Cancelar pedido" }),
+      )
+
+      expect(cancel).toHaveBeenCalledOnce()
     })
   })
 })

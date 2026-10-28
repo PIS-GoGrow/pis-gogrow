@@ -41,9 +41,9 @@ RSpec.describe "Auditoría de pedidos", type: :system do
     click_button "Editar"
     within("[role=dialog]") do
       click_button "Agregar uno"
-      click_button "Guardar cambios"
+      click_button "Modificar"
+      expect(page).to have_content("Pedido modificado")
     end
-    expect(page).to have_content("Pedido actualizado")
 
     sign_out
     sign_in users(:provider_user), role: :provider

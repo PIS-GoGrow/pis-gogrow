@@ -80,7 +80,7 @@ RSpec.describe "Cancelar pedidos después de la hora de cierre e información de
       sign_in consumer_user, role: :consumer
       visit_hydrated order_path(modifiable_order, edit: 1)
 
-      expect(page).to have_content("Modificar pedido")
+      expect(page).to have_button("Modificar")
       expect(page).to have_content("18 de Julio 1006")
       expect(page).to have_content("Julio Herrera y Reissig 565")
       expect(page).to have_no_content("disponibles para esta fecha")

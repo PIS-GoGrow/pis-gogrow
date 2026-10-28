@@ -934,12 +934,18 @@
           "upcoming_tab": "Próximos"
         },
         "show": {
+          "add_units_dialog": {
+            "back": "Volver",
+            "confirm": "Aumentar pedido",
+            "description": "Se enviará un pedido complementario al que ya tenés aprobado, sujeto a la aprobación del proveedor.",
+            "title": "¿Agregar más unidades?"
+          },
           "address": "Dirección de entrega",
           "back": "Volver a mis pedidos",
           "base_price": "Precio base",
           "cannot_edit": {
             "already_closed": "Este pedido ya está cerrado.",
-            "already_confirmed": "El proveedor ya confirmó este pedido, así que no se puede modificar.",
+            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede modificar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede modificar."
           },
           "date": "Fecha de entrega",
@@ -948,12 +954,23 @@
           "edit_dialog": {
             "address": "Dirección de entrega",
             "back": "Volver",
-            "confirm": "Guardar cambios",
+            "confirm": "Modificar",
             "description": "Podés cambiar la cantidad, las opciones del plato, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo.",
             "notes": "Notas",
             "notes_placeholder": "Sin salsa, sin cebolla…",
             "quantity": "Cantidad",
-            "title": "Modificar pedido"
+            "remove": "Cancelar pedido"
+          },
+          "modified_dialog": {
+            "description": "Te notificaremos cuando el proveedor confirme tu pedido.",
+            "done": "Listo",
+            "title": "Pedido modificado"
+          },
+          "modify_confirmed_dialog": {
+            "back": "Volver",
+            "confirm": "Modificar pedido",
+            "description": "Este pedido ya fue confirmado. Modificarlo significa que se cancelará y se volverá a pedir uno nuevo, sujeto a la aprobación del proveedor.",
+            "title": "¿Modificar el pedido?"
           },
           "no_notes": "Sin notas",
           "notes": "Notas",

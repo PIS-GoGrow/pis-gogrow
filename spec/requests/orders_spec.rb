@@ -278,10 +278,18 @@ RSpec.describe "Orders", type: :request do
         expect(inertia.props[:delivery_addresses].last).to include(id: "current", label: "Dirección actual", address: "Colonia 1370, Apto 4")
       end
 
-      it "explains why an order the provider confirmed cannot be modified" do
+      it "lets an order the provider confirmed be modified until the day before its delivery" do
         get order_path(orders(:upcoming_confirmed_future))
 
-        expect(inertia.props[:order]).to include(modifiable: false, modification_block_reason: "already_confirmed")
+        expect(inertia.props[:order]).to include(modifiable: true, modification_block_reason: nil)
+      end
+
+      it "explains why an order confirmed for today cannot be modified" do
+        orders(:upcoming_confirmed_future).update_columns(schedule_id: schedules(:today).id)
+
+        get order_path(orders(:upcoming_confirmed_future))
+
+        expect(inertia.props[:order]).to include(modifiable: false, modification_block_reason: "confirmed_for_today")
       end
 
       it "redirects users with a non-consumer role to root" do
@@ -1402,8 +1410,7 @@ RSpec.describe "Orders", type: :request do
           discounted_price: 901.50.to_d
         )
 
-        follow_redirect!
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+        expect(response).to redirect_to(order_path(order))
       end
 
       # El pedido de los fixtures es de un plato sin grupos; para probar la
@@ -1620,8 +1627,7 @@ RSpec.describe "Orders", type: :request do
         patch order_path(order), params: update_params(quantity: 1)
 
         expect(order.reload.amount).to eq(1)
-        follow_redirect!
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+        expect(response).to redirect_to(order_path(order))
       end
 
       it "refuses a quantity the schedule cannot cover" do
@@ -1670,15 +1676,77 @@ RSpec.describe "Orders", type: :request do
         expect(inertia).to have_flash(alert: I18n.t("validations.invalid_quantity"))
       end
 
-      it "refuses to modify an order the provider already confirmed" do
-        confirmed = orders(:upcoming_confirmed_future)
+      context "when the provider already confirmed the order" do
+        let(:confirmed) { orders(:upcoming_confirmed_future) }
 
-        patch order_path(confirmed), params: update_params(quantity: 3)
+        it "asks for the extra units in a complementary order and keeps the confirmed one" do
+          expect {
+            patch order_path(confirmed), params: update_params(quantity: 3)
+          }.to change(Order, :count).by(1)
 
-        expect(confirmed.reload.amount).to eq(2)
+          complementary = Order.last
+          expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2)
+          expect(complementary).to have_attributes(
+            status: "pending",
+            amount: 1,
+            schedule_id: confirmed.schedule_id,
+            address: confirmed.address,
+            delivery_method: "office"
+          )
+          expect(response).to redirect_to(order_path(complementary))
+        end
 
-        follow_redirect!
-        expect(inertia).to have_flash(alert: I18n.t("validations.order_not_modifiable"))
+        it "cancels it and asks for a new one when anything besides adding units changes" do
+          expect {
+            patch order_path(confirmed), params: update_params(quantity: 1, notes: "Sin sal")
+          }.to change(Order, :count).by(1)
+
+          replacement = Order.last
+          expect(confirmed.reload).to have_attributes(status: "cancelled", cancelled_by: users(:one), amount: 2)
+          expect(replacement).to have_attributes(status: "pending", amount: 1, notes: "Sin sal")
+          expect(response).to redirect_to(order_path(replacement))
+        end
+
+        it "lets the provider know about the cancellation and the new order" do
+          expect {
+            patch order_path(confirmed), params: update_params(quantity: 2, notes: "Sin sal")
+          }.to change { users(:provider_user).notifications.where(event: %w[order_cancellation order_received]).count }.by(2)
+        end
+
+        it "does nothing when nothing changed" do
+          expect {
+            patch order_path(confirmed), params: update_params(quantity: 2)
+          }.not_to change(Order, :count)
+
+          expect(confirmed.reload.status).to eq("confirmed")
+          expect(response).to redirect_to(order_path(confirmed))
+        end
+
+        it "keeps the confirmed order when the new one cannot be placed" do
+          confirmed.schedule.update_columns(amount: 2)
+
+          expect {
+            patch order_path(confirmed), params: update_params(quantity: 3, notes: "Sin sal")
+          }.not_to change(Order, :count)
+
+          expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2, notes: nil)
+
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.schedule_unavailable"))
+        end
+
+        it "refuses to modify it on its delivery day" do
+          confirmed.update_columns(schedule_id: schedules(:today).id)
+
+          expect {
+            patch order_path(confirmed), params: update_params(quantity: 3)
+          }.not_to change(Order, :count)
+
+          expect(confirmed.reload.amount).to eq(2)
+
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.order_not_modifiable"))
+        end
       end
 
       it "refuses to modify a pending order whose delivery day already passed" do
@@ -1726,8 +1794,7 @@ RSpec.describe "Orders", type: :request do
         patch order_path(order), params: update_params(notes: notes_140)
 
         expect(order.reload.notes).to eq(notes_140)
-        follow_redirect!
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+        expect(response).to redirect_to(order_path(order))
       end
 
       it "refuses notes exceeding 140 characters and preserves the previous notes" do
@@ -1751,8 +1818,7 @@ RSpec.describe "Orders", type: :request do
         expect(order.reload.notes).to be_nil
         log = order.audit_logs.sole
         expect(log.changeset).to include("notes" => [ "Nota previa", nil ])
-        follow_redirect!
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+        expect(response).to redirect_to(order_path(order))
       end
     end
   end
