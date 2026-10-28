@@ -88,6 +88,35 @@ RSpec.describe "Consumer Accounts", type: :request do
         all_keys = inertia.props[:providers].flat_map { |p| p.keys.map(&:to_s) }
         expect(all_keys).not_to include("tax_id", "bank_account_type", "user_id", "order_deadline")
       end
+
+      it "sends the confirmed orders of the current month as the consumption detail" do
+        get accounts_path
+
+        expect(inertia).to have_props { |props|
+          detail = props.deep_symbolize_keys[:current_month_detail]
+          detail[:month] == I18n.l(Date.current, format: :month_year) &&
+            detail[:amount].to_d == BigDecimal("450.75") &&
+            detail[:orders].map { |order| order[:id] }.sort ==
+              [ orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id ].sort
+        }
+      end
+
+      it "sends the number of meals behind the pending accounts" do
+        get accounts_path
+
+        # 2 + 1 viandas de los pedidos confirmados de TuViandita; la cuenta de
+        # Endulzate de los fixtures no tiene pedidos.
+        expect(inertia).to have_props(total_meals: 3)
+      end
+
+      it "leaves out the orders of other employees and the ones that are not confirmed" do
+        get accounts_path
+
+        expect(inertia).to have_props { |props|
+          ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |order| order[:id] }
+          ids.exclude?(orders(:other_consumer_upcoming).id) && ids.exclude?(orders(:upcoming_pending_future).id)
+        }
+      end
     end
 
     describe "Mandatory Edge Case 1: Interface Bypass" do
@@ -227,6 +256,7 @@ RSpec.describe "Consumer Accounts", type: :request do
         expect(inertia).to have_props { |props|
           p = props.deep_symbolize_keys
           p[:total_debt].to_d.zero? &&
+            p[:total_meals] == 0 &&
             p[:current_month_debt].to_d.zero? &&
             p[:current_month_ordered] == 0 &&
             p[:accounts].empty?

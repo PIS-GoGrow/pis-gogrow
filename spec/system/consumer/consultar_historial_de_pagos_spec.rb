@@ -11,15 +11,11 @@ require "rails_helper"
 # nivel de cuenta (mes + proveedor), no de pago suelto, así que una cuenta
 # aparece una sola vez aunque haya tenido varios intentos de pago.
 #
-# Criterio 1 incompleto: la tarjeta del historial muestra fecha, importe y
-# estado, pero no el proveedor -- ni la tarjeta lo renderiza ni AccountSerializer
-# se lo manda (solo expone provider_id). No es trabajo pendiente: la pantalla ya
-# está publicada y el empleado la usa, le falta un dato que el criterio exige.
-# Ver docs/reports/defects/DEFECT-historial-sin-proveedor-27-09-2026.md. Por eso
-# el ejemplo del criterio 1 no afirma el proveedor.
+# Criterio 1: la tarjeta del historial muestra la fecha de vencimiento del
+# período, el proveedor junto al mes, el importe y el estado (Confirmado).
 #
-# Criterio 2 parcial: "Ver detalle" abre los pedidos que componen la deuda y el
-# total, pero el comprobante no está dentro de ese panel: se llega con el botón
+# Criterio 2 parcial: "Ver detalle" abre los pedidos que componen la deuda, pero
+# el comprobante no está dentro de ese panel: se llega con el botón
 # "Descargar comprobante de pago" de la misma tarjeta. El ejemplo del criterio 2
 # cubre las dos mitades por separado.
 RSpec.describe "Consultar el historial de pagos visto por el empleado" do
@@ -100,8 +96,8 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
   let(:previous_month_label) { I18n.l(previous_month, format: :month_year) }
 
   # Criterio 1
-  it "shows the employee's own payments with their date, amount and status" do
-    _account, = paid_month(
+  it "shows the employee's own payments with their date, provider, amount and status" do
+    account, = paid_month(
       consumer: consumers(:one), provider:, month: previous_month,
       quantity: 2, discounted_price: 300
     )
@@ -110,10 +106,11 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
     open_history
 
     within(find("[role=tabpanel]")) do
-      expect(page).to have_content(previous_month_label)
+      expect(page).to have_content(DateFormat.short(account.due_date))
+      expect(page).to have_content("#{provider.user.name}: #{previous_month_label}")
       expect(page).to have_content("$300")
       expect(page).to have_content("2 viandas")
-      expect(page).to have_content("Aprobado")
+      expect(page).to have_content("Confirmado")
     end
   end
 
@@ -145,7 +142,7 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
       expect(page).to have_content("Consumo #{previous_month_label}")
       expect(page).to have_content("Milanesa al pan")
       expect(page).to have_content("300")
-      expect(page).to have_content("Total")
+      expect(page).to have_no_content("Total")
       click_on "Cerrar"
     end
 
