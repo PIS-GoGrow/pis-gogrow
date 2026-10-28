@@ -14,7 +14,7 @@ class AdminConsumerSummary
     def avatar_url = consumer.user.avatar_url
   end
 
-  ProviderRow = Data.define(:id, :name, :amount, :status)
+  ProviderRow = Data.define(:id, :name, :amount, :status, :receipt_url)
 
   MonthRow = Data.define(:month, :accounts) do
     def key = month.strftime("%Y-%m")
@@ -26,7 +26,7 @@ class AdminConsumerSummary
     def status = AdminConsumerSummary.status_of(accounts)
 
     def orders
-      accounts.flat_map { it.orders.select(&:confirmed?) }.sort_by { [ it.delivery_date&.jd || 0, it.created_at ] }
+      accounts.flat_map { it.orders.select(&:confirmed?) }.sort_by { [ it.delivery_date&.jd || 0, it.created_at ] }.reverse
     end
 
     def subsidy = orders.sum { it.subsidy || 0 }.to_f
@@ -38,10 +38,18 @@ class AdminConsumerSummary
             id: account.provider_id,
             name: account.provider.user.name,
             amount: account.amount.to_f,
-            status: account.collection_status
+            status: account.collection_status,
+            receipt_url: receipt_url_of(account)
           )
         end
         .sort_by(&:name)
+    end
+
+    private
+
+    def receipt_url_of(account)
+      payment = account.payments.select { it.receipt.attached? }.max_by(&:created_at)
+      Rails.application.routes.url_helpers.receipt_admin_payment_path(payment) if payment
     end
   end
 
@@ -56,15 +64,26 @@ class AdminConsumerSummary
   end
 
   def self.rows_for(company, month: Date.current)
+    rows(company) { it.where(month: month.beginning_of_month) }
+  end
+
+  # Lo de este mes más lo que quedó sin pagar de los anteriores: mirando un solo
+  # mes no se ve lo que el empleado todavía debe de antes.
+  def self.debt_rows_for(company)
+    rows(company) { it.where(month: Date.current.beginning_of_month).or(it.pending) }
+  end
+
+  def self.rows(company)
     consumers = company.consumers.joins(:user).preload(:user).order("users.name").to_a
-    accounts = Account.where(month: month.beginning_of_month, owner_type: "Consumer", owner_id: consumers.map(&:id))
-                      .preload(:payments).group_by(&:owner_id)
+    accounts = yield(Account.where(owner_type: "Consumer", owner_id: consumers.map(&:id)))
+               .preload(:payments).group_by(&:owner_id)
 
     consumers.map do |consumer|
-      current = accounts.fetch(consumer.id, [])
-      ConsumerRow.new(consumer:, amount: amount_of(current), status: status_of(current))
+      owed = accounts.fetch(consumer.id, [])
+      ConsumerRow.new(consumer:, amount: amount_of(owed), status: status_of(owed))
     end
   end
+  private_class_method :rows
 
   def initialize(consumer)
     @consumer = consumer
@@ -101,7 +120,7 @@ class AdminConsumerSummary
 
   def accounts
     @accounts ||= @consumer.accounts
-                           .preload(:payments, provider: :user, orders: { schedule: { menu: { provider: :user } } })
+                           .preload({ payments: { receipt_attachment: :blob } }, provider: :user, orders: { schedule: { menu: { provider: :user } } })
                            .to_a
   end
 

@@ -476,6 +476,35 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(response.body).to eq("company receipt")
     end
 
+    # Desde el historial de Empleados, RR. HH. descarga lo que cada empleado le
+    # mandó al proveedor.
+    it "allows HR to access the receipt of one of its employees" do
+      employee_account = accounts(:one_tuviandita_current)
+      payment = employee_account.payments.build(provider: employee_account.provider, status: :submitted)
+      payment.receipt.attach(io: StringIO.new("employee receipt"), filename: "receipt.png", content_type: "image/png")
+      payment.save!
+      sign_in users(:admin), role: :admin
+
+      get receipt_admin_payment_path(payment)
+
+      expect(response.body).to eq("employee receipt")
+    end
+
+    it "does not expose the receipt of another company's employee" do
+      company = Company.create!(name: "Otra", address: "Rivera 2000")
+      user = User.create!(email: "outsider@gmail.com", name: "Zoe Outsider", password: "password123456")
+      outsider = Consumer.create!(user:, company:, address: "Rivera 2001")
+      outsider_account = Account.create!(owner: outsider, provider: providers(:tuviandita), month: Date.current, amount: 100)
+      payment = outsider_account.payments.build(provider: providers(:tuviandita), status: :submitted)
+      payment.receipt.attach(io: StringIO.new("private"), filename: "private.png", content_type: "image/png")
+      payment.save!
+      sign_in users(:admin), role: :admin
+
+      get receipt_admin_payment_path(payment)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     it "does not expose receipts from another company" do
       payment = other_company_account.payments.build(
         provider: other_company_account.provider,
