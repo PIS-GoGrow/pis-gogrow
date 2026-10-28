@@ -1,4 +1,4 @@
-# frozen_string_literal: true
+  # frozen_string_literal: true
 
 class Consumer::OrdersController < Consumer::InertiaController
   before_action :set_consumer
