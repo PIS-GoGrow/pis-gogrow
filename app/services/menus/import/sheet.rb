@@ -45,6 +45,8 @@ module Menus
       private
 
       def significant_rows
+        return [] if sheet.first_row.nil? || sheet.last_row.nil?
+
         (sheet.first_row..sheet.last_row)
           .map { |number| [ number, sheet.row(number) ] }
           .reject { |_, values| blank?(values) || help?(values) }

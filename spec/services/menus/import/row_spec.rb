@@ -104,6 +104,11 @@ RSpec.describe Menus::Import::Row do
       end
     end
 
+    it "rechaza grupos de opciones con nombres repetidos en la misma fila" do
+      expect(row("opciones_1" => "Salsa=filetto", "opciones_2" => "Salsa=crema").errors)
+        .to include(I18n.t("validations.menu_import.duplicated_groups", name: "Salsa"))
+    end
+
     it "junta todo lo que falta en la misma fila" do
       expect(row("nombre" => "", "precio" => "").errors.size).to eq(2)
     end

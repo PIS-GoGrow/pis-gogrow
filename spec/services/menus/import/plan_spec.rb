@@ -93,5 +93,14 @@ RSpec.describe Menus::Import::Plan do
     ensure
       File.delete(path)
     end
+
+    it "rechaza un archivo demasiado grande antes de procesar la planilla" do
+      path = write("nombre,descripcion,precio\nMilanesa,#{"a" * described_class::MAX_SIZE},320\n", name: "grande2.csv")
+      expect(Menus::Import::Sheet).not_to receive(:new)
+
+      plan_for(path).call
+    ensure
+      File.delete(path)
+    end
   end
 end

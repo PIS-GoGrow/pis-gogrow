@@ -119,4 +119,11 @@ RSpec.describe Menus::Import::Sheet do
 
     expect { described_class.new(path: path).rows }.to raise_error(described_class::TooManyRows)
   end
+
+  it "avisa cuando la planilla está completamente vacía y no tiene primera fila" do
+    sheet = described_class.new(path: write("", name: "vacia.csv"))
+    allow(sheet).to receive(:sheet).and_return(double(first_row: nil, last_row: nil))
+
+    expect { sheet.rows }.to raise_error(described_class::Unreadable)
+  end
 end

@@ -63,7 +63,7 @@ module Menus
       end
 
       def option_errors
-        option_cells.filter_map do |cell|
+        errors = option_cells.filter_map do |cell|
           group = parse_group(cell)
 
           next message(:options, cell: cell) if group.nil?
@@ -71,6 +71,15 @@ module Menus
           options = group[:options].map { it.downcase }
           message(:duplicated_options, name: group[:name]) if options.uniq.size != options.size
         end
+
+        names = option_groups.map { it[:name].downcase }
+        duplicates = names.select { |name| names.count(name) > 1 }.uniq
+        duplicates.each do |dup_name|
+          original_name = option_groups.find { it[:name].downcase == dup_name }[:name]
+          errors << message(:duplicated_groups, name: original_name)
+        end
+
+        errors
       end
 
       def message(key, **data) = I18n.t("validations.menu_import.#{key}", **data)

@@ -87,6 +87,7 @@ es:
       price: "El precio tiene que ser un número mayor que cero."
       options: "No se entendió el grupo de opciones «%{cell}». Se escribe así: Nombre=opción 1, opción 2"
       duplicated_options: "El grupo «%{name}» tiene opciones repetidas."
+      duplicated_groups: "Hay más de un grupo de opciones llamado «%{name}»."
       file:
         unsupported_format: "El archivo tiene que ser .xlsx, .xls, .csv o .ods."
         unreadable: "No se pudo leer la planilla. Descargá la plantilla y volvé a intentar."

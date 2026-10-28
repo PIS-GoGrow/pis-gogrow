@@ -53,9 +53,9 @@ module Menus
       # Problemas del archivo entero, que dejan la vista previa sin nada que
       # mostrar. Uno solo alcanza para no seguir leyendo.
       def file_error
-        sheet # El formato primero: es el problema más fácil de explicar.
-        return file_message(:too_big, max: MAX_SIZE / 1.megabyte) if File.size(@path) > MAX_SIZE
+        return file_message(:too_big, max: MAX_SIZE / 1.megabyte) if File.size?(@path).to_i > MAX_SIZE
 
+        sheet # El formato primero: es el problema más fácil de explicar.
         missing = REQUIRED_COLUMNS - sheet.headers
         return file_message(:missing_columns, columns: missing.join(", ")) if missing.any?
 
