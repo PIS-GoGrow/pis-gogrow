@@ -71,7 +71,7 @@ RSpec.describe "Visualizar facturas de proveedores", type: :system do
     # Abrir el enlace con la sesión real: el navegador muestra la imagen en vez
     # de redirigir al login.
     visit view[:href]
-    expect(page).to have_current_path(file_admin_invoice_path(invoice))
+    expect(page).to have_current_path(file_admin_invoice_path(invoice, filename: "factura-sep.png"))
     expect(page).to have_css("img")
   end
 
