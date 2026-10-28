@@ -64,8 +64,8 @@ class Consumer::OrdersController < Consumer::InertiaController
           .order(:id)
           .lock.index_by(&:id)
 
-        # Tiramos error si alguno de los schedules no existen o si están fuera del
-        # rango de fechas permitidas (definidas por Calendar#allowed_order_dates)
+      # Tiramos error si alguno de los schedules no existen o si están fuera del
+      # rango de fechas permitidas (definidas por Calendar#allowed_order_dates)
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
       pricings = Orders::Pricing.new(@consumer).call(
