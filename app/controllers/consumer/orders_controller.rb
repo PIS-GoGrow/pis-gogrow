@@ -269,11 +269,14 @@ class Consumer::OrdersController < Consumer::InertiaController
     groups = menu&.option_groups.to_a.index_by(&:id)
 
     options.to_a.filter_map do |option|
-      group = groups[option[:group_id].to_i]
+      group_id = option[:group_id].to_i
       values = Array(option[:values]).map(&:to_s).compact_blank
-      next if group.nil? || values.empty?
+      next if values.empty?
 
-      { group_id: group.id, name: group.name, values: }
+      # Un grupo que el plato ya no tiene (el proveedor lo cambió con el
+      # formulario abierto) se pasa igual, para que la validación del pedido lo
+      # rechace en vez de perder la elección sin avisar.
+      { group_id:, name: groups[group_id]&.name, values: }
     end
   end
 
