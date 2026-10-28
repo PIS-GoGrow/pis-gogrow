@@ -407,3 +407,162 @@ describe("PaymentReceiptDialog", () => {
     ).not.toBeInTheDocument()
   })
 })
+
+describe("PaymentReceiptDialog with inline upload", () => {
+  const createObjectURLMock = vi.fn(() => "blob:http://localhost/mock-preview")
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    triggerSuccess = undefined
+    triggerError = undefined
+    triggerBefore = undefined
+    URL.createObjectURL = createObjectURLMock
+    URL.revokeObjectURL = vi.fn(() => undefined)
+  })
+
+  const submittedPayment: Payment = {
+    id: 101,
+    status: "submitted",
+    created_at: "2026-10-01T12:00:00Z",
+    receipt_uploaded_at: "01/10/2026",
+    receipt_filename: "comprobante_banco_1.png",
+    receipt_url: "/consumer/payments/101/receipt",
+    receipt_content_type: "image/png",
+    receipt_byte_size: 1258291,
+    rejection_reason: null,
+  }
+
+  const chosenFile = () =>
+    new File([new Uint8Array(2048)], "mi_comprobante.png", {
+      type: "image/png",
+    })
+
+  it("shows the file selector and a disabled upload button without opening a dialog", () => {
+    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
+
+    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
+    expect(screen.getByText("Sin archivos seleccionados")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeDisabled()
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+  })
+
+  it("shows the chosen file with its size and enables the upload button", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
+
+    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
+
+    expect(screen.getByText("mi_comprobante.png")).toBeInTheDocument()
+    expect(screen.getByText("2 KB")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeEnabled()
+    expect(createObjectURLMock).not.toHaveBeenCalled()
+  })
+
+  it("shows the error sheet when the upload fails", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
+
+    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
+
+    expect(triggerError).toBeDefined()
+    act(() => {
+      triggerError?.()
+    })
+
+    expect(
+      await screen.findByText("No se pudo subir el comprobante"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
+      ),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Entendido" }))
+
+    expect(
+      screen.queryByText("No se pudo subir el comprobante"),
+    ).not.toBeInTheDocument()
+  })
+
+  it("clears the chosen file after a failed upload so a new one can be picked", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
+
+    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
+    act(() => {
+      triggerError?.()
+    })
+    await user.click(await screen.findByRole("button", { name: "Entendido" }))
+
+    expect(screen.queryByText("mi_comprobante.png")).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeDisabled()
+
+    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
+
+    expect(screen.getByText("mi_comprobante.png")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeEnabled()
+  })
+
+  it("shows the success sheet when the upload succeeds", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
+
+    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
+
+    expect(triggerSuccess).toBeDefined()
+    act(() => {
+      triggerSuccess?.()
+    })
+
+    expect(await screen.findByText("Comprobante enviado")).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Listo" }))
+
+    expect(screen.queryByText("Comprobante enviado")).not.toBeInTheDocument()
+    expect(screen.queryByText("mi_comprobante.png")).not.toBeInTheDocument()
+  })
+
+  it("hides the form and the hint while a receipt is under review", () => {
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        payments={[submittedPayment]}
+        uploadDisabled
+        inlineUpload
+      />,
+    )
+
+    expect(screen.getByText("comprobante_banco_1.png")).toBeInTheDocument()
+    expect(screen.getByText("1.2 MB")).toBeInTheDocument()
+    expect(screen.getByText("En revisión")).toBeInTheDocument()
+    expect(screen.queryByLabelText("Comprobante")).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/Ya hay un comprobante en revisión/),
+    ).not.toBeInTheDocument()
+  })
+
+  it("does not render the form when uploading is not allowed", () => {
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        payments={[]}
+        canUpload={false}
+        inlineUpload
+      />,
+    )
+
+    expect(screen.queryByLabelText("Comprobante")).not.toBeInTheDocument()
+  })
+})

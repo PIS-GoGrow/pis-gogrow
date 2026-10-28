@@ -48,22 +48,6 @@ export default function AccountCard({
   const showReceiptSection =
     !account.current || account.payments.some(({ receipt_url }) => receipt_url)
 
-  // Sin comprobante todavía = pendiente; el mismo estado "submitted" cubre
-  // tanto el primer envío como un reenvío luego de un rechazo.
-  const statusLabel =
-    payment?.status === "rejected"
-      ? t("pages.accounts.show.status_rejected")
-      : payment?.status === "submitted"
-        ? t("pages.accounts.show.status_submitted")
-        : t("pages.accounts.show.status_pending")
-
-  const statusBadgeClassName =
-    payment?.status === "rejected"
-      ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
-      : payment?.status === "submitted"
-        ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400"
-        : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
-
   async function handleClick() {
     setLoading(true)
     try {
@@ -85,12 +69,10 @@ export default function AccountCard({
   }
 
   return (
-    <Card className="bg-zinc-50 dark:bg-zinc-900">
-      <CardHeader className="grid gap-4">
+    <Card className="bg-muted py-4 shadow-none">
+      <CardHeader className="grid grid-cols-1 gap-3 px-4">
         <CardDescription className="flex items-center gap-2">
           {account.month}
-
-          <Badge className={statusBadgeClassName}>{statusLabel}</Badge>
 
           <Badge
             variant="ghost"
@@ -123,7 +105,7 @@ export default function AccountCard({
               onClick={() => {
                 void handleClick()
               }}
-              className="ml-auto"
+              className="ml-auto h-auto p-0 font-semibold hover:bg-transparent has-[>svg]:px-0 dark:hover:bg-transparent"
               variant="ghost"
             >
               {" "}
@@ -138,7 +120,7 @@ export default function AccountCard({
 
         {payment?.status === "rejected" &&
           (payment.rejection_reason === PARTIAL_PAYMENT_REJECTION_REASON ? (
-            <div className="flex items-start gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+            <div className="flex items-start gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
               <TriangleAlert className="mt-0.5 size-4 shrink-0" />
               <p>{t("pages.accounts.show.partial_payment_warning")}</p>
             </div>
@@ -157,6 +139,7 @@ export default function AccountCard({
         {showReceiptSection && (
           <PaymentReceiptDialog
             accountId={account.id}
+            inlineUpload
             canUpload={!account.current}
             uploadDisabled={account.payments.some(
               ({ status }) => status === "submitted",

@@ -23,6 +23,7 @@ class Consumer::AccountsController < Consumer::InertiaController
     # La suma de la deuda total se calcula en memoria en el controlador, para no hacer
     # una consulta más redundante a la base de datos.
     total_debt = accounts.sum(&:amount)
+    total_meals = sums.values.sum { it[:amount].to_i }
 
     current_accounts = consumer.accounts.current.pluck(:id)
     current_sums = Account.amount_and_price_sum(current_accounts).values
@@ -31,6 +32,11 @@ class Consumer::AccountsController < Consumer::InertiaController
     current_month_debt = current_sums.reduce(0) { |acc, x| acc + x[:price] }
     benefit_available = consumer.monthly_benefit_available
 
+    current_orders = Order.confirmed
+                          .joins(:order_accounts)
+                          .where(order_accounts: { account_id: current_accounts })
+                          .order(:created_at)
+
     render inertia: {
       accounts: AccountSerializer.new(accounts, params: { orders_sum: sums }).as_json,
       providers: PaymentProviderSerializer.new(providers).as_json,
@@ -38,7 +44,13 @@ class Consumer::AccountsController < Consumer::InertiaController
       history_accounts: AccountSerializer.new(history_accounts, params: { orders_sum: history_sums }).as_json,
       current_month_debt:,
       current_month_ordered:,
+      current_month_detail: {
+        orders: SimplifiedOrderSerializer.new(current_orders).as_json,
+        month: I18n.l(Date.current, format: :month_year),
+        amount: current_month_debt
+      },
       total_debt:,
+      total_meals:,
       benefit_available:
     }
   end

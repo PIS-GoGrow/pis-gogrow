@@ -38,14 +38,10 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
   it "permite rechazar por pago parcial, ver el aviso correspondiente, reenviar otro comprobante y revisarlo" do
     # 1. El empleado ingresa y sube el primer comprobante
     sign_in employee_user, role: :consumer
-    visit accounts_path
+    visit_hydrated accounts_path
 
     within("[role=tabpanel]") do
-      expect(page).to have_button("Subir comprobante de pago")
-      click_on "Subir comprobante de pago"
-    end
-
-    within(find("[role=dialog]")) do
+      expect(page).to have_button("Subir comprobante de pago", disabled: true)
       attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
@@ -78,7 +74,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     # 3. El empleado vuelve a ingresar y ve la advertencia de pago parcial en vez del cartel rojo genérico
     sign_out
     sign_in employee_user, role: :consumer
-    visit accounts_path
+    visit_hydrated accounts_path
 
     within("[role=tabpanel]") do
       expect(page).to have_content("Rechazado")
@@ -88,10 +84,6 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
 
     # 4. El empleado sube un segundo comprobante y la advertencia de pago parcial desaparece
     within("[role=tabpanel]") do
-      click_on "Subir comprobante de pago"
-    end
-
-    within(find("[role=dialog]")) do
       attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
