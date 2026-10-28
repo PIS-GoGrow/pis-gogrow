@@ -4,7 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Consumer Accounts", type: :request do
-  fixtures :users, :consumers, :companies, :providers, :accounts, :admins
+  fixtures :users, :consumers, :companies, :providers, :accounts, :admins, :menus, :schedules, :benefits
 
   let(:consumer_user) { users(:one) }
   let(:other_consumer_user) { users(:other_consumer_user) }
@@ -31,6 +31,17 @@ RSpec.describe "Consumer Accounts", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(inertia).to render_component("consumer/accounts/index")
+      end
+
+      it "counts the monthly allowance like every other screen, not the meals ordered" do
+        Order.create!(
+          consumer: consumers(:one), schedule: schedules(:today), amount: 3, price: 900,
+          address: "18 de Julio 1006", delivery_method: :office, status: :confirmed
+        ).apply_benefit! benefits(:monthly), 2
+
+        get accounts_path
+
+        expect(inertia).to have_props(benefit_used: 2, benefit_available: 20)
       end
 
       it "returns 404 for legacy route /pagos" do
@@ -228,7 +239,7 @@ RSpec.describe "Consumer Accounts", type: :request do
           p = props.deep_symbolize_keys
           p[:total_debt].to_d.zero? &&
             p[:current_month_debt].to_d.zero? &&
-            p[:current_month_ordered] == 0 &&
+            p[:benefit_used] == 0 &&
             p[:accounts].empty?
         }
       end
