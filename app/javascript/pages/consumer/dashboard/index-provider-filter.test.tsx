@@ -440,7 +440,9 @@ it("keeps all 140 note characters after the asynchronous dish price updates", as
           subtotal: 300,
           discount: 150,
           total: 150,
-          tiers: [{ id: 1, name: "Base", percentage: 50, quantity: 1, discount: 150 }],
+          tiers: [
+            { id: 1, name: "Base", percentage: 50, quantity: 1, discount: 150 },
+          ],
         },
       ],
       subsidizedQuantity: 1,
