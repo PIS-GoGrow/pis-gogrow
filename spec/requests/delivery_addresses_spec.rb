@@ -7,7 +7,7 @@ require "inertia_rails/rspec"
 # personalizada cuando el proveedor lo permita para recibir el pedido fuera de
 # la oficina."
 RSpec.describe "Delivery addresses", type: :request do
-  fixtures :users, :consumers, :companies, :providers
+  fixtures :users, :consumers, :companies, :providers, :admins
 
   def address_params(save_for_later: true, **attributes)
     { delivery_address: { name: "Flora Café", street: "Canelones 892", apartment: "Apto 3", save_for_later:, **attributes } }
@@ -19,10 +19,32 @@ RSpec.describe "Delivery addresses", type: :request do
     expect(response).to redirect_to(sign_in_path)
   end
 
-  it "rejects a session with a different role" do
+  it "redirects visitors on GET to the sign in page" do
+    get delivery_addresses_path
+    expect(response).to redirect_to(sign_in_path)
+  end
+
+  it "redirects visitors on PATCH to the sign in page" do
+    patch delivery_address_path(id: 1), params: address_params
+    expect(response).to redirect_to(sign_in_path)
+  end
+
+  it "redirects visitors on DELETE to the sign in page" do
+    delete delivery_address_path(id: 1)
+    expect(response).to redirect_to(sign_in_path)
+  end
+
+  it "rejects a session with a provider role" do
     sign_in users(:provider_user)
 
     expect { post delivery_addresses_path, params: address_params }.not_to change(DeliveryAddress, :count)
+    expect(response).to redirect_to(root_path)
+  end
+
+  it "rejects a session with an admin role" do
+    sign_in users(:admin)
+
+    get delivery_addresses_path
     expect(response).to redirect_to(root_path)
   end
 
@@ -138,6 +160,19 @@ RSpec.describe "Delivery addresses", type: :request do
         expect(ids).to include(own_address.id)
         expect(ids).not_to include(other_address.id)
       end
+
+      it "returns exact props with empty saved addresses list when employee has none" do
+        consumers(:one).saved_addresses.delete_all
+
+        get delivery_addresses_path
+
+        expect(response).to have_http_status(:success)
+        expect(inertia).to render_component("consumer/delivery_addresses/index")
+        expect(inertia.props).to include(
+          office_address: consumers(:one).company.address,
+          delivery_addresses: []
+        )
+      end
     end
 
     describe "PATCH /direcciones-de-entrega/:id" do
@@ -243,6 +278,14 @@ RSpec.describe "Delivery addresses", type: :request do
           street: "Ellauri 1234"
         )
       end
+
+      it "returns 404 when updating a nonexistent address" do
+        patch delivery_address_path(id: 999_999), params: {
+          delivery_address: { name: "Nueva", street: "Colonia 1000" }
+        }
+
+        expect(response).to have_http_status(:not_found)
+      end
     end
 
     describe "DELETE /direcciones-de-entrega/:id" do
@@ -289,9 +332,34 @@ RSpec.describe "Delivery addresses", type: :request do
         expect(DeliveryAddress.exists?(address.id)).to be(false)
         expect(order.reload.address).to eq(original_address)
       end
+
+      it "returns 404 when deleting a nonexistent address" do
+        delete delivery_address_path(id: 999_999)
+
+        expect(response).to have_http_status(:not_found)
+      end
     end
 
     describe "POST /direcciones-de-entrega from address management" do
+      it "returns bad request when root parameter is missing" do
+        post delivery_addresses_path, params: { source: "addresses" }
+
+        expect(response).to have_http_status(:bad_request)
+      end
+
+      it "validates max length constraints directly sent to the endpoint" do
+        post delivery_addresses_path,
+             params: address_params(
+               name: "a" * 41,
+               street: "Calle #{"a" * 121} 1",
+               apartment: "b" * 41
+             ).merge(source: "addresses")
+
+        expect(response).to redirect_to(delivery_addresses_path)
+        follow_redirect!
+        expect(inertia.props[:errors]).to include(:name, :street, :apartment)
+      end
+
       it "saves an address from the address management page" do
         expect {
           post delivery_addresses_path,
