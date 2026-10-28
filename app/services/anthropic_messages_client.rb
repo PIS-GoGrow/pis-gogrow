@@ -26,6 +26,7 @@ class AnthropicMessagesClient
 
     message = JSON.parse(response.body)
     details = message["stop_details"] if message.is_a?(Hash)
+    return failure("refused") if message.is_a?(Hash) && message["stop_reason"] == "refusal"
     return failure("refused") if details.is_a?(Hash) && details["type"] == "refusal"
     return failure("invalid_response") unless message.is_a?(Hash) && message["type"] == "message" &&
                                               message["role"] == "assistant" && message["stop_reason"] == "end_turn"

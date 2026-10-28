@@ -18,6 +18,8 @@ class AdminBenefitUsageStats
     missing_pending = missing_benefit_records?(pending)
     invalid_confirmed_uses = invalid_monthly_uses?(confirmed, confirmed_uses)
     invalid_pending_uses = invalid_monthly_uses?(pending, pending_uses)
+    mismatched_confirmed_uses = mismatched_benefit_uses?(confirmed)
+    mismatched_pending_uses = mismatched_benefit_uses?(pending)
     company_subsidy_amount = company_subsidy_for(confirmed)
 
     consumer_dates = consumers.pluck(:id, :onboarding_date).to_h
@@ -32,7 +34,8 @@ class AdminBenefitUsageStats
     end
     uses_outside_eligibility = (confirmed_by_consumer.keys | pending_by_consumer.keys).any? { eligibility[it] != :eligible }
     reliable_quota = full_coverage && within_quota && !uses_outside_eligibility &&
-                     !missing_confirmed && !missing_pending && !invalid_confirmed_uses && !invalid_pending_uses
+                     !missing_confirmed && !missing_pending && !invalid_confirmed_uses && !invalid_pending_uses &&
+                     !mismatched_confirmed_uses && !mismatched_pending_uses
 
     employee_count = consumer_dates.size
     employees_with_orders = orders.distinct.count(:consumer_id)
@@ -52,6 +55,7 @@ class AdminBenefitUsageStats
     warnings << { code: "historical_discounts_without_benefit_records", scope: "benefits" } if missing_confirmed
     warnings << { code: "pending_discounts_without_benefit_records", scope: "benefits" } if missing_pending
     warnings << { code: "monthly_benefit_units_exceed_order_amount", scope: "benefits" } if invalid_confirmed_uses || invalid_pending_uses
+    warnings << { code: "benefit_consumer_mismatch", scope: "benefits" } if mismatched_confirmed_uses || mismatched_pending_uses
     warnings << { code: "monthly_usage_exceeds_quota", scope: "benefits" } unless within_quota
     warnings << { code: "monthly_usage_outside_eligibility", scope: "benefits" } if uses_outside_eligibility
     warnings << { code: "company_subsidy_amount_unreliable", scope: "benefits" } if company_subsidy_amount.nil?
@@ -66,9 +70,9 @@ class AdminBenefitUsageStats
         pending_meals: pending.sum(:amount)
       },
       benefits: {
-        monthly_subsidized_meals: (confirmed_uses.values.sum unless missing_confirmed || invalid_confirmed_uses),
-        confirmed_meals_without_monthly_subsidy: (confirmed_meals - confirmed_uses.values.sum unless confirmed_meals.nil? || missing_confirmed || invalid_confirmed_uses),
-        monthly_pending_reserved_meals: (pending_uses.values.sum unless missing_pending || invalid_pending_uses),
+        monthly_subsidized_meals: (confirmed_uses.values.sum unless missing_confirmed || invalid_confirmed_uses || mismatched_confirmed_uses),
+        confirmed_meals_without_monthly_subsidy: (confirmed_meals - confirmed_uses.values.sum unless confirmed_meals.nil? || missing_confirmed || invalid_confirmed_uses || mismatched_confirmed_uses),
+        monthly_pending_reserved_meals: (pending_uses.values.sum unless missing_pending || invalid_pending_uses || mismatched_pending_uses),
         known_eligible_monthly_quota_meals: known_quota,
         known_eligible_with_known_quota: quotas.size,
         monthly_quota_meals: (known_quota if complete_current_roster),
@@ -179,7 +183,8 @@ class AdminBenefitUsageStats
   def trend_snapshot(month, monthly_benefits, warnings)
     confirmed = orders_for(month).confirmed
     uses = monthly_uses_for(confirmed, monthly_benefits)
-    unknown_monthly = missing_benefit_records?(confirmed) || invalid_monthly_uses?(confirmed, uses)
+    unknown_monthly = missing_benefit_records?(confirmed) || invalid_monthly_uses?(confirmed, uses) ||
+                      mismatched_benefit_uses?(confirmed)
     subsidy_amount = company_subsidy_for(confirmed)
     confirmed_meals = confirmed_meals_for(confirmed)
     warnings << { code: "trend_monthly_subsidy_unknown", scope: "trends", month: } if unknown_monthly
@@ -228,14 +233,20 @@ class AdminBenefitUsageStats
     end
   end
 
+  def mismatched_benefit_uses?(relation)
+    OrderBenefit.joins(:order, :benefit)
+                .where(order_id: relation.select(:id))
+                .where("benefits.consumer_id <> orders.consumer_id").exists?
+  end
+
   def classify_eligibility(consumer_dates, monthly_benefits)
     rules = MonthlyBenefit.joins(:benefit_configuration)
                           .where(benefit_configurations: { company_id: @company.id })
                           .where(effective_from: ..@month.end_of_month)
                           .pluck(:benefit_configuration_id, :limit).to_h
     grants = monthly_benefits.where(due_date: @month.end_of_month)
-                             .pluck(:consumer_id, :benefit_configuration_id, :amount)
-                             .group_by(&:first)
+                             .pluck(:id, :consumer_id, :benefit_configuration_id, :amount)
+                             .group_by { it[1] }
     eligibility = {}
     quotas = {}
 
@@ -243,10 +254,10 @@ class AdminBenefitUsageStats
       records = grants.fetch(consumer_id, [])
       if onboarding_date && onboarding_date > @month.end_of_month
         eligibility[consumer_id] = records.empty? ? :ineligible : :unknown
-      elsif records.one? && rules.key?(records.first[1])
+      elsif records.one? && rules.key?(records.first[2])
         eligibility[consumer_id] = :eligible
-        limit = rules.fetch(records.first[1])
-        quotas[consumer_id] = limit if limit&.positive? && records.first[2] == limit
+        limit = rules.fetch(records.first[2])
+        quotas[consumer_id] = limit if limit&.positive? && records.first[3] == limit
       else
         eligibility[consumer_id] = :unknown
       end

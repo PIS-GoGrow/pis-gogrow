@@ -86,6 +86,18 @@ RSpec.describe AdminBenefitUsageStats do
     expect(stats[:orders][:confirmed_meals]).to eq(1)
   end
 
+  it "keeps a delivery-dated order after its schedule is deleted" do
+    inserted = Schedule.insert!({ menu_id: menus(:milanesa).id, date: month.next_month,
+                                  created_at: Time.current, updated_at: Time.current })
+    schedule = Schedule.find(inserted.rows.first.first)
+    selected = insert_order(schedule:, delivery_date: month, amount: 2, discounted_price: 600)
+    insert_order(schedule:, delivery_date: month.next_month, amount: 4, discounted_price: 1200)
+    schedule.destroy!
+
+    expect(selected.reload.schedule_id).to be_nil
+    expect(stats[:orders]).to include(confirmed_orders: 1, confirmed_meals: 2)
+  end
+
   it "counts monthly benefit units once when a special benefit also applies" do
     order = insert_order(amount: 3, discounted_price: 300)
     special = Benefit.create!(consumer: consumers(:one), benefit_configuration: benefit_configurations(:gift),
@@ -154,6 +166,67 @@ RSpec.describe AdminBenefitUsageStats do
     expect(stats[:benefits][:monthly_subsidized_meals]).to be_nil
     expect(stats[:benefits][:confirmed_meals_without_monthly_subsidy]).to be_nil
     expect(warning_codes).to include("monthly_benefit_units_exceed_order_amount")
+  end
+
+  it "does not treat duplicate historical monthly grants as trustworthy eligibility or quota" do
+    allow(Date).to receive(:current).and_return(Date.new(2032, 4, 17))
+    grant_monthly(consumer: consumers(:one))
+    grant_monthly(consumer: consumers(:one))
+    grant_monthly(consumer: consumers(:other))
+
+    expect(Benefit.monthly.where(consumer: consumers(:one), due_date: month.end_of_month).count).to eq(2)
+    expect(stats[:employees][:eligibility]).to eq(eligible: 1, ineligible: 0, unknown: 1)
+    expect(stats[:benefits]).to include(known_eligible_monthly_quota_meals: 20, monthly_quota_meals: nil)
+    expect(stats[:employees][:participation_percent]).to be_nil
+    expect(warning_codes).to include("eligibility_unknown")
+  end
+
+  it "rejects a second current monthly grant for the same configuration" do
+    duplicate = Benefit.new(consumer: consumers(:one), benefit_configuration: benefit_configurations(:monthly),
+                            amount: 20, percentage: 50, due_date: month.end_of_month, status: :current)
+
+    expect(duplicate).not_to be_valid
+    expect(duplicate.errors[:base]).to include("el cliente ya tiene un beneficio mensual")
+  end
+
+  it "rejects a negative monthly benefit use instead of counting it as consumption" do
+    order = insert_order(discounted_price: 300)
+    apply_benefit(order, benefits(:monthly), -1)
+
+    expect(stats[:benefits][:monthly_subsidized_meals]).to be_nil
+    expect(warning_codes).to include("monthly_benefit_units_exceed_order_amount")
+  end
+
+  it "does not trust a monthly benefit belonging to another consumer on the order" do
+    order = insert_order(discounted_price: 150)
+    foreign_grant = grant_monthly(consumer: consumers(:other), status: :expired)
+    apply_benefit(order, foreign_grant, 1)
+
+    expect(stats[:benefits][:monthly_subsidized_meals]).to be_nil
+    expect(stats[:benefits][:monthly_available_meals]).to be_nil
+    expect(stats[:benefits][:confirmed_meals_without_monthly_subsidy]).to be_nil
+    expect(warning_codes).to include("benefit_consumer_mismatch")
+  end
+
+  it "does not treat another consumer's pending benefit as a valid reservation" do
+    order = insert_order(status: :pending, discounted_price: 150)
+    foreign_grant = grant_monthly(consumer: consumers(:other), status: :expired)
+    apply_benefit(order, foreign_grant, 1)
+
+    expect(stats[:benefits][:monthly_pending_reserved_meals]).to be_nil
+    expect(warning_codes).to include("benefit_consumer_mismatch")
+  end
+
+  it "flags a benefit from another company's consumer linked to the order" do
+    other_company = Company.create!(name: "Otra empresa", address: "Rincón 500")
+    other_user = User.create!(name: "Otro empleado", email: "otro-vinculo@example.test", password: "secret-password-123")
+    other_consumer = Consumer.create!(user: other_user, company: other_company)
+    benefit = grant_monthly(consumer: other_consumer, status: :expired)
+    order = insert_order(discounted_price: 150)
+    apply_benefit(order, benefit, 1)
+
+    expect(stats[:benefits][:monthly_subsidized_meals]).to be_nil
+    expect(warning_codes).to include("benefit_consumer_mismatch")
   end
 
   context "when the selected month is current" do
@@ -324,6 +397,22 @@ RSpec.describe AdminBenefitUsageStats do
       expect(warning_codes).to include("company_subsidy_amount_unreliable")
     end
 
+    [
+      [ :discounted_price, nil ],
+      [ :price, -1 ],
+      [ :discounted_price, -1 ]
+    ].each do |field, invalid_value|
+      it "rejects #{field} #{invalid_value.inspect} without reporting a partial subsidy total" do
+        insert_order(discounted_price: 200)
+        invalid = insert_order(discounted_price: 150)
+        invalid.update_columns(field => invalid_value)
+
+        expect(stats[:benefits][:company_subsidy_amount]).to be_nil
+        expect(warning_codes).to include("company_subsidy_amount_unreliable")
+        expect(stats.dig(:trends, :months).last[:company_subsidy_amount]).to be_nil
+      end
+    end
+
     it "does not include another company's discount" do
       other_company = Company.create!(name: "Otra empresa", address: "Rincón 500")
       other_user = User.create!(name: "Otro empleado", email: "otra-inversion@example.com", password: "secret-password-123")
@@ -351,6 +440,54 @@ RSpec.describe AdminBenefitUsageStats do
       expect(series.map { it[:company_subsidy_amount] }).to eq([ 600, 1200, 1500, 1800 ])
       expect(series[1].dig(:changes, :confirmed_meals)).to eq(reference: 4, difference: 4, percent: BigDecimal("100"))
       expect(series.last.dig(:changes, :confirmed_orders)).to eq(reference: 1, difference: 0, percent: BigDecimal("0"))
+    end
+
+    [
+      [ :confirmed_meals, 100, 129, false ],
+      [ :confirmed_meals, 100, 130, true ],
+      [ :confirmed_meals, 9, 18, false ],
+      [ :confirmed_meals, 10, 13, true ],
+      [ :monthly_subsidized_meals, 100, 129, false ],
+      [ :monthly_subsidized_meals, 100, 130, true ],
+      [ :monthly_subsidized_meals, 9, 18, false ],
+      [ :monthly_subsidized_meals, 10, 13, true ]
+    ].each do |indicator, reference, current, anomalous|
+      it "applies the anomaly boundary to #{indicator}: #{reference} to #{current}" do
+        earlier = insert_order(delivery_date: month.prev_month, amount: reference, discounted_price: 300 * reference)
+        latest = insert_order(amount: current, discounted_price: 300 * current)
+        if indicator == :monthly_subsidized_meals
+          configuration = create_monthly_configuration(effective_from: month.prev_month.beginning_of_month,
+                                                       limit: 200)
+          earlier_grant = grant_monthly(consumer: consumers(:one), configuration:,
+                                        due_date: month.prev_month.end_of_month, status: :expired, amount: 200)
+          latest_grant = grant_monthly(consumer: consumers(:one), configuration:,
+                                       due_date: month.end_of_month, status: :expired, amount: 200)
+          apply_benefit(earlier, earlier_grant, reference)
+          apply_benefit(latest, latest_grant, current)
+        end
+
+        matches = stats[:anomalies].select { it[:indicator] == indicator.to_s && it[:month] == month.beginning_of_month }
+        expect(matches.any?).to be(anomalous)
+      end
+    end
+
+    it "orders October through January across a year boundary and leaves January open" do
+      january = Date.new(2032, 1, 17)
+      allow(Date).to receive(:current).and_return(january)
+      [ 2, 3, 4, 5 ].each_with_index do |meals, index|
+        insert_order(delivery_date: january.beginning_of_month << (3 - index), amount: meals,
+                     discounted_price: 300 * meals)
+      end
+      insert_order(delivery_date: january.next_month, amount: 99, discounted_price: 29_700)
+
+      series = described_class.new(company:, month: january).to_h.dig(:trends, :months)
+      expect(series.map { it[:month] }).to eq([ Date.new(2031, 10, 1), Date.new(2031, 11, 1),
+                                                Date.new(2031, 12, 1), Date.new(2032, 1, 1) ])
+      expect(series.map { it[:confirmed_meals] }).to eq([ 2, 3, 4, 5 ])
+      expect(series.map { it[:complete] }).to eq([ true, true, true, false ])
+      expect(series[2].dig(:changes, :confirmed_meals)).to eq(reference: 3, difference: 1,
+                                                               percent: BigDecimal("33.33"))
+      expect(series.last.dig(:changes, :confirmed_meals)).to eq(reference: 4, difference: nil, percent: nil)
     end
 
     it "keeps a real zero but leaves percentage change unknown when the reference is zero" do

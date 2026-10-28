@@ -93,6 +93,43 @@ RSpec.describe AnthropicMessagesClient do
     )
   end
 
+  it "classifies a refusal stop reason as a refusal" do
+    body = JSON.generate(type: "message", role: "assistant", stop_reason: "refusal",
+                         content: [ { type: "text", text: "No puedo ayudar." } ])
+    allow(client).to receive(:connection).and_return(Faraday.new(url: "https://api.anthropic.com") do |faraday|
+      faraday.adapter :test do |stub|
+        stub.post("/v1/messages") { [ 200, {}, body ] }
+      end
+    end)
+
+    expect(client.create_summary(system: "Instrucciones", payload_json: "{}")).to eq(
+      ok: false, error: { code: "refused" }
+    )
+  end
+
+  it "joins multiple valid text blocks without accepting an unexpected structure" do
+    bodies = [
+      JSON.generate(type: "message", role: "assistant", stop_reason: "end_turn",
+                    content: [ { type: "text", text: "Primer bloque." }, { type: "text", text: "Segundo bloque." } ]),
+      JSON.generate(type: "message", role: "user", stop_reason: "end_turn",
+                    content: [ { type: "text", text: "Texto inesperado." } ]),
+      JSON.generate(type: "message", role: "assistant", stop_reason: "end_turn", content: []),
+      JSON.generate(type: "message", role: "assistant", stop_reason: "end_turn",
+                    content: [ { type: "text", text: "Válido" }, { type: "tool_use", id: "tool" } ])
+    ]
+
+    bodies.each_with_index do |body, index|
+      allow(client).to receive(:connection).and_return(Faraday.new(url: "https://api.anthropic.com") do |faraday|
+        faraday.adapter :test do |stub|
+          stub.post("/v1/messages") { [ 200, {}, body ] }
+        end
+      end)
+      expected = index.zero? ? { ok: true, text: "Primer bloque.\nSegundo bloque." } :
+                               { ok: false, error: { code: "invalid_response" } }
+      expect(client.create_summary(system: "Instrucciones", payload_json: "{}")).to eq(expected)
+    end
+  end
+
   it "recognizes documented spend limits without returning the provider's message" do
     [
       [ 400, { type: "invalid_request_error", message: "You have reached your specified API usage limits" } ],

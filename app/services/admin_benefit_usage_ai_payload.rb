@@ -5,6 +5,7 @@ class AdminBenefitUsageAiPayload
     employee_counts_use_current_roster historical_roster_incomplete historical_status_at_close_unavailable
     eligibility_unknown monthly_quota_unknown historical_discounts_without_benefit_records
     pending_discounts_without_benefit_records monthly_benefit_units_exceed_order_amount
+    benefit_consumer_mismatch
     monthly_usage_exceeds_quota monthly_usage_outside_eligibility company_subsidy_amount_unreliable
     confirmed_meals_unreliable historical_trends_from_retained_records open_month_partial
     trend_monthly_subsidy_unknown trend_company_subsidy_unknown trend_confirmed_meals_unknown

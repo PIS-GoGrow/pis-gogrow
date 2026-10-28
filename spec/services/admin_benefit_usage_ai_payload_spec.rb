@@ -50,6 +50,17 @@ RSpec.describe AdminBenefitUsageAiPayload do
     expect(payload[:participation]).to eq(percent: 50.0, eligible_employees: 4, eligible_without_orders: 1)
   end
 
+  it "never includes historical participation inside trends" do
+    stats[:trends][:months].last[:complete] = false
+
+    expect(payload[:participation][:percent]).to eq(50.0)
+    expect(payload[:trends].all? { it.keys == %i[month closed confirmed_orders confirmed_meals monthly_subsidized_meals company_subsidy_amount changes] }).to be(true)
+    expect(JSON.generate(payload[:trends])).not_to include("participation", "eligible_employees")
+
+    stats[:benefits][:monthly_quota_meals] = nil
+    expect(described_class.new(stats:).to_h.dig(:participation, :percent)).to be_nil
+  end
+
   it "does not copy internal fields or personal information added anywhere in the source" do
     stats[:company_id] = 42
     stats[:employee] = { name: "Nombre privado", email: "privado@example.com" }
@@ -119,12 +130,14 @@ RSpec.describe AdminBenefitUsageAiPayload do
     stats[:warnings] = [
       { code: "historical_roster_incomplete", scope: "employees", detail: "Texto privado" },
       { code: "historical_trends_from_retained_records", scope: "trends" },
+      { code: "benefit_consumer_mismatch", scope: "benefits" },
       { code: "trend_monthly_subsidy_unknown", scope: "trends", month: Date.new(2032, 3, 1), detail: "Privado" }
     ]
 
     expect(payload[:warnings]).to eq([
       { code: "historical_roster_incomplete" },
       { code: "historical_trends_from_retained_records" },
+      { code: "benefit_consumer_mismatch" },
       { code: "trend_monthly_subsidy_unknown", month: "2032-03" }
     ])
   end

@@ -38,7 +38,7 @@ class Admin::BenefitUsageController < Admin::InertiaController
   end
 
   def safe_statistics(month)
-    AdminBenefitUsageAiPayload.new(stats: statistics(month)).to_h
+    AdminBenefitUsagePresentationPayload.new(stats: statistics(month)).to_h
   end
 
   def requested_month(default_current: false)
