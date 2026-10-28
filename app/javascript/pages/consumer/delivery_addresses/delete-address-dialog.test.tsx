@@ -10,18 +10,11 @@ const { deleteMock } = vi.hoisted(() => ({
   deleteMock: vi.fn(),
 }))
 
-vi.mock("@inertiajs/react", async () => {
-  const actual =
-    await vi.importActual<typeof import("@inertiajs/react")>("@inertiajs/react")
-
-  return {
-    ...actual,
-    router: {
-      ...actual.router,
-      delete: deleteMock,
-    },
-  }
-})
+vi.mock("@inertiajs/react", () => ({
+  router: {
+    delete: deleteMock,
+  },
+}))
 
 const address: ConsumerDeliveryAddress = {
   id: 12,
@@ -29,6 +22,11 @@ const address: ConsumerDeliveryAddress = {
   street: "Canelones 892",
   apartment: null,
   address: "Canelones 892",
+}
+
+interface DeleteOptions {
+  onSuccess?: () => void
+  onFinish?: () => void
 }
 
 describe("DeleteAddressDialog", () => {
@@ -110,11 +108,13 @@ describe("DeleteAddressDialog", () => {
   it("shows the success state after deletion", async () => {
     const user = userEvent.setup()
 
-    deleteMock.mockImplementation((_url, options) => {
-      options?.onSuccess?.({} as never)
-      options?.onFinish?.()
-    })
-
+    deleteMock.mockImplementation(
+      (_url: string, options?: DeleteOptions) => {
+        options?.onSuccess?.()
+        options?.onFinish?.()
+      },
+    )
+    
     render(
       <DeleteAddressDialog
         address={address}

@@ -586,12 +586,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e1_user, role: :consumer
 
       edit_order(order)
-      click_button "Ver mis direcciones"
-      within("[role=dialog]", text: "Mis direcciones") do
-        find("label", text: "Colonia 1370").click
-        click_button "Seleccionar"
-      end
       within("[role=dialog]", text: "Modificar pedido") do
+        find("label", text: "Colonia 1370").find("[role=radio]").click
         click_button "Guardar cambios"
       end
       expect(page).to have_content("Pedido actualizado")

@@ -11,10 +11,10 @@ import { cn } from "@/lib/utils"
 import {
   consumerAccounts,
   consumerDashboard,
+  consumerDeliveryAddresses,
   consumerOrders,
   consumerProfiles,
   settingsNotifications,
-  consumerDeliveryAddresses,
 } from "@/routes"
 
 const links = [

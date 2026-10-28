@@ -8,13 +8,13 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
 import {
+  consumerDeliveryAddresses,
   settingsAppearance,
   settingsEmails,
   settingsNotifications,
   settingsPasswords,
   settingsProfiles,
   settingsSessions,
-  consumerDeliveryAddresses,
 } from "@/routes"
 import type { NavItem } from "@/types"
 

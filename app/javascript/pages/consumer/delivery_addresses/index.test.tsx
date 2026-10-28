@@ -6,8 +6,7 @@ import type { ConsumerDeliveryAddressesIndex } from "@/types"
 import Index from "./index"
 
 vi.mock("@inertiajs/react", async () => {
-  const actual =
-    await vi.importActual<typeof import("@inertiajs/react")>("@inertiajs/react")
+  const actual = await vi.importActual("@inertiajs/react")
 
   return {
     ...actual,
