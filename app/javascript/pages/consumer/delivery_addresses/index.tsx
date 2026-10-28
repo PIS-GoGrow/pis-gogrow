@@ -47,64 +47,64 @@ export default function Index({
         consumerMobileBackLabel={t(`${page}.back`)}
       >
         <div className="grid w-full gap-3">
-        {office_address && (
+          {office_address && (
             <Card className="h-[66px] gap-0 rounded-[10px] py-0 shadow-none">
-            <CardContent className="flex h-full items-center justify-between gap-3 px-3 py-0">
+              <CardContent className="flex h-full items-center justify-between gap-3 px-3 py-0">
                 <div className="min-w-0">
-                <p className="truncate text-sm leading-5 font-medium">
+                  <p className="truncate text-sm leading-5 font-medium">
                     {t(`${page}.office`)}
-                </p>
-                <p className="text-muted-foreground truncate text-xs leading-4">
+                  </p>
+                  <p className="text-muted-foreground truncate text-xs leading-4">
                     {office_address}
-                </p>
+                  </p>
                 </div>
-            </CardContent>
+              </CardContent>
             </Card>
-        )}
+          )}
 
-        {delivery_addresses.map((address) => (
+          {delivery_addresses.map((address) => (
             <Card
-            key={address.id}
-            className="h-[66px] gap-0 rounded-[10px] py-0 shadow-none"
+              key={address.id}
+              className="h-[66px] gap-0 rounded-[10px] py-0 shadow-none"
             >
-            <CardContent className="flex h-full items-center justify-between gap-3 px-3 py-0">
+              <CardContent className="flex h-full items-center justify-between gap-3 px-3 py-0">
                 <div className="min-w-0">
-                <p className="truncate text-sm leading-5 font-medium">
+                  <p className="truncate text-sm leading-5 font-medium">
                     {address.name}
-                </p>
-                <p className="text-muted-foreground truncate text-xs leading-4">
+                  </p>
+                  <p className="text-muted-foreground truncate text-xs leading-4">
                     {address.address}
-                </p>
+                  </p>
                 </div>
 
                 <AddressFormSheet
-                address={address}
-                onDelete={setDeletingAddress}
+                  address={address}
+                  onDelete={setDeletingAddress}
                 >
-                <Button
+                  <Button
                     type="button"
                     variant="ghost"
                     size="icon"
                     className="size-10 shrink-0 rounded-[10px]"
                     aria-label={t(`${page}.edit`, {
-                    name: address.name,
+                      name: address.name,
                     })}
-                >
+                  >
                     <MoreVertical aria-hidden="true" className="size-4" />
-                </Button>
+                  </Button>
                 </AddressFormSheet>
-            </CardContent>
+              </CardContent>
             </Card>
-        ))}
+          ))}
 
-        <AddressFormSheet>
+          <AddressFormSheet>
             <Button
-            type="button"
-            className="mt-2 h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90"
+              type="button"
+              className="mt-2 h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90"
             >
-            {t(`${page}.add`)}
+              {t(`${page}.add`)}
             </Button>
-        </AddressFormSheet>
+          </AddressFormSheet>
         </div>
       </SettingsPageLayout>
 

@@ -125,7 +125,7 @@ export default function AddressFormSheet({
           <AdaptableDialogDescription className="sr-only">
             {t("pages.consumer_delivery_addresses.form.description")}
           </AdaptableDialogDescription>
-          
+
           <div className="grid gap-4">
             <Field data-invalid={!!errors.name} className="gap-3">
               <FieldLabel htmlFor={`delivery_address_name_${suffix}`}>
@@ -148,7 +148,9 @@ export default function AddressFormSheet({
                 className="h-12 rounded-lg shadow-none"
               />
 
-              <FieldError errors={errors.name?.map((message) => ({ message }))} />
+              <FieldError
+                errors={errors.name?.map((message) => ({ message }))}
+              />
             </Field>
 
             <Field data-invalid={!!errors.street} className="gap-3">

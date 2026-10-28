@@ -36,11 +36,7 @@ describe("DeleteAddressDialog", () => {
 
   it("shows the address deletion confirmation", () => {
     render(
-      <DeleteAddressDialog
-        address={address}
-        open
-        onOpenChange={vi.fn()}
-      />,
+      <DeleteAddressDialog address={address} open onOpenChange={vi.fn()} />,
     )
 
     expect(
@@ -53,9 +49,7 @@ describe("DeleteAddressDialog", () => {
       ),
     ).toBeInTheDocument()
 
-    expect(
-      screen.getByRole("button", { name: "Volver" }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Volver" })).toBeInTheDocument()
 
     expect(
       screen.getByRole("button", { name: "Eliminar dirección" }),
@@ -84,16 +78,10 @@ describe("DeleteAddressDialog", () => {
     const user = userEvent.setup()
 
     render(
-      <DeleteAddressDialog
-        address={address}
-        open
-        onOpenChange={vi.fn()}
-      />,
+      <DeleteAddressDialog address={address} open onOpenChange={vi.fn()} />,
     )
 
-    await user.click(
-      screen.getByRole("button", { name: "Eliminar dirección" }),
-    )
+    await user.click(screen.getByRole("button", { name: "Eliminar dirección" }))
 
     expect(deleteMock).toHaveBeenCalledTimes(1)
     expect(deleteMock).toHaveBeenCalledWith(
@@ -108,24 +96,16 @@ describe("DeleteAddressDialog", () => {
   it("shows the success state after deletion", async () => {
     const user = userEvent.setup()
 
-    deleteMock.mockImplementation(
-      (_url: string, options?: DeleteOptions) => {
-        options?.onSuccess?.()
-        options?.onFinish?.()
-      },
-    )
-    
+    deleteMock.mockImplementation((_url: string, options?: DeleteOptions) => {
+      options?.onSuccess?.()
+      options?.onFinish?.()
+    })
+
     render(
-      <DeleteAddressDialog
-        address={address}
-        open
-        onOpenChange={vi.fn()}
-      />,
+      <DeleteAddressDialog address={address} open onOpenChange={vi.fn()} />,
     )
 
-    await user.click(
-      screen.getByRole("button", { name: "Eliminar dirección" }),
-    )
+    await user.click(screen.getByRole("button", { name: "Eliminar dirección" }))
 
     expect(
       screen.getByRole("heading", { name: "Dirección eliminada" }),
