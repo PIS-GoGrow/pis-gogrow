@@ -726,7 +726,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
   describe "GET /provider/pedidos/exportar" do
     def exported
-      CSV.parse(response.body.force_encoding("UTF-8").delete_prefix("\uFEFF"), col_sep: ";")
+      xlsx_rows(response.body)
     end
 
     def exported_ids
@@ -817,33 +817,33 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(exported_ids).to eq([ other_provider_order.id ])
     end
 
-    it "sends a named CSV with the operational columns, no contact data and matching totals" do
+    it "sends a named XLSX with the operational columns, no contact data and matching totals" do
       users(:one).update!(phone: "099123456")
       sign_in users(:provider_user), role: :provider
 
       get export_provider_orders_path(estado: "pending")
 
       today = Date.current
-      expect(response.media_type).to eq("text/csv")
-      expect(response.headers["Content-Type"]).to include("charset=utf-8")
+      expect(response.media_type).to eq("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
       expect(response.headers["Content-Disposition"]).to include(
         "attachment",
-        "pedidos_provider-user_proximos_#{today.iso8601}_al_#{(today + 3).iso8601}_generado_#{today.iso8601}_1200.csv"
+        "pedidos_provider-user_proximos_#{today.iso8601}_al_#{(today + 3).iso8601}_generado_#{today.iso8601}_1200.xlsx"
       )
-      expect(response.body.b).to start_with("\uFEFF".b)
+      expect(response.body.b).to start_with("PK".b)
       expect(exported.first).to eq([
         "Código", "Fecha de entrega", "Hora del pedido", "Estado", "Empleado", "Empresa", "Plato",
         "Opciones", "Cantidad", "Entrega", "Dirección", "Notas", "Monto"
       ])
-      expect(response.body).not_to include("one@example.com", "099123456")
+      expect(exported.flatten.join).not_to include("one@example.com", "099123456")
 
       rows = exported[1..-2]
+      expect(rows.map(&:second)).to all(be_a(Date))
       expect(exported.last).to eq([
         "Total", nil, nil, nil, nil, nil, nil, nil,
-        rows.sum { it[8].to_i }.to_s, nil, nil, nil,
-        format("%.2f", rows.sum { it[12].tr(",", ".").to_d }).tr(".", ",")
+        rows.sum { it[8] }, nil, nil, nil,
+        rows.sum { it[12] }
       ])
-      expect(exported.last[12]).to eq("601,00")
+      expect(exported.last[12]).to eq(601)
     end
   end
 end

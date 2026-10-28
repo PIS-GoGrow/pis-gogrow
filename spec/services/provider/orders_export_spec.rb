@@ -29,7 +29,7 @@ RSpec.describe Provider::OrdersExport do
   end
 
   def rows(export)
-    CSV.parse(export.to_csv.delete_prefix("﻿"), col_sep: ";")
+    xlsx_rows(export.to_xlsx)
   end
 
   describe "#orders" do
@@ -65,42 +65,55 @@ RSpec.describe Provider::OrdersExport do
     end
   end
 
-  describe "#to_csv" do
-    it "starts with a BOM and uses semicolons" do
-      csv = export([ order ]).to_csv
+  describe "#to_xlsx" do
+    it "writes the header on a frozen first row of a sheet named Pedidos" do
+      xlsx = export([ order ]).to_xlsx
 
-      expect(csv).to start_with("﻿Código;Fecha de entrega;")
+      expect(rows(export([ order ])).first).to eq([
+        "Código", "Fecha de entrega", "Hora del pedido", "Estado", "Empleado", "Empresa", "Plato",
+        "Opciones", "Cantidad", "Entrega", "Dirección", "Notas", "Monto"
+      ])
+      Zip::File.open_buffer(StringIO.new(xlsx)) do |zip|
+        expect(zip.read("xl/workbook.xml")).to include('name="Pedidos"')
+        expect(zip.read("xl/worksheets/sheet1.xml")).to include('state="frozen"', 'ySplit="1"')
+      end
     end
 
-    it "writes the operational data of each order without personal contact data" do
+    it "writes the operational data of each order with real dates and numbers, without contact data" do
       options = [
         { "group_id" => 1, "name" => "Guarnición", "values" => [ "Papas", "Ensalada" ] },
         { "group_id" => 2, "name" => "Salsa", "values" => [ "Criolla" ] }
       ]
-      row = rows(export([ order(selected_options: options, notes: "Timbre 2", price: 1234.5, amount: 2) ]))[1]
+      xlsx = export([ order(selected_options: options, notes: "Timbre 2", price: 1234.5, amount: 2) ]).to_xlsx
+      row = xlsx_cells(xlsx)[1]
 
-      expect(row).to eq([
-        "PED-1247", "26/10/2026", "21:30", "Pendiente", "Test User", "GoGrow", "Milanesa con papas fritas",
-        "Guarnición: Papas, Ensalada; Salsa: Criolla", "2", "Oficina", "Julio Herrera y Reissig 565", "Timbre 2", "1234,50"
+      expect(row.map(&:value)).to eq([
+        "PED-1247", Date.new(2026, 10, 26), "21:30", "Pendiente", "Test User", "GoGrow", "Milanesa con papas fritas",
+        "Guarnición: Papas, Ensalada; Salsa: Criolla", 2, "Oficina", "Julio Herrera y Reissig 565", "Timbre 2", 1234.5
       ])
-      expect(row.join).not_to include("one@example.com")
+      expect(row[1].format).to eq("dd/mm/yyyy")
+      expect(row[12].format).to eq("#,##0.00")
+      expect(xlsx_rows(xlsx).flatten.join).not_to include("one@example.com")
     end
 
-    it "keeps text that Excel would read as a formula as text" do
-      row = rows(export([ order(notes: "=HYPERLINK(\"x\")") ]))[1]
+    it "keeps text that Excel would read as a formula as plain text" do
+      cell = xlsx_cells(export([ order(notes: "=HYPERLINK(\"x\")") ]).to_xlsx)[1][11]
 
-      expect(row[11]).to eq("'=HYPERLINK(\"x\")")
+      expect(cell.value).to eq("=HYPERLINK(\"x\")")
+      expect(cell.formula).to be_nil
     end
 
-    it "ends with the totals of the exported orders" do
+    it "ends with the totals of the exported orders as numbers" do
       orders = [ order(id: 1, amount: 2, price: 601), order(id: 2, amount: 1, price: 300.50, status: :cancelled) ]
+      total = xlsx_cells(export(orders).to_xlsx).last
 
-      expect(rows(export(orders)).last).to eq([ "Total", nil, nil, nil, nil, nil, nil, nil, "3", nil, nil, nil, "901,50" ])
+      expect(total.map(&:value)).to eq([ "Total", nil, nil, nil, nil, nil, nil, nil, 3, nil, nil, nil, 901.5 ])
+      expect(total[12].format).to eq("#,##0.00")
     end
 
     it "writes headers and a zero total without orders" do
       expect(rows(export([])).size).to eq(2)
-      expect(rows(export([])).last).to include("Total", "0", "0,00")
+      expect(rows(export([])).last).to include("Total", 0)
     end
   end
 
@@ -109,13 +122,13 @@ RSpec.describe Provider::OrdersExport do
       orders = [ order(id: 1, delivery_date: Date.new(2026, 11, 3)), order(id: 2, delivery_date: Date.new(2026, 10, 27)) ]
 
       expect(export(orders).filename)
-        .to eq("pedidos_provider-user_proximos_2026-10-27_al_2026-11-03_generado_2026-10-26_2130.csv")
+        .to eq("pedidos_provider-user_proximos_2026-10-27_al_2026-11-03_generado_2026-10-26_2130.xlsx")
     end
 
     it "leaves the range out without orders" do
       history = described_class.new([], provider:, period: :history)
 
-      expect(history.filename).to eq("pedidos_provider-user_historial_generado_2026-10-26_2130.csv")
+      expect(history.filename).to eq("pedidos_provider-user_historial_generado_2026-10-26_2130.xlsx")
     end
   end
 end
