@@ -76,7 +76,7 @@ export default function SettingsPageLayout({
           <Button
             variant="ghost"
             size="icon"
-            className="size-9 -ml-2 rounded-[10px] md:hidden"
+            className="-ml-2 size-9 rounded-[10px] md:hidden"
             asChild
           >
             <Link

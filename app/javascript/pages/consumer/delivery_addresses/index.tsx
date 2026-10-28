@@ -100,7 +100,7 @@ export default function Index({
           ))}
         </div>
 
-        <div className="fixed bottom-[88px] left-1/2 z-20 w-[354px] max-w-[calc(100vw-2rem)] -translate-x-1/2 md:static md:w-full md:translate-x-0 md:mt-2">
+        <div className="fixed bottom-[88px] left-1/2 z-20 w-[354px] max-w-[calc(100vw-2rem)] -translate-x-1/2 md:static md:mt-2 md:w-full md:translate-x-0">
           <AddressFormSheet>
             <Button
               type="button"
