@@ -38,7 +38,17 @@ export default function PeriodCard({
     <Card className="bg-muted/50 gap-3 py-4">
       <CardHeader className="px-4">
         <CardDescription>
-          {providerName ? `${providerName}: ${account.month}` : account.month}
+          {providerName ? (
+            <>
+              <span className="text-foreground font-semibold">
+                {providerName}
+              </span>
+              {": "}
+              <span className="font-semibold">{account.month}</span>
+            </>
+          ) : (
+            account.month
+          )}
         </CardDescription>
         <CardAction>
           <StatusBadge status={status} kind="payment" />

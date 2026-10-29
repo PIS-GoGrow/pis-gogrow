@@ -30,12 +30,14 @@ interface AccountDetail {
 
 interface PaymentHistoryCardProps {
   account: Account
+  providerName: string
   setDetail: React.Dispatch<React.SetStateAction<AccountDetail | null>>
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export default function PaymentHistoryCard({
   account,
+  providerName,
   setDetail,
   setLoading,
 }: PaymentHistoryCardProps) {
@@ -67,10 +69,13 @@ export default function PaymentHistoryCard({
   return (
     <Card className="bg-zinc-50 dark:bg-zinc-900">
       <CardHeader className="grid gap-4">
-        <CardDescription className="flex items-center">
-          {account.month}
+        <CardDescription className="flex items-center gap-2">
+          <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="text-foreground font-bold">{providerName}</span>
+            <span className="font-bold">{account.month}</span>
+          </span>
           {/* Como es historial los payments estan siempre aprobados */}
-          <Badge className="ml-auto bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
+          <Badge className="ml-auto shrink-0 bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
             {t("pages.accounts.show.status_accepted")}
           </Badge>
         </CardDescription>

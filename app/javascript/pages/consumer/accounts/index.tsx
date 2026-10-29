@@ -115,6 +115,10 @@ export default function Index({
     </Card>
   ))
 
+  const providerNames = new Map(
+    providers.map((provider) => [provider.id, provider.name]),
+  )
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.accounts.index.payments")} />
@@ -190,6 +194,7 @@ export default function Index({
                   <PaymentHistoryCard
                     key={account.id}
                     account={account}
+                    providerName={providerNames.get(account.provider_id) ?? ""}
                     setDetail={setDetail}
                     setLoading={setLoading}
                   />

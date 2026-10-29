@@ -46,15 +46,29 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
   }
 }
 
-function renderCard(account: Account) {
+function renderCard(account: Account, providerName?: string) {
   return render(
     <Sheet>
-      <PeriodCard account={account} onOpenDetail={vi.fn()} />
+      <PeriodCard
+        account={account}
+        providerName={providerName}
+        onOpenDetail={vi.fn()}
+      />
     </Sheet>,
   )
 }
 
 describe("PeriodCard", () => {
+  it("highlights the provider name in history", () => {
+    renderCard(makeAccount(), "TuViandita")
+
+    expect(screen.getByText("TuViandita")).toHaveClass(
+      "font-semibold",
+      "text-foreground",
+    )
+    expect(screen.getByText("Septiembre 2026")).toHaveClass("font-semibold")
+  })
+
   it("disables uploading another receipt while one is under review", () => {
     const account = makeAccount({
       collection_status: "submitted",

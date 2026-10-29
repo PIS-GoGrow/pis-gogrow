@@ -40,11 +40,12 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
   }
 }
 
-function renderCard(account: Account) {
+function renderCard(account: Account, providerName = "Tu Viandita") {
   return render(
     <Sheet>
       <PaymentHistoryCard
         account={account}
+        providerName={providerName}
         setDetail={vi.fn()}
         setLoading={vi.fn()}
       />
@@ -53,6 +54,16 @@ function renderCard(account: Account) {
 }
 
 describe("PaymentHistoryCard", () => {
+  it("renders the provider name in bold with the foreground color", () => {
+    renderCard(makeAccount(), "La Cocina")
+
+    expect(screen.getByText("La Cocina")).toHaveClass(
+      "font-bold",
+      "text-foreground",
+    )
+    expect(screen.getByText("Septiembre 2026")).toHaveClass("font-bold")
+  })
+
   it("renders the orders price sum formatted with formatMoney", () => {
     const account = makeAccount({ orders_price_sum: 150.5 })
     renderCard(account)
