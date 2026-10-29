@@ -1265,7 +1265,7 @@ RSpec.describe "Orders", type: :request do
 
         expect(order.reload).to be_cancelled
         follow_redirect!
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_cancelled"))
+        expect(inertia).to have_flash(order_cancelled: true)
 
         sign_in order.provider.user, role: :provider
         get provider_dashboard_path
