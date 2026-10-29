@@ -17,6 +17,17 @@ class Notification < ApplicationRecord
   validate :role_belongs_to_user
   validate :event_exists
 
+  # skipped => se decidió no enviar la notificación
+  # pending => se decidió enviar, pero todavía no se empezó el proceso
+  # sending => se está enviando, no fue aceptada por Twilio todavía
+  # accepted => se envió a Twilio, no le llegó al usuario todavía
+  # delivered => le llegó a Twilio y al usuario
+  # send_failed => no se pudo enviar a Twilio
+  # delivery_failed => Twilio no se la pudo enviar al usuario
+  enum :whatsapp_send_status,
+       { pending: 0, skipped: 1, sending: 2, accepted: 3, delivered: 4, send_failed: 5, delivery_failed: 6 },
+       default: :sending
+
   scope :closed, -> { where.not(closed_at: nil) }
   scope :active, -> { where(closed_at: nil) }
 
@@ -103,14 +114,14 @@ end
 #  delivered_at                  :datetime
 #  description_data              :json
 #  event                         :string           not null
-#  failed                        :boolean
 #  notifiable_type               :string           not null
 #  requires_action               :boolean          not null
 #  role                          :string           not null
-#  send_attempts                 :integer          default(0)
 #  title_data                    :json
 #  twilio_sid                    :string
-#  whatsapp_sent_at              :datetime
+#  whatsapp_last_sent_at         :datetime
+#  whatsapp_send_attempts        :integer          default(0)
+#  whatsapp_send_status          :integer
 #  created_at                    :datetime         not null
 #  updated_at                    :datetime         not null
 #  notifiable_id                 :bigint           not null
