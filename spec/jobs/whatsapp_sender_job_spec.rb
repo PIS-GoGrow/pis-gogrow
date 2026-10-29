@@ -143,8 +143,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
     end
 
     context "cuando title y description comparten nombre de clave" do
-      let(:title_data) { { name: "A" } }
-      let(:description_data) { { name: "B" } }
+      let(:title_data) { { provider: "A" } }
 
       it "conserva ambas claves" do
         messages = stub_twilio(:ok)
@@ -152,12 +151,12 @@ RSpec.describe WhatsappSenderJob, type: :job do
         perform_now_job
 
         expect(JSON.parse(messages.calls.first.fetch(:content_variables)))
-          .to eq("title_name" => "A", "description_name" => "B")
+          .to include("title_provider" => "A", "description_provider" => "TuViandita")
       end
     end
 
     context "con valores que no son texto" do
-      let(:description_data) { { amount: 2, count: 3 } }
+      let(:description_data) { { date: "12/12", provider: 2, count: 3 } }
 
       it "los manda como texto" do
         messages = stub_twilio(:ok)
@@ -165,7 +164,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
         perform_now_job
 
         expect(JSON.parse(messages.calls.first.fetch(:content_variables)))
-          .to include("description_amount" => "2", "description_count" => "3")
+          .to include("description_provider" => "2", "description_count" => "3")
       end
     end
 
@@ -187,7 +186,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
 
       { 1 => "HXsingular", 3 => "HXplural" }.each do |count, content_sid|
         context "y count #{count}" do
-          let(:description_data) { { count: } }
+          let(:description_data) { { date: "12/12", provider: 2, count: } }
 
           it "usa la plantilla #{content_sid}" do
             messages = stub_twilio(:ok)
