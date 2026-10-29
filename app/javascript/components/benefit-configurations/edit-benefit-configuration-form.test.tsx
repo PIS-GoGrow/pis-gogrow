@@ -64,7 +64,9 @@ describe("EditBenefitConfigurationForm", () => {
       />,
     )
 
-    expect(screen.getByText(/sábado 12 de diciembre/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/los cambios se aplicarán en el próximo período/i),
+    ).toBeInTheDocument()
     expect(screen.getByLabelText(/se descuenta/i)).toHaveValue(50)
     expect(
       screen.getByLabelText(/cuando el precio por vianda es/i),

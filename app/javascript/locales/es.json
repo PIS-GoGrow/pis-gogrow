@@ -368,7 +368,7 @@
               "max_voucher_price": "Cuando el precio por vianda es",
               "monthly_voucher_limit": "Hasta un límite por empleado de",
               "monthly_voucher_limit_unit": "viandas",
-              "notice": "Los cambios se aplicarán el %{date}.",
+              "notice": "Los cambios se aplicarán en el próximo período.",
               "pending_conflict": {
                 "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
                 "keep": "Mantener el programado",
@@ -382,7 +382,7 @@
                 "dismiss": "Cerrar aviso",
                 "title": "Tus cambios están programados"
               },
-              "submit": "Programar Subsidio",
+              "submit": "Guardar cambios",
               "subsidy_percentage": "Se descuenta",
               "title": "Subsidio Base"
             },
@@ -394,7 +394,7 @@
               "threshold": "Monto límite",
               "title": "Alerta de deuda"
             },
-            "description": "Gestioná los subsidios de tu empresa",
+            "description": "Gestioná los subsidios de tu compañía",
             "special": {
               "add": "Agregar",
               "applies_to": "Aplicado a",

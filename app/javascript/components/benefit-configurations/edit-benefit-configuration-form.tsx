@@ -311,17 +311,19 @@ export default function EditBenefitConfigurationForm({
             <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500">
               <TriangleAlert className="size-4 shrink-0" />
               <span>
-                {t("pages.admin.benefit_configurations.index.current.notice", {
-                  date: formatLongDateInline(configurableMonth),
-                })}
+                {t("pages.admin.benefit_configurations.index.current.notice")}
               </span>
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="grid grid-cols-2 gap-3 pt-2 sm:flex sm:justify-end">
               <Button type="button" variant="outline" onClick={onCancel}>
                 {t("pages.admin.benefit_configurations.index.current.cancel")}
               </Button>
-              <Button type="submit" disabled={processing}>
+              <Button
+                type="submit"
+                disabled={processing}
+                aria-label="Programar Subsidio"
+              >
                 {t("pages.admin.benefit_configurations.index.current.submit")}
               </Button>
             </div>

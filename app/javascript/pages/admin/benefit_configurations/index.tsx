@@ -9,14 +9,14 @@ import SpecialSubsidiesSection from "@/components/benefit-configurations/special
 import Heading from "@/components/heading"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
+import { useIsMobile } from "@/hooks/use-mobile"
 import AppLayout from "@/layouts/app-layout"
 import { formatLongDateInline } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
@@ -33,14 +33,16 @@ export default function Index({
   debt_alert_threshold,
 }: AdminBenefitConfigurationsIndex) {
   const { t } = useTranslation()
-  const [isEditing, setIsEditing] = useState(false)
+  const isMobile = useIsMobile()
+  const [isEditingInline, setIsEditingInline] = useState(false)
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false)
 
   const title = t("pages.admin.benefit_configurations.index.title")
 
   const breadcrumbs: BreadcrumbItem[] = [
     { title, href: adminBenefitConfigurations.index().url },
   ]
-  console.log(pending_base_subsidies)
+
   const pendingBenefitSubsidy = pending_base_subsidies.find(
     (config) => config.benefit_rules[0].effective_from === configurable_month,
   )
@@ -61,11 +63,29 @@ export default function Index({
       }
     : undefined
 
+  function handleStartEditing() {
+    if (isMobile) {
+      setIsMobileSheetOpen(true)
+    } else {
+      setIsEditingInline(true)
+    }
+  }
+
+  const editFormProps = {
+    defaultValues: {
+      subsidy_percentage: (base_subsidy?.subsidy_percentage ?? ""),
+      max_voucher_price: base_subsidy?.benefit_rules[0]?.max_price ?? "",
+      monthly_voucher_limit: (base_subsidy?.benefit_rules[0]?.limit ?? ""),
+    },
+    pendingBenefitConfiguration,
+    configurableMonth: configurable_month,
+  }
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={title} />
 
-      <div className="mx-auto grid w-full max-w-200 gap-6 p-5">
+      <div className="mx-auto flex w-full max-w-200 flex-col gap-6 p-5 md:p-8">
         <Heading
           title={title}
           description={t(
@@ -83,117 +103,138 @@ export default function Index({
           }
         />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-bold text-foreground">
               {t("pages.admin.benefit_configurations.index.current.title")}
-            </CardTitle>
+            </h2>
 
-            {!isEditing && (
-              <CardAction>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <PencilIcon />
-                  {t("pages.admin.benefit_configurations.index.current.edit")}
-                </Button>
-              </CardAction>
+            {!isEditingInline && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 font-semibold text-foreground"
+                onClick={handleStartEditing}
+              >
+                <PencilIcon className="size-4" />
+                {t("pages.admin.benefit_configurations.index.current.edit")}
+              </Button>
             )}
-          </CardHeader>
-          <CardContent className="grid gap-2">
-            {isEditing ? (
+          </div>
+
+          {isEditingInline ? (
+            <div className="rounded-lg border border-border bg-card p-4">
               <EditBenefitConfigurationForm
-                defaultValues={{
-                  subsidy_percentage: base_subsidy?.subsidy_percentage ?? "",
-                  max_voucher_price:
-                    base_subsidy?.benefit_rules[0]?.max_price ?? "",
-                  monthly_voucher_limit:
-                    base_subsidy?.benefit_rules[0]?.limit ?? "",
-                }}
-                pendingBenefitConfiguration={pendingBenefitConfiguration}
-                configurableMonth={configurable_month}
-                onCancel={() => setIsEditing(false)}
-                onSuccess={() => setIsEditing(false)}
+                {...editFormProps}
+                onCancel={() => setIsEditingInline(false)}
+                onSuccess={() => setIsEditingInline(false)}
               />
-            ) : (
-              <>
-                {pending_base_subsidies.map((subsidy) => (
-                  <Alert key={subsidy.id}>
-                    <AlertCircleIcon />
-                    <AlertTitle className="font-bold">
+            </div>
+          ) : (
+            <>
+              {pending_base_subsidies.map((subsidy) => (
+                <Alert key={subsidy.id}>
+                  <AlertCircleIcon />
+                  <AlertTitle className="font-bold">
+                    {t(
+                      "pages.admin.benefit_configurations.index.current.pending_conflict.title_alt",
+                      { date: formatLongDateInline(configurable_month) },
+                    )}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {t(
+                      "pages.admin.benefit_configurations.index.current.pending_conflict.description",
+                      {
+                        subsidy_percentage: subsidy.subsidy_percentage,
+                        max_voucher_price: formatMoney(
+                          subsidy.benefit_rules[0]?.max_price ?? 0,
+                        ),
+                        monthly_voucher_limit: subsidy.benefit_rules[0]?.limit,
+                      },
+                    )}
+                  </AlertDescription>
+                </Alert>
+              ))}
+
+              {base_subsidy ? (
+                <div className="flex flex-col gap-3 rounded-lg border border-[#E5E5E5] bg-[#F5F5F5] p-4 dark:border-neutral-800 dark:bg-neutral-900">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-[#737373] dark:text-neutral-400">
                       {t(
-                        "pages.admin.benefit_configurations.index.current.pending_conflict.title_alt",
-                        { date: formatLongDateInline(configurable_month) },
+                        "pages.admin.benefit_configurations.index.current.subsidy_percentage",
                       )}
-                    </AlertTitle>
-                    <AlertDescription>
+                    </span>
+                    <span className="text-base font-medium text-foreground">
+                      {base_subsidy.subsidy_percentage}%
+                    </span>
+                  </div>
+
+                  <div className="border-t border-[#E5E5E5] dark:border-neutral-800" />
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-[#737373] dark:text-neutral-400">
                       {t(
-                        "pages.admin.benefit_configurations.index.current.pending_conflict.description",
-                        {
-                          subsidy_percentage: subsidy.subsidy_percentage,
-                          max_voucher_price: formatMoney(
-                            subsidy.benefit_rules[0]?.max_price ?? 0,
-                          ),
-                          monthly_voucher_limit:
-                            subsidy.benefit_rules[0]?.limit,
-                        },
+                        "pages.admin.benefit_configurations.index.current.max_voucher_price",
                       )}
-                    </AlertDescription>
-                  </Alert>
-                ))}
-                {base_subsidy ? (
-                  <dl className="divide-border bg-muted divide-y rounded-lg px-4">
-                    <div className="flex items-center justify-between py-3">
-                      <dt className="text-muted-foreground">
-                        {t(
-                          "pages.admin.benefit_configurations.index.current.subsidy_percentage",
-                        )}
-                      </dt>
-                      <dd className="text-lg font-semibold">
-                        {base_subsidy.subsidy_percentage}%
-                      </dd>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <dt className="text-muted-foreground">
-                        {t(
-                          "pages.admin.benefit_configurations.index.current.max_voucher_price",
-                        )}
-                      </dt>
-                      <dd className="text-lg font-semibold">
-                        ≤
-                        {formatMoney(
-                          base_subsidy?.benefit_rules[0]?.max_price ?? 0,
-                        )}
-                      </dd>
-                    </div>
-                    <div className="flex items-center justify-between py-3">
-                      <dt className="text-muted-foreground">
-                        {t(
-                          "pages.admin.benefit_configurations.index.current.monthly_voucher_limit",
-                        )}
-                      </dt>
-                      <dd className="text-lg font-semibold">
-                        {base_subsidy?.benefit_rules[0]?.limit}
-                      </dd>
-                    </div>
-                  </dl>
-                ) : (
-                  <Empty>
-                    <EmptyHeader>
-                      <EmptyTitle>
-                        {t(
-                          "pages.admin.benefit_configurations.index.current.empty",
-                        )}
-                      </EmptyTitle>
-                    </EmptyHeader>
-                  </Empty>
-                )}
-              </>
-            )}
-          </CardContent>
-        </Card>
+                    </span>
+                    <span className="text-base font-medium text-foreground">
+                      ≤
+                      {formatMoney(
+                        base_subsidy?.benefit_rules[0]?.max_price ?? 0,
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="border-t border-[#E5E5E5] dark:border-neutral-800" />
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-[#737373] dark:text-neutral-400">
+                      {t(
+                        "pages.admin.benefit_configurations.index.current.monthly_voucher_limit",
+                      )}
+                    </span>
+                    <span className="text-base font-medium text-foreground">
+                      {base_subsidy?.benefit_rules[0]?.limit}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <Empty className="border-0 bg-transparent">
+                  <EmptyHeader>
+                    <EmptyTitle>
+                      {t(
+                        "pages.admin.benefit_configurations.index.current.empty",
+                      )}
+                    </EmptyTitle>
+                  </EmptyHeader>
+                </Empty>
+              )}
+            </>
+          )}
+        </section>
+
+        {/* Mobile Bottom Sheet Editor */}
+        <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
+          <SheetContent
+            side="bottom"
+            showCloseButton={false}
+            className="max-h-[90dvh] overflow-y-auto rounded-t-2xl p-6"
+          >
+            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-muted" />
+            <SheetHeader className="p-0 text-left">
+              <SheetTitle className="text-xl font-bold text-foreground">
+                {t("pages.admin.benefit_configurations.index.current.title")}
+              </SheetTitle>
+            </SheetHeader>
+            <div className="mt-4">
+              <EditBenefitConfigurationForm
+                {...editFormProps}
+                onCancel={() => setIsMobileSheetOpen(false)}
+                onSuccess={() => setIsMobileSheetOpen(false)}
+              />
+            </div>
+          </SheetContent>
+        </Sheet>
 
         <SpecialSubsidiesSection
           specialSubsidies={special_subsidies}
