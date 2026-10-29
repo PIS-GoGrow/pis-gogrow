@@ -5,6 +5,16 @@ class Admin::BenefitUsageController < Admin::InertiaController
              by: -> { Current.user&.id || request.remote_ip }, store: Rails.configuration.x.rate_limit_store || Rails.cache,
              with: -> { render_error("rate_limited", :too_many_requests) }
 
+  def analysis
+    month = requested_month(default_current: true)
+    return redirect_to admin_benefit_usage_analysis_path unless month
+
+    current = Date.current.beginning_of_month
+    @month = month.strftime("%Y-%m")
+    @current_month = current.strftime("%Y-%m")
+    @months = month_options((12.times.map { current << it } + [ month ]).uniq.sort.reverse)
+  end
+
   def show
     month = requested_month(default_current: true)
     return render_error("invalid_month", :unprocessable_content) unless month

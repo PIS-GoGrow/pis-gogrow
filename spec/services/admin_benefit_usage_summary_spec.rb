@@ -44,6 +44,16 @@ RSpec.describe AdminBenefitUsageSummary do
     expect(json.dig("consumption", "company_subsidy_amount")).to eq("1500.25")
     expect(arguments.fetch(:payload_json)).not_to include("Nombre privado", "privado@example.com", "Dirección privada")
     expect(arguments.fetch(:system)).to include("null significa desconocido", "sin IVA", "No compares la participación")
+    expect(arguments.keys).to contain_exactly(:system, :payload_json)
+  end
+
+  it "asks for evidence-backed findings without repeating every metric" do
+    prompt = described_class::SYSTEM_PROMPT
+
+    expect(prompt).to include("series de tendencias", "diferencias absolutas y porcentuales", "anomalías precalculadas")
+    expect(prompt).to include("no repitas todas las métricas", "sin aplicar un umbral porcentual fijo")
+    expect(prompt).to include("null significa desconocido", "No solicites información personal", "No compares la participación")
+    expect(prompt).to include("mes abierto es parcial", "sin IVA", "no dinero efectivamente pagado")
   end
 
   it "returns a controlled error for oversized payloads without sending them" do
