@@ -119,6 +119,8 @@ es:
       invalid_date: "Elegí un día de semana entre hoy y la fecha máxima de publicación."
       invalid_menus: "Algún plato elegido no existe."
   notifications:
+    # Cualquier cambio en las notificaciones tiene que ser avisado a Juan Andrés Olmedo o
+    # a Sebastián Rama para que se envíen correctamente por WhatsApp
     order_received:
       title: "Nuevo pedido"
       description: "%{consumer} pidió %{amount} de %{dish} para el %{date}."

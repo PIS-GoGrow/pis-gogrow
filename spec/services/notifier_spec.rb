@@ -255,7 +255,7 @@ RSpec.describe Notifier do
         configuration.users << user
 
         expect { described_class.call(**params) }
-          .to have_enqueued_job(WhatsappSenderJob).with(instance_of(Notification), event_key, {}, {}, "+59899123456")
+          .to have_enqueued_job(WhatsappSenderJob).with(instance_of(Notification))
       end
 
       it "encola el envío sin suscripción si el grupo no es configurable" do

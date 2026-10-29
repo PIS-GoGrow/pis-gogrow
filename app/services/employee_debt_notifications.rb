@@ -80,7 +80,7 @@ class EmployeeDebtNotifications
 
     def update_description(notification, debts)
       description = I18n.t!("notifications.#{EVENT}.description", **description_data(debts))
-      notification.update!(description:) unless notification.description == description
+      notification.update!(description_data: description_data(debts)) unless notification.description == description
     end
 
     def description_data(debts)
