@@ -135,7 +135,7 @@ RSpec.describe DebtReminders::EmployeeEligibility do
       event: described_class::EVENT,
       requires_action: false,
       notifiable: consumer,
-      description_data: {amount: "INF", providers: "TuViandia"}
+      description_data: { amount: "INF", providers: "TuViandia" }
     ).tap(&:close!)
   end
 
