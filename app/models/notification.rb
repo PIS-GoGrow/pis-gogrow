@@ -65,7 +65,6 @@ class Notification < ApplicationRecord
 
   # Determina si mandarle o no una notificación por WhatsApp al usuario.
   # Si el usuario no tiene un teléfono configurado, no la enviamos.
-  # Si ya intentamos muchas veces, no la enviamos.
   # Si ya cerró manual o automáticamente la notificación, no la enviamos.
   # Si le estamos mandando una notificación a un proveedor que está cerrado en el día
   # de hoy, no la enviamos.
@@ -74,8 +73,6 @@ class Notification < ApplicationRecord
   def send_to_user?
     return false unless user.phone.present?
 
-    return false if send_attempts >= MAX_SEND_ATTEMPTS
-
     return false if closed_at
 
     return false if role == "provider" && user.provider&.closed_on?(Date.current)
@@ -83,6 +80,10 @@ class Notification < ApplicationRecord
     return true unless notification_configuration.configurable
 
     notification_configuration.users.exists? user.id
+  end
+
+  def send_attempts_exceeded?
+    whatsapp_send_attempts >= MAX_SEND_ATTEMPTS
   end
 
   def title
