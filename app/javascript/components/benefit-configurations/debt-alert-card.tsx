@@ -29,7 +29,7 @@ export default function DebtAlertCard({ threshold }: DebtAlertCardProps) {
     <section className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">
+          <h2 className="text-foreground text-xl font-bold">
             {t(`${scope}.title`)}
           </h2>
 
@@ -37,7 +37,7 @@ export default function DebtAlertCard({ threshold }: DebtAlertCardProps) {
             <Button
               variant="ghost"
               size="sm"
-              className="gap-1.5 font-semibold text-foreground"
+              className="text-foreground gap-1.5 font-semibold"
               onClick={() => setIsEditing(true)}
             >
               <PencilIcon className="size-4" />
@@ -45,13 +45,13 @@ export default function DebtAlertCard({ threshold }: DebtAlertCardProps) {
             </Button>
           )}
         </div>
-        <p className="text-base text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           {t(`${scope}.description`)}
         </p>
       </div>
 
       {isEditing ? (
-        <div className="rounded-lg border border-[#E5E5E5] bg-card p-4 dark:border-neutral-800">
+        <div className="bg-card rounded-lg border border-[#E5E5E5] p-4 dark:border-neutral-800">
           <Form
             action={adminDebtAlert()}
             options={{ preserveScroll: true }}
@@ -111,7 +111,7 @@ export default function DebtAlertCard({ threshold }: DebtAlertCardProps) {
           <span className="text-sm font-medium text-[#737373] dark:text-neutral-400">
             {t(`${scope}.threshold`)}
           </span>
-          <span className="text-base font-medium text-foreground">
+          <span className="text-foreground text-base font-medium">
             {formatMoney(threshold)}
           </span>
         </div>

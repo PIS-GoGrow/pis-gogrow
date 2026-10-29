@@ -316,11 +316,17 @@ export default function EditBenefitConfigurationForm({
             </div>
 
             <div className="grid grid-cols-2 gap-3 pt-2 sm:flex sm:justify-end">
-              <Button type="button" variant="outline" onClick={onCancel}>
+              <Button
+                type="button"
+                variant="secondary"
+                className="text-foreground h-12 rounded-[10px] bg-[#F5F5F5] text-base font-medium hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                onClick={onCancel}
+              >
                 {t("pages.admin.benefit_configurations.index.current.cancel")}
               </Button>
               <Button
                 type="submit"
+                className="h-12 rounded-[10px] text-base font-medium"
                 disabled={processing}
                 aria-label="Programar Subsidio"
               >

@@ -6,7 +6,6 @@ import { useTranslation } from "react-i18next"
 import DebtAlertCard from "@/components/benefit-configurations/debt-alert-card"
 import EditBenefitConfigurationForm from "@/components/benefit-configurations/edit-benefit-configuration-form"
 import SpecialSubsidiesSection from "@/components/benefit-configurations/special-subsidies-section"
-import Heading from "@/components/heading"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
@@ -73,9 +72,11 @@ export default function Index({
 
   const editFormProps = {
     defaultValues: {
-      subsidy_percentage: (base_subsidy?.subsidy_percentage ?? ""),
+      subsidy_percentage: (base_subsidy?.subsidy_percentage ?? "") as
+        number | "",
       max_voucher_price: base_subsidy?.benefit_rules[0]?.max_price ?? "",
-      monthly_voucher_limit: (base_subsidy?.benefit_rules[0]?.limit ?? ""),
+      monthly_voucher_limit: (base_subsidy?.benefit_rules[0]?.limit ?? "") as
+        number | "",
     },
     pendingBenefitConfiguration,
     configurableMonth: configurable_month,
@@ -86,26 +87,34 @@ export default function Index({
       <Head title={title} />
 
       <div className="mx-auto flex w-full max-w-200 flex-col gap-6 p-5 md:p-8">
-        <Heading
-          title={title}
-          description={t(
-            "pages.admin.benefit_configurations.index.description",
-          )}
-          back={
-            <Button variant="ghost" size="icon" asChild>
-              <Link
-                href={adminAccount()}
-                aria-label={t("pages.admin.benefit_configurations.index.back")}
-              >
-                <ArrowLeft aria-hidden="true" />
-              </Link>
-            </Button>
-          }
-        />
+        <div className="flex flex-col gap-6">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-9 rounded-[10px] p-0"
+            asChild
+          >
+            <Link
+              href={adminAccount()}
+              aria-label={t("pages.admin.benefit_configurations.index.back")}
+            >
+              <ArrowLeft className="size-4" aria-hidden="true" />
+            </Link>
+          </Button>
+
+          <div className="flex flex-col gap-2">
+            <h1 className="text-foreground text-2xl font-bold tracking-tight">
+              {title}
+            </h1>
+            <p className="text-base text-[#737373] dark:text-neutral-400">
+              {t("pages.admin.benefit_configurations.index.description")}
+            </p>
+          </div>
+        </div>
 
         <section className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-foreground">
+            <h2 className="text-foreground text-xl font-bold">
               {t("pages.admin.benefit_configurations.index.current.title")}
             </h2>
 
@@ -113,7 +122,7 @@ export default function Index({
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-1.5 font-semibold text-foreground"
+                className="text-foreground gap-1.5 font-semibold"
                 onClick={handleStartEditing}
               >
                 <PencilIcon className="size-4" />
@@ -123,7 +132,7 @@ export default function Index({
           </div>
 
           {isEditingInline ? (
-            <div className="rounded-lg border border-border bg-card p-4">
+            <div className="border-border bg-card rounded-lg border p-4">
               <EditBenefitConfigurationForm
                 {...editFormProps}
                 onCancel={() => setIsEditingInline(false)}
@@ -164,7 +173,7 @@ export default function Index({
                         "pages.admin.benefit_configurations.index.current.subsidy_percentage",
                       )}
                     </span>
-                    <span className="text-base font-medium text-foreground">
+                    <span className="text-foreground text-base font-medium">
                       {base_subsidy.subsidy_percentage}%
                     </span>
                   </div>
@@ -177,7 +186,7 @@ export default function Index({
                         "pages.admin.benefit_configurations.index.current.max_voucher_price",
                       )}
                     </span>
-                    <span className="text-base font-medium text-foreground">
+                    <span className="text-foreground text-base font-medium">
                       ≤
                       {formatMoney(
                         base_subsidy?.benefit_rules[0]?.max_price ?? 0,
@@ -193,7 +202,7 @@ export default function Index({
                         "pages.admin.benefit_configurations.index.current.monthly_voucher_limit",
                       )}
                     </span>
-                    <span className="text-base font-medium text-foreground">
+                    <span className="text-foreground text-base font-medium">
                       {base_subsidy?.benefit_rules[0]?.limit}
                     </span>
                   </div>
@@ -220,9 +229,9 @@ export default function Index({
             showCloseButton={false}
             className="max-h-[90dvh] overflow-y-auto rounded-t-2xl p-6"
           >
-            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-muted" />
+            <div className="bg-muted mx-auto mb-4 h-1.5 w-12 rounded-full" />
             <SheetHeader className="p-0 text-left">
-              <SheetTitle className="text-xl font-bold text-foreground">
+              <SheetTitle className="text-foreground text-xl font-bold">
                 {t("pages.admin.benefit_configurations.index.current.title")}
               </SheetTitle>
             </SheetHeader>

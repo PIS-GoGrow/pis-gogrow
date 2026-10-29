@@ -39,34 +39,36 @@ export default function SpecialSubsidiesSection({
     <section className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold text-foreground">
+          <h2 className="text-foreground text-xl font-bold">
             {t("pages.admin.benefit_configurations.index.special.title")}
           </h2>
           <Button
             variant="ghost"
             size="sm"
-            className="gap-1.5 font-semibold text-foreground"
+            className="text-foreground gap-1.5 font-semibold"
             onClick={() => openAdaptableDialog()}
           >
             <PlusIcon className="size-4" aria-hidden="true" />
             {t("pages.admin.benefit_configurations.index.special.add")}
           </Button>
         </div>
-        <p className="text-base text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           {t("pages.admin.benefit_configurations.index.special.description")}
         </p>
       </div>
 
       {specialSubsidies.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-7 px-10 gap-4 text-center">
-          <div className="flex items-center justify-center size-10 rounded-[10px] bg-[#F5F5F5] dark:bg-neutral-800 text-foreground">
+        <div className="flex flex-col items-center justify-center gap-4 px-10 py-7 text-center">
+          <div className="text-foreground flex size-10 items-center justify-center rounded-[10px] bg-[#F5F5F5] dark:bg-neutral-800">
             <PercentIcon className="size-5" aria-hidden="true" />
           </div>
           <div className="flex flex-col items-center gap-2">
-            <h3 className="text-lg font-medium text-foreground">
-              {t("pages.admin.benefit_configurations.index.special.empty.title")}
+            <h3 className="text-foreground text-lg font-medium">
+              {t(
+                "pages.admin.benefit_configurations.index.special.empty.title",
+              )}
             </h3>
-            <p className="text-sm text-muted-foreground max-w-[280px]">
+            <p className="text-muted-foreground max-w-[280px] text-sm">
               {t(
                 "pages.admin.benefit_configurations.index.special.empty.description",
               )}
@@ -88,8 +90,9 @@ export default function SpecialSubsidiesSection({
 
       <AdaptableDialog open={sheetOpen} onOpenChange={setAdaptableDialogOpen}>
         <AdaptableDialogContent showCloseButton={false} className="p-5">
+          <div className="bg-muted mx-auto mb-2 h-1.5 w-12 rounded-full sm:hidden" />
           <div className="flex flex-col gap-1">
-            <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
+            <AdaptableDialogTitle className="text-foreground text-base leading-6 font-semibold tracking-normal">
               {editing
                 ? t(
                     "pages.admin.benefit_configurations.index.special.form.edit_title",
@@ -98,7 +101,7 @@ export default function SpecialSubsidiesSection({
                     "pages.admin.benefit_configurations.index.special.form.add_title",
                   )}
             </AdaptableDialogTitle>
-            <AdaptableDialogDescription>
+            <AdaptableDialogDescription className="sr-only">
               {t(
                 "pages.admin.benefit_configurations.index.special.form.description",
               )}
