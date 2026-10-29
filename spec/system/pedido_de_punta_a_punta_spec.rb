@@ -157,8 +157,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       click_button "Agregar uno"
       pick_option("Guarnición", "Papas")
       fill_in "notes", with: "Sin sal, con limón"
-      click_button "Guardar cambios"
-      expect(page).to have_content("Pedido actualizado")
+      click_button "Modificar"
+      confirm_order_modified
 
       edited = Order.find(order.id)
       expect(e1.orders.count).to eq(1)
@@ -253,7 +253,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       edit_order(e2_order)
       click_button "Agregar uno"
-      click_button "Guardar cambios"
+      click_button "Modificar"
 
       expect(page).to have_content("Este plato ya no está disponible para la fecha seleccionada.")
       expect(e2_order.reload.amount).to eq(1)
@@ -581,8 +581,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
         find("label", text: "Colonia 1370").click
         click_button "Seleccionar"
       end
-      click_button "Guardar cambios"
-      expect(page).to have_content("Pedido actualizado")
+      click_button "Modificar"
+      confirm_order_modified
       expect(order.reload).to have_attributes(delivery_method: "home", address: "Colonia 1370")
       sign_out
 

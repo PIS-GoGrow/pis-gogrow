@@ -66,7 +66,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       click_button "Cancelar pedido"
 
       # 1.3: Verificar transición inmediata a Cancelado y registro de trazabilidad (CAG-07)
-      expect(page).to have_content("Pedido cancelado.")
+      expect(page).to have_content("Pedido cancelado")
       order_1.reload
       expect(order_1.status).to eq("cancelled")
       expect(order_1.status_before_cancellation).to eq("pending")
@@ -200,7 +200,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       expect(page).to have_content("¿Cancelar pedido?")
       click_button "Cancelar pedido"
 
-      expect(page).to have_content("Pedido cancelado.")
+      expect(page).to have_content("Pedido cancelado")
       expect(same_day_order.reload.status).to eq("cancelled")
       expect(consumer.reload.remaining_monthly_benefit).to eq(20)
     end

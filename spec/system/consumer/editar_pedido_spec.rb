@@ -63,10 +63,10 @@ RSpec.describe "Modificar un pedido desde la pantalla del plato", type: :system 
 
     find("label", text: "Bolognesa").click
     fill_in "notes", with: "Por favor enviar cubiertos extra"
-    click_button "Guardar cambios"
+    click_button "Modificar"
 
-    expect(page).to have_content("Pedido actualizado")
-    expect(page).to have_current_path(order_path(order))
+    confirm_order_modified
+    visit_hydrated order_path(order)
     expect(page).to have_content("Bolognesa")
     expect(page).to have_content("Por favor enviar cubiertos extra")
 
@@ -82,9 +82,10 @@ RSpec.describe "Modificar un pedido desde la pantalla del plato", type: :system 
     visit_hydrated edit_order_path(order)
 
     fill_in "notes", with: "Edición desde mobile"
-    click_button "Guardar cambios"
+    click_button "Modificar"
 
-    expect(page).to have_content("Pedido actualizado")
+    confirm_order_modified
+    visit_hydrated order_path(order)
     expect(page).to have_content("Edición desde mobile")
     expect(order.reload.notes).to eq("Edición desde mobile")
   end

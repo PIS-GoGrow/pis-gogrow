@@ -23,7 +23,6 @@ es:
     order_created: "Tu vianda ha sido reservada."
     order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
     order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
-    order_updated: "Pedido actualizado."
     review_unavailable: "Este pedido ya no se puede calificar."
     already_signed_in: "Ya iniciaste sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
@@ -899,7 +898,10 @@ es:
       edit:
         title: "Modificar pedido"
         address: "Dirección de entrega"
-        save: "Guardar cambios"
+        updated_dialog:
+          title: "Pedido modificado"
+          description: "Te notificaremos cuando el proveedor confirme tu pedido."
+          done: "Listo"
       addresses:
         office: "Oficina"
         home: "Casa"

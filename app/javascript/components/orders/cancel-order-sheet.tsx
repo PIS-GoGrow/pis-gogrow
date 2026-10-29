@@ -8,20 +8,24 @@ import {
   AdaptableDialogContent,
   AdaptableDialogDescription,
   AdaptableDialogTitle,
-  AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
 import { consumerOrders } from "@/routes"
 import type { Order } from "@/types"
 
-interface CancelOrderSheetProps {
+interface CancelOrderDialogProps {
   order: Order
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-export default function CancelOrderSheet({ order }: CancelOrderSheetProps) {
+export function CancelOrderDialog({
+  order,
+  open,
+  onOpenChange,
+}: CancelOrderDialogProps) {
   const { t } = useTranslation()
-  const [open, setOpen] = useState(false)
   const [processing, setProcessing] = useState(false)
 
   function handleCancel() {
@@ -38,7 +42,7 @@ export default function CancelOrderSheet({ order }: CancelOrderSheetProps) {
           const hasAlert =
             (page.props as { flash?: { alert?: string } })?.flash?.alert ??
             page.flash?.alert
-          if (!hasAlert) setOpen(false)
+          if (!hasAlert) onOpenChange(false)
         },
         onFinish: () => setProcessing(false),
       },
@@ -46,14 +50,7 @@ export default function CancelOrderSheet({ order }: CancelOrderSheetProps) {
   }
 
   return (
-    <AdaptableDialog open={open} onOpenChange={setOpen}>
-      <AdaptableDialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className="w-full">
-          <X aria-hidden="true" />
-          {t("pages.orders.index.cancel")}
-        </Button>
-      </AdaptableDialogTrigger>
-
+    <AdaptableDialog open={open} onOpenChange={onOpenChange}>
       <AdaptableDialogContent showCloseButton={false} className="p-5">
         <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
           {t("pages.orders.index.cancel_dialog.title")}
@@ -67,7 +64,7 @@ export default function CancelOrderSheet({ order }: CancelOrderSheetProps) {
             type="button"
             variant="outline"
             className="h-12 rounded-lg text-base font-medium"
-            onClick={() => setOpen(false)}
+            onClick={() => onOpenChange(false)}
           >
             {t("pages.orders.index.cancel_dialog.back")}
           </Button>
@@ -83,5 +80,27 @@ export default function CancelOrderSheet({ order }: CancelOrderSheetProps) {
         </div>
       </AdaptableDialogContent>
     </AdaptableDialog>
+  )
+}
+
+export default function CancelOrderSheet({ order }: { order: Order }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="w-full"
+        onClick={() => setOpen(true)}
+      >
+        <X aria-hidden="true" />
+        {t("pages.orders.index.cancel")}
+      </Button>
+
+      <CancelOrderDialog order={order} open={open} onOpenChange={setOpen} />
+    </>
   )
 }

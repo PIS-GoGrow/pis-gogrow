@@ -39,7 +39,7 @@ interface Props {
   // conserva los cupones que ya tiene, sin dejar elegir otros.
   orderId?: number
   fixedBenefitIds?: number[]
-  actionLabel?: string
+  badge?: ReactNode
   processing?: boolean
   children?: ReactNode
 }
@@ -60,7 +60,7 @@ export function DishDetail({
   benefit,
   orderId,
   fixedBenefitIds,
-  actionLabel,
+  badge,
   processing = false,
   children,
 }: Props) {
@@ -125,13 +125,13 @@ export function DishDetail({
     const timeout = setTimeout(async () => {
       try {
         const cartToPrice = isEditing ? cartWithoutCurrent : cart
-        const result = await priceItems(
-          cartPricedItem([
-            ...cartToPrice,
-            { ...item, quantity, benefits: benefitIds },
-          ]),
-          orderId,
-        )
+        const pricedItems = cartPricedItem([
+          ...cartToPrice,
+          { ...item, quantity, benefits: benefitIds },
+        ])
+        const result = await (orderId === undefined
+          ? priceItems(pricedItems)
+          : priceItems(pricedItems, orderId))
         if (cancelled || !result?.lines) return
 
         const usedBenefitIds = result.lines
@@ -205,7 +205,7 @@ export function DishDetail({
         <p className="text-muted-foreground text-xs">
           {item.menu.provider_name}
         </p>
-        {inCart > 0 && <AddedBadge />}
+        {badge ?? (inCart > 0 && <AddedBadge />)}
       </div>
       <h1 className="mt-1 text-xl font-bold">{item.menu.name}</h1>
       <p className="text-muted-foreground mt-2 text-xs leading-5">
@@ -346,10 +346,9 @@ export function DishDetail({
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
         >
           {processing && <Spinner />}
-          {actionLabel ??
-            (isEditing
-              ? t("pages.consumer_dashboard.index.modify")
-              : t("pages.consumer_dashboard.index.add"))}
+          {isEditing
+            ? t("pages.consumer_dashboard.index.modify")
+            : t("pages.consumer_dashboard.index.add")}
         </Button>
       </BottomAction>
     </MobileCard>

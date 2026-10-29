@@ -226,11 +226,11 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       calm_animations
 
       click_link "Editar"
-      expect(page).to have_button("Guardar cambios", disabled: false)
+      expect(page).to have_button("Modificar", disabled: false)
 
       pick_option("Extras", "Papaya")
 
-      expect(page).to have_button("Guardar cambios", disabled: true)
+      expect(page).to have_button("Modificar", disabled: true)
 
       expect(order.reload.selected_options.first["values"]).to eq([ "Papaya" ])
     end
@@ -245,14 +245,14 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       calm_animations
 
       click_link "Editar"
-      expect(page).to have_button("Guardar cambios", disabled: true)
+      expect(page).to have_button("Modificar", disabled: true)
 
       pick_option("Salsa", "Bolognesa")
       pick_option("Relleno", "Ricota y nuez")
 
-      expect(page).to have_button("Guardar cambios", disabled: false)
-      click_button "Guardar cambios"
-      expect(page).to have_content("Pedido actualizado")
+      expect(page).to have_button("Modificar", disabled: false)
+      click_button "Modificar"
+      confirm_order_modified
 
       expect(order.reload.selected_options.map { it["values"] })
         .to contain_exactly([ "Bolognesa" ], [ "Ricota y nuez" ])
@@ -298,9 +298,9 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
 
         click_link "Editar"
         pick_option("Salsa", "Bolognesa")
-        expect(page).to have_button("Guardar cambios", disabled: false)
-        click_button "Guardar cambios"
-        expect(page).to have_content("Pedido actualizado")
+        expect(page).to have_button("Modificar", disabled: false)
+        click_button "Modificar"
+        confirm_order_modified
 
         expect(order.reload.selected_options.pluck("group_id")).to eq([ relleno.id ])
       end
@@ -317,8 +317,9 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
       # refleje el cambio, el envío puede llevar la personalización anterior.
       expect(checked_option("Salsa")).to include("Filetto")
 
-      click_button "Guardar cambios"
-      expect(page).to have_content("Pedido actualizado")
+      click_button "Modificar"
+      confirm_order_modified
+      visit_hydrated order_path(order)
 
       expect(order.reload.selected_options.map { it["values"] })
         .to contain_exactly([ "Filetto" ], [ "Ricota y nuez" ])

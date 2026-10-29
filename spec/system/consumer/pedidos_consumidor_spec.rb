@@ -193,14 +193,12 @@ RSpec.describe "Pedidos del consumidor" do
       click_link "Editar"
     end
 
-    expect(page).to have_current_path(/edit=1/)
-    within("[role=dialog]") do
-      expect(page).to have_content("Modificar pedido")
-      fill_in "notes", with: "Sin cebolla por favor"
-      click_button "Guardar cambios"
-    end
+    expect(page).to have_current_path(/editar/)
+    fill_in "notes", with: "Sin cebolla por favor"
+    click_button "Modificar"
 
-    expect(page).to have_content("Pedido actualizado")
+    confirm_order_modified
+    click_link "Milanesa con papas fritas", match: :first
     expect(page).to have_content("Sin cebolla por favor")
   end
 
@@ -210,13 +208,12 @@ RSpec.describe "Pedidos del consumidor" do
     visit order_path(order)
 
     # Modificar desde el detalle
-    click_button "Editar"
-    within("[role=dialog]") do
-      fill_in "notes", with: "Con servilletas extras"
-      click_button "Guardar cambios"
-    end
+    click_link "Editar"
+    fill_in "notes", with: "Con servilletas extras"
+    click_button "Modificar"
 
-    expect(page).to have_content("Pedido actualizado")
+    confirm_order_modified
+    visit_hydrated order_path(order)
     expect(page).to have_content("Con servilletas extras")
 
     # Cancelar desde el detalle

@@ -38,12 +38,10 @@ RSpec.describe "Auditoría de pedidos", type: :system do
   it "muestra a RR. HH. lo que cambió cada rol, con los valores anterior y nuevo" do
     sign_in users(:one), role: :consumer
     visit_hydrated order_path(modified)
-    click_button "Editar"
-    within("[role=dialog]") do
-      click_button "Agregar uno"
-      click_button "Guardar cambios"
-    end
-    expect(page).to have_content("Pedido actualizado")
+    click_link "Editar"
+    click_button "Agregar uno"
+    click_button "Modificar"
+    confirm_order_modified
 
     sign_out
     sign_in users(:provider_user), role: :provider

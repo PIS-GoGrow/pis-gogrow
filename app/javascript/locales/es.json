@@ -948,8 +948,12 @@
         },
         "edit": {
           "address": "Dirección de entrega",
-          "save": "Guardar cambios",
-          "title": "Modificar pedido"
+          "title": "Modificar pedido",
+          "updated_dialog": {
+            "description": "Te notificaremos cuando el proveedor confirme tu pedido.",
+            "done": "Listo",
+            "title": "Pedido modificado"
+          }
         },
         "index": {
           "all_providers": "Todos los proveedores",

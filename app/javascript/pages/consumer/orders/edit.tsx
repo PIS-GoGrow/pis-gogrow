@@ -1,20 +1,40 @@
 import { Head, router, useForm } from "@inertiajs/react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { CancelOrderDialog } from "@/components/orders/cancel-order-sheet"
+import OrderUpdatedSheet from "@/components/orders/order-updated-sheet"
+import StatusBadge from "@/components/status-badge"
 import { RadioGroup } from "@/components/ui/radio-group"
 import AppLayout from "@/layouts/app-layout"
+import { AddAddressSheet } from "@/pages/consumer/dashboard/add-address-sheet"
 import { AddressOption } from "@/pages/consumer/dashboard/address-option"
+import type { DeliveryAddressOption } from "@/pages/consumer/dashboard/consumer-types"
 import { DishDetail } from "@/pages/consumer/dashboard/dish-detail"
 import { SavedAddressesSheet } from "@/pages/consumer/dashboard/saved-addresses-sheet"
 import { consumerOrders } from "@/routes"
 import type { BreadcrumbItem, ConsumerOrdersEdit } from "@/types"
 
+// El pedido conserva los cupones que ya tiene: al modificarlo no se eligen otros.
+const NO_SELECTABLE_BENEFITS = {
+  percentage: 0,
+  monthly_limit: 0,
+  monthly_used: 0,
+  monthly_remaining: 0,
+  specials: [],
+}
+
 export default function Edit({
   order,
   schedule,
   delivery_addresses,
+  benefit_ids,
 }: ConsumerOrdersEdit) {
   const { t } = useTranslation()
+  const [cancelOpen, setCancelOpen] = useState(false)
+  const [addedAddresses, setAddedAddresses] = useState<DeliveryAddressOption[]>(
+    [],
+  )
 
   const { data, setData, patch, processing, transform } = useForm({
     quantity: order.amount ?? 1,
@@ -25,15 +45,21 @@ export default function Edit({
     ),
   })
 
-  const office = delivery_addresses.find((item) => item.id === "office")
-  const customAddresses = delivery_addresses.filter(
-    (item) => item.id !== "office",
-  )
+  const addresses = [
+    ...delivery_addresses,
+    ...addedAddresses.filter(
+      (added) =>
+        !delivery_addresses.some((item) => item.address === added.address),
+    ),
+  ]
+  const office = addresses.find((item) => item.id === "office")
+  const customAddresses = addresses.filter((item) => item.id !== "office")
   const visibleAddresses = [
     office,
     customAddresses.find((item) => item.address === data.address) ??
       customAddresses[0],
   ].filter((item) => item !== undefined)
+  const homeDelivery = schedule.menu.home_delivery
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -49,6 +75,14 @@ export default function Edit({
       href: consumerOrders.edit(order.id).url,
     },
   ]
+
+  function addAddress(option: DeliveryAddressOption) {
+    setAddedAddresses((items) => [
+      option,
+      ...items.filter((item) => item.address !== option.address),
+    ])
+    setData("address", option.address)
+  }
 
   function save() {
     transform(({ selections, ...rest }) => ({
@@ -84,19 +118,26 @@ export default function Edit({
           cart={[]}
           back={() => router.visit(consumerOrders.show(order.id).url)}
           add={save}
+          onRemove={() => setCancelOpen(true)}
           orderId={order.id}
-          actionLabel={t("pages.orders.edit.save")}
+          benefit={NO_SELECTABLE_BENEFITS}
+          fixedBenefitIds={benefit_ids}
+          badge={<StatusBadge status={order.status} />}
           processing={processing}
         >
           <section className="border-border border-b py-4">
-            <h2 className="text-xs font-semibold">
-              {t("pages.orders.edit.address")}
-            </h2>
+            <div className="mb-3 flex items-center justify-between text-sm font-semibold">
+              <h2>{t("pages.orders.edit.address")}</h2>
+              <AddAddressSheet
+                disabled={processing || !homeDelivery}
+                onAdd={addAddress}
+              />
+            </div>
             <RadioGroup
               value={data.address}
               onValueChange={(address) => setData("address", address)}
-              disabled={processing || delivery_addresses.length <= 1}
-              className="mt-3 gap-3"
+              disabled={processing || addresses.length <= 1}
+              className="gap-3"
             >
               {visibleAddresses.map((option) => (
                 <AddressOption
@@ -108,7 +149,7 @@ export default function Edit({
             </RadioGroup>
             {customAddresses.length > 1 && (
               <SavedAddressesSheet
-                addresses={delivery_addresses}
+                addresses={addresses}
                 address={data.address}
                 disabled={processing}
                 onSelect={(address) => setData("address", address)}
@@ -116,6 +157,13 @@ export default function Edit({
             )}
           </section>
         </DishDetail>
+
+        <CancelOrderDialog
+          order={order}
+          open={cancelOpen}
+          onOpenChange={setCancelOpen}
+        />
+        <OrderUpdatedSheet />
       </div>
     </AppLayout>
   )

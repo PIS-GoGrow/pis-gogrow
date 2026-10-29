@@ -1410,7 +1410,7 @@ RSpec.describe "Orders", type: :request do
         )
 
         follow_redirect!
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+        expect(inertia).to have_flash(order_updated: true)
       end
 
       # El pedido de los fixtures es de un plato sin grupos; para probar la
@@ -1628,7 +1628,7 @@ RSpec.describe "Orders", type: :request do
 
         expect(order.reload.amount).to eq(1)
         follow_redirect!
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+        expect(inertia).to have_flash(order_updated: true)
       end
 
       it "refuses a quantity the schedule cannot cover" do
@@ -1640,8 +1640,15 @@ RSpec.describe "Orders", type: :request do
         expect(inertia).to have_flash(alert: I18n.t("validations.schedule_unavailable"))
       end
 
-      it "refuses an address that is neither the office nor the employee's" do
+      it "accepts a new address typed in without saving it, when the provider delivers to homes" do
         patch order_path(order), params: update_params(address: "Otra calle 123")
+
+        expect(order.reload).to have_attributes(address: "Otra calle 123", delivery_method: "home")
+        expect(consumers(:one).saved_addresses.pluck(:street)).not_to include("Otra calle 123")
+      end
+
+      it "refuses an address that is neither the office nor the employee's" do
+        patch order_path(order), params: update_params(address: "Avenida Siempreviva")
 
         expect(order.reload.address).to eq("Julio Herrera y Reissig 565")
 
@@ -1734,7 +1741,7 @@ RSpec.describe "Orders", type: :request do
 
         expect(order.reload.notes).to eq(notes_140)
         follow_redirect!
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+        expect(inertia).to have_flash(order_updated: true)
       end
 
       it "refuses notes exceeding 140 characters and preserves the previous notes" do
@@ -1759,7 +1766,7 @@ RSpec.describe "Orders", type: :request do
         log = order.audit_logs.sole
         expect(log.changeset).to include("notes" => [ "Nota previa", nil ])
         follow_redirect!
-        expect(inertia).to have_flash(notice: I18n.t("flash.order_updated"))
+        expect(inertia).to have_flash(order_updated: true)
       end
     end
   end

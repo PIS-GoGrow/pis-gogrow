@@ -17,6 +17,7 @@ export interface FlashData {
   alert?: string
   notice?: string
   order_cancelled?: boolean
+  order_updated?: boolean
 }
 
 export * from "./serializers"

@@ -122,7 +122,7 @@ class Consumer::OrdersController < Consumer::InertiaController
     order = @consumer.orders.find(params[:id])
 
     return reject_update(order, :invalid_quantity) unless update_params[:quantity].to_s.match?(/\A[1-9]\d*\z/)
-    return reject_update(order, :invalid_address) unless order.delivery_address_options(@consumer).pluck(:address).include?(update_params[:address])
+    return reject_update(order, :invalid_address) unless update_address_allowed?(order)
 
     delivery = @consumer.delivery_for(order.provider, update_params[:address])
     return reject_update(order, :office_address_required) if delivery[:address].blank?
@@ -136,7 +136,8 @@ class Consumer::OrdersController < Consumer::InertiaController
     )
 
     if modified
-      redirect_to order_path(order), notice: t("flash.order_updated"), status: :see_other
+      flash.inertia[:order_updated] = true
+      redirect_to edit_order_path(order), status: :see_other
     else
       redirect_to order.modifiable? ? edit_order_path(order) : order_path(order),
                   alert: order.errors.full_messages.first || t("validations.order_not_modifiable"),
@@ -210,6 +211,16 @@ class Consumer::OrdersController < Consumer::InertiaController
     return :insufficient_stock if schedule && schedule.remaining_amount < order.amount.to_i
 
     :cart_unavailable
+  end
+
+  # Al modificar, además de las direcciones del pedido y del perfil, se acepta
+  # una nueva sin guardar (igual que en el carrito), pero solo si el proveedor
+  # entrega a domicilio.
+  def update_address_allowed?(order)
+    address = update_params[:address]
+
+    order.delivery_address_options(@consumer).pluck(:address).include?(address) ||
+      (order.provider&.home_delivery? && DeliveryAddress.valid_full_address?(address))
   end
 
   # Además de las direcciones conocidas, el carrito puede mandar una que el
