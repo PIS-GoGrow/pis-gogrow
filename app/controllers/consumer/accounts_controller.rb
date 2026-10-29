@@ -6,7 +6,7 @@ class Consumer::AccountsController < Consumer::InertiaController
   def index
     consumer = Current.user.consumer
 
-    accounts = consumer.accounts.pending.includes(:payments).order :month
+    accounts = consumer.accounts.pending.includes(:payments).order(month: :desc)
     # Calculamos la cantidad total de viandas pedidas y el precio total
     # para cada cuenta. Lo hacemos acá para que esto se pueda hacer con una única
     # consulta a la bd. Si se hiciera en AccountSerializer, se necesitaría una
