@@ -475,6 +475,7 @@ es:
       order_events:
         index:
           title: "Auditoría de pedidos"
+          back: "Volver a Cuenta"
           description: "Cada creación y cambio de un pedido, con quién lo hizo. El registro no se puede editar ni borrar."
           filters:
             order: "Pedido"
@@ -743,6 +744,13 @@ es:
           meals_other: "%{count} viandas"
           due: "Vence: %{date}"
           see_detail: "Ver detalle"
+          confirmed: "Confirmado"
+          total_paid: "Total pagado"
+          download_invoice: "Descargar factura"
+          download_receipt: "Descargar comprobante de pago"
+          providers_filter: "Proveedores:"
+          all_providers: "Todos"
+          filter_providers: "Filtrar por proveedor"
           detail:
             title: "%{provider}: Consumo %{month}"
             loading_title: "Detalle del consumo"
