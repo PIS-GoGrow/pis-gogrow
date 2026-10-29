@@ -23,10 +23,12 @@ class TwilioCallbacksController < ApplicationController
       elsif FAIL_STATUSES.include?(callback_params[:MessageStatus]) && @notification.accepted?
         @notification.delivery_failed!
 
-        # send_to_user? ya tiene en cuenta la cantidad máxima de reintentos posibles
-        # WhatsappSenderJob actualiza la cantidad de envíos
-        if NO_RETRY_CODES.exclude?(callback_params[:ErrorCode]) && @notification.send_to_user?
-          retry_send = true
+        if NO_RETRY_CODES.exclude?(callback_params[:ErrorCode])
+          retry_send = @notification.send_to_user? && !@notification.send_attempts_exceeded?
+
+          if !@notification.send_to_user? && !@notification.send_attempts_exceeded?
+            @notification.skipped!
+          end
         end
       end
     end

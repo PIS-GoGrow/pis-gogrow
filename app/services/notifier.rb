@@ -27,9 +27,7 @@ class Notifier
     notification.whatsapp_send_status = send ? :pending : :skipped
     notification.save!
 
-    if send
-      WhatsappSenderJob.perform_later(notification)
-    end
+    WhatsappSenderJob.perform_later(notification) if send
 
     notification
   rescue ActiveRecord::RecordInvalid => e

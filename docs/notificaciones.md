@@ -153,23 +153,32 @@ Si los locales definidos para una notificación necesitan datos extra, se pueden
 en `title_data` y `description_data`.
 
 # WhatsappSenderJob
-Envía un mensaje de WhatsApp a un número de celular, dados una clave de evento
-configurada en `config/notifications.yml` y los datos extra que se necesiten.
+Envía un mensaje de WhatsApp para una notificación.
+
 Para que funcione, necesitan estar cargadas las credenciales. En development,
 solo corre cuando esta configurada la variable `TWILIO_DELIVERY_ENABLED=true`.
 Las credenciales se configuran con `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
 `TWILIO_PHONE`.
 
+Mientras está corriendo el job, su notificación se marca con estado `sending`.
 Cuando hay un error de red, Twilio responde 429 o un 5xx, se reintenta hasta cinco
 veces el envío. Si los cinco intentos fallan, se marca la notificación con el
-atributo `failed`. Cualquier otro error de Twilio (un 4xx: credenciales, número o
-variables inválidas) no se reintenta y marca `failed` en el momento. Si el Job fue
-exitoso, marca la notifiación como no fallada y registra la hora de envío en el
+estado `send_failed`. Cualquier otro error de Twilio (un 4xx: credenciales, número o
+variables inválidas) no se reintenta y marca `send_failed` en el momento. Si el Job fue
+exitoso, marca la notifiación con estado `accepted` y registra la hora de envío en el
 atributo `whatsapp_sent_at`.
 
-`whatsapp_sent_at` y `failed` solo dicen si Twilio aceptó el mensaje, no si llegó
+`whatsapp_sent_at` y `accepted` solo dicen si Twilio aceptó el mensaje, no si llegó
 al celular. Los errores de entrega (por ejemplo, que el número no tenga WhatsApp)
-Twilio los informa después, por el status callback, y hoy no los recibimos.
+Twilio los informa después, por el status callback. Para poder recibir los callbacks
+de Twilio en ambiente de dev, es necesario configurar la variable
+`TWILIO_STATUS_CALLBACK_URL` a la URL pública que se esté usando (por ejemplo con
+un túnel de cloudflare) más `/twilio-callback`.
+
+Una vez que llega el callback de Twilio, la notificación se marca como `delivered`
+si el envío fue exitoso. Si no, se marca como `delivery_failed` y se reintenta hasta
+un máximo de 5 veces (en los reintentos, la notificación va a volver a pasar por los
+estados `sending` y `accepted`).
 
 `User` guarda el teléfono en formato internacional (`+59899123456`), que es el que
 pide Twilio: lo normaliza con `phonelib`, interpretando como uruguayo un número sin
@@ -191,3 +200,5 @@ plantilla nueva en Twilio y actualizar su SID: las plantillas no se pueden edita
 Este Job no debería ser accedido desde ningún lugar, menos el servicio `Notifier`.
 Supone que Notifier ya chequeó que la clave de evento exista y que todas las
 notificaciones tienen un content SID asignado.
+
+Si `Notifier` decide no enviar la notificación, se marca con estado `skipped`.
