@@ -68,11 +68,17 @@ class Consumer::OrdersController < Consumer::InertiaController
       # rango de fechas permitidas (definidas por Calendar#allowed_order_dates)
       raise ActiveRecord::RecordNotFound unless schedules.size == schedule_ids.uniq.size
 
-      pricing = OrderPricing.new(@consumer).call(
-        requested_items.map { |item| { schedule: schedules.fetch(item[:schedule_id].to_i), quantity: item[:quantity].to_i } }
+      pricings = Orders::Pricing.new(@consumer).call(
+        requested_items.map do |item|
+          {
+            schedule: schedules.fetch(item[:schedule_id].to_i),
+            quantity: item[:quantity].to_i,
+            benefits: item[:benefits]
+          }
+        end
       )
 
-      requested_items.each do |item|
+      requested_items.zip(pricings).each do |item, pricing|
         quantity = item[:quantity].to_i
         schedule = schedules.fetch(item[:schedule_id].to_i)
 
@@ -95,9 +101,9 @@ class Consumer::OrdersController < Consumer::InertiaController
           schedule:,
           quantity:,
           notes: item[:notes],
-          discounted_price: pricing[schedule.id].discounted_price,
+          discounted_price: pricing[1].discounted_price,
           selected_options: selected_options_for(schedule.menu, item[:options]),
-          benefits: pricing[schedule.id].benefits,
+          benefits: pricing[1].benefits,
           **delivery
         )
 
@@ -150,7 +156,20 @@ class Consumer::OrdersController < Consumer::InertiaController
     end
   end
 
+  # Le provee al frontend una interfaz de JSON para el servicio OrderPricing, para poder
+  # calcular el precio de pedidos en el carrito
   def pricing
+    items = build_requested_items
+
+    pricings = Orders::Pricing.new(@consumer).call(items)
+
+    render json: Consumer::OrderPricingSerializer.new(items, pricings)
+  end
+
+  private
+
+  # Convierte las id de schedule
+  def build_requested_items
     requested_items = pricing_params
 
     # Obtenemos las ids de los schedules para los que se hicieron órdenes y traemos
@@ -163,64 +182,10 @@ class Consumer::OrdersController < Consumer::InertiaController
         .order(:id)
         .index_by(&:id)
 
-    requested_items.map! do |item|
+    requested_items.filter_map do |item|
       schedule = schedules.dig(item[:schedule_id].to_i)
-      { schedule:, quantity: item[:quantity].to_i } if schedule
-    end.compact!
-
-    @pricing = OrderPricing.new(@consumer).call(requested_items)
-
-    render json: to_pricing(requested_items, @pricing)
-  end
-
-  private
-
-  def to_pricing(items, pricing)
-    items_by_schedule = items.index_by { |item| item[:schedule].id }
-
-    lines = pricing.to_h do |schedule_id, result|
-      item = items_by_schedule.fetch(schedule_id)
-      quantity = item[:quantity]
-      price = result.price.to_f
-
-      tiers = result.benefits.map do |benefit, units_used|
-        discount = price * units_used * benefit.percentage / 100 / quantity
-
-        {
-          name: benefit.benefit_configuration.name,
-          percentage: benefit.percentage,
-          quantity: units_used,
-          discount: discount.to_f
-        }
-      end
-
-      discount = price - result.discounted_price.to_f
-      [
-        schedule_id.to_s,
-        {
-          subtotal: price,
-          discount: discount,
-          total: price - discount,
-          tiers: tiers
-        }
-      ]
+      { schedule:, quantity: item[:quantity].to_i, benefits: item[:benefits] } if schedule
     end
-
-    {
-      subtotal: lines.values.sum { |line| line[:subtotal] },
-      discount: lines.values.sum { |line| line[:discount] },
-      total: lines.values.sum { |line| line[:total] },
-      lines: lines,
-      subsidizedQuantity: items.sum do |item|
-        pricing.fetch(item[:schedule][:id]).benefits.sum { |_, u| u }
-      end,
-      fullPriceQuantity: items.sum do |item|
-        schedule_id = item[:schedule][:id]
-        quantity = item[:quantity]
-        subsidized = pricing.fetch(schedule_id).benefits.sum { |_, u| u }
-        quantity - subsidized
-      end
-    }
   end
 
   def reject_update(order, reason)
@@ -288,11 +253,11 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def order_params
-    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] } ] ] ])
+    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] }, benefits: [] ] ] ])
   end
 
   def pricing_params
-    params.expect(items: [ [ :schedule_id, :quantity ] ])
+    params.expect(items: [ [ :schedule_id, :quantity, benefits: [] ] ])
   end
 
   def set_consumer

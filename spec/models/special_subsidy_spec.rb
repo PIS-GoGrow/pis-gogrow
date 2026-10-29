@@ -214,10 +214,10 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
       schedules = [ Date.new(2026, 5, 13), Date.new(2026, 5, 14), Date.new(2026, 5, 20), Date.new(2026, 5, 21) ].map { Schedule.create!(menu:, date: it, amount: 10) }
 
-      pricing = OrderPricing.new(one).call(schedules.map { { schedule: it, quantity: 1 } })
+      pricing = Orders::Pricing.new(one).call(schedules.map { { schedule: it, quantity: 1, benefits: [ benefit.id ] } })
 
       expect(benefit).to have_attributes(consumer: one, starts_on: Date.new(2026, 5, 14), due_date: Date.new(2026, 5, 20), status: "current")
-      expect(schedules.map { pricing[it.id].benefits.key?(benefit) }).to eq([ false, true, true, false ])
+      expect(pricing.map { |p| p.second.benefits.key?(benefit) }).to eq([ false, true, true, false ])
     end
 
     it "al sacar a un empleado de la lista le vence el cupón y los demás lo conservan" do
@@ -238,14 +238,14 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
       today, tomorrow = [ Date.current, Date.tomorrow ].map { Schedule.create!(menu:, date: it, amount: 10) }
       orders = [ today, tomorrow ].map do |schedule|
-        Order.reserve(consumer: one, schedule:, delivery_method: :office, address: nil, discounted_price: 210, benefits: { benefit => 1 })
+        Order.reserve(consumer: one, schedule:, delivery_method: :office, address: nil, discounted_price: 210, benefits: { benefit => Orders::Pricing::BenefitUsed[1, 90] })
       end
       orders.first.update!(status: :confirmed)
 
       save_coupon(configuration, consumer_ids: [ other.id ])
 
       orders.each { expect(it.reload).to have_attributes(discounted_price: 210, benefits: [ benefit ]) }
-      expect(OrderPricing.new(one).call([ { schedule: tomorrow, quantity: 1 } ])[tomorrow.id].benefits).not_to have_key(benefit)
+      expect(Orders::Pricing.new(one).call([ { schedule: tomorrow, quantity: 1, benefits: [ benefit.id ] } ]).first.second.benefits).not_to have_key(benefit)
 
       configuration.deactivate!(by: admin_user)
 
@@ -257,11 +257,11 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       benefit = one.benefits.find_by!(benefit_configuration: configuration)
       menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
       schedule = Schedule.create!(menu:, date: Date.tomorrow, amount: 10)
-      order = Order.reserve(consumer: one, schedule:, delivery_method: :office, address: nil, discounted_price: 210, benefits: { benefit => 1 })
+      order = Order.reserve(consumer: one, schedule:, delivery_method: :office, address: nil, discounted_price: 210, benefits: { benefit => Orders::Pricing::BenefitUsed[1, 90] })
 
       configuration.deactivate!(by: admin_user)
 
-      expect(OrderPricing.new(one, modifiable_order: order).call([ { schedule:, quantity: 2 } ])[schedule.id].benefits).to include(benefit => 1)
+      expect(Orders::Pricing.new(one, modifiable_order: order).call([ { schedule:, quantity: 2, benefits: [ benefit.id ] } ]).first.second.benefits).to include(benefit => Orders::Pricing::BenefitUsed[1, 90])
     end
 
     it "les avisa solo a los empleados elegidos, una vez" do
