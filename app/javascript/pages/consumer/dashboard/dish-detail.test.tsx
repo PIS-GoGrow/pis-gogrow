@@ -26,6 +26,7 @@ const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
     description: "Pasta rellena a elección",
     price: 320,
     provider_id: 1,
+    saved_menu_id: 10,
     option_groups: [],
     provider_name: "Endulzate by Noe",
     home_delivery: true,
