@@ -55,6 +55,7 @@ const cartItem = (
   quantity: 1,
   notes: "",
   selections: {},
+  benefits: [],
   menu: {
     id: id * 10,
     name: `Plato ${id}`,
@@ -158,7 +159,7 @@ describe("ConsumerCart delivery address", () => {
 
     expect(within(sheet).getByLabelText("Nombre")).toHaveAttribute(
       "placeholder",
-      "Ej: Oficina, Casa, etc.",
+      "Ej: Casa, Gimnasio, etc.",
     )
     expect(within(sheet).getByLabelText("Dirección")).toBeInTheDocument()
     expect(
@@ -267,14 +268,14 @@ describe("ConsumerCart without subsidy", () => {
     subtotal: 301 * quantity,
     discount: 0,
     total: 301 * quantity,
-    lines: {
-      "1": {
+    lines: [
+      {
         subtotal: 301 * quantity,
         discount: 0,
         total: 301 * quantity,
         tiers: [],
       },
-    },
+    ],
     subsidizedQuantity: subsidized,
     fullPriceQuantity: quantity - subsidized,
   })

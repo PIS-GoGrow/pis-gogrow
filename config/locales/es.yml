@@ -81,6 +81,20 @@ es:
     password_required: "Ingresá una contraseña."
     order_not_modifiable: "Este pedido ya no se puede modificar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
+    menu_import:
+      name: "Falta el nombre del plato."
+      description: "Falta la descripción."
+      price: "El precio tiene que ser un número mayor que cero."
+      options: "No se entendió el grupo de opciones «%{cell}». Se escribe así: Nombre=opción 1, opción 2"
+      duplicated_options: "El grupo «%{name}» tiene opciones repetidas."
+      duplicated_groups: "Hay más de un grupo de opciones llamado «%{name}»."
+      file:
+        unsupported_format: "El archivo tiene que ser .xlsx, .xls, .csv o .ods."
+        unreadable: "No se pudo leer la planilla. Descargá la plantilla y volvé a intentar."
+        empty: "La planilla no tiene ningún plato."
+        too_big: "El archivo no puede pesar más de %{max} MB."
+        too_many_rows: "La planilla no puede tener más de %{max} platos."
+        missing_columns: "Faltan columnas en la planilla: %{columns}."
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
     payment_current_account: "No se puede subir ni aprobar un comprobante mientras el mes siga en curso."
@@ -359,6 +373,7 @@ es:
       sessions: "Sesiones"
       appearance: "Apariencia"
       notifications: "Notificaciones"
+      addresses: "Direcciones"
     payments: "Pagos"
     collections: "Cobros"
     consumer:
@@ -460,6 +475,7 @@ es:
       order_events:
         index:
           title: "Auditoría de pedidos"
+          back: "Volver a Cuenta"
           description: "Cada creación y cambio de un pedido, con quién lo hizo. El registro no se puede editar ni borrar."
           filters:
             order: "Pedido"
@@ -528,7 +544,7 @@ es:
       benefit_configurations:
         index:
           title: "Subsidios"
-          description: "Gestioná los subsidios de tu empresa"
+          description: "Gestioná los subsidios de tu compañía"
           back: "Volver a Cuenta"
           current:
             title: "Subsidio Base"
@@ -538,9 +554,9 @@ es:
             max_voucher_price: "Cuando el precio por vianda es"
             monthly_voucher_limit: "Hasta un límite por empleado de"
             monthly_voucher_limit_unit: "viandas"
-            notice: "Los cambios se aplicarán el %{date}."
+            notice: "Los cambios se aplicarán en el próximo período."
             cancel: "Cancelar"
-            submit: "Programar Subsidio"
+            submit: "Guardar cambios"
             scheduled_banner:
               title: "Tus cambios están programados"
               description: "La nueva configuración de subsidios se aplicará a partir del próximo período."
@@ -728,6 +744,13 @@ es:
           meals_other: "%{count} viandas"
           due: "Vence: %{date}"
           see_detail: "Ver detalle"
+          confirmed: "Confirmado"
+          total_paid: "Total pagado"
+          download_invoice: "Descargar factura"
+          download_receipt: "Descargar comprobante de pago"
+          providers_filter: "Proveedores:"
+          all_providers: "Todos"
+          filter_providers: "Filtrar por proveedor"
           detail:
             title: "%{provider}: Consumo %{month}"
             loading_title: "Detalle del consumo"
@@ -1405,7 +1428,7 @@ es:
         title: "Agregar una dirección"
         description: "Ingresá dónde querés recibir el pedido."
         name: "Nombre"
-        name_placeholder: "Ej: Oficina, Casa, etc."
+        name_placeholder: "Ej: Casa, Gimnasio, etc."
         street: "Dirección"
         apartment: "Piso / Apartamento (opcional)"
         save_for_later: "Guardar esta dirección para futuros pedidos"
@@ -1465,6 +1488,72 @@ es:
         settings: "Configuración"
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
+        settings: "Configuración"
+        notifications: "Notificaciones"
+        notifications_description: "Configurá qué alertas querés recibir"
+        addresses: "Direcciones"
+        addresses_description: "Gestioná tus direcciones de entrega"
+    provider_menu_imports:
+      new:
+        title: "Importar platos"
+        back: "Volver al menú"
+        intro: "Importá varios platos a la vez y agregalos al menú cuando quieras."
+        download:
+          title: "Descargá la plantilla"
+          description: "Completá una fila por plato sin modificar los encabezados. Incluye un ejemplo con opciones."
+          action: "Descargar plantilla"
+        upload:
+          title: "Subí tu archivo"
+          description: "Soporta %{formats} hasta %{size} MB"
+          choose: "Seleccionar archivo"
+          empty: "Sin archivos seleccionados"
+          remove: "Quitar el archivo"
+          action: "Subir archivo"
+        file_error: "No se pudo leer la planilla"
+        summary:
+          title: "Resumen"
+          new_one: "%{count} Nuevo"
+          new_other: "%{count} Nuevos"
+          error_one: "%{count} Error"
+          error_other: "%{count} Errores"
+          exists_one: "%{count} Ya existe"
+          exists_other: "%{count} Ya existen"
+          updated_one: "%{count} Actualizado"
+          updated_other: "%{count} Actualizados"
+        card:
+          unnamed: "Sin nombre"
+          price: "Precio: %{price}"
+          no_price: "Precio: -"
+          new: "Nuevo"
+          error: "Error"
+          exists: "Ya existe"
+          updated: "Actualizado"
+          exists_warning: "Este plato no se importará a menos que elijas una de las siguientes acciones."
+          remove: "Quitar"
+          edit: "Editar"
+          duplicate: "Duplicar"
+          update: "Actualizar"
+          reset: "Reestablecer"
+        edit:
+          title: "Editar plato"
+        update_dialog:
+          title: "¿Actualizar el plato guardado?"
+          description: "Este plato se actualizará en tus platos guardados."
+          keep: "Mantener los pedidos confirmados"
+          keep_description: "Los pedidos afectados que están confirmados no se modificarán."
+          reject: "Rechazar los pedidos confirmados"
+          reject_description: "Los pedidos afectados que están confirmados se cancelarán."
+          back: "Volver"
+          apply: "Aplicar cambios"
+        imported:
+          title: "¡Platos importados!"
+          description: "Los platos importados ya están disponibles en Platos guardados."
+          back: "Volver a Menú"
+          again: "Seguir importando"
+        import: "Importar platos"
+        cancel: "Cancelar"
+        blocked: "Corregí o quitá los platos con error para poder importar."
+        nothing: "Elegí al menos un plato para importar."
     provider_accounts:
       show:
         title: "Cuenta"
@@ -1597,6 +1686,11 @@ es:
           description: "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}"
           empty: "%{provider} no recibirá pedidos del %{period}."
           dismiss: "Cerrar aviso"
+      detail:
+        add: "Agregar"
+        reached_100:
+          one: "Se llegó al 100%, no se aplicará el beneficio %{benefits}"
+          other: "Se llegó al 100%, no se aplicarán los beneficios: %{benefits}"
       options:
         choose: "Elegí tu/s %{name}"
         limit: "Podés elegir hasta %{count}"
@@ -1693,6 +1787,35 @@ es:
         preferences_description: "Activá o desactivá las categorías de avisos que querés recibir."
         back: "Volver a Cuenta"
         back_to_account: "Volver a Mi cuenta"
+    consumer_delivery_addresses:
+      index:
+        title: "Direcciones"
+        description: "Gestioná tus direcciones de entrega"
+        back: "Volver a Cuenta"
+        office: "Oficina"
+        add: "Agregar dirección"
+        edit: "Editar %{name}"
+      form:
+        create_title: "Agregar una dirección"
+        edit_title: "Editar dirección"
+        description: "Completá los datos de la dirección de entrega"
+        name: "Nombre"
+        name_placeholder: "Ej: Casa, Gimnasio, etc."
+        street: "Dirección"
+        apartment: "Piso/Apartamento (opcional)"
+        cancel: "Cancelar"
+        create: "Agregar"
+        update: "Guardar cambios"
+        delete: "Eliminar"
+      delete:
+        title: "¿Eliminar %{name}?"
+        description: "Esta dirección no podrá recuperarse. Podés agregar una nueva cuando quieras."
+        back: "Volver"
+        submit: "Eliminar dirección"
+        deleting: "Eliminando..."
+        success_title: "Dirección eliminada"
+        success_description: "La dirección se eliminó correctamente."
+        done: "Listo"
   date:
     formats:
       default: "%d/%m/%y"

@@ -42,15 +42,28 @@ RSpec.describe Consumer, type: :model do
       Order.create!(consumer:, schedule:, amount: 1, price: 300, address:, delivery_method: :home, created_at:)
     end
 
-    it "lists the office, the profile address and the saved ones, newest first" do
-      consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892", created_at: 2.days.ago)
-      consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
+    it "lists the office and the saved addresses, newest first" do
+      consumer.saved_addresses.create!(
+        name: "Casa",
+        street: "Ellauri 1234",
+        created_at: 3.days.ago
+      )
+      consumer.saved_addresses.create!(
+        name: "Flora Café",
+        street: "Canelones 892",
+        created_at: 2.days.ago
+      )
+      consumer.saved_addresses.create!(
+        name: "La Bicicleta Café",
+        street: "Bv. España 2643",
+        apartment: "Local 2"
+      )
 
       expect(consumer.delivery_address_options.pluck(:label, :address)).to eq([
         [ "Oficina", company_address ],
-        [ "Casa", "Ellauri 1234" ],
         [ "La Bicicleta Café", "Bv. España 2643, Local 2" ],
-        [ "Flora Café", "Canelones 892" ]
+        [ "Flora Café", "Canelones 892" ],
+        [ "Casa", "Ellauri 1234" ]
       ])
     end
 
@@ -239,13 +252,28 @@ RSpec.describe Consumer, type: :model do
   end
 
   describe "#delivery_addresses" do
-    it "returns both consumer and company addresses when both are present" do
-      expect(consumer.delivery_addresses).to contain_exactly(consumer.address, consumer.company.address)
+    it "returns the company address and the saved addresses" do
+      casa = consumer.saved_addresses.create!(
+        name: "Casa",
+        street: "Julio Herrera y Reissig 565"
+      )
+
+      otra = consumer.saved_addresses.create!(
+        name: "Flora Café",
+        street: "Canelones 892"
+      )
+
+      expect(consumer.delivery_addresses).to contain_exactly(
+        consumer.company.address,
+        casa.full_address,
+        otra.full_address
+      )
     end
 
-    it "omits blank consumer addresses" do
-      consumer.update!(address: "")
-      expect(consumer.delivery_addresses).to eq([ consumer.company.address ])
+    it "does not expose the legacy consumer address" do
+      expect(consumer.address).to be_present
+
+      expect(consumer.delivery_addresses).not_to include(consumer.address)
     end
   end
 

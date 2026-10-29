@@ -116,4 +116,12 @@ RSpec.describe "Auditoría de pedidos", type: :system do
     expect(page).to have_css("tbody tr", count: 1)
     expect(page).to have_no_css("tbody button, tbody a, tbody input")
   end
+
+  it "permite volver a Cuenta con la flecha junto al título" do
+    sign_in users(:admin), role: :admin
+    visit_hydrated admin_order_events_path
+
+    find("a[aria-label='Volver a Cuenta']").click
+    expect(page).to have_current_path(admin_account_path)
+  end
 end

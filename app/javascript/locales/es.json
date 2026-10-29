@@ -111,6 +111,7 @@
         "payments": "Cobros"
       },
       "settings": {
+        "addresses": "Direcciones",
         "appearance": "Apariencia",
         "email": "Correo electrónico",
         "notifications": "Notificaciones",
@@ -367,7 +368,7 @@
               "max_voucher_price": "Cuando el precio por vianda es",
               "monthly_voucher_limit": "Hasta un límite por empleado de",
               "monthly_voucher_limit_unit": "viandas",
-              "notice": "Los cambios se aplicarán el %{date}.",
+              "notice": "Los cambios se aplicarán en el próximo período.",
               "pending_conflict": {
                 "description": "Se descuenta %{subsidy_percentage}%, cuando el precio por vianda es ≤%{max_voucher_price}, hasta un límite de %{monthly_voucher_limit} viandas por empleado.",
                 "keep": "Mantener el programado",
@@ -381,7 +382,7 @@
                 "dismiss": "Cerrar aviso",
                 "title": "Tus cambios están programados"
               },
-              "submit": "Programar Subsidio",
+              "submit": "Guardar cambios",
               "subsidy_percentage": "Se descuenta",
               "title": "Subsidio Base"
             },
@@ -393,7 +394,7 @@
               "threshold": "Monto límite",
               "title": "Alerta de deuda"
             },
-            "description": "Gestioná los subsidios de tu empresa",
+            "description": "Gestioná los subsidios de tu compañía",
             "special": {
               "add": "Agregar",
               "applies_to": "Aplicado a",
@@ -612,6 +613,7 @@
             },
             "actor": "Actor",
             "after": "Nuevo",
+            "back": "Volver a Cuenta",
             "before": "Anterior",
             "changes": "Cambio",
             "description": "Cada creación y cambio de un pedido, con quién lo hizo. El registro no se puede editar ni borrar.",
@@ -658,6 +660,7 @@
         },
         "payments": {
           "index": {
+            "all_providers": "Todos",
             "bank": {
               "account_number": "Nº de cuenta: %{number}",
               "copied": "Número de cuenta copiado",
@@ -666,6 +669,7 @@
               "holder": "Beneficiario: %{holder}",
               "missing": "Este proveedor todavía no cargó sus datos de cobro."
             },
+            "confirmed": "Confirmado",
             "detail": {
               "company": "GoGrow",
               "description": "Lo que la empresa le paga al proveedor en el mes y los pedidos confirmados de cada día.",
@@ -684,9 +688,12 @@
               "user": "Usuario",
               "vat": "IVA (%{rate}%)"
             },
+            "download_invoice": "Descargar factura",
+            "download_receipt": "Descargar comprobante de pago",
             "due": "Vence: %{date}",
             "empty_history_description": "Cuando termines de pagar un período, va a aparecer acá.",
             "empty_history_title": "Todavía no hay períodos pagados",
+            "filter_providers": "Filtrar por proveedor",
             "history_tab": "Historial",
             "meals_one": "%{count} vianda",
             "meals_other": "%{count} viandas",
@@ -699,11 +706,13 @@
             "pending_meals_other": "(%{count} viandas)",
             "pending_payments": "Pagos pendientes",
             "pending_tab": "Pendientes",
+            "providers_filter": "Proveedores:",
             "section": "Pagos",
             "see_detail": "Ver detalle",
             "spending": "Tu consumo",
             "title": "Pagos",
             "total_debt": "Deuda total",
+            "total_paid": "Total pagado",
             "view_detail": "Ver detalle del consumo"
           }
         },
@@ -740,7 +749,7 @@
           "cancel": "Cancelar",
           "description": "Ingresá dónde querés recibir el pedido.",
           "name": "Nombre",
-          "name_placeholder": "Ej: Oficina, Casa, etc.",
+          "name_placeholder": "Ej: Casa, Gimnasio, etc.",
           "save_for_later": "Guardar esta dirección para futuros pedidos",
           "street": "Dirección",
           "submit": "Agregar",
@@ -766,6 +775,13 @@
           "title": "Tu consumo",
           "unit": "viandas pedidas",
           "used": "%{used} de %{limit}"
+        },
+        "detail": {
+          "add": "Agregar",
+          "reached_100": {
+            "one": "Se llegó al 100%, no se aplicará el beneficio %{benefits}",
+            "other": "Se llegó al 100%, no se aplicarán los beneficios: %{benefits}"
+          }
         },
         "index": {
           "add": "Agregar",
@@ -805,8 +821,43 @@
           "required": "Obligatorio"
         }
       },
+      "consumer_delivery_addresses": {
+        "delete": {
+          "back": "Volver",
+          "deleting": "Eliminando...",
+          "description": "Esta dirección no podrá recuperarse. Podés agregar una nueva cuando quieras.",
+          "done": "Listo",
+          "submit": "Eliminar dirección",
+          "success_description": "La dirección se eliminó correctamente.",
+          "success_title": "Dirección eliminada",
+          "title": "¿Eliminar %{name}?"
+        },
+        "form": {
+          "apartment": "Piso/Apartamento (opcional)",
+          "cancel": "Cancelar",
+          "create": "Agregar",
+          "create_title": "Agregar una dirección",
+          "delete": "Eliminar",
+          "description": "Completá los datos de la dirección de entrega",
+          "edit_title": "Editar dirección",
+          "name": "Nombre",
+          "name_placeholder": "Ej: Casa, Gimnasio, etc.",
+          "street": "Dirección",
+          "update": "Guardar cambios"
+        },
+        "index": {
+          "add": "Agregar dirección",
+          "back": "Volver a Cuenta",
+          "description": "Gestioná tus direcciones de entrega",
+          "edit": "Editar %{name}",
+          "office": "Oficina",
+          "title": "Direcciones"
+        }
+      },
       "consumer_profiles": {
         "show": {
+          "addresses": "Direcciones",
+          "addresses_description": "Gestioná tus direcciones de entrega",
           "benefit": "Mi beneficio",
           "coupon_discount": "%{percentage}% de descuento",
           "coupon_period": "Para entregas del",
@@ -1251,6 +1302,76 @@
           "heading": "Registrate con Email",
           "submit": "Registrarse",
           "title": "Registro de proveedor"
+        }
+      },
+      "provider_menu_imports": {
+        "new": {
+          "back": "Volver al menú",
+          "blocked": "Corregí o quitá los platos con error para poder importar.",
+          "cancel": "Cancelar",
+          "card": {
+            "duplicate": "Duplicar",
+            "edit": "Editar",
+            "error": "Error",
+            "exists": "Ya existe",
+            "exists_warning": "Este plato no se importará a menos que elijas una de las siguientes acciones.",
+            "new": "Nuevo",
+            "no_price": "Precio: -",
+            "price": "Precio: %{price}",
+            "remove": "Quitar",
+            "reset": "Reestablecer",
+            "unnamed": "Sin nombre",
+            "update": "Actualizar",
+            "updated": "Actualizado"
+          },
+          "download": {
+            "action": "Descargar plantilla",
+            "description": "Completá una fila por plato sin modificar los encabezados. Incluye un ejemplo con opciones.",
+            "title": "Descargá la plantilla"
+          },
+          "edit": {
+            "title": "Editar plato"
+          },
+          "file_error": "No se pudo leer la planilla",
+          "import": "Importar platos",
+          "imported": {
+            "again": "Seguir importando",
+            "back": "Volver a Menú",
+            "description": "Los platos importados ya están disponibles en Platos guardados.",
+            "title": "¡Platos importados!"
+          },
+          "intro": "Importá varios platos a la vez y agregalos al menú cuando quieras.",
+          "nothing": "Elegí al menos un plato para importar.",
+          "summary": {
+            "error_one": "%{count} Error",
+            "error_other": "%{count} Errores",
+            "exists_one": "%{count} Ya existe",
+            "exists_other": "%{count} Ya existen",
+            "new_one": "%{count} Nuevo",
+            "new_other": "%{count} Nuevos",
+            "title": "Resumen",
+            "updated_one": "%{count} Actualizado",
+            "updated_other": "%{count} Actualizados"
+          },
+          "title": "Importar platos",
+          "update_dialog": {
+            "apply": "Aplicar cambios",
+            "back": "Volver",
+            "description": "Este plato se actualizará en tus platos guardados.",
+            "keep": "Mantener los pedidos confirmados",
+            "keep_description": "Los pedidos afectados que están confirmados no se modificarán.",
+            "reject": "Rechazar los pedidos confirmados",
+            "reject_description": "Los pedidos afectados que están confirmados se cancelarán.",
+            "title": "¿Actualizar el plato guardado?"
+          },
+          "upload": {
+            "action": "Subir archivo",
+            "choose": "Seleccionar archivo",
+            "description": "Soporta %{formats} hasta %{size} MB",
+            "empty": "Sin archivos seleccionados",
+            "remove": "Quitar el archivo",
+            "title": "Subí tu archivo"
+          }
         }
       },
       "provider_menus": {

@@ -66,13 +66,24 @@ RSpec.describe "Consultar el menú disponible por fecha" do
     within("[role=radiogroup]") { find("[role=radio]", text: /\b#{date.day}\b/).click }
   end
 
+  def open_provider_filter
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      loop do
+        find("button[aria-label='Filtrar por proveedores']").click
+        break if page.has_css?("[data-provider-filter-sheet]", wait: 0.5)
+      rescue Capybara::ElementNotFound
+        sleep 0.2
+      end
+    end
+  end
+
   it "conserva el filtro al navegar a pagos e historial y volver al menu" do
     publish(menus(:milanesa), monday)
     publish(menus(:sorrentinos), monday)
     sign_in users(:one), role: :consumer
     visit_hydrated dashboard_path
 
-    find("button[aria-label='Filtrar por proveedores']").click
+    open_provider_filter
     within("[data-provider-filter-sheet]") do
       all("[role=checkbox]").reject { |checkbox| checkbox[:id] == "dashboard-filter-all" || checkbox[:id] == "dashboard-filter-#{menus(:milanesa).provider_id}" }.each(&:click)
       click_button "Aplicar"
@@ -82,15 +93,19 @@ RSpec.describe "Consultar el menú disponible por fecha" do
     find("a[href='#{accounts_path}']", match: :first).click
     expect(page).to have_current_path(accounts_path)
     find("a[href='#{dashboard_path}']", match: :first).click
+    expect(page).to have_current_path(dashboard_path)
     expect(page).to have_content("Milanesa con papas fritas")
     expect(page).to have_no_content("Sorrentinos artesanales")
 
     find("a[href='#{orders_path}']", match: :first).click
+    expect(page).to have_current_path(orders_path)
     find("[role=tab]", text: "Historial").click
     expect(page).to have_content("Todos los proveedores")
     find("a[href='#{dashboard_path}']", match: :first).click
+    expect(page).to have_current_path(dashboard_path)
+    expect(page).to have_content("Milanesa con papas fritas")
     expect(page).to have_no_content("Sorrentinos artesanales")
-    find("button[aria-label='Filtrar por proveedores']").click
+    open_provider_filter
     within("[data-provider-filter-sheet]") do
       find("#dashboard-filter-all").click
       click_button "Aplicar"
