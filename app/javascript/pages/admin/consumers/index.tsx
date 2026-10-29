@@ -154,7 +154,7 @@ export default function Index({
             </EmptyHeader>
           </Empty>
         ) : (
-          <Card className="gap-0 divide-y rounded-xl py-0 shadow-sm overflow-hidden">
+          <Card className="gap-0 divide-y overflow-hidden rounded-xl py-0 shadow-sm">
             {shown.map((consumer) => (
               <div
                 key={consumer.id}
@@ -173,7 +173,7 @@ export default function Index({
                 <div className="min-w-0 flex-1">
                   <Link
                     href={adminConsumers.show(consumer.id).url}
-                    className="truncate font-medium after:absolute after:inset-0 hover:underline block"
+                    className="block truncate font-medium after:absolute after:inset-0 hover:underline"
                   >
                     {consumer.name}
                   </Link>
