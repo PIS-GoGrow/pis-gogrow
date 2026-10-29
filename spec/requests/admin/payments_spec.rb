@@ -47,6 +47,14 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    it "redirects a provider to the home page" do
+      sign_in users(:provider_user), role: :provider
+
+      get admin_payments_path
+
+      expect(response).to redirect_to(root_path)
+    end
+
     context "when signed in as HR" do
       before { sign_in users(:admin), role: :admin }
 
@@ -96,6 +104,40 @@ RSpec.describe "Admin::Payments", type: :request do
       end
 
       it "offers no invoice to download until the provider sends it" do
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole[:invoice_download_url]).to be_nil
+      end
+
+      it "uses the newest approved payment when an account has multiple approved payments" do
+        account = accounts(:gogrow_tuviandita_previous)
+        payment = payments(:gogrow_previous_approved)
+        payment.receipt.attach(receipt_upload(filename: "comprobante_1.png"))
+
+        newer_payment = account.payments.create!(
+          provider: account.provider,
+          status: :approved,
+          created_at: payment.created_at + 1.day
+        )
+        newer_payment.receipt.attach(receipt_upload(filename: "comprobante_2.png"))
+
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole).to include(
+          paid_on: DateFormat.short(newer_payment.created_at),
+          receipt_download_url: receipt_admin_payment_path(newer_payment)
+        )
+      end
+
+      it "does not offer invoice download when invoice is rejected" do
+        account = accounts(:gogrow_tuviandita_previous)
+        account.invoices.create!(
+          issued_on: Date.current,
+          total_amount: 900,
+          status: :rejected,
+          file: receipt_upload(filename: "factura_rechazada.png")
+        )
+
         get admin_payments_path
 
         expect(inertia.props[:history].sole[:invoice_download_url]).to be_nil

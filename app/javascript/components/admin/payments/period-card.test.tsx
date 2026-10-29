@@ -104,6 +104,13 @@ describe("PeriodCard", () => {
     expect(header?.querySelector("[data-status='pending']")).toBeInTheDocument()
   })
 
+  it("highlights overdue date when due_date_passed is true", () => {
+    renderCard(makeAccount({ due_date_passed: true }))
+
+    const dueText = screen.getByText("Vence: 10/10/26")
+    expect(dueText.className).toContain("text-red-600")
+  })
+
   // Historia IBP-061 y diseño de Figma del Historial de RR. HH.
   describe("when the payment was confirmed", () => {
     const paid = makeAccount({
@@ -149,6 +156,14 @@ describe("PeriodCard", () => {
 
       expect(
         screen.queryByRole("link", { name: "Descargar factura" }),
+      ).not.toBeInTheDocument()
+    })
+
+    it("leaves out the receipt download if not available", () => {
+      renderCard({ ...paid, receipt_download_url: undefined }, "TuViandita")
+
+      expect(
+        screen.queryByRole("link", { name: "Descargar comprobante de pago" }),
       ).not.toBeInTheDocument()
     })
   })

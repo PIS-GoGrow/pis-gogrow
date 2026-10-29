@@ -197,6 +197,38 @@ describe("Admin Payments Page", () => {
     expect(screen.getByText(/Tu Viandita: agosto/)).toBeInTheDocument()
   })
 
+  it("shows empty state in history tab when filtered provider has no history", async () => {
+    const user = userEvent.setup()
+    const paid = { ...account, collection_status: "approved" as const }
+    const bankless = {
+      home_delivery: true,
+      bank_name: null,
+      bank_account_number: null,
+      bank_account_holder: null,
+    }
+
+    render(
+      <Index
+        {...props}
+        history={[{ ...paid, id: 1, provider_id: 1 }]}
+        providers={[
+          { id: 1, name: "Endulzate by Noe", ...bankless },
+          { id: 2, name: "Tu Viandita", ...bankless },
+        ]}
+      />,
+    )
+
+    await user.click(screen.getByRole("tab", { name: "Historial" }))
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedor" }),
+    )
+    await user.click(screen.getByRole("menuitemradio", { name: "Tu Viandita" }))
+
+    expect(
+      screen.getByText("Todavía no hay períodos pagados"),
+    ).toBeInTheDocument()
+  })
+
   it("shows the meals next to the pending total", () => {
     render(<Index {...props} total_debt={19500} total_meals={130} />)
 

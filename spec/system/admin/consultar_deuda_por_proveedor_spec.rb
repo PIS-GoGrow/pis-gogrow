@@ -58,7 +58,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
   def sign_in_as_hr
     sign_in users(:admin), role: :admin
-    visit admin_payments_path
+    visit_hydrated admin_payments_path
   end
 
   # El detalle del período se pide por fetch y se pinta en un panel, así que
@@ -181,6 +181,65 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
       within(:css, "[data-status='approved']") { expect(page).to have_content("Confirmado") }
       expect(page).to have_content(money(settled_period.amount))
       expect(page).to have_no_content("Vence:")
+    end
+
+    it "shows confirmed period details and download links in history without upload button" do
+      payment = payments(:gogrow_previous_approved)
+      payment.receipt.attach(
+        io: StringIO.new("fake receipt"),
+        filename: "comprobante.png",
+        content_type: "image/png"
+      )
+      settled_period.invoices.create!(
+        issued_on: Date.current,
+        total_amount: 900,
+        status: :approved,
+        file: {
+          io: StringIO.new("fake invoice"),
+          filename: "factura.png",
+          content_type: "image/png"
+        }
+      )
+
+      sign_in_as_hr
+
+      click_on "Historial"
+
+      within(:css, "[data-status='approved']") { expect(page).to have_content("Confirmado") }
+      expect(page).to have_content("Total pagado")
+      expect(page).to have_content(money(settled_period.amount))
+      expect(page).to have_content("Ver detalle")
+      expect(page).to have_no_content("Subir comprobante de pago")
+      expect(page).to have_link("Descargar factura")
+      expect(page).to have_link("Descargar comprobante de pago")
+    end
+
+    it "filters history by provider" do
+      other_account = Account.create!(
+        owner: companies(:gogrow),
+        provider: providers(:endulzate),
+        month: 2.months.ago.beginning_of_month,
+        amount: 300.0
+      )
+      other_account.payments.create!(
+        provider: providers(:endulzate),
+        status: :approved
+      )
+
+      sign_in_as_hr
+
+      click_on "Historial"
+
+      expect(page).to have_content("Proveedores: Todos")
+      expect(page).to have_content("Provider User:")
+      expect(page).to have_content("Other Provider User:")
+
+      find("button[aria-label='Filtrar por proveedor']").click
+      find("[role='menuitemradio']", text: "Provider User", exact_text: true).click
+
+      expect(page).to have_content("Proveedores: Provider User")
+      expect(page).to have_content("Provider User:")
+      expect(page).to have_no_content("Other Provider User:")
     end
   end
 
