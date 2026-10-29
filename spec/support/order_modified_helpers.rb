@@ -4,8 +4,7 @@ module OrderModifiedHelpers
   # Al modificar un pedido se abre un modal sobre la pantalla de edición; "Listo"
   # lleva a Mis pedidos.
   def confirm_order_modified
-    within("[role=dialog]") do
-      expect(page).to have_content("Pedido modificado")
+    within("[role=dialog]", text: "Pedido modificado") do
       click_button "Listo"
     end
 

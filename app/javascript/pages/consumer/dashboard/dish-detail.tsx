@@ -41,6 +41,7 @@ interface Props {
   fixedBenefitIds?: number[]
   badge?: ReactNode
   processing?: boolean
+  submitDisabled?: boolean
   children?: ReactNode
 }
 
@@ -62,6 +63,7 @@ export function DishDetail({
   fixedBenefitIds,
   badge,
   processing = false,
+  submitDisabled = false,
   children,
 }: Props) {
   const { t } = useTranslation()
@@ -187,7 +189,11 @@ export function DishDetail({
     (group) => group.required && !selections[group.id]?.length,
   )
   const addDisabled =
-    item.sold_out || item.orders_closed || choicesMissing || processing
+    item.sold_out ||
+    item.orders_closed ||
+    choicesMissing ||
+    processing ||
+    submitDisabled
 
   return (
     <MobileCard>

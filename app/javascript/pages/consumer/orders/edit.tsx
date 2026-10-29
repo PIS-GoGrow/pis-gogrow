@@ -3,6 +3,9 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { CancelOrderDialog } from "@/components/orders/cancel-order-sheet"
+import ConfirmModifyDialog, {
+  type ConfirmModifyKind,
+} from "@/components/orders/confirm-modify-dialog"
 import OrderUpdatedSheet from "@/components/orders/order-updated-sheet"
 import StatusBadge from "@/components/status-badge"
 import { RadioGroup } from "@/components/ui/radio-group"
@@ -32,18 +35,29 @@ export default function Edit({
 }: ConsumerOrdersEdit) {
   const { t } = useTranslation()
   const [cancelOpen, setCancelOpen] = useState(false)
+  const [confirmKind, setConfirmKind] = useState<ConfirmModifyKind | null>(null)
   const [addedAddresses, setAddedAddresses] = useState<DeliveryAddressOption[]>(
     [],
   )
 
-  const { data, setData, patch, processing, transform } = useForm({
+  const initial = {
     quantity: order.amount ?? 1,
     address: order.address ?? delivery_addresses[0]?.address ?? "",
     notes: order.notes ?? "",
     selections: Object.fromEntries(
       order.selected_options.map((option) => [option.group_id, option.values]),
     ),
-  })
+  }
+
+  const { data, setData, patch, processing, transform } = useForm(initial)
+
+  // El proveedor ya aceptó un pedido confirmado: no se pisa, se pide otro (o uno
+  // complementario si solo se suman unidades), y antes se pide confirmación.
+  const confirmed = order.status === "confirmed"
+  const sameDetails =
+    JSON.stringify({ ...data, quantity: 0 }) ===
+    JSON.stringify({ ...initial, quantity: 0 })
+  const unchanged = sameDetails && data.quantity === initial.quantity
 
   const addresses = [
     ...delivery_addresses,
@@ -95,7 +109,19 @@ export default function Edit({
       },
     }))
 
-    patch(consumerOrders.update(order.id).url)
+    patch(consumerOrders.update(order.id).url, {
+      onSuccess: () => setConfirmKind(null),
+    })
+  }
+
+  function modify() {
+    if (!confirmed) return save()
+
+    setConfirmKind(
+      sameDetails && data.quantity > initial.quantity
+        ? "add_units"
+        : "modify_confirmed",
+    )
   }
 
   return (
@@ -116,8 +142,9 @@ export default function Edit({
           selections={data.selections}
           setSelections={(selections) => setData("selections", selections)}
           cart={[]}
-          back={() => router.visit(consumerOrders.show(order.id).url)}
-          add={save}
+          back={() => router.visit(consumerOrders.index().url)}
+          add={modify}
+          submitDisabled={confirmed && unchanged}
           onRemove={() => setCancelOpen(true)}
           orderId={order.id}
           benefit={NO_SELECTABLE_BENEFITS}
@@ -162,6 +189,12 @@ export default function Edit({
           order={order}
           open={cancelOpen}
           onOpenChange={setCancelOpen}
+        />
+        <ConfirmModifyDialog
+          kind={confirmKind}
+          processing={processing}
+          onConfirm={save}
+          onClose={() => setConfirmKind(null)}
         />
         <OrderUpdatedSheet />
       </div>

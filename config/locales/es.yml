@@ -892,7 +892,7 @@ es:
         edit: "Editar"
         rejection_reason: "Motivo de rechazo"
         cannot_edit:
-          already_confirmed: "El proveedor ya confirmó este pedido, así que no se puede modificar."
+          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede modificar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede modificar."
       edit:
@@ -902,6 +902,16 @@ es:
           title: "Pedido modificado"
           description: "Te notificaremos cuando el proveedor confirme tu pedido."
           done: "Listo"
+        modify_confirmed_dialog:
+          title: "¿Modificar el pedido?"
+          description: "Este pedido ya fue confirmado. Modificarlo significa que se cancelará y se volverá a pedir uno nuevo, sujeto a la aprobación del proveedor."
+          back: "Volver"
+          confirm: "Modificar pedido"
+        add_units_dialog:
+          title: "¿Agregar más unidades?"
+          description: "Se enviará un pedido complementario al que ya tenés aprobado, sujeto a la aprobación del proveedor."
+          back: "Volver"
+          confirm: "Aumentar pedido"
       addresses:
         office: "Oficina"
         home: "Casa"

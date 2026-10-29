@@ -137,7 +137,7 @@ class Consumer::OrdersController < Consumer::InertiaController
 
     if modified
       flash.inertia[:order_updated] = true
-      redirect_to edit_order_path(order), status: :see_other
+      redirect_to edit_order_path(modified), status: :see_other
     else
       redirect_to order.modifiable? ? edit_order_path(order) : order_path(order),
                   alert: order.errors.full_messages.first || t("validations.order_not_modifiable"),
