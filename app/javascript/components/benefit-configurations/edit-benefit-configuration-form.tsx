@@ -16,10 +16,10 @@ import { Input } from "@/components/ui/input"
 import { formatLongDateInline } from "@/lib/dates"
 import { adminBenefitConfigurations } from "@/routes"
 
-interface EditBenefitConfigurationFormProps {
+export interface EditBenefitConfigurationFormProps {
   defaultValues: {
     subsidy_percentage: number | ""
-    max_voucher_price: number | ""
+    max_voucher_price: number | string
     monthly_voucher_limit: number | ""
   }
   pendingBenefitConfiguration?: {
@@ -43,6 +43,13 @@ interface BenefitConfigurationErrors {
   }[]
 }
 
+function normalizeInteger(value: number | string): number | "" {
+  if (value === "") return ""
+
+  const number = Number(String(value).replace(",", "."))
+  return Number.isFinite(number) ? Math.trunc(number) : ""
+}
+
 export default function EditBenefitConfigurationForm({
   defaultValues,
   pendingBenefitConfiguration,
@@ -55,7 +62,7 @@ export default function EditBenefitConfigurationForm({
 
   const form = useForm({
     subsidy_percentage: defaultValues.subsidy_percentage,
-    max_voucher_price: defaultValues.max_voucher_price,
+    max_voucher_price: normalizeInteger(defaultValues.max_voucher_price),
     monthly_voucher_limit: defaultValues.monthly_voucher_limit,
   })
 
@@ -166,12 +173,22 @@ export default function EditBenefitConfigurationForm({
                 id="max_voucher_price"
                 name="max_voucher_price"
                 type="number"
-                min="0.01"
-                step="0.01"
+                min="1"
+                step="1"
+                inputMode="numeric"
                 className="w-24 text-base"
                 value={data.max_voucher_price}
                 aria-invalid={!!errors.benefit_rules?.at(0)?.max_price}
+                onKeyDown={(event) => {
+                  if ([".", ",", "e", "E", "+", "-"].includes(event.key)) {
+                    event.preventDefault()
+                  }
+                }}
                 onChange={(e) => {
+                  if (e.target.value !== "" && !/^\d+$/.test(e.target.value)) {
+                    return
+                  }
+
                   setData(
                     "max_voucher_price",
                     e.target.value === "" ? "" : Number(e.target.value),
@@ -217,7 +234,7 @@ export default function EditBenefitConfigurationForm({
                   clearErrors("monthly_voucher_limit")
                 }}
               />
-              <span className="text-muted-foreground">
+              <span>
                 {t(
                   "pages.admin.benefit_configurations.index.current.monthly_voucher_limit_unit",
                 )}
@@ -294,17 +311,25 @@ export default function EditBenefitConfigurationForm({
             <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-500">
               <TriangleAlert className="size-4 shrink-0" />
               <span>
-                {t("pages.admin.benefit_configurations.index.current.notice", {
-                  date: formatLongDateInline(configurableMonth),
-                })}
+                {t("pages.admin.benefit_configurations.index.current.notice")}
               </span>
             </div>
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onCancel}>
+            <div className="grid grid-cols-2 gap-3 pt-2 sm:flex sm:justify-end">
+              <Button
+                type="button"
+                variant="secondary"
+                className="text-foreground h-12 rounded-[10px] bg-[#F5F5F5] text-base font-medium hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
+                onClick={onCancel}
+              >
                 {t("pages.admin.benefit_configurations.index.current.cancel")}
               </Button>
-              <Button type="submit" disabled={processing}>
+              <Button
+                type="submit"
+                className="h-12 rounded-[10px] text-base font-medium"
+                disabled={processing}
+                aria-label="Programar Subsidio"
+              >
                 {t("pages.admin.benefit_configurations.index.current.submit")}
               </Button>
             </div>
