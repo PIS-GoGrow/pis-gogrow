@@ -72,8 +72,7 @@ RSpec.describe DebtReminders::Eligibility do
         notification_configuration: configuration,
         event: described_class::EVENT,
         notifiable: consumer_account,
-        title: "Recordatorio de pago",
-        description: "Tienes una deuda pendiente",
+        description_data: { amount: "Inf", provider: "TuViandita", period: "octubre" },
         role: "consumer",
         requires_action: false,
         closed_at: closed ? at : nil

@@ -44,7 +44,7 @@ RSpec.describe "Editar los datos personales del proveedor" do
     fill_in "phone", with: "llamame"
     click_on "Guardar"
 
-    expect(page).to have_css("[data-slot=field-error]", text: "no es válido")
+    expect(page).to have_css("[data-slot=field-error]", text: "No es un celular válido. Si no es de Uruguay, escribilo con + y el código de país.")
     expect(provider_user.reload.phone).to be_nil
   end
 
@@ -58,7 +58,7 @@ RSpec.describe "Editar los datos personales del proveedor" do
     expect(page).to have_content("Tu perfil fue actualizado")
     expect(provider_user.reload.audit_logs.sole).to have_attributes(
       user: provider_user,
-      changeset: { "phone" => [ nil, "099123456" ] }
+      changeset: { "phone" => [ nil, "+59899123456" ] }
     )
   end
 
