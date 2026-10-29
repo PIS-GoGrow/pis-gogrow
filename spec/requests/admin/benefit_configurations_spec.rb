@@ -20,6 +20,18 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(inertia).to have_props(base_subsidy: nil, benefit_configurations: [])
     end
 
+    it "renders the page with current benefit configuration props" do
+      get admin_benefit_configurations_path
+
+      expect(inertia).to render_component("admin/benefit_configurations/index")
+      expect(inertia.props).to include(
+        :benefit_configurations,
+        :configurable_month,
+        :special_subsidies,
+        :employees
+      )
+    end
+
     it "requires an admin session" do
       sign_out
 
@@ -391,6 +403,39 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
         rule_errors = inertia.props[:errors][:benefit_rules].first
         expect(rule_errors).to have_key(:max_price)
         expect(rule_errors).to have_key(:limit)
+      end
+
+      it "mantiene la integridad de la base de datos ante bypass de interfaz con decimales o strings" do
+        expect {
+          post admin_benefit_configurations_path, params: {
+            benefit_configuration: { subsidy_percentage: 50, max_voucher_price: "150.75", monthly_voucher_limit: 20 }
+          }
+        }.not_to change(BenefitConfiguration, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors][:benefit_rules].first[:max_price]).to be_present
+
+        expect {
+          post admin_benefit_configurations_path, params: {
+            benefit_configuration: { subsidy_percentage: 50, max_voucher_price: "invalid_price", monthly_voucher_limit: 20 }
+          }
+        }.not_to change(BenefitConfiguration, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors][:benefit_rules].first[:max_price]).to be_present
+      end
+
+      it "bloquea el acceso a consumidores con mensaje de alerta" do
+        sign_in users(:one), role: :consumer
+
+        expect {
+          post admin_benefit_configurations_path, params: {
+            benefit_configuration: { subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20 }
+          }
+        }.not_to change(BenefitConfiguration, :count)
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to be_present
       end
     end
   end

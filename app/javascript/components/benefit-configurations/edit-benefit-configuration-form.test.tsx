@@ -251,4 +251,56 @@ describe("EditBenefitConfigurationForm", () => {
     expect(screen.getByText("debe ser un número entero")).toBeInTheDocument()
     expect(screen.getByText(/error inesperado/i)).toBeInTheDocument()
   })
+
+  it("prevents entering disallowed characters like dots, commas or letters via onKeyDown", () => {
+    render(
+      <EditBenefitConfigurationForm
+        defaultValues={defaultValues}
+        onCancel={vi.fn()}
+        onSuccess={vi.fn()}
+        configurableMonth={"2026-12-12"}
+      />,
+    )
+
+    const input = screen.getByLabelText(/cuando el precio por vianda es/i)
+
+    const dotEvent = new KeyboardEvent("keydown", {
+      key: ".",
+      bubbles: true,
+      cancelable: true,
+    })
+    input.dispatchEvent(dotEvent)
+    expect(dotEvent.defaultPrevented).toBe(true)
+
+    const commaEvent = new KeyboardEvent("keydown", {
+      key: ",",
+      bubbles: true,
+      cancelable: true,
+    })
+    input.dispatchEvent(commaEvent)
+    expect(commaEvent.defaultPrevented).toBe(true)
+
+    const exponentEvent = new KeyboardEvent("keydown", {
+      key: "e",
+      bubbles: true,
+      cancelable: true,
+    })
+    input.dispatchEvent(exponentEvent)
+    expect(exponentEvent.defaultPrevented).toBe(true)
+  })
+
+  it("renders the monthly voucher limit unit without muted text class", () => {
+    render(
+      <EditBenefitConfigurationForm
+        defaultValues={defaultValues}
+        onCancel={vi.fn()}
+        onSuccess={vi.fn()}
+        configurableMonth={"2026-12-12"}
+      />,
+    )
+
+    const unit = screen.getByText("viandas")
+    expect(unit).toBeInTheDocument()
+    expect(unit).not.toHaveClass("text-muted-foreground")
+  })
 })

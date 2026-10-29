@@ -60,6 +60,23 @@ RSpec.describe "Configuración de subsidios especiales por RRHH", type: :system 
     expect(configuration.benefit_rules.sole).to have_attributes(type: "SeniorityBenefit", min_years: 2)
   end
 
+  it "muestra agrupados los campos de cantidad de viandas y validez para la condición cumpleaños" do
+    visit admin_benefit_configurations_path
+    without_animations
+
+    click_button "Agregar"
+
+    within("[role=dialog]") do
+      choose_option "Condición", "Cumpleaños"
+      expect(page).to have_content("Comienza automáticamente en la fecha de cumpleaños.")
+      expect(page).to have_field("condition_limit")
+      expect(page).to have_content("Cantidad de")
+      expect(page).to have_content("vianda(s)")
+      expect(page).to have_field("condition_validity_amount")
+      expect(page).to have_content("Validez")
+    end
+  end
+
   context "con un subsidio especial cargado" do
     let!(:special) do
       company.benefit_configurations.new(created_by: admin_user).tap do |configuration|
