@@ -18,10 +18,12 @@ end
 #  closed_at                     :datetime
 #  description                   :string
 #  event                         :string           not null
+#  failed                        :boolean
 #  notifiable_type               :string           not null
 #  requires_action               :boolean          not null
 #  role                          :string           not null
 #  title                         :string
+#  whatsapp_sent_at              :datetime
 #  created_at                    :datetime         not null
 #  updated_at                    :datetime         not null
 #  notifiable_id                 :bigint           not null

@@ -2,8 +2,13 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import type { ConsumerDashboardIndex } from "@/types"
+
 import type { CartItem, Schedule } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
+import type { Pricing } from "./pricing"
+
+type Benefit = ConsumerDashboardIndex["benefit"]
 
 // Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
 // plato, para tomar una decisión informada." Esta es la pantalla donde el
@@ -31,6 +36,14 @@ const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
   },
 })
 
+const benefit: Benefit = {
+  percentage: 50,
+  monthly_limit: 20,
+  monthly_used: 0,
+  monthly_remaining: 20,
+  specials: [],
+}
+
 function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
   const defaults = {
     item: schedule(),
@@ -43,6 +56,7 @@ function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
     cart: [] as CartItem[],
     back: vi.fn(),
     add: vi.fn(),
+    benefit: benefit,
   }
   return render(<DishDetail {...defaults} {...props} />)
 }
@@ -106,6 +120,7 @@ describe("DishDetail", () => {
       quantity: 1,
       notes: "",
       selections: {},
+      benefits: [],
     }
 
     renderDetail({ cart: [added] })
@@ -239,6 +254,7 @@ describe("DishDetail", () => {
         cart={[]}
         back={vi.fn()}
         add={add}
+        benefit={benefit}
       />,
     )
 
@@ -323,6 +339,7 @@ describe("DishDetail", () => {
         quantity: 1,
         notes: "Sin sal",
         selections: {},
+        benefits: [],
       }
 
       renderDetail({
@@ -358,6 +375,7 @@ describe("DishDetail", () => {
         quantity: 1,
         notes: "",
         selections: {},
+        benefits: [],
       }
 
       renderDetail({
@@ -380,6 +398,7 @@ describe("DishDetail", () => {
         quantity: 2,
         notes: "",
         selections: {},
+        benefits: [],
       }
 
       // Con remaining: 3 y 2 ya en el carrito para este ítem:
@@ -394,5 +413,139 @@ describe("DishDetail", () => {
 
       expect(screen.getByRole("button", { name: "Agregar uno" })).toBeEnabled()
     })
+  })
+})
+
+describe("benefit specials", () => {
+  const special = (
+    overrides: Partial<Benefit["specials"][number]> = {},
+  ): Benefit["specials"][number] => ({
+    id: 3,
+    name: "Descuento día del padre",
+    percentage: 30,
+    remaining: 5,
+    due_date: null,
+    ...overrides,
+  })
+
+  it("shows the special and its checkbox when it has remaining units", () => {
+    const s = special({ remaining: 5 })
+
+    renderDetail({ benefit: { ...benefit, specials: [s] } })
+
+    expect(screen.getByText(/Descuento día del padre/)).toBeInTheDocument()
+
+    const checkbox = screen.getByRole("checkbox", { name: "Aplicar" })
+    expect(checkbox).toHaveAttribute("id", `benefit-checkbox-${s.id}`)
+  })
+
+  it("does not show the special when its remaining is zero", () => {
+    const s = special({ remaining: 0 })
+
+    renderDetail({ benefit: { ...benefit, specials: [s] } })
+
+    expect(
+      screen.queryByText(/Descuento día del padre/),
+    ).not.toBeInTheDocument()
+    expect(
+      document.getElementById(`benefit-checkbox-${s.id}`),
+    ).not.toBeInTheDocument()
+  })
+
+  it("does not show a special without limit (remaining null)", () => {
+    const s = special({ remaining: null })
+
+    renderDetail({ benefit: { ...benefit, specials: [s] } })
+
+    expect(
+      screen.queryByText(/Descuento día del padre/),
+    ).not.toBeInTheDocument()
+    expect(
+      document.getElementById(`benefit-checkbox-${s.id}`),
+    ).not.toBeInTheDocument()
+  })
+})
+
+describe("benefits message and lines", () => {
+  it("shows the 'reached 100' message when the last line has no tier for a selectable special", async () => {
+    const special = {
+      id: 3,
+      name: "Descuento día del padre",
+      percentage: 30,
+      remaining: 5,
+      due_date: null,
+    }
+
+    mocks.priceItems.mockResolvedValue({
+      subtotal: 320,
+      discount: 0,
+      total: 320,
+      subsidizedQuantity: 0,
+      fullPriceQuantity: 1,
+      lines: [
+        {
+          subtotal: 320,
+          discount: 0,
+          total: 320,
+          tiers: [], // ningún tier con id 3: el beneficio no se usó
+        },
+      ],
+    } satisfies Pricing)
+
+    renderDetail({ benefit: { ...benefit, specials: [special] } })
+
+    const message = `Se llegó al 100%, no se aplicará el beneficio ${special.name}`
+
+    expect(await screen.findByText(message)).toBeInTheDocument()
+  })
+
+  it("does not show the 'reached 100' message, but shows benefit lines", async () => {
+    const special = {
+      id: 3,
+      name: "Descuento día del padre",
+      percentage: 30,
+      remaining: 5,
+      due_date: null,
+    }
+
+    mocks.priceItems.mockResolvedValue({
+      subtotal: 320,
+      discount: 160,
+      total: 160,
+      subsidizedQuantity: 1,
+      fullPriceQuantity: 0,
+      lines: [
+        {
+          subtotal: 320,
+          discount: 0,
+          total: 320,
+          tiers: [
+            {
+              id: 3,
+              name: "Descuento día del padre",
+              percentage: 30,
+              quantity: 1,
+              discount: 96,
+            },
+            {
+              id: 5,
+              name: "Descuento sorpresa",
+              percentage: 20,
+              quantity: 1,
+              discount: 64,
+            },
+          ],
+        },
+      ],
+    } satisfies Pricing)
+
+    renderDetail({ benefit: { ...benefit, specials: [special] } })
+
+    expect(await screen.findByText("- $96")).toBeInTheDocument()
+    expect(await screen.findByText("- $64")).toBeInTheDocument()
+
+    const message = `Se llegó al 100%, no se aplicará el beneficio ${special.name}`
+
+    expect(screen.queryByText(message)).not.toBeInTheDocument()
   })
 })
