@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { formatLongDateInline } from "@/lib/dates"
 import { adminBenefitConfigurations } from "@/routes"
 
-interface EditBenefitConfigurationFormProps {
+export interface EditBenefitConfigurationFormProps {
   defaultValues: {
     subsidy_percentage: number | ""
     max_voucher_price: number | string

@@ -4,7 +4,9 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import DebtAlertCard from "@/components/benefit-configurations/debt-alert-card"
-import EditBenefitConfigurationForm from "@/components/benefit-configurations/edit-benefit-configuration-form"
+import EditBenefitConfigurationForm, {
+  type EditBenefitConfigurationFormProps,
+} from "@/components/benefit-configurations/edit-benefit-configuration-form"
 import SpecialSubsidiesSection from "@/components/benefit-configurations/special-subsidies-section"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -70,13 +72,14 @@ export default function Index({
     }
   }
 
-  const editFormProps = {
+  const editFormProps: Pick<
+    EditBenefitConfigurationFormProps,
+    "defaultValues" | "pendingBenefitConfiguration" | "configurableMonth"
+  > = {
     defaultValues: {
-      subsidy_percentage: (base_subsidy?.subsidy_percentage ?? "") as
-        number | "",
+      subsidy_percentage: base_subsidy?.subsidy_percentage ?? "",
       max_voucher_price: base_subsidy?.benefit_rules[0]?.max_price ?? "",
-      monthly_voucher_limit: (base_subsidy?.benefit_rules[0]?.limit ?? "") as
-        number | "",
+      monthly_voucher_limit: base_subsidy?.benefit_rules[0]?.limit ?? "",
     },
     pendingBenefitConfiguration,
     configurableMonth: configurable_month,
