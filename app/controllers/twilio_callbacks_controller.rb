@@ -12,17 +12,26 @@ class TwilioCallbacksController < ApplicationController
   NO_RETRY_CODES = %w[63001 63002 63003 63005 63006 63007 63008 63013 63014].freeze
 
   def callback
-    if DELIVERED_STATUSES.include?(callback_params[:MessageStatus])
-      @notification.update!(delivered_at: Time.current, failed: false) if @notification.delivered_at.nil?
-    elsif FAIL_STATUSES.include?(callback_params[:MessageStatus]) && @notification.delivered_at.nil?
-      @notification.update! failed: true
+    retry_send = false
 
-      # send_to_user? ya tiene en cuenta la cantidad máxima de reintentos posibles
-      # WhatsappSenderJob actualiza la cantidad de envíos
-      if NO_RETRY_CODES.exclude?(callback_params[:ErrorCode]) && @notification.send_to_user?
-        WhatsappSenderJob.perform_later(@notification)
+    @notification.with_lock do
+      if DELIVERED_STATUSES.include?(callback_params[:MessageStatus]) && !@notification.delivered?
+        @notification.update!(
+          delivered_at: Time.current,
+          whatsapp_send_status: :delivered
+        )
+      elsif FAIL_STATUSES.include?(callback_params[:MessageStatus]) && @notification.accepted?
+        @notification.delivery_failed!
+
+        # send_to_user? ya tiene en cuenta la cantidad máxima de reintentos posibles
+        # WhatsappSenderJob actualiza la cantidad de envíos
+        if NO_RETRY_CODES.exclude?(callback_params[:ErrorCode]) && @notification.send_to_user?
+          retry_send = true
+        end
       end
     end
+
+    WhatsappSenderJob.perform_later(@notification) if retry_send
 
     head :ok
   end

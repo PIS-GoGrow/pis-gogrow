@@ -15,26 +15,34 @@ class WhatsappSenderJob < ApplicationJob
     notification = job.arguments.first
 
     Rails.logger.error("Reintentos agotados (notification #{notification.id}): #{error.message}")
-    notification.update! failed: true
+    notification.send_failed!
   end
 
   discard_on PermanentTwilioError do |job, error|
     notification = job.arguments.first
 
     Rails.logger.error("Fallo (notification #{notification.id}): #{error.message}")
-    notification.update! failed: true
+    notification.send_failed!
   end
 
   def perform(notification)
     return if Rails.env.development? && ENV["TWILIO_DELIVERY_ENABLED"] != "true"
 
-    return if notification.whatsapp_sent_at.present? && !notification.failed
-
-    Rails.logger.info("Enviando notificación (notification #{notification.id})")
-
     from = ENV.fetch("TWILIO_PHONE")
     content_sid = Notification::Registry.content_sid(notification.event, count: notification.description_data["count"].to_i)
     status_callback = ENV.fetch("TWILIO_STATUS_CALLBACK_URL", nil) || Rails.application.routes.url_helpers.twilio_callback_url
+
+    # Cancelamos el job si la notificación ya llegó, ya se envió o ni se tenía que enviar
+    return unless notification.with_lock do
+      if notification.pending? || notification.sending? || notification.delivery_failed?
+        notification.sending!
+        true
+      else
+        false
+      end
+    end
+
+    Rails.logger.info("Enviando notificación (notification #{notification.id})")
 
     message = client.messages.create(
       from:,
@@ -46,12 +54,17 @@ class WhatsappSenderJob < ApplicationJob
 
     Rails.logger.info("Enviado mensaje (SID #{message.sid})")
 
-    notification.update!(
-      whatsapp_sent_at: Time.current,
-      failed: false,
-      twilio_sid: message.sid,
-      send_attempts: notification.send_attempts + 1
-    )
+    notification.with_lock do
+      attrs = {
+        whatsapp_send_attempts: notification.whatsapp_send_attempts + 1,
+        whatsapp_last_sent_at: Time.current,
+        twilio_sid: message.sid
+      }
+      # Si la notificación cambió de estado entre que hicimos la request,
+      # no la marcamos como aceptada si no que dejamos ese estado.
+      attrs[:whatsapp_send_status] = :accepted if notification.sending?
+      notification.update! attrs
+    end
   rescue Twilio::REST::RestError => e
     klass = transient?(e) ? TransientTwilioError : PermanentTwilioError
     raise klass, "#{e.status_code}/#{e.code}: #{e.error_message}"

@@ -12,7 +12,7 @@ class Notifier
     event = Notification::Registry.event!(event_key)
     configuration = find_configuration_for! event
 
-    notification = Notification.create!(
+    notification = Notification.new(
       notification_configuration: configuration,
       user:,
       role: event.role,
@@ -23,7 +23,11 @@ class Notifier
       description_data: description_data
     )
 
-    if notification.send_to_user?
+    send = notification.send_to_user?
+    notification.whatsapp_send_status = send ? :pending : :skipped
+    notification.save!
+
+    if send
       WhatsappSenderJob.perform_later(notification)
     end
 
