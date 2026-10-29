@@ -144,6 +144,9 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `DeliveryFilterSheet` | `@/components/orders/delivery-filter-sheet` | Filtro de tipo de entrega (Todas, Oficina, Domicilios) en un sheet inferior, con Cancelar y Aplicar |
 | `ProviderOrderDays` | `@/components/orders/provider-order-days` | Pedidos del proveedor agrupados por día: acordeón en celular, lista de días y panel del día elegido desde `lg` |
 | `Stat` | `@/components/stat` | Tarjeta de métrica: recibe `label`, `value`, y `detail`, `badge` y `action` opcionales |
+| `DashboardMetric` | `@/components/provider/dashboard-metric` | Número con su etiqueta en el Inicio y en Hallazgos del proveedor; `valueFirst` pone el número arriba y centrado. El fondo y el borde los pasa quien lo usa con `className` |
+| `InsightsMetrics` | `@/components/provider/insights-metrics` | Las tres métricas grises de los hallazgos del proveedor (Pedidos, Platos y ★ Valoración, con «—» si no hay reseñas). Recibe `orders`, `dishes` y `rating` |
+| `AiInsightCard` | `@/components/provider/ai-insight-card` | Tarjeta violeta con gradiente y el pie «Generado por IA»; el texto va como `children` |
 | `MobileNav` | `@/components/mobile-nav` | Barra inferior móvil de RRHH; recibe ítems con ícono, ruta opcional y estado activo |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |
@@ -423,12 +426,15 @@ Botón con la fecha elegida que abre un `Calendar` en un `Popover`, en español.
 |---|---|
 | `value` / `from` y `to` | Fechas `YYYY-MM-DD`; `""` si no hay |
 | `onChange` | Recibe la fecha elegida (`DatePicker`) o el desde y el hasta (`DateRangePicker`) |
-| `min`, `max` | Primer y último día habilitado (`DateRangePicker` solo acepta `min`) |
+| `min`, `max` | Primer y último día habilitado |
 | `weekdaysOnly` | Deshabilita sábados y domingos (`DatePicker`) |
 | `id` | Para vincularlo con un `FieldLabel htmlFor` |
 | `className` | Clases del botón; `w-full` para que ocupe todo el ancho (`DateRangePicker`) |
+| `presets` | `{ label, from, to }[]` que se muestran como botones debajo del calendario; tocar uno aplica el rango y cierra el calendario. Se deshabilitan los que quedan fuera de `min`/`max` (`DateRangePicker`) |
+| `commitOnComplete` | `onChange` se llama una sola vez, cuando el rango tiene inicio y fin; el primer click solo marca el inicio, y si se cierra el calendario con el inicio solo, el rango es ese día. Para cuando elegir navega, como en Hallazgos (`DateRangePicker`) |
+| `label` | Texto del botón en lugar del rango, por ejemplo "Octubre 2026" para un mes completo (`DateRangePicker`) |
 
-`DateRangePicker` escribe el rango como en el Figma, "9 junio – 27 junio 2027": el año una sola vez, salvo que el rango cruce de año.
+`DateRangePicker` escribe el rango con fechas cortas, "09/06/27 – 27/06/27", y un solo día una vez. Sin `commitOnComplete` llama a `onChange` en cada click, con `to` vacío mientras falta el fin.
 
 El encabezado del calendario sigue el Figma: domingo primero y días y meses en inglés ("Su Mo Tu…", "Jun"). Los textos accesibles quedan en español.
 
@@ -437,6 +443,19 @@ El encabezado del calendario sigue el Figma: domingo primero y días y meses en 
   <FieldLabel htmlFor="agenda-date">{t("…date")}</FieldLabel>
   <DatePicker id="agenda-date" value={date} min={today} weekdaysOnly onChange={setDate} />
 </Field>
+```
+
+```tsx
+<DateRangePicker
+  from={from}
+  to={to}
+  min={min}
+  max={max}
+  label={monthLabel}
+  commitOnComplete
+  presets={[{ label: t("…today"), from: today, to: today }]}
+  onChange={navigate}
+/>
 ```
 
 - Para fechas en un formulario se usa este componente y no `Input type="date"`. Un rango en un solo campo, como el de los cierres programados, es `DateRangePicker`; si el diseño pide dos campos, "Desde" y "Hasta", como en la agenda de un plato, se usan dos `DatePicker`.

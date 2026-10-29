@@ -1,4 +1,4 @@
-import { ChevronLeft, Star } from "lucide-react"
+import { ChevronLeft, Star, TicketPercent } from "lucide-react"
 import type { ReactNode } from "react"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -8,15 +8,18 @@ import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
 import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { formatShortDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
+import type { ConsumerDashboardIndex } from "@/types"
 
 import type { CartItem, Schedule, Selections } from "./consumer-types"
 import { OrderSummary } from "./order-summary"
-import type { PricedLine } from "./pricing"
-import { cartPricedItem, lastUnitsLine, priceItems } from "./pricing"
+import type { Pricing } from "./pricing"
+import { cartPricedItem, priceItems } from "./pricing"
 
 interface Props {
   item: Schedule
@@ -28,11 +31,14 @@ interface Props {
   setSelections: (value: Selections) => void
   cart: CartItem[]
   back: () => void
-  add: () => void
   editingCartId?: string | null
   onRemove?: () => void
-  // Al modificar un pedido: el precio descuenta lo que ese pedido ya reservó.
+  add: (benefits: number[]) => void
+  benefit: ConsumerDashboardIndex["benefit"]
+  // Al modificar un pedido: el precio descuenta lo que ese pedido ya reservó y
+  // conserva los cupones que ya tiene, sin dejar elegir otros.
   orderId?: number
+  fixedBenefitIds?: number[]
   actionLabel?: string
   processing?: boolean
   children?: ReactNode
@@ -51,13 +57,43 @@ export function DishDetail({
   add,
   editingCartId,
   onRemove,
+  benefit,
   orderId,
+  fixedBenefitIds,
   actionLabel,
   processing = false,
   children,
 }: Props) {
   const { t } = useTranslation()
-  const [line, setLine] = useState<PricedLine | null>(null)
+  const [pricing, setPricing] = useState<Pricing | null>(null)
+  const line = pricing?.lines?.at(-1)
+
+  const benefitHeld = benefit.specials.reduce(
+    (acc, benefit) => {
+      acc[benefit.id] =
+        pricing?.lines?.slice(0, -1)?.reduce((acc, line) => {
+          return (
+            acc + (line.tiers.find((t) => t.id === benefit.id)?.quantity ?? 0)
+          )
+        }, 0) ?? 0
+
+      return acc
+    },
+    {} as Record<number, number>,
+  )
+
+  // No dejamos seleccionar beneficios sin límite (se aplican siempre)
+  // No mostramos beneficios para los que ya no quedan unidades disponibles
+  const selectableBenefits = benefit.specials.filter(
+    (b) => b.remaining !== null && b.remaining - benefitHeld[b.id] > 0,
+  )
+  const specialBenefitIds = selectableBenefits.map((b) => b.id)
+
+  // Al principio, todos los beneficios están activados
+  const [benefitIds, setBenefitIds] = useState<number[]>(
+    fixedBenefitIds ?? specialBenefitIds,
+  )
+  const [unusedBenefits, setUnusedBenefits] = useState<string[]>([])
 
   const isEditing = Boolean(editingCartId ?? onRemove)
 
@@ -90,15 +126,28 @@ export function DishDetail({
       try {
         const cartToPrice = isEditing ? cartWithoutCurrent : cart
         const result = await priceItems(
-          cartPricedItem([...cartToPrice, { ...item, quantity }]),
+          cartPricedItem([
+            ...cartToPrice,
+            { ...item, quantity, benefits: benefitIds },
+          ]),
           orderId,
         )
         if (cancelled || !result?.lines) return
 
-        const preLine = result.lines[String(item.id)]
-        const totalUnits = (isEditing ? otherInCart : inCart) + quantity
+        const usedBenefitIds = result.lines
+          .at(-1)
+          ?.tiers?.map((tier) => tier.id)
 
-        setLine(preLine ? lastUnitsLine(totalUnits, quantity, preLine) : null)
+        setUnusedBenefits(
+          benefit.specials
+            .filter(
+              (benefit) =>
+                benefitIds.includes(benefit.id) &&
+                !usedBenefitIds?.includes(benefit.id),
+            )
+            .map((benefit) => benefit.name),
+        )
+        setPricing(result)
       } finally {
         // No hacer nada
       }
@@ -119,8 +168,17 @@ export function DishDetail({
     item.date,
     item.menu.price,
     quantity,
+    benefitIds,
+    benefit.specials,
     orderId,
   ])
+
+  // Agrega/borra un beneficio para que se aplique a la orden
+  function setChecked(benefitId: number) {
+    if (benefitIds.includes(benefitId))
+      setBenefitIds(benefitIds.filter((b) => b !== benefitId))
+    else setBenefitIds(benefitIds.concat([benefitId]))
+  }
 
   const reviews = item.menu.reviews
   const ratingAverage = item.menu.rating_average
@@ -232,8 +290,45 @@ export function DishDetail({
         </p>
       </section>
       {children}
+      {selectableBenefits.length > 0 && (
+        <section className="border-border grid gap-2 border-b py-4 text-sm">
+          {selectableBenefits.map((benefit) => (
+            <div key={benefit.id} className="flex justify-between">
+              <div className="flex">
+                <TicketPercent color="#29944c" className="mr-2" size="20" />
+                <p>
+                  {benefit.name} ({benefit.percentage}% off)
+                </p>
+              </div>
+
+              <Field orientation="horizontal" className="max-w-fit">
+                <Checkbox
+                  id={`benefit-checkbox-${benefit.id}`}
+                  name={`benefit-checkbox-${benefit.id}`}
+                  onCheckedChange={() => setChecked(benefit.id)}
+                  checked={benefitIds.includes(benefit.id)}
+                />
+
+                <FieldContent className="max-w-fit">
+                  <FieldLabel htmlFor={`benefit-checkbox-${benefit.id}`}>
+                    Aplicar
+                  </FieldLabel>
+                </FieldContent>
+              </Field>
+            </div>
+          ))}
+          {unusedBenefits.length > 0 && (
+            <p className="text-sm">
+              {t(
+                `pages.consumer_dashboard.detail.reached_100.${unusedBenefits.length === 1 ? "one" : "other"}`,
+                { benefits: unusedBenefits.join(", ") },
+              )}
+            </p>
+          )}
+        </section>
+      )}
       <OrderSummary
-        loading={false}
+        loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede
         subtotal={line?.subtotal}
         total={line?.total}
         tiers={line?.tiers}
@@ -247,7 +342,7 @@ export function DishDetail({
         />
         <Button
           disabled={addDisabled}
-          onClick={add}
+          onClick={() => add(benefitIds)}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
         >
           {processing && <Spinner />}

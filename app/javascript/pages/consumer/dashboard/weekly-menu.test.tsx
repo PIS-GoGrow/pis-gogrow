@@ -46,6 +46,7 @@ const sampleSchedule: Schedule = {
     name: "Milanesa con papas fritas",
     description: "Clásica milanesa de carne",
     price: 350,
+    provider_id: 1,
     option_groups: [],
     provider_name: "Tu Viandita",
     home_delivery: true,
@@ -65,6 +66,7 @@ const sampleCartItem: CartItem = {
   quantity: 1,
   notes: "",
   selections: {},
+  benefits: [],
   menu: sampleSchedule.menu,
 }
 
@@ -77,7 +79,9 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
       date: "2026-10-12",
       setDate: vi.fn(),
       benefit: defaultBenefit,
-      providers: ["Tu Viandita"],
+      activeProviders: new Set<number>(),
+      setActiveProviders: vi.fn(),
+      providers: [{ id: 1, name: "Tu Viandita", order_deadline: null }],
       schedules: [sampleSchedule],
       closures: [],
       cart: [],

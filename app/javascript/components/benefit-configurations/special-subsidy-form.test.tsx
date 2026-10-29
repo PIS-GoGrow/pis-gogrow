@@ -62,6 +62,20 @@ const gift: SpecialSubsidy = {
   },
 }
 
+const birthdaySubsidy: SpecialSubsidy = {
+  id: 8,
+  name: "Cumpleaños",
+  subsidy_percentage: 50,
+  applies_to_all: true,
+  consumer_ids: [],
+  condition: {
+    type: "birthday",
+    limit: 1,
+    validity_amount: 1,
+    validity_unit: "months",
+  },
+}
+
 function dayButton(day: number) {
   return within(screen.getByRole("grid")).getByRole("button", {
     name: new RegExp(` ${day} de octubre de 2026`),
@@ -97,7 +111,7 @@ describe("SpecialSubsidyForm", () => {
     renderForm(gift)
 
     expect(screen.getByLabelText(/disponible desde/i)).toHaveTextContent(
-      "Enero 10, 2099",
+      "Sábado 10 de enero",
     )
     expect(screen.getByLabelText(/cantidad de/i)).toHaveValue(3)
     expect(screen.getByLabelText("Validez")).toHaveValue(2)
@@ -168,7 +182,7 @@ describe("SpecialSubsidyForm", () => {
       await user.click(dayButton(28))
 
       expect(screen.getByLabelText(/disponible desde/i)).toHaveTextContent(
-        "Octubre 28, 2026",
+        "Miércoles 28 de octubre",
       )
       expect(screen.getByRole("button", { name: "Modificar" })).toBeEnabled()
     })
@@ -201,5 +215,16 @@ describe("SpecialSubsidyForm", () => {
     renderForm(gift)
 
     expect(screen.getByText("no puede estar en blanco")).toBeInTheDocument()
+  })
+
+  it("renders quantity of viandas suffix and validity fields properly for birthday condition", () => {
+    renderForm(birthdaySubsidy)
+
+    expect(
+      screen.getByText(/comienza automáticamente en la fecha de cumpleaños/i),
+    ).toBeInTheDocument()
+    expect(screen.getByLabelText(/cantidad de/i)).toHaveValue(1)
+    expect(screen.getByText("vianda(s)")).toBeInTheDocument()
+    expect(screen.getByLabelText("Validez")).toHaveValue(1)
   })
 })

@@ -5,9 +5,11 @@ import type { CartItem } from "./consumer-types"
 export interface PricedItem {
   schedule_id: number
   quantity: number
+  benefits: number[]
 }
 
 export interface DiscountTier {
+  id: number
   name?: string
   percentage: number
   quantity: number
@@ -25,7 +27,7 @@ export interface Pricing {
   subtotal: number
   discount: number
   total: number
-  lines: Record<string, PricedLine>
+  lines: PricedLine[]
   subsidizedQuantity: number
   fullPriceQuantity: number
 }
@@ -56,52 +58,13 @@ export async function priceItems(
   return response.json() as Promise<Pricing>
 }
 
-export const lastUnitsLine = (
-  n: number,
-  k: number,
-  line: PricedLine,
-): PricedLine => {
-  if (!line) return line
-
-  if (n <= 0) return { subtotal: 0, discount: 0, total: 0, tiers: [] }
-
-  const units = Math.min(Math.max(k, 0), n)
-  const start = n - units // posición (0-indexed) desde la que cuentan las últimas k
-
-  const offset = 0
-  const tiers: DiscountTier[] = []
-
-  for (const tier of line.tiers) {
-    const tierStart = offset
-    const tierEnd = offset + tier.quantity
-
-    // unidades de este tier que caen dentro de la ventana [start, n)
-    const overlap = Math.max(0, tierEnd - Math.max(tierStart, start))
-    if (overlap === 0) continue
-
-    tiers.push({
-      ...tier,
-      quantity: overlap,
-      discount: (tier.discount * overlap) / tier.quantity,
-    })
-  }
-
-  const subtotal = (line.subtotal * units) / n
-  const discount = tiers.reduce((sum, t) => sum + t.discount, 0)
-
-  return { subtotal, discount, total: subtotal - discount, tiers }
-}
-
-type Quantifiable = Pick<CartItem, "id" | "quantity">
+type Quantifiable = Pick<CartItem, "id" | "quantity" | "benefits">
 export const cartPricedItem = (items: Quantifiable[]): PricedItem[] => {
-  const quantities = new Map<CartItem["id"], number>()
-
-  for (const item of items) {
-    quantities.set(item.id, (quantities.get(item.id) ?? 0) + item.quantity)
-  }
-
-  return Array.from(quantities, ([id, quantity]) => ({
-    schedule_id: id,
-    quantity,
-  }))
+  return items.map((item) => {
+    return {
+      schedule_id: item.id,
+      quantity: item.quantity,
+      benefits: item.benefits,
+    }
+  })
 }

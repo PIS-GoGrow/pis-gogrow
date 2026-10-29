@@ -133,7 +133,7 @@ class Order < ApplicationRecord
     )
 
     benefits.each do |benefit, benefit_used|
-      order.apply_benefit benefit, benefit_used
+      order.apply_benefit benefit, benefit_used.units_used
     end
 
     return order unless order.valid?
@@ -286,7 +286,7 @@ class Order < ApplicationRecord
             return false
           end
 
-          line = OrderPricing.new(consumer, modifiable_order: self).call([ { schedule:, quantity: } ])[schedule_id]
+          line = Orders::Pricing.new(consumer, modifiable_order: self).call([ { schedule:, quantity:, benefits: benefit_ids } ]).first.second
 
           # El update tiene que ir antes de tocar los beneficios y cortar si
           # falla: si una validación rechaza el cambio, los beneficios no se
@@ -403,11 +403,13 @@ class Order < ApplicationRecord
   end
 
   def notify_cancelled
-    return unless provider&.user
+    target_provider = provider
+    return unless target_provider&.user
+    return if target_provider.closed_on?(Date.current)
 
     Notifier.call(
       event_key: :order_cancellation,
-      user: provider.user,
+      user: target_provider.user,
       notifiable: self,
       description_data: {
         consumer: consumer.user.name,
@@ -524,7 +526,7 @@ class Order < ApplicationRecord
   def replace_benefits!(benefits)
     order_benefits.where.not(benefit_id: benefits.keys.map(&:id)).destroy_all
     benefits.each do |benefit, benefit_used|
-      order_benefits.find_or_initialize_by(benefit:).update!(benefit_used:)
+      order_benefits.find_or_initialize_by(benefit:).update!(benefit_used: benefit_used.units_used)
     end
   end
 

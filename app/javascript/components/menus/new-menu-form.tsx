@@ -17,6 +17,7 @@ import EditMenuAdaptableDialog, {
 } from "@/components/menus/edit-menu-sheet"
 import MenuAgendaFields, {
   type AgendaDraft,
+  type AgendaPayload,
   agendaPayload,
   agendaProblem,
   cwday,
@@ -29,6 +30,7 @@ import {
   Field,
   FieldContent,
   FieldDescription,
+  FieldError,
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
@@ -53,11 +55,37 @@ const emptyDraft: OptionGroupDraft = {
   required: false,
 }
 
+// Lo que devuelve el formulario cuando se edita un plato que todavía no
+// existe. Lo usa la importación, que guarda recién al final.
+export interface MenuDraft {
+  name: string
+  description: string
+  price: string
+  option_groups: OptionGroupValues[]
+  agenda: AgendaPayload
+}
+
+export interface OptionGroupValues {
+  name: string
+  options: string[]
+  limit: number
+  required: boolean
+}
+
 interface MenuFormProps {
   menu?: Menu
   edit?: ProviderMenusEdit
   create?: ProviderMenusNew
   onCreated?: (publishedDate: string | null) => void
+  // Modo local: en lugar de guardar en el servidor, el formulario devuelve el
+  // borrador y quien lo usa decide qué hacer con él.
+  draft?: {
+    today: string
+    maximum_publish_date: string
+    agenda: ProviderMenusEdit["agenda"]
+  }
+  onSaveDraft?: (values: MenuDraft) => void
+  onCancelDraft?: () => void
 }
 
 export default function MenuForm({
@@ -65,10 +93,13 @@ export default function MenuForm({
   edit,
   create,
   onCreated,
+  draft: local,
+  onSaveDraft,
+  onCancelDraft,
 }: MenuFormProps) {
   const { t } = useTranslation()
   const key = "pages.provider_menus.form"
-  const calendar = edit ?? create
+  const calendar = edit ?? create ?? local
 
   const [groups, setGroups] = useState<OptionGroupDraft[]>(() =>
     menu
@@ -90,29 +121,31 @@ export default function MenuForm({
   const [saveAdaptableDialogOpen, setSaveAdaptableDialogOpen] = useState(false)
   const [saved, setSaved] = useState(false)
   const [agenda, setAgenda] = useState<AgendaDraft | null>(() =>
-    edit
-      ? initialAgenda(edit.agenda)
-      : create
-        ? initialAgenda(
-            create.default_date
-              ? {
-                  mode: "single",
-                  weekdays: [cwday(create.default_date)],
-                  date: create.default_date,
-                  starts_on: null,
-                  ends_on: null,
-                  amount: null,
-                }
-              : {
-                  mode: "none",
-                  weekdays: [],
-                  date: null,
-                  starts_on: null,
-                  ends_on: null,
-                  amount: null,
-                },
-          )
-        : null,
+    local
+      ? initialAgenda(local.agenda)
+      : edit
+        ? initialAgenda(edit.agenda)
+        : create
+          ? initialAgenda(
+              create.default_date
+                ? {
+                    mode: "single",
+                    weekdays: [cwday(create.default_date)],
+                    date: create.default_date,
+                    starts_on: null,
+                    ends_on: null,
+                    amount: null,
+                  }
+                : {
+                    mode: "none",
+                    weekdays: [],
+                    date: null,
+                    starts_on: null,
+                    ends_on: null,
+                    amount: null,
+                  },
+            )
+          : null,
   )
   const [agendaError, setAgendaError] = useState<string | null>(null)
 
@@ -164,6 +197,7 @@ export default function MenuForm({
 
     const groupToSave: OptionGroupDraft = {
       ...draft,
+      options: draftOptions.join(", "),
       limit: Math.min(draft.limit, draftOptions.length),
     }
 
@@ -204,6 +238,25 @@ export default function MenuForm({
     )
 
     if (emptyFields.length > 0 || priceNotPositive || problem !== null) return
+
+    if (onSaveDraft) {
+      onSaveDraft({
+        name: data.name.trim(),
+        description: data.description.trim(),
+        price: data.price.trim(),
+        option_groups: groups.map((group) => ({
+          name: group.name.trim(),
+          options: group.options
+            .split(",")
+            .map((option) => option.trim())
+            .filter(Boolean),
+          limit: group.limit,
+          required: group.required,
+        })),
+        agenda: agenda ? agendaPayload(agenda) : { mode: "none" },
+      })
+      return
+    }
 
     if (edit) {
       transform((formData) => ({ menu: menuPayload(formData) }))
@@ -298,6 +351,7 @@ export default function MenuForm({
                 id="name"
                 type="text"
                 name="name"
+                aria-invalid={!!errors.name?.length}
                 placeholder={t(`${key}.name_placeholder`)}
                 value={data.name}
                 onChange={(e) => {
@@ -305,9 +359,7 @@ export default function MenuForm({
                   clearErrors("name")
                 }}
               />
-              {!!errors.name?.length && (
-                <FieldDescription>{errors.name}</FieldDescription>
-              )}
+              <FieldError>{errors.name}</FieldError>
             </Field>
 
             <Field data-invalid={!!errors.price?.length} className="w-24">
@@ -331,6 +383,7 @@ export default function MenuForm({
                   min="0.01"
                   step="0.01"
                   name="price"
+                  aria-invalid={!!errors.price?.length}
                   className="[appearance:textfield] pl-6 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   value={data.price}
                   onChange={(e) => {
@@ -339,9 +392,7 @@ export default function MenuForm({
                   }}
                 />
               </div>
-              {!!errors.price?.length && (
-                <FieldDescription>{errors.price}</FieldDescription>
-              )}
+              <FieldError>{errors.price}</FieldError>
             </Field>
           </div>
 
@@ -355,6 +406,7 @@ export default function MenuForm({
             <Textarea
               id="description"
               name="description"
+              aria-invalid={!!errors.description?.length}
               placeholder={t(`${key}.description_placeholder`)}
               value={data.description}
               className="min-h-24 resize-none"
@@ -364,9 +416,7 @@ export default function MenuForm({
               }}
             />
 
-            {!!errors.description?.length && (
-              <FieldDescription>{errors.description}</FieldDescription>
-            )}
+            <FieldError>{errors.description}</FieldError>
           </Field>
 
           <div className="flex flex-col gap-3">
@@ -461,7 +511,22 @@ export default function MenuForm({
           </div>
         )}
 
-        {menu ? (
+        {onSaveDraft ? (
+          <div className="mt-8 grid grid-cols-2 gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-11"
+              onClick={onCancelDraft}
+            >
+              {t(`${key}.cancel`)}
+            </Button>
+
+            <Button type="submit" className="h-11">
+              {t(`${key}.update`)}
+            </Button>
+          </div>
+        ) : menu ? (
           <div className="mt-8 grid grid-cols-2 gap-3">
             <Button type="button" variant="secondary" className="h-11" asChild>
               <Link href={edit?.return_to ?? schedules.index().url}>

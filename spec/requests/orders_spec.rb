@@ -1251,6 +1251,41 @@ RSpec.describe "Orders", type: :request do
         expect(order.cancelled_by).to eq(users(:one))
       end
 
+      it "cancels a confirmed order without notifying the provider when the provider is closed today" do
+        order = orders(:upcoming_confirmed_future)
+        order.provider.closures.create!(
+          starts_on: Date.current,
+          ends_on: Date.current,
+          reason: "Cierre temporal"
+        )
+
+        expect {
+          patch cancel_consumer_order_path(order)
+        }.not_to change(Notification, :count)
+
+        expect(order.reload).to be_cancelled
+        follow_redirect!
+        expect(inertia).to have_flash(notice: I18n.t("flash.order_cancelled"))
+
+        sign_in order.provider.user, role: :provider
+        get provider_dashboard_path
+        expect(response).to have_http_status(:ok)
+        expect(inertia.props[:notifications].map { |n| n["title"] || n[:title] }).not_to include(I18n.t("notifications.order_cancellation.title"))
+      end
+
+      it "notifies the provider and exposes the notification in Inertia props when cancelling while open" do
+        order = orders(:upcoming_confirmed_future)
+
+        expect {
+          patch cancel_consumer_order_path(order)
+        }.to change { Notification.where(event: "order_cancellation", user: order.provider.user).count }.by(1)
+
+        sign_in order.provider.user, role: :provider
+        get provider_dashboard_path
+        expect(response).to have_http_status(:ok)
+        expect(inertia.props[:notifications].map { |n| n["title"] || n[:title] }).to include(I18n.t("notifications.order_cancellation.title"))
+      end
+
       it "refuses to cancel a confirmed order on its delivery day" do
         order = orders(:upcoming_pending_today)
         order.update!(status: :confirmed)

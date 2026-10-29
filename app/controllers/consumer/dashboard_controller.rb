@@ -6,6 +6,7 @@ class Consumer::DashboardController < Consumer::InertiaController
     @week = week_data
     @schedules = schedule_data
     @benefit = benefit_data
+    @providers = Provider.includes(:user).all
     @closures = ProviderClosure.upcoming.includes(provider: :user)
   end
 
@@ -50,7 +51,7 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def benefit_data
-    pricing = OrderPricing.new(@consumer)
+    pricing = Orders::Pricing.new(@consumer)
 
     {
       percentage: @consumer.monthly_benefit_percentage,

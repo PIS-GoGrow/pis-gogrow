@@ -1,6 +1,7 @@
 import { Head, usePage } from "@inertiajs/react"
 import { useEffect, useMemo, useState } from "react"
 
+import { useConsumerMenuFilter } from "@/hooks/consumer-menu-filter"
 import useSessionStorage from "@/hooks/use-session-storage"
 import AppLayout from "@/layouts/app-layout"
 import { consumerDashboard } from "@/routes"
@@ -17,6 +18,7 @@ type View = "menu" | "detail"
 export default function Index({
   week,
   schedules,
+  providers,
   closures,
   benefit,
 }: ConsumerDashboardIndex) {
@@ -28,6 +30,7 @@ export default function Index({
     week.days[0]?.date ??
     ""
   const [date, setDate] = useState(initialDate)
+  const { activeProviders, setActiveProviders } = useConsumerMenuFilter()
   const [selected, setSelected] = useState<Schedule | null>(null)
   // Guardamos el carrito en sessionStorage. Así, se persiste si el consumidor
   // recarga la página o navega por la aplicación, pero se borra si cierra la
@@ -37,18 +40,6 @@ export default function Index({
   const [notes, setNotes] = useState("")
   const [selections, setSelections] = useState<Selections>({})
   const [editingCartId, setEditingCartId] = useState<string | null>(null)
-
-  // Un proveedor cerrado no tiene platos que mostrar, pero tiene que seguir en
-  // el filtro para poder ver por qué no hay menú.
-  const providers = useMemo(
-    () => [
-      ...new Set([
-        ...schedules.map((item) => item.menu.provider_name),
-        ...closures.map((closure) => closure.provider_name),
-      ]),
-    ],
-    [schedules, closures],
-  )
 
   const visibleSchedules = schedules.filter((item) => item.date === date)
 
@@ -83,12 +74,12 @@ export default function Index({
     setView("menu")
   }
 
-  function addToCart() {
+  function addToCart(benefitsSelected: number[]) {
     if (!selected || selected.sold_out || selected.orders_closed) return
 
     // Dos veces el mismo plato con distinta personalización son dos líneas del
     // carrito, así que la clave incluye lo elegido además de las notas.
-    const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}`
+    const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}-${JSON.stringify(benefitsSelected)}`
 
     setCart((items) => {
       if (editingCartId) {
@@ -118,6 +109,7 @@ export default function Index({
           quantity: Math.min(selected.remaining, quantity),
           notes,
           selections,
+          benefits: benefitsSelected,
         }
 
         const next = [...items]
@@ -144,6 +136,7 @@ export default function Index({
               quantity: Math.min(selected.remaining, quantity),
               notes,
               selections,
+              benefits: benefitsSelected,
             },
           ]
     })
@@ -202,6 +195,8 @@ export default function Index({
             setDate={setDate}
             benefit={benefit}
             providers={providers}
+            activeProviders={activeProviders}
+            setActiveProviders={setActiveProviders}
             schedules={visibleSchedules}
             closures={closures}
             cart={cart}
@@ -225,6 +220,7 @@ export default function Index({
             add={addToCart}
             editingCartId={editingCartId}
             onRemove={editingCartId ? handleRemoveFromCartAndBack : undefined}
+            benefit={benefit}
           />
         )}
       </div>

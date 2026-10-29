@@ -599,7 +599,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       open_menu(as: e1_user, day: tuesday)
       click_button "Agregar #{p1_milanesa.name}"
 
-      fill_in "notes", with: "a" * 141
+      fill_in "notes", with: "a" * 141, fill_options: { rapid: false }
 
       expect(find_field("notes").value.length).to eq(140)
     end
@@ -614,7 +614,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
         click_link "Editar"
       end
 
-      fill_in "notes", with: "a" * 141
+      fill_in "notes", with: "a" * 141, fill_options: { rapid: false }
 
       expect(find_field("notes").value.length).to eq(140)
       expect(page).to have_content("140/140")

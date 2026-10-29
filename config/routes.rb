@@ -61,6 +61,10 @@ Rails.application.routes.draw do
     resources :menus, path: "platos", except: [ :index, :show ], path_names: { new: "nuevo", edit: "editar" } do
       post :publish, on: :collection, path: "publicar"
     end
+    # Importar un menú desde una planilla: la vista previa y la confirmación.
+    get  "importar-platos", to: "menu_imports#new", as: :menu_import
+    post "importar-platos", to: "menu_imports#create", as: :menu_import_preview
+    post "importar-platos/confirmar", to: "menu_imports#confirm", as: :confirm_menu_import
     resources :orders, path: "pedidos", only: [ :index, :show ] do
       member do
         patch :confirm, path: "confirmar"
@@ -76,6 +80,7 @@ Rails.application.routes.draw do
     resource :order_deadline, path: "limite-de-pedidos", only: [ :update ]
     resources :closures, path: "cierres", only: [ :create, :update, :destroy ]
     get "inicio", to: "dashboard#index", as: :dashboard
+    get "inicio/hallazgos", to: "insights#index", as: :insights
     resources :payments, path: "comprobantes", only: [ :update ] do
       get :receipt, on: :member, path: "archivo"
     end
@@ -93,7 +98,9 @@ Rails.application.routes.draw do
     get "menu-semanal/error", to: "dashboard#error", as: :dashboard_error
 
     resources :menus, path: "menu-del-dia", only: [ :index ]
-    resources :delivery_addresses, path: "direcciones-de-entrega", only: [ :create ]
+    resources :delivery_addresses,
+              path: "direcciones-de-entrega",
+              only: %i[index create update destroy]
 
     resources :orders, path: "pedidos", path_names: { edit: "editar" }, only: [ :index, :show, :edit, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer, path: "cancelar"

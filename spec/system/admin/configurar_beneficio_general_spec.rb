@@ -87,4 +87,17 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
 
     expect(page).to have_content("debe ser menor que o igual a 100")
   end
+
+  it "configura el campo de precio por vianda con atributos enteros y muestra la unidad viandas" do
+    visit admin_benefit_configurations_path
+
+    open_editor
+
+    input = find_field("max_voucher_price")
+    expect(input[:step]).to eq("1")
+    expect(input[:min]).to eq("1")
+    expect(input[:inputmode]).to eq("numeric")
+
+    expect(page).to have_content("viandas")
+  end
 end
