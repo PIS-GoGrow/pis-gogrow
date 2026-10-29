@@ -88,7 +88,7 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def benefit_data
-    pricing = OrderPricing.new(@consumer)
+    pricing = Orders::Pricing.new(@consumer)
 
     {
       percentage: @consumer.monthly_benefit_percentage,

@@ -59,7 +59,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       get admin_benefit_configurations_path
 
       expect(inertia.props[:base_subsidy][:id]).to eq(own_config.id)
-      expect(inertia.props[:benefit_configurations].length).to eq(3)
+      expect(inertia.props[:benefit_configurations].length).to eq(4)
       expect(inertia.props[:benefit_configurations].first[:id]).to eq(own_config.id)
       expect(inertia.props[:benefit_configurations].first[:created_by_name]).to eq(admin_user.name)
     end

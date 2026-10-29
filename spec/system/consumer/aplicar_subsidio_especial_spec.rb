@@ -15,9 +15,9 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
   end
 
   before do
-    # Los fixtures gift y seniority son subsidios especiales sin nombre que la
-    # pantalla de RRHH mostraría vacíos.
-    benefit_configurations(:gift, :seniority).each(&:destroy)
+    # Los fixtures gift, gift2 y seniority son subsidios especiales sin nombre que
+    # la pantalla de RRHH mostraría vacíos.
+    benefit_configurations(:gift, :gift2, :seniority).each(&:destroy)
     benefits(:monthly).update!(percentage: 50, amount: 20, due_date: Date.current.end_of_month, status: :current)
     Schedule.create!(menu:, date: Date.current, amount: 10)
   end

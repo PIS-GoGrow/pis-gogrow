@@ -1678,6 +1678,11 @@ es:
           description: "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}"
           empty: "%{provider} no recibirá pedidos del %{period}."
           dismiss: "Cerrar aviso"
+      detail:
+        add: "Agregar"
+        reached_100:
+          one: "Se llegó al 100%, no se aplicará el beneficio %{benefits}"
+          other: "Se llegó al 100%, no se aplicarán los beneficios: %{benefits}"
       options:
         choose: "Elegí tu/s %{name}"
         limit: "Podés elegir hasta %{count}"
