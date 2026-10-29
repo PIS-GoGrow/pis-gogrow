@@ -11,8 +11,8 @@ describe("priceItems", () => {
 
   it("envía los items al backend y devuelve el pricing", async () => {
     const items = [
-      { schedule_id: 1, quantity: 2 },
-      { schedule_id: 2, quantity: 1 },
+      { schedule_id: 1, quantity: 2, benefits: [1] },
+      { schedule_id: 2, quantity: 1, benefits: [] },
     ]
 
     const pricing = {
@@ -56,8 +56,8 @@ describe("priceItems", () => {
 
   it("devuelve el pricing correctamente cuando un plato no tiene subsidio por superar el precio máximo", async () => {
     const items = [
-      { schedule_id: 10, quantity: 1 }, // plato caro sin descuento
-      { schedule_id: 11, quantity: 1 }, // plato dentro del límite con descuento
+      { schedule_id: 10, quantity: 1, benefits: [] }, // plato caro sin descuento
+      { schedule_id: 11, quantity: 1, benefits: [1] }, // plato dentro del límite con descuento
     ]
 
     const pricing = {
