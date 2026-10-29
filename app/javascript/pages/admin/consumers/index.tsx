@@ -5,11 +5,10 @@ import { useTranslation } from "react-i18next"
 
 import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
 import MonthSelect from "@/components/admin/month-select"
-import ListItemCard from "@/components/list-item-card"
 import PageContainer from "@/components/page-container"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import {
   Empty,
   EmptyDescription,
@@ -155,43 +154,38 @@ export default function Index({
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <Card className="gap-0 divide-y rounded-xl py-0 shadow-sm overflow-hidden">
             {shown.map((consumer) => (
-              <ListItemCard
+              <div
                 key={consumer.id}
-                className="hover:bg-accent/40 focus-within:ring-ring/50 relative transition-colors focus-within:ring-[3px]"
+                className="hover:bg-accent/40 focus-within:ring-ring/50 relative flex items-center gap-3 px-4 py-3.5 transition-colors focus-within:ring-[3px]"
               >
-                <CardContent className="flex items-center gap-3">
-                  <Avatar size="lg">
-                    <AvatarFallback className="text-foreground text-xs font-semibold">
-                      {getInitials(consumer.name)}
-                    </AvatarFallback>
-                  </Avatar>
+                <Avatar size="lg">
+                  <AvatarImage
+                    src={consumer.avatar_url ?? undefined}
+                    alt={consumer.name}
+                  />
+                  <AvatarFallback className="text-foreground text-xs font-semibold">
+                    {getInitials(consumer.name)}
+                  </AvatarFallback>
+                </Avatar>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">
-                      <Link
-                        href={adminConsumers.show(consumer.id).url}
-                        className="after:absolute after:inset-0 hover:underline"
-                      >
-                        {consumer.name}
-                      </Link>
-                    </p>
-                    <p className="text-muted-foreground truncate text-sm">
-                      {consumer.email}
-                    </p>
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={adminConsumers.show(consumer.id).url}
+                    className="truncate font-medium after:absolute after:inset-0 hover:underline block"
+                  >
+                    {consumer.name}
+                  </Link>
+                </div>
 
-                  <div className="flex shrink-0 items-center gap-3">
-                    <span className="font-semibold">
-                      {formatMoney(consumer.amount)}
-                    </span>
-                    <ConsumptionStatusBadge status={consumer.status} />
-                  </div>
-                </CardContent>
-              </ListItemCard>
+                <span className="shrink-0 font-semibold">
+                  {formatMoney(consumer.amount)}
+                </span>
+                <ConsumptionStatusBadge status={consumer.status} />
+              </div>
             ))}
-          </div>
+          </Card>
         )}
       </PageContainer>
     </AppLayout>
