@@ -224,7 +224,7 @@ RSpec.describe OrderReminders::Generate do
 
         expect {
           described_class.call(date:, now: at(11))
-        }.to have_enqueued_job(WhatsappSenderJob).with(instance_of(Notification), :order_deadline_reminder, {}, {}, "+59899123456")
+        }.to have_enqueued_job(WhatsappSenderJob).with(instance_of(Notification))
       end
 
       it "does not enqueue WhatsApp for an employee who turned order reminders off" do

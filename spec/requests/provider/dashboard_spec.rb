@@ -259,8 +259,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
         event: "order_confirmation",
         requires_action: false,
         notifiable: orders(:upcoming_pending_today),
-        title: "Tu pedido fue confirmado",
-        description: "Tu pedido fue confirmado."
+        description_data: {date: "12/12", provider: "TuViandita"}
       )
 
       sign_in user, role: :provider
