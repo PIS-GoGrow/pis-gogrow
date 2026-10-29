@@ -25,7 +25,7 @@ RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system
 
       expect(page).to have_content("Menú semanal")
       expect(page).to have_content("Tu consumo")
-      expect(page).to have_content("viandas subsidiadas")
+      expect(page).to have_content("viandas pedidas")
       expect(page).to have_link("Pedidos", href: orders_path)
     end
 

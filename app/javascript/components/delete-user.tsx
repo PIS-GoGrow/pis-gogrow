@@ -2,17 +2,17 @@ import { Form } from "@inertiajs/react"
 import { useRef } from "react"
 import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogClose,
+  AdaptableDialogContent,
+  AdaptableDialogDescription,
+  AdaptableDialogFooter,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
 import HeadingSmall from "@/components/heading-small"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { users } from "@/routes"
@@ -35,19 +35,20 @@ export default function DeleteUser() {
           <p className="text-sm">{t("components.delete_account.caution")}</p>
         </div>
 
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="destructive">
-              {t("components.delete_account.title")}
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogTitle>
+        <AdaptableDialog>
+          <AdaptableDialogTrigger asChild>
+            <Button>{t("components.delete_account.title")}</Button>
+          </AdaptableDialogTrigger>
+          <AdaptableDialogContent
+            showCloseButton={false}
+            className="p-5 md:p-6"
+          >
+            <AdaptableDialogTitle>
               {t("components.delete_account.confirm_title")}
-            </DialogTitle>
-            <DialogDescription>
+            </AdaptableDialogTitle>
+            <AdaptableDialogDescription>
               {t("components.delete_account.confirm_description")}
-            </DialogDescription>
+            </AdaptableDialogDescription>
             <Form
               action={users.destroy()}
               options={{
@@ -83,27 +84,32 @@ export default function DeleteUser() {
                     />
                   </Field>
 
-                  <DialogFooter>
-                    <DialogClose asChild>
+                  <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
+                    <AdaptableDialogClose asChild>
                       <Button
                         variant="secondary"
+                        className="max-md:flex-1"
                         onClick={() => resetAndClearErrors()}
                       >
                         {t("common.cancel")}
                       </Button>
-                    </DialogClose>
+                    </AdaptableDialogClose>
 
-                    <Button variant="destructive" disabled={processing} asChild>
+                    <Button
+                      disabled={processing}
+                      asChild
+                      className="max-md:flex-1"
+                    >
                       <button type="submit">
                         {t("components.delete_account.title")}
                       </button>
                     </Button>
-                  </DialogFooter>
+                  </AdaptableDialogFooter>
                 </>
               )}
             </Form>
-          </DialogContent>
-        </Dialog>
+          </AdaptableDialogContent>
+        </AdaptableDialog>
       </div>
     </div>
   )

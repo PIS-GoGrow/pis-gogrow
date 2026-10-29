@@ -1,33 +1,27 @@
 import { Head, Link, usePage } from "@inertiajs/react"
-import { ChevronRight, Clock3, Sparkles, Star } from "lucide-react"
-import type { ReactNode } from "react"
+import { ChevronRight, Clock3, Star } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import NotificationBanners from "@/components/notification-banners"
 import PageContainer from "@/components/page-container"
+import AiInsightCard from "@/components/provider/ai-insight-card"
+import DashboardMetric from "@/components/provider/dashboard-metric"
+import InsightsMetrics from "@/components/provider/insights-metrics"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import AppLayout from "@/layouts/app-layout"
-import { cn } from "@/lib/utils"
 import {
+  providerAccount,
   providerCollections,
   providerDashboard,
+  providerInsights,
   providerOperationalSettings,
   providerOrders,
 } from "@/routes"
 import type { BreadcrumbItem, ProviderDashboardIndex } from "@/types"
 
 type Props = ProviderDashboardIndex
-
-interface DashboardMetricProps {
-  icon?: ReactNode
-  label: string
-  value: number | string
-  variant?: "default" | "destructive"
-  valueFirst?: boolean
-  className?: string
-}
 
 export default function ProviderDashboard({
   today,
@@ -40,9 +34,14 @@ export default function ProviderDashboard({
   month_orders_count,
   month_dishes_count,
   average_rating,
+  top_rated,
+  completed_sections_count,
+  sections_total,
 }: Props) {
   const { t } = useTranslation()
   const { auth } = usePage().props
+  const completionDegrees =
+    sections_total > 0 ? (completed_sections_count / sections_total) * 360 : 0
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -65,35 +64,48 @@ export default function ProviderDashboard({
         <NotificationBanners />
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="dark:border-border dark:bg-muted dark:hover:bg-accent gap-3 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] py-4 shadow-none transition-colors hover:bg-[#EEEEEE] lg:col-span-2">
-            <CardContent className="px-4">
-              <Button
-                type="button"
-                variant="ghost"
-                className="group h-auto w-full cursor-pointer justify-start gap-3 p-0 text-left whitespace-normal hover:bg-transparent"
-              >
-                <span className="grid size-12 shrink-0 place-items-center rounded-full bg-[conic-gradient(#16a34a_0deg_270deg,var(--color-muted)_270deg_360deg)] p-1">
-                  <span className="bg-card grid size-full place-items-center rounded-full">
-                    <span className="text-sm font-semibold">3/4</span>
-                  </span>
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-base font-semibold">
-                    {t("pages.provider_dashboard.index.profile.title")}
-                  </span>
-                  <span className="text-muted-foreground block text-sm font-normal">
-                    {t("pages.provider_dashboard.index.profile.description")}
-                  </span>
-                </span>
-                <span className="bg-card grid size-9 shrink-0 place-items-center rounded-full">
-                  <ChevronRight
-                    className="size-4 transition-transform group-hover:translate-x-0.5"
-                    aria-hidden="true"
-                  />
-                </span>
-              </Button>
-            </CardContent>
-          </Card>
+          {completed_sections_count < sections_total && (
+            <Card className="dark:border-border dark:bg-muted dark:hover:bg-accent gap-3 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] py-4 shadow-none transition-colors hover:bg-[#EEEEEE] lg:col-span-2">
+              <CardContent className="px-4">
+                <Button
+                  asChild
+                  variant="ghost"
+                  className="group h-auto w-full cursor-pointer justify-start gap-3 p-0 text-left whitespace-normal hover:bg-transparent"
+                >
+                  <Link href={providerAccount().url}>
+                    <span
+                      className="grid size-12 shrink-0 place-items-center rounded-full p-1"
+                      style={{
+                        background: `conic-gradient(#16a34a 0deg ${completionDegrees}deg, var(--color-muted) ${completionDegrees}deg 360deg)`,
+                      }}
+                    >
+                      <span className="bg-card grid size-full place-items-center rounded-full">
+                        <span className="text-sm font-semibold">
+                          {completed_sections_count}/{sections_total}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-base font-semibold">
+                        {t("pages.provider_dashboard.index.profile.title")}
+                      </span>
+                      <span className="text-muted-foreground block text-sm font-normal">
+                        {t(
+                          "pages.provider_dashboard.index.profile.description",
+                        )}
+                      </span>
+                    </span>
+                    <span className="bg-card grid size-9 shrink-0 place-items-center rounded-full">
+                      <ChevronRight
+                        className="size-4 transition-transform group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                      />
+                    </span>
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="dark:border-border dark:bg-muted gap-4 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] py-4 shadow-none">
             <CardHeader className="grid-cols-[1fr_auto] grid-rows-1 items-center px-4">
@@ -176,42 +188,50 @@ export default function ProviderDashboard({
               <DashboardSectionButton
                 id="insights-title"
                 title={t("pages.provider_dashboard.index.insights.title")}
+                href={providerInsights.index().url}
               />
-              <div className="grid grid-cols-3 gap-2">
-                <DashboardMetric
-                  className="dark:border-border dark:bg-muted rounded-xl border border-[#E8E8E8] bg-[#F5F5F5] px-2 py-4"
-                  label={t("pages.provider_dashboard.index.insights.orders")}
-                  value={month_orders_count}
-                  valueFirst
-                />
-                <DashboardMetric
-                  className="dark:border-border dark:bg-muted rounded-xl border border-[#E8E8E8] bg-[#F5F5F5] px-2 py-4"
-                  label={t("pages.provider_dashboard.index.insights.dishes")}
-                  value={month_dishes_count}
-                  valueFirst
-                />
-                <DashboardMetric
-                  className="dark:border-border dark:bg-muted rounded-xl border border-[#E8E8E8] bg-[#F5F5F5] px-2 py-4"
-                  icon={
-                    <Star className="size-5 fill-current" aria-hidden="true" />
-                  }
-                  label={t("pages.provider_dashboard.index.insights.rating")}
-                  value={average_rating ?? "—"}
-                  valueFirst
-                />
-              </div>
-              <div className="space-y-3 rounded-xl border border-violet-300 bg-gradient-to-br from-[#FCFAFF] to-[#EEF6FF] p-4 text-sm dark:border-violet-900 dark:from-violet-950/30 dark:to-slate-900/30">
-                <p>
-                  {t("pages.provider_dashboard.index.insights.description")}
-                </p>
-                <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
-                  <Sparkles
-                    className="size-4 shrink-0 text-violet-500"
-                    aria-hidden="true"
-                  />
-                  {t("pages.provider_dashboard.index.insights.generated")}
-                </p>
-              </div>
+              <InsightsMetrics
+                orders={month_orders_count}
+                dishes={month_dishes_count}
+                rating={average_rating}
+              />
+              <AiInsightCard>
+                {t("pages.provider_dashboard.index.insights.description")}
+              </AiInsightCard>
+            </section>
+
+            <section className="space-y-3" aria-labelledby="top-rated-title">
+              <DashboardSectionButton
+                id="top-rated-title"
+                title={t("pages.provider_dashboard.index.top_rated.title")}
+              />
+              <Card className="dark:border-border dark:bg-muted gap-0 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] p-4 shadow-none">
+                {top_rated.length > 0 ? (
+                  <ul className="divide-border divide-y">
+                    {top_rated.map((dish) => (
+                      <li
+                        key={dish.name}
+                        className="flex items-center justify-between gap-2 py-2.5 text-sm first:pt-0 last:pb-0"
+                      >
+                        <span className="min-w-0 flex-1 truncate">
+                          {dish.name}
+                        </span>
+                        <span className="flex shrink-0 items-center gap-1 font-semibold">
+                          {dish.rating}
+                          <Star
+                            className="size-4 fill-current"
+                            aria-hidden="true"
+                          />
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    {t("pages.provider_dashboard.index.top_rated.empty")}
+                  </p>
+                )}
+              </Card>
             </section>
 
             <section className="space-y-3" aria-labelledby="payments-title">
@@ -276,38 +296,5 @@ function DashboardSectionButton({
         {href ? <Link href={href}>{content}</Link> : content}
       </Button>
     </h3>
-  )
-}
-
-function DashboardMetric({
-  icon,
-  label,
-  value,
-  variant = "default",
-  valueFirst = false,
-  className,
-}: DashboardMetricProps) {
-  const valueContent = (
-    <p className="flex items-center justify-center gap-1 text-2xl font-semibold tracking-tight">
-      {icon}
-      {value}
-    </p>
-  )
-
-  return (
-    <div className={cn("min-w-0", valueFirst && "text-center", className)}>
-      {valueFirst && valueContent}
-      <p
-        className={cn(
-          valueFirst ? "text-sm" : "text-muted-foreground text-sm",
-          variant === "destructive" && "text-destructive",
-        )}
-      >
-        {label}
-      </p>
-      {!valueFirst && (
-        <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
-      )}
-    </div>
   )
 }

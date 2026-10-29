@@ -58,7 +58,7 @@ export function AppSidebar() {
         icon: LayoutGrid,
       },
       {
-        title: "Menús",
+        title: t("nav.provider.menus"),
         href: schedules.index().url,
         icon: CalendarPlus,
       },

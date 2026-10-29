@@ -410,6 +410,55 @@ RSpec.describe Order, type: :model do
       expect(orders(:upcoming_pending_today)).to be_cancellable
     end
 
+    context "when the provider's order deadline is set" do
+      let(:order) { orders(:upcoming_pending_today) }
+
+      before { order.schedule.menu.provider.update!(order_deadline: "12:00") }
+
+      it "lets a pending order be cancelled on its delivery day before the deadline" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 11, min: 59)) do
+          expect(order).to be_cancellable
+        end
+      end
+
+      it "blocks a pending order on its delivery day once the deadline passed" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 12)) do
+          expect(order).not_to be_cancellable
+          expect(order.cancellation_block_reason).to eq("order_deadline_passed")
+        end
+      end
+
+      it "does not cancel a pending order on its delivery day once the deadline passed" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(order.cancel(by: users(:one))).to be(false)
+          expect(order.reload).to be_pending
+        end
+      end
+
+      it "keeps the confirmed reason for a confirmed order after the deadline" do
+        order.update!(status: :confirmed)
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(order.cancellation_block_reason).to eq("confirmed_for_today")
+        end
+      end
+
+      it "still lets an order for a later day be cancelled after today's deadline" do
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(orders(:upcoming_pending_future)).to be_cancellable
+        end
+      end
+
+      it "keeps an order for today cancellable when the provider has no deadline configured" do
+        order.schedule.menu.provider.update!(order_deadline: nil)
+
+        travel_to(Time.zone.today.in_time_zone.change(hour: 15)) do
+          expect(order).to be_cancellable
+          expect(order.cancellation_block_reason).to be_nil
+        end
+      end
+    end
+
     it "lets a confirmed order be cancelled while its delivery day is still ahead" do
       expect(orders(:upcoming_confirmed_future)).to be_cancellable
     end
@@ -619,6 +668,48 @@ RSpec.describe Order, type: :model do
       expect(order.reload).to be_confirmed
     end
 
+    it "rejects a confirmed order whose delivery is today" do
+      order = orders(:upcoming_pending_today)
+      order.update!(status: :confirmed)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(true)
+      expect(order.reload).to be_rejected
+    end
+
+    it "refuses to reject a confirmed order whose delivery date has passed" do
+      order = orders(:history_confirmed_past)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order.errors[:base]).to eq([ I18n.t("validations.order_not_rejectable") ])
+      expect(order.reload).to be_confirmed
+      expect(order.rejected_at).to be_nil
+    end
+
+    it "still rejects a pending order whose delivery date has passed" do
+      order = orders(:history_pending_past)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(true)
+      expect(order.reload).to be_rejected
+    end
+
+    it "preserves accounts balances and does not sync amounts when refusing to reject past confirmed order" do
+      order = orders(:history_confirmed_past)
+      accounts = order.accounts
+      original_amounts = accounts.map(&:amount)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order.accounts.reload.map(&:amount)).to eq(original_amounts)
+    end
+
+    it "refuses to reject a confirmed order without a delivery date" do
+      order = orders(:history_without_schedule)
+      order.update_columns(status: Order.statuses[:confirmed], delivery_date: nil)
+
+      expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+      expect(order.errors[:base]).to eq([ I18n.t("validations.order_not_rejectable") ])
+      expect(order.reload).to be_confirmed
+    end
+
     it "refuses to confirm an already confirmed order and returns false" do
       order = orders(:upcoming_confirmed_future)
 
@@ -645,6 +736,38 @@ RSpec.describe Order, type: :model do
 
       expect(order.decide(:confirmed)).to be(false)
       expect(order.reload).to be_rejected
+    end
+  end
+
+  describe "#rejectable?" do
+    it "is true for pending orders, even when their delivery date has passed" do
+      expect(orders(:upcoming_pending_today)).to be_rejectable
+      expect(orders(:history_pending_past)).to be_rejectable
+    end
+
+    it "is true for a confirmed order delivered today or later" do
+      expect(orders(:upcoming_confirmed_future)).to be_rejectable
+
+      today = orders(:upcoming_pending_today)
+      today.update!(status: :confirmed)
+      expect(today).to be_rejectable
+    end
+
+    it "is false for a confirmed order whose delivery date has passed" do
+      expect(orders(:history_confirmed_past)).not_to be_rejectable
+    end
+
+    it "is false for a confirmed order without a delivery date" do
+      order = orders(:history_without_schedule)
+      order.status = :confirmed
+
+      expect(order.delivery_date).to be_nil
+      expect(order).not_to be_rejectable
+    end
+
+    it "is false for cancelled and rejected orders" do
+      expect(orders(:history_cancelled_future)).not_to be_rejectable
+      expect(orders(:history_rejected_future)).not_to be_rejectable
     end
   end
 
@@ -982,9 +1105,59 @@ RSpec.describe Order, type: :model do
         title: "Un pedido fue cancelado"
       )
       expect(notification.description).to eq(
-        "El pedido de #{order.consumer.user.name} del #{order.schedule.date.strftime("%d/%m")} " \
+        "El pedido de #{order.consumer.user.name} del #{DateFormat.long(order.schedule.date, inline: true)} " \
         "de #{order.menu_name} fue cancelado."
       )
+    end
+
+    it "does not notify the provider when the consumer cancels a confirmed order while the provider is closed" do
+      order = orders(:upcoming_confirmed_future)
+
+      order.provider.closures.create!(
+        starts_on: Date.current,
+        ends_on: Date.current,
+        reason: "Vacaciones"
+      )
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.not_to change(Notification, :count)
+
+      expect(
+        Notification.where(
+          event: "order_cancellation",
+          user: order.provider.user,
+          notifiable: order
+        )
+      ).to be_empty
+    end
+
+    it "notifies the provider when the consumer cancels a confirmed order while the provider is open" do
+      order = orders(:upcoming_confirmed_future)
+
+      order.provider.closures.create!(
+        starts_on: Date.current + 2.days,
+        ends_on: Date.current + 4.days,
+        reason: "Vacaciones futuras"
+      )
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.to change { Notification.where(event: "order_cancellation", user: order.provider.user).count }.by(1)
+    end
+
+    it "does not notify the provider when the cancellation occurs during a multi-day closure including today" do
+      order = orders(:upcoming_confirmed_future)
+
+      order.provider.closures.create!(
+        starts_on: Date.current,
+        ends_on: Date.current + 2.days,
+        reason: "Obras"
+      )
+
+      expect {
+        order.cancel(by: order.consumer.user)
+      }.not_to change(Notification, :count)
     end
 
     it "does not notify the provider when the cancellation is refused" do
@@ -1029,7 +1202,7 @@ RSpec.describe Order, type: :model do
       order.decide(:confirmed)
 
       description = confirmation_notifications(order).first.description
-      expect(description).to include(I18n.l(order.schedule.date, format: :short))
+      expect(description).to include(DateFormat.long(order.schedule.date, inline: true))
       expect(description).to include(users(:provider_user).name)
     end
 
@@ -1091,8 +1264,8 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
     end
 
-    def place(quantity)
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: } ])[schedule.id]
+    def place(quantity, benefits: [])
+      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity:, benefits: } ]).first.second
       Order.reserve(
         consumer:, schedule:, quantity:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1104,7 +1277,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "records how many meals each benefit covered" do
-      order = place(3)
+      order = place(3, benefits: [ special.id ])
 
       # 1ª base + premio (60), 2ª solo premio (210), 3ª a precio completo.
       expect(order.discounted_price).to eq(570)
@@ -1112,7 +1285,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "charges the company the base and the special subsidy once confirmed" do
-      order = place(3)
+      order = place(3, benefits: [ special.id ])
       order.decide(:confirmed)
 
       expect(order.accounts.find { it.owner == consumer }.reload.amount).to eq(570)
@@ -1120,7 +1293,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "raises the quantity without spending its own uses twice" do
-      order = place(1)
+      order = place(1, benefits: [ special.id ])
 
       expect(modify(order, 3)).to be(true)
 
@@ -1129,13 +1302,13 @@ RSpec.describe Order, type: :model do
     end
 
     it "lowers the quantity and gives the uses back" do
-      order = place(3)
+      order = place(3, benefits: [ special.id ])
 
       expect(modify(order, 1)).to be(true)
 
       expect(order.reload.discounted_price).to eq(60)
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
-      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(1)
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(1)
     end
 
     it "adds a special assigned after the order was placed" do
@@ -1149,14 +1322,15 @@ RSpec.describe Order, type: :model do
       expect(order.order_benefits.pluck(:benefit_id)).to contain_exactly(base.id, seniority.id)
     end
 
-    it "drops a special that no longer applies" do
-      order = place(1)
+    it "keeps a special removed after the order was placed, only for the meals it already covered" do
+      order = place(1, benefits: [ special.id ])
       benefit_configurations(:gift).deactivate!(by: users(:admin))
 
-      modify(order, 1)
+      modify(order, 2)
 
-      expect(order.reload.discounted_price).to eq(150)
-      expect(order.order_benefits.pluck(:benefit_id)).to contain_exactly(base.id)
+      # 1ª base + premio (60), 2ª a precio completo aunque al premio le quedaba un uso.
+      expect(order.reload.discounted_price).to eq(360)
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
     end
   end
 
@@ -1171,7 +1345,7 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 1)
     end
     let(:order) do
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ])[schedule.id]
+      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity: 1, benefits: [ special.id ] } ]).first.second
       Order.reserve(
         consumer:, schedule:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1184,23 +1358,22 @@ RSpec.describe Order, type: :model do
     end
 
     it "spends the use while the order is pending or confirmed" do
-      order
-      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(0)
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(1)
 
       order.decide(:confirmed)
-      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(0)
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(0)
     end
 
     it "frees the use when the employee cancels" do
       order.cancel(by: users(:one))
 
-      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(1)
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(1)
     end
 
     it "frees the use when the provider rejects" do
       order.decide(:rejected, reason: :out_of_stock)
 
-      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(1)
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(1)
     end
   end
 
@@ -1212,7 +1385,7 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
     end
     let(:order) do
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ])[schedule.id]
+      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity: 1, benefits: [ special.id ] } ]).first.second
       Order.reserve(
         consumer:, schedule:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1233,9 +1406,48 @@ RSpec.describe Order, type: :model do
       expect {
         Order.reserve(
           consumer:, schedule:, delivery_method: :office, address: nil,
-          quantity: 0, discounted_price: 100, benefits: { special => 1 }
+          quantity: 0, discounted_price: 100, benefits: { special => Orders::Pricing::BenefitUsed[1, 2] }
         )
       }.not_to change(OrderBenefit, :count)
+    end
+  end
+
+  describe "auditing modifications" do
+    let(:order) { orders(:upcoming_pending_future) }
+    let(:user) { users(:one) }
+
+    before do
+      Current.session = user.sessions.create!(role: :consumer)
+    end
+
+    after do
+      Current.reset
+    end
+
+    it "records an audit log with previous and new values when modifying audited attributes" do
+      delivery = { delivery_method: "home", address: "Av. Italia 1234" }
+      order.modify(by: user, quantity: 2, notes: "Sin cebolla", delivery:)
+
+      log = order.audit_logs.sole
+      expect(log.user).to eq(user)
+      expect(log.changeset).to include(
+        "amount" => [ 1, 2 ],
+        "address" => [ "Julio Herrera y Reissig 565", "Av. Italia 1234" ],
+        "notes" => [ nil, "Sin cebolla" ]
+      )
+    end
+
+    it "does not record an audit log when state changes" do
+      expect {
+        order.decide(:confirmed)
+        order.cancel(by: user)
+      }.not_to change(order.audit_logs, :count)
+    end
+
+    it "does not record an audit log when modify fails validation" do
+      delivery = { delivery_method: "home", address: "" }
+      expect(order.modify(by: user, quantity: 1, notes: "a" * 141, delivery:)).to be(false)
+      expect(order.audit_logs).to be_empty
     end
   end
 end

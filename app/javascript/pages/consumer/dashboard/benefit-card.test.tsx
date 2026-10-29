@@ -23,7 +23,7 @@ describe("BenefitCard", () => {
 
     expect(screen.getByText("Este mes")).toBeInTheDocument()
     expect(screen.getByText("3 de 2")).toBeInTheDocument()
-    expect(screen.getByText("viandas subsidiadas")).toBeInTheDocument()
+    expect(screen.getByText("viandas pedidas")).toBeInTheDocument()
   })
 
   it("does not divide a small monthly limit down to zero", () => {

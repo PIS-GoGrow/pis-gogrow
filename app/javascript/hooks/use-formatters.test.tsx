@@ -27,11 +27,20 @@ describe("useFormatters", () => {
     })
   })
 
-  describe("formatLongDate", () => {
-    const { formatLongDate } = renderHook(() => useFormatters()).result.current
+  describe("fechas", () => {
+    const { formatLongDate, formatLongDateInline, formatShortDate } =
+      renderHook(() => useFormatters()).result.current
 
-    it("escribe día, mes y año sin el día de la semana", () => {
-      expect(formatLongDate("2026-10-07")).toBe("7 de octubre de 2026")
+    it("escribe la fecha larga con el día de la semana", () => {
+      expect(formatLongDate("2026-10-07")).toBe("Miércoles 7 de octubre")
+    })
+
+    it("escribe la fecha larga en minúscula para usarla dentro de una frase", () => {
+      expect(formatLongDateInline("2026-10-07")).toBe("miércoles 7 de octubre")
+    })
+
+    it("escribe la fecha corta como dd/mm/aa", () => {
+      expect(formatShortDate("2026-10-07")).toBe("07/10/26")
     })
   })
 })

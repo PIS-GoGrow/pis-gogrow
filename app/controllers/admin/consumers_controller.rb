@@ -18,7 +18,7 @@ class Admin::ConsumersController < Admin::InertiaController
 
     summary = AdminConsumerSummary.new(@consumer)
     @summary = summary.current_month
-    @benefit_summary = OrderPricing.new(@consumer).summary
+    @benefit_summary = Orders::Pricing.new(@consumer).summary
     @months = summary.months
     @debt_reminder = debt_reminder_for(@consumer)
   end
@@ -34,7 +34,7 @@ class Admin::ConsumersController < Admin::InertiaController
       eligible: eligibility.eligible?,
       amount: eligibility.amount.to_f,
       remaining: eligibility.remaining,
-      next_available_at: eligibility.next_available_at&.in_time_zone(Time.zone)&.strftime("%d/%m/%Y a las %H:%M"),
+      next_available_at: DateFormat.long_with_time(eligibility.next_available_at&.in_time_zone(Time.zone), inline: true),
       blocked_reason: eligibility.reason&.to_s
     }
   end

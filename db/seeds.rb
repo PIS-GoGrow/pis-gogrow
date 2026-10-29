@@ -69,7 +69,7 @@ menus = [
     description: "Opción de carne o pollo",
     price: 300,
     option_groups_attributes: [
-      { name: "Salsas", limit: 1, options: [ "Mayonesa de ajo", "Ketchup" ] }
+      { name: "Salsa", limit: 1, options: [ "Mayonesa de ajo", "Ketchup" ] }
     ],
     day: 0,
     amount: 7
@@ -96,7 +96,7 @@ menus = [
     description: "Pasta fresca con salsa a elección",
     price: 320,
     option_groups_attributes: [
-      { name: "Salsas", limit: 1, options: [ "Filetto", "Bolognesa" ] }
+      { name: "Salsa", limit: 1, options: [ "Filetto", "Bolognesa" ] }
     ],
     day: 3,
     amount: 8
@@ -115,8 +115,8 @@ menus = [
     description: "Pasta rellena con opciones a elección",
     price: 300,
     option_groups_attributes: [
-      { name: "Rellenos", limit: 1, options: [ "Ricota y nuez", "Ricota y espinaca" ] },
-      { name: "Salsas", limit: 1, options: [ "Filetto", "Bolognesa", "Rosa" ] }
+      { name: "Relleno", limit: 1, options: [ "Ricota y nuez", "Ricota y espinaca" ] },
+      { name: "Salsa", limit: 1, options: [ "Filetto", "Bolognesa", "Rosa" ] }
     ],
     day: 0,
     amount: 8
@@ -179,8 +179,22 @@ admin = Admin.create!(user: admin_user, company:)
 benefit_config = BenefitConfiguration.create! subsidy_percentage: 50, name: "Subsidio base", company:, created_by: admin_user
 benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: Date.current, type: MonthlyBenefit.name
 
-consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892")
-consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
+consumer.saved_addresses.create!(
+  name: "Casa",
+  street: "Julio Herrera y Reissig 565"
+)
+
+consumer.saved_addresses.create!(
+  name: "Flora Café",
+  street: "Canelones 892"
+)
+
+consumer.saved_addresses.create!(
+  name: "La Bicicleta Café",
+  street: "Bv. España 2643",
+  apartment: "Local 2"
+)
+
 
 benefit = Benefit.create!(
   consumer:,

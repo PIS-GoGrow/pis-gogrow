@@ -21,7 +21,12 @@ import {
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
-import { providerMenus, schedules as schedulesRoutes } from "@/routes"
+import { formatLongDateInline } from "@/lib/dates"
+import {
+  providerMenuImports,
+  providerMenus,
+  schedules as schedulesRoutes,
+} from "@/routes"
 import type { BreadcrumbItem, SavedMenu, Schedule } from "@/types"
 
 interface ScheduleDay {
@@ -44,12 +49,6 @@ interface SchedulesIndexProps {
   tab: "week" | "saved"
   selected_date: string | null
   today: string
-}
-
-function weekdayName(isoDate: string) {
-  return new Intl.DateTimeFormat("es-UY", { weekday: "long" }).format(
-    new Date(`${isoDate}T00:00:00`),
-  )
 }
 
 function normalize(text: string) {
@@ -146,12 +145,12 @@ export default function Index({
                     <>
                       <EmptyTitle>
                         {t("pages.schedules.index.empty.title", {
-                          day: weekdayName(selectedDay.date),
+                          day: formatLongDateInline(selectedDay.date),
                         })}
                       </EmptyTitle>
                       <EmptyDescription>
                         {t("pages.schedules.index.empty.description", {
-                          day: weekdayName(selectedDay.date),
+                          day: formatLongDateInline(selectedDay.date),
                         })}
                       </EmptyDescription>
                     </>
@@ -219,9 +218,11 @@ export default function Index({
         <div aria-hidden="true" className="h-20" />
 
         <div className="bg-background fixed inset-x-0 bottom-[72px] z-20 grid grid-cols-2 gap-3 px-5 py-3 md:inset-x-auto md:right-6 md:bottom-6 md:w-96 md:bg-transparent md:p-0">
-          <Button variant="secondary" className="h-11" disabled>
-            <Upload aria-hidden="true" />
-            {t("pages.schedules.index.import_dishes")}
+          <Button variant="secondary" className="h-11" asChild>
+            <Link href={providerMenuImports.new().url}>
+              <Upload aria-hidden="true" />
+              {t("pages.schedules.index.import_dishes")}
+            </Link>
           </Button>
 
           {tab === "saved" || selectedDay?.publishable ? (

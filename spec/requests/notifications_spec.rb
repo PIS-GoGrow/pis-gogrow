@@ -102,5 +102,66 @@ RSpec.describe "Notifications", type: :request do
       expect(response).to have_http_status(:not_found)
       expect(notification.reload.closed_at).to be_nil
     end
+
+    context "cuando el usuario no está autenticado" do
+      it "redirecciona al inicio de sesión" do
+        notification = create_notification(user:)
+
+        patch close_notification_path(notification)
+
+        expect(response).to have_http_status(:redirect)
+        expect(notification.reload.closed_at).to be_nil
+      end
+    end
+
+    context "con bypass de interfaz o parámetros inválidos" do
+      before { sign_in(user) }
+
+      it "devuelve 404 para un id inexistente" do
+        patch close_notification_path(id: 999_999)
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "devuelve 404 para un id no numérico o inválido" do
+        patch "/notificaciones/invalido/cerrar"
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "devuelve 404 al intentar cerrar una notificación que ya fue cerrada" do
+        notification = create_notification(user:)
+        notification.close!
+
+        patch close_notification_path(notification)
+
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+  end
+
+  describe "Inertia shared props :notifications" do
+    it "envía las notificaciones activas del rol de la sesión con la estructura esperada" do
+      closed_notification = create_notification(user:)
+      closed_notification.close!
+      active_notification = create_notification(user:)
+      sign_in(user)
+
+      get dashboard_path
+
+      expect(response).to have_http_status(:ok)
+      notifications_prop = inertia.props[:notifications]
+      expect(notifications_prop).to be_an(Array)
+      expect(notifications_prop.size).to eq(1)
+      expect(notifications_prop.first).to match(
+        a_hash_including(
+          id: active_notification.id,
+          title: "Tu pedido fue confirmado",
+          description: "Tu pedido fue confirmado.",
+          requires_action: false
+        )
+      )
+      expect(notifications_prop.map { |n| n[:id] }).not_to include(closed_notification.id)
+    end
   end
 end

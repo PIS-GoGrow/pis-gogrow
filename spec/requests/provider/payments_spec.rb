@@ -278,6 +278,7 @@ RSpec.describe "Provider payments", type: :request do
     get receipt_provider_payment_path(payment)
 
     expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
   end
 
   it "keeps a rejected partial payment receipt accessible only to its provider" do
@@ -296,7 +297,53 @@ RSpec.describe "Provider payments", type: :request do
     get receipt_provider_payment_path(payment)
 
     expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
     expect(payment.reload).to be_rejected
+  end
+
+  it "returns 404 when opening a non-existent receipt file" do
+    user, _payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    get receipt_provider_payment_path(id: 999_999)
+
+    expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
+  end
+
+  it "returns 404 when receipt ID is non-numeric" do
+    user, _payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    get "/proveedor/comprobantes/invalido/archivo"
+
+    expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
+  end
+
+  it "returns 404 when reviewing a non-existent payment without altering data" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    expect {
+      patch provider_payment_path(id: 999_999), params: { status: "approved" }
+    }.not_to change { payment.reload.status }
+
+    expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
+  end
+
+  it "returns 404 when reviewing a payment belonging to another provider" do
+    _user, payment = setup_submitted_payment
+    other = create_provider("other-review-provider@gmail.com")
+    sign_in(other.user, role: :provider)
+
+    expect {
+      patch provider_payment_path(payment), params: { status: "approved" }
+    }.not_to change { payment.reload.status }
+
+    expect(response).to have_http_status(:not_found)
+    expect(inertia).to render_component("errors/not_found")
   end
 
   it "redirects a consumer trying to review a payment" do
@@ -338,5 +385,108 @@ RSpec.describe "Provider payments", type: :request do
     expect(payment.reload.rejection_reason).to eq("El pago es parcial")
     expect(account.reload.payment_pending_review).to be_nil
     expect(account.collection_status).to eq("rejected")
+  end
+
+  describe "manual debt reminders closure on review" do
+    before do
+      Notification::Configuration.find_or_create_by!(key: "provider_payment_reminders") do |c|
+        c.roles = [ "consumer" ]
+      end
+    end
+
+    def create_reminder(account)
+      Notifier.call(
+        event_key: "debt_payment_reminder",
+        user: account.owner.user,
+        notifiable: account,
+        description_data: {
+          amount: "$500",
+          provider: account.provider.user.name,
+          period: "octubre de 2026"
+        }
+      )
+    end
+
+    it "closes the active manual debt reminder when approved" do
+      user, payment = setup_submitted_payment
+      reminder = create_reminder(payment.account)
+      sign_in(user, role: :provider)
+
+      patch provider_payment_path(payment), params: { status: "approved" }
+
+      expect(response).to redirect_to(provider_collections_path)
+      expect(payment.reload).to be_approved
+      expect(reminder.reload.closed_at).to be_present
+    end
+
+    it "leaves the manual debt reminder active when rejected" do
+      user, payment = setup_submitted_payment
+      reminder = create_reminder(payment.account)
+      sign_in(user, role: :provider)
+
+      patch provider_payment_path(payment),
+            params: { status: "rejected", rejection_reason: "incorrect_receipt" }
+
+      expect(response).to redirect_to(provider_collections_path)
+      expect(payment.reload).to be_rejected
+      expect(reminder.reload.closed_at).to be_nil
+    end
+
+    it "does not close the reminder if approval fails due to invalid parameters (bypass de interfaz: 422)" do
+      user, payment = setup_submitted_payment
+      reminder = create_reminder(payment.account)
+      sign_in(user, role: :provider)
+
+      patch provider_payment_path(payment), params: { status: "invalid_status" }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(payment.reload).to be_submitted
+      expect(reminder.reload.closed_at).to be_nil
+    end
+
+    it "does not close the reminder if approving a current month payment (business rule redirect)" do
+      user, payment = setup_submitted_payment
+      payment.account.update!(month: Date.current.beginning_of_month)
+      reminder = create_reminder(payment.account)
+      sign_in(user, role: :provider)
+
+      patch provider_payment_path(payment), params: { status: "approved" }
+
+      expect(response).to redirect_to(provider_collections_path)
+      expect(payment.reload).to be_submitted
+      expect(reminder.reload.closed_at).to be_nil
+    end
+
+    it "does not close the reminder if an unauthorized role attempts to approve" do
+      _user, payment = setup_submitted_payment
+      reminder = create_reminder(payment.account)
+      consumer_user = payment.account.owner.user
+      sign_in(consumer_user, role: :consumer)
+
+      patch provider_payment_path(payment), params: { status: "approved" }
+
+      expect(response).to redirect_to(root_path)
+      expect(payment.reload).to be_submitted
+      expect(reminder.reload.closed_at).to be_nil
+    end
+
+    it "only closes reminders for the paid account, not reminders from another account" do
+      user, payment = setup_submitted_payment
+      reminder1 = create_reminder(payment.account)
+
+      other_account = Account.create!(
+        owner: payment.account.owner,
+        provider: payment.provider,
+        month: 2.months.ago.to_date,
+        amount: 300
+      )
+      reminder2 = create_reminder(other_account)
+
+      sign_in(user, role: :provider)
+      patch provider_payment_path(payment), params: { status: "approved" }
+
+      expect(reminder1.reload.closed_at).to be_present
+      expect(reminder2.reload.closed_at).to be_nil
+    end
   end
 end

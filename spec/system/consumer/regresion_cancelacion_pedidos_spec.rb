@@ -33,7 +33,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       address: "18 de Julio 1006",
       quantity: 1,
       discounted_price:,
-      benefits: { benefit => 1 }
+      benefits: { benefit => Orders::Pricing::BenefitUsed[1, schedule.price - discounted_price] }
     )
   end
 

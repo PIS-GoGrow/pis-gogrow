@@ -102,7 +102,7 @@ es:
     consumer: "Consumidor"
     admin: "Admin"
   flash:
-    cart_confirmed: "Pedido confirmado. Tus platos quedaron reservados."
+    cart_confirmed: "Pedido realizado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
     order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
     order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
@@ -158,11 +158,26 @@ es:
     delivery_method_not_allowed: "La modalidad de entrega elegida no está disponible para este proveedor."
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
+    order_not_rejectable: "No se puede rechazar un pedido confirmado cuya fecha de entrega ya pasó."
     invalid_code: "Código incorrecto."
     invalid_email: "Ingresá un correo válido."
     password_required: "Ingresá una contraseña."
     order_not_modifiable: "Este pedido ya no se puede modificar."
     password_challenge_invalid: "La verificación de contraseña no es válida"
+    menu_import:
+      name: "Falta el nombre del plato."
+      description: "Falta la descripción."
+      price: "El precio tiene que ser un número mayor que cero."
+      options: "No se entendió el grupo de opciones «%{cell}». Se escribe así: Nombre=opción 1, opción 2"
+      duplicated_options: "El grupo «%{name}» tiene opciones repetidas."
+      duplicated_groups: "Hay más de un grupo de opciones llamado «%{name}»."
+      file:
+        unsupported_format: "El archivo tiene que ser .xlsx, .xls, .csv o .ods."
+        unreadable: "No se pudo leer la planilla. Descargá la plantilla y volvé a intentar."
+        empty: "La planilla no tiene ningún plato."
+        too_big: "El archivo no puede pesar más de %{max} MB."
+        too_many_rows: "La planilla no puede tener más de %{max} platos."
+        missing_columns: "Faltan columnas en la planilla: %{columns}."
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
     payment_closed: "Este pago ya fue aprobado y no puede modificarse."
     payment_current_account: "No se puede subir ni aprobar un comprobante mientras el mes siga en curso."
@@ -208,6 +223,9 @@ es:
         dish_modified: "porque el plato fue modificado"
         dish_deleted: "porque el plato fue eliminado"
         dish_unpublished: "porque el plato fue retirado del menú de ese día"
+    order_deadline_reminder:
+      title: "Recordatorio de pedido"
+      description: "¡No te quedes sin almuerzo! Todavía no pediste tu vianda de hoy."
     debt_threshold_exceeded:
       title: "Tu deuda superó el monto límite"
       description: "Tu deuda es de %{debt} y superó el límite de %{threshold} definido por RR. HH. Regularizá tus pagos para que este aviso desaparezca."
@@ -245,7 +263,13 @@ es:
       description: "Todavía no publicaste un menú para el %{date}."
     hr_debt_payment_reminder:
       title: "Recordatorio de pago pendiente"
-      description: "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos. Podés verlos en tus pagos."
+      description: "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos con %{providers}. Podés verlos en tus pagos."
+      unknown_provider: "un proveedor"
+    coupon_assigned:
+      title: "Recibiste un cupón"
+      description:
+        one: "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} vianda para entregas del %{period}."
+        other: "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} viandas para entregas del %{period}."
   notification_configurations:
     provider_orders:
       title: "Pedidos nuevos"
@@ -295,6 +319,12 @@ es:
     hr_payment_reminders:
       title: "Recordatorios de pago de Recursos Humanos"
       description: "Recordatorios de pagos vencidos enviados por Recursos Humanos."
+    order_reminders:
+      title: "Recordatorios de pedidos"
+      description: "Recibí un aviso para no olvidarte de pedir tu vianda."
+    coupons:
+      title: "Cupones"
+      description: "Avisos cuando RR. HH. te da un cupón."
   activerecord:
     errors:
       models:
@@ -327,8 +357,8 @@ es:
           attributes:
             receipt:
               required: "debe adjuntarse para enviar el pago"
-              invalid_content_type: "debe ser un archivo PDF, JPG o PNG"
-              too_large: "no puede superar los 10 MB"
+              invalid_content_type: "El archivo debe ser PDF, JPG o PNG."
+              too_large: "El archivo no puede superar los 10 MB."
               already_under_review: "Ya hay un comprobante en revisión para esta cuenta. Esperá a que se resuelva para enviar otro."
             rejection_reason:
               blank: "es obligatorio para rechazar un comprobante"
@@ -407,7 +437,7 @@ es:
     change_to: "Cambiar a"
     provider:
       home: "Inicio"
-      menus: "Menús"
+      menus: "Gestión de Menú"
       menu: "Menú"
       orders: "Pedidos"
       payments: "Cobros"
@@ -426,6 +456,7 @@ es:
       sessions: "Sesiones"
       appearance: "Apariencia"
       notifications: "Notificaciones"
+      addresses: "Direcciones"
     payments: "Pagos"
     collections: "Cobros"
     consumer:
@@ -453,6 +484,7 @@ es:
     settings_layout:
       title: "Configuración"
       description: "Administrá tu perfil y la configuración de tu cuenta"
+      back_to_account: "Volver a Cuenta"
     delete_account:
       title: "Eliminar cuenta"
       description: "Eliminá tu cuenta y todos tus datos"
@@ -462,6 +494,12 @@ es:
       confirm_description: "Una vez eliminada tu cuenta, todos sus recursos y datos también se eliminarán de forma permanente. Ingresá tu contraseña para confirmar que querés eliminar tu cuenta definitivamente."
     month_select:
       this_month: "Este mes"
+    insights_metrics:
+      orders: "Pedidos"
+      dishes: "Platos"
+      rating: "Valoración"
+    ai_insight_card:
+      generated: "Generado por IA"
     date_picker:
       placeholder: "Elegí una fecha"
       range_placeholder: "Elegí un rango"
@@ -637,7 +675,7 @@ es:
               seniority: "Antigüedad"
               birthday: "Cumpleaños"
               onboarding: "Onboarding"
-              gift: "Premio"
+              gift: "Cupón"
             form:
               add_title: "Agregar subsidio especial"
               edit_title: "Modificar subsidio especial"
@@ -733,7 +771,31 @@ es:
           quantity: "Cant."
           employee: "Empleado"
           no_provider: "Sin proveedor"
+          orders_empty_title: "Sin consumos"
           orders_empty: "No hay pedidos confirmados en este mes."
+          filters:
+            open: "Filtrar historial"
+            title: "Filtros del historial"
+            providers: "Proveedores:"
+            all_providers: "Todos"
+            status: "Estado de pago"
+            all_statuses: "Todos"
+            subsidy: "Subsidio aplicado"
+            subsidy_all: "Todos los consumos"
+            subsidy_with: "Con subsidio aplicado"
+            subsidy_without: "Sin subsidio aplicado"
+            provider_chip: "Proveedor: %{provider}"
+            status_chip: "Estado: %{status}"
+            subsidy_chip: "Subsidio: %{subsidy}"
+            remove_provider: "Quitar filtro de proveedor %{provider}"
+            remove_status: "Quitar filtro de estado"
+            remove_subsidy: "Quitar filtro de subsidio"
+            empty_title: "No hay consumos que coincidan"
+            empty_description: "Probá cambiando o limpiando los filtros."
+            clear: "Limpiar filtros"
+            cancel: "Cancelar"
+            apply: "Aplicar"
+          total_label: "Total"
           total: "Total: %{amount}"
           close: "Cerrar"
       payments:
@@ -861,9 +923,14 @@ es:
         upcoming_empty_description: "No tenés viandas en camino."
         history_empty_title: "No tenés pedidos anteriores"
         history_empty_description: "Tus pedidos completados aparecerán aquí."
+        history_filtered_empty_title: "No hay pedidos de este proveedor"
+        history_filtered_empty_description: "No tenés pedidos anteriores realizados a este proveedor."
+        providers_label: "Proveedores:"
+        all_providers: "Todos los proveedores"
         quantity: "x%{count}"
         upcoming_address: "Lo recibís en: %{address} (%{delivery_method})"
         history_address: "Lo recibiste en: %{address} (%{delivery_method})"
+        cancelled_address: "Lo pediste para: %{address} (%{delivery_method})"
         no_date: "Sin fecha de entrega"
         no_price: "Importe no disponible"
         base_price: "Precio base: %{amount}"
@@ -878,6 +945,7 @@ es:
           confirm: "Cancelar pedido"
         cannot_cancel:
           confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar."
+          order_deadline_passed: "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede cancelar."
         review: "Calificar vianda"
@@ -903,7 +971,6 @@ es:
           address: "Dirección de entrega"
           notes: "Notas"
           notes_placeholder: "Sin salsa, sin cebolla…"
-          remaining: "Quedan %{count} disponibles para esta fecha"
           back: "Volver"
           confirm: "Guardar cambios"
         cannot_edit:
@@ -920,6 +987,7 @@ es:
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
+        delivered: "Entregado"
       delivery_methods:
         office: "Oficina"
         home: "Domicilio"
@@ -1128,6 +1196,7 @@ es:
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
+        delivered: "Entregado"
       index:
         title: "Pedidos"
         tabs:
@@ -1191,8 +1260,8 @@ es:
           label: "Hora límite"
           help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
         profile:
-          title: "Completá tu cuenta"
-          description: "La configuración de los pasos estará disponible próximamente."
+          title: "Complete su cuenta"
+          description: "Deje todo listo para empezar a recibir pedidos."
         orders:
           title: "Pedidos"
           today: "Hoy"
@@ -1206,21 +1275,38 @@ es:
           deadline_all_day: "Recibiendo pedidos todo el día"
         insights:
           title: "Hallazgos del mes"
-          orders: "Pedidos"
-          dishes: "Platos"
-          rating: "Valoración"
           description: "Los hallazgos basados en las valoraciones estarán disponibles próximamente."
           generated: "Generado por IA"
+        top_rated:
+          title: "Mejor valorados"
+          empty: "Todavía no hay platos valorados."
         payments:
           title: "Resumen de cobros"
           pending: "Cobros pendientes"
           total: "Deuda total"
           description: "Los cobros pendientes aparecerán acá próximamente."
+    provider_insights:
+      index:
+        title: "Hallazgos"
+        back: "Volver al inicio"
+        period: "Período"
+        top_dishes: "Platos más pedidos"
+        top_rated_dishes: "Mejor valorados"
+        orders_count: "x%{count}"
+        empty_orders: "Todavía no hay pedidos en este período"
+        empty_reviews: "Todavía no hay reseñas en este período"
+        presets:
+          today: "Hoy"
+          yesterday: "Ayer"
+          this_week: "Esta semana"
+          this_month: "Este mes"
+          last_month: "Mes pasado"
     schedules:
       index:
         title: "Gestión de Menú"
         week_range: "%{from} - %{to}, %{month}"
         previous_week: "Semana anterior"
+        published: "Publicado"
         next_week: "Semana siguiente"
         availability:
           toggle_label: "En stock"
@@ -1358,6 +1444,7 @@ es:
           starts_on: "Desde"
           ends_on: "Hasta"
           incomplete: "Completá las fechas."
+          weekdays_required: "Elegí al menos un día de lunes a viernes."
         sheet:
           back: "Volver"
           apply: "Aplicar cambios"
@@ -1396,6 +1483,8 @@ es:
       office_delivery_warning_other: "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
       remove: "Quitar %{name}"
+      decrease: "Quitar una unidad de %{name}"
+      increase: "Agregar una unidad de %{name}"
       delivery: "Entrega: %{date}"
       benefit: "Subsidio Base (%{percentage}%)"
       no_benefit: "Subsidio GoGrow"
@@ -1414,7 +1503,7 @@ es:
         title: "Agregar una dirección"
         description: "Ingresá dónde querés recibir el pedido."
         name: "Nombre"
-        name_placeholder: "Ej: Oficina, Casa, etc."
+        name_placeholder: "Ej: Casa, Gimnasio, etc."
         street: "Dirección"
         apartment: "Piso / Apartamento (opcional)"
         save_for_later: "Guardar esta dirección para futuros pedidos"
@@ -1467,14 +1556,85 @@ es:
         meals_one: "%{count} vianda"
         meals_other: "%{count} viandas"
         no_benefit: "Todavía no tenés un beneficio asignado. RR. HH. lo configura para toda la empresa."
+        coupons: "Mis cupones"
+        coupon_discount: "%{percentage}% de descuento"
+        coupon_remaining: "Te quedan"
+        coupon_period: "Para entregas del"
         settings: "Configuración"
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
+        settings: "Configuración"
+        notifications: "Notificaciones"
+        notifications_description: "Configurá qué alertas querés recibir"
+        addresses: "Direcciones"
+        addresses_description: "Gestioná tus direcciones de entrega"
+    provider_menu_imports:
+      new:
+        title: "Importar platos"
+        back: "Volver al menú"
+        intro: "Importá varios platos a la vez y agregalos al menú cuando quieras."
+        download:
+          title: "Descargá la plantilla"
+          description: "Completá una fila por plato sin modificar los encabezados. Incluye un ejemplo con opciones."
+          action: "Descargar plantilla"
+        upload:
+          title: "Subí tu archivo"
+          description: "Soporta %{formats} hasta %{size} MB"
+          choose: "Seleccionar archivo"
+          empty: "Sin archivos seleccionados"
+          remove: "Quitar el archivo"
+          action: "Subir archivo"
+        file_error: "No se pudo leer la planilla"
+        summary:
+          title: "Resumen"
+          new_one: "%{count} Nuevo"
+          new_other: "%{count} Nuevos"
+          error_one: "%{count} Error"
+          error_other: "%{count} Errores"
+          exists_one: "%{count} Ya existe"
+          exists_other: "%{count} Ya existen"
+          updated_one: "%{count} Actualizado"
+          updated_other: "%{count} Actualizados"
+        card:
+          unnamed: "Sin nombre"
+          price: "Precio: %{price}"
+          no_price: "Precio: -"
+          new: "Nuevo"
+          error: "Error"
+          exists: "Ya existe"
+          updated: "Actualizado"
+          exists_warning: "Este plato no se importará a menos que elijas una de las siguientes acciones."
+          remove: "Quitar"
+          edit: "Editar"
+          duplicate: "Duplicar"
+          update: "Actualizar"
+          reset: "Reestablecer"
+        edit:
+          title: "Editar plato"
+        update_dialog:
+          title: "¿Actualizar el plato guardado?"
+          description: "Este plato se actualizará en tus platos guardados."
+          keep: "Mantener los pedidos confirmados"
+          keep_description: "Los pedidos afectados que están confirmados no se modificarán."
+          reject: "Rechazar los pedidos confirmados"
+          reject_description: "Los pedidos afectados que están confirmados se cancelarán."
+          back: "Volver"
+          apply: "Aplicar cambios"
+        imported:
+          title: "¡Platos importados!"
+          description: "Los platos importados ya están disponibles en Platos guardados."
+          back: "Volver a Menú"
+          again: "Seguir importando"
+        import: "Importar platos"
+        cancel: "Cancelar"
+        blocked: "Corregí o quitá los platos con error para poder importar."
+        nothing: "Elegí al menos un plato para importar."
     provider_accounts:
       show:
         title: "Cuenta"
         sign_out: "Salir"
         settings: "Configuración"
+        incomplete: "Incompleto"
         payment_details: "Datos de cobro"
         payment_details_description: "Configurá dónde querés recibir tus cobros"
         operational_settings: "Configuración operativa"
@@ -1494,23 +1654,19 @@ es:
       steps:
         1:
           title: "Datos de cobro"
-          description: "Ingresá los datos de la cuenta donde vas a recibir los pagos de tus pedidos."
+          description: "Ingrese los datos de la cuenta donde recibirá los pagos de sus pedidos."
         2:
-          title: "Hora de cierre"
-          description: "Definí hasta qué hora recibís pedidos cada día."
-          order_deadline: "Hora de cierre"
-          order_deadline_description: "Después de esta hora no se reciben más pedidos del día."
+          title: "Configure sus pedidos"
+          description: "Defina hasta qué hora recibe pedidos y qué días no estará disponible."
         3:
-          title: "Entregas"
-          description: "Elegí si aceptás direcciones de entrega personalizadas además de las oficinas."
-          home_delivery: "Direcciones personalizadas"
-          home_delivery_description: "Aceptás pedidos con direcciones de entrega además de las oficinas."
+          title: "Configure sus entregas"
+          description: "Elija dónde realiza sus entregas y si acepta direcciones personalizadas."
         4:
           title: "Notificaciones"
-          description: "Elegí qué alertas querés recibir sobre tus pedidos y pagos."
+          description: "Elija qué alertas desea recibir sobre sus pedidos y pagos."
       done:
         title: "¡Todo listo!"
-        description: "Tu cuenta ya está configurada y podés empezar a recibir pedidos."
+        description: "Su cuenta ya está configurada y puede empezar a recibir pedidos."
         cta: "Ir al Inicio"
     provider_payment_details:
       show:
@@ -1548,6 +1704,7 @@ es:
         back: "Volver a Cuenta"
         closing_time: "Hora de cierre"
         closing_time_description: "Hasta qué hora recibís pedidos."
+        closing_time_placeholder: "Seleccione una hora"
         add_closing_time: "Agregar hora de cierre"
         add_closing_time_title: "Agregar Hora de cierre"
         save_changes: "Guardar cambios"
@@ -1572,27 +1729,45 @@ es:
           saved_description: "No recibirás pedidos del %{period}."
           edit: "Editar cierre %{reason}"
           delete: "Eliminar cierre %{reason}"
-          period:
-            single: "%{date}"
-            same_month: "%{from_day} al %{to_day_month} de %{year}"
-            same_year: "%{from_day_month} al %{to_day_month} de %{year}"
-            other_year: "%{from} al %{to}"
     consumer_dashboard:
       benefit_card:
         title: "Tu consumo"
         period: "Este mes"
         used: "%{used} de %{limit}"
-        unit: "viandas subsidiadas"
+        unit: "viandas pedidas"
       index:
         orders_closed: "Este proveedor ya cerró la recepción de pedidos para hoy."
+        added: "Agregado"
+        add: "Agregar"
+        modify: "Modificar"
+        provider_filter:
+          label: "Proveedores:"
+          open: "Filtrar por proveedores"
+          title: "Filtrar por proveedores"
+          all: "Todos"
+          cancel: "Cancelar"
+          apply: "Aplicar"
+        empty:
+          title: "Menú no disponible"
+          all: "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde."
+          filtered: "No encontramos viandas disponibles entre los proveedores seleccionados. Volvé a consultar más tarde."
+        reviews:
+          title: "Opiniones del plato"
+          empty: "Este plato aún no fue calificado."
+          anonymous: "Anónimo"
         closure:
           title_now: "%{provider} no está disponible"
           title_soon: "%{provider} no estará disponible"
           description: "Sus viandas no estarán disponibles del %{period}. Motivo: %{reason}"
           empty: "%{provider} no recibirá pedidos del %{period}."
           dismiss: "Cerrar aviso"
+      detail:
+        add: "Agregar"
+        reached_100:
+          one: "Se llegó al 100%, no se aplicará el beneficio %{benefits}"
+          other: "Se llegó al 100%, no se aplicarán los beneficios: %{benefits}"
       options:
-        choose: "Elegí tu %{name}"
+        choose: "Elegí tu/s %{name}"
         limit: "Podés elegir hasta %{count}"
         required: "Obligatorio"
         optional: "Opcional"
@@ -1687,12 +1862,42 @@ es:
         preferences_description: "Activá o desactivá las categorías de avisos que querés recibir."
         back: "Volver a Cuenta"
         back_to_account: "Volver a Mi cuenta"
+    consumer_delivery_addresses:
+      index:
+        title: "Direcciones"
+        description: "Gestioná tus direcciones de entrega"
+        back: "Volver a Cuenta"
+        office: "Oficina"
+        add: "Agregar dirección"
+        edit: "Editar %{name}"
+      form:
+        create_title: "Agregar una dirección"
+        edit_title: "Editar dirección"
+        description: "Completá los datos de la dirección de entrega"
+        name: "Nombre"
+        name_placeholder: "Ej: Casa, Gimnasio, etc."
+        street: "Dirección"
+        apartment: "Piso/Apartamento (opcional)"
+        cancel: "Cancelar"
+        create: "Agregar"
+        update: "Guardar cambios"
+        delete: "Eliminar"
+      delete:
+        title: "¿Eliminar %{name}?"
+        description: "Esta dirección no podrá recuperarse. Podés agregar una nueva cuando quieras."
+        back: "Volver"
+        submit: "Eliminar dirección"
+        deleting: "Eliminando..."
+        success_title: "Dirección eliminada"
+        success_description: "La dirección se eliminó correctamente."
+        done: "Listo"
   date:
     formats:
+      default: "%d/%m/%y"
+      short: "%d/%m/%y"
+      long: "%A %-d de %B"
       month_year: "%B %Y"
       month_name_year: "%B %Y"
-      day_month: "%-d de %B"
-      day_month_year: "%-d de %B de %Y"
     month_names:
       [
         ~,

@@ -20,6 +20,8 @@ class Benefit < ApplicationRecord
     numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validate :only_one_monthly_benefit_per_consumer, if: [ :monthly?, :current? ]
 
+  after_create_commit :notify_coupon_assigned, if: :coupon?
+
   # Es importante que current sea 0
   enum :status, { current: 0, expired: 1, future: 2 }, default: :current
 
@@ -32,6 +34,16 @@ class Benefit < ApplicationRecord
       )
       .distinct
   }
+
+  scope :special, -> {
+      joins(benefit_configuration: :benefit_rules)
+        .where.not(
+          benefit_configuration: {
+            benefit_rules: { type: MonthlyBenefit.name }
+          }
+        )
+        .distinct
+    }
 
   # Expira beneficios pasados de fecha y que no deberían poder usarse más.
   # Incluye beneficios futuros pero pasados de fecha.
@@ -56,6 +68,10 @@ class Benefit < ApplicationRecord
     benefit_configuration&.benefit_rules&.any? { |rule| rule.type == MonthlyBenefit.name }
   end
 
+  def coupon?
+    benefit_configuration&.benefit_rules&.any?(GiftBenefit)
+  end
+
   def valid_on?(date)
     if future?
       # Si es future, no puede haber otros beneficios que no hayan vencido para esa
@@ -71,10 +87,26 @@ class Benefit < ApplicationRecord
       return false if competing_benefits.any?
     end
 
+    return false if starts_on && starts_on > date
+
     due_date.nil? || due_date >= date
   end
 
   private
+
+  def notify_coupon_assigned
+    Notifier.call(
+      event_key: :coupon_assigned,
+      user: consumer.user,
+      notifiable: self,
+      description_data: {
+        name: description,
+        percentage:,
+        count: amount,
+        period: DateFormat.short_range(starts_on, due_date)
+      }
+    )
+  end
 
   def only_one_monthly_benefit_per_consumer
     return if consumer_id.blank?
@@ -95,6 +127,7 @@ end
 #  due_date                 :date
 #  max_price                :decimal(10, 2)
 #  percentage               :integer
+#  starts_on                :date
 #  status                   :integer
 #  created_at               :datetime         not null
 #  updated_at               :datetime         not null

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
@@ -37,6 +37,9 @@ describe("Provider Dashboard Page", () => {
     month_orders_count: 42,
     month_dishes_count: 8,
     average_rating: 4.8,
+    top_rated: [] as { name: string; rating: number }[],
+    completed_sections_count: 3,
+    sections_total: 4,
     provider: {
       order_deadline: "11:30",
     },
@@ -111,12 +114,47 @@ describe("Provider Dashboard Page", () => {
     expect(screen.getByText("42")).toBeInTheDocument()
     expect(screen.getByText("8")).toBeInTheDocument()
     expect(screen.getByText("4.8")).toBeInTheDocument()
+    expect(screen.getByText("Generado por IA")).toBeInTheDocument()
+  })
+
+  it("lleva a Hallazgos desde el encabezado de los hallazgos del mes", () => {
+    render(<ProviderDashboard {...defaultProps} />)
+
+    expect(
+      screen.getByRole("link", { name: "Hallazgos del mes" }),
+    ).toHaveAttribute("href", "/proveedor/inicio/hallazgos")
   })
 
   it("muestra un guión cuando el proveedor aún no tiene valoraciones", () => {
     render(<ProviderDashboard {...defaultProps} average_rating={undefined} />)
 
     expect(screen.getByText("—")).toBeInTheDocument()
+  })
+
+  it("lista los platos mejor valorados con su puntaje", () => {
+    render(
+      <ProviderDashboard
+        {...defaultProps}
+        top_rated={[
+          { name: "Wok de Verduras", rating: 5 },
+          { name: "Lasaña veggie", rating: 4.9 },
+        ]}
+      />,
+    )
+
+    const section = screen.getByRole("region", { name: "Mejor valorados" })
+    expect(within(section).getByText("Wok de Verduras")).toBeInTheDocument()
+    expect(within(section).getByText("5")).toBeInTheDocument()
+    expect(within(section).getByText("Lasaña veggie")).toBeInTheDocument()
+    expect(within(section).getByText("4.9")).toBeInTheDocument()
+  })
+
+  it("avisa cuando todavía no hay platos valorados", () => {
+    render(<ProviderDashboard {...defaultProps} top_rated={[]} />)
+
+    expect(
+      screen.getByText("Todavía no hay platos valorados."),
+    ).toBeInTheDocument()
   })
 
   it("ofrece enlace directo al resumen de cobros", () => {

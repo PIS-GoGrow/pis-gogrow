@@ -6,14 +6,24 @@ class Consumer::ProfilesController < Consumer::InertiaController
   def show
     consumer = Current.user.consumer
     benefit = consumer.current_monthly_benefit
-    @benefit_summary = OrderPricing.new(consumer).summary
+    pricing = Orders::Pricing.new(consumer)
+    @benefit_summary = pricing.summary
+    @coupons = consumer.special_benefits.includes(benefit_configuration: :benefit_rules).select(&:coupon?).map do |coupon|
+      {
+        id: coupon.id,
+        name: coupon.description.to_s,
+        percentage: coupon.percentage,
+        remaining: pricing.remaining_uses(coupon),
+        period: DateFormat.short_range(coupon.starts_on, coupon.due_date)
+      }
+    end
 
     @benefit = benefit && {
       percentage: benefit.percentage.to_i,
       monthly_limit: consumer.monthly_benefit_available,
       monthly_remaining: consumer.remaining_monthly_benefit,
       max_price: benefit.benefit_configuration.benefit_rules.find { it.is_a?(MonthlyBenefit) }&.max_price&.to_f,
-      due_date: benefit.due_date && I18n.l(benefit.due_date, format: "%d/%m/%Y")
+      due_date: DateFormat.short(benefit.due_date)
     }
   end
 end

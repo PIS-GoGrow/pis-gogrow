@@ -1,6 +1,7 @@
 import { Head, usePage } from "@inertiajs/react"
 import { useEffect, useMemo, useState } from "react"
 
+import { useConsumerMenuFilter } from "@/hooks/consumer-menu-filter"
 import useSessionStorage from "@/hooks/use-session-storage"
 import AppLayout from "@/layouts/app-layout"
 import { consumerDashboard } from "@/routes"
@@ -17,6 +18,7 @@ type View = "menu" | "detail"
 export default function Index({
   week,
   schedules,
+  providers,
   closures,
   benefit,
 }: ConsumerDashboardIndex) {
@@ -28,6 +30,7 @@ export default function Index({
     week.days[0]?.date ??
     ""
   const [date, setDate] = useState(initialDate)
+  const { activeProviders, setActiveProviders } = useConsumerMenuFilter()
   const [selected, setSelected] = useState<Schedule | null>(null)
   // Guardamos el carrito en sessionStorage. Así, se persiste si el consumidor
   // recarga la página o navega por la aplicación, pero se borra si cierra la
@@ -36,18 +39,7 @@ export default function Index({
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
   const [selections, setSelections] = useState<Selections>({})
-
-  // Un proveedor cerrado no tiene platos que mostrar, pero tiene que seguir en
-  // el filtro para poder ver por qué no hay menú.
-  const providers = useMemo(
-    () => [
-      ...new Set([
-        ...schedules.map((item) => item.menu.provider_name),
-        ...closures.map((closure) => closure.provider_name),
-      ]),
-    ],
-    [schedules, closures],
-  )
+  const [editingCartId, setEditingCartId] = useState<string | null>(null)
 
   const visibleSchedules = schedules.filter((item) => item.date === date)
 
@@ -55,20 +47,76 @@ export default function Index({
 
   function openDetail(item: Schedule) {
     setSelected(item)
-    setQuantity(1)
-    setNotes("")
-    setSelections({})
+    const existing = cart.find((c) => c.id === item.id)
+    if (existing) {
+      setEditingCartId(existing.cartId)
+      setQuantity(existing.quantity)
+      setNotes(existing.notes)
+      setSelections(existing.selections)
+    } else {
+      setEditingCartId(null)
+      setQuantity(1)
+      setNotes("")
+      setSelections({})
+    }
     setView("detail")
   }
 
-  function addToCart() {
+  function handleBack() {
+    setEditingCartId(null)
+    setView("menu")
+  }
+
+  function handleRemoveFromCartAndBack() {
+    if (!editingCartId) return
+    setCart((items) => items.filter((item) => item.cartId !== editingCartId))
+    setEditingCartId(null)
+    setView("menu")
+  }
+
+  function addToCart(benefitsSelected: number[]) {
     if (!selected || selected.sold_out || selected.orders_closed) return
 
     // Dos veces el mismo plato con distinta personalización son dos líneas del
     // carrito, así que la clave incluye lo elegido además de las notas.
-    const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}`
+    const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}-${JSON.stringify(benefitsSelected)}`
 
     setCart((items) => {
+      if (editingCartId) {
+        const targetIndex = items.findIndex(
+          (item) => item.cartId === editingCartId,
+        )
+        if (targetIndex === -1) return items
+
+        const withoutCurrent = items.filter(
+          (item) => item.cartId !== editingCartId,
+        )
+        const duplicate = withoutCurrent.find((item) => item.cartId === cartId)
+        if (duplicate) {
+          return withoutCurrent.map((item) =>
+            item.cartId === cartId
+              ? {
+                  ...item,
+                  quantity: Math.min(item.remaining, item.quantity + quantity),
+                }
+              : item,
+          )
+        }
+
+        const updatedItem: CartItem = {
+          ...selected,
+          cartId,
+          quantity: Math.min(selected.remaining, quantity),
+          notes,
+          selections,
+          benefits: benefitsSelected,
+        }
+
+        const next = [...items]
+        next[targetIndex] = updatedItem
+        return next
+      }
+
       const found = items.find((item) => item.cartId === cartId)
 
       return found
@@ -88,10 +136,12 @@ export default function Index({
               quantity: Math.min(selected.remaining, quantity),
               notes,
               selections,
+              benefits: benefitsSelected,
             },
           ]
     })
 
+    setEditingCartId(null)
     setView("menu")
   }
 
@@ -145,6 +195,8 @@ export default function Index({
             setDate={setDate}
             benefit={benefit}
             providers={providers}
+            activeProviders={activeProviders}
+            setActiveProviders={setActiveProviders}
             schedules={visibleSchedules}
             closures={closures}
             cart={cart}
@@ -164,8 +216,11 @@ export default function Index({
             setSelections={setSelections}
             setNotes={setNotes}
             cart={cart}
-            back={() => setView("menu")}
+            back={handleBack}
             add={addToCart}
+            editingCartId={editingCartId}
+            onRemove={editingCartId ? handleRemoveFromCartAndBack : undefined}
+            benefit={benefit}
           />
         )}
       </div>

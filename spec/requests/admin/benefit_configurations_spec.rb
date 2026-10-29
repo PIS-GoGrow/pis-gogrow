@@ -59,7 +59,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       get admin_benefit_configurations_path
 
       expect(inertia.props[:base_subsidy][:id]).to eq(own_config.id)
-      expect(inertia.props[:benefit_configurations].length).to eq(3)
+      expect(inertia.props[:benefit_configurations].length).to eq(4)
       expect(inertia.props[:benefit_configurations].first[:id]).to eq(own_config.id)
       expect(inertia.props[:benefit_configurations].first[:created_by_name]).to eq(admin_user.name)
     end
@@ -67,14 +67,14 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
     it "renders configurable_month as next month when accessed before cutoff date" do
       travel_to Date.new(2026, 10, 15) do
         get admin_benefit_configurations_path
-        expect(inertia.props[:configurable_month]).to eq("01/11/26")
+        expect(inertia.props[:configurable_month]).to eq("2026-11-01")
       end
     end
 
     it "renders configurable_month as two months ahead when accessed on or after cutoff date" do
       travel_to Date.new(2026, 10, 31) do
         get admin_benefit_configurations_path
-        expect(inertia.props[:configurable_month]).to eq("01/12/26")
+        expect(inertia.props[:configurable_month]).to eq("2026-12-01")
       end
     end
   end

@@ -4,10 +4,12 @@ import { ChevronLeft, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
+import { QuantityInput } from "@/components/quantity-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { RadioGroup } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
+import { formatLongDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
 import { consumerDashboard } from "@/routes"
@@ -32,6 +34,7 @@ interface Props {
   error?: string | string[]
   confirm: () => void
   remove: (cartId: string) => void
+  setQuantity: (cartId: string, quantity: number) => void
   loading: boolean
 }
 
@@ -48,6 +51,7 @@ export function ConsumerCart({
   error,
   confirm,
   remove,
+  setQuantity,
   loading,
 }: Props) {
   const { t } = useTranslation()
@@ -75,6 +79,15 @@ export function ConsumerCart({
     officeOnlyProviders.length > 0 &&
     !!selectedAddress &&
     selectedAddress !== office?.address
+  const deliveryDates = [...new Set(cart.map((item) => item.date))]
+  // Con un solo día de entrega la fecha va arriba; con varios, cada plato
+  // lleva la suya.
+  const singleDeliveryDate =
+    deliveryDates.length === 1 ? deliveryDates[0] : null
+  const deliveryLabel = (date: string) =>
+    t("pages.cart.delivery", {
+      date: formatLongDate(date),
+    })
 
   return (
     <MobileCard>
@@ -91,6 +104,11 @@ export function ConsumerCart({
         </Button>
       </Link>
       <h1 className="text-xl font-bold">Tu carrito</h1>
+      {singleDeliveryDate && (
+        <p className="text-muted-foreground mt-2 text-sm">
+          {deliveryLabel(singleDeliveryDate)}
+        </p>
+      )}
       <section className="border-border mt-8 border-b pb-4">
         <div className="mb-3 flex items-center justify-between text-sm font-semibold">
           <h2>{t("pages.cart.delivery_address")}</h2>
@@ -148,33 +166,26 @@ export function ConsumerCart({
       )}
 
       <section className="border-border mt-6 pb-4 text-sm md:border-b">
-        {cart.map((item) => {
+        {cart.map((item, i) => {
           const line = item.menu.price * item.quantity
           return (
             <div
               key={item.cartId}
               className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
             >
-              <p className="text-muted-foreground mb-2">
-                {t("pages.cart.delivery", {
-                  date: new Date(`${item.date}T12:00:00`).toLocaleDateString(
-                    "es-UY",
-                    {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                    },
-                  ),
-                })}
-              </p>
+              {!singleDeliveryDate && (
+                <p className="text-muted-foreground mb-2">
+                  {deliveryLabel(item.date)}
+                </p>
+              )}
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   {item.menu.name} x{item.quantity}
                 </span>
                 <span>{formatMoney(line)}</span>
               </div>
-              {pricing?.lines?.[item.id] && (
-                <ItemBenefitLines tiers={pricing.lines[item.id].tiers} />
+              {pricing?.lines?.[i] && (
+                <ItemBenefitLines tiers={pricing.lines[i].tiers} />
               )}
               {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
                   aparte, así que el carrito lo muestra por su cuenta. */}
@@ -188,16 +199,23 @@ export function ConsumerCart({
               {item.notes && (
                 <p className="text-muted-foreground mt-2">{item.notes}</p>
               )}
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={processing}
-                onClick={() => remove(item.cartId)}
-                className="mt-2"
-              >
-                {t("pages.cart.remove", { name: item.menu.name })}
-              </Button>
+              <div className="mt-2">
+                <QuantityInput
+                  size="sm"
+                  value={item.quantity}
+                  max={item.remaining}
+                  disabled={processing}
+                  onChange={(quantity) => setQuantity(item.cartId, quantity)}
+                  onRemove={() => remove(item.cartId)}
+                  decreaseLabel={t("pages.cart.decrease", {
+                    name: item.menu.name,
+                  })}
+                  increaseLabel={t("pages.cart.increase", {
+                    name: item.menu.name,
+                  })}
+                  removeLabel={t("pages.cart.remove", { name: item.menu.name })}
+                />
+              </div>
             </div>
           )
         })}

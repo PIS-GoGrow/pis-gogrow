@@ -4,13 +4,25 @@ import { useTranslation } from "react-i18next"
 
 import BenefitSummaryCard from "@/components/benefit-summary-card"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
+import ListItemCard from "@/components/list-item-card"
 import PageContainer from "@/components/page-container"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import {
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
-import { consumerProfiles, sessions, settingsNotifications } from "@/routes"
+import {
+  consumerDeliveryAddresses,
+  consumerProfiles,
+  sessions,
+  settingsNotifications,
+} from "@/routes"
 import type { BreadcrumbItem, ConsumerProfilesShow } from "@/types"
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -25,6 +37,7 @@ function Row({ label, value }: { label: string; value: string }) {
 export default function Show({
   benefit,
   benefit_summary,
+  coupons,
 }: ConsumerProfilesShow) {
   const { t } = useTranslation()
   const { auth } = usePage().props
@@ -113,6 +126,41 @@ export default function Show({
           )}
         </section>
 
+        {coupons.length > 0 && (
+          <section aria-labelledby="coupons-title">
+            <h3 id="coupons-title" className="mb-3 text-xl font-bold">
+              {t(`${page}.coupons`)}
+            </h3>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {coupons.map((coupon) => (
+                <ListItemCard key={coupon.id}>
+                  <CardHeader>
+                    <CardTitle>{coupon.name}</CardTitle>
+                    <CardDescription>
+                      {t(`${page}.coupon_discount`, {
+                        percentage: coupon.percentage,
+                      })}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <dl className="border-t">
+                      <Row
+                        label={t(`${page}.coupon_remaining`)}
+                        value={t(`${page}.meals`, { count: coupon.remaining })}
+                      />
+                      <Row
+                        label={t(`${page}.coupon_period`)}
+                        value={coupon.period}
+                      />
+                    </dl>
+                  </CardContent>
+                </ListItemCard>
+              ))}
+            </div>
+          </section>
+        )}
+
         <section
           aria-labelledby="consumer-settings-title"
           className="md:hidden"
@@ -122,6 +170,26 @@ export default function Show({
           </h3>
 
           <div className="border-t">
+            <Link
+              href={consumerDeliveryAddresses.index().url}
+              prefetch
+              className="hover:bg-accent/50 flex w-full cursor-pointer items-center gap-4 border-b px-1 py-5 transition-colors"
+            >
+              <span className="min-w-0 flex-1 text-left">
+                <span className="block text-base font-medium">
+                  {t(`${page}.addresses`)}
+                </span>
+                <span className="text-muted-foreground block text-sm">
+                  {t(`${page}.addresses_description`)}
+                </span>
+              </span>
+
+              <ChevronRight
+                className="text-muted-foreground size-5 shrink-0"
+                aria-hidden="true"
+              />
+            </Link>
+
             <Link
               href={settingsNotifications.index().url}
               prefetch

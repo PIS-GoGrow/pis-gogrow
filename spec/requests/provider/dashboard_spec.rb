@@ -56,10 +56,58 @@ RSpec.describe "Provider::Dashboard", type: :request do
         get provider_dashboard_path
 
         expect(inertia).to have_props(
-          today: I18n.l(Date.current, format: "%A %-d de %B").capitalize,
+          today: DateFormat.long(Date.current),
           order_deadline: "11:30",
           provider: { order_deadline: "11:30" }
         )
+      end
+
+      it "expone el progreso de completitud de la cuenta" do
+        get provider_dashboard_path
+
+        expect(inertia).to(have_props do |props|
+          props["sections_total"] == 4 &&
+            props["completed_sections_count"].is_a?(Integer)
+        end)
+      end
+
+      it "refleja exactamente 0 secciones completadas cuando ningún timestamp está configurado" do
+        provider.update_columns(
+          payment_details_configured_at: nil,
+          order_deadline_configured_at: nil,
+          deliveries_configured_at: nil,
+          notifications_configured_at: nil
+        )
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(completed_sections_count: 0, sections_total: 4)
+      end
+
+      it "refleja el conteo parcial (2/4) cuando dos secciones están configuradas" do
+        provider.update_columns(
+          payment_details_configured_at: Time.current,
+          order_deadline_configured_at: nil,
+          deliveries_configured_at: Time.current,
+          notifications_configured_at: nil
+        )
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(completed_sections_count: 2, sections_total: 4)
+      end
+
+      it "refleja 4 secciones completadas cuando la cuenta está 100% configurada" do
+        provider.update_columns(
+          payment_details_configured_at: Time.current,
+          order_deadline_configured_at: Time.current,
+          deliveries_configured_at: Time.current,
+          notifications_configured_at: Time.current
+        )
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(completed_sections_count: 4, sections_total: 4)
       end
 
       context "con la hora de cierre configurada" do
@@ -143,8 +191,9 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
         # tuviandita solo tiene el menú milanesa en fixtures (sin reseñas)
         expect(inertia).to have_props(
-          month_dishes_count: provider.menus.count,
-          average_rating: nil
+          month_dishes_count: 1,
+          average_rating: nil,
+          top_rated: []
         )
 
         # Ahora agregamos una reseña para el plato del proveedor actual
@@ -155,6 +204,43 @@ RSpec.describe "Provider::Dashboard", type: :request do
         expect(inertia).to have_props(
           average_rating: 5.0
         )
+      end
+
+      it "cuenta en los hallazgos del mes solo los platos pedidos y las reseñas escritas en el mes" do
+        Menu.create!(provider:, name: "Wok de verduras", description: "Sin pedidos", price: 300)
+        Review.create!(menu: menus(:milanesa), rating: 1, created_at: Date.current.prev_month.in_time_zone)
+        Review.create!(menu: menus(:milanesa), rating: 4, created_at: Time.current)
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(month_dishes_count: 1, average_rating: 4.0)
+      end
+
+      it "muestra en los hallazgos del mes los mismos números que Hallazgos para el mes actual" do
+        get provider_insights_path
+        insights = inertia.props.slice(:orders_count, :dishes_count, :average_rating)
+
+        get provider_dashboard_path
+
+        expect(inertia.props.slice(:month_orders_count, :month_dishes_count, :average_rating).values).to eq(insights.values)
+      end
+
+      it "expone los platos mejor valorados ordenados por promedio, sin las reseñas sin puntaje" do
+        # milanesa: promedio 4.5
+        Review.create!(menu: menus(:milanesa), rating: 4)
+        Review.create!(menu: menus(:milanesa), rating: 5)
+
+        wok = Menu.create!(provider:, name: "Wok de verduras", description: "Salteado de verduras", price: 150)
+        Review.create!(menu: wok, rating: 5)
+        # Una reseña sin puntaje no es una valoración: no cuenta para el promedio.
+        Review.create!(menu: wok, rating: nil, description: "sin puntaje")
+
+        get provider_dashboard_path
+
+        expect(inertia.props[:top_rated]).to eq([
+          { "name" => "Wok de verduras", "rating" => 5.0 },
+          { "name" => "Milanesa con papas fritas", "rating" => 4.5 }
+        ])
       end
     end
   end

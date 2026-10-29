@@ -8,9 +8,31 @@ RSpec.describe "Consumer dashboard", type: :request do
 
   def consumer_user
     company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
-    user = User.create!(email: "consumer-menu@gmail.com", name: "Sofía", password: "password123456")
-    consumer = Consumer.create!(user:, company:, address: "Ellauri 1234")
-    consumer.benefits.create!(description: "Viandas mensuales", amount: 20, percentage: 50, due_date: Date.current + 3.days, benefit_configuration: benefit_configurations(:monthly))
+    user = User.create!(
+      email: "consumer-menu@gmail.com",
+      name: "Sofía",
+      password: "password123456"
+    )
+
+    consumer = Consumer.create!(
+      user:,
+      company:,
+      address: "Ellauri 1234"
+    )
+
+    consumer.saved_addresses.create!(
+      name: "Casa",
+      street: "Ellauri 1234"
+    )
+
+    consumer.benefits.create!(
+      description: "Viandas mensuales",
+      amount: 20,
+      percentage: 50,
+      due_date: Date.current + 3.days,
+      benefit_configuration: benefit_configurations(:monthly)
+    )
+
     user
   end
 
@@ -351,9 +373,9 @@ RSpec.describe "Consumer dashboard", type: :request do
 
         expect(inertia.props[:closures]).to contain_exactly(
           a_hash_including(provider_name: users(:provider_user).name, reason: "Vacaciones",
-                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21 de septiembre al 2 de octubre de 2026"),
+                           starts_on: "2026-09-21", ends_on: "2026-10-02", period: "21/09/26 al 02/10/26"),
           a_hash_including(provider_name: users(:other_provider_user).name, reason: "Feriado",
-                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14 de septiembre de 2026")
+                           starts_on: "2026-09-14", ends_on: "2026-09-14", period: "14/09/26")
         )
       end
 
@@ -511,24 +533,40 @@ RSpec.describe "Consumer dashboard", type: :request do
         "Llegaron calientes",
         "Porción generosa"
       ])
-      expect(reviews.first).to include(rating: 5, created_at: "2026-09-20")
+      expect(reviews.first).to include(rating: 5, created_at: "2026-09-20", author: nil)
       expect(reviews.pluck(:description)).not_to include("Estaban bien, nada del otro mundo")
     end
 
-    # Criterio 3: sin reseñas, la lista viaja vacía. Que la pantalla invente una
-    # a partir de esto es un defecto aparte, no algo que el server insinúe.
+    # IBP-012, criterio 1 y 2: el promedio sale de las cinco valoraciones válidas
+    # ((3+4+4+5+5)/5 = 4.2) y el conteo las abarca a todas, aunque solo se envíen
+    # las cuatro más recientes.
+    it "exposes the average rating and the number of ratings" do
+      publish(menus(:sorrentinos), monday)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(inertia.props[:schedules].first[:menu]).to include(
+        rating_average: 4.2,
+        rating_count: 5
+      )
+    end
+
+    # IBP-012, criterio 4: sin reseñas, la lista viaja vacía y sin promedio.
     it "exposes an empty review list for a dish nobody reviewed" do
       publish(menus(:milanesa), monday)
       sign_in users(:one)
 
       get dashboard_path
 
-      expect(inertia.props[:schedules].first.dig(:menu, :reviews)).to eq([])
+      menu = inertia.props[:schedules].first[:menu]
+      expect(menu[:reviews]).to eq([])
+      expect(menu).to include(rating_average: nil, rating_count: 0)
     end
 
-    # Criterio 3: un dato opcional ausente viaja como ausente, no como texto
-    # inventado ni como cadena vacía que la pantalla pueda confundir con un dato.
-    it "sends optional data that was never filled in as null" do
+    # IBP-012, criterio 2: una reseña sin puntaje no es una valoración válida, así
+    # que no cuenta para el promedio ni viaja en la lista de reseñas publicadas.
+    it "ignores reviews that have no rating" do
       menus(:milanesa).update_column(:description, nil)
       publish(menus(:milanesa), monday)
       publish(menus(:office_menu), monday)
@@ -539,8 +577,24 @@ RSpec.describe "Consumer dashboard", type: :request do
       by_name = inertia.props[:schedules].map { |s| s[:menu] }.index_by { |m| m[:name] }
       expect(by_name.fetch("Milanesa con papas fritas")[:description]).to be_nil
 
-      review = by_name.fetch("Ensalada de quinoa")[:reviews].first
-      expect(review).to include(description: nil, rating: nil)
+      office_menu = by_name.fetch("Ensalada de quinoa")
+      expect(office_menu[:reviews]).to eq([])
+      expect(office_menu).to include(rating_average: nil, rating_count: 0)
+    end
+
+    # IBP-012, criterio 3: la reseña identifica al autor por su primer nombre, sin
+    # exponer el nombre completo.
+    it "exposes only the author's first name, never their full name" do
+      menu = menus(:milanesa)
+      Review.create!(menu:, consumer: consumers(:one), rating: 5, description: "Riquísimo")
+      publish(menu, monday)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      review = inertia.props[:schedules].first.dig(:menu, :reviews).first
+      expect(review[:author]).to eq("Test")
+      expect(review[:author]).not_to eq(users(:one).name)
     end
 
     it "sends the option groups of a dish that has none as an empty list" do

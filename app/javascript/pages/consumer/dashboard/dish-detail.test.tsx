@@ -2,22 +2,17 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import type { ConsumerDashboardIndex } from "@/types"
+
 import type { CartItem, Schedule } from "./consumer-types"
 import { DishDetail } from "./dish-detail"
+import type { Pricing } from "./pricing"
+
+type Benefit = ConsumerDashboardIndex["benefit"]
 
 // Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
 // plato, para tomar una decisión informada." Esta es la pantalla donde el
 // empleado ve esa información antes de decidir.
-//
-// TODO(integración): falta corregir el bloque de opiniones antes de poder
-// testear qué se muestra cuando un plato no tiene reseñas. Hoy la pantalla
-// fabrica una reseña de ejemplo, un puntaje 4.8, un autor ("Pedro"/"Lucía") y
-// una fecha fija, ninguno de los cuales sale de los datos — y Review ni
-// siquiera tiene columna de autor. Está registrado como defecto
-// (DEFECT-detalle-plato-reseñas-inventadas): no se fija acá el comportamiento
-// actual como si fuera el correcto. Historia, criterio 3: "si un dato opcional
-// no fue informado, la interfaz no muestra información engañosa ni valores
-// inventados".
 
 const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
   id: 1,
@@ -30,13 +25,24 @@ const schedule = (overrides: Partial<Schedule["menu"]> = {}): Schedule => ({
     name: "Sorrentinos artesanales",
     description: "Pasta rellena a elección",
     price: 320,
+    provider_id: 1,
     option_groups: [],
     provider_name: "Endulzate by Noe",
     home_delivery: true,
+    rating_average: null,
+    rating_count: 0,
     reviews: [],
     ...overrides,
   },
 })
+
+const benefit: Benefit = {
+  percentage: 50,
+  monthly_limit: 20,
+  monthly_used: 0,
+  monthly_remaining: 20,
+  specials: [],
+}
 
 function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
   const defaults = {
@@ -50,6 +56,7 @@ function renderDetail(props: Partial<Parameters<typeof DishDetail>[0]> = {}) {
     cart: [] as CartItem[],
     back: vi.fn(),
     add: vi.fn(),
+    benefit: benefit,
   }
   return render(<DishDetail {...defaults} {...props} />)
 }
@@ -59,7 +66,7 @@ const mocks = vi.hoisted(() => ({ priceItems: vi.fn() }))
 vi.mock("@/pages/consumer/dashboard/pricing", () => ({
   priceItems: mocks.priceItems,
   cartPricedItem: (cart: { id: number; quantity: number }[]) =>
-    cart.map((item) => ({ id: item.id, quantity: item.quantity })),
+    cart.map((item) => ({ schedule_id: item.id, quantity: item.quantity })),
 }))
 
 beforeEach(() => {
@@ -106,12 +113,38 @@ describe("DishDetail", () => {
     expect(screen.getByRole("button", { name: "Agregar uno" })).toBeDisabled()
   })
 
+  it("marks the dish as added when it is already in the cart", () => {
+    const added: CartItem = {
+      ...schedule(),
+      cartId: "1-",
+      quantity: 1,
+      notes: "",
+      selections: {},
+      benefits: [],
+    }
+
+    renderDetail({ cart: [added] })
+
+    expect(screen.getByText("Agregado")).toBeInTheDocument()
+  })
+
+  it("does not mark a dish that is not in the cart", () => {
+    renderDetail()
+
+    expect(screen.queryByText("Agregado")).not.toBeInTheDocument()
+  })
+
+  // IBP-012, criterio 1: cada reseña publicada muestra su autor, su fecha, su
+  // puntaje y su texto, todos saliendo de los datos (no inventados).
   it("shows the real reviews of the dish", () => {
     renderDetail({
       item: schedule({
+        rating_average: 5,
+        rating_count: 1,
         reviews: [
           {
             id: 7,
+            author: "Lucía",
             description: "La salsa filetto es la mejor",
             rating: 5,
             created_at: "2026-09-15",
@@ -121,6 +154,63 @@ describe("DishDetail", () => {
     })
 
     expect(screen.getByText("La salsa filetto es la mejor")).toBeInTheDocument()
+    expect(screen.getByText("Lucía")).toBeInTheDocument()
+    expect(screen.getByText("15/09/26")).toBeInTheDocument()
+  })
+
+  // IBP-012, criterio 1: el promedio y la cantidad de valoraciones, con el
+  // conteo de todas las válidas aunque se muestren solo algunas reseñas.
+  it("shows the average rating and the number of ratings", () => {
+    renderDetail({
+      item: schedule({
+        rating_average: 4.8,
+        rating_count: 5,
+        reviews: [
+          {
+            id: 1,
+            author: "Pedro",
+            description: "Muy ricos",
+            rating: 5,
+            created_at: "2026-09-20",
+          },
+        ],
+      }),
+    })
+
+    expect(screen.getByText("4.8 (5)")).toBeInTheDocument()
+  })
+
+  // IBP-012, criterio 3: cuando la reseña no tiene autor conocido, no se inventa
+  // uno ni se filtra el null — se muestra "Anónimo".
+  it("shows an anonymous author when the review has none", () => {
+    renderDetail({
+      item: schedule({
+        rating_average: 4,
+        rating_count: 1,
+        reviews: [
+          {
+            id: 3,
+            author: null,
+            description: "Porción generosa",
+            rating: 4,
+            created_at: "2026-09-05",
+          },
+        ],
+      }),
+    })
+
+    expect(screen.getByText("Anónimo")).toBeInTheDocument()
+  })
+
+  // IBP-012, criterio 4: sin valoraciones se informa claramente, sin promedio ni
+  // reseñas inventadas.
+  it("states clearly when the dish has no ratings yet", () => {
+    const { container } = renderDetail()
+
+    expect(
+      screen.getByText("Este plato aún no fue calificado."),
+    ).toBeInTheDocument()
+    expect(container.textContent).not.toMatch(/4\.8|null|undefined|NaN/)
   })
 
   const groups = [
@@ -164,6 +254,7 @@ describe("DishDetail", () => {
         cart={[]}
         back={vi.fn()}
         add={add}
+        benefit={benefit}
       />,
     )
 
@@ -235,5 +326,226 @@ describe("DishDetail", () => {
     await user.click(screen.getByRole("button", { name: "Agregar" }))
 
     expect(add).toHaveBeenCalledOnce()
+  })
+
+  describe("when editing an already added dish", () => {
+    it("renders the 'Modificar' button and trash icon when quantity is 1", async () => {
+      const user = userEvent.setup()
+      const onRemove = vi.fn()
+      const add = vi.fn()
+      const cartItem: CartItem = {
+        ...schedule(),
+        cartId: "1-",
+        quantity: 1,
+        notes: "Sin sal",
+        selections: {},
+        benefits: [],
+      }
+
+      renderDetail({
+        cart: [cartItem],
+        editingCartId: "1-",
+        quantity: 1,
+        notes: "Sin sal",
+        onRemove,
+        add,
+      })
+
+      expect(screen.getByText("Agregado")).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Modificar" }),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: "Agregar" }),
+      ).not.toBeInTheDocument()
+
+      const trashButton = screen.getByRole("button", { name: "Quitar" })
+      expect(trashButton).toBeInTheDocument()
+
+      await user.click(trashButton)
+      expect(onRemove).toHaveBeenCalledOnce()
+    })
+
+    it("allows modifying the dish and clicking 'Modificar'", async () => {
+      const user = userEvent.setup()
+      const add = vi.fn()
+      const cartItem: CartItem = {
+        ...schedule(),
+        cartId: "1-",
+        quantity: 1,
+        notes: "",
+        selections: {},
+        benefits: [],
+      }
+
+      renderDetail({
+        cart: [cartItem],
+        editingCartId: "1-",
+        quantity: 2,
+        onRemove: vi.fn(),
+        add,
+      })
+
+      const modifyButton = screen.getByRole("button", { name: "Modificar" })
+      await user.click(modifyButton)
+      expect(add).toHaveBeenCalledOnce()
+    })
+
+    it("does not reduce the quota by the dish currently being edited", () => {
+      const cartItem: CartItem = {
+        ...schedule(),
+        cartId: "1-",
+        quantity: 2,
+        notes: "",
+        selections: {},
+        benefits: [],
+      }
+
+      // Con remaining: 3 y 2 ya en el carrito para este ítem:
+      // Al editarlo, el tope debe ser 3 (no 3 - 2 = 1)
+      renderDetail({
+        item: { ...schedule(), remaining: 3 },
+        cart: [cartItem],
+        editingCartId: "1-",
+        quantity: 2,
+        onRemove: vi.fn(),
+      })
+
+      expect(screen.getByRole("button", { name: "Agregar uno" })).toBeEnabled()
+    })
+  })
+})
+
+describe("benefit specials", () => {
+  const special = (
+    overrides: Partial<Benefit["specials"][number]> = {},
+  ): Benefit["specials"][number] => ({
+    id: 3,
+    name: "Descuento día del padre",
+    percentage: 30,
+    remaining: 5,
+    due_date: null,
+    ...overrides,
+  })
+
+  it("shows the special and its checkbox when it has remaining units", () => {
+    const s = special({ remaining: 5 })
+
+    renderDetail({ benefit: { ...benefit, specials: [s] } })
+
+    expect(screen.getByText(/Descuento día del padre/)).toBeInTheDocument()
+
+    const checkbox = screen.getByRole("checkbox", { name: "Aplicar" })
+    expect(checkbox).toHaveAttribute("id", `benefit-checkbox-${s.id}`)
+  })
+
+  it("does not show the special when its remaining is zero", () => {
+    const s = special({ remaining: 0 })
+
+    renderDetail({ benefit: { ...benefit, specials: [s] } })
+
+    expect(
+      screen.queryByText(/Descuento día del padre/),
+    ).not.toBeInTheDocument()
+    expect(
+      document.getElementById(`benefit-checkbox-${s.id}`),
+    ).not.toBeInTheDocument()
+  })
+
+  it("does not show a special without limit (remaining null)", () => {
+    const s = special({ remaining: null })
+
+    renderDetail({ benefit: { ...benefit, specials: [s] } })
+
+    expect(
+      screen.queryByText(/Descuento día del padre/),
+    ).not.toBeInTheDocument()
+    expect(
+      document.getElementById(`benefit-checkbox-${s.id}`),
+    ).not.toBeInTheDocument()
+  })
+})
+
+describe("benefits message and lines", () => {
+  it("shows the 'reached 100' message when the last line has no tier for a selectable special", async () => {
+    const special = {
+      id: 3,
+      name: "Descuento día del padre",
+      percentage: 30,
+      remaining: 5,
+      due_date: null,
+    }
+
+    mocks.priceItems.mockResolvedValue({
+      subtotal: 320,
+      discount: 0,
+      total: 320,
+      subsidizedQuantity: 0,
+      fullPriceQuantity: 1,
+      lines: [
+        {
+          subtotal: 320,
+          discount: 0,
+          total: 320,
+          tiers: [], // ningún tier con id 3: el beneficio no se usó
+        },
+      ],
+    } satisfies Pricing)
+
+    renderDetail({ benefit: { ...benefit, specials: [special] } })
+
+    const message = `Se llegó al 100%, no se aplicará el beneficio ${special.name}`
+
+    expect(await screen.findByText(message)).toBeInTheDocument()
+  })
+
+  it("does not show the 'reached 100' message, but shows benefit lines", async () => {
+    const special = {
+      id: 3,
+      name: "Descuento día del padre",
+      percentage: 30,
+      remaining: 5,
+      due_date: null,
+    }
+
+    mocks.priceItems.mockResolvedValue({
+      subtotal: 320,
+      discount: 160,
+      total: 160,
+      subsidizedQuantity: 1,
+      fullPriceQuantity: 0,
+      lines: [
+        {
+          subtotal: 320,
+          discount: 0,
+          total: 320,
+          tiers: [
+            {
+              id: 3,
+              name: "Descuento día del padre",
+              percentage: 30,
+              quantity: 1,
+              discount: 96,
+            },
+            {
+              id: 5,
+              name: "Descuento sorpresa",
+              percentage: 20,
+              quantity: 1,
+              discount: 64,
+            },
+          ],
+        },
+      ],
+    } satisfies Pricing)
+
+    renderDetail({ benefit: { ...benefit, specials: [special] } })
+
+    expect(await screen.findByText("- $96")).toBeInTheDocument()
+    expect(await screen.findByText("- $64")).toBeInTheDocument()
+
+    const message = `Se llegó al 100%, no se aplicará el beneficio ${special.name}`
+
+    expect(screen.queryByText(message)).not.toBeInTheDocument()
   })
 })
