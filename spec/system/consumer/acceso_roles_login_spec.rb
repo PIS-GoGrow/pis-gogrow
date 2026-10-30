@@ -68,6 +68,17 @@ RSpec.describe "Acceso y login según rol de pantalla de entrada", type: :system
       expect(page).to have_content(I18n.t("flash.role_not_available"))
     end
 
+    it "rechaza a una cuenta de solo empleado que intenta ingresar por /proveedor y la mantiene en /proveedor" do
+      visit_hydrated provider_home_path
+
+      fill_in "email", with: users(:one).email
+      fill_in "password", with: password
+      click_button "Ingresar"
+
+      expect(page).to have_current_path(provider_home_path)
+      expect(page).to have_content(I18n.t("flash.role_not_available"))
+    end
+
     it "rechaza credenciales incorrectas en /rrhh y mantiene al usuario en /rrhh" do
       visit_hydrated admin_welcome_path
 

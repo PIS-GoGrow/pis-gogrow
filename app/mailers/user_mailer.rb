@@ -15,6 +15,8 @@ class UserMailer < ApplicationMailer
     @token = "#{@user.id}.#{@otp_code.code}"
     @company_token = @company.signed_id(purpose: :provider_invitation, expires_in: OtpCode::TTL.fetch("invitation"))
 
+    attach_branding_images
+
     mail to: @user.email, subject: t(".subject")
   end
 
@@ -24,6 +26,15 @@ class UserMailer < ApplicationMailer
     @code = @otp_code.code
     @minutes = (OtpCode::TTL.fetch("password_reset") / 1.minute).to_i
 
+    attach_branding_images
+
     mail to: @user.email, subject: t(".subject")
+  end
+
+  private
+
+  def attach_branding_images
+    attachments.inline["serving-food.png"] = Rails.root.join("public/serving-food.png").read
+    attachments.inline["gogrow-logo.png"] = Rails.root.join("public/gogrow-logo.png").read
   end
 end

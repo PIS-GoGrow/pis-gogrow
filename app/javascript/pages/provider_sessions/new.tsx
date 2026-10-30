@@ -31,11 +31,14 @@ export default function ProviderSignIn() {
     <AuthLayout
       title={t("pages.provider_sessions.new.heading")}
       description={t("pages.provider_sessions.new.description")}
+      backHref="/proveedor"
+      hideLogo
+      variant="form"
     >
       <Head title={t("pages.provider_sessions.new.title")} />
 
       <Form
-        action={providerSessions.create()}
+        action={providerSessions.proveedorIniciarSesion()}
         resetOnSuccess={["password"]}
         noValidate
         className="flex flex-col gap-6"
@@ -45,7 +48,7 @@ export default function ProviderSignIn() {
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">
-                  {t("common.email_address")}
+                  {t("pages.provider_sessions.new.email_label")}
                 </FieldLabel>
                 <Input
                   id="email"
@@ -92,7 +95,7 @@ export default function ProviderSignIn() {
             <Button
               type="submit"
               size="lg"
-              className="w-full"
+              className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 disabled:opacity-50"
               disabled={!email || !password || processing}
             >
               {processing && <Spinner />}

@@ -14,6 +14,10 @@ class HomeController < InertiaController
     render_welcome("consumer")
   end
 
+  def provider
+    render_welcome("provider")
+  end
+
   def admin
     render_welcome("admin")
   end

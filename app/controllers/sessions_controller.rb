@@ -10,14 +10,18 @@ class SessionsController < InertiaController
       user.sync_roles!
 
       if user.roles.empty?
-        redirect_back_or_to consumer_welcome_path, alert: t("flash.role_not_available")
+        redirect_to entry_path, alert: t("flash.role_not_available"), inertia: {
+          errors: { auth: t("flash.role_not_available") }
+        }
         return
       end
 
-      entry_role = Session::ENTRY_ROLES[URI(request.referer.to_s).path]
+      entry_role = Session::ENTRY_ROLES[origin_path]
 
       if entry_role && user.roles.exclude?(entry_role)
-        redirect_back_or_to consumer_welcome_path, alert: t("flash.role_not_available")
+        redirect_to entry_path, alert: t("flash.role_not_available"), inertia: {
+          errors: { auth: t("flash.role_not_available") }
+        }
         return
       end
 
@@ -27,7 +31,9 @@ class SessionsController < InertiaController
 
       redirect_to root_path, notice: t("flash.signed_in")
     else
-      redirect_back_or_to consumer_welcome_path, alert: t("flash.incorrect_credentials")
+      redirect_to entry_path, alert: t("flash.incorrect_credentials"), inertia: {
+        errors: { auth: t("flash.incorrect_credentials") }
+      }
     end
   end
 
@@ -55,6 +61,17 @@ class SessionsController < InertiaController
   end
 
   private
+
+  def origin_path
+    path = params[:origin].presence || request.referer.to_s
+    URI(path).path
+  rescue URI::InvalidURIError
+    nil
+  end
+
+  def entry_path
+    Session::ENTRY_ROLES.key?(origin_path) ? origin_path : consumer_welcome_path
+  end
 
   def set_session
     @session = Current.user.sessions.find(params[:id])

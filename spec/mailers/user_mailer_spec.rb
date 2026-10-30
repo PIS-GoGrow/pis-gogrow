@@ -28,13 +28,15 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "greets by name, names the company and links to the registration" do
-      body = mail.body.decoded
+      body = (mail.html_part || mail).body.decoded
 
       expect(body).to include("Hola Ana Proveedora,")
-      expect(body).to include("Recibiste una invitación de GoGrow para unirte como proveedor de viandas")
+      expect(body).to include("GoGrow te invitó a unirte como proveedor de viandas")
       expect(body).to include("/proveedor/bienvenida?company=")
       expect(body).to include("token=#{user.id}.#{otp_code.code}")
       expect(body).to include("/proveedor")
+      expect(mail.attachments["serving-food.png"]).to be_present
+      expect(mail.attachments["gogrow-logo.png"]).to be_present
     end
   end
 
@@ -48,10 +50,12 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "shows the six digit code and how long it lasts" do
-      body = mail.body.encoded
+      body = (mail.html_part || mail).body.decoded
 
       expect(body).to include(otp_code.code)
       expect(body).to include("20 minutos")
+      expect(mail.attachments["serving-food.png"]).to be_present
+      expect(mail.attachments["gogrow-logo.png"]).to be_present
     end
   end
 end

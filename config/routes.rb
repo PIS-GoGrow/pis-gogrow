@@ -9,7 +9,9 @@ Rails.application.routes.draw do
   get  "iniciar-sesion", to: redirect("/consumidor"), as: nil
   post "iniciar-sesion", to: "sessions#create", as: :sign_in
 
-  get  "proveedor", to: "provider_sessions#new", as: :provider_sign_in
+  get  "proveedor", to: "home#provider", as: :provider_home
+  get  "proveedor/iniciar-sesion", to: "provider_sessions#new", as: :provider_sign_in
+  post "proveedor/iniciar-sesion", to: "provider_sessions#create"
   post "proveedor", to: "provider_sessions#create"
   resource :provider_welcome, path: "proveedor/bienvenida", only: :show
   resource :provider_invitation, path: "proveedor/invitacion", only: [ :show, :update ]

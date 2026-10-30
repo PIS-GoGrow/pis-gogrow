@@ -9,7 +9,8 @@ RSpec.describe Session, type: :model do
     it "defines ENTRY_ROLES for entry paths" do
       expect(Session::ENTRY_ROLES).to eq(
         "/consumidor" => "consumer",
-        "/rrhh" => "admin"
+        "/rrhh" => "admin",
+        "/proveedor" => "provider"
       )
     end
   end

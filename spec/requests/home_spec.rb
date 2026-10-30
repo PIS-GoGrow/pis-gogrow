@@ -82,6 +82,21 @@ RSpec.describe "Home", type: :request do
     end
   end
 
+  describe "GET /proveedor" do
+    it "shows the provider welcome" do
+      get "/proveedor"
+
+      expect(inertia).to render_component("home/index")
+      expect(inertia).to have_props(variant: "provider")
+    end
+
+    it "redirects an already authenticated provider to provider dashboard" do
+      sign_in users(:provider_user), role: :provider
+      get "/proveedor"
+      expect(response).to redirect_to(provider_dashboard_path)
+    end
+  end
+
   describe "GET /rrhh" do
     it "shows the admin welcome" do
       get admin_welcome_path

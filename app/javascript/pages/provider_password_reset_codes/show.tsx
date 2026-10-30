@@ -3,7 +3,6 @@ import { REGEXP_ONLY_DIGITS } from "input-otp"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import TextLink from "@/components/text-link"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError } from "@/components/ui/field"
 import {
@@ -39,9 +38,8 @@ function ResendButton({ email, seconds }: { email: string; seconds: number }) {
   return (
     <Button
       type="button"
-      variant="secondary"
       size="lg"
-      className="w-full"
+      className="h-12 w-full rounded-[10px] bg-[#F4F4F5] text-sm font-medium text-[#737373] hover:bg-[#E4E4E7] disabled:opacity-80 dark:bg-neutral-800 dark:text-neutral-400 dark:hover:bg-neutral-700"
       disabled={left > 0}
       onClick={() => router.post(providerPasswordResets.create(), { email })}
     >
@@ -67,6 +65,8 @@ export default function ProviderPasswordResetCode({
       description={t("pages.provider_password_reset_codes.show.description", {
         email,
       })}
+      backHref={providerSessions.new().url}
+      variant="form"
     >
       <Head title={t("pages.provider_password_reset_codes.show.title")} />
 
@@ -105,7 +105,7 @@ export default function ProviderPasswordResetCode({
             <Button
               type="submit"
               size="lg"
-              className="w-full"
+              className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/90"
               disabled={code.length < CODE_LENGTH || processing}
             >
               {processing && <Spinner />}
@@ -116,12 +116,6 @@ export default function ProviderPasswordResetCode({
       </Form>
 
       <ResendButton key={resend_in} email={email} seconds={resend_in} />
-
-      <div className="text-center text-sm">
-        <TextLink href={providerSessions.new()}>
-          {t("pages.provider_password_reset_codes.show.back")}
-        </TextLink>
-      </div>
     </AuthLayout>
   )
 }

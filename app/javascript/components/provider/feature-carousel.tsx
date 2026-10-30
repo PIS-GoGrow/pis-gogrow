@@ -44,16 +44,16 @@ export default function FeatureCarousel() {
           <Card
             key={key}
             aria-roledescription="slide"
-            className="bg-muted w-full shrink-0 snap-center border-0 py-8 text-left shadow-none"
+            className="bg-[#FAFAFA] dark:bg-muted w-full shrink-0 snap-center border-0 p-6 rounded-lg text-left shadow-none"
           >
-            <CardHeader className="gap-2 px-8">
-              <span className="bg-foreground/10 mb-4 flex size-12 items-center justify-center rounded-full">
+            <CardHeader className="gap-2 p-0">
+              <span className="bg-[#E5E5E5] dark:bg-neutral-800 mb-2 flex size-10 items-center justify-center rounded-full text-[#0A0A0A] dark:text-neutral-100">
                 <Icon className="size-6" aria-hidden="true" />
               </span>
-              <h2 className="text-lg font-semibold">
+              <h2 className="text-base font-semibold leading-6 text-[#0A0A0A] dark:text-neutral-100">
                 {t(`pages.home.features.${key}.title`)}
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-sm font-normal leading-5 text-[#737373] dark:text-neutral-400">
                 {t(`pages.home.features.${key}.description`)}
               </p>
             </CardHeader>
@@ -61,7 +61,7 @@ export default function FeatureCarousel() {
         ))}
       </div>
 
-      <div className="flex gap-1">
+      <div className="flex gap-2">
         {features.map(({ key }, index) => (
           <Button
             key={key}
@@ -71,13 +71,14 @@ export default function FeatureCarousel() {
             aria-label={t("pages.home.features.go_to", { number: index + 1 })}
             aria-current={index === active}
             onClick={() => goTo(index)}
+            className="size-4 p-0 hover:bg-transparent"
           >
             <span
               className={cn(
-                "size-2.5 rounded-full",
+                "size-3 rounded-full transition-colors",
                 index === active
-                  ? "bg-foreground/60"
-                  : "bg-muted-foreground/25",
+                  ? "bg-[#737373]"
+                  : "bg-[#E5E5E5] dark:bg-neutral-800",
               )}
             />
           </Button>

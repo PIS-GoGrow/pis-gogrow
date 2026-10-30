@@ -13,7 +13,7 @@ class OmniauthCallbacksController < InertiaController
 
     if !user || user.roles.empty?
       # No permitir loguearse si el usuario no existe aún, o si no tiene roles disponibles
-      redirect_to entry_path, inertia: {
+      redirect_to entry_path, alert: t("flash.user_not_found"), inertia: {
         errors: { auth: t("flash.user_not_found") }
       }
 
@@ -23,7 +23,7 @@ class OmniauthCallbacksController < InertiaController
     entry_role = Session::ENTRY_ROLES[origin_path]
 
     if entry_role && user.roles.exclude?(entry_role)
-      redirect_to entry_path, inertia: {
+      redirect_to entry_path, alert: t("flash.role_not_available"), inertia: {
         errors: { auth: t("flash.role_not_available") }
       }
 

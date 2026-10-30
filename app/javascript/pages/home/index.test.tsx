@@ -51,6 +51,19 @@ describe("Home Page Component", () => {
     expect(screen.getByTestId("google-mark")).toBeInTheDocument()
   })
 
+  it("renders provider variant with FeatureCarousel and link to provider login", () => {
+    render(<Home variant="provider" dev_login_enabled={false} />)
+
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
+      "Viandas GoGrow",
+    )
+    expect(
+      screen.getByText("Pedidos, menú y cobros, en un solo lugar"),
+    ).toBeInTheDocument()
+    const link = screen.getByRole("link", { name: /Continuar con Email/i })
+    expect(link).toHaveAttribute("href", "/proveedor/iniciar-sesion")
+  })
+
   it("renders DevLoginForm when dev_login_enabled is true", () => {
     render(<Home variant="consumer" dev_login_enabled={true} />)
 

@@ -86,10 +86,26 @@ RSpec.describe "Sessions", type: :request do
     end
 
     context "with a consumer-only account" do
-      it "rejects the login from /rrhh" do
+      it "rejects the login from /rrhh via Referer" do
         post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*" }, headers: { "Referer" => "http://www.example.com/rrhh" }
 
         expect(response).to redirect_to("/rrhh")
+        expect(users(:one).sessions).to be_empty
+      end
+
+      it "rejects the login from /rrhh via origin param" do
+        post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*", origin: "/rrhh" }
+
+        expect(response).to redirect_to("/rrhh")
+        expect(flash[:alert]).to eq(I18n.t("flash.role_not_available"))
+        expect(users(:one).sessions).to be_empty
+      end
+
+      it "rejects the login from /proveedor via origin param" do
+        post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*", origin: "/proveedor" }
+
+        expect(response).to redirect_to("/proveedor")
+        expect(flash[:alert]).to eq(I18n.t("flash.role_not_available"))
         expect(users(:one).sessions).to be_empty
       end
     end
