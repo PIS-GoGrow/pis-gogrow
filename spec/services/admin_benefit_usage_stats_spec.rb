@@ -145,6 +145,13 @@ RSpec.describe AdminBenefitUsageStats do
     expect(warning_codes).to include("employee_counts_use_current_roster")
   end
 
+  it "counts an employee with multiple confirmed orders only once" do
+    insert_order(consumer: consumers(:one), discounted_price: 300)
+    insert_order(consumer: consumers(:one), discounted_price: 300)
+
+    expect(stats[:employees][:current_employees_with_confirmed_orders]).to eq(1)
+  end
+
   it "returns zero for calculable indicators in a month without activity" do
     expect(stats[:orders]).to eq(confirmed_orders: 0, confirmed_meals: 0, pending_orders: 0, pending_meals: 0)
     expect(stats[:benefits]).to include(monthly_subsidized_meals: 0, confirmed_meals_without_monthly_subsidy: 0)

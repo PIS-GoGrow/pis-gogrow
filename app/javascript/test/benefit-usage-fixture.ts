@@ -23,6 +23,11 @@ export function benefitUsageFixture(month = "2026-10"): BenefitUsageStats {
       eligible_employees: 25,
       eligible_without_orders: 7,
     },
+    employee_activity: {
+      current_employees: 10,
+      employees_with_confirmed_orders: 7,
+      average_confirmed_meals_per_current_employee: 4.5,
+    },
     trends: ["2026-06", "2026-07", "2026-08", month].map((key, index) => ({
       month: key,
       closed: index < 3,

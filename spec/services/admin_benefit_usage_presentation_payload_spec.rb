@@ -15,7 +15,10 @@ RSpec.describe AdminBenefitUsagePresentationPayload do
         company_subsidy_amount: BigDecimal("1500.25"), known_eligible_monthly_quota_meals: 30,
         monthly_unused_closed_meals: nil
       },
-      employees: { participation_percent: 50.0, eligibility: { eligible: 4 }, eligible_without_orders: 1 },
+      employees: {
+        participation_percent: 50.0, eligibility: { eligible: 4 }, eligible_without_orders: 1,
+        current_employees: 4, current_employees_with_confirmed_orders: 2
+      },
       trends: { months: [
         { month:, complete: false, confirmed_orders: 2, confirmed_meals: 3,
           monthly_subsidized_meals: 2, company_subsidy_amount: BigDecimal("1500.25"),
@@ -27,14 +30,19 @@ RSpec.describe AdminBenefitUsagePresentationPayload do
   end
   let(:payload) { described_class.new(stats:).to_h }
 
-  it "keeps every existing GET field and adds only the approved capacity block" do
+  it "keeps the AI fields and adds only the approved presentation blocks" do
     original = AdminBenefitUsageAiPayload.new(stats:).to_h
 
-    expect(payload.except(:capacity)).to eq(original)
-    expect(payload.keys).to eq(%i[schema_version period consumption capacity participation trends anomalies warnings])
+    expect(payload.except(:capacity, :employee_activity)).to eq(original)
+    expect(payload.keys).to eq(%i[schema_version period consumption capacity participation employee_activity trends
+                                  anomalies warnings])
     expect(payload[:capacity].keys).to eq(%i[monthly_quota_meals monthly_pending_reserved_meals monthly_available_meals])
     expect(payload[:capacity]).to eq(monthly_quota_meals: 20, monthly_pending_reserved_meals: 1,
                                      monthly_available_meals: 17)
+    expect(payload[:employee_activity]).to eq(
+      current_employees: 4, employees_with_confirmed_orders: 2,
+      average_confirmed_meals_per_current_employee: 0.75
+    )
     expect(payload.dig(:consumption, :pending)).to eq(orders: 1, meals: 2, monthly_reserved_meals: 1)
   end
 
@@ -54,6 +62,33 @@ RSpec.describe AdminBenefitUsagePresentationPayload do
     expect(payload[:capacity].values).to eq([ nil, nil, nil ])
     expect(payload.dig(:consumption, :pending)).to be_nil
     expect(payload.dig(:participation, :percent)).to be_nil
+    expect(payload[:employee_activity]).to eq(
+      current_employees: 4, employees_with_confirmed_orders: 2,
+      average_confirmed_meals_per_current_employee: 0.75
+    )
+  end
+
+  it "averages confirmed meals over every current employee with at most two decimals" do
+    stats[:orders][:confirmed_meals] = 10
+    stats[:employees][:current_employees] = 3
+
+    expect(payload.dig(:employee_activity, :average_confirmed_meals_per_current_employee)).to eq(3.33)
+  end
+
+  it "returns zero when there are current employees but no confirmed meals" do
+    stats[:orders][:confirmed_meals] = 0
+
+    expect(payload.dig(:employee_activity, :average_confirmed_meals_per_current_employee)).to eq(0.0)
+  end
+
+  it "leaves the average unknown without current employees or reliable confirmed meals" do
+    stats[:employees][:current_employees] = 0
+    expect(payload.dig(:employee_activity, :average_confirmed_meals_per_current_employee)).to be_nil
+
+    stats[:employees][:current_employees] = 4
+    stats[:orders][:confirmed_meals] = nil
+    expect(described_class.new(stats:).to_h.dig(:employee_activity,
+                                                :average_confirmed_meals_per_current_employee)).to be_nil
   end
 
   it "preserves decimal money, trends, anomalies and controlled warnings" do

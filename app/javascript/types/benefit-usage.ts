@@ -43,6 +43,11 @@ export interface BenefitUsageStats {
     eligible_employees: number | null
     eligible_without_orders: number | null
   }
+  employee_activity: {
+    current_employees: number
+    employees_with_confirmed_orders: number
+    average_confirmed_meals_per_current_employee: number | null
+  }
   trends: BenefitUsageTrend[]
   anomalies: {
     type: "increase" | "decrease"

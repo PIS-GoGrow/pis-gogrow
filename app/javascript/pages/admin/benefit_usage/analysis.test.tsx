@@ -46,6 +46,17 @@ function deferred() {
   return { promise, resolve }
 }
 
+async function openSection(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+) {
+  const trigger = screen.getByRole("button", { name: new RegExp(name) })
+  expect(trigger).toHaveAttribute("aria-expanded", "false")
+  await user.click(trigger)
+  expect(trigger).toHaveAttribute("aria-expanded", "true")
+  return trigger
+}
+
 describe("Uso del beneficio", () => {
   const fetchMock = vi.fn<typeof fetch>()
   beforeEach(() => {
@@ -57,6 +68,7 @@ describe("Uso del beneficio", () => {
   afterEach(() => vi.unstubAllGlobals())
 
   it("loads once in StrictMode and never generates AI automatically", async () => {
+    const user = userEvent.setup()
     render(
       <StrictMode>
         <Analysis {...props} />
@@ -78,25 +90,52 @@ describe("Uso del beneficio", () => {
     expect(
       screen.getByRole("button", { name: "Generar resumen con IA" }),
     ).toBeEnabled()
+    expect(
+      screen.getByRole("button", { name: "Resumen con IA" }),
+    ).toHaveAttribute("aria-expanded", "true")
+    expect(
+      screen.getByRole("button", { name: /Resumen del mes/ }),
+    ).toHaveAttribute("aria-expanded", "true")
+    for (const name of [
+      "Capacidad del beneficio",
+      "Participación de empleados",
+      "Últimos cuatro meses",
+      "Limitaciones de los datos",
+    ]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute(
+        "aria-expanded",
+        "false",
+      )
+    }
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(fetchMock.mock.calls[0][0]).toBe("/rrhh/uso-beneficio?month=2026-10")
+    await openSection(user, "Participación de empleados")
     expect(screen.getByText("72%")).toBeInTheDocument()
+    expect(screen.getByText("Empleados")).toBeInTheDocument()
+    expect(
+      screen.getByText("Promedio de viandas por empleado"),
+    ).toBeInTheDocument()
+    expect(screen.getByText("4,5")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Promedio calculado sobre todos los empleados actuales de la empresa, incluidos aquellos que no realizaron pedidos.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Elegibles sin pedidos")).not.toBeInTheDocument()
+    await openSection(user, "Capacidad del beneficio")
     expect(screen.getByText("257")).toBeInTheDocument()
     expect(screen.getByRole("progressbar")).toHaveAttribute(
       "aria-valuetext",
-      "257 de 300 viandas disponibles",
+      "43 de 300 viandas utilizadas o reservadas",
     )
     expect(
       screen.getByRole("link", { name: "Volver a Inicio" }),
     ).toHaveAttribute("href", "/rrhh/inicio?month=2026-10")
-    expect(
-      screen.getAllByText("Mes abierto · parcial", {
-        selector: '[data-slot="badge"]',
-      }),
-    ).toHaveLength(2)
+    expect(screen.getByText("Mes abierto · parcial")).toBeInTheDocument()
   })
 
-  it("preserves unknowns and zero, including historical capacity and unknown trend bars", async () => {
+  it("preserves unknowns and zero while omitting unreliable historical capacity", async () => {
+    const user = userEvent.setup()
     const data = benefitUsageFixture()
     data.period.closed = true
     data.consumption.confirmed_orders = 0
@@ -112,19 +151,113 @@ describe("Uso del beneficio", () => {
       eligible_employees: null,
       eligible_without_orders: null,
     }
+    data.employee_activity = {
+      current_employees: 10,
+      employees_with_confirmed_orders: 0,
+      average_confirmed_meals_per_current_employee: 0,
+    }
     fetchMock.mockResolvedValue(response(data))
     render(<Analysis {...props} />)
     await screen.findByText("$9.007.199.254.740.993,01")
-    expect(screen.getAllByText("Dato no disponible").length).toBeGreaterThan(5)
-    expect(screen.getAllByText("0")).toHaveLength(2)
-    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
     expect(
-      screen.getByText(/No se conserva el estado del cupo/),
+      screen.queryByRole("button", { name: "Capacidad del beneficio" }),
+    ).not.toBeInTheDocument()
+    await openSection(user, "Actividad de empleados")
+    expect(
+      screen.getByText("Empleados con pedidos confirmados"),
     ).toBeInTheDocument()
+    expect(screen.getByText("Empleados actuales")).toBeInTheDocument()
+    expect(
+      screen.getByText("Promedio sobre la nómina actual"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Este promedio utiliza la nómina actual como referencia. La cantidad de empleados al cierre de ese mes puede haber sido diferente.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getAllByText("0").length).toBeGreaterThanOrEqual(3)
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
+    await openSection(user, "Últimos cuatro meses")
     const trends = screen.getByRole("list", { name: "Viandas confirmadas" })
     const unknownMonth = within(trends).getAllByRole("listitem")[1]
     expect(unknownMonth).toHaveTextContent("Dato no disponible")
     expect(unknownMonth.querySelector('[aria-hidden="true"]')).toBeNull()
+  })
+
+  it("shows 20% used capacity for 4 of 20 reserved or used meals", async () => {
+    const user = userEvent.setup()
+    const data = benefitUsageFixture()
+    data.capacity = {
+      monthly_quota_meals: 20,
+      monthly_available_meals: 16,
+      monthly_pending_reserved_meals: 4,
+    }
+    fetchMock.mockResolvedValue(response(data))
+    render(<Analysis {...props} />)
+    await screen.findByText("$5.425,25")
+    await openSection(user, "Capacidad del beneficio")
+    expect(screen.getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "20",
+    )
+    expect(screen.getByRole("progressbar")).toHaveAttribute(
+      "aria-valuetext",
+      "4 de 20 viandas utilizadas o reservadas",
+    )
+    expect(
+      screen.getByText("4 de 20 viandas utilizadas o reservadas"),
+    ).toBeInTheDocument()
+    expect(screen.getByText("16")).toBeInTheDocument()
+    expect(screen.getByText("20")).toBeInTheDocument()
+    expect(screen.getByText("4")).toBeInTheDocument()
+  })
+
+  it("does not render a capacity bar when a required value is unknown", async () => {
+    const user = userEvent.setup()
+    const data = benefitUsageFixture()
+    data.capacity.monthly_pending_reserved_meals = null
+    fetchMock.mockResolvedValue(response(data))
+    render(<Analysis {...props} />)
+    await screen.findByText("$5.425,25")
+    await openSection(user, "Capacidad del beneficio")
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        /Faltan datos confiables para informar el cupo completo/,
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("expands and collapses every main card through its accessible trigger", async () => {
+    const user = userEvent.setup()
+    render(<Analysis {...props} />)
+    await screen.findByText("$5.425,25")
+    const sections = [
+      ["Resumen con IA", true],
+      ["Resumen del mes", true],
+      ["Capacidad del beneficio", false],
+      ["Participación de empleados", false],
+      ["Últimos cuatro meses", false],
+      ["Limitaciones de los datos", false],
+    ] as const
+
+    for (const [name, initiallyOpen] of sections) {
+      const trigger = screen.getByRole("button", { name: new RegExp(name) })
+      expect(trigger).toHaveAttribute(
+        "aria-expanded",
+        initiallyOpen ? "true" : "false",
+      )
+      await user.click(trigger)
+      expect(trigger).toHaveAttribute(
+        "aria-expanded",
+        initiallyOpen ? "false" : "true",
+      )
+      await user.click(trigger)
+      expect(trigger).toHaveAttribute(
+        "aria-expanded",
+        initiallyOpen ? "true" : "false",
+      )
+    }
   })
 
   it.each([
@@ -186,6 +319,13 @@ describe("Uso del beneficio", () => {
       screen.getByRole("heading", { name: "Últimos cuatro meses" }),
     ).toBeInTheDocument()
     expect(screen.queryByText("Variaciones destacadas")).not.toBeInTheDocument()
+    await openSection(user, "Últimos cuatro meses")
+    const trendDetails = screen.getByRole("button", {
+      name: "Ver indicadores mensuales",
+    })
+    await user.click(trendDetails)
+    expect(trendDetails).toHaveAttribute("aria-expanded", "true")
+    expect(screen.getAllByText(/Mes anterior:/).length).toBeGreaterThan(0)
     const limitations = screen.getByRole("button", {
       name: "Limitaciones de los datos",
     })
@@ -213,6 +353,48 @@ describe("Uso del beneficio", () => {
         /Una vianda sin subsidio mensual puede tener un beneficio especial/,
       ),
     ).toBeInTheDocument()
+  })
+
+  it("groups repeated historical warnings but preserves specific limitations", async () => {
+    const user = userEvent.setup()
+    const data = benefitUsageFixture()
+    data.warnings = [
+      { code: "trend_monthly_subsidy_unknown", month: "2026-07" },
+      { code: "trend_monthly_subsidy_unknown", month: "2026-08" },
+      { code: "benefit_consumer_mismatch" },
+    ]
+    fetchMock.mockResolvedValue(response(data))
+    render(<Analysis {...props} />)
+    await screen.findByText("$5.425,25")
+    await openSection(user, "Limitaciones de los datos")
+    expect(
+      screen.getByText(
+        "Algunas estadísticas históricas no pueden calcularse completamente con los registros disponibles.",
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getAllByText(
+        "No se conoce la cantidad de viandas con subsidio mensual.",
+      ),
+    ).toHaveLength(1)
+    expect(
+      screen.getByText(
+        "Hay beneficios cuyo titular no coincide con el empleado del pedido.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/Julio 2026:/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Agosto 2026:/)).not.toBeInTheDocument()
+  })
+
+  it("does not invent a data limitations card when there are no warnings", async () => {
+    const data = benefitUsageFixture()
+    data.warnings = []
+    fetchMock.mockResolvedValue(response(data))
+    render(<Analysis {...props} />)
+    await screen.findByText("$5.425,25")
+    expect(
+      screen.queryByRole("button", { name: "Limitaciones de los datos" }),
+    ).not.toBeInTheDocument()
   })
 
   it("offers a manual retry after a statistics error", async () => {
@@ -311,6 +493,7 @@ describe("Uso del beneficio", () => {
   )
 
   it("posts only the month with CSRF, prevents duplicates and renders AI as safe text", async () => {
+    const user = userEvent.setup()
     const request = deferred()
     fetchMock
       .mockResolvedValueOnce(response(benefitUsageFixture()))
@@ -346,6 +529,14 @@ describe("Uso del beneficio", () => {
     )
     await screen.findByText("<img src=x onerror=alert(1)>")
     expect(document.querySelector("img")).toBeNull()
+    const aiTrigger = screen.getByRole("button", { name: "Resumen con IA" })
+    await user.click(aiTrigger)
+    expect(
+      screen.queryByText("<img src=x onerror=alert(1)>"),
+    ).not.toBeInTheDocument()
+    await user.click(aiTrigger)
+    expect(screen.getByText("<img src=x onerror=alert(1)>")).toBeInTheDocument()
+    expect(fetchMock).toHaveBeenCalledTimes(2)
     meta.remove()
   })
 

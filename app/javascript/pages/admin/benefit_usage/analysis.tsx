@@ -3,12 +3,12 @@ import { ArrowLeft } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import BenefitUsageCollapsibleCard from "@/components/admin/benefit-usage-collapsible-card"
 import BenefitUsageMetrics from "@/components/admin/benefit-usage-metrics"
 import MonthSelect from "@/components/admin/month-select"
 import PageContainer from "@/components/page-container"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { useBenefitUsage } from "@/hooks/use-benefit-usage"
@@ -46,45 +46,43 @@ function AnalysisMonth({
   }
 
   const aiSummary = (
-    <Card className="gap-4 rounded-lg border-violet-300 bg-violet-50 py-5 text-violet-950 shadow-none dark:border-violet-900 dark:bg-violet-950/30 dark:text-violet-100">
-      <CardHeader className="px-5 sm:px-6">
-        <CardTitle>
-          <h3>{t(`${p}.ai_title`)}</h3>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4 px-5 sm:px-6">
-        <p className="text-sm leading-relaxed text-violet-900 dark:text-violet-200">
-          {t(`${p}.ai_description`)}
-        </p>
-        <Button
-          disabled={!usage.stats || usage.generating || navigating}
-          onClick={() => void usage.generate()}
-          className="w-full sm:w-auto"
-        >
-          {usage.generating && <Spinner aria-hidden="true" />}
-          {t(`${p}.${usage.generating ? "generating" : "generate"}`)}
-        </Button>
-        <div aria-live="polite" aria-atomic="true">
-          {usage.summaryError && (
-            <Alert variant="destructive">
-              <AlertDescription>
-                {t(`${p}.errors.${usage.summaryError}`)}
-              </AlertDescription>
-            </Alert>
-          )}
-          {usage.summary !== null && (
-            <div className="space-y-4 border-t border-violet-200 pt-5 dark:border-violet-800">
-              <p className="text-xs leading-relaxed text-violet-800 dark:text-violet-200">
-                {t(`${p}.ai_notice`)}
-              </p>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {usage.summary}
-              </p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+    <BenefitUsageCollapsibleCard
+      title={t(`${p}.ai_title`)}
+      defaultOpen
+      className="border-violet-300 bg-violet-50 text-violet-950 dark:border-violet-900 dark:bg-violet-950/30 dark:text-violet-100"
+      contentClassName="space-y-4"
+    >
+      <p className="text-sm leading-relaxed text-violet-900 dark:text-violet-200">
+        {t(`${p}.ai_description`)}
+      </p>
+      <Button
+        disabled={!usage.stats || usage.generating || navigating}
+        onClick={() => void usage.generate()}
+        className="w-full sm:w-auto"
+      >
+        {usage.generating && <Spinner aria-hidden="true" />}
+        {t(`${p}.${usage.generating ? "generating" : "generate"}`)}
+      </Button>
+      <div aria-live="polite" aria-atomic="true">
+        {usage.summaryError && (
+          <Alert variant="destructive">
+            <AlertDescription>
+              {t(`${p}.errors.${usage.summaryError}`)}
+            </AlertDescription>
+          </Alert>
+        )}
+        {usage.summary !== null && (
+          <div className="space-y-4 border-t border-violet-200 pt-5 dark:border-violet-800">
+            <p className="text-xs leading-relaxed text-violet-800 dark:text-violet-200">
+              {t(`${p}.ai_notice`)}
+            </p>
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              {usage.summary}
+            </p>
+          </div>
+        )}
+      </div>
+    </BenefitUsageCollapsibleCard>
   )
 
   return (

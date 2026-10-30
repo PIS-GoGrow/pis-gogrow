@@ -14,7 +14,10 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
         company_subsidy_amount: BigDecimal("1500.25"), monthly_pending_reserved_meals: 1,
         monthly_quota_meals: nil, monthly_available_meals: nil
       },
-      employees: { participation_percent: nil, eligibility: { eligible: 0 }, eligible_without_orders: nil },
+      employees: {
+        participation_percent: nil, eligibility: { eligible: 0 }, eligible_without_orders: nil,
+        current_employees: 2, current_employees_with_confirmed_orders: 1
+      },
       trends: { months: [
         { month:, complete: false, confirmed_orders: 2, confirmed_meals: 3,
           monthly_subsidized_meals: 2, company_subsidy_amount: BigDecimal("1500.25"),
@@ -51,6 +54,10 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
       expect(response.parsed_body.fetch("capacity")).to eq(
         "monthly_quota_meals" => nil, "monthly_pending_reserved_meals" => 1,
         "monthly_available_meals" => nil
+      )
+      expect(response.parsed_body.fetch("employee_activity")).to eq(
+        "current_employees" => 2, "employees_with_confirmed_orders" => 1,
+        "average_confirmed_meals_per_current_employee" => 1.5
       )
       expect(response.body).not_to include("Nombre privado", "privado@example.com")
     end
@@ -444,8 +451,10 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
                                                                 "company_subsidy_amount" => prior_subsidy)
         expect(response.body).not_to include("PRIVATE-", "@example.test", "PRIVATE-ORDER-NOTES")
         expect(response.body).not_to match(/"(?:company_id|consumer_id|user_id|order_id|benefit_id|address|email|name)"\s*:/)
-        expect(response.parsed_body.keys).to contain_exactly("schema_version", "period", "consumption",
-                                                              "capacity", "participation", "trends", "anomalies", "warnings")
+        expect(response.parsed_body.keys).to contain_exactly(
+          "schema_version", "period", "consumption", "capacity", "participation", "employee_activity",
+          "trends", "anomalies", "warnings"
+        )
       end
       expect(requests).to be_empty
     end
@@ -490,6 +499,7 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
         "monthly_quota_meals" => 20, "monthly_pending_reserved_meals" => 0,
         "monthly_available_meals" => 15
       )
+      expect(response.parsed_body.dig("employee_activity", "average_confirmed_meals_per_current_employee")).to eq(5.0)
       expect(response.body).not_to include("PRIVATE-", "@example.test", "consumer_id", "user_id")
 
       post admin_benefit_usage_summary_path, params: { month: "2032-04" }

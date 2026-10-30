@@ -1,11 +1,10 @@
-import { ChevronDown } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import BenefitUsageCollapsibleCard from "@/components/admin/benefit-usage-collapsible-card"
 import HeadingSmall from "@/components/heading-small"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/collapsible"
 import { Progress } from "@/components/ui/progress"
 import { formatBenefitMoney, formatBenefitMonth } from "@/lib/benefit-usage"
+import { cn } from "@/lib/utils"
 import type { BenefitUsageStats } from "@/types/benefit-usage"
 
 interface BenefitUsageMetricsProps {
@@ -31,15 +31,38 @@ export default function BenefitUsageMetrics({
     value === null
       ? unknown
       : `${value.toLocaleString("es-UY", { maximumFractionDigits: 2 })}%`
+  const decimal = (value: number | null) =>
+    value === null
+      ? unknown
+      : value.toLocaleString("es-UY", { maximumFractionDigits: 2 })
   const money = (value: string | null) =>
     value === null ? unknown : formatBenefitMoney(value)
-  const { consumption, capacity, participation } = stats
+  const { consumption, capacity, participation, employee_activity } = stats
   const available = capacity.monthly_available_meals
   const quota = capacity.monthly_quota_meals
-  const availability =
-    available !== null && quota !== null && quota > 0
-      ? (available / quota) * 100
+  const usedMeals =
+    available !== null && quota !== null ? quota - available : null
+  const usedPercentage =
+    usedMeals !== null &&
+    quota !== null &&
+    quota > 0 &&
+    capacity.monthly_pending_reserved_meals !== null
+      ? Math.min(100, Math.max(0, (usedMeals / quota) * 100))
       : null
+  const historicalWarningCounts = stats.warnings.reduce<Record<string, number>>(
+    (counts, warning) => {
+      if (warning.month) counts[warning.code] = (counts[warning.code] ?? 0) + 1
+      return counts
+    },
+    {},
+  )
+  const groupedHistoricalWarningCodes = Object.entries(historicalWarningCounts)
+    .filter(([, warningCount]) => warningCount > 1)
+    .map(([code]) => code)
+  const specificWarnings = stats.warnings.filter(
+    (warning) =>
+      !warning.month || !groupedHistoricalWarningCodes.includes(warning.code),
+  )
   const maxMeals = Math.max(
     1,
     ...stats.trends.flatMap((entry) =>
@@ -49,132 +72,178 @@ export default function BenefitUsageMetrics({
 
   return (
     <>
-      <Card className="bg-muted gap-4 rounded-lg py-5 shadow-none">
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 px-5 sm:px-6">
-          <CardTitle>
-            <h3>{t(`${p}.consumption`)}</h3>
-          </CardTitle>
+      <BenefitUsageCollapsibleCard
+        title={t(`${p}.consumption`)}
+        defaultOpen
+        accessory={
           <Badge variant="secondary">
             {t(`${p}.${stats.period.closed ? "closed" : "open"}`)}
           </Badge>
-        </CardHeader>
-        <CardContent className="space-y-4 px-5 sm:px-6">
-          <dl className="grid grid-cols-2 gap-4">
-            <Metric
-              label={t(`${p}.indicators.confirmed_meals`)}
-              value={count(consumption.confirmed_meals)}
-              prominent
-            />
-            <Metric
-              label={t(`${p}.indicators.confirmed_orders`)}
-              value={count(consumption.confirmed_orders)}
-              prominent
-            />
-          </dl>
-          {consumption.confirmed_orders === 0 && (
-            <p className="text-muted-foreground text-sm">{t(`${p}.empty`)}</p>
-          )}
-          <dl className="bg-background divide-border grid divide-y rounded-lg border px-4 [&>div]:py-3">
-            <Metric
-              label={t(`${p}.indicators.monthly_subsidized_meals`)}
-              value={count(consumption.monthly_subsidized_meals)}
-              compact
-            />
-            <Metric
-              label={t(`${p}.without_subsidy`)}
-              value={count(consumption.confirmed_meals_without_monthly_subsidy)}
-              compact
-            />
-            <Metric
-              label={t(`${p}.indicators.company_subsidy_amount`)}
-              value={money(consumption.company_subsidy_amount)}
-              compact
-              monetary
-            />
-          </dl>
-          <Collapsible>
-            <CollapsibleTrigger asChild>
-              <Button variant="link" size="sm" className="h-auto p-0">
-                {t(`${p}.subsidy_explanation`)}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-2">
-              <p className="text-muted-foreground text-sm">
-                {t(`${p}.subsidy_note`)}
-              </p>
-            </CollapsibleContent>
-          </Collapsible>
-          {consumption.pending && (
+        }
+        contentClassName="space-y-4"
+      >
+        <dl className="grid grid-cols-2 gap-4">
+          <Metric
+            label={t(`${p}.indicators.confirmed_meals`)}
+            value={count(consumption.confirmed_meals)}
+            prominent
+          />
+          <Metric
+            label={t(`${p}.indicators.confirmed_orders`)}
+            value={count(consumption.confirmed_orders)}
+            prominent
+          />
+        </dl>
+        {consumption.confirmed_orders === 0 && (
+          <p className="text-muted-foreground text-sm">{t(`${p}.empty`)}</p>
+        )}
+        <dl className="bg-background divide-border grid divide-y rounded-lg border px-4 [&>div]:py-3">
+          <Metric
+            label={t(`${p}.indicators.monthly_subsidized_meals`)}
+            value={count(consumption.monthly_subsidized_meals)}
+            compact
+          />
+          <Metric
+            label={t(`${p}.without_subsidy`)}
+            value={count(consumption.confirmed_meals_without_monthly_subsidy)}
+            compact
+          />
+          <Metric
+            label={t(`${p}.indicators.company_subsidy_amount`)}
+            value={money(consumption.company_subsidy_amount)}
+            compact
+            monetary
+          />
+        </dl>
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <Button variant="link" size="sm" className="h-auto p-0">
+              {t(`${p}.subsidy_explanation`)}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-2">
             <p className="text-muted-foreground text-sm">
-              {t(`${p}.pending`, {
-                orders: t(`${p}.pending_orders`, {
-                  count: consumption.pending.orders,
-                }),
-                meals: t(`${p}.pending_meals`, {
-                  count: consumption.pending.meals,
-                }),
-              })}
+              {t(`${p}.subsidy_note`)}
+            </p>
+          </CollapsibleContent>
+        </Collapsible>
+        {consumption.pending && (
+          <p className="text-muted-foreground text-sm">
+            {t(`${p}.pending`, {
+              orders: t(`${p}.pending_orders`, {
+                count: consumption.pending.orders,
+              }),
+              meals: t(`${p}.pending_meals`, {
+                count: consumption.pending.meals,
+              }),
+            })}
+          </p>
+        )}
+      </BenefitUsageCollapsibleCard>
+
+      <div
+        className={cn("grid gap-4", !stats.period.closed && "lg:grid-cols-2")}
+      >
+        {!stats.period.closed && (
+          <BenefitUsageCollapsibleCard title={t(`${p}.capacity`)}>
+            <dl className="bg-background divide-border grid divide-y rounded-lg border px-4 [&>div]:py-4">
+              <Metric
+                label={t(`${p}.available`)}
+                value={count(available)}
+                prominent
+              />
+              <Metric label={t(`${p}.quota`)} value={count(quota)} />
+              <Metric
+                label={t(`${p}.reserved`)}
+                value={count(capacity.monthly_pending_reserved_meals)}
+              />
+            </dl>
+            {usedPercentage !== null && usedMeals !== null && (
+              <div className="space-y-2">
+                <Progress
+                  value={usedPercentage}
+                  aria-label={t(`${p}.used_capacity`)}
+                  aria-valuenow={usedPercentage}
+                  aria-valuetext={t(`${p}.used_of`, {
+                    used: count(usedMeals),
+                    quota: count(quota),
+                  })}
+                />
+                <p className="text-muted-foreground text-sm font-medium">
+                  {t(`${p}.used_of`, {
+                    used: count(usedMeals),
+                    quota: count(quota),
+                  })}
+                </p>
+              </div>
+            )}
+            <p className="text-muted-foreground text-sm">
+              {t(
+                `${p}.${usedPercentage === null ? "unknown_capacity" : "capacity_note"}`,
+              )}
+            </p>
+          </BenefitUsageCollapsibleCard>
+        )}
+        <BenefitUsageCollapsibleCard
+          title={t(
+            `${p}.${stats.period.closed ? "employee_activity" : "participation"}`,
+          )}
+        >
+          <dl className="bg-background divide-border grid divide-y rounded-lg border px-4 [&>div]:py-4">
+            {stats.period.closed ? (
+              <>
+                <Metric
+                  label={t(`${p}.employees_with_confirmed_orders`)}
+                  value={count(
+                    employee_activity.employees_with_confirmed_orders,
+                  )}
+                  prominent
+                />
+                <Metric
+                  label={t(`${p}.current_employees`)}
+                  value={count(employee_activity.current_employees)}
+                />
+                <Metric
+                  label={t(`${p}.historical_average`)}
+                  value={decimal(
+                    employee_activity.average_confirmed_meals_per_current_employee,
+                  )}
+                />
+              </>
+            ) : (
+              <>
+                <Metric
+                  label={t(`${p}.participation_percent`)}
+                  value={percent(participation.percent)}
+                  prominent
+                />
+                <Metric
+                  label={t(`${p}.employees`)}
+                  value={count(employee_activity.current_employees)}
+                />
+                <Metric
+                  label={t(`${p}.average_per_employee`)}
+                  value={decimal(
+                    employee_activity.average_confirmed_meals_per_current_employee,
+                  )}
+                />
+              </>
+            )}
+          </dl>
+          {!stats.period.closed && (
+            <p className="text-muted-foreground text-sm">
+              {t(`${p}.participation_note`)}
             </p>
           )}
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Panel title={t(`${p}.capacity`)}>
-          <dl className="bg-background divide-border grid divide-y rounded-lg border px-4 [&>div]:py-4">
-            <Metric
-              label={t(`${p}.available`)}
-              value={count(available)}
-              prominent
-            />
-            <Metric label={t(`${p}.quota`)} value={count(quota)} />
-            <Metric
-              label={t(`${p}.reserved`)}
-              value={count(capacity.monthly_pending_reserved_meals)}
-            />
-          </dl>
-          {availability !== null && (
-            <Progress
-              value={availability}
-              aria-label={t(`${p}.available`)}
-              aria-valuenow={availability}
-              aria-valuetext={t(`${p}.available_of`, {
-                available: count(available),
-                quota: count(quota),
-              })}
-            />
-          )}
           <p className="text-muted-foreground text-sm">
             {t(
-              `${p}.${stats.period.closed ? "historical_capacity" : available === null || quota === null || capacity.monthly_pending_reserved_meals === null ? "unknown_capacity" : "capacity_note"}`,
+              `${p}.${stats.period.closed ? "historical_average_note" : "average_note"}`,
             )}
           </p>
-        </Panel>
-        <Panel title={t(`${p}.participation`)}>
-          <dl className="bg-background divide-border grid divide-y rounded-lg border px-4 [&>div]:py-4">
-            <Metric
-              label={t(`${p}.participation_percent`)}
-              value={percent(participation.percent)}
-              prominent
-            />
-            <Metric
-              label={t(`${p}.eligible`)}
-              value={count(participation.eligible_employees)}
-            />
-            <Metric
-              label={t(`${p}.without_orders`)}
-              value={count(participation.eligible_without_orders)}
-            />
-          </dl>
-          <p className="text-muted-foreground text-sm">
-            {t(
-              `${p}.${participation.percent === null ? "unknown_participation" : "participation_note"}`,
-            )}
-          </p>
-        </Panel>
+        </BenefitUsageCollapsibleCard>
       </div>
 
-      <Panel title={t(`${p}.trends`)}>
+      <BenefitUsageCollapsibleCard title={t(`${p}.trends`)}>
         <p className="text-muted-foreground text-sm">{t(`${p}.trends_note`)}</p>
         <ul
           className="space-y-4"
@@ -275,35 +344,45 @@ export default function BenefitUsageMetrics({
             ))}
           </CollapsibleContent>
         </Collapsible>
-      </Panel>
+      </BenefitUsageCollapsibleCard>
 
       {stats.warnings.length > 0 && (
-        <Collapsible className="bg-muted rounded-lg border">
-          <CollapsibleTrigger asChild>
-            <Button
-              variant="ghost"
-              className="group h-auto w-full justify-between px-5 py-4 text-left"
-            >
-              {t(`${p}.warnings_title`)}
-              <ChevronDown
-                aria-hidden="true"
-                className="transition-transform group-data-[state=open]:rotate-180"
-              />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="px-5 pb-5">
-            <ul className="text-muted-foreground list-disc space-y-2 pl-4 text-sm">
-              {stats.warnings.map((warning, index) => (
-                <li key={`${warning.code}-${warning.month ?? index}`}>
-                  {warning.month && `${formatBenefitMonth(warning.month)}: `}
-                  {t(`${p}.warnings.${warning.code}`, {
-                    defaultValue: t(`${p}.warning_fallback`),
-                  })}
-                </li>
-              ))}
-            </ul>
-          </CollapsibleContent>
-        </Collapsible>
+        <BenefitUsageCollapsibleCard title={t(`${p}.warnings_title`)}>
+          {groupedHistoricalWarningCodes.length > 0 && (
+            <section className="space-y-2">
+              <HeadingSmall title={t(`${p}.historical_limitations`)} />
+              <p className="text-muted-foreground text-sm">
+                {t(`${p}.historical_warnings_grouped`)}
+              </p>
+              <ul className="text-muted-foreground list-disc space-y-2 pl-4 text-sm">
+                {groupedHistoricalWarningCodes.map((code) => (
+                  <li key={code}>
+                    {t(`${p}.warnings.${code}`, {
+                      defaultValue: t(`${p}.warning_fallback`),
+                    })}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          {specificWarnings.length > 0 && (
+            <section className="space-y-2">
+              {groupedHistoricalWarningCodes.length > 0 && (
+                <HeadingSmall title={t(`${p}.specific_limitations`)} />
+              )}
+              <ul className="text-muted-foreground list-disc space-y-2 pl-4 text-sm">
+                {specificWarnings.map((warning, index) => (
+                  <li key={`${warning.code}-${warning.month ?? index}`}>
+                    {warning.month && `${formatBenefitMonth(warning.month)}: `}
+                    {t(`${p}.warnings.${warning.code}`, {
+                      defaultValue: t(`${p}.warning_fallback`),
+                    })}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </BenefitUsageCollapsibleCard>
       )}
     </>
   )
@@ -351,18 +430,5 @@ function Metric({
         {value}
       </dd>
     </div>
-  )
-}
-
-function Panel({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <Card className="bg-muted gap-6 rounded-lg py-6 shadow-none">
-      <CardHeader className="px-5 sm:px-6">
-        <CardTitle>
-          <h3>{title}</h3>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6 px-5 sm:px-6">{children}</CardContent>
-    </Card>
   )
 }

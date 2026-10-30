@@ -8,7 +8,9 @@ class AdminBenefitUsagePresentationPayload
   def to_h
     approved = AdminBenefitUsageAiPayload.new(stats: @stats).to_h
     benefits = @stats.fetch(:benefits)
+    employees = @stats.fetch(:employees)
     closed = approved.fetch(:period).fetch(:closed)
+    current_employees = integer(employees.fetch(:current_employees))
 
     {
       schema_version: approved.fetch(:schema_version),
@@ -20,6 +22,11 @@ class AdminBenefitUsagePresentationPayload
         monthly_available_meals: (integer(benefits.fetch(:monthly_available_meals)) unless closed)
       },
       participation: approved.fetch(:participation),
+      employee_activity: {
+        current_employees:,
+        employees_with_confirmed_orders: integer(employees.fetch(:current_employees_with_confirmed_orders)),
+        average_confirmed_meals_per_current_employee: average_confirmed_meals(current_employees)
+      },
       trends: approved.fetch(:trends),
       anomalies: approved.fetch(:anomalies),
       warnings: approved.fetch(:warnings)
@@ -32,5 +39,12 @@ class AdminBenefitUsagePresentationPayload
     raise ArgumentError, "invalid count" unless value.nil? || value.is_a?(Integer)
 
     value
+  end
+
+  def average_confirmed_meals(current_employees)
+    confirmed_meals = integer(@stats.fetch(:orders).fetch(:confirmed_meals))
+    return if confirmed_meals.nil? || current_employees.zero?
+
+    (confirmed_meals.to_d / current_employees).round(2).to_f
   end
 end
