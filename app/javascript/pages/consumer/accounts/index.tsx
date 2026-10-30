@@ -135,10 +135,10 @@ export default function Index({
     benefit_available > 0
       ? t("pages.accounts.index.meals_used_with_limit", {
           count: benefit_available,
-          meals: current_month_ordered,
+          meals: benefit_used,
           limit: benefit_available,
         })
-      : t("pages.accounts.index.meals_used", { count: current_month_ordered })
+      : t("pages.accounts.index.meals_used", { count: benefit_used })
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -161,17 +161,6 @@ export default function Index({
             detail={
               <span className="text-foreground font-semibold">
                 {`| ${mealsUsed}`}
-            </CardDescription>
-            <CardTitle>
-              {formatMoney(current_month_debt)}
-              <span className="text-zinc-500 dark:text-zinc-400">
-                {" | "}
-                {benefit_used}
-                {" de "}
-                {benefit_available}{" "}
-                {benefit_available == 1
-                  ? t("pages.accounts.show.lunch")
-                  : t("pages.accounts.show.lunches")}
               </span>
             }
             className="bg-muted shadow-none"
