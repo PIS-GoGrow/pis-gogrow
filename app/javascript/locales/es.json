@@ -985,7 +985,7 @@
           "base_price": "Precio base",
           "cannot_edit": {
             "already_closed": "Este pedido ya está cerrado.",
-            "already_confirmed": "El proveedor ya confirmó este pedido, así que no se puede modificar.",
+            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede modificar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede modificar."
           },
           "date": "Fecha de entrega",
@@ -995,6 +995,9 @@
             "address": "Dirección de entrega",
             "back": "Volver",
             "confirm": "Guardar cambios",
+            "confirm_replacement": "Confirmar pedido",
+            "confirmed_description": "Si lo modificás, cancelamos este pedido y creamos uno nuevo con los cambios, que el proveedor tiene que volver a confirmar.",
+            "confirmed_title": "El proveedor ya confirmó este pedido",
             "description": "Podés cambiar la cantidad, las opciones del plato, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo.",
             "notes": "Notas",
             "notes_placeholder": "Sin salsa, sin cebolla…",

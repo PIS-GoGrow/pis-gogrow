@@ -237,7 +237,7 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_button("Cancelar", disabled: true)
     expect(page).to have_button("Editar", disabled: true)
     expect(page).not_to have_content("Ya está confirmado para hoy, así que no se puede cancelar.")
-    expect(page).not_to have_content("El proveedor ya confirmó este pedido, así que no se puede modificar.")
+    expect(page).not_to have_content("Ya está confirmado para hoy, así que no se puede modificar.")
   end
 
 

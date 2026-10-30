@@ -237,16 +237,16 @@ class Order < ApplicationRecord
     end
   end
 
-  # RN-12: modificar equivale a cancelar y volver a pedir, así que rige la misma
-  # ventana. Una orden ya confirmada queda fuera: el proveedor la aceptó con
-  # esos datos. Devuelve el motivo del bloqueo para que la pantalla lo explique.
+  # RN-12: modificar equivale a cancelar y volver a pedir. Un pedido pendiente se
+  # modifica hasta el día de la entrega inclusive; uno confirmado, igual que al
+  # cancelarlo, solo mientras la entrega siga siendo para un día futuro. Devuelve
+  # el motivo del bloqueo para que la pantalla lo explique.
   def modification_block_reason
-    return "already_confirmed" if confirmed?
-    return "already_closed" unless pending?
+    return "already_closed" unless pending? || confirmed?
     return "unavailable" if schedule.nil?
-    return if schedule.date >= Date.current
+    return if schedule.date.after?(Date.current) || (pending? && schedule.date.today?)
 
-    "already_closed"
+    schedule.date.today? ? "confirmed_for_today" : "already_closed"
   end
 
   def modifiable?
@@ -287,26 +287,25 @@ class Order < ApplicationRecord
           end
 
           line = Orders::Pricing.new(consumer, modifiable_order: self).call([ { schedule:, quantity:, benefits: benefit_ids } ]).first.second
-
-          # El update tiene que ir antes de tocar los beneficios y cortar si
-          # falla: si una validación rechaza el cambio, los beneficios no se
-          # tocan y modify tiene que devolver false para que el controller
-          # reporte el error en vez de un "Pedido actualizado".
-          saved = update(
+          changes = {
             amount: quantity,
             notes:,
             price: line.price,
             discounted_price: line.discounted_price,
             selected_options: selected_options || self.selected_options,
-            modified_at: Time.current,
-            modified_by: by,
             **delivery
-          )
+          }
 
-          return false unless saved
+          return replace_with(changes, benefits: line.benefits, by:) if confirmed?
+
+          # El update tiene que ir antes de tocar los beneficios y cortar si
+          # falla: si una validación rechaza el cambio, los beneficios no se
+          # tocan y modify tiene que devolver false para que el controller
+          # reporte el error en vez de un "Pedido actualizado".
+          return false unless update(**changes, modified_at: Time.current, modified_by: by)
 
           replace_benefits! line.benefits
-          true
+          self
         end
       end
     end
@@ -521,6 +520,25 @@ class Order < ApplicationRecord
   # otro sin abortar la transacción del pedido.
   def account_of(owner, month:, provider:)
     owner.accounts.find_by(month:, provider:) || owner.accounts.create_or_find_by!(month:, provider:)
+  end
+
+  # El proveedor aceptó el pedido confirmado con esos datos, así que no se
+  # reescribe: se cancela y se crea otro pendiente que vuelve a pasar por su
+  # aprobación. El nuevo se valida antes de cancelar para no dejar al empleado
+  # sin ninguno de los dos.
+  def replace_with(changes, benefits:, by:)
+    replacement = consumer.orders.new(schedule:, **changes)
+    benefits.each { |benefit, benefit_used| replacement.apply_benefit benefit, benefit_used.units_used }
+
+    unless replacement.valid?
+      errors.merge!(replacement.errors)
+      return false
+    end
+
+    update!(status_before_cancellation: status, status: :cancelled, cancelled_at: Time.current, cancelled_by: by)
+    replacement.save!
+    notify_cancelled
+    replacement
   end
 
   def replace_benefits!(benefits)

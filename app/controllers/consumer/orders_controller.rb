@@ -138,7 +138,8 @@ class Consumer::OrdersController < Consumer::InertiaController
     )
 
     if modified
-      redirect_to order_path(order), notice: t("flash.order_updated"), status: :see_other
+      notice = modified == order ? t("flash.order_updated") : t("flash.order_replaced")
+      redirect_to order_path(modified), notice:, status: :see_other
     else
       redirect_to order_path(order),
                   alert: order.errors.full_messages.first || t("validations.order_not_modifiable"),

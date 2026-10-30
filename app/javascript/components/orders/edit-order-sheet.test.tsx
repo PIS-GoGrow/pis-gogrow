@@ -63,6 +63,44 @@ describe("EditOrderSheet", () => {
     expect(screen.getByText("12/140")).toBeInTheDocument()
   })
 
+  it("warns that a confirmed order is cancelled and replaced by a new one", () => {
+    render(
+      <EditOrderSheet
+        order={{ ...baseOrder, status: "confirmed" }}
+        addresses={addresses}
+        optionGroups={[]}
+        maxQuantity={5}
+        editing={true}
+      />,
+    )
+
+    expect(
+      screen.getByText("El proveedor ya confirmó este pedido"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Confirmar pedido" }),
+    ).toBeInTheDocument()
+  })
+
+  it("saves a pending order in place without the replacement warning", () => {
+    render(
+      <EditOrderSheet
+        order={baseOrder}
+        addresses={addresses}
+        optionGroups={[]}
+        maxQuantity={5}
+        editing={true}
+      />,
+    )
+
+    expect(
+      screen.queryByText("El proveedor ya confirmó este pedido"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Guardar cambios" }),
+    ).toBeInTheDocument()
+  })
+
   it("shows 0/140 when order has no notes", () => {
     const orderWithoutNotes: Order = {
       ...baseOrder,

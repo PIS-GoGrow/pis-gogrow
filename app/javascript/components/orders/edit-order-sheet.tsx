@@ -1,5 +1,5 @@
 import { useForm } from "@inertiajs/react"
-import { Pencil } from "lucide-react"
+import { Pencil, TriangleAlert } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -12,6 +12,7 @@ import {
 } from "@/components/adaptable-dialog"
 import OptionChoices from "@/components/menus/option-choices"
 import { QuantityInput } from "@/components/quantity-input"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { RadioGroup } from "@/components/ui/radio-group"
@@ -116,6 +117,18 @@ export default function EditOrderSheet({
             {t("pages.orders.show.edit_dialog.description")}
           </AdaptableDialogDescription>
 
+          {order.status === "confirmed" && (
+            <Alert role="status">
+              <TriangleAlert aria-hidden="true" />
+              <AlertTitle>
+                {t("pages.orders.show.edit_dialog.confirmed_title")}
+              </AlertTitle>
+              <AlertDescription>
+                {t("pages.orders.show.edit_dialog.confirmed_description")}
+              </AlertDescription>
+            </Alert>
+          )}
+
           <Field>
             <FieldLabel htmlFor="quantity">
               {t("pages.orders.show.edit_dialog.quantity")}
@@ -219,7 +232,9 @@ export default function EditOrderSheet({
               disabled={processing || missingChoice}
             >
               {processing && <Spinner />}
-              {t("pages.orders.show.edit_dialog.confirm")}
+              {order.status === "confirmed"
+                ? t("pages.orders.show.edit_dialog.confirm_replacement")
+                : t("pages.orders.show.edit_dialog.confirm")}
             </Button>
           </div>
         </form>

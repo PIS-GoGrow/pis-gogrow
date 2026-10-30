@@ -84,7 +84,7 @@ describe("Consumer::Orders Show Page", () => {
       cancellable: false,
       cancellation_block_reason: "already_closed",
       modifiable: false,
-      modification_block_reason: "already_confirmed",
+      modification_block_reason: "already_closed",
     }
 
     render(
@@ -110,7 +110,7 @@ describe("Consumer::Orders Show Page", () => {
       cancellable: false,
       cancellation_block_reason: "already_closed",
       modifiable: false,
-      modification_block_reason: "already_confirmed",
+      modification_block_reason: "already_closed",
     }
 
     render(
@@ -152,9 +152,9 @@ describe("Consumer::Orders Show Page", () => {
       ...baseOrder,
       status: "confirmed",
       cancellable: false,
-      cancellation_block_reason: "already_confirmed",
+      cancellation_block_reason: "confirmed_for_today",
       modifiable: false,
-      modification_block_reason: "already_confirmed",
+      modification_block_reason: "confirmed_for_today",
     }
 
     render(
@@ -174,7 +174,7 @@ describe("Consumer::Orders Show Page", () => {
     ).not.toBeInTheDocument()
     expect(
       screen.queryByText(
-        "El proveedor ya confirmó este pedido, así que no se puede modificar.",
+        "Ya está confirmado para hoy, así que no se puede modificar.",
       ),
     ).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()

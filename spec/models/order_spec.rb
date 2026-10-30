@@ -1302,7 +1302,7 @@ RSpec.describe Order, type: :model do
     it "raises the quantity without spending its own uses twice" do
       order = place(1, benefits: [ special.id ])
 
-      expect(modify(order, 3)).to be(true)
+      expect(modify(order, 3)).to eq(order)
 
       expect(order.reload.discounted_price).to eq(570)
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 2 ])
@@ -1311,7 +1311,7 @@ RSpec.describe Order, type: :model do
     it "lowers the quantity and gives the uses back" do
       order = place(3, benefits: [ special.id ])
 
-      expect(modify(order, 1)).to be(true)
+      expect(modify(order, 1)).to eq(order)
 
       expect(order.reload.discounted_price).to eq(60)
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
@@ -1338,6 +1338,30 @@ RSpec.describe Order, type: :model do
       # 1ª base + premio (60), 2ª a precio completo aunque al premio le quedaba un uso.
       expect(order.reload.discounted_price).to eq(360)
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
+    end
+
+    it "replaces a confirmed order with a pending one that keeps its benefits" do
+      order = place(1, benefits: [ special.id ])
+      order.decide(:confirmed)
+
+      replacement = modify(order, 3)
+
+      expect(order.reload).to have_attributes(status: "cancelled", status_before_cancellation: "confirmed", cancelled_by: users(:one))
+      expect(replacement).to be_persisted
+      expect(replacement).to have_attributes(status: "pending", amount: 3, schedule:, discounted_price: 570)
+      expect(replacement.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 2 ])
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(0)
+    end
+
+    it "keeps a confirmed order untouched when its replacement is invalid" do
+      order = place(1)
+      order.decide(:confirmed)
+
+      expect(order.modify(by: users(:one), quantity: 2, notes: "a" * 141, delivery:)).to be(false)
+
+      expect(order.reload).to be_confirmed
+      expect(order.errors[:notes]).to be_present
+      expect(consumer.orders.where(schedule:).count).to eq(1)
     end
   end
 

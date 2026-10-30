@@ -25,6 +25,7 @@ es:
     order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
     order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     order_updated: "Pedido actualizado."
+    order_replaced: "Cancelamos el pedido anterior y creamos uno nuevo, pendiente de confirmación del proveedor."
     review_unavailable: "Este pedido ya no se puede calificar."
     already_signed_in: "Ya iniciaste sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
@@ -883,8 +884,11 @@ es:
           notes_placeholder: "Sin salsa, sin cebolla…"
           back: "Volver"
           confirm: "Guardar cambios"
+          confirm_replacement: "Confirmar pedido"
+          confirmed_title: "El proveedor ya confirmó este pedido"
+          confirmed_description: "Si lo modificás, cancelamos este pedido y creamos uno nuevo con los cambios, que el proveedor tiene que volver a confirmar."
         cannot_edit:
-          already_confirmed: "El proveedor ya confirmó este pedido, así que no se puede modificar."
+          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede modificar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede modificar."
       addresses:

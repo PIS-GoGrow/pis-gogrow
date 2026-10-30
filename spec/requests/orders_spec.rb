@@ -278,10 +278,19 @@ RSpec.describe "Orders", type: :request do
         expect(inertia.props[:delivery_addresses].last).to include(id: "current", label: "Dirección actual", address: "Colonia 1370, Apto 4")
       end
 
-      it "explains why an order the provider confirmed cannot be modified" do
+      it "lets the employee modify an order the provider confirmed for a later day" do
         get order_path(orders(:upcoming_confirmed_future))
 
-        expect(inertia.props[:order]).to include(modifiable: false, modification_block_reason: "already_confirmed")
+        expect(inertia.props[:order]).to include(modifiable: true, modification_block_reason: nil)
+      end
+
+      it "explains why an order the provider confirmed for today cannot be modified" do
+        order = orders(:upcoming_pending_today)
+        order.update!(status: :confirmed)
+
+        get order_path(order)
+
+        expect(inertia.props[:order]).to include(modifiable: false, modification_block_reason: "confirmed_for_today")
       end
 
       it "redirects users with a non-consumer role to root" do
@@ -1671,12 +1680,34 @@ RSpec.describe "Orders", type: :request do
         expect(inertia).to have_flash(alert: I18n.t("validations.invalid_quantity"))
       end
 
-      it "refuses to modify an order the provider already confirmed" do
+      it "cancels an order the provider confirmed and creates a pending one with the changes" do
         confirmed = orders(:upcoming_confirmed_future)
 
-        patch order_path(confirmed), params: update_params(quantity: 3)
+        expect {
+          patch order_path(confirmed), params: update_params(quantity: 3, notes: "Sin sal")
+        }.to change(Order, :count).by(1)
+          .and change { Notification.where(event: "order_cancellation", user: confirmed.provider.user).count }.by(1)
 
-        expect(confirmed.reload.amount).to eq(2)
+        replacement = Order.last
+        expect(confirmed.reload).to have_attributes(status: "cancelled", status_before_cancellation: "confirmed", cancelled_by: users(:one))
+        expect(replacement).to have_attributes(
+          status: "pending", consumer: consumers(:one), schedule: confirmed.schedule, amount: 3, notes: "Sin sal"
+        )
+        expect(response).to redirect_to(order_path(replacement))
+
+        follow_redirect!
+        expect(inertia).to have_flash(notice: I18n.t("flash.order_replaced"))
+      end
+
+      it "refuses to modify an order the provider confirmed for today" do
+        confirmed = orders(:upcoming_pending_today)
+        confirmed.update!(status: :confirmed)
+
+        expect {
+          patch order_path(confirmed), params: update_params(quantity: 2)
+        }.not_to change(Order, :count)
+
+        expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 1)
 
         follow_redirect!
         expect(inertia).to have_flash(alert: I18n.t("validations.order_not_modifiable"))
