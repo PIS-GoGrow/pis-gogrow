@@ -1,5 +1,6 @@
-import { Head, Link, usePage } from "@inertiajs/react"
+import { Head, Link, router, usePage } from "@inertiajs/react"
 import { ChevronRight, Clock3, Star } from "lucide-react"
+import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 
 import NotificationBanners from "@/components/notification-banners"
@@ -31,6 +32,7 @@ export default function ProviderDashboard({
   home_orders_count,
   order_deadline,
   order_deadline_passed_today,
+  seconds_until_order_deadline,
   month_orders_count,
   month_dishes_count,
   average_rating,
@@ -42,6 +44,17 @@ export default function ProviderDashboard({
   const { auth } = usePage().props
   const completionDegrees =
     sections_total > 0 ? (completed_sections_count / sections_total) * 360 : 0
+
+  useEffect(() => {
+    if (!seconds_until_order_deadline) return
+
+    const timeout = setTimeout(() => {
+      router.reload({
+        only: ["order_deadline_passed_today", "seconds_until_order_deadline"],
+      })
+    }, seconds_until_order_deadline * 1000)
+    return () => clearTimeout(timeout)
+  }, [seconds_until_order_deadline])
 
   const breadcrumbs: BreadcrumbItem[] = [
     {

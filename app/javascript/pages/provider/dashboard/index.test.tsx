@@ -1,14 +1,17 @@
 import { render, screen, within } from "@testing-library/react"
 import type React from "react"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import ProviderDashboard from "./index"
+
+const { reload } = vi.hoisted(() => ({ reload: vi.fn() }))
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
     Head: () => null,
+    router: { reload },
     usePage: () => ({
       url: "/proveedor/inicio",
       props: { auth: { user: { name: "Doña Petrona" } } },
@@ -34,6 +37,7 @@ describe("Provider Dashboard Page", () => {
     home_orders_count: 1,
     order_deadline: "11:30",
     order_deadline_passed_today: false,
+    seconds_until_order_deadline: 90,
     month_orders_count: 42,
     month_dishes_count: 8,
     average_rating: 4.8,
@@ -72,6 +76,38 @@ describe("Provider Dashboard Page", () => {
 
     const viewOrdersLink = screen.getByRole("link", { name: "Ver pedidos" })
     expect(viewOrdersLink).toHaveAttribute("href", "/proveedor/pedidos")
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    reload.mockClear()
+  })
+
+  it("recarga el estado de recepción al llegar a la hora de cierre", () => {
+    vi.useFakeTimers()
+    render(<ProviderDashboard {...defaultProps} />)
+
+    vi.advanceTimersByTime(89_000)
+    expect(reload).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(1_000)
+    expect(reload).toHaveBeenCalledWith({
+      only: ["order_deadline_passed_today", "seconds_until_order_deadline"],
+    })
+  })
+
+  it("no programa la recarga si la recepción ya cerró", () => {
+    vi.useFakeTimers()
+    render(
+      <ProviderDashboard
+        {...defaultProps}
+        order_deadline_passed_today
+        seconds_until_order_deadline={undefined}
+      />,
+    )
+
+    vi.runAllTimers()
+    expect(reload).not.toHaveBeenCalled()
   })
 
   it("muestra la hora de cierre si está configurada", () => {

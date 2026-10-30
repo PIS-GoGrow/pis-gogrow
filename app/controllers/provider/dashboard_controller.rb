@@ -17,6 +17,7 @@ class Provider::DashboardController < Provider::InertiaController
     @home_orders_count = today_orders.home.count
     @order_deadline = @provider.order_deadline && I18n.l(@provider.order_deadline, format: "%H:%M")
     @order_deadline_passed_today = @provider.order_deadline_passed_today?
+    @seconds_until_order_deadline = @provider.seconds_until_order_deadline
     @month_orders_count = month.orders_count
     @month_dishes_count = month.dishes_count
     @average_rating = month.average_rating
