@@ -5,14 +5,6 @@ import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
   Field,
   FieldContent,
   FieldError,
@@ -34,26 +26,32 @@ export default function DebtAlertCard({ threshold }: DebtAlertCardProps) {
   const scope = "pages.admin.benefit_configurations.index.debt_alert"
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{t(`${scope}.title`)}</CardTitle>
-        <CardDescription>{t(`${scope}.description`)}</CardDescription>
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between">
+          <h2 className="text-foreground text-xl font-bold">
+            {t(`${scope}.title`)}
+          </h2>
 
-        {!isEditing && (
-          <CardAction>
+          {!isEditing && (
             <Button
               variant="ghost"
               size="sm"
+              className="text-foreground gap-1.5 font-semibold"
               onClick={() => setIsEditing(true)}
             >
-              <PencilIcon />
+              <PencilIcon className="size-4" />
               {t(`${scope}.edit`)}
             </Button>
-          </CardAction>
-        )}
-      </CardHeader>
-      <CardContent>
-        {isEditing ? (
+          )}
+        </div>
+        <p className="text-muted-foreground text-sm">
+          {t(`${scope}.description`)}
+        </p>
+      </div>
+
+      {isEditing ? (
+        <div className="bg-card rounded-lg border border-[#E5E5E5] p-4 dark:border-neutral-800">
           <Form
             action={adminDebtAlert()}
             options={{ preserveScroll: true }}
@@ -92,7 +90,7 @@ export default function DebtAlertCard({ threshold }: DebtAlertCardProps) {
                   </FieldContent>
                 </Field>
 
-                <div className="flex justify-end gap-2">
+                <div className="grid grid-cols-2 gap-3 pt-2 sm:flex sm:justify-end">
                   <Button
                     type="button"
                     variant="outline"
@@ -107,19 +105,17 @@ export default function DebtAlertCard({ threshold }: DebtAlertCardProps) {
               </>
             )}
           </Form>
-        ) : (
-          <dl className="bg-muted rounded-lg px-4">
-            <div className="flex items-center justify-between py-3">
-              <dt className="text-muted-foreground">
-                {t(`${scope}.threshold`)}
-              </dt>
-              <dd className="text-lg font-semibold">
-                {formatMoney(threshold)}
-              </dd>
-            </div>
-          </dl>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between rounded-lg border border-[#E5E5E5] bg-[#F5F5F5] p-4 dark:border-neutral-800 dark:bg-neutral-900">
+          <span className="text-sm font-medium text-[#737373] dark:text-neutral-400">
+            {t(`${scope}.threshold`)}
+          </span>
+          <span className="text-foreground text-base font-medium">
+            {formatMoney(threshold)}
+          </span>
+        </div>
+      )}
+    </section>
   )
 }

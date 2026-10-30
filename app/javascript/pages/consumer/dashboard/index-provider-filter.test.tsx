@@ -117,7 +117,7 @@ beforeEach(() => {
       subtotal: quantity * 300,
       discount: quantity * 150,
       total: quantity * 150,
-      lines: {},
+      lines: [],
       subsidizedQuantity: quantity,
       fullPriceQuantity: 0,
     })
@@ -260,6 +260,7 @@ describe("Consumer menu provider filter navigation", () => {
       quantity: 2,
       notes: "Sin sal",
       selections: {},
+      benefits: [],
     }
     window.sessionStorage.setItem("cart", JSON.stringify([existing]))
     render(<Index {...props} />)
@@ -318,6 +319,7 @@ describe("Clearing consumer provider filters", () => {
         quantity: 2,
         notes: "Sin sal",
         selections: {},
+        benefits: [],
       }
       window.sessionStorage.setItem("cart", JSON.stringify([existing]))
       render(<Index {...props} />)
@@ -433,14 +435,16 @@ it("keeps all 140 note characters after the asynchronous dish price updates", as
       subtotal: 300,
       discount: 150,
       total: 150,
-      lines: {
-        "261": {
+      lines: [
+        {
           subtotal: 300,
           discount: 150,
           total: 150,
-          tiers: [{ percentage: 50, quantity: 1, discount: 150 }],
+          tiers: [
+            { id: 1, name: "Base", percentage: 50, quantity: 1, discount: 150 },
+          ],
         },
-      },
+      ],
       subsidizedQuantity: 1,
       fullPriceQuantity: 0,
     })

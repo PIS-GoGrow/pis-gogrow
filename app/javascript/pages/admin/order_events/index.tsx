@@ -1,5 +1,5 @@
 import { Form, Head, Link } from "@inertiajs/react"
-import { History } from "lucide-react"
+import { ArrowLeft, History } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -31,7 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import AppLayout from "@/layouts/app-layout"
-import { adminOrderEvents } from "@/routes"
+import { adminAccount, adminOrderEvents } from "@/routes"
 import type {
   AdminOrderEventsIndex,
   BreadcrumbItem,
@@ -70,6 +70,13 @@ export default function Index({
       <PageContainer
         title={t(`${page}.title`)}
         description={t(`${page}.description`)}
+        back={
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={adminAccount()} aria-label={t(`${page}.back`)}>
+              <ArrowLeft aria-hidden="true" />
+            </Link>
+          </Button>
+        }
       >
         <Form
           action={adminOrderEvents.index()}

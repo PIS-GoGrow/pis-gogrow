@@ -126,16 +126,16 @@ RSpec.describe BenefitConfiguration, type: :model do
       expect(build_base_subsidy(limit: nil)).not_to be_valid
     end
 
-    it "accepts a positive decimal max_voucher_price" do
+    it "rejects a positive decimal max_voucher_price" do
       benefit_configurations(:monthly).destroy
 
-      expect(build_base_subsidy(max_price: 150.75)).to be_valid
+      expect(build_base_subsidy(max_price: 150.75)).not_to be_valid
     end
 
-    it "accepts the minimum positive max_voucher_price" do
+    it "accepts the minimum positive integer max_voucher_price" do
       benefit_configurations(:monthly).destroy
 
-      expect(build_base_subsidy(max_price: 0.01)).to be_valid
+      expect(build_base_subsidy(max_price: 1)).to be_valid
     end
 
     it "rejects a missing company" do

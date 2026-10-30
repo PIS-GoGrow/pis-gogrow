@@ -772,6 +772,13 @@ RSpec.describe Order, type: :model do
   end
 
   describe "#ensure_accounts!" do
+    around do |example|
+      travel_to(Date.current.beginning_of_month + 10.days) do
+        schedules(:future).update!(date: Date.current + 3)
+        example.run
+      end
+    end
+
     let(:consumer) { consumers(:one) }
     let(:provider) { providers(:tuviandita) }
     let(:month) { Date.current.beginning_of_month }
@@ -1264,8 +1271,8 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
     end
 
-    def place(quantity)
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: } ])[schedule.id]
+    def place(quantity, benefits: [])
+      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity:, benefits: } ]).first.second
       Order.reserve(
         consumer:, schedule:, quantity:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1277,7 +1284,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "records how many meals each benefit covered" do
-      order = place(3)
+      order = place(3, benefits: [ special.id ])
 
       # 1ª base + premio (60), 2ª solo premio (210), 3ª a precio completo.
       expect(order.discounted_price).to eq(570)
@@ -1285,7 +1292,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "charges the company the base and the special subsidy once confirmed" do
-      order = place(3)
+      order = place(3, benefits: [ special.id ])
       order.decide(:confirmed)
 
       expect(order.accounts.find { it.owner == consumer }.reload.amount).to eq(570)
@@ -1293,7 +1300,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "raises the quantity without spending its own uses twice" do
-      order = place(1)
+      order = place(1, benefits: [ special.id ])
 
       expect(modify(order, 3)).to be(true)
 
@@ -1302,13 +1309,13 @@ RSpec.describe Order, type: :model do
     end
 
     it "lowers the quantity and gives the uses back" do
-      order = place(3)
+      order = place(3, benefits: [ special.id ])
 
       expect(modify(order, 1)).to be(true)
 
       expect(order.reload.discounted_price).to eq(60)
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])
-      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(1)
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(1)
     end
 
     it "adds a special assigned after the order was placed" do
@@ -1323,7 +1330,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "keeps a special removed after the order was placed, only for the meals it already covered" do
-      order = place(1)
+      order = place(1, benefits: [ special.id ])
       benefit_configurations(:gift).deactivate!(by: users(:admin))
 
       modify(order, 2)
@@ -1345,7 +1352,7 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 1)
     end
     let(:order) do
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ])[schedule.id]
+      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity: 1, benefits: [ special.id ] } ]).first.second
       Order.reserve(
         consumer:, schedule:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1358,23 +1365,22 @@ RSpec.describe Order, type: :model do
     end
 
     it "spends the use while the order is pending or confirmed" do
-      order
-      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(0)
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(1)
 
       order.decide(:confirmed)
-      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(0)
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(0)
     end
 
     it "frees the use when the employee cancels" do
       order.cancel(by: users(:one))
 
-      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(1)
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(1)
     end
 
     it "frees the use when the provider rejects" do
       order.decide(:rejected, reason: :out_of_stock)
 
-      expect(OrderPricing.new(consumer).remaining_uses(special)).to eq(1)
+      expect(Orders::Pricing.new(consumer).remaining_uses(special)).to eq(1)
     end
   end
 
@@ -1386,7 +1392,7 @@ RSpec.describe Order, type: :model do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
     end
     let(:order) do
-      line = OrderPricing.new(consumer).call([ { schedule:, quantity: 1 } ])[schedule.id]
+      line = Orders::Pricing.new(consumer).call([ { schedule:, quantity: 1, benefits: [ special.id ] } ]).first.second
       Order.reserve(
         consumer:, schedule:, delivery_method: :office, address: nil,
         discounted_price: line.discounted_price, benefits: line.benefits
@@ -1407,7 +1413,7 @@ RSpec.describe Order, type: :model do
       expect {
         Order.reserve(
           consumer:, schedule:, delivery_method: :office, address: nil,
-          quantity: 0, discounted_price: 100, benefits: { special => 1 }
+          quantity: 0, discounted_price: 100, benefits: { special => Orders::Pricing::BenefitUsed[1, 2] }
         )
       }.not_to change(OrderBenefit, :count)
     end
