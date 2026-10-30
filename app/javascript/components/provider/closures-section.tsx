@@ -179,6 +179,7 @@ export default function ClosuresSection({
                           from={range.from}
                           to={range.to}
                           min={today}
+                          weekdaysOnly
                           className="w-full"
                           onChange={(from, to) => setRange({ from, to })}
                         />
