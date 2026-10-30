@@ -7,7 +7,7 @@ class Admin::PaymentsController < Admin::InertiaController
   before_action :set_payment, only: [ :destroy ]
 
   def index
-    accounts = company.accounts.where.not(amount: ..0).preload(:payments).order(month: :desc)
+    accounts = company.accounts.where.not(amount: ..0).preload(:payments, :invoices).order(month: :desc)
     settled, unpaid = accounts.partition { it.collection_status == "approved" }
     sums = Account.amount_and_price_sum(accounts.map(&:id))
 
@@ -107,6 +107,6 @@ class Admin::PaymentsController < Admin::InertiaController
   # Las viandas de todas las cuentas salen de una consulta sola y viajan como
   # params, que no llegan al serializer de la página: por eso se arma acá.
   def serialize(accounts, sums)
-    AccountSerializer.new(accounts, params: { orders_sum: sums }).serializable_hash
+    Admin::AccountSerializer.new(accounts, params: { orders_sum: sums }).serializable_hash
   end
 end

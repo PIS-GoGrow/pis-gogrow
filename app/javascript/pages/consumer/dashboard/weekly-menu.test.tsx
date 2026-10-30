@@ -66,6 +66,7 @@ const sampleCartItem: CartItem = {
   quantity: 1,
   notes: "",
   selections: {},
+  benefits: [],
   menu: sampleSchedule.menu,
 }
 

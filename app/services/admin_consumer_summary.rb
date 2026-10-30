@@ -124,13 +124,9 @@ class AdminConsumerSummary
                            .to_a
   end
 
-  # Mismo criterio que Consumer#monthly_benefit_used_this_month, abierto por proveedor.
   def meals_by_provider
-    OrderBenefit
+    @consumer.monthly_benefit_usages
       .joins(order: { schedule: { menu: { provider: :user } } })
-      .where(schedules: { date: Date.current.all_month })
-      .where.not(orders: { status: [ :rejected, :cancelled ] })
-      .where(benefit_id: @consumer.monthly_benefits)
       .group("users.name")
       .sum(:benefit_used)
       .sort

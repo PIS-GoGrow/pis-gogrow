@@ -13,7 +13,7 @@ class Admin::ConsumersController < Admin::InertiaController
 
     summary = AdminConsumerSummary.new(@consumer)
     @summary = summary.current_month
-    @benefit_summary = OrderPricing.new(@consumer).summary
+    @benefit_summary = Orders::Pricing.new(@consumer).summary
     @months = summary.months
     @debt_reminder = debt_reminder_for(@consumer)
   end

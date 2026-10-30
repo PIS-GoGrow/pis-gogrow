@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 
 import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
 import PageContainer from "@/components/page-container"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import {
@@ -128,24 +128,30 @@ export default function Index({
             </EmptyHeader>
           </Empty>
         ) : (
-          <Card className="gap-0 divide-y py-0">
+          <Card className="gap-0 divide-y overflow-hidden rounded-xl py-0 shadow-sm">
             {shown.map((consumer) => (
               <div
                 key={consumer.id}
-                className="hover:bg-accent/40 focus-within:ring-ring/50 relative flex items-center gap-3 px-4 py-3 transition-colors focus-within:ring-[3px]"
+                className="hover:bg-accent/40 focus-within:ring-ring/50 relative flex items-center gap-3 px-4 py-3.5 transition-colors focus-within:ring-[3px]"
               >
                 <Avatar size="lg">
+                  <AvatarImage
+                    src={consumer.avatar_url ?? undefined}
+                    alt={consumer.name}
+                  />
                   <AvatarFallback className="text-foreground text-xs font-semibold">
                     {getInitials(consumer.name)}
                   </AvatarFallback>
                 </Avatar>
 
-                <Link
-                  href={adminConsumers.show(consumer.id).url}
-                  className="min-w-0 flex-1 truncate font-medium after:absolute after:inset-0 hover:underline"
-                >
-                  {consumer.name}
-                </Link>
+                <div className="min-w-0 flex-1">
+                  <Link
+                    href={adminConsumers.show(consumer.id).url}
+                    className="block truncate font-medium after:absolute after:inset-0 hover:underline"
+                  >
+                    {consumer.name}
+                  </Link>
+                </div>
 
                 <span className="shrink-0 font-semibold">
                   {formatMoney(consumer.amount)}

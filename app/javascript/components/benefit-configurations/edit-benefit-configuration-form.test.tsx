@@ -37,7 +37,7 @@ vi.mock("@inertiajs/react", async () => {
 describe("EditBenefitConfigurationForm", () => {
   const defaultValues = {
     subsidy_percentage: 50 as const,
-    max_voucher_price: 150 as const,
+    max_voucher_price: "500.0" as const,
     monthly_voucher_limit: 20 as const,
   }
 
@@ -64,11 +64,19 @@ describe("EditBenefitConfigurationForm", () => {
       />,
     )
 
-    expect(screen.getByText(/sábado 12 de diciembre/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/los cambios se aplicarán en el próximo período/i),
+    ).toBeInTheDocument()
     expect(screen.getByLabelText(/se descuenta/i)).toHaveValue(50)
     expect(
       screen.getByLabelText(/cuando el precio por vianda es/i),
-    ).toHaveValue(150)
+    ).toHaveValue(500)
+    expect(
+      screen.getByLabelText(/cuando el precio por vianda es/i),
+    ).toHaveAttribute("step", "1")
+    expect(
+      screen.getByLabelText(/cuando el precio por vianda es/i),
+    ).toHaveAttribute("inputmode", "numeric")
     expect(
       screen.getByLabelText(/hasta un límite por empleado de/i),
     ).toHaveValue(20)
@@ -244,5 +252,57 @@ describe("EditBenefitConfigurationForm", () => {
     expect(screen.getByText("debe ser mayor que 0")).toBeInTheDocument()
     expect(screen.getByText("debe ser un número entero")).toBeInTheDocument()
     expect(screen.getByText(/error inesperado/i)).toBeInTheDocument()
+  })
+
+  it("prevents entering disallowed characters like dots, commas or letters via onKeyDown", () => {
+    render(
+      <EditBenefitConfigurationForm
+        defaultValues={defaultValues}
+        onCancel={vi.fn()}
+        onSuccess={vi.fn()}
+        configurableMonth={"2026-12-12"}
+      />,
+    )
+
+    const input = screen.getByLabelText(/cuando el precio por vianda es/i)
+
+    const dotEvent = new KeyboardEvent("keydown", {
+      key: ".",
+      bubbles: true,
+      cancelable: true,
+    })
+    input.dispatchEvent(dotEvent)
+    expect(dotEvent.defaultPrevented).toBe(true)
+
+    const commaEvent = new KeyboardEvent("keydown", {
+      key: ",",
+      bubbles: true,
+      cancelable: true,
+    })
+    input.dispatchEvent(commaEvent)
+    expect(commaEvent.defaultPrevented).toBe(true)
+
+    const exponentEvent = new KeyboardEvent("keydown", {
+      key: "e",
+      bubbles: true,
+      cancelable: true,
+    })
+    input.dispatchEvent(exponentEvent)
+    expect(exponentEvent.defaultPrevented).toBe(true)
+  })
+
+  it("renders the monthly voucher limit unit without muted text class", () => {
+    render(
+      <EditBenefitConfigurationForm
+        defaultValues={defaultValues}
+        onCancel={vi.fn()}
+        onSuccess={vi.fn()}
+        configurableMonth={"2026-12-12"}
+      />,
+    )
+
+    const unit = screen.getByText("viandas")
+    expect(unit).toBeInTheDocument()
+    expect(unit).not.toHaveClass("text-muted-foreground")
   })
 })
