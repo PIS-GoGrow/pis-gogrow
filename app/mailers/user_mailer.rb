@@ -13,6 +13,7 @@ class UserMailer < ApplicationMailer
     @user = @otp_code.user
     @company = params[:company]
     @token = "#{@user.id}.#{@otp_code.code}"
+    @company_token = @company.signed_id(purpose: :provider_invitation, expires_in: OtpCode::TTL.fetch("invitation"))
 
     mail to: @user.email, subject: t(".subject")
   end

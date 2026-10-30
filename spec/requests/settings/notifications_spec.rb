@@ -86,7 +86,7 @@ RSpec.describe "Settings::Notifications", type: :request do
     it "redirige al login sin sesión" do
       get settings_notifications_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
   end
 
@@ -123,7 +123,7 @@ RSpec.describe "Settings::Notifications", type: :request do
 
       patch settings_notification_path(order_updates), params: { subscribe: true }, as: :json
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
       expect(order_updates.reload.users).to be_empty
     end
 

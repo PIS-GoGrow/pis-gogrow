@@ -928,11 +928,6 @@
             "title": "Todos tus pedidos bajo control"
           }
         },
-        "provider": {
-          "description": "¡Hola {{username}}! {{company_name}} te invitó a unirte como proveedor de viandas.",
-          "heading": "Bienvenido a Viandas GoGrow",
-          "sign_in": "Unirse ahora"
-        },
         "title": "Viandas GoGrow"
       },
       "orders": {
@@ -1725,6 +1720,14 @@
           "heading": "¡Bienvenido de nuevo!",
           "submit": "Iniciar sesión",
           "title": "Iniciar sesión"
+        }
+      },
+      "provider_welcomes": {
+        "show": {
+          "description": "¡Hola %{username}! %{company_name} te invitó a unirte como proveedor de viandas.",
+          "heading": "Bienvenido a Viandas GoGrow",
+          "join": "Unirse ahora",
+          "title": "Bienvenido a Viandas GoGrow"
         }
       },
       "reviews": {

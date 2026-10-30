@@ -102,7 +102,7 @@ describe("NotFound Error Page", () => {
     render(<NotFound />)
 
     const signInLink = screen.getByRole("link", { name: "Iniciar sesión" })
-    expect(signInLink).toHaveAttribute("href", "/iniciar-sesion")
+    expect(signInLink).toHaveAttribute("href", "/consumidor")
 
     const homeLink = screen.getByRole("link", { name: "Volver al inicio" })
     expect(homeLink).toHaveAttribute("href", "/")

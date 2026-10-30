@@ -104,7 +104,7 @@ RSpec.describe "Admin::SpecialSubsidies", type: :request do
 
       post admin_special_subsidies_path, params: params
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
   end
 

@@ -737,7 +737,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     it "un visitante sin sesión no ve el pedido" do
       visit order_path(e1_order)
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(consumer_welcome_path)
     end
   end
 end

@@ -28,11 +28,12 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "greets by name, names the company and links to the registration" do
-      body = mail.body.encoded
+      body = mail.body.decoded
 
       expect(body).to include("Hola Ana Proveedora,")
       expect(body).to include("Recibiste una invitación de GoGrow para unirte como proveedor de viandas")
-      expect(body).to include("/proveedor/invitacion?token=#{user.id}.#{otp_code.code}")
+      expect(body).to include("/proveedor/bienvenida?company=")
+      expect(body).to include("token=#{user.id}.#{otp_code.code}")
       expect(body).to include("/proveedor")
     end
   end

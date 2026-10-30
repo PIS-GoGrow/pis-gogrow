@@ -4,7 +4,7 @@
 
 <p><%= t(".intro", company: @company.name) %></p>
 
-<p><%= link_to t(".cta"), provider_invitation_url(token: @token) %></p>
+<p><%= link_to t(".cta"), provider_welcome_url(token: @token, company: @company_token) %></p>
 
 <p><%= t(".after", url: provider_sign_in_url) %></p>
 

@@ -109,7 +109,7 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
     # la sesión se haya cerrado, y eso se ve en que /profile ya no le sirve la
     # pantalla a nadie.
     visit profile_path
-    expect(page).to have_current_path(sign_in_path)
+    expect(page).to have_current_path(consumer_welcome_path)
     expect(page).to have_no_content(employee.name)
     expect(page).to have_no_content(employee.email)
   end
@@ -129,7 +129,7 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
   it "sends a visitor without a session to sign in" do
     visit profile_path
 
-    expect(page).to have_current_path(sign_in_path)
+    expect(page).to have_current_path(consumer_welcome_path)
     expect(page).to have_no_content(employee.name)
   end
 

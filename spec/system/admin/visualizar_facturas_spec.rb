@@ -118,7 +118,7 @@ RSpec.describe "Visualizar facturas de proveedores", type: :system do
     it "sends a visitor to sign in" do
       visit admin_invoices_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(admin_welcome_path)
     end
 
     it "keeps a provider out of the list and the file, even the one who issued it" do

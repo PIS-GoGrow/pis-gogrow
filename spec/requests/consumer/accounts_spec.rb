@@ -183,7 +183,7 @@ RSpec.describe "Consumer Accounts", type: :request do
       it "redirects unauthenticated users to sign in with alert flash" do
         get accounts_path
 
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(consumer_welcome_path)
         expect(flash[:alert]).to eq(I18n.t("flash.not_signed_in"))
       end
 
@@ -320,7 +320,7 @@ RSpec.describe "Consumer Accounts", type: :request do
     it "redirects an unauthenticated visitor to the sign in page" do
       get accounts_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirects a user with provider role to the root path with an alert" do
