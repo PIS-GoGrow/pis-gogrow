@@ -4,7 +4,7 @@ require "rails_helper"
 require "inertia_rails/rspec"
 
 RSpec.describe "Consumer Accounts", type: :request do
-  fixtures :users, :consumers, :companies, :providers, :accounts, :admins
+  fixtures :users, :consumers, :companies, :providers, :accounts, :admins, :menus, :schedules, :benefits
 
   let(:consumer_user) { users(:one) }
   let(:other_consumer_user) { users(:other_consumer_user) }
@@ -33,10 +33,71 @@ RSpec.describe "Consumer Accounts", type: :request do
         expect(inertia).to render_component("consumer/accounts/index")
       end
 
+      it "counts the monthly allowance like every other screen, not the meals ordered" do
+        Order.create!(
+          consumer: consumers(:one), schedule: schedules(:today), amount: 3, price: 900,
+          address: "18 de Julio 1006", delivery_method: :office, status: :confirmed
+        ).apply_benefit! benefits(:monthly), 2
+
+        get accounts_path
+
+        expect(inertia).to have_props(benefit_used: 2, benefit_available: 20)
+      end
+
       it "returns 404 for legacy route /pagos" do
         get "/pagos"
 
         expect(response).to have_http_status(:not_found)
+      end
+
+      it "orders pending accounts from newest to oldest" do
+        consumer = consumers(:one)
+
+        older_account = Account.create!(
+          owner: consumer,
+          provider: provider,
+          month: 3.months.ago.beginning_of_month,
+          amount: 100
+        )
+
+        newer_account = Account.create!(
+          owner: consumer,
+          provider: provider,
+          month: 2.months.ago.beginning_of_month,
+          amount: 200
+        )
+
+        get accounts_path
+
+        ids = inertia.props[:accounts].map { |account| account["id"] }
+
+        expect(ids.index(newer_account.id)).to be < ids.index(older_account.id)
+      end
+
+      it "orders all pending accounts strictly from newest to oldest month across multiple periods" do
+        consumer = consumers(:one)
+
+        account_oldest = Account.create!(
+          owner: consumer,
+          provider: provider,
+          month: 4.months.ago.beginning_of_month,
+          amount: 150
+        )
+        account_middle = Account.create!(
+          owner: consumer,
+          provider: provider,
+          month: 2.months.ago.beginning_of_month,
+          amount: 250
+        )
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        pending_accounts = inertia.props[:accounts]
+        ids = pending_accounts.map { |a| a["id"] }
+
+        expect(ids.index(accounts(:one_tuviandita_current).id)).to be < ids.index(account_middle.id)
+        expect(ids.index(account_middle.id)).to be < ids.index(account_oldest.id)
       end
 
       it "includes provider bank details in props[:providers] when configured" do
@@ -228,7 +289,7 @@ RSpec.describe "Consumer Accounts", type: :request do
           p = props.deep_symbolize_keys
           p[:total_debt].to_d.zero? &&
             p[:current_month_debt].to_d.zero? &&
-            p[:current_month_ordered] == 0 &&
+            p[:benefit_used] == 0 &&
             p[:accounts].empty?
         }
       end
@@ -249,6 +310,87 @@ RSpec.describe "Consumer Accounts", type: :request do
         post account_path(account)
         expect(response).to have_http_status(:not_found)
       end
+
+      it "tolerates unexpected data types and invalid values in query parameters" do
+        sign_in(consumer_user, role: :consumer)
+
+        get accounts_path, params: { type: "invalid_filter", unexpected: { nested: "payload" } }
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to render_component("consumer/accounts/index")
+      end
+
+      it "returns 404 when requesting a non-existent or malformed account ID" do
+        sign_in(consumer_user, role: :consumer)
+
+        get account_path(id: 999_999)
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "prevents accessing an account belonging to another consumer returning 404" do
+        sign_in(consumer_user, role: :consumer)
+        other_account = accounts(:other_tuviandita_current)
+
+        get account_path(other_account)
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "counts both pending and confirmed orders but ignores cancelled orders in benefit_used prop" do
+        sign_in(consumer_user, role: :consumer)
+        schedule = schedules(:today)
+
+        # 1 confirmed order with 2 subsidized meals
+        Order.create!(
+          consumer: consumers(:one), schedule:, amount: 2, price: 600,
+          address: "18 de Julio 1006", delivery_method: :office, status: :confirmed
+        ).apply_benefit! benefits(:monthly), 2
+
+        # 1 pending order with 1 subsidized meal
+        Order.create!(
+          consumer: consumers(:one), schedule:, amount: 1, price: 300,
+          address: "18 de Julio 1006", delivery_method: :office, status: :pending
+        ).apply_benefit! benefits(:monthly), 1
+
+        # 1 cancelled order with 3 subsidized meals (must NOT be counted)
+        Order.create!(
+          consumer: consumers(:one), schedule:, amount: 3, price: 900,
+          address: "18 de Julio 1006", delivery_method: :office, status: :cancelled
+        ).apply_benefit! benefits(:monthly), 3
+
+        get accounts_path
+
+        expect(inertia).to have_props(benefit_used: 3, benefit_available: 20)
+      end
+    end
+  end
+
+  describe "Access control by role for /payments" do
+    it "redirects an unauthenticated visitor to the sign in page" do
+      get accounts_path
+
+      expect(response).to redirect_to(sign_in_path)
+    end
+
+    it "redirects a user with provider role to the root path with an alert" do
+      sign_in(users(:provider_user), role: :provider)
+
+      get accounts_path
+
+      expect(response).to redirect_to(root_path)
+      follow_redirect!
+      expect(flash[:alert]).to be_present
+    end
+
+    it "redirects a user with admin role to the root path with an alert" do
+      sign_in(users(:admin), role: :admin)
+
+      get accounts_path
+
+      expect(response).to redirect_to(root_path)
+      follow_redirect!
+      expect(flash[:alert]).to be_present
     end
   end
 end

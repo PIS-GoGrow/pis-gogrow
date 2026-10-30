@@ -25,6 +25,7 @@ class Consumer::InertiaController < InertiaController
         description: menu.description,
         price: menu.price.to_f,
         provider_id: menu.provider_id,
+        saved_menu_id: menu.base_menu_id || menu.id,
         option_groups: menu.option_groups.map do |group|
           { id: group.id, name: group.name, options: group.options, limit: group.limit, required: group.required }
         end,
