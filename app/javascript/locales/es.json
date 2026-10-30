@@ -32,6 +32,7 @@
           "summary_unavailable": "No pudimos generar el resumen. Intentá nuevamente más tarde. Las estadísticas siguen disponibles."
         },
         "generate": "Generar resumen con IA",
+        "generated_at": "Generado el %{date}",
         "generating": "Generando resumen…",
         "historical_average": "Promedio sobre la nómina actual",
         "historical_average_note": "Este promedio utiliza la nómina actual como referencia. La cantidad de empleados al cierre de ese mes puede haber sido diferente.",

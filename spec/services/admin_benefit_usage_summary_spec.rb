@@ -11,7 +11,7 @@ RSpec.describe AdminBenefitUsageSummary do
       benefits: {
         monthly_subsidized_meals: 2, confirmed_meals_without_monthly_subsidy: 1,
         company_subsidy_amount: BigDecimal("1500.25"), monthly_pending_reserved_meals: 1,
-        monthly_quota_meals: nil
+        monthly_quota_meals: nil, monthly_available_meals: nil
       },
       employees: { participation_percent: nil, eligibility: { eligible: 0 }, eligible_without_orders: nil },
       trends: { months: [
@@ -39,7 +39,7 @@ RSpec.describe AdminBenefitUsageSummary do
     expect(summary.call).to eq(ok: true, text: "Uso estable del beneficio.")
     expect(client).to have_received(:create_summary).once
     json = JSON.parse(arguments.fetch(:payload_json))
-    expect(json.keys).to contain_exactly("schema_version", "period", "consumption", "participation",
+    expect(json.keys).to contain_exactly("schema_version", "period", "consumption", "capacity", "participation",
                                         "trends", "anomalies", "warnings")
     expect(json.dig("consumption", "company_subsidy_amount")).to eq("1500.25")
     expect(arguments.fetch(:payload_json)).not_to include("Nombre privado", "privado@example.com", "Dirección privada")
@@ -54,6 +54,8 @@ RSpec.describe AdminBenefitUsageSummary do
     expect(prompt).to include("no repitas todas las métricas", "sin aplicar un umbral porcentual fijo")
     expect(prompt).to include("null significa desconocido", "No solicites información personal", "No compares la participación")
     expect(prompt).to include("mes abierto es parcial", "sin IVA", "no dinero efectivamente pagado")
+    expect(prompt).to include("capacity.monthly_available_meals en viandas", "sin recalcularlo",
+                             "no inventes saldos históricos")
   end
 
   it "returns a controlled error for oversized payloads without sending them" do

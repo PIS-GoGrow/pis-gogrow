@@ -65,5 +65,6 @@ export interface BenefitUsageSummary {
   text: string
   month: string
   generated_at: string
+  generated_at_label: string
   generated_by_ai: true
 }

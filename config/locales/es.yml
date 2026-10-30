@@ -83,6 +83,7 @@ es:
       generate: "Generar resumen con IA"
       generating: "Generando resumen…"
       ai_notice: "Texto generado mediante IA. Contrastalo con los indicadores y sus advertencias."
+      generated_at: "Generado el %{date}"
       errors:
         configuration_missing: "La generación con IA todavía no está configurada. Las estadísticas siguen disponibles."
         rate_limited: "Alcanzaste el límite de generación. Intentá nuevamente más tarde."

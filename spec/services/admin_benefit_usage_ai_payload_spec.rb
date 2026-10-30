@@ -24,7 +24,7 @@ RSpec.describe AdminBenefitUsageAiPayload do
       benefits: {
         monthly_subsidized_meals: 2, confirmed_meals_without_monthly_subsidy: 1,
         monthly_pending_reserved_meals: 2, company_subsidy_amount: BigDecimal("1500.25"),
-        monthly_quota_meals: 20, monthly_unused_closed_meals: nil
+        monthly_quota_meals: 20, monthly_available_meals: 16, monthly_unused_closed_meals: nil
       },
       employees: {
         participation_percent: 50.0, eligibility: { eligible: 4 }, eligible_without_orders: 1,
@@ -50,6 +50,34 @@ RSpec.describe AdminBenefitUsageAiPayload do
     expect(payload[:participation]).to eq(percent: 50.0, eligible_employees: 4, eligible_without_orders: 1)
   end
 
+  it "includes only the existing aggregate monthly capacity for an open month" do
+    stats[:trends][:months].last[:complete] = false
+    stats[:benefits][:consumer_id] = 123
+
+    expect(payload[:capacity]).to eq(monthly_quota_meals: 20, monthly_pending_reserved_meals: 2,
+                                    monthly_available_meals: 16)
+  end
+
+  it "preserves an unknown available balance without deriving it from quota and consumption" do
+    stats[:trends][:months].last[:complete] = false
+    stats[:benefits][:monthly_available_meals] = nil
+
+    expect(payload[:capacity]).to eq(monthly_quota_meals: 20, monthly_pending_reserved_meals: 2,
+                                    monthly_available_meals: nil)
+  end
+
+  it "withholds historical capacity even when the source contains values" do
+    expect(payload[:capacity]).to eq(monthly_quota_meals: nil, monthly_pending_reserved_meals: nil,
+                                    monthly_available_meals: nil)
+  end
+
+  it "keeps a known zero balance as zero" do
+    stats[:trends][:months].last[:complete] = false
+    stats[:benefits][:monthly_available_meals] = 0
+
+    expect(payload.dig(:capacity, :monthly_available_meals)).to eq(0)
+  end
+
   it "never includes historical participation inside trends" do
     stats[:trends][:months].last[:complete] = false
 
@@ -73,7 +101,7 @@ RSpec.describe AdminBenefitUsageAiPayload do
     serialized = JSON.generate(payload)
     expect(serialized).not_to include("Nombre privado", "privado@example.com", "Dirección privada",
                                       "bank_account", "personal_debt", "employee_id", "private_text", "Secreto")
-    expect(payload.keys).to eq(%i[schema_version period consumption participation trends anomalies warnings])
+    expect(payload.keys).to eq(%i[schema_version period consumption capacity participation trends anomalies warnings])
   end
 
   it "preserves unknown values as JSON null and does not infer a historical roster" do

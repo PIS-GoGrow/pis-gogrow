@@ -7,20 +7,14 @@ class AdminBenefitUsagePresentationPayload
 
   def to_h
     approved = AdminBenefitUsageAiPayload.new(stats: @stats).to_h
-    benefits = @stats.fetch(:benefits)
     employees = @stats.fetch(:employees)
-    closed = approved.fetch(:period).fetch(:closed)
     current_employees = integer(employees.fetch(:current_employees))
 
     {
       schema_version: approved.fetch(:schema_version),
       period: approved.fetch(:period),
       consumption: approved.fetch(:consumption),
-      capacity: {
-        monthly_quota_meals: (integer(benefits.fetch(:monthly_quota_meals)) unless closed),
-        monthly_pending_reserved_meals: (integer(benefits.fetch(:monthly_pending_reserved_meals)) unless closed),
-        monthly_available_meals: (integer(benefits.fetch(:monthly_available_meals)) unless closed)
-      },
+      capacity: approved.fetch(:capacity),
       participation: approved.fetch(:participation),
       employee_activity: {
         current_employees:,

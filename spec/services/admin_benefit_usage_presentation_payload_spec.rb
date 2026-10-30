@@ -33,7 +33,7 @@ RSpec.describe AdminBenefitUsagePresentationPayload do
   it "keeps the AI fields and adds only the approved presentation blocks" do
     original = AdminBenefitUsageAiPayload.new(stats:).to_h
 
-    expect(payload.except(:capacity, :employee_activity)).to eq(original)
+    expect(payload.except(:employee_activity)).to eq(original)
     expect(payload.keys).to eq(%i[schema_version period consumption capacity participation employee_activity trends
                                   anomalies warnings])
     expect(payload[:capacity].keys).to eq(%i[monthly_quota_meals monthly_pending_reserved_meals monthly_available_meals])

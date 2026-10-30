@@ -564,9 +564,17 @@ describe("Uso del beneficio", () => {
         success: true,
         text: "<img src=x onerror=alert(1)>",
         month: "2026-10",
+        generated_at: "2032-04-17T22:30:00-03:00",
+        generated_at_label: "sábado 17 de abril a las 22:30",
+        generated_by_ai: true,
       }),
     )
     await screen.findByText("<img src=x onerror=alert(1)>")
+    expect(
+      screen
+        .getByText("Generado el sábado 17 de abril a las 22:30")
+        .closest("time"),
+    ).toHaveAttribute("datetime", "2032-04-17T22:30:00-03:00")
     expect(document.querySelector("img")).toBeNull()
     const aiTrigger = screen.getByRole("button", { name: "Resumen con IA" })
     await user.click(aiTrigger)
@@ -577,6 +585,42 @@ describe("Uso del beneficio", () => {
     expect(screen.getByText("<img src=x onerror=alert(1)>")).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledTimes(2)
     meta.remove()
+  })
+
+  it("discards the completed summary and its generation date when changing periods", async () => {
+    const user = userEvent.setup()
+    fetchMock
+      .mockResolvedValueOnce(response(benefitUsageFixture()))
+      .mockResolvedValueOnce(
+        response({
+          success: true,
+          text: "Resumen del mes anterior",
+          month: "2026-10",
+          generated_at: "2032-04-17T22:30:00-03:00",
+          generated_at_label: "sábado 17 de abril a las 22:30",
+          generated_by_ai: true,
+        }),
+      )
+      .mockResolvedValueOnce(response(benefitUsageFixture("2026-09")))
+    const view = render(<Analysis {...props} />)
+    await screen.findByText("$5.425,25")
+    await user.click(
+      screen.getByRole("button", { name: "Generar resumen con IA" }),
+    )
+    await screen.findByText("Generado el sábado 17 de abril a las 22:30")
+
+    screen.getByRole("combobox", { name: "Mes del análisis" }).focus()
+    await user.keyboard("{Enter}{End}{Enter}")
+    expect(
+      screen.queryByText("Resumen del mes anterior"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText("Generado el sábado 17 de abril a las 22:30"),
+    ).not.toBeInTheDocument()
+    view.rerender(<Analysis {...props} month="2026-09" />)
+    await screen.findByText("$5.425,25")
+    expect(document.querySelector("time")).toBeNull()
+    expect(fetchMock).toHaveBeenCalledTimes(3)
   })
 
   it.each([
@@ -654,11 +698,21 @@ describe("Uso del beneficio", () => {
     expect(signal?.aborted).toBe(true)
     await act(async () => {
       old.resolve(
-        response({ success: true, month: "2026-10", text: "Resumen anterior" }),
+        response({
+          success: true,
+          month: "2026-10",
+          text: "Resumen anterior",
+          generated_at: "2032-04-17T22:30:00-03:00",
+          generated_at_label: "sábado 17 de abril a las 22:30",
+          generated_by_ai: true,
+        }),
       )
       await old.promise
     })
     expect(screen.queryByText("Resumen anterior")).not.toBeInTheDocument()
+    expect(
+      screen.queryByText("Generado el sábado 17 de abril a las 22:30"),
+    ).not.toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Generar resumen con IA" }),
     ).toBeEnabled()

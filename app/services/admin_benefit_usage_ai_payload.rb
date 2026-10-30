@@ -56,6 +56,11 @@ class AdminBenefitUsageAiPayload
       schema_version: 1,
       period: { month: period_month, closed: },
       consumption:,
+      capacity: {
+        monthly_quota_meals: (integer(benefits.fetch(:monthly_quota_meals)) unless closed),
+        monthly_pending_reserved_meals: (integer(benefits.fetch(:monthly_pending_reserved_meals)) unless closed),
+        monthly_available_meals: (integer(benefits.fetch(:monthly_available_meals)) unless closed)
+      },
       participation: {
         percent: (percent(employees.fetch(:participation_percent)) if trusted_roster),
         eligible_employees: eligible,

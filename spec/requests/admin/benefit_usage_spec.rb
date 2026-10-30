@@ -106,6 +106,20 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
   end
 
   describe "POST /rrhh/uso-beneficio/resumen" do
+    it "formats the generation date on the server in Montevideo, including UTC day boundaries" do
+      sign_in users(:admin), role: :admin
+
+      travel_to Time.utc(2032, 4, 18, 1, 30) do
+        post admin_benefit_usage_summary_path, params: { month: "2032-04" }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.parsed_body).to include(
+          "generated_at" => "2032-04-17T22:30:00-03:00",
+          "generated_at_label" => "sábado 17 de abril a las 22:30"
+        )
+      end
+    end
+
     it "recalculates server statistics and generates a summary only after an explicit POST" do
       sign_in users(:admin), role: :admin
       expect(AdminBenefitUsageStats).to receive(:new)
@@ -119,7 +133,8 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
       expect(response).to have_http_status(:ok)
       expect(response.parsed_body).to eq(
         "success" => true, "text" => "Resumen de prueba.", "month" => "2032-04",
-        "generated_at" => "2032-04-17T10:30:00-03:00", "generated_by_ai" => true
+        "generated_at" => "2032-04-17T10:30:00-03:00",
+        "generated_at_label" => "sábado 17 de abril a las 10:30", "generated_by_ai" => true
       )
     end
 
@@ -475,14 +490,16 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
         body = JSON.parse(outbound[:body])
         expect(body).to include("model" => "configured-test-model", "max_tokens" => 500)
         payload = JSON.parse(body.fetch("messages").sole.fetch("content"))
-        expect(payload).not_to have_key("capacity")
+        expect(payload.fetch("capacity").keys).to contain_exactly(
+          "monthly_quota_meals", "monthly_pending_reserved_meals", "monthly_available_meals"
+        )
         expect(payload.dig("consumption", "confirmed_meals")).to eq(meals)
         expect(payload.dig("consumption", "monthly_subsidized_meals")).to eq(meals)
         expect(payload.dig("consumption", "company_subsidy_amount")).to eq(subsidy)
         expect(payload.dig("trends", 2, "confirmed_meals")).to eq(prior_meals)
         expect(outbound[:body]).not_to include("PRIVATE-", "@example.test", "PRIVATE-ORDER-NOTES")
         expect(outbound[:body]).not_to match(/"(?:company_id|consumer_id|user_id|order_id|benefit_id|address|email|name)"\s*:/)
-        expect(payload.keys).to contain_exactly("schema_version", "period", "consumption", "participation",
+        expect(payload.keys).to contain_exactly("schema_version", "period", "consumption", "capacity", "participation",
                                                 "trends", "anomalies", "warnings")
       end
       expect(requests.size).to eq(2)
@@ -507,7 +524,10 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
       expect(requests.size).to eq(1)
       outbound = JSON.parse(requests.sole.fetch(:body))
       ai_payload = JSON.parse(outbound.fetch("messages").sole.fetch("content"))
-      expect(ai_payload).not_to have_key("capacity")
+      expect(ai_payload.fetch("capacity")).to eq(
+        "monthly_quota_meals" => 20, "monthly_pending_reserved_meals" => 0,
+        "monthly_available_meals" => 15
+      )
       expect(requests.sole.fetch(:body)).not_to include("PRIVATE-", "@example.test", "consumer_id", "user_id")
     end
 

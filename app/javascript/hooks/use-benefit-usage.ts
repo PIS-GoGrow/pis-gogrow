@@ -10,7 +10,7 @@ export function useBenefitUsage(month: string) {
   const [stats, setStats] = useState<BenefitUsageStats | null>(null)
   const [error, setError] = useState(false)
   const [attempt, setAttempt] = useState(0)
-  const [summary, setSummary] = useState<string | null>(null)
+  const [summary, setSummary] = useState<BenefitUsageSummary | null>(null)
   const [summaryError, setSummaryError] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
   const summaryRequest = useRef<AbortController | null>(null)
@@ -93,8 +93,13 @@ export function useBenefitUsage(month: string) {
             ? "configuration_missing"
             : "summary_unavailable",
         )
-      } else if (data.month === month && typeof data.text === "string") {
-        setSummary(data.text)
+      } else if (
+        data.month === month &&
+        typeof data.text === "string" &&
+        typeof data.generated_at === "string" &&
+        typeof data.generated_at_label === "string"
+      ) {
+        setSummary(data)
       } else {
         setSummaryError("summary_unavailable")
       }

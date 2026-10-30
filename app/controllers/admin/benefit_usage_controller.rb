@@ -40,11 +40,13 @@ class Admin::BenefitUsageController < Admin::InertiaController
     result = AdminBenefitUsageSummary.new(payload:).call
     return render_summary_error(result.dig(:error, :code)) unless result[:ok]
 
+    generated_at = Time.current
     render json: {
       success: true,
       text: result.fetch(:text),
       month: month.strftime("%Y-%m"),
-      generated_at: Time.current.iso8601,
+      generated_at: generated_at.iso8601,
+      generated_at_label: DateFormat.long_with_time(generated_at, inline: true),
       generated_by_ai: true
     }
   end

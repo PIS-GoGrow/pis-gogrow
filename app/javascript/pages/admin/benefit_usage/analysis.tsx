@@ -76,8 +76,15 @@ function AnalysisMonth({
             <p className="text-xs leading-relaxed text-violet-800 dark:text-violet-200">
               {t(`${p}.ai_notice`)}
             </p>
+            <p className="text-xs leading-relaxed text-violet-800 dark:text-violet-200">
+              <time dateTime={usage.summary.generated_at}>
+                {t(`${p}.generated_at`, {
+                  date: usage.summary.generated_at_label,
+                })}
+              </time>
+            </p>
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {usage.summary}
+              {usage.summary.text}
             </p>
           </div>
         )}
