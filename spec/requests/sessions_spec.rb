@@ -34,6 +34,13 @@ RSpec.describe "Sessions", type: :request do
         get dashboard_path
         expect(response).to redirect_to(consumer_welcome_path)
       end
+
+      it "handles blank or missing parameters gracefully" do
+        post sign_in_path, params: { email: "", password: "" }
+        expect(response).to redirect_to(consumer_welcome_path)
+        expect(flash[:alert]).to eq("El correo electrónico o la contraseña son incorrectos")
+        expect(Session.count).to eq(0)
+      end
     end
 
     context "with a consumer and HR account" do
@@ -48,10 +55,33 @@ RSpec.describe "Sessions", type: :request do
         expect(users(:one).sessions.last).to be_admin
       end
 
+      it "opens the consumer session when coming from /consumidor" do
+        post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*" }, headers: { "Referer" => "http://www.example.com/consumidor" }
+
+        expect(users(:one).sessions.last).to be_consumer
+      end
+
+      it "falls back to user's first role when referer is unknown" do
+        post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*" }, headers: { "Referer" => "http://www.example.com/desconocido" }
+
+        expect(response).to redirect_to(root_path)
+        expect(users(:one).sessions.last.role).to eq(users(:one).roles.first)
+      end
+
       it "sends a failed login back to the screen it came from" do
         post sign_in_path, params: { email: users(:one).email, password: "mala" }, headers: { "Referer" => "http://www.example.com/rrhh" }
 
         expect(response).to redirect_to("/rrhh")
+      end
+    end
+
+    context "with an admin-only account" do
+      it "rejects the login from /consumidor" do
+        post sign_in_path, params: { email: users(:admin).email, password: "Secret1*3*5*" }, headers: { "Referer" => "http://www.example.com/consumidor" }
+
+        expect(response).to redirect_to(consumer_welcome_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.role_not_available"))
+        expect(users(:admin).sessions).to be_empty
       end
     end
 

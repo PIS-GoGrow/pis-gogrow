@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Provider welcomes", type: :request do
-  fixtures :companies
+  fixtures :companies, :users
 
   let(:company) { companies(:gogrow) }
   let!(:user) { Providers::Invite.call(name: "Ana Proveedora", email: "ana@proveedor.com", company: company) }
@@ -28,6 +28,18 @@ RSpec.describe "Provider welcomes", type: :request do
       expect(OtpCode.pending?(user, :invitation)).to be(true)
     end
 
+    it "redirects to sign in when parameters are missing" do
+      get provider_welcome_path
+
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    it "rejects a malformed token without dot separator" do
+      get provider_welcome_path, params: { token: "invalidtokenformat", company: company_token }
+
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
+
     it "rejects a wrong token" do
       get provider_welcome_path, params: { token: "#{user.id}.#{'0' * 32}", company: company_token }
 
@@ -46,6 +58,14 @@ RSpec.describe "Provider welcomes", type: :request do
       get provider_welcome_path, params: { token: token, company: company_token }
 
       expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    it "redirects an already authenticated user" do
+      sign_in users(:one), role: :consumer
+
+      get provider_welcome_path, params: { token: token, company: company_token }
+
+      expect(response).to redirect_to(root_path)
     end
   end
 end
