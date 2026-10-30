@@ -20,7 +20,6 @@ RSpec.describe "Consumo y gasto mensual de cada empleado", type: :system do
     visit admin_consumers_path
 
     expect(page).to have_content("Empleados")
-    expect(find("[role='combobox'][aria-label='Mes de los saldos']")).to have_text("Este mes")
     expect(page).to have_content("Test User")
     expect(page).to have_content("$950,75")
     expect(page).to have_content("Other Consumer User")
@@ -29,61 +28,27 @@ RSpec.describe "Consumo y gasto mensual de cada empleado", type: :system do
     expect(page).to have_content("En revisión")
   end
 
-  it "shows a previous month's spending when the URL asks for that month" do
-    Account.create!(owner: consumer, provider: providers(:tuviandita), month: previous_month, amount: 2_425)
-
-    visit admin_consumers_path(month: previous_key)
-
-    expect(find("[role='combobox'][aria-label='Mes de los saldos']")).to have_text(I18n.l(previous_month, format: :month_name_year))
-    expect(page).to have_content("Test User")
-    # Los miles de cuatro cifras también se agrupan: $2.425.
-    expect(page).to have_content("$2.425")
-    expect(page).to have_no_content("$950,75")
-  end
-
-  it "allows changing the month in the selector and updates spending" do
+  # Lo que quedó sin pagar de meses anteriores también es deuda del empleado.
+  it "adds the unpaid earlier months to what each employee owes" do
     Account.create!(owner: consumer, provider: providers(:tuviandita), month: previous_month, amount: 2_425)
 
     visit admin_consumers_path
 
-    expect(find("[role='combobox'][aria-label='Mes de los saldos']")).to have_text("Este mes")
-    expect(page).to have_content("$950,75")
-
-    find("[role='combobox'][aria-label='Mes de los saldos']").click
-    find("[role='option']", text: I18n.l(previous_month, format: :month_name_year)).click
-
-    expect(page).to have_current_path(admin_consumers_path(month: previous_key))
-    expect(find("[role='combobox'][aria-label='Mes de los saldos']")).to have_text(I18n.l(previous_month, format: :month_name_year))
-    expect(page).to have_content("$2.425")
-    expect(page).to have_no_content("$950,75")
+    expect(page).to have_no_css("[role='combobox']")
+    # Los miles de cuatro cifras también se agrupan: $3.375,75.
+    expect(page).to have_content("$3.375,75")
   end
 
-  it "preserves the pending filter when changing months from the selector" do
-    Account.create!(owner: consumer, provider: providers(:tuviandita), month: previous_month, amount: 2_425)
-
-    visit admin_consumers_path(filter: "pending")
-
-    expect(page).to have_css("[role='radio'][aria-checked='true']", text: "Pendientes")
-
-    find("[role='combobox'][aria-label='Mes de los saldos']").click
-    find("[role='option']", text: I18n.l(previous_month, format: :month_name_year)).click
-
-    expect(page).to have_current_path(%r{\A/rrhh/empleados\?(?=.*month=#{previous_key})(?=.*filter=pending)})
-    expect(page).to have_css("[role='radio'][aria-checked='true']", text: "Pendientes")
-    expect(page).to have_content("$2.425")
-  end
-
-  it "shows the chosen month in selector when navigating from debt ranking" do
+  it "opens the pending employees from the debt ranking of the home" do
     Account.create!(owner: consumer, provider: providers(:tuviandita), month: previous_month, amount: 2_425)
 
     visit admin_dashboard_path(month: previous_key)
 
     click_on "Ver empleados con saldos pendientes"
 
-    expect(page).to have_current_path(admin_consumers_path(filter: "pending", month: previous_key))
-    expect(find("[role='combobox'][aria-label='Mes de los saldos']")).to have_text(I18n.l(previous_month, format: :month_name_year))
     expect(page).to have_css("[role='radio'][aria-checked='true']", text: "Pendientes")
-    expect(page).to have_content("$2.425")
+    expect(page).to have_content("Test User")
+    expect(page).to have_content("$3.375,75")
   end
 
   it "opens an employee and shows the month's consumption" do
@@ -105,12 +70,12 @@ RSpec.describe "Consumo y gasto mensual de cada empleado", type: :system do
     first("button[aria-label^='Ver el detalle de']").click
 
     expect(page).to have_content("Historial de consumo:")
-    expect(page).to have_content("Pedidos confirmados del mes")
+    expect(page).to have_content("Proveedores:")
     expect(page).to have_button("Cerrar")
 
     click_button "Cerrar"
 
-    expect(page).to have_no_content("Pedidos confirmados del mes")
+    expect(page).to have_no_content("Proveedores:")
   end
 
   # Lo que la home muestra como deuda del empleado y lo que Empleados lista para
