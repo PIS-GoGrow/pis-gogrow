@@ -15,9 +15,11 @@ class UserMailer < ApplicationMailer
     @token = "#{@user.id}.#{@otp_code.code}"
     @company_token = @company.signed_id(purpose: :provider_invitation, expires_in: OtpCode::TTL.fetch("invitation"))
 
-    attach_branding_images
+    attach_brand_images
 
-    mail to: @user.email, subject: t(".subject")
+    mail to: @user.email, subject: t(".subject"), template_name: "invitation" do |format|
+      format.html { render layout: "branded_mailer" }
+    end
   end
 
   def password_reset_code
