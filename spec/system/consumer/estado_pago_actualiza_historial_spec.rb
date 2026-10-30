@@ -134,14 +134,13 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     sign_in employee
 
     visit accounts_path
-    within(find("[role=tabpanel]")) { click_on "Subir comprobante de pago" }
 
     Tempfile.create([ "comprobante-grande", ".pdf" ]) do |file|
       file.binmode
       file.write("x" * (10.megabytes + 1))
       file.rewind
 
-      within(find("[role=dialog]")) do
+      within(find("[role=tabpanel]")) do
         attach_file("Comprobante", file.path, make_visible: true)
         click_on "Subir comprobante de pago"
       end
