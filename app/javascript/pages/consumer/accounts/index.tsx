@@ -44,6 +44,7 @@ interface AccountProps {
   current_month_detail: AccountDetail
   total_debt: number
   total_meals: number
+  benefit_used: number
   benefit_available: number
 }
 
@@ -63,6 +64,7 @@ export default function Index({
   current_month_detail,
   total_debt,
   total_meals,
+  benefit_used,
   benefit_available,
 }: AccountProps) {
   const { t } = useTranslation()
@@ -159,6 +161,17 @@ export default function Index({
             detail={
               <span className="text-foreground font-semibold">
                 {`| ${mealsUsed}`}
+            </CardDescription>
+            <CardTitle>
+              {formatMoney(current_month_debt)}
+              <span className="text-zinc-500 dark:text-zinc-400">
+                {" | "}
+                {benefit_used}
+                {" de "}
+                {benefit_available}{" "}
+                {benefit_available == 1
+                  ? t("pages.accounts.show.lunch")
+                  : t("pages.accounts.show.lunches")}
               </span>
             }
             className="bg-muted shadow-none"

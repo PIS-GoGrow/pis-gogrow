@@ -28,9 +28,7 @@ class Consumer::AccountsController < Consumer::InertiaController
     current_accounts = consumer.accounts.current.pluck(:id)
     current_sums = Account.amount_and_price_sum(current_accounts).values
 
-    current_month_ordered = current_sums.reduce(0) { |acc, x| acc + x[:amount] }
     current_month_debt = current_sums.reduce(0) { |acc, x| acc + x[:price] }
-    benefit_available = consumer.monthly_benefit_available
 
     current_orders = Order.confirmed
                           .joins(:order_accounts)
@@ -51,7 +49,8 @@ class Consumer::AccountsController < Consumer::InertiaController
       },
       total_debt:,
       total_meals:,
-      benefit_available:
+      benefit_used: consumer.monthly_benefit_used_this_month,
+      benefit_available: consumer.monthly_benefit_available
     }
   end
 
