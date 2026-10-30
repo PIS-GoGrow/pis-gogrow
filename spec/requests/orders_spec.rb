@@ -1079,6 +1079,7 @@ RSpec.describe "Orders", type: :request do
       before do
         travel_back
         travel_to Time.zone.local(2026, 10, 31, 14, 0)
+        schedules(:future).update_columns(date: Date.new(2026, 11, 4))
       end
 
       after do
