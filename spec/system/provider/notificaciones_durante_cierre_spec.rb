@@ -97,12 +97,13 @@ RSpec.describe "Notificaciones al proveedor durante cierres programados", type: 
       visit_hydrated accounts_path
 
       within(find("[role=tabpanel]")) do
-        expect(page).to have_button(I18n.t("pages.accounts.show.receipt"))
-        click_on I18n.t("pages.accounts.show.receipt")
-      end
-
-      within(find("[role=dialog]")) do
         attach_file(I18n.t("pages.accounts.show.receipt_file"), receipt_file)
+
+        expect(page).to have_button(
+          I18n.t("pages.accounts.show.receipt"),
+          disabled: false
+        )
+
         click_on I18n.t("pages.accounts.show.receipt")
       end
 
