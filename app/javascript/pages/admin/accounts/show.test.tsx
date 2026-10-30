@@ -50,6 +50,15 @@ describe("Admin account page", () => {
     ).toHaveAttribute("href", "/configuracion/notificaciones")
   })
 
+  it("links to invoices", () => {
+    render(<AdminAccount />)
+
+    expect(screen.getByRole("link", { name: /^Facturas/ })).toHaveAttribute(
+      "href",
+      "/rrhh/facturas",
+    )
+  })
+
   it("links to profile and appearance without security options", () => {
     render(<AdminAccount />)
 

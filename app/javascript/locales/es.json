@@ -345,6 +345,8 @@
       },
       "admin": {
         "account": {
+          "invoices": "Facturas",
+          "invoices_description": "Consultá las facturas de los proveedores",
           "more_options": "Más opciones",
           "notifications": "Notificaciones",
           "notifications_description": "Configurá qué alertas querés recibir",
