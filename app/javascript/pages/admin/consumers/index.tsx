@@ -1,10 +1,9 @@
-import { Head, Link, router } from "@inertiajs/react"
+import { Head, Link } from "@inertiajs/react"
 import { Search, Users } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
-import MonthSelect from "@/components/admin/month-select"
 import PageContainer from "@/components/page-container"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -39,9 +38,6 @@ const segment =
 export default function Index({
   consumers,
   filter: initialFilter,
-  month,
-  current_month,
-  months,
 }: AdminConsumersIndex) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -67,19 +63,6 @@ export default function Index({
       consumer.email.toLowerCase().includes(term),
   )
 
-  function selectMonth(key: string) {
-    router.get(
-      adminConsumers.index({
-        query: {
-          ...(key === current_month ? {} : { month: key }),
-          ...(filter === "pending" ? { filter } : {}),
-        },
-      }).url,
-      {},
-      { preserveScroll: true, preserveState: true },
-    )
-  }
-
   const emptyKey = consumers.length === 0 ? "empty" : "no_results"
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -99,15 +82,6 @@ export default function Index({
               {t(`${page}.count`, { count: inTab.length })}
             </span>
           </Badge>
-        }
-        actions={
-          <MonthSelect
-            value={month}
-            currentMonth={current_month}
-            months={months}
-            onValueChange={selectMonth}
-            label={t(`${page}.month_label`)}
-          />
         }
       >
         <ToggleGroup
