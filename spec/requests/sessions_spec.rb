@@ -6,36 +6,10 @@ RSpec.describe "Sessions", type: :request do
   fixtures :users
 
   describe "GET /iniciar-sesion" do
-    it "renders the sign in page" do
-      get sign_in_path
-      expect(response).to have_http_status(:success)
-    end
+    it "redirects to the consumer sign in" do
+      get "/iniciar-sesion"
 
-    it "redirects authenticated users" do
-      sign_in users(:one)
-      get sign_in_path
-      expect(response).to redirect_to(root_path)
-    end
-
-    # El valor se fija acá y no se deja al entorno: quien tenga el login de prueba
-    # prendido en su .env vería este ejemplo fallar.
-    it "hides the password form unless the test login is enabled" do
-      allow(ENV).to receive(:fetch).and_call_original
-      allow(ENV).to receive(:fetch).with("DEV_LOGIN_ENABLED", "false").and_return("false")
-
-      get sign_in_path
-
-      expect(inertia).to render_component("sessions/new")
-      expect(inertia.props[:dev_login_enabled]).to be(false)
-    end
-
-    it "shows the password form when the test login is enabled" do
-      allow(ENV).to receive(:fetch).and_call_original
-      allow(ENV).to receive(:fetch).with("DEV_LOGIN_ENABLED", "false").and_return("true")
-
-      get sign_in_path
-
-      expect(inertia.props[:dev_login_enabled]).to be(true)
+      expect(response).to redirect_to("/consumidor")
     end
   end
 
@@ -54,11 +28,39 @@ RSpec.describe "Sessions", type: :request do
     context "with invalid credentials" do
       it "redirects back with an alert" do
         post sign_in_path, params: { email: users(:one).email, password: "wrongpassword" }
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(consumer_welcome_path)
         expect(flash[:alert]).to eq("El correo electrónico o la contraseña son incorrectos")
 
         get dashboard_path
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(consumer_welcome_path)
+      end
+    end
+
+    context "with a consumer and HR account" do
+      before do
+        Admin.create!(user: users(:one), company: Company.first || Company.create!(name: "GoGrow", address: "18 de Julio 1006"))
+        users(:one).sync_roles!
+      end
+
+      it "opens the session with the role of the screen it came from" do
+        post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*" }, headers: { "Referer" => "http://www.example.com/rrhh" }
+
+        expect(users(:one).sessions.last).to be_admin
+      end
+
+      it "sends a failed login back to the screen it came from" do
+        post sign_in_path, params: { email: users(:one).email, password: "mala" }, headers: { "Referer" => "http://www.example.com/rrhh" }
+
+        expect(response).to redirect_to("/rrhh")
+      end
+    end
+
+    context "with a consumer-only account" do
+      it "rejects the login from /rrhh" do
+        post sign_in_path, params: { email: users(:one).email, password: "Secret1*3*5*" }, headers: { "Referer" => "http://www.example.com/rrhh" }
+
+        expect(response).to redirect_to("/rrhh")
+        expect(users(:one).sessions).to be_empty
       end
     end
 
@@ -83,7 +85,7 @@ RSpec.describe "Sessions", type: :request do
     context "when user has no profile" do
       it "denies access and redirects to sign in" do
         post sign_in_path, params: { email: users(:two).email, password: "Secret1*3*5*" }
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(consumer_welcome_path)
         expect(flash[:alert]).to eq(I18n.t("flash.role_not_available"))
       end
     end

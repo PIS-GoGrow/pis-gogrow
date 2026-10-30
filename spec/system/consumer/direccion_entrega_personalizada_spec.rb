@@ -232,7 +232,7 @@ RSpec.describe "Dirección de entrega personalizada" do
     it "no la ve un visitante sin sesión" do
       visit order_path(order)
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(consumer_welcome_path)
       expect(page).to have_no_content("Colonia 1370")
     end
 
