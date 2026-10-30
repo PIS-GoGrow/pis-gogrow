@@ -324,12 +324,12 @@ es:
     greeting: "Hola,"
     support: "¿Tenés dudas o necesitás ayuda? Respondé este correo y nuestro equipo de soporte te va a ayudar a resolverlo."
     invitation:
-      subject: "Invitación a Viandas GoGrow"
-      title: "Invitación a Viandas GoGrow"
+      subject: "Fuiste invitado a Viandas GoGrow"
+      title: "Fuiste invitado a Viandas GoGrow"
       greeting: "Hola %{name},"
-      intro: "Recibiste una invitación de %{company} para unirte como proveedor de viandas a través de la plataforma Viandas GoGrow."
-      cta: "Aceptar invitación"
-      after: "Una vez completado el registro, podés acceder a tu cuenta desde %{url}"
+      intro: "%{company} te invitó a unirte como proveedor de viandas a través de la plataforma Viandas GoGrow."
+      cta: "Unirme ahora"
+      after: "Una vez que te unas, podés acceder a tu cuenta desde %{url}"
     password_reset_code:
       subject: "Restablecimiento de contraseña"
       title: "Restablecimiento de contraseña"
