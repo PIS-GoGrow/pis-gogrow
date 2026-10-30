@@ -20,7 +20,8 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
 
   before do
     sched_today.update!(amount: 10, available: true)
-    sched_future.update!(amount: 10, available: true)
+    future_date = Date.tomorrow.month == Date.current.month ? Date.tomorrow : Date.current
+    sched_future.update!(amount: 10, available: true, date: future_date)
     provider.update!(order_deadline: 2.hours.from_now.strftime("%H:%M"))
   end
 

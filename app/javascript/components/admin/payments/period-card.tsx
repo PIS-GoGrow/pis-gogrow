@@ -1,4 +1,4 @@
-import { Eye, TriangleAlert } from "lucide-react"
+import { Download, Eye, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import PaymentReceiptDialog from "@/components/consumer/accounts/payment-receipt-dialog"
@@ -10,14 +10,16 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
+  CardTitle,
 } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { adminPayments } from "@/routes"
-import type { Account } from "@/types"
+import type { AdminAccount } from "@/types"
 
 interface PeriodCardProps {
-  account: Account
+  account: AdminAccount
   // En el historial los períodos van todos juntos, así que cada tarjeta dice
   // de qué proveedor es.
   providerName?: string
@@ -33,48 +35,95 @@ export default function PeriodCard({
   const { formatMoney } = useFormatters()
 
   const status = account.collection_status
+  const title = providerName
+    ? `${providerName}: ${account.month}`
+    : account.month
+
+  if (status === "approved") {
+    return (
+      <Card className="gap-3 py-4">
+        <CardHeader className="px-4">
+          <CardDescription>{account.paid_on}</CardDescription>
+          <CardAction>
+            <StatusBadge
+              status={status}
+              kind="payment"
+              label={t("pages.admin.payments.index.confirmed")}
+            />
+          </CardAction>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+
+        <CardContent className="grid gap-3 px-4">
+          <Separator />
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <div className="grid gap-1">
+              <span className="text-muted-foreground text-sm">
+                {t("pages.admin.payments.index.total_paid")}
+              </span>
+              <strong className="text-xl">
+                {formatMoney(account.payable_amount)}
+              </strong>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onOpenDetail}>
+              <Eye aria-hidden="true" />
+              {t("pages.admin.payments.index.see_detail")}
+            </Button>
+          </div>
+
+          {account.invoice_download_url && (
+            <Button asChild>
+              <a href={account.invoice_download_url}>
+                <Download aria-hidden="true" />
+                {t("pages.admin.payments.index.download_invoice")}
+              </a>
+            </Button>
+          )}
+          {account.receipt_download_url && (
+            <Button variant="secondary" asChild>
+              <a href={account.receipt_download_url} download>
+                <Download aria-hidden="true" />
+                {t("pages.admin.payments.index.download_receipt")}
+              </a>
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="bg-muted/50 gap-3 py-4">
       <CardHeader className="px-4">
-        <CardDescription>
-          {providerName ? `${providerName}: ${account.month}` : account.month}
-        </CardDescription>
-        <CardAction>
+        <CardDescription>{title}</CardDescription>
+        <CardAction className="flex flex-wrap items-center justify-end gap-2">
+          <span
+            className={cn(
+              "flex items-center gap-1.5 text-xs",
+              account.due_date_passed
+                ? "text-red-600 dark:text-red-400"
+                : "text-amber-600 dark:text-amber-400",
+            )}
+          >
+            <TriangleAlert className="size-3.5" aria-hidden="true" />
+            {t("pages.admin.payments.index.due", { date: account.due_date })}
+          </span>
           <StatusBadge status={status} kind="payment" />
         </CardAction>
       </CardHeader>
 
       <CardContent className="grid gap-2 px-4">
-        <p className="flex flex-wrap items-baseline gap-x-2">
-          {/* El monto es un decimal de Rails, así que viaja como texto. */}
-          <strong className="text-2xl">
-            {formatMoney(account.payable_amount)}
-          </strong>
-          <span className="text-muted-foreground text-sm">
-            {"| "}
-            {t("pages.admin.payments.index.meals", {
-              count: account.orders_amount_sum,
-            })}
-          </span>
-        </p>
-
         <div className="flex flex-wrap items-center justify-between gap-2">
-          {status === "approved" ? (
-            <span />
-          ) : (
-            <span
-              className={cn(
-                "flex items-center gap-1.5 text-xs",
-                account.due_date_passed
-                  ? "text-red-600 dark:text-red-400"
-                  : "text-amber-600 dark:text-amber-400",
-              )}
-            >
-              <TriangleAlert className="size-3.5" aria-hidden="true" />
-              {t("pages.admin.payments.index.due", { date: account.due_date })}
+          <p className="flex flex-wrap items-baseline gap-x-2">
+            {/* El monto es un decimal de Rails, así que viaja como texto. */}
+            <strong>{formatMoney(account.payable_amount)}</strong>
+            <span className="text-muted-foreground text-sm">
+              {"| "}
+              {t("pages.admin.payments.index.meals", {
+                count: account.orders_amount_sum,
+              })}
             </span>
-          )}
+          </p>
 
           <Button variant="ghost" size="sm" onClick={onOpenDetail}>
             <Eye aria-hidden="true" />
