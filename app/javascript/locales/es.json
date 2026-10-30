@@ -652,7 +652,8 @@
               "copy": "Copiar número de cuenta",
               "copy_failed": "No pudimos copiar el número de cuenta",
               "holder": "Beneficiario: %{holder}",
-              "missing": "Este proveedor todavía no cargó sus datos de cobro."
+              "missing": "Este proveedor todavía no cargó sus datos de cobro.",
+              "missing_upload_hint": "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro."
             },
             "confirmed": "Confirmado",
             "detail": {

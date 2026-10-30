@@ -217,6 +217,9 @@ export default function Index({
                           <PeriodCard
                             key={account.id}
                             account={account}
+                            paymentDetailsMissing={
+                              !provider.payment_details_complete
+                            }
                             onOpenDetail={() => void openDetail(account)}
                           />
                         ))}

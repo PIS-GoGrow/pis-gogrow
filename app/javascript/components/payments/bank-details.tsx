@@ -15,7 +15,7 @@ export default function BankDetails({ provider }: BankDetailsProps) {
   const { t } = useTranslation()
   const { bank_name, bank_account_number, bank_account_holder } = provider
 
-  if (!bank_name || !bank_account_number || !bank_account_holder) {
+  if (!provider.payment_details_complete) {
     return (
       <p className="text-muted-foreground text-sm">{t(`${page}.missing`)}</p>
     )
