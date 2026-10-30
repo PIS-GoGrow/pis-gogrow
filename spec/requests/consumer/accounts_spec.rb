@@ -74,6 +74,32 @@ RSpec.describe "Consumer Accounts", type: :request do
         expect(ids.index(newer_account.id)).to be < ids.index(older_account.id)
       end
 
+      it "orders all pending accounts strictly from newest to oldest month across multiple periods" do
+        consumer = consumers(:one)
+
+        account_oldest = Account.create!(
+          owner: consumer,
+          provider: provider,
+          month: 4.months.ago.beginning_of_month,
+          amount: 150
+        )
+        account_middle = Account.create!(
+          owner: consumer,
+          provider: provider,
+          month: 2.months.ago.beginning_of_month,
+          amount: 250
+        )
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        pending_accounts = inertia.props[:accounts]
+        ids = pending_accounts.map { |a| a["id"] }
+
+        expect(ids.index(accounts(:one_tuviandita_current).id)).to be < ids.index(account_middle.id)
+        expect(ids.index(account_middle.id)).to be < ids.index(account_oldest.id)
+      end
+
       it "includes provider bank details in props[:providers] when configured" do
         provider.update!(
           bank_name: "Banco Itaú",
