@@ -40,7 +40,6 @@ interface AccountProps {
   providers: PaymentProvider[]
   history: boolean
   current_month_debt: number
-  current_month_ordered: number
   current_month_detail: AccountDetail
   total_debt: number
   total_meals: number
@@ -60,7 +59,6 @@ export default function Index({
   providers,
   history,
   current_month_debt,
-  current_month_ordered,
   current_month_detail,
   total_debt,
   total_meals,
@@ -168,10 +166,7 @@ export default function Index({
               <div className="grid w-full gap-4">
                 {benefit_available > 0 && (
                   <Progress
-                    value={Math.min(
-                      100,
-                      (current_month_ordered / benefit_available) * 100,
-                    )}
+                    value={Math.min(100, (benefit_used / benefit_available) * 100)}
                     aria-label={t("pages.accounts.index.spending")}
                   />
                 )}

@@ -41,7 +41,6 @@ class Consumer::AccountsController < Consumer::InertiaController
       history:,
       history_accounts: AccountSerializer.new(history_accounts, params: { orders_sum: history_sums }).as_json,
       current_month_debt:,
-      current_month_ordered:,
       current_month_detail: {
         orders: SimplifiedOrderSerializer.new(current_orders).as_json,
         month: I18n.l(Date.current, format: :month_year),

@@ -47,7 +47,6 @@ const props = {
   providers: [],
   history: false,
   current_month_debt: 450.75,
-  current_month_ordered: 3,
   current_month_detail: detail,
   total_debt: 0,
   total_meals: 0,
@@ -108,7 +107,6 @@ describe("Consumer Payments Page", () => {
     render(
       <Index
         {...props}
-        current_month_ordered={0}
         current_month_detail={{ ...detail, orders: [], amount: 0 }}
       />,
     )
