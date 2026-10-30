@@ -121,6 +121,12 @@ RSpec.describe "Visualizar facturas de proveedores", type: :system do
       expect(page).to have_current_path(sign_in_path)
     end
 
+    it "sends a visitor accessing the invoice file to sign in" do
+      visit file_admin_invoice_path(invoice, filename: "factura.png")
+
+      expect(page).to have_current_path(sign_in_path)
+    end
+
     it "keeps a provider out of the list and the file, even the one who issued it" do
       sign_in users(:provider_user), role: :provider
 
@@ -129,14 +135,19 @@ RSpec.describe "Visualizar facturas de proveedores", type: :system do
 
       visit file_admin_invoice_path(invoice)
       expect(page).to have_no_current_path(file_admin_invoice_path(invoice))
+
+      visit file_admin_invoice_path(invoice, filename: "factura.png")
+      expect(page).to have_no_current_path(file_admin_invoice_path(invoice, filename: "factura.png"))
     end
 
-    it "keeps a consumer out of the list" do
+    it "keeps a consumer out of the list and the file" do
       sign_in users(:one), role: :consumer
 
       visit admin_invoices_path
-
       expect(page).to have_no_current_path(admin_invoices_path)
+
+      visit file_admin_invoice_path(invoice, filename: "factura.png")
+      expect(page).to have_no_current_path(file_admin_invoice_path(invoice, filename: "factura.png"))
     end
   end
 end

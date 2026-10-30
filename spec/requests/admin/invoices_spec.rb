@@ -138,6 +138,49 @@ RSpec.describe "Admin::Invoices", type: :request do
       expect(response.headers["Content-Disposition"]).to start_with("inline")
     end
 
+    it "serves it under a file name with spaces and special characters" do
+      sign_in users(:admin), role: :admin
+
+      get file_admin_invoice_path(invoice, filename: "factura 2026-08 (1).png")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Content-Disposition"]).to start_with("inline")
+    end
+
+    it "serves the actual stored file even when the URL filename differs from the stored name" do
+      sign_in users(:admin), role: :admin
+
+      get file_admin_invoice_path(invoice, filename: "nombre-arbitrario.png")
+
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Content-Disposition"]).to include(invoice.file.filename.to_s)
+    end
+
+    it "lets HR download it when requested with filename" do
+      sign_in users(:admin), role: :admin
+
+      get file_admin_invoice_path(invoice, filename: "factura.png", download: 1)
+
+      expect(response).to have_http_status(:ok)
+      expect(response.headers["Content-Disposition"]).to start_with("attachment")
+    end
+
+    it "returns not found for a nonexistent invoice id with filename" do
+      sign_in users(:admin), role: :admin
+
+      get file_admin_invoice_path(id: 999_999, filename: "factura.png")
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "rejects nested path segments due to the route constraint" do
+      sign_in users(:admin), role: :admin
+
+      get "/rrhh/facturas/#{invoice.id}/archivo/subdir/factura.png"
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     it "lets HR download it" do
       sign_in users(:admin), role: :admin
 
@@ -167,12 +210,26 @@ RSpec.describe "Admin::Invoices", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
+    it "does not serve the invoice of another company when requested with filename" do
+      sign_in users(:admin), role: :admin
+
+      get file_admin_invoice_path(other_company_invoice, filename: "factura.png")
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     it "does not let it be downloaded either" do
       sign_in users(:admin), role: :admin
 
       get file_admin_invoice_path(other_company_invoice, download: 1)
 
       expect(response).to have_http_status(:not_found)
+    end
+
+    it "redirects an unauthenticated visitor to the sign in page" do
+      get file_admin_invoice_path(invoice, filename: "factura.png")
+
+      expect(response).to redirect_to(sign_in_path)
     end
 
     it "redirects a consumer to the home page" do
@@ -183,10 +240,26 @@ RSpec.describe "Admin::Invoices", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
+    it "redirects a consumer to the home page when requesting with filename" do
+      sign_in users(:one), role: :consumer
+
+      get file_admin_invoice_path(invoice, filename: "factura.png")
+
+      expect(response).to redirect_to(root_path)
+    end
+
     it "redirects a provider to the home page, even the one who issued it" do
       sign_in users(:provider_user), role: :provider
 
       get file_admin_invoice_path(invoice)
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects a provider to the home page when requesting with filename" do
+      sign_in users(:provider_user), role: :provider
+
+      get file_admin_invoice_path(invoice, filename: "factura.png")
 
       expect(response).to redirect_to(root_path)
     end
