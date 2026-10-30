@@ -80,30 +80,22 @@ class Consumer < ApplicationRecord
     current_monthly_benefit&.amount || 0
   end
 
-  # Devuelve la cantidad de beneficios mensuales usados en total en un determinado
-  # rango de fechas y especificando si contar órdenes pendientes.
-  # Si se hizo una orden pidiendo dos viandas con un beneficio, esa orden cuenta
-  # por dos.
-  def monthly_benefit_used_in(date_range, count_pending: false)
-    valid_status = [ :rejected, :cancelled ]
-    valid_status << :pending if count_pending
-
+  # Los usos del cupo mensual en pedidos activos (pendientes y confirmados) con
+  # entrega este mes; una orden de dos viandas subsidiadas cuenta por dos. Es el
+  # único conteo del cupo: RR. HH., Pagos, Cuenta e Inicio lo leen de acá.
+  def monthly_benefit_usages
     OrderBenefit
       .joins(order: :schedule)
-      .where(schedules: { date: date_range })
-      .where.not(orders: { status:  valid_status })
+      .where(schedules: { date: Date.current.all_month })
+      .where.not(orders: { status: [ :rejected, :cancelled ] })
       .where(benefit_id: monthly_benefits)
-      .sum(:benefit_used)
   end
 
-  # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes, para
-  # las que se usó un beneficio mensual
   def monthly_benefit_used_this_month
-    monthly_benefit_used_in Date.current.all_month
+    monthly_benefit_usages.sum(:benefit_used)
   end
 
-  # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes,
-  # contando solo las órdenes confirmadas
+  # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes
   def remaining_monthly_benefit
     [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
   end

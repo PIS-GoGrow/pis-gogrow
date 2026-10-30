@@ -135,7 +135,7 @@ Rails.application.routes.draw do
     end
 
     resources :invoices, path: "facturas", only: [ :index ] do
-      get :file, on: :member, path: "archivo"
+      get "archivo(/:filename)", action: :file, on: :member, as: :file, constraints: { filename: %r{[^/]+} }
     end
     resources :order_events, path: "auditoria", only: [ :index ]
     resources :payments, path: "pagos", only: [ :index, :show, :create, :destroy ] do
