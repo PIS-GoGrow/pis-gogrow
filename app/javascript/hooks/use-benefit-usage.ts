@@ -13,12 +13,10 @@ export function useBenefitUsage(month: string) {
   const [summary, setSummary] = useState<string | null>(null)
   const [summaryError, setSummaryError] = useState<string | null>(null)
   const [generating, setGenerating] = useState(false)
-  const statsRequest = useRef<AbortController | null>(null)
   const summaryRequest = useRef<AbortController | null>(null)
 
   useEffect(() => {
     const request = new AbortController()
-    statsRequest.current = request
     // StrictMode desmonta el primer efecto antes de esta microtarea: no enviamos dos GET.
     void Promise.resolve().then(async () => {
       if (request.signal.aborted) return
@@ -52,8 +50,7 @@ export function useBenefitUsage(month: string) {
     setAttempt((value) => value + 1)
   }
 
-  function cancel() {
-    statsRequest.current?.abort()
+  function cancelSummary() {
     summaryRequest.current?.abort()
     summaryRequest.current = null
     setSummary(null)
@@ -119,6 +116,6 @@ export function useBenefitUsage(month: string) {
     summaryError,
     generating,
     generate,
-    cancel,
+    cancelSummary,
   }
 }

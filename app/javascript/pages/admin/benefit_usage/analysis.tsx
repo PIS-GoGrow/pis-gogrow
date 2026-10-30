@@ -33,7 +33,7 @@ function AnalysisMonth({
 
   function selectMonth(value: string) {
     if (value === month) return
-    usage.cancel()
+    usage.cancelSummary()
     setNavigating(true)
     router.get(
       adminBenefitUsage.analysis({ query: { month: value } }).url,

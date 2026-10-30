@@ -429,6 +429,45 @@ describe("Uso del beneficio", () => {
     )
   })
 
+  it.each(["success", "error"] as const)(
+    "recovers the initial statistics after unsuccessful month navigation (%s)",
+    async (outcome) => {
+      const user = userEvent.setup()
+      const request = deferred()
+      fetchMock.mockReturnValueOnce(request.promise)
+      render(<Analysis {...props} />)
+      await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+      const signal = fetchMock.mock.calls[0][1]?.signal
+
+      screen.getByRole("combobox", { name: "Mes del análisis" }).focus()
+      await user.keyboard("{Enter}{End}{Enter}")
+      expect(visit).toHaveBeenCalledTimes(1)
+      const { onFinish } = visit.mock.calls[0][2] as { onFinish: () => void }
+      act(onFinish)
+      expect(signal?.aborted).toBe(false)
+
+      await act(async () => {
+        request.resolve(
+          outcome === "success"
+            ? response(benefitUsageFixture())
+            : response({}, 500),
+        )
+        await request.promise
+      })
+      if (outcome === "error") {
+        await screen.findByText("No pudimos cargar las estadísticas")
+        await user.click(screen.getByRole("button", { name: "Reintentar" }))
+      }
+      await screen.findByText("$5.425,25")
+      expect(
+        screen.queryByRole("status", {
+          name: "Cargando estadísticas del beneficio",
+        }),
+      ).not.toBeInTheDocument()
+      expect(fetchMock).toHaveBeenCalledTimes(outcome === "success" ? 1 : 2)
+    },
+  )
+
   it("keeps a twelve-month menu in a scrollable, viewport-bound panel", async () => {
     const user = userEvent.setup()
     const months = [
@@ -568,6 +607,7 @@ describe("Uso del beneficio", () => {
   )
 
   it("ignores late statistics even if transport ignores abort", async () => {
+    const user = userEvent.setup()
     const old = deferred()
     fetchMock
       .mockReturnValueOnce(old.promise)
@@ -575,6 +615,10 @@ describe("Uso del beneficio", () => {
     const view = render(<Analysis {...props} />)
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
     const signal = fetchMock.mock.calls[0][1]?.signal
+    screen.getByRole("combobox", { name: "Mes del análisis" }).focus()
+    await user.keyboard("{Enter}{End}{Enter}")
+    expect(visit).toHaveBeenCalledTimes(1)
+    expect(signal?.aborted).toBe(false)
     view.rerender(<Analysis {...props} month="2026-09" />)
     await screen.findByText("$5.425,25")
     expect(signal?.aborted).toBe(true)
@@ -589,6 +633,7 @@ describe("Uso del beneficio", () => {
   })
 
   it("discards AI from the previous month and ignores late responses", async () => {
+    const user = userEvent.setup()
     const old = deferred()
     fetchMock
       .mockResolvedValueOnce(response(benefitUsageFixture()))
@@ -600,6 +645,10 @@ describe("Uso del beneficio", () => {
       screen.getByRole("button", { name: "Generar resumen con IA" }),
     )
     const signal = fetchMock.mock.calls[1][1]?.signal
+    screen.getByRole("combobox", { name: "Mes del análisis" }).focus()
+    await user.keyboard("{Enter}{End}{Enter}")
+    expect(visit).toHaveBeenCalledTimes(1)
+    expect(signal?.aborted).toBe(true)
     view.rerender(<Analysis {...props} month="2026-09" />)
     await screen.findByText("$5.425,25")
     expect(signal?.aborted).toBe(true)
