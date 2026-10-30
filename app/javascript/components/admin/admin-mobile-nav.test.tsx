@@ -143,10 +143,14 @@ describe("AdminMobileNav", () => {
     )
   })
 
-  it("mantiene Pagos inactivo en facturas (/rrhh/facturas)", () => {
+  it("marca Cuenta como activo en Facturas (/rrhh/facturas)", () => {
     currentUrl = "/rrhh/facturas"
     const menu = nav()
 
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
     const pagosLink = menu.getByRole("link", { name: "Pagos" })
     expect(pagosLink).not.toHaveAttribute("aria-current")
     expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(

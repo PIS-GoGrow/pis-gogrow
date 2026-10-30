@@ -433,6 +433,8 @@ es:
         settings: "Configuración"
         subsidies: "Subsidios"
         subsidies_description: "Gestioná los subsidios de tu empresa"
+        invoices: "Facturas"
+        invoices_description: "Consultá las facturas de los proveedores"
         order_events: "Auditoría de pedidos"
         order_events_description: "Consultá quién creó o cambió cada pedido"
         notifications: "Notificaciones"

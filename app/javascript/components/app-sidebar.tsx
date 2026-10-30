@@ -27,6 +27,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
+  adminAccounts,
   adminBenefitConfigurations,
   adminInvoices,
   adminOrderEvents,
@@ -72,7 +73,9 @@ export function AppSidebar() {
       },
     ],
     admin: [
-      ...adminPrimaryNavItems,
+      ...adminPrimaryNavItems.filter(
+        (item) => item.href !== adminAccounts.show().url,
+      ),
       {
         title: t("nav.benefit_configurations"),
         href: adminBenefitConfigurations.index().url,
