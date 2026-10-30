@@ -26,6 +26,7 @@ function Menu() {
 
 beforeEach(() => {
   page.props.auth = { session: { id: 1, role: "consumer" } }
+  window.sessionStorage.clear()
 })
 
 it("preserves menu state through other pages without sharing the history filter", async () => {
@@ -59,6 +60,8 @@ it.each(["logout", "new session", "role change"])(
   "clears the menu filter on %s",
   async (change) => {
     const user = userEvent.setup()
+    window.sessionStorage.setItem("consumer-cart:consumer:1", "old cart")
+    window.sessionStorage.setItem("other-feature", "preserve me")
     const { rerender } = render(
       <PersistentLayout>
         <Menu />
@@ -80,5 +83,29 @@ it.each(["logout", "new session", "role change"])(
       </PersistentLayout>,
     )
     expect(screen.getByRole("button", { name: "Todos" })).toBeInTheDocument()
+    expect(window.sessionStorage.getItem("consumer-cart:consumer:1")).toBeNull()
+    expect(window.sessionStorage.getItem("other-feature")).toBe("preserve me")
   },
 )
+
+it("cleans inactive carts on session changes without removing other storage", () => {
+  window.sessionStorage.setItem("cart", "legacy")
+  window.sessionStorage.setItem("consumer-cart:consumer:1", "old cart")
+  window.sessionStorage.setItem("other-feature", "preserve me")
+  const { rerender } = render(
+    <PersistentLayout>
+      <div>Menú</div>
+    </PersistentLayout>,
+  )
+
+  page.props.auth = { session: { id: 2, role: "consumer" } }
+  rerender(
+    <PersistentLayout>
+      <div>Menú</div>
+    </PersistentLayout>,
+  )
+
+  expect(window.sessionStorage.getItem("cart")).toBeNull()
+  expect(window.sessionStorage.getItem("consumer-cart:consumer:1")).toBeNull()
+  expect(window.sessionStorage.getItem("other-feature")).toBe("preserve me")
+})

@@ -9,6 +9,7 @@ import type { ComponentProps, ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ConsumerMenuFilterProvider } from "@/hooks/consumer-menu-filter"
+import { consumerCartStorageKey } from "@/hooks/use-consumer-cart"
 import type { ConsumerDashboardIndex } from "@/types"
 
 import type { CartItem } from "./consumer-types"
@@ -29,7 +30,13 @@ vi.mock("@inertiajs/react", async () => ({
   Head: () => null,
   usePage: () => ({
     url: "/menu-semanal",
-    props: { auth: { user: { name: "Sofía" } }, notifications: [] },
+    props: {
+      auth: {
+        user: { name: "Sofía" },
+        session: { id: 10, role: "consumer" },
+      },
+      notifications: [],
+    },
   }),
   Link: ({ children, ...props }: ComponentProps<"a">) => (
     <a {...props}>{children}</a>
@@ -94,6 +101,8 @@ const props: ConsumerDashboardIndex = {
     specials: [],
   },
 }
+
+const cartStorageKey = consumerCartStorageKey({ id: 10, role: "consumer" })
 
 async function applyFilter(user: ReturnType<typeof userEvent.setup>) {
   await user.click(
@@ -198,7 +207,7 @@ describe("Consumer menu provider filter navigation", () => {
         schedules={[reviewedSchedule, ...schedules.slice(1)]}
       />,
     )
-    const cartBefore = window.sessionStorage.getItem("cart")
+    const cartBefore = window.sessionStorage.getItem(cartStorageKey)
     await applyFilter(user)
     expectFilteredDay(26)
     await user.click(
@@ -214,7 +223,7 @@ describe("Consumer menu provider filter navigation", () => {
     expect(screen.getByText("Muy buena comida")).toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "Volver" }))
     expectFilteredDay(26)
-    expect(window.sessionStorage.getItem("cart")).toBe(cartBefore)
+    expect(window.sessionStorage.getItem(cartStorageKey)).toBe(cartBefore)
   })
 
   it("keeps multiple provider IDs after detail navigation and day changes", async () => {
@@ -265,7 +274,7 @@ describe("Consumer menu provider filter navigation", () => {
       selections: {},
       benefits: [],
     }
-    window.sessionStorage.setItem("cart", JSON.stringify([existing]))
+    window.sessionStorage.setItem(cartStorageKey, JSON.stringify([existing]))
     render(<Index {...props} />)
     await applyFilter(user)
 
@@ -278,23 +287,25 @@ describe("Consumer menu provider filter navigation", () => {
     expectFilteredDay(26)
 
     const added = JSON.parse(
-      window.sessionStorage.getItem("cart")!,
+      window.sessionStorage.getItem(cartStorageKey)!,
     ) as CartItem[]
     expect(added[0]).toEqual(existing)
     expect(added[1]).toMatchObject({ id: 261, quantity: 2, notes: "Sin salsa" })
     await waitFor(() =>
       expect(priceItems).toHaveBeenCalledWith([
-        { schedule_id: 263, quantity: 2 },
-        { schedule_id: 261, quantity: 2 },
+        { schedule_id: 263, quantity: 2, benefits: [] },
+        { schedule_id: 261, quantity: 2, benefits: [] },
       ]),
     )
 
-    await user.click(screen.getByRole("button", { name: /Plato 1 día 26/ }))
+    await user.click(
+      screen.getByRole("button", { name: "Agregar Plato 1 día 26" }),
+    )
     await user.click(screen.getByRole("button", { name: "Agregar uno" }))
     await user.click(screen.getByRole("button", { name: /^Modificar$/ }))
     expectFilteredDay(26)
     const edited = JSON.parse(
-      window.sessionStorage.getItem("cart")!,
+      window.sessionStorage.getItem(cartStorageKey)!,
     ) as CartItem[]
     expect(edited[0]).toEqual(existing)
     expect(edited[1]).toMatchObject({
@@ -304,8 +315,8 @@ describe("Consumer menu provider filter navigation", () => {
     })
     await waitFor(() =>
       expect(priceItems).toHaveBeenCalledWith([
-        { schedule_id: 263, quantity: 2 },
-        { schedule_id: 261, quantity: 3 },
+        { schedule_id: 263, quantity: 2, benefits: [] },
+        { schedule_id: 261, quantity: 3, benefits: [] },
       ]),
     )
   })
@@ -324,7 +335,7 @@ describe("Clearing consumer provider filters", () => {
         selections: {},
         benefits: [],
       }
-      window.sessionStorage.setItem("cart", JSON.stringify([existing]))
+      window.sessionStorage.setItem(cartStorageKey, JSON.stringify([existing]))
       render(<Index {...props} />)
       await applyFilter(user)
       expectFilteredDay(26)
@@ -353,9 +364,9 @@ describe("Clearing consumer provider filters", () => {
       for (const id of [1, 2, 3]) {
         expect(screen.getByText(`Plato ${id} día 26`)).toBeInTheDocument()
       }
-      expect(JSON.parse(window.sessionStorage.getItem("cart")!)).toEqual([
-        existing,
-      ])
+      expect(
+        JSON.parse(window.sessionStorage.getItem(cartStorageKey)!),
+      ).toEqual([existing])
       expect(screen.getByRole("heading", { level: 3 }).textContent).toBe(total)
 
       await user.click(screen.getByRole("radio", { name: /27/ }))
@@ -369,9 +380,9 @@ describe("Clearing consumer provider filters", () => {
           "Todavía no hay viandas publicadas para este día. Volvé a consultar más tarde.",
         ),
       ).toBeInTheDocument()
-      expect(JSON.parse(window.sessionStorage.getItem("cart")!)).toEqual([
-        existing,
-      ])
+      expect(
+        JSON.parse(window.sessionStorage.getItem(cartStorageKey)!),
+      ).toEqual([existing])
     },
   )
 

@@ -41,6 +41,11 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
     expect(page).to have_content("Tu carrito")
   end
 
+  def cart_storage_key
+    session = users(:one).sessions.order(:id).last
+    "consumer-cart:#{session.role}:#{session.id}"
+  end
+
   def expect_buttons_within_container_and_balanced
     bounds = page.evaluate_script(<<~JS)
       (() => {
@@ -94,10 +99,11 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
 
       # Reproducción exacta del PR: cambiar id en sessionStorage a uno inexistente
       page.execute_script(<<~JS)
-        const cart = JSON.parse(sessionStorage.getItem("cart") || "[]");
+        const key = #{cart_storage_key.inspect};
+        const cart = JSON.parse(sessionStorage.getItem(key) || "[]");
         if (cart.length > 0) {
           cart[0].id = 999999;
-          sessionStorage.setItem("cart", JSON.stringify(cart));
+          sessionStorage.setItem(key, JSON.stringify(cart));
         }
       JS
       page.refresh
