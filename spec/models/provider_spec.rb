@@ -187,6 +187,32 @@ RSpec.describe Provider, type: :model do
     end
   end
 
+  describe "#seconds_until_order_deadline" do
+    let(:provider) { providers(:tuviandita) }
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 10, 2, 11, 30)) { example.run }
+    end
+
+    it "is nil without a deadline" do
+      provider.order_deadline = nil
+
+      expect(provider.seconds_until_order_deadline).to be_nil
+    end
+
+    it "counts the seconds left before the deadline" do
+      provider.order_deadline = Time.zone.parse("11:31")
+
+      expect(provider.seconds_until_order_deadline).to eq 60
+    end
+
+    it "is nil once the deadline has been reached" do
+      provider.order_deadline = Time.zone.parse("11:30")
+
+      expect(provider.seconds_until_order_deadline).to be_nil
+    end
+  end
+
   describe "#closed_on?" do
     let(:provider) { providers(:tuviandita) }
     let(:monday) { Date.new(2026, 10, 12) }

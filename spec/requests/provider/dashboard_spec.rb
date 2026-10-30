@@ -120,7 +120,11 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
           get provider_dashboard_path
 
-          expect(inertia).to have_props(order_deadline: "12:01", order_deadline_passed_today: false)
+          expect(inertia).to have_props(
+            order_deadline: "12:01",
+            order_deadline_passed_today: false,
+            seconds_until_order_deadline: 60
+          )
         end
 
         it "indica que la recepción está cerrada al llegar a la hora de cierre" do
@@ -128,7 +132,11 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
           get provider_dashboard_path
 
-          expect(inertia).to have_props(order_deadline: "12:00", order_deadline_passed_today: true)
+          expect(inertia).to have_props(
+            order_deadline: "12:00",
+            order_deadline_passed_today: true,
+            seconds_until_order_deadline: nil
+          )
         end
       end
 
