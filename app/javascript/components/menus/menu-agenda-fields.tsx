@@ -225,6 +225,7 @@ export default function MenuAgendaFields({
                 id="agenda-starts-on"
                 value={value.starts_on}
                 min={today}
+                weekdaysOnly
                 onChange={(starts_on) => onChange({ ...value, starts_on })}
               />
             </Field>
@@ -241,6 +242,7 @@ export default function MenuAgendaFields({
                   value={value.starts_on}
                   min={today}
                   max={value.ends_on || undefined}
+                  weekdaysOnly
                   onChange={(starts_on) => onChange({ ...value, starts_on })}
                 />
               </Field>
@@ -253,6 +255,7 @@ export default function MenuAgendaFields({
                   id="agenda-ends-on"
                   value={value.ends_on}
                   min={value.starts_on || today}
+                  weekdaysOnly
                   onChange={(ends_on) => onChange({ ...value, ends_on })}
                 />
               </Field>
