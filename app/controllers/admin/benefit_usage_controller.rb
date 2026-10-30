@@ -1,8 +1,16 @@
 # frozen_string_literal: true
 
 class Admin::BenefitUsageController < Admin::InertiaController
+  def self.rate_limit_store
+    configured_store = Rails.configuration.x.rate_limit_store
+    configured_store.is_a?(ActiveSupport::Cache::Store) ? configured_store : Rails.cache
+  end
+  private_class_method :rate_limit_store
+
+  wrap_parameters false
+
   rate_limit to: 3, within: 15.minutes, only: :create_summary, name: "benefit-usage-summary",
-             by: -> { Current.user&.id || request.remote_ip }, store: Rails.configuration.x.rate_limit_store || Rails.cache,
+             by: -> { Current.user&.id || request.remote_ip }, store: rate_limit_store,
              with: -> { render_error("rate_limited", :too_many_requests) }
 
   def analysis

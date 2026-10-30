@@ -156,7 +156,7 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
       sign_in users(:admin), role: :admin
       allow(summary_service).to receive(:call).and_return(ok: false, error: { code: "configuration_missing" })
 
-      post admin_benefit_usage_summary_path, params: { month: "2032-04" }
+      post admin_benefit_usage_summary_path, params: { month: "2032-04" }, as: :json
 
       expect(response).to have_http_status(:service_unavailable)
       expect(response.parsed_body.dig("error", "code")).to eq("configuration_missing")
@@ -234,6 +234,12 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
                           password: "secret-password-123")
       Admin.create!(user:, company: companies(:gogrow))
       user
+    end
+
+    it "falls back to Rails.cache when the configured rate limit store is not usable" do
+      allow(Rails.configuration.x).to receive(:rate_limit_store).and_return(ActiveSupport::OrderedOptions.new)
+
+      expect(Admin::BenefitUsageController.send(:rate_limit_store)).to equal(Rails.cache)
     end
 
     it "keeps separate counters for administrators and ignores a supplied user_id" do
