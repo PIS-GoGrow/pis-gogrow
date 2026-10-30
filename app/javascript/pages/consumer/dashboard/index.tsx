@@ -20,6 +20,8 @@ export default function Index({
   schedules,
   providers,
   closures,
+  favorites,
+  frequent,
   benefit,
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
@@ -196,6 +198,8 @@ export default function Index({
             setActiveProviders={setActiveProviders}
             schedules={visibleSchedules}
             closures={closures}
+            favorites={favorites}
+            frequent={frequent}
             cart={cart}
             count={count}
             loading={loading}

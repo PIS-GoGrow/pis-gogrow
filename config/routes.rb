@@ -98,6 +98,8 @@ Rails.application.routes.draw do
     get "menu-semanal/error", to: "dashboard#error", as: :dashboard_error
 
     resources :menus, path: "menu-del-dia", only: [ :index ]
+    resource :favorite, path: "favoritos/:kind/:id", only: [ :update, :destroy ],
+                        constraints: { kind: /menus|providers/ }
     resources :delivery_addresses,
               path: "direcciones-de-entrega",
               only: %i[index create update destroy]
@@ -133,7 +135,7 @@ Rails.application.routes.draw do
     end
 
     resources :invoices, path: "facturas", only: [ :index ] do
-      get :file, on: :member, path: "archivo"
+      get "archivo(/:filename)", action: :file, on: :member, as: :file, constraints: { filename: %r{[^/]+} }
     end
     resources :order_events, path: "auditoria", only: [ :index ]
     resources :payments, path: "pagos", only: [ :index, :show, :create, :destroy ] do

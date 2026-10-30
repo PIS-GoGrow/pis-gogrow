@@ -67,6 +67,7 @@ const schedules: ConsumerDashboardIndex["schedules"] = [26, 27].flatMap((day) =>
       description: null,
       price: 300,
       provider_id: provider.id,
+      saved_menu_id: provider.id,
       provider_name: provider.name,
       option_groups: [],
       home_delivery: true,
@@ -81,6 +82,8 @@ const props: ConsumerDashboardIndex = {
   providers,
   schedules,
   closures: [],
+  favorites: { menus: [], provider_ids: [] },
+  frequent: { menus: [], provider_ids: [] },
   week: {
     start_date: "2026-10-26",
     end_date: "2026-10-30",
