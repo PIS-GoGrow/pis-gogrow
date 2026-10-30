@@ -51,6 +51,7 @@ const props = {
   current_month_detail: detail,
   total_debt: 0,
   total_meals: 0,
+  benefit_used: 3,
   benefit_available: 20,
 }
 
