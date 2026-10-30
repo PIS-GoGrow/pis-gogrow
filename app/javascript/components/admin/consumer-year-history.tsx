@@ -5,8 +5,7 @@ import { useTranslation } from "react-i18next"
 import ConsumerMonthSheet from "@/components/admin/consumer-month-sheet"
 import ConsumptionStatusBadge from "@/components/admin/consumption-status-badge"
 import HeadingSmall from "@/components/heading-small"
-import ListItemCard from "@/components/list-item-card"
-import { CardContent } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import {
   Empty,
   EmptyDescription,
@@ -43,6 +42,7 @@ export default function ConsumerYearHistory({
   const [sheetOpen, setSheetOpen] = useState(false)
 
   const visibleMonths = months.filter((month) => String(month.year) === year)
+  const neverOrdered = months.every((month) => month.orders.length === 0)
   const selectedMonth = months.find((month) => month.key === selectedKey)
 
   return (
@@ -50,7 +50,7 @@ export default function ConsumerYearHistory({
       <div className="flex items-center justify-between gap-4">
         <HeadingSmall title={t(`${page}.history`)} />
 
-        {years.length > 0 && (
+        {!neverOrdered && (
           <Select
             value={year}
             onValueChange={(value) => {
@@ -73,7 +73,7 @@ export default function ConsumerYearHistory({
         )}
       </div>
 
-      {months.length === 0 ? (
+      {neverOrdered ? (
         <Empty className="border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -86,38 +86,30 @@ export default function ConsumerYearHistory({
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
+        <Card className="gap-0 divide-y py-0">
           {visibleMonths.map((month) => (
-            <ListItemCard
+            <button
               key={month.key}
-              className="hover:bg-accent/40 focus-within:ring-ring/50 relative transition-colors focus-within:ring-[3px]"
+              type="button"
+              onClick={() => {
+                setSelectedKey(month.key)
+                setSheetOpen(true)
+              }}
+              aria-label={t(`${page}.view_month`, {
+                month: month.label,
+              })}
+              className="hover:bg-accent/40 focus-visible:ring-ring/50 flex w-full items-center gap-3 px-4 py-3 text-left transition-colors outline-none focus-visible:ring-[3px]"
             >
-              <CardContent>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedKey(month.key)
-                    setSheetOpen(true)
-                  }}
-                  aria-label={t(`${page}.view_month`, {
-                    month: month.label,
-                  })}
-                  className="flex w-full items-center gap-3 text-left outline-none after:absolute after:inset-0"
-                >
-                  <span className="flex-1 font-medium">{month.label}</span>
-                  <span className="font-semibold">
-                    {formatMoney(month.amount)}
-                  </span>
-                  <ConsumptionStatusBadge status={month.status} />
-                  <ChevronRight
-                    className="text-muted-foreground size-4 shrink-0"
-                    aria-hidden="true"
-                  />
-                </button>
-              </CardContent>
-            </ListItemCard>
+              <span className="flex-1 font-medium">{month.name}</span>
+              <span className="font-semibold">{formatMoney(month.amount)}</span>
+              <ConsumptionStatusBadge status={month.status} />
+              <ChevronRight
+                className="text-muted-foreground size-4 shrink-0"
+                aria-hidden="true"
+              />
+            </button>
           ))}
-        </div>
+        </Card>
       )}
 
       <ConsumerMonthSheet

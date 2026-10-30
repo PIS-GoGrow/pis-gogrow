@@ -56,18 +56,9 @@ const consumers: AdminConsumerRow[] = [
   },
 ]
 
-const monthProps = {
-  month: "2026-10",
-  current_month: "2026-10",
-  months: [
-    { key: "2026-10", label: "octubre 2026" },
-    { key: "2026-09", label: "septiembre 2026" },
-  ],
-}
-
 describe("Admin Consumers Page", () => {
   it("opens on the filter the URL asked for", () => {
-    render(<Index consumers={consumers} filter="pending" {...monthProps} />)
+    render(<Index consumers={consumers} filter="pending" />)
 
     expect(screen.getByRole("radio", { name: "Pendientes" })).toHaveAttribute(
       "aria-checked",
@@ -78,14 +69,14 @@ describe("Admin Consumers Page", () => {
   })
 
   it("shows everyone by default", () => {
-    render(<Index consumers={consumers} filter="all" {...monthProps} />)
+    render(<Index consumers={consumers} filter="all" />)
 
     expect(screen.getByText("Ana Paid")).toBeInTheDocument()
     expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
   })
 
   it("has only the two tabs of the design", () => {
-    render(<Index consumers={consumers} filter="all" {...monthProps} />)
+    render(<Index consumers={consumers} filter="all" />)
 
     expect(screen.getAllByRole("radio").map((tab) => tab.textContent)).toEqual([
       "Todos",
@@ -94,7 +85,7 @@ describe("Admin Consumers Page", () => {
   })
 
   it("lists the pending and under review employees in Pendientes", () => {
-    render(<Index consumers={consumers} filter="pending" {...monthProps} />)
+    render(<Index consumers={consumers} filter="pending" />)
 
     expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
     expect(screen.getByText("Carla Review")).toBeInTheDocument()
@@ -102,7 +93,7 @@ describe("Admin Consumers Page", () => {
   })
 
   it("counts the employees of the tab next to the title, without the search", () => {
-    render(<Index consumers={consumers} filter="all" {...monthProps} />)
+    render(<Index consumers={consumers} filter="all" />)
 
     const heading = screen.getByRole("heading", { name: "Empleados" })
     const title = heading.parentElement
@@ -117,52 +108,8 @@ describe("Admin Consumers Page", () => {
     expect(title).toHaveTextContent("Empleados22 empleados")
   })
 
-  it("shows which month the balances belong to", () => {
-    render(
-      <Index
-        consumers={consumers}
-        filter="all"
-        {...monthProps}
-        month="2026-09"
-      />,
-    )
-
-    expect(
-      screen.getByRole("combobox", { name: "Mes de los saldos" }),
-    ).toHaveTextContent("septiembre 2026")
-  })
-
-  it("reads the current month as Este mes", () => {
-    render(<Index consumers={consumers} filter="all" {...monthProps} />)
-
-    expect(
-      screen.getByRole("combobox", { name: "Mes de los saldos" }),
-    ).toHaveTextContent("Este mes")
-  })
-
-  it("filters employees by search term while displaying the chosen month", () => {
-    render(
-      <Index
-        consumers={consumers}
-        filter="all"
-        {...monthProps}
-        month="2026-09"
-      />,
-    )
-
-    fireEvent.change(screen.getByRole("searchbox"), {
-      target: { value: "bruno" },
-    })
-
-    expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
-    expect(screen.queryByText("Ana Paid")).not.toBeInTheDocument()
-    expect(
-      screen.getByRole("combobox", { name: "Mes de los saldos" }),
-    ).toHaveTextContent("septiembre 2026")
-  })
-
   it("shows an empty state when search finds no matches", () => {
-    render(<Index consumers={consumers} filter="all" {...monthProps} />)
+    render(<Index consumers={consumers} filter="all" />)
 
     fireEvent.change(screen.getByRole("searchbox"), {
       target: { value: "inexistente" },
@@ -174,19 +121,33 @@ describe("Admin Consumers Page", () => {
     ).toBeInTheDocument()
   })
 
-  it("filters by pending employees during a previous month", () => {
-    render(
-      <Index
-        consumers={consumers}
-        filter="pending"
-        {...monthProps}
-        month="2026-09"
-      />,
-    )
+  it("leaves the settled and idle employees out of Pendientes", () => {
+    render(<Index consumers={consumers} filter="pending" />)
 
     expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
     expect(screen.getByText("Carla Review")).toBeInTheDocument()
     expect(screen.queryByText("Ana Paid")).not.toBeInTheDocument()
     expect(screen.queryByText("Diego Idle")).not.toBeInTheDocument()
+  })
+
+  it("filters employees by name or email", () => {
+    render(<Index consumers={consumers} filter="all" />)
+
+    fireEvent.change(screen.getByRole("searchbox"), {
+      target: { value: "bruno@" },
+    })
+
+    expect(screen.getByText("Bruno Owes")).toBeInTheDocument()
+    expect(screen.queryByText("Ana Paid")).not.toBeInTheDocument()
+  })
+
+  // Figma: nombre, monto y estado; el monto es la deuda que calcula Rails.
+  it("shows each employee with the amount owed and Confirmado once paid", () => {
+    render(<Index consumers={consumers} filter="all" />)
+
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument()
+    expect(screen.queryByText("ana@gogrow.com")).not.toBeInTheDocument()
+    expect(screen.getByText(/2\.425/)).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
   })
 })
