@@ -12,10 +12,10 @@ class Notification < ApplicationRecord
   belongs_to :notification_configuration, class_name: "Notification::Configuration"
   belongs_to :notifiable, polymorphic: true
 
-  validates :title, presence: true
-  validates :description, presence: true
-  validate :role_belongs_to_user
-  validate :event_exists
+  validates :title, presence: true, on: :create
+  validates :description, presence: true, on: :create
+  validate :role_belongs_to_user, on: :create
+  validate :event_exists, on: :create
 
   # skipped => se decidió no enviar la notificación
   # pending => se decidió enviar, pero todavía no se empezó el proceso
@@ -26,7 +26,7 @@ class Notification < ApplicationRecord
   # delivery_failed => Twilio no se la pudo enviar al usuario
   enum :whatsapp_send_status,
        { pending: 0, skipped: 1, sending: 2, accepted: 3, delivered: 4, send_failed: 5, delivery_failed: 6 },
-       default: :sending
+       default: :pending
 
   scope :closed, -> { where.not(closed_at: nil) }
   scope :active, -> { where(closed_at: nil) }
@@ -97,7 +97,7 @@ class Notification < ApplicationRecord
   private
 
   def role_belongs_to_user
-    user.sync_roles!
+    user&.sync_roles!
     errors.add(:role, :invalid) unless user&.roles&.include?(role.to_s)
   end
 

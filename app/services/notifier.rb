@@ -23,7 +23,7 @@ class Notifier
       description_data: description_data
     )
 
-    send = notification.send_to_user?
+    send_notification = notification.send_to_user?
     notification.whatsapp_send_status = send ? :pending : :skipped
     notification.save!
 

@@ -34,6 +34,11 @@ class WhatsappSenderJob < ApplicationJob
 
     # Cancelamos el job si la notificación ya llegó, ya se envió o ni se tenía que enviar
     return unless notification.with_lock do
+      unless notification.send_to_user?
+        notification.skipped!
+        next false
+      end
+
       if notification.pending? || notification.sending? || notification.delivery_failed?
         notification.sending!
         true

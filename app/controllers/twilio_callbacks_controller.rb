@@ -48,6 +48,8 @@ class TwilioCallbacksController < ApplicationController
     @notification = Notification.find_by(twilio_sid: callback_params[:MessageSid])
 
     head :ok unless @notification
+    Rails.logger.warn("[TwilioCallbacksController] SID de mensaje inválido: #{callback_params[:MessageSid]} " +
+                      "con estado #{callback_params[:MessageStatus]}")
   end
 
   def validate_twilio_signature

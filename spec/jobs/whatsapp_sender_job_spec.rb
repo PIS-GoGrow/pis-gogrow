@@ -47,6 +47,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
       title_data:,
       description_data:,
       role: users(:one).roles[0],
+      whatsapp_send_status: :pending,
       notifiable: orders(:upcoming_pending_future),
       notification_configuration: Notification::Configuration.find_by!(key: "order_updates")
     )
@@ -54,6 +55,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
 
   before do
     users(:one).update phone: PHONE
+    users(:one).notification_configurations << notification.notification_configuration
     Notification::Registry.set_data([
       {},
       {
@@ -212,25 +214,25 @@ RSpec.describe WhatsappSenderJob, type: :job do
       end
     end
 
-    it "registra whatsapp_sent_at y deja failed en false" do
+    it "registra whatsapp_last_sent_at y deja en accepted" do
       stub_twilio(:ok)
 
       freeze_time do
         perform_now_job
 
         notification.reload
-        expect(notification.whatsapp_sent_at).to eq(Time.current)
-        expect(notification.failed).to be(false)
+        expect(notification.whatsapp_last_sent_at).to eq(Time.current)
+        expect(notification.whatsapp_send_status).to eq("accepted")
       end
     end
 
-    it "pone failed en false aunque antes estuviera en true" do
-      notification.update!(failed: true)
+    it "pone accepted aunque antes estuviera en delivery_failed" do
+      notification.update!(whatsapp_send_status: :delivery_failed)
       stub_twilio(:ok)
 
       perform_now_job
 
-      expect(notification.reload.failed).to be(false)
+      expect(notification.reload.whatsapp_send_status).to eq("accepted")
     end
   end
 
@@ -241,8 +243,8 @@ RSpec.describe WhatsappSenderJob, type: :job do
       expect { perform_now_job }.to have_enqueued_job(described_class)
 
       notification.reload
-      expect(notification.whatsapp_sent_at).to be_nil
-      expect(notification.failed).not_to be(true)
+      expect(notification.whatsapp_last_sent_at).to be_nil
+      expect(notification.whatsapp_send_status).not_to eq("send_failed")
     end
 
     it "reintenta un RestError 429" do
@@ -256,18 +258,18 @@ RSpec.describe WhatsappSenderJob, type: :job do
 
       expect { perform_now_job }.to have_enqueued_job(described_class)
 
-      expect(notification.reload.failed).not_to be(true)
+      expect(notification.reload.whatsapp_send_status).not_to eq("send_failed")
     end
 
-    it "marca como enviada y no fallada si un reintento tiene éxito" do
+    it "marca como enviada y aceptada si un reintento tiene éxito" do
       messages = stub_twilio(rest_error(20500, status: 500), :ok)
 
       perform_enqueued_jobs { perform_later_job }
 
       expect(messages.calls.size).to eq(2)
       notification.reload
-      expect(notification.whatsapp_sent_at).to be_present
-      expect(notification.failed).to be(false)
+      expect(notification.whatsapp_last_sent_at).to be_present
+      expect(notification.whatsapp_send_status).to eq("accepted")
     end
 
     it "no marca failed antes de agotar los intentos" do
@@ -276,7 +278,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
       perform_now_job
 
       expect(messages.calls.size).to eq(1)
-      expect(notification.reload.failed).not_to be(true)
+      expect(notification.reload.whatsapp_send_status).to eq("sending")
     end
 
     it "marca la notificación como failed después de agotar los intentos" do
@@ -292,8 +294,8 @@ RSpec.describe WhatsappSenderJob, type: :job do
 
       expect(messages.calls.size).to eq(MAX_ATTEMPTS)
       notification.reload
-      expect(notification.failed).to be(true)
-      expect(notification.whatsapp_sent_at).to be_nil
+      expect(notification.whatsapp_send_status).to eq("send_failed")
+      expect(notification.whatsapp_last_sent_at).to be_nil
     end
   end
 
@@ -306,8 +308,8 @@ RSpec.describe WhatsappSenderJob, type: :job do
 
         expect(messages.calls.size).to eq(1)
         notification.reload
-        expect(notification.failed).to be(true)
-        expect(notification.whatsapp_sent_at).to be_nil
+        expect(notification.whatsapp_send_status).to eq("send_failed")
+        expect(notification.whatsapp_last_sent_at).to be_nil
       end
     end
 
