@@ -12,7 +12,9 @@ vi.mock("@inertiajs/react", async () => {
     ...actual,
     Head: () => null,
     router: { flushAll: vi.fn() },
-    usePage: () => ({ props: { auth: { user: { name: "Sofía" } }, locale: "es" } }),
+    usePage: () => ({
+      props: { auth: { user: { name: "Sofía" } }, locale: "es" },
+    }),
   }
 })
 
