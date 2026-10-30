@@ -26,7 +26,8 @@ RSpec.describe PaymentProviderSerializer do
           "home_delivery" => true,
           "bank_name" => "Banco Itaú",
           "bank_account_number" => "1951234",
-          "bank_account_holder" => "Tu Vianda SRL"
+          "bank_account_holder" => "Tu Vianda SRL",
+          "payment_details_complete" => true
         )
       end
 
@@ -51,7 +52,8 @@ RSpec.describe PaymentProviderSerializer do
           "home_delivery" => true,
           "bank_name" => nil,
           "bank_account_number" => nil,
-          "bank_account_holder" => nil
+          "bank_account_holder" => nil,
+          "payment_details_complete" => false
         )
       end
     end
