@@ -1650,6 +1650,15 @@ es:
         added: "Agregado"
         add: "Agregar"
         modify: "Modificar"
+        favorites:
+          title: "Tus favoritos"
+          frequent_title: "Los que pedís seguido"
+          favorite_badge: "Favorito"
+          frequent_badge: "Frecuente"
+          unavailable: "No disponible este día"
+          add: "Marcar %{name} como favorito"
+          remove: "Quitar %{name} de favoritos"
+          filter_provider: "Ver platos de %{name}"
         provider_filter:
           label: "Proveedores:"
           open: "Filtrar por proveedores"

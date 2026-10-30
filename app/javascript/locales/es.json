@@ -783,6 +783,16 @@
             "filtered": "No encontramos viandas disponibles entre los proveedores seleccionados. Volvé a consultar más tarde.",
             "title": "Menú no disponible"
           },
+          "favorites": {
+            "add": "Marcar %{name} como favorito",
+            "favorite_badge": "Favorito",
+            "filter_provider": "Ver platos de %{name}",
+            "frequent_badge": "Frecuente",
+            "frequent_title": "Los que pedís seguido",
+            "remove": "Quitar %{name} de favoritos",
+            "title": "Tus favoritos",
+            "unavailable": "No disponible este día"
+          },
           "modify": "Modificar",
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy.",
           "provider_filter": {

@@ -98,6 +98,8 @@ Rails.application.routes.draw do
     get "menu-semanal/error", to: "dashboard#error", as: :dashboard_error
 
     resources :menus, path: "menu-del-dia", only: [ :index ]
+    resource :favorite, path: "favoritos/:kind/:id", only: [ :update, :destroy ],
+                        constraints: { kind: /menus|providers/ }
     resources :delivery_addresses,
               path: "direcciones-de-entrega",
               only: %i[index create update destroy]
