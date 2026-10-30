@@ -63,6 +63,10 @@ class Provider < ApplicationRecord
     delivery_methods.include?(method.to_s)
   end
 
+  def payment_details_complete?
+    [ bank_name, bank_account_number, bank_account_holder ].all?(&:present?)
+  end
+
   def order_deadline_passed_today?
     deadline = order_deadline
     return false unless deadline

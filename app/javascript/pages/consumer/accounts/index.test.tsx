@@ -31,6 +31,7 @@ const defaultProviders: PaymentProvider[] = [
     bank_name: "Banco República",
     bank_account_number: "00123456",
     bank_account_holder: "Tu Viandita SRL",
+    payment_details_complete: true,
     home_delivery: true,
   },
 ]

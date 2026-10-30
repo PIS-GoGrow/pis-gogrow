@@ -34,6 +34,7 @@ interface PaymentReceiptDialogProps {
   // Se muestra el botón pero deshabilitado, por ej. mientras hay un comprobante
   // en revisión: la cuenta solo admite uno a la vez.
   uploadDisabled?: boolean
+  uploadDisabledHint?: string
   payments: Payment[]
   allowDelete?: boolean
   createAction?: ComponentProps<typeof Form>["action"]
@@ -46,6 +47,7 @@ export default function PaymentReceiptDialog({
   accountId,
   canUpload = true,
   uploadDisabled = false,
+  uploadDisabledHint,
   payments,
   allowDelete = true,
   createAction = consumerPayments.create(),
@@ -304,7 +306,8 @@ export default function PaymentReceiptDialog({
 
       {canUpload && uploadDisabled && (
         <p id={uploadHintId} className="text-muted-foreground text-sm">
-          {t("pages.accounts.show.receipt_under_review_hint")}
+          {uploadDisabledHint ??
+            t("pages.accounts.show.receipt_under_review_hint")}
         </p>
       )}
 

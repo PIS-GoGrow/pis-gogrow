@@ -23,6 +23,7 @@ RSpec.describe "Comprobante en revisión en pagos de empresa", type: :system do
   end
 
   before do
+    provider.update!(bank_name: "Banco Itaú", bank_account_number: "1951234", bank_account_holder: "Noelia Patricia Pinheiro")
     account
   end
 

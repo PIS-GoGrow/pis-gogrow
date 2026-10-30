@@ -75,6 +75,25 @@ describe("PeriodCard", () => {
     ).toBeInTheDocument()
   })
 
+  it("disables uploading a receipt while the provider has no payment details", () => {
+    render(
+      <Sheet>
+        <PeriodCard
+          account={makeAccount()}
+          paymentDetailsMissing
+          onOpenDetail={vi.fn()}
+        />
+      </Sheet>,
+    )
+
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeDisabled()
+    expect(
+      screen.getByText(/cuando el proveedor cargue sus datos de cobro/),
+    ).toBeInTheDocument()
+  })
+
   it("enables the upload button when there is no submitted receipt", () => {
     const account = makeAccount({
       collection_status: "rejected",

@@ -277,6 +277,7 @@ es:
               invalid_content_type: "El archivo debe ser PDF, JPG o PNG."
               too_large: "El archivo no puede superar los 10 MB."
               already_under_review: "Ya hay un comprobante en revisión para esta cuenta. Esperá a que se resuelva para enviar otro."
+              provider_payment_details_missing: "El proveedor todavía no cargó sus datos de cobro. Podrás enviar el comprobante cuando los complete."
             rejection_reason:
               blank: "es obligatorio para rechazar un comprobante"
         invoice:
@@ -725,6 +726,7 @@ es:
             copied: "Número de cuenta copiado"
             copy_failed: "No pudimos copiar el número de cuenta"
             missing: "Este proveedor todavía no cargó sus datos de cobro."
+            missing_upload_hint: "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro."
           meals_one: "%{count} vianda"
           meals_other: "%{count} viandas"
           due: "Vence: %{date}"
