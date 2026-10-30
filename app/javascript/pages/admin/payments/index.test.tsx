@@ -1,8 +1,9 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
-import type { Account, AdminPaymentsIndex } from "@/types"
+import type { AdminAccount, AdminPaymentsIndex } from "@/types"
 
 import Index from "./index"
 
@@ -54,7 +55,7 @@ const period: NonNullable<AdminPaymentsIndex["consumption"]> = {
   providers: [provider(1, "Endulzate by Noe"), provider(2, "Tu Viandita")],
 }
 
-const account: Account = {
+const account: AdminAccount = {
   id: 7,
   provider_id: 2,
   amount: 15000,
@@ -155,6 +156,77 @@ describe("Admin Payments Page", () => {
     expect(fetch).toHaveBeenCalledWith("/rrhh/pagos/7", expect.anything())
 
     vi.unstubAllGlobals()
+  })
+
+  it("filters the history by provider", async () => {
+    const user = userEvent.setup()
+    const paid = { ...account, collection_status: "approved" as const }
+    const bankless = {
+      home_delivery: true,
+      bank_name: null,
+      bank_account_number: null,
+      bank_account_holder: null,
+    }
+
+    render(
+      <Index
+        {...props}
+        history={[
+          { ...paid, id: 1, provider_id: 1 },
+          { ...paid, id: 2, provider_id: 2 },
+        ]}
+        providers={[
+          { id: 1, name: "Endulzate by Noe", ...bankless },
+          { id: 2, name: "Tu Viandita", ...bankless },
+        ]}
+      />,
+    )
+
+    await user.click(screen.getByRole("tab", { name: "Historial" }))
+    expect(screen.getByText("Proveedores:")).toHaveTextContent("Todos")
+    expect(screen.getByText(/Endulzate by Noe: agosto/)).toBeInTheDocument()
+
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedor" }),
+    )
+    await user.click(screen.getByRole("menuitemradio", { name: "Tu Viandita" }))
+
+    expect(
+      screen.queryByText(/Endulzate by Noe: agosto/),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText(/Tu Viandita: agosto/)).toBeInTheDocument()
+  })
+
+  it("shows empty state in history tab when filtered provider has no history", async () => {
+    const user = userEvent.setup()
+    const paid = { ...account, collection_status: "approved" as const }
+    const bankless = {
+      home_delivery: true,
+      bank_name: null,
+      bank_account_number: null,
+      bank_account_holder: null,
+    }
+
+    render(
+      <Index
+        {...props}
+        history={[{ ...paid, id: 1, provider_id: 1 }]}
+        providers={[
+          { id: 1, name: "Endulzate by Noe", ...bankless },
+          { id: 2, name: "Tu Viandita", ...bankless },
+        ]}
+      />,
+    )
+
+    await user.click(screen.getByRole("tab", { name: "Historial" }))
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por proveedor" }),
+    )
+    await user.click(screen.getByRole("menuitemradio", { name: "Tu Viandita" }))
+
+    expect(
+      screen.getByText("Todavía no hay períodos pagados"),
+    ).toBeInTheDocument()
   })
 
   it("shows the meals next to the pending total", () => {
