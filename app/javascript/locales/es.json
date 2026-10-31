@@ -1041,6 +1041,27 @@
           "home": "Domicilio",
           "office": "Oficina"
         },
+        "edit": {
+          "add_units_dialog": {
+            "back": "Volver",
+            "confirm": "Aumentar pedido",
+            "description": "Se enviará un pedido complementario al que ya tenés aprobado, sujeto a la aprobación del proveedor.",
+            "title": "¿Agregar más unidades?"
+          },
+          "address": "Dirección de entrega",
+          "modify_confirmed_dialog": {
+            "back": "Volver",
+            "confirm": "Modificar pedido",
+            "description": "Este pedido ya fue confirmado. Modificarlo significa que se cancelará y se volverá a pedir uno nuevo, sujeto a la aprobación del proveedor.",
+            "title": "¿Modificar el pedido?"
+          },
+          "title": "Modificar pedido",
+          "updated_dialog": {
+            "description": "Te notificaremos cuando el proveedor confirme tu pedido.",
+            "done": "Listo",
+            "title": "Pedido modificado"
+          }
+        },
         "index": {
           "all_providers": "Todos los proveedores",
           "base_price": "Precio base: %{amount}",
@@ -1052,6 +1073,11 @@
             "title": "¿Cancelar pedido?"
           },
           "cancelled_address": "Lo pediste para: %{address} (%{delivery_method})",
+          "cancelled_dialog": {
+            "description": "Podés hacer un nuevo pedido cuando quieras.",
+            "done": "Listo",
+            "title": "Pedido cancelado"
+          },
           "cannot_cancel": {
             "already_closed": "Este pedido ya está cerrado.",
             "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",
@@ -1085,22 +1111,12 @@
           "base_price": "Precio base",
           "cannot_edit": {
             "already_closed": "Este pedido ya está cerrado.",
-            "already_confirmed": "El proveedor ya confirmó este pedido, así que no se puede modificar.",
+            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede modificar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede modificar."
           },
           "date": "Fecha de entrega",
           "delivery_method": "Modalidad de entrega",
           "edit": "Editar",
-          "edit_dialog": {
-            "address": "Dirección de entrega",
-            "back": "Volver",
-            "confirm": "Guardar cambios",
-            "description": "Podés cambiar la cantidad, las opciones del plato, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo.",
-            "notes": "Notas",
-            "notes_placeholder": "Sin salsa, sin cebolla…",
-            "quantity": "Cantidad",
-            "title": "Modificar pedido"
-          },
           "no_notes": "Sin notas",
           "notes": "Notas",
           "quantity": "Cantidad",

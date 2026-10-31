@@ -18,23 +18,21 @@ class Consumer::OrdersController < Consumer::InertiaController
   def show
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
+    @order = @consumer.orders.preload(:review).find(params[:id])
+  end
+
+  def edit
     @order = @consumer.orders.preload(
-      :review, schedule: { menu: [ :option_groups, { provider: :user } ] }
+      :review, schedule: { menu: [ { reviews: { consumer: :user } }, :option_groups, { provider: :user } ] }
     ).find(params[:id])
 
-    @delivery_addresses = @order.delivery_address_options @consumer
-    @max_quantity = @order.max_quantity
-    @editing = params[:edit] == "1"
+    return redirect_to order_path(@order), alert: t("validations.order_not_modifiable") unless @order.modifiable?
 
-    @option_groups = @order.schedule&.menu&.option_groups.to_a.map do |group|
-      {
-        id: group.id,
-        name: group.name,
-        options: group.options,
-        limit: group.limit,
-        required: group.required
-      }
-    end
+    # El cupo libre ya descuenta lo que este pedido reservó, y el plazo lo
+    # resolvió modifiable?: el plato se muestra con lo que el pedido puede tener.
+    @schedule = dish_data(@order.schedule).merge(remaining: @order.max_quantity, sold_out: false, orders_closed: false)
+    @delivery_addresses = @order.delivery_address_options @consumer
+    @benefit_ids = @order.benefit_ids
   end
 
   def create
@@ -124,7 +122,7 @@ class Consumer::OrdersController < Consumer::InertiaController
     order = @consumer.orders.find(params[:id])
 
     return reject_update(order, :invalid_quantity) unless update_params[:quantity].to_s.match?(/\A[1-9]\d*\z/)
-    return reject_update(order, :invalid_address) unless order.delivery_address_options(@consumer).pluck(:address).include?(update_params[:address])
+    return reject_update(order, :invalid_address) unless update_address_allowed?(order)
 
     delivery = @consumer.delivery_for(order.provider, update_params[:address])
     return reject_update(order, :office_address_required) if delivery[:address].blank?
@@ -134,15 +132,17 @@ class Consumer::OrdersController < Consumer::InertiaController
       quantity: update_params[:quantity].to_i,
       notes: update_params[:notes],
       delivery:,
-      selected_options: selected_options_for(order.schedule&.menu, update_params[:options])
+      selected_options: selected_options_for(order.schedule&.menu, update_params[:options]),
+      add_units: ActiveModel::Type::Boolean.new.cast(update_params[:add_units])
     )
 
     if modified
-      redirect_to order_path(order), notice: t("flash.order_updated"), status: :see_other
+      flash.inertia[:order_updated] = true
+      redirect_to edit_order_path(modified), status: :see_other
     else
-      redirect_to order_path(order),
-                  alert: order.errors.full_messages.first || t("validations.order_not_modifiable"),
-                  status: :see_other
+      alert = order.errors.full_messages.first || t("validations.order_not_modifiable")
+      # El rollback de un pedido de reemplazo no deshace la cancelación en memoria.
+      redirect_to order.reload.modifiable? ? edit_order_path(order) : order_path(order), alert:, status: :see_other
     end
   end
 
@@ -150,7 +150,8 @@ class Consumer::OrdersController < Consumer::InertiaController
     order = @consumer.orders.find(params[:id])
 
     if order.cancel(by: Current.user)
-      redirect_to orders_path, notice: t("flash.order_cancelled"), status: :see_other
+      flash.inertia[:order_cancelled] = true
+      redirect_to orders_path, status: :see_other
     else
       redirect_to orders_path, alert: t("validations.order_not_cancellable"), status: :see_other
     end
@@ -161,7 +162,9 @@ class Consumer::OrdersController < Consumer::InertiaController
   def pricing
     items = build_requested_items
 
-    pricings = Orders::Pricing.new(@consumer).call(items)
+    # Al modificar, lo que el pedido ya tiene reservado vuelve a estar disponible.
+    modifiable_order = @consumer.orders.find_by(id: params[:order_id])
+    pricings = Orders::Pricing.new(@consumer, modifiable_order:).call(items)
 
     render json: Consumer::OrderPricingSerializer.new(items, pricings)
   end
@@ -189,7 +192,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def reject_update(order, reason)
-    redirect_to order_path(order), alert: t("validations.#{reason}"), status: :see_other
+    redirect_to edit_order_path(order), alert: t("validations.#{reason}"), status: :see_other
   end
 
   def reject_order(reason)
@@ -209,6 +212,16 @@ class Consumer::OrdersController < Consumer::InertiaController
     return :insufficient_stock if schedule && schedule.remaining_amount < order.amount.to_i
 
     :cart_unavailable
+  end
+
+  # Al modificar, además de las direcciones del pedido y del perfil, se acepta
+  # una nueva sin guardar (igual que en el carrito), pero solo si el proveedor
+  # entrega a domicilio.
+  def update_address_allowed?(order)
+    address = update_params[:address]
+
+    order.delivery_address_options(@consumer).pluck(:address).include?(address) ||
+      (order.provider&.home_delivery? && DeliveryAddress.valid_full_address?(address))
   end
 
   # Además de las direcciones conocidas, el carrito puede mandar una que el
@@ -249,7 +262,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def update_params
-    params.expect(order: [ :quantity, :address, :notes, options: [ [ :group_id, { values: [] } ] ] ])
+    params.expect(order: [ :quantity, :address, :notes, :add_units, options: [ [ :group_id, { values: [] } ] ] ])
   end
 
   def order_params

@@ -458,6 +458,33 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(json["fullPriceQuantity"]).to eq(0)
       expect(json["lines"].first["tiers"].first["percentage"]).to eq(50)
     end
+
+    it "al modificar un pedido le devuelve los usos del beneficio que ese pedido ya tiene" do
+      consumer_user.consumer.benefits.destroy_all
+      benefit = consumer_user.consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly),
+        percentage: 50,
+        amount: 1,
+        due_date: Date.current.end_of_month,
+        status: :current
+      )
+      order = Order.create!(
+        consumer: consumer_user.consumer,
+        schedule:,
+        amount: 1,
+        price: schedule.menu.price,
+        discounted_price: schedule.menu.price / 2,
+        address: company_address,
+        delivery_method: :office
+      )
+      order.apply_benefit!(benefit, 1)
+
+      post pricing_orders_path, params: { items: [ { schedule_id: schedule.id, quantity: 1 } ] }
+      expect(response.parsed_body["discount"]).to eq(0)
+
+      post pricing_orders_path, params: { items: [ { schedule_id: schedule.id, quantity: 1 } ], order_id: order.id }
+      expect(response.parsed_body["discount"]).to eq(schedule.menu.price.to_f * 0.5)
+    end
   end
 
   describe "POST /orders con restricción de max_price" do

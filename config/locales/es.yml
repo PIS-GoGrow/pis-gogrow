@@ -115,10 +115,8 @@ es:
   flash:
     cart_confirmed: "Pedido realizado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
-    order_cancelled: "Pedido cancelado. Podés hacer un nuevo pedido cuando quieras."
     order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
     order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
-    order_updated: "Pedido actualizado."
     review_unavailable: "Este pedido ya no se puede calificar."
     already_signed_in: "Ya iniciaste sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
@@ -174,6 +172,7 @@ es:
     invalid_email: "Ingresá un correo válido."
     password_required: "Ingresá una contraseña."
     order_not_modifiable: "Este pedido ya no se puede modificar."
+    add_units_unavailable: "El plato cambió, así que no se pueden sumar unidades a este pedido. Tu pedido sigue confirmado."
     password_challenge_invalid: "La verificación de contraseña no es válida"
     menu_import:
       name: "Falta el nombre del plato."
@@ -947,6 +946,10 @@ es:
           description: "Este pedido no podrá recuperarse. Podés hacer uno nuevo cuando quieras."
           back: "Volver"
           confirm: "Cancelar pedido"
+        cancelled_dialog:
+          title: "Pedido cancelado"
+          description: "Podés hacer un nuevo pedido cuando quieras."
+          done: "Listo"
         cannot_cancel:
           confirmed_for_today: "Ya está confirmado para hoy, así que no se puede cancelar."
           order_deadline_passed: "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar."
@@ -968,19 +971,27 @@ es:
         no_notes: "Sin notas"
         edit: "Editar"
         rejection_reason: "Motivo de rechazo"
-        edit_dialog:
-          title: "Modificar pedido"
-          description: "Podés cambiar la cantidad, las opciones del plato, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo."
-          quantity: "Cantidad"
-          address: "Dirección de entrega"
-          notes: "Notas"
-          notes_placeholder: "Sin salsa, sin cebolla…"
-          back: "Volver"
-          confirm: "Guardar cambios"
         cannot_edit:
-          already_confirmed: "El proveedor ya confirmó este pedido, así que no se puede modificar."
+          confirmed_for_today: "Ya está confirmado para hoy, así que no se puede modificar."
           already_closed: "Este pedido ya está cerrado."
           unavailable: "Este pedido no tiene fecha de entrega, así que no se puede modificar."
+      edit:
+        title: "Modificar pedido"
+        address: "Dirección de entrega"
+        updated_dialog:
+          title: "Pedido modificado"
+          description: "Te notificaremos cuando el proveedor confirme tu pedido."
+          done: "Listo"
+        modify_confirmed_dialog:
+          title: "¿Modificar el pedido?"
+          description: "Este pedido ya fue confirmado. Modificarlo significa que se cancelará y se volverá a pedir uno nuevo, sujeto a la aprobación del proveedor."
+          back: "Volver"
+          confirm: "Modificar pedido"
+        add_units_dialog:
+          title: "¿Agregar más unidades?"
+          description: "Se enviará un pedido complementario al que ya tenés aprobado, sujeto a la aprobación del proveedor."
+          back: "Volver"
+          confirm: "Aumentar pedido"
       addresses:
         office: "Oficina"
         home: "Casa"
