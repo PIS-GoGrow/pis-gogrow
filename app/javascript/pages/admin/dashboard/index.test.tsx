@@ -73,6 +73,16 @@ const props: AdminDashboardIndex = {
 // con información del beneficio, participación, consumos, gasto y presupuesto,
 // para conocer el estado global del programa."
 describe("Admin Dashboard Page", () => {
+  it("links the analysis with the selected month", () => {
+    render(<AdminDashboard {...props} month="2026-09" />)
+    expect(
+      screen.getByRole("link", { name: "Ver análisis del beneficio" }),
+    ).toHaveAttribute("href", "/rrhh/analisis-beneficio?month=2026-09")
+    expect(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    ).toBeInTheDocument()
+  })
+
   it("greets HR by first name with today's date", () => {
     render(<AdminDashboard {...props} />)
 

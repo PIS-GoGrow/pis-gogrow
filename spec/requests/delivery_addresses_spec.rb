@@ -88,6 +88,12 @@ RSpec.describe "Delivery addresses", type: :request do
       )
     end
 
+    it "goes back to the screen the employee came from" do
+      post delivery_addresses_path, params: address_params, headers: { "HTTP_REFERER" => orders_url }
+
+      expect(response).to redirect_to(orders_url)
+    end
+
     it "only validates an address that is not saved for later" do
       expect { post delivery_addresses_path, params: address_params(save_for_later: false) }
         .not_to change(DeliveryAddress, :count)

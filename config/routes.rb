@@ -107,7 +107,7 @@ Rails.application.routes.draw do
               path: "direcciones-de-entrega",
               only: %i[index create update destroy]
 
-    resources :orders, path: "pedidos", only: [ :index, :show, :create, :update ] do
+    resources :orders, path: "pedidos", path_names: { edit: "editar" }, only: [ :index, :show, :edit, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer, path: "cancelar"
       resource :review, only: [ :new, :create ], path: "calificacion", path_names: { new: "nueva" }
       post :pricing, on: :collection, as: :pricing
@@ -127,6 +127,9 @@ Rails.application.routes.draw do
 
   namespace :admin, path: "rrhh" do
     get "inicio", to: "dashboard#index", as: :dashboard
+    get "uso-beneficio", to: "benefit_usage#show", as: :benefit_usage
+    get "analisis-beneficio", to: "benefit_usage#analysis", as: :benefit_usage_analysis
+    post "uso-beneficio/resumen", to: "benefit_usage#create_summary", as: :benefit_usage_summary
     get "cuenta", to: "accounts#show", as: :account
     get "preferencias", to: "preferences#show", as: :preferences
     resources :benefit_configurations, path: "subsidios", only: [ :index, :create ]
