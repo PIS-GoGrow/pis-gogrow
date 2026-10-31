@@ -10,7 +10,9 @@ vi.mock("@inertiajs/react", () => ({ usePage: vi.fn() }))
 vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => true }))
 
 const mockFlash = (flash: Record<string, unknown>) =>
-  vi.mocked(usePage).mockReturnValue({ flash } as ReturnType<typeof usePage>)
+  vi.mocked(usePage).mockReturnValue({
+    flash,
+  } as unknown as ReturnType<typeof usePage>)
 
 describe("OrderCancelledSheet", () => {
   beforeEach(() => vi.clearAllMocks())

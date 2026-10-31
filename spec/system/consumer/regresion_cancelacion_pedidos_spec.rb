@@ -73,6 +73,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       expect(order_1.cancelled_by).to eq(consumer_user)
       expect(order_1.cancelled_at).to be_present
 
+      click_button "Listo"
       find("button", text: "Historial").click
       expect(page).to have_content("Cancelado")
 

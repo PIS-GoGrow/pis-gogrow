@@ -383,8 +383,10 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in p1_user, role: :provider
       visit edit_provider_menu_path(p1_milanesa)
       click_button "Editar Guarnición"
-      fill_in "group-options", with: "Ensalada, Boniato", fill_options: { clear: :backspace }
-      click_button "Modificar"
+      within("[role=dialog]") do
+        fill_in "group-options", with: "Ensalada, Boniato", fill_options: { clear: :backspace }
+        click_button "Modificar"
+      end
       click_button "Modificar"
       click_button "Aplicar cambios"
       expect(page).to have_content("¡Plato modificado!")
@@ -425,9 +427,11 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       fill_in "description", with: "Con fideos de arroz", fill_options: { clear: :backspace }
       fill_in "price", with: "320", fill_options: { clear: :backspace }
       click_button "Agregar", exact: true
-      fill_in "group-name", with: "Salsa"
-      fill_in "group-options", with: "Soja, Agridulce"
-      click_button "Agregar"
+      within("[role=dialog]") do
+        fill_in "group-name", with: "Salsa"
+        fill_in "group-options", with: "Soja, Agridulce"
+        click_button "Agregar"
+      end
       save_with_simple_confirmation
 
       expect(page).to have_content("¡Plato modificado!")
@@ -500,9 +504,11 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       "con alternativas duplicadas" => [ "Salsa", "Soja, soja" ]
     }.each do |label, (name, options)|
       it "no deja agregar un grupo #{label}" do
-        fill_in "group-name", with: name
-        fill_in "group-options", with: options
-        expect(page).to have_button("Agregar", disabled: true)
+        within("[role=dialog]") do
+          fill_in "group-name", with: name
+          fill_in "group-options", with: options
+          expect(page).to have_button("Agregar", disabled: true)
+        end
       end
     end
   end
@@ -561,8 +567,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   describe "IBP-008: qué se puede modificar y cuándo" do
     let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday) }
 
-    it "no deja editar un pedido que el proveedor ya confirmó" do
-      order = place_order(e1, milanesa_tuesday).tap { it.update!(status: :confirmed) }
+    it "no deja editar un pedido confirmado el día de la entrega" do
+      order = place_order(e1, publish(p1_milanesa, monday)).tap { it.update!(status: :confirmed) }
       sign_in e1_user, role: :consumer
 
       visit order_path(order)
@@ -576,11 +582,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e1_user, role: :consumer
 
       edit_order(order)
-      click_button "Ver mis direcciones"
-      within("[role=dialog]", text: "Mis direcciones") do
-        find("label", text: "Colonia 1370").click
-        click_button "Seleccionar"
-      end
+      find("label", text: "Colonia 1370").click
       click_button "Modificar"
       confirm_order_modified
       expect(order.reload).to have_attributes(delivery_method: "home", address: "Colonia 1370")
