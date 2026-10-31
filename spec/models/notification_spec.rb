@@ -62,6 +62,26 @@ RSpec.describe Notification, type: :model do
       expect(notification.title).to be_present
       expect(notification.description).to be_present
     end
+
+    it "siempre devuelve un String y nunca un Hash para eventos con pluralización aunque description_data sea nil o incompleto" do
+      notification.event = "coupon_assigned"
+      notification.description_data = nil
+
+      expect(notification.description).to be_a(String)
+      expect(notification.description).not_to be_a(Hash)
+    end
+
+    it "resuelve correctamente eventos pluralizados cuando se pasan todos los parámetros" do
+      notification.event = "coupon_assigned"
+      notification.description_data = {
+        name: "Descuento 50%",
+        percentage: 50,
+        count: 2,
+        period: "15/11/26 al 20/11/26"
+      }
+
+      expect(notification.description).to include("2 viandas")
+    end
   end
 
   describe "scopes y métodos de cierre" do

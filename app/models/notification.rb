@@ -87,11 +87,35 @@ class Notification < ApplicationRecord
   end
 
   def title
-    I18n.t("notifications.#{event}.title", default: nil, **title_data&.transform_keys(&:to_sym))
+    return "" unless event.present?
+
+    data = title_data&.transform_keys(&:to_sym) || {}
+    result = I18n.t("notifications.#{event}.title", default: nil, **data)
+    result.is_a?(Hash) ? (result[:other] || result[:one] || result.values.first).to_s : result.to_s
+  rescue I18n::MissingInterpolationArgument, I18n::ArgumentError
+    raw = I18n.t("notifications.#{event}.title", default: event.to_s.humanize)
+    raw.is_a?(Hash) ? (raw[:other] || raw[:one] || raw.values.first).to_s : raw.to_s
   end
 
   def description
-    I18n.t("notifications.#{event}.description", default: nil, **description_data&.transform_keys(&:to_sym))
+    return "" unless event.present?
+
+    data = description_data&.transform_keys(&:to_sym) || {}
+    data = { count: 1 }.merge(data) unless data.key?(:count)
+
+    result = I18n.t("notifications.#{event}.description", default: nil, **data)
+    if result.is_a?(Hash)
+      (result[:other] || result[:one] || result.values.first).to_s
+    else
+      result.to_s
+    end
+  rescue I18n::MissingInterpolationArgument, I18n::ArgumentError
+    raw = I18n.t("notifications.#{event}.description", default: "")
+    if raw.is_a?(Hash)
+      (raw[:other] || raw[:one] || raw.values.first).to_s
+    else
+      raw.to_s
+    end
   end
 
   private

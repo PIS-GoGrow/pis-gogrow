@@ -146,7 +146,13 @@ export default function NotificationBanners({
                   : "text-foreground text-sm leading-5"
               }
             >
-              {notification.description}
+              {typeof notification.description === "string"
+                ? notification.description
+                : typeof notification.description === "object" && notification.description !== null
+                  ? ((notification.description as Record<string, string>).other ||
+                    (notification.description as Record<string, string>).one ||
+                    "")
+                  : ""}
             </AlertDescription>
 
             {!requiresAction && (
