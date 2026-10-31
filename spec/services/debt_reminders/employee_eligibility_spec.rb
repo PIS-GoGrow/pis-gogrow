@@ -135,8 +135,7 @@ RSpec.describe DebtReminders::EmployeeEligibility do
       event: described_class::EVENT,
       requires_action: false,
       notifiable: consumer,
-      title: "Recordatorio",
-      description: "Tenés pagos vencidos"
+      description_data: { amount: "INF", providers: "TuViandia" }
     ).tap(&:close!)
   end
 

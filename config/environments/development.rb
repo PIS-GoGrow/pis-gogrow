@@ -40,9 +40,14 @@ Rails.application.configure do
   config.action_mailer.perform_caching = false
 
   config.hosts << "web"
+  if ENV["TWILIO_STATUS_CALLBACK_URL"].present?
+    config.hosts << URI.parse(ENV["TWILIO_STATUS_CALLBACK_URL"]).host
 
-  # Set localhost to be used by links generated in mailer templates.
+  end
+
+  # Set localhost to be used by links generated in mailer templates and background jobs.
   config.action_mailer.default_url_options = { host: "localhost", port: 3001 }
+  Rails.application.routes.default_url_options = { host: "localhost", port: 3001 }
 
   if ENV["SMTP_HOST"].present?
     config.action_mailer.delivery_method = :smtp

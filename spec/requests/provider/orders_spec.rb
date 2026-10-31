@@ -497,7 +497,7 @@ RSpec.describe "Provider::Orders", type: :request do
     it "still confirms the order when the notification cannot be saved" do
       sign_in users(:provider_user), role: :provider
       order = orders(:upcoming_pending_today)
-      allow(Notification).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
+      allow_any_instance_of(Notification).to receive(:save!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
 
       patch confirm_provider_order_path(order)
 

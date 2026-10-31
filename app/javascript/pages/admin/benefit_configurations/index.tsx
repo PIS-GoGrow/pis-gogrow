@@ -98,7 +98,7 @@ export default function Index({
             asChild
           >
             <Link
-              href={adminAccount()}
+              href={adminAccount().url}
               aria-label={t("pages.admin.benefit_configurations.index.back")}
             >
               <ArrowLeft className="size-4" aria-hidden="true" />

@@ -41,8 +41,8 @@ RSpec.describe "Notifications", type: :request do
       event: "order_confirmation",
       requires_action: false,
       notifiable:,
-      title: "Tu pedido fue confirmado",
-      description: "Tu pedido fue confirmado."
+      title_data: {},
+      description_data: { date: "12/12", provider: "TuViandita" }
     )
   end
 
@@ -156,8 +156,6 @@ RSpec.describe "Notifications", type: :request do
       expect(notifications_prop.first).to match(
         a_hash_including(
           id: active_notification.id,
-          title: "Tu pedido fue confirmado",
-          description: "Tu pedido fue confirmado.",
           requires_action: false
         )
       )

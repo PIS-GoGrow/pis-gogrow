@@ -152,6 +152,7 @@ Rails.application.routes.draw do
   root "home#index"
   get "consumidor", to: "home#consumer", as: :consumer_welcome
   get "rrhh", to: "home#admin", as: :admin_welcome
+  post "twilio-callback", to: "twilio_callbacks#callback", as: :twilio_callback
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   get "up" => "rails/health#show", as: :rails_health_check

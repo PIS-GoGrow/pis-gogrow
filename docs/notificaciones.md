@@ -151,3 +151,54 @@ notificaciones a un mismo usuario en el mismo evento.
 
 Si los locales definidos para una notificación necesitan datos extra, se pueden pasar
 en `title_data` y `description_data`.
+
+# WhatsappSenderJob
+Envía un mensaje de WhatsApp para una notificación.
+
+Para que funcione, necesitan estar cargadas las credenciales. En development,
+solo corre cuando esta configurada la variable `TWILIO_DELIVERY_ENABLED=true`.
+Las credenciales se configuran con `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
+`TWILIO_PHONE`.
+
+Mientras está corriendo el job, su notificación se marca con estado `sending`.
+Cuando hay un error de red, Twilio responde 429 o un 5xx, se reintenta hasta cinco
+veces el envío. Si los cinco intentos fallan, se marca la notificación con el
+estado `send_failed`. Cualquier otro error de Twilio (un 4xx: credenciales, número o
+variables inválidas) no se reintenta y marca `send_failed` en el momento. Si el Job fue
+exitoso, marca la notifiación con estado `accepted` y registra la hora de envío en el
+atributo `whatsapp_sent_at`.
+
+`whatsapp_sent_at` y `accepted` solo dicen si Twilio aceptó el mensaje, no si llegó
+al celular. Los errores de entrega (por ejemplo, que el número no tenga WhatsApp)
+Twilio los informa después, por el status callback. Para poder recibir los callbacks
+de Twilio en ambiente de dev, es necesario configurar la variable
+`TWILIO_STATUS_CALLBACK_URL` a la URL pública que se esté usando (por ejemplo con
+un túnel de cloudflare) más `/twilio-callback`.
+
+Una vez que llega el callback de Twilio, la notificación se marca como `delivered`
+si el envío fue exitoso. Si no, se marca como `delivery_failed` y se reintenta hasta
+un máximo de 5 veces (en los reintentos, la notificación va a volver a pasar por los
+estados `sending` y `accepted`).
+
+`User` guarda el teléfono en formato internacional (`+59899123456`), que es el que
+pide Twilio: lo normaliza con `phonelib`, interpretando como uruguayo un número sin
+`+`, y solo acepta celulares.
+
+Los datos extra de locales de notificaciones se pasan a Twilio, agregando `title_`
+a las claves de los datos de título y agregando `description_` a las claves de
+datos de descripción.
+
+Cada evento tiene una plantilla en Twilio (Content Template Builder) con el mismo
+texto que `config/locales/es.yml`: el título en negrita en la primera línea y la
+descripción abajo, con cada `%{dato}` reemplazado por `{{description_dato}}`. Las
+plantillas se llaman `gogrow_<evento>` y su SID va en `content_sid` de
+`config/notifications.yml`. Si la descripción tiene singular y plural, hay una
+plantilla para cada forma (`gogrow_<evento>_one` y `gogrow_<evento>_other`) y el Job
+elige según el dato `count`. Si se cambia un texto en `es.yml`, hay que crear una
+plantilla nueva en Twilio y actualizar su SID: las plantillas no se pueden editar.
+
+Este Job no debería ser accedido desde ningún lugar, menos el servicio `Notifier`.
+Supone que Notifier ya chequeó que la clave de evento exista y que todas las
+notificaciones tienen un content SID asignado.
+
+Si `Notifier` decide no enviar la notificación, se marca con estado `skipped`.

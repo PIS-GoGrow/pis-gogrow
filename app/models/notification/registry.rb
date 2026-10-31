@@ -7,7 +7,7 @@ class Notification::Registry
   PATH = Rails.root.join("config/notifications.yml").freeze
 
   Configuration = Data.define(:key, :roles, :configurable)
-  Event = Data.define(:key, :configuration_key, :role, :requires_action)
+  Event = Data.define(:key, :configuration_key, :role, :requires_action, :content_sid)
 
   class InvalidRegistry < StandardError; end
   class UnknownEvent < StandardError; end
@@ -46,6 +46,13 @@ class Notification::Registry
       events.fetch(key.to_sym) { raise UnknownEvent, "Evento desconocido: #{key.inspect}" }
     end
 
+    # Un evento con textos en singular y plural tiene una plantilla de Twilio para
+    # cada uno, elegida según count.
+    def content_sid(event_key, count: nil)
+      content_sid = event!(event_key).content_sid
+      content_sid.is_a?(Hash) ? content_sid.fetch(count == 1 ? :one : :other) : content_sid
+    end
+
     private
 
     # Carga el archivo
@@ -82,9 +89,15 @@ class Notification::Registry
           raise InvalidRegistry, "#{key}: rol #{role} no incluido en #{configuration_key}"
         end
 
-        requires_action = attrs.fetch(:requires_action)
+        requires_action = attrs.fetch(:requires_action)  do
+          raise InvalidRegistry, "#{key}: falta el campo requires_action"
+        end
 
-        [ key, Event.new(key:, configuration_key:, role:, requires_action:) ]
+        content_sid = attrs.fetch(:content_sid) do
+          raise InvalidRegistry, "#{key}: falta content_sid, el identificador de la plantilla de Twilio"
+        end
+
+        [ key, Event.new(key:, configuration_key:, role:, requires_action:, content_sid:) ]
       end
 
       [ configurations.freeze, events.freeze ].freeze

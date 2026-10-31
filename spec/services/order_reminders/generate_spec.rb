@@ -219,11 +219,12 @@ RSpec.describe OrderReminders::Generate do
       let(:configuration) { Notification::Configuration.find_by!(key: "order_reminders") }
 
       it "enqueues the WhatsApp message for an employee subscribed to order reminders" do
+        consumer.user.update!(phone: "+59899123456")
         configuration.users << consumer.user
 
         expect {
           described_class.call(date:, now: at(11))
-        }.to have_enqueued_job(WhatsappSenderJob).with(:order_deadline_reminder, {}, {}, consumer.user.phone)
+        }.to have_enqueued_job(WhatsappSenderJob).with(instance_of(Notification))
       end
 
       it "does not enqueue WhatsApp for an employee who turned order reminders off" do
