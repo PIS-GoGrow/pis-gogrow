@@ -1506,6 +1506,24 @@ RSpec.describe "Orders", type: :request do
           expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
         end
 
+        it "refuses an option the provider removed while the form was open, without changing anything" do
+          group.update!(required: false)
+          order
+          # Cambiar el plato solo para un día crea una variante con grupos
+          # nuevos: el formulario abierto sigue mandando el id viejo.
+          group.destroy!
+          schedules(:sorrentinos_today).menu.option_groups.create!(name: "Salsa", options: [ "Bolognesa" ], limit: 1, required: false)
+
+          patch order_path(order), params: update_params(quantity: 2, options: options_params([ "Filetto" ]))
+
+          order.reload
+          expect(order.amount).to eq(1)
+          expect(order.selected_options.find { it["group_id"] == group.id }["values"]).to eq([ "Filetto" ])
+          expect(order.audit_logs).to be_empty
+          follow_redirect!
+          expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+        end
+
         it "refuses options with non-existent group_id bypassing the interface" do
           invalid_options = [ { group_id: 999_999, values: [ "Inexistente" ] }, { group_id: other_group.id, values: [ "Ricota y nuez" ] } ]
           patch order_path(order), params: update_params(options: invalid_options)
@@ -1800,6 +1818,19 @@ RSpec.describe "Orders", type: :request do
 
             expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2)
             expect(response).to redirect_to(edit_order_path(confirmed))
+
+            follow_redirect!
+            expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+          end
+
+          it "refuses without cancelling when it is no longer just adding units" do
+            expect {
+              patch order_path(confirmed), params: update_params(
+                quantity: 3, notes: "Sin sal", options: [ { group_id: group.id, values: [ "Filetto" ] } ]
+              ).deep_merge(order: { add_units: true })
+            }.not_to change(Order, :count)
+
+            expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2, notes: nil)
 
             follow_redirect!
             expect(inertia).to have_flash(alert: I18n.t("validations.add_units_unavailable"))
