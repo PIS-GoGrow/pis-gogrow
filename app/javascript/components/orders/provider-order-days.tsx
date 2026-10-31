@@ -1,5 +1,5 @@
 import { ChevronDown, Package } from "lucide-react"
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import ProviderOrderCard from "@/components/orders/provider-order-card"
@@ -23,6 +23,7 @@ import {
   hasActiveFilters,
   initialDate,
   ordersColumns,
+  searchableText,
   summarize,
   withToday,
 } from "@/lib/provider-orders"
@@ -34,6 +35,7 @@ interface ProviderOrderDaysProps {
   today: string
   period: "upcoming" | "history"
   filters: OrderFilters
+  footer?: ReactNode
 }
 
 export default function ProviderOrderDays({
@@ -41,22 +43,16 @@ export default function ProviderOrderDays({
   today,
   period,
   filters,
+  footer,
 }: ProviderOrderDaysProps) {
   const { t } = useTranslation()
   const { formatMoney, formatShortDate } = useFormatters()
   // undefined: el usuario todavía no eligió; null: cerró el día abierto.
   const [selected, setSelected] = useState<string | null | undefined>(undefined)
 
-  const filtered = filterOrders(orders, filters, (order) => [
-    order.consumer_name,
-    order.consumer_company,
-    order.menu_name,
-    order.address,
-    order.notes,
-    t("pages.provider_orders.index.code", { id: order.id }),
-    t(`pages.provider_orders.statuses.${order.status}`),
-    t(`pages.provider_orders.index.delivery_methods.${order.delivery_method}`),
-  ])
+  const filtered = filterOrders(orders, filters, (order) =>
+    searchableText(order, t),
+  )
   const grouped = groupByDate(filtered)
   // Sin filtros, hoy siempre aparece: es el valor inicial de la pantalla.
   const days =
@@ -148,6 +144,8 @@ export default function ProviderOrderDays({
           </Collapsible>
         )
       })}
+
+      {footer && <div className="mt-3 lg:col-start-1">{footer}</div>}
     </div>
   )
 }

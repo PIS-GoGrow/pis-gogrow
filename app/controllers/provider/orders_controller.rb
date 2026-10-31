@@ -2,18 +2,23 @@
 
 class Provider::OrdersController < Provider::InertiaController
   def index
-    today = Date.current
-    @today = today.iso8601
+    @today = Date.current.iso8601
+    @upcoming_orders = orders_in(:upcoming)
+    @past_orders = orders_in(:history)
+  end
 
-    # Al proveedor le aparecen las órdenes ordenadas según el día de entrega,
-    # y según cuándo se hicieron. Una orden para hoy que se hizo recién, se muestra
-    # primero.
-    @upcoming_orders =
-      provider_orders.where("COALESCE(schedules.date, orders.delivery_date) >= ?", today)
-                     .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) ASC, orders.created_at DESC"))
-    @past_orders =
-      provider_orders.where("COALESCE(schedules.date, orders.delivery_date) < ?", today)
-                     .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC, orders.created_at DESC"))
+  def export
+    period = params[:periodo] == "historial" ? :history : :upcoming
+    export = Provider::OrdersExport.new(
+      orders_in(period),
+      provider: Current.user.provider,
+      period:,
+      status: params[:estado],
+      delivery: params[:entrega],
+      search: params[:busqueda]
+    )
+
+    send_data export.to_xlsx, type: Mime[:xlsx], disposition: "attachment", filename: export.filename
   end
 
   # El find va sobre los pedidos del proveedor y no sobre Order: pedir el de
@@ -42,6 +47,21 @@ class Provider::OrdersController < Provider::InertiaController
     else
       alert = order.errors.full_messages.to_sentence.presence || t("validations.order_not_pending")
       redirect_back_or_to provider_orders_path, alert:, status: :see_other
+    end
+  end
+
+  # Al proveedor le aparecen las órdenes ordenadas según el día de entrega,
+  # y según cuándo se hicieron. Una orden para hoy que se hizo recién, se muestra
+  # primero.
+  def orders_in(period)
+    today = Date.current
+
+    if period == :history
+      provider_orders.where("COALESCE(schedules.date, orders.delivery_date) < ?", today)
+                     .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC, orders.created_at DESC"))
+    else
+      provider_orders.where("COALESCE(schedules.date, orders.delivery_date) >= ?", today)
+                     .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) ASC, orders.created_at DESC"))
     end
   end
 

@@ -69,6 +69,7 @@ Rails.application.routes.draw do
     post "importar-platos", to: "menu_imports#create", as: :menu_import_preview
     post "importar-platos/confirmar", to: "menu_imports#confirm", as: :confirm_menu_import
     resources :orders, path: "pedidos", only: [ :index, :show ] do
+      get :export, on: :collection, path: "exportar"
       member do
         patch :confirm, path: "confirmar"
         patch :reject, path: "rechazar"
