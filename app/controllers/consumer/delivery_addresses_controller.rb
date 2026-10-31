@@ -60,6 +60,8 @@ class Consumer::DeliveryAddressesController < Consumer::InertiaController
   end
 
   def create_redirect_path
-    management_request? ? delivery_addresses_path : dashboard_cart_path
+    return delivery_addresses_path if management_request?
+
+    url_from(request.referer) || dashboard_cart_path
   end
 end

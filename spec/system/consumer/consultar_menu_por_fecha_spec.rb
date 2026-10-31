@@ -238,7 +238,7 @@ RSpec.describe "Consultar el menú disponible por fecha" do
 
     visit dashboard_path
 
-    expect(page).to have_current_path(sign_in_path)
+    expect(page).to have_current_path(consumer_welcome_path)
     expect(page).to have_no_content("Milanesa con papas fritas")
     expect(page).to have_no_content("Menú semanal")
   end

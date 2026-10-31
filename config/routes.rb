@@ -6,16 +6,19 @@
 Rails.application.routes.draw do
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
-  get  "iniciar-sesion", to: "sessions#new", as: :sign_in
-  post "iniciar-sesion", to: "sessions#create", as: nil
+  get  "iniciar-sesion", to: redirect("/consumidor"), as: nil
+  post "iniciar-sesion", to: "sessions#create", as: :sign_in
 
-  get  "proveedor", to: "provider_sessions#new", as: :provider_sign_in
+  get  "proveedor", to: "home#provider", as: :provider_home
+  get  "proveedor/iniciar-sesion", to: "provider_sessions#new", as: :provider_sign_in
+  post "proveedor/iniciar-sesion", to: "provider_sessions#create"
   post "proveedor", to: "provider_sessions#create"
+  resource :provider_welcome, path: "proveedor/bienvenida", only: :show
   resource :provider_invitation, path: "proveedor/invitacion", only: [ :show, :update ]
   resource :provider_password_reset, path: "proveedor/contrasena", only: [ :create, :edit, :update ], path_names: { edit: "nueva" }
   resource :provider_password_reset_code, path: "proveedor/contrasena/codigo", only: [ :show, :create ]
 
-  get "provider", to: redirect("/proveedor"), as: :provider_welcome
+  get "provider", to: redirect("/proveedor")
   get "provider/*path", to: redirect("/proveedor/%{path}")
   get "admin", to: redirect("/rrhh")
   get "admin/*path", to: redirect("/rrhh/%{path}")
@@ -66,6 +69,7 @@ Rails.application.routes.draw do
     post "importar-platos", to: "menu_imports#create", as: :menu_import_preview
     post "importar-platos/confirmar", to: "menu_imports#confirm", as: :confirm_menu_import
     resources :orders, path: "pedidos", only: [ :index, :show ] do
+      get :export, on: :collection, path: "exportar"
       member do
         patch :confirm, path: "confirmar"
         patch :reject, path: "rechazar"
@@ -104,7 +108,7 @@ Rails.application.routes.draw do
               path: "direcciones-de-entrega",
               only: %i[index create update destroy]
 
-    resources :orders, path: "pedidos", only: [ :index, :show, :create, :update ] do
+    resources :orders, path: "pedidos", path_names: { edit: "editar" }, only: [ :index, :show, :edit, :create, :update ] do
       patch :cancel, on: :member, as: :cancel_consumer, path: "cancelar"
       resource :review, only: [ :new, :create ], path: "calificacion", path_names: { new: "nueva" }
       post :pricing, on: :collection, as: :pricing
@@ -124,6 +128,9 @@ Rails.application.routes.draw do
 
   namespace :admin, path: "rrhh" do
     get "inicio", to: "dashboard#index", as: :dashboard
+    get "uso-beneficio", to: "benefit_usage#show", as: :benefit_usage
+    get "analisis-beneficio", to: "benefit_usage#analysis", as: :benefit_usage_analysis
+    post "uso-beneficio/resumen", to: "benefit_usage#create_summary", as: :benefit_usage_summary
     get "cuenta", to: "accounts#show", as: :account
     get "preferencias", to: "preferences#show", as: :preferences
     resources :benefit_configurations, path: "subsidios", only: [ :index, :create ]
@@ -144,6 +151,7 @@ Rails.application.routes.draw do
   end
 
   root "home#index"
+  get "consumidor", to: "home#consumer", as: :consumer_welcome
   get "rrhh", to: "home#admin", as: :admin_welcome
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

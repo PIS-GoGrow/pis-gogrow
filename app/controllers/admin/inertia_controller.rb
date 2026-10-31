@@ -6,6 +6,10 @@ class Admin::InertiaController < InertiaController
 
   private
 
+  def unauthenticated_path
+    admin_welcome_path
+  end
+
   # ?month=AAAA-MM. Un mes mal escrito o futuro no es un error de RR. HH.: se
   # muestra el actual.
   def selected_month
