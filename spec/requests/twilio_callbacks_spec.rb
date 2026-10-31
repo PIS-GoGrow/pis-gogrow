@@ -216,4 +216,66 @@ RSpec.describe "TwilioCallbacks", type: :request do
       end
     end
   end
+
+  describe "casos borde y bypass de parámetros" do
+    it "ignora parámetros no permitidos sin alterar atributos protegidos" do
+      post_callback(
+        MessageStatus: "delivered",
+        admin: true,
+        user_id: 999_999,
+        whatsapp_send_status: "send_failed"
+      )
+
+      expect(response).to have_http_status(:ok)
+      notification.reload
+      expect(notification.whatsapp_send_status).to eq("delivered")
+      expect(notification.user_id).not_to eq(999_999)
+    end
+
+    it "responde 200 cuando MessageSid viene vacío" do
+      expect {
+        post_callback(MessageSid: "")
+      }.not_to have_enqueued_job(WhatsappSenderJob)
+
+      expect(response).to have_http_status(:ok)
+    end
+
+    it "ignora un MessageStatus desconocido o arbitrario sin encolar jobs ni cambiar estado" do
+      expect {
+        post_callback(MessageStatus: "status_desconocido")
+      }.not_to have_enqueued_job(WhatsappSenderJob)
+
+      expect(response).to have_http_status(:ok)
+      expect(notification.reload.whatsapp_send_status).to eq("accepted")
+    end
+
+    it "maneja un ErrorCode no numérico o vacío sin romper el flujo de reintentos" do
+      allow_any_instance_of(Notification).to receive(:send_to_user?).and_return(true)
+      allow_any_instance_of(Notification).to receive(:send_attempts_exceeded?).and_return(false)
+
+      expect {
+        post_callback(MessageStatus: "failed", ErrorCode: "codigo_invalido")
+      }.to have_enqueued_job(WhatsappSenderJob).with(notification)
+
+      expect(response).to have_http_status(:ok)
+      expect(notification.reload.whatsapp_send_status).to eq("delivery_failed")
+    end
+
+    it "procesa el webhook sin autenticación de usuario pero rechaza si no hay firma válida" do
+      allow_any_instance_of(Twilio::Security::RequestValidator).to receive(:validate).and_return(false)
+
+      post_callback
+
+      expect(response).to have_http_status(:forbidden)
+    end
+
+    it "exige firma válida incluso si hay un usuario autenticado en la sesión" do
+      sign_in users(:one), role: :consumer
+      allow_any_instance_of(Twilio::Security::RequestValidator).to receive(:validate).and_return(false)
+
+      post_callback
+
+      expect(response).to have_http_status(:forbidden)
+    end
+  end
 end

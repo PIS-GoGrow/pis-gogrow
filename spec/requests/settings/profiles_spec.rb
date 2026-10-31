@@ -217,4 +217,58 @@ RSpec.describe "Settings::Profiles", type: :request do
       expect(providers(:tuviandita).audit_logs.sole).to have_attributes(user:, changeset: { "home_delivery" => [ true, false ] })
     end
   end
+
+  describe "PATCH /configuracion/perfil phone as consumer" do
+    let(:consumer_user) { users(:one) }
+
+    before { sign_in consumer_user, role: :consumer }
+
+    it "guarda el celular uruguayo normalizado a E.164 y actualiza las props de Inertia" do
+      patch settings_profile_path, params: { name: consumer_user.name, phone: "099 876 543" }
+
+      expect(response).to redirect_to(settings_profile_path)
+      expect(consumer_user.reload.phone).to eq("+59899876543")
+
+      follow_redirect!
+      expect(inertia).to have_props(phone: "+59899876543")
+    end
+
+    it "rechaza un teléfono fijo con error en props de Inertia y no persiste el cambio" do
+      consumer_user.update_column(:phone, "+59899111222")
+
+      patch settings_profile_path, params: { name: consumer_user.name, phone: "2900 1234" }
+
+      expect(response).to redirect_to(settings_profile_path)
+      expect(consumer_user.reload.phone).to eq("+59899111222")
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("phone")
+    end
+
+    it "permite limpiar el teléfono enviando vacío" do
+      consumer_user.update_column(:phone, "+59899111222")
+
+      patch settings_profile_path, params: { name: consumer_user.name, phone: "   " }
+
+      expect(response).to redirect_to(settings_profile_path)
+      expect(consumer_user.reload.phone).to be_nil
+    end
+
+    it "ignora intentos de bypass de parámetros y mantiene la integridad de la base de datos" do
+      patch settings_profile_path, params: {
+        name: consumer_user.name,
+        phone: "099 123 456",
+        role: "admin",
+        roles: %w[admin provider consumer],
+        verified: false,
+        whatsapp_send_status: "delivered"
+      }
+
+      expect(response).to redirect_to(settings_profile_path)
+      consumer_user.reload
+      expect(consumer_user.phone).to eq("+59899123456")
+      expect(consumer_user.roles).to eq([ "consumer" ])
+      expect(consumer_user.verified).to be(true)
+    end
+  end
 end
