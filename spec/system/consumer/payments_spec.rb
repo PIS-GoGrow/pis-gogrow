@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe "Consumer Payments and Bank Details", type: :system do
-  fixtures :users, :consumers, :companies, :providers, :accounts, :admins
+  fixtures :users, :consumers, :companies, :providers, :accounts, :admins, :payments
 
   let(:consumer_user) { users(:one) }
   let(:provider_user) { users(:provider_user) }
@@ -49,6 +49,48 @@ RSpec.describe "Consumer Payments and Bank Details", type: :system do
         expect(page).not_to have_content("Nº de cuenta:")
         expect(page).not_to have_content("Beneficiario:")
         expect(page).not_to have_button("Copiar número de cuenta")
+      end
+    end
+  end
+
+  describe "Orden de períodos de cuentas pendientes y consistencia de estados" do
+    let(:older_month) { 2.months.ago.to_date.beginning_of_month }
+    let(:current_month) { Date.current.beginning_of_month }
+
+    before do
+      Account.create!(
+        owner: consumer_user.consumer,
+        provider: provider_with_bank,
+        month: older_month,
+        amount: 250
+      )
+    end
+
+    it "muestra los períodos desde el más reciente al más antiguo dentro de la tarjeta del proveedor" do
+      sign_in consumer_user, role: :consumer
+      visit accounts_path
+
+      card = find("[data-slot='card-title']", text: provider_with_bank.user.name, exact_text: true).ancestor("[data-slot='card']")
+
+      within(card) do
+        current_period_label = I18n.l(current_month, format: :month_year)
+        older_period_label = I18n.l(older_month, format: :month_year)
+
+        expect(page).to have_content(current_period_label)
+        expect(page).to have_content(older_period_label)
+
+        expect(page.text.index(current_period_label)).to be < page.text.index(older_period_label)
+      end
+    end
+
+    it "muestra el estado 'En revisión' en la tarjeta cuando el pago fue enviado con comprobante" do
+      sign_in users(:other_consumer_user), role: :consumer
+      visit accounts_path
+
+      card = find("[data-slot='card-title']", text: provider_with_bank.user.name, exact_text: true).ancestor("[data-slot='card']")
+
+      within(card) do
+        expect(page).to have_content("En revisión")
       end
     end
   end

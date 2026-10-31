@@ -62,6 +62,7 @@ const cartItem = (
     description: null,
     price: 280,
     provider_id: id,
+    saved_menu_id: id * 10,
     option_groups: [],
     provider_name: providerName,
     home_delivery: homeDelivery,

@@ -152,14 +152,14 @@ end
 #  delivered_at                  :datetime
 #  description_data              :json
 #  event                         :string           not null
-#  failed                        :boolean
 #  notifiable_type               :string           not null
 #  requires_action               :boolean          not null
 #  role                          :string           not null
-#  send_attempts                 :integer          default(0)
 #  title_data                    :json
 #  twilio_sid                    :string
-#  whatsapp_sent_at              :datetime
+#  whatsapp_last_sent_at         :datetime
+#  whatsapp_send_attempts        :integer          default(0)
+#  whatsapp_send_status          :integer
 #  created_at                    :datetime         not null
 #  updated_at                    :datetime         not null
 #  notifiable_id                 :bigint           not null

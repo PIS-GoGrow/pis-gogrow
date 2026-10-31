@@ -2,6 +2,7 @@ import { Plus } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import AddedBadge from "@/components/consumer/menus/added-badge"
+import FavoriteButton from "@/components/consumer/menus/favorite-button"
 import { Button } from "@/components/ui/button"
 import { formatMoney } from "@/lib/money"
 import { cn } from "@/lib/utils"
@@ -16,6 +17,8 @@ export default function MenuItem({
   isPast = false,
   addedQuantity,
   onSelect,
+  favorite,
+  onToggleFavorite,
 }: {
   providerName: string
   name: string
@@ -26,6 +29,8 @@ export default function MenuItem({
   isPast?: boolean
   addedQuantity?: number
   onSelect?: () => void
+  favorite?: boolean
+  onToggleFavorite?: () => void
 }) {
   const { t } = useTranslation()
   const disabled = soldOut || ordersClosed || isPast
@@ -64,6 +69,16 @@ export default function MenuItem({
           </p>
         )}
       </div>
+      {onToggleFavorite && (
+        <FavoriteButton
+          active={!!favorite}
+          label={t(
+            `pages.consumer_dashboard.index.favorites.${favorite ? "remove" : "add"}`,
+            { name },
+          )}
+          onToggle={onToggleFavorite}
+        />
+      )}
       <Button
         size="icon"
         variant="outline"

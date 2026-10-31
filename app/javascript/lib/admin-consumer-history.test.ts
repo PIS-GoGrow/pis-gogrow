@@ -12,12 +12,25 @@ const month: AdminConsumerMonth = {
   key: "2026-10",
   year: 2026,
   label: "Octubre 2026",
+  name: "Octubre",
   amount: 600,
   subsidy: 400,
   status: "pending",
   providers: [
-    { id: 1, name: "Tu Viandita", amount: 400, status: "pending" },
-    { id: 2, name: "Endulzate", amount: 200, status: "approved" },
+    {
+      id: 1,
+      name: "Tu Viandita",
+      amount: 400,
+      status: "pending",
+      receipt_url: null,
+    },
+    {
+      id: 2,
+      name: "Endulzate",
+      amount: 200,
+      status: "approved",
+      receipt_url: null,
+    },
   ],
   orders: [
     {
@@ -71,7 +84,13 @@ describe("filterConsumerHistory", () => {
 
     expect(result.orders.map((order) => order.id)).toEqual([1])
     expect(result.providers).toEqual([
-      { id: 1, name: "Tu Viandita", amount: 200, status: "pending" },
+      {
+        id: 1,
+        name: "Tu Viandita",
+        amount: 200,
+        status: "pending",
+        receipt_url: null,
+      },
     ])
     expect(result.total).toBe(200)
     expect(result.subsidy).toBe(200)
