@@ -17,10 +17,10 @@ RSpec.describe "Admin::Consumers", type: :request do
   describe "GET /admin/empleados" do
     it "redirects visitors to the sign in page" do
       get admin_consumers_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
 
       get admin_consumers_path, params: { month: "2026-09", filter: "pending" }
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects users without an admin profile" do
@@ -306,7 +306,7 @@ RSpec.describe "Admin::Consumers", type: :request do
       it "redirects visitors without a session to the sign in page" do
         get admin_consumer_path(consumers(:one))
 
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(admin_welcome_path)
       end
 
       it "redirects consumers to the root page" do

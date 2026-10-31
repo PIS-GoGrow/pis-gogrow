@@ -459,7 +459,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
       get dashboard_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     # Transversal — privacidad entre pares: el menú es común a todos los
@@ -724,7 +724,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
     it "redirects visitors to the sign in page" do
       get dashboard_confirmation_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirects users with another role to root_path" do

@@ -19,7 +19,7 @@ RSpec.describe "Admin::DebtReminders", type: :request do
     it "redirige al inicio de sesión cuando no hay sesión activa" do
       post admin_consumer_debt_reminders_path(consumer)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirige al inicio cuando el usuario es un empleado" do

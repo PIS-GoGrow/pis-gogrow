@@ -329,11 +329,11 @@ es:
     support: "¿Tenés dudas o necesitás ayuda? Respondé este correo y nuestro equipo de soporte te va a ayudar a resolverlo."
     invitation:
       subject: "Invitación a Viandas GoGrow"
-      title: "Invitación a Viandas GoGrow"
+      title: "Fuiste invitado a Viandas GoGrow"
       greeting: "Hola %{name},"
-      intro: "Recibiste una invitación de %{company} para unirte como proveedor de viandas a través de la plataforma Viandas GoGrow."
-      cta: "Aceptar invitación"
-      after: "Una vez completado el registro, podés acceder a tu cuenta desde %{url}"
+      intro: "%{company} te invitó a unirte como proveedor de viandas a través de la plataforma Viandas GoGrow."
+      cta: "Unirme ahora"
+      after: "Una vez que te unas, podés acceder a tu cuenta desde %{url}"
     password_reset_code:
       subject: "Restablecimiento de contraseña"
       title: "Restablecimiento de contraseña"
@@ -1439,9 +1439,9 @@ es:
         description: "Simplificá las viandas de tu equipo"
         sign_in: "Continuar con Google"
       provider:
-        heading: "Bienvenido a Viandas GoGrow"
-        description: "¡Hola {{username}}! {{company_name}} te invitó a unirte como proveedor de viandas."
-        sign_in: "Unirse ahora"
+        heading: "Viandas GoGrow"
+        description: "Pedidos, menú y cobros, en un solo lugar"
+        sign_in: "Continuar con Email"
       features:
         label: "Qué podés hacer en Viandas GoGrow"
         go_to: "Ver la tarjeta %{number}"
@@ -1714,6 +1714,7 @@ es:
         title: "Iniciar sesión"
         heading: "¡Bienvenido de nuevo!"
         description: "Ingresá a tu cuenta para continuar gestionando tus viandas."
+        email_label: "Email"
         email_placeholder: "ejemplo@empresa.com"
         submit: "Iniciar sesión"
         forgot_password: "¿Olvidaste tu contraseña?"
@@ -1721,6 +1722,12 @@ es:
           title: "¿Olvidaste tu contraseña?"
           description: "Ingresá tu email y te enviaremos un código para restablecer tu contraseña."
           submit: "Enviar código"
+    provider_welcomes:
+      show:
+        title: "Bienvenido a Viandas GoGrow"
+        heading: "Bienvenido a Viandas GoGrow"
+        description: "¡Hola %{username}! %{company_name} te invitó a unirte como proveedor de viandas."
+        join: "Unirse ahora"
     provider_invitations:
       show:
         title: "Registro de proveedor"
@@ -1730,7 +1737,7 @@ es:
     provider_password_reset_codes:
       show:
         title: "Revisá tu email"
-        description: "¡Gracias! Si hay una cuenta asociada con %{email}, vas a recibir un código de verificación de 6 dígitos. Si no recibiste un email después de unos minutos, revisá tu carpeta de spam."
+        description: "¡Gracias! Si hay una cuenta asociada con %{email} vas a recibir un código de verificación de 6 dígitos.\n\nSi no recibiste un email después de unos minutos, revisá tu carpeta de spam."
         submit: "Verificar"
         resend: "Volver a mandar código"
         resend_in: "Volver a mandar código en %{time}"

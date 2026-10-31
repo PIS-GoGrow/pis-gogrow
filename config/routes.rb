@@ -6,16 +6,19 @@
 Rails.application.routes.draw do
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
-  get  "iniciar-sesion", to: "sessions#new", as: :sign_in
-  post "iniciar-sesion", to: "sessions#create", as: nil
+  get  "iniciar-sesion", to: redirect("/consumidor"), as: nil
+  post "iniciar-sesion", to: "sessions#create", as: :sign_in
 
-  get  "proveedor", to: "provider_sessions#new", as: :provider_sign_in
+  get  "proveedor", to: "home#provider", as: :provider_home
+  get  "proveedor/iniciar-sesion", to: "provider_sessions#new", as: :provider_sign_in
+  post "proveedor/iniciar-sesion", to: "provider_sessions#create"
   post "proveedor", to: "provider_sessions#create"
+  resource :provider_welcome, path: "proveedor/bienvenida", only: :show
   resource :provider_invitation, path: "proveedor/invitacion", only: [ :show, :update ]
   resource :provider_password_reset, path: "proveedor/contrasena", only: [ :create, :edit, :update ], path_names: { edit: "nueva" }
   resource :provider_password_reset_code, path: "proveedor/contrasena/codigo", only: [ :show, :create ]
 
-  get "provider", to: redirect("/proveedor"), as: :provider_welcome
+  get "provider", to: redirect("/proveedor")
   get "provider/*path", to: redirect("/proveedor/%{path}")
   get "admin", to: redirect("/rrhh")
   get "admin/*path", to: redirect("/rrhh/%{path}")
@@ -144,6 +147,7 @@ Rails.application.routes.draw do
   end
 
   root "home#index"
+  get "consumidor", to: "home#consumer", as: :consumer_welcome
   get "rrhh", to: "home#admin", as: :admin_welcome
   post "twilio-callback", to: "twilio_callbacks#callback", as: :twilio_callback
 
