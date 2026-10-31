@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next"
+
 import type { OrderDeliveryMethod, ProviderOrder } from "@/types"
 
 export type StatusFilter = "pending" | "confirmed" | "all"
@@ -34,6 +36,21 @@ function normalize(text: string) {
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
     .toLowerCase()
+}
+
+// Provider::OrdersExport busca sobre los mismos campos: si cambia uno, tiene
+// que cambiar el otro, o el archivo exportado deja de coincidir con la lista.
+export function searchableText(order: ProviderOrder, t: TFunction) {
+  return [
+    order.consumer_name,
+    order.consumer_company,
+    order.menu_name,
+    order.address,
+    order.notes,
+    t("pages.provider_orders.index.code", { id: order.id }),
+    t(`pages.provider_orders.statuses.${order.status}`),
+    t(`pages.provider_orders.index.delivery_methods.${order.delivery_method}`),
+  ]
 }
 
 export function filterOrders(

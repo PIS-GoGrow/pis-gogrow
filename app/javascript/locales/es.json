@@ -1,5 +1,105 @@
 {
   "es": {
+    "benefit_usage": {
+      "errors": {
+        "invalid_month": "Seleccioná un mes válido que no sea futuro.",
+        "invalid_request": "Enviá únicamente el mes que querés consultar.",
+        "rate_limited": "Alcanzaste el límite de resúmenes. Intentá de nuevo en unos minutos.",
+        "summary_unavailable": "No pudimos generar el resumen. Intentá nuevamente más tarde."
+      },
+      "ui": {
+        "ai_description": "Generá una lectura de las estadísticas de este mes. Es opcional y no modifica los indicadores.",
+        "ai_notice": "Texto generado mediante IA. Contrastalo con los indicadores y sus advertencias.",
+        "ai_title": "Resumen con IA",
+        "analysis_link": "Ver análisis del beneficio",
+        "available": "Cupo mensual disponible",
+        "average_note": "Promedio calculado sobre todos los empleados actuales de la empresa, incluidos aquellos que no realizaron pedidos.",
+        "average_per_employee": "Promedio de viandas por empleado",
+        "back": "Volver a Inicio",
+        "capacity": "Capacidad del beneficio",
+        "capacity_note": "El cupo disponible contempla el consumo confirmado y las reservas de pedidos pendientes.",
+        "change_detail": "Mes anterior: %{reference} · Diferencia: %{difference} · Variación: %{percent}",
+        "closed": "Mes cerrado",
+        "consumption": "Resumen del mes",
+        "current_employees": "Empleados actuales",
+        "employee_activity": "Actividad de empleados",
+        "employees": "Empleados",
+        "employees_with_confirmed_orders": "Empleados con pedidos confirmados",
+        "empty": "No hay pedidos confirmados en este período.",
+        "errors": {
+          "configuration_missing": "La generación con IA todavía no está configurada. Las estadísticas siguen disponibles.",
+          "rate_limited": "Alcanzaste el límite de generación. Intentá nuevamente más tarde.",
+          "summary_unavailable": "No pudimos generar el resumen. Intentá nuevamente más tarde. Las estadísticas siguen disponibles."
+        },
+        "generate": "Generar resumen con IA",
+        "generated_at": "Generado el %{date}",
+        "generating": "Generando resumen…",
+        "historical_average": "Promedio sobre la nómina actual",
+        "historical_average_note": "Este promedio utiliza la nómina actual como referencia. La cantidad de empleados al cierre de ese mes puede haber sido diferente.",
+        "historical_capacity": "No se conserva el estado del cupo al cierre de los meses históricos.",
+        "historical_limitations": "Limitaciones históricas",
+        "historical_warnings_grouped": "Algunas estadísticas históricas no pueden calcularse completamente con los registros disponibles.",
+        "indicators": {
+          "company_subsidy_amount": "Subsidio comprometido por la empresa, sin IVA",
+          "confirmed_meals": "Viandas confirmadas",
+          "confirmed_orders": "Pedidos confirmados",
+          "monthly_subsidized_meals": "Viandas con subsidio mensual"
+        },
+        "load_error": "No pudimos cargar las estadísticas",
+        "load_error_detail": "Comprobá tu conexión e intentá nuevamente.",
+        "loading": "Cargando estadísticas del beneficio",
+        "month_label": "Mes del análisis",
+        "not_comparable": "Sin variación comparable con el mes anterior.",
+        "open": "Mes abierto · parcial",
+        "participation": "Participación de empleados",
+        "participation_note": "La participación es el porcentaje de empleados elegibles con al menos un pedido confirmado.",
+        "participation_percent": "Participación",
+        "pending": "Pendientes de confirmación: %{orders} · %{meals}.",
+        "pending_meals_one": "%{count} vianda",
+        "pending_meals_other": "%{count} viandas",
+        "pending_orders_one": "%{count} pedido",
+        "pending_orders_other": "%{count} pedidos",
+        "quota": "Cupo mensual total",
+        "reserved": "Viandas con cupo reservado",
+        "retry": "Reintentar",
+        "specific_limitations": "Otras limitaciones detectadas",
+        "subsidy_explanation": "Cómo se calcula el subsidio",
+        "subsidy_note": "El subsidio de la empresa incluye los beneficios aplicados. Una vianda sin subsidio mensual puede tener un beneficio especial.",
+        "title": "Uso del beneficio",
+        "trend_details": "Ver indicadores mensuales",
+        "trends": "Últimos cuatro meses",
+        "trends_note": "Viandas confirmadas del mes seleccionado y los tres anteriores. El mes abierto es parcial y no se compara con meses cerrados.",
+        "unavailable": "Dato no disponible",
+        "unknown_capacity": "Faltan datos confiables para informar el cupo completo. Los valores desconocidos no equivalen a cero.",
+        "unknown_participation": "No hay una base completa de elegibles para calcular la participación, o no hay empleados elegibles. En meses históricos no se conserva la nómina al cierre.",
+        "used_capacity": "Cupo utilizado o reservado",
+        "used_of": "%{used} de %{quota} viandas utilizadas o reservadas",
+        "variation": "%{percent} respecto al mes anterior",
+        "warning_fallback": "Hay datos incompletos en este período. Interpretá los indicadores con precaución.",
+        "warnings": {
+          "benefit_consumer_mismatch": "Hay beneficios cuyo titular no coincide con el empleado del pedido.",
+          "company_subsidy_amount_unreliable": "El importe del subsidio no puede calcularse de forma confiable.",
+          "confirmed_meals_unreliable": "Las cantidades de viandas confirmadas contienen datos incompletos o inválidos.",
+          "eligibility_unknown": "No se pudo determinar la elegibilidad de todos los empleados.",
+          "employee_counts_use_current_roster": "Los indicadores de empleados usan la nómina actual de la empresa.",
+          "historical_discounts_without_benefit_records": "Hay descuentos confirmados sin registros de beneficio suficientes.",
+          "historical_roster_incomplete": "La nómina histórica al cierre no está disponible.",
+          "historical_status_at_close_unavailable": "No se conserva el estado histórico de los beneficios al cierre.",
+          "historical_trends_from_retained_records": "Las tendencias históricas se reconstruyen con los registros conservados.",
+          "monthly_benefit_units_exceed_order_amount": "Hay usos del beneficio mensual incompatibles con las cantidades pedidas.",
+          "monthly_quota_unknown": "No se conoce el cupo mensual de todos los empleados elegibles.",
+          "monthly_usage_exceeds_quota": "Se detectó consumo mensual que supera el cupo registrado.",
+          "monthly_usage_outside_eligibility": "Hay usos mensuales fuera de la elegibilidad conocida.",
+          "open_month_partial": "El mes abierto todavía puede incorporar pedidos y cambios.",
+          "pending_discounts_without_benefit_records": "Hay descuentos pendientes sin registros de beneficio suficientes.",
+          "trend_company_subsidy_unknown": "No se conoce el importe del subsidio de la empresa.",
+          "trend_confirmed_meals_unknown": "No se conoce la cantidad de viandas confirmadas.",
+          "trend_monthly_subsidy_unknown": "No se conoce la cantidad de viandas con subsidio mensual."
+        },
+        "warnings_title": "Limitaciones de los datos",
+        "without_subsidy": "Viandas sin subsidio mensual"
+      }
+    },
     "common": {
       "admin": "Admin",
       "cancel": "Cancelar",
@@ -932,9 +1032,9 @@
           }
         },
         "provider": {
-          "description": "¡Hola {{username}}! {{company_name}} te invitó a unirte como proveedor de viandas.",
-          "heading": "Bienvenido a Viandas GoGrow",
-          "sign_in": "Unirse ahora"
+          "description": "Pedidos, menú y cobros, en un solo lugar",
+          "heading": "Viandas GoGrow",
+          "sign_in": "Continuar con Email"
         },
         "title": "Viandas GoGrow"
       },
@@ -949,6 +1049,27 @@
           "home": "Domicilio",
           "office": "Oficina"
         },
+        "edit": {
+          "add_units_dialog": {
+            "back": "Volver",
+            "confirm": "Aumentar pedido",
+            "description": "Se enviará un pedido complementario al que ya tenés aprobado, sujeto a la aprobación del proveedor.",
+            "title": "¿Agregar más unidades?"
+          },
+          "address": "Dirección de entrega",
+          "modify_confirmed_dialog": {
+            "back": "Volver",
+            "confirm": "Modificar pedido",
+            "description": "Este pedido ya fue confirmado. Modificarlo significa que se cancelará y se volverá a pedir uno nuevo, sujeto a la aprobación del proveedor.",
+            "title": "¿Modificar el pedido?"
+          },
+          "title": "Modificar pedido",
+          "updated_dialog": {
+            "description": "Te notificaremos cuando el proveedor confirme tu pedido.",
+            "done": "Listo",
+            "title": "Pedido modificado"
+          }
+        },
         "index": {
           "all_providers": "Todos los proveedores",
           "base_price": "Precio base: %{amount}",
@@ -960,6 +1081,11 @@
             "title": "¿Cancelar pedido?"
           },
           "cancelled_address": "Lo pediste para: %{address} (%{delivery_method})",
+          "cancelled_dialog": {
+            "description": "Podés hacer un nuevo pedido cuando quieras.",
+            "done": "Listo",
+            "title": "Pedido cancelado"
+          },
           "cannot_cancel": {
             "already_closed": "Este pedido ya está cerrado.",
             "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede cancelar.",
@@ -993,22 +1119,12 @@
           "base_price": "Precio base",
           "cannot_edit": {
             "already_closed": "Este pedido ya está cerrado.",
-            "already_confirmed": "El proveedor ya confirmó este pedido, así que no se puede modificar.",
+            "confirmed_for_today": "Ya está confirmado para hoy, así que no se puede modificar.",
             "unavailable": "Este pedido no tiene fecha de entrega, así que no se puede modificar."
           },
           "date": "Fecha de entrega",
           "delivery_method": "Modalidad de entrega",
           "edit": "Editar",
-          "edit_dialog": {
-            "address": "Dirección de entrega",
-            "back": "Volver",
-            "confirm": "Guardar cambios",
-            "description": "Podés cambiar la cantidad, las opciones del plato, la dirección de entrega y las notas. Para cambiar el plato o la fecha, cancelá el pedido y hacé uno nuevo.",
-            "notes": "Notas",
-            "notes_placeholder": "Sin salsa, sin cebolla…",
-            "quantity": "Cantidad",
-            "title": "Modificar pedido"
-          },
           "no_notes": "Sin notas",
           "notes": "Notas",
           "quantity": "Cantidad",
@@ -1624,6 +1740,7 @@
           "empty_filtered_description": "No tenés pedidos que coincidan con los filtros.",
           "empty_history_description": "Todavía no tenés pedidos anteriores.",
           "empty_title": "No hay pedidos",
+          "export": "Exportar pedidos",
           "no_address": "Sin dirección de entrega",
           "quantity": "x%{count}",
           "search_label": "Buscar pedidos",
@@ -1679,7 +1796,7 @@
       "provider_password_reset_codes": {
         "show": {
           "back": "Volver",
-          "description": "¡Gracias! Si hay una cuenta asociada con %{email}, vas a recibir un código de verificación de 6 dígitos. Si no recibiste un email después de unos minutos, revisá tu carpeta de spam.",
+          "description": "¡Gracias! Si hay una cuenta asociada con %{email} vas a recibir un código de verificación de 6 dígitos.\n\nSi no recibiste un email después de unos minutos, revisá tu carpeta de spam.",
           "resend": "Volver a mandar código",
           "resend_in": "Volver a mandar código en %{time}",
           "submit": "Verificar",
@@ -1718,6 +1835,7 @@
       "provider_sessions": {
         "new": {
           "description": "Ingresá a tu cuenta para continuar gestionando tus viandas.",
+          "email_label": "Email",
           "email_placeholder": "ejemplo@empresa.com",
           "forgot": {
             "description": "Ingresá tu email y te enviaremos un código para restablecer tu contraseña.",
@@ -1728,6 +1846,14 @@
           "heading": "¡Bienvenido de nuevo!",
           "submit": "Iniciar sesión",
           "title": "Iniciar sesión"
+        }
+      },
+      "provider_welcomes": {
+        "show": {
+          "description": "¡Hola %{username}! %{company_name} te invitó a unirte como proveedor de viandas.",
+          "heading": "Bienvenido a Viandas GoGrow",
+          "join": "Unirse ahora",
+          "title": "Bienvenido a Viandas GoGrow"
         }
       },
       "reviews": {

@@ -116,7 +116,7 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
 
     sign_out
     visit settings_profile_path
-    expect(page).to have_current_path(sign_in_path)
+    expect(page).to have_current_path(consumer_welcome_path)
 
     sign_in provider.user, role: :provider
     visit settings_profile_path
@@ -175,7 +175,7 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
   it "keeps a visitor with no session out of the settings" do
     visit settings_profile_path
 
-    expect(page).to have_current_path(sign_in_path)
+    expect(page).to have_current_path(consumer_welcome_path)
     expect(page).to have_no_content(I18n.t("pages.settings.profile.home_delivery.label"))
   end
 end

@@ -37,7 +37,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
 
       get admin_benefit_configurations_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer to the root page" do
@@ -114,7 +114,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(configuration.benefit_rules.first.limit).to eq(20)
     end
 
-    it "always applies the change from the first day of next month, regardless of what is posted" do
+    it "always applies the change from the configurable month, regardless of what is posted" do
       post admin_benefit_configurations_path, params: {
         benefit_configuration: {
           subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20,
@@ -122,7 +122,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
         }
       }
 
-      expect(BenefitConfiguration.last.benefit_rules.first.effective_from).to eq(Date.current.next_month.beginning_of_month)
+      expect(BenefitConfiguration.last.benefit_rules.first.effective_from).to eq(Calendar.new.configurable_month)
     end
 
     it "sets effective_from to two months ahead when posted on or after configuration cutoff date" do
@@ -214,7 +214,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       BenefitConfiguration.new_base_subsidy(
         company: company, created_by: admin_user,
         subsidy_percentage: 50, max_price: 150, limit: 20,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       ).save!
 
       expect {
@@ -231,7 +231,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       pending = BenefitConfiguration.new_base_subsidy(
         company: company, created_by: admin_user,
         subsidy_percentage: 50, max_price: 150, limit: 20,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       )
       pending.save!
 
@@ -244,7 +244,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(BenefitConfiguration.exists?(pending.id)).to be false
 
       new_pending =
-        BenefitConfiguration.joins(:benefit_rules).where(benefit_rules: { effective_from: Date.current.next_month.beginning_of_month }).last
+        BenefitConfiguration.joins(:benefit_rules).where(benefit_rules: { effective_from: Calendar.new.configurable_month }).last
       expect(new_pending.subsidy_percentage).to eq(60)
       expect(new_pending.benefit_rules.first.max_price).to eq(200)
       expect(new_pending.benefit_rules.first.limit).to eq(25)
@@ -260,7 +260,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       BenefitConfiguration.new_base_subsidy(
         company: company, created_by: admin_user,
         subsidy_percentage: 55, max_price: 160, limit: 22,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       ).save!
 
       post admin_benefit_configurations_path, params: {
@@ -280,7 +280,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
         }
       }.not_to change(BenefitConfiguration, :count)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer to the root page without creating a configuration" do
@@ -326,14 +326,14 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       other_pending = BenefitConfiguration.new_base_subsidy(
         company: other_company, created_by: other_admin,
         subsidy_percentage: 80, max_price: 300, limit: 10,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       )
       other_pending.save!
 
       own_pending = BenefitConfiguration.new_base_subsidy(
         company: company, created_by: admin_user,
         subsidy_percentage: 50, max_price: 150, limit: 20,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       )
       own_pending.save!
 
@@ -351,7 +351,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       BenefitConfiguration.new_base_subsidy(
         company: company, created_by: admin_user,
         subsidy_percentage: 50, max_price: 150, limit: 20,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       ).save!
 
       expect {

@@ -28,6 +28,17 @@ vi.mock("@inertiajs/react", async () => {
 })
 
 describe("AdminMobileNav", () => {
+  it("keeps four items and Inicio active in the analysis", () => {
+    currentUrl = "/rrhh/analisis-beneficio?month=2026-10"
+    const menu = nav()
+    expect(menu.getAllByRole("link")).toHaveLength(4)
+    expect(menu.getByRole("link", { name: "Inicio" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    currentUrl = "/rrhh/inicio"
+  })
+
   function nav() {
     render(<AdminMobileNav />)
     return within(
