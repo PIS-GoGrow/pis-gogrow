@@ -15,13 +15,15 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
   let(:sched_future) { schedules(:future) }
 
   around do |example|
-    travel_to(Time.current.change(hour: 12, min: 0, sec: 0)) { example.run }
+    mid_month = Date.current.beginning_of_month.advance(days: 14)
+    travel_to(mid_month.next_occurring(:wednesday).noon) { example.run }
   end
 
   before do
-    sched_today.update!(amount: 10, available: true)
-    future_date = Date.tomorrow.month == Date.current.month ? Date.tomorrow : Date.current
-    sched_future.update!(amount: 10, available: true, date: future_date)
+    schedules(:past).update!(date: Date.current - 5.days)
+    sched_today.update!(amount: 10, available: true, date: Date.current)
+    sched_future.update!(amount: 10, available: true, date: Date.tomorrow)
+    benefit.update!(due_date: Date.current.end_of_month)
     provider.update!(order_deadline: 2.hours.from_now.strftime("%H:%M"))
   end
 

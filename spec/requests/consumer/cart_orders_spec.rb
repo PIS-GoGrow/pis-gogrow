@@ -440,7 +440,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         percentage: 50,
         amount: 10,
         max_price: schedule.menu.price + 50,
-        due_date: Date.current.end_of_month,
+        due_date: 1.month.from_now,
         status: :current
       )
 
@@ -465,7 +465,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         benefit_configuration: benefit_configurations(:monthly),
         percentage: 50,
         amount: 1,
-        due_date: Date.current.end_of_month,
+        due_date: 1.month.from_now,
         status: :current
       )
       order = Order.create!(

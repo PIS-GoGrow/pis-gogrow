@@ -49,7 +49,7 @@ class BenefitRule < ApplicationRecord
   # Igual a la anterior, indica cuándo debería caducar un beneficio futuro si se crea
   # hoy.
   def future_benefit_deadline(consumer, date: Date.current)
-    benefit_deadline consumer, date
+    benefit_deadline consumer, date:
   end
 
   # Devuelve desde qué día de entrega se puede usar el beneficio. nil significa que
