@@ -28,7 +28,7 @@ class ApplicationController < ActionController::Base
     authenticate
     return if performed?
 
-    redirect_to sign_in_path if Current.session && !Current.user.consumer?
+    redirect_to consumer_welcome_path if Current.session && !Current.user.consumer?
   end
 
   def authenticate
@@ -36,7 +36,7 @@ class ApplicationController < ActionController::Base
   end
 
   def unauthenticated_path
-    sign_in_path
+    consumer_welcome_path
   end
 
   def require_no_authentication

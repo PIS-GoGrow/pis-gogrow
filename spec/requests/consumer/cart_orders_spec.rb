@@ -16,7 +16,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   describe "Control de acceso por rol en /dashboard y POST /pedidos" do
     it "redirige al inicio de sesión cuando un visitante no autenticado intenta acceder a /dashboard" do
       get dashboard_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirige al inicio de sesión cuando un visitante no autenticado intenta enviar un carrito a POST /pedidos" do
@@ -26,7 +26,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
           items: [ { schedule_id: schedule.id, quantity: 1, notes: "", options: [] } ]
         }
       }
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "rechaza el acceso a /dashboard para usuarios con rol provider redirigiendo a la raíz" do
@@ -346,7 +346,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   describe "GET /dashboard/cart y POST /orders/pricing - Control de acceso y props" do
     it "redirige al inicio de sesión cuando un visitante no autenticado accede a /dashboard/cart" do
       get dashboard_cart_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirige a la raíz cuando un provider accede a /dashboard/cart" do
@@ -376,7 +376,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
     it "redirige al inicio de sesión cuando un visitante no autenticado consulta POST /orders/pricing" do
       post pricing_orders_path, params: { items: [ { schedule_id: schedule.id, quantity: 1 } ] }
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirige a la raíz cuando un provider consulta POST /orders/pricing" do
@@ -528,7 +528,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
     it "redirige al inicio de sesión cuando un visitante no autenticado intenta acceder a la confirmación" do
       get dashboard_confirmation_path(confirmed_order_ids: [ own_order.id ])
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "rechaza el acceso a la confirmación para usuarios con rol provider redirigiendo a la raíz" do

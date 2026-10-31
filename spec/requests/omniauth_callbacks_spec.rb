@@ -23,7 +23,7 @@ RSpec.describe "OmniauthCallbacks", type: :request do
       get "/auth/google_oauth2/callback"
 
       expect(User.find_by(email: "nonexistent@gmail.com")).to be_nil
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "rejects login if the user has no roles" do
@@ -35,7 +35,7 @@ RSpec.describe "OmniauthCallbacks", type: :request do
 
       get "/auth/google_oauth2/callback"
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "signs in and redirects to root when user has a single role" do
@@ -95,6 +95,52 @@ RSpec.describe "OmniauthCallbacks", type: :request do
       expect(response).to redirect_to(edit_session_path(session))
     end
 
+    context "with a consumer and admin user" do
+      let(:user) do
+        company = Company.first || Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+        users(:one).tap do |u|
+          u.update!(email: "empleado-rrhh@gmail.com")
+          Admin.create!(user: u, company:)
+          u.sync_roles!
+        end
+      end
+
+      before { OmniAuth.config.mock_auth[:google_oauth2] = mock_google_auth(email: user.email) }
+
+      it "signs in as admin when coming from /rrhh" do
+        post "/auth/google_oauth2", params: { origin: "/rrhh" }
+        get "/auth/google_oauth2/callback"
+
+        expect(user.sessions.last).to be_admin
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "signs in as consumer when coming from /consumidor" do
+        post "/auth/google_oauth2", params: { origin: "/consumidor" }
+        get "/auth/google_oauth2/callback"
+
+        expect(user.sessions.last).to be_consumer
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "rejects a user without the role of the entry screen" do
+        user.admin.destroy!
+        user.sync_roles!
+
+        post "/auth/google_oauth2", params: { origin: "/rrhh" }
+        get "/auth/google_oauth2/callback"
+
+        expect(response).to redirect_to("/rrhh")
+        expect(user.sessions).to be_empty
+      end
+
+      it "asks for the role when the entry point is unknown" do
+        get "/auth/google_oauth2/callback"
+
+        expect(response).to redirect_to(edit_session_path(user.sessions.last))
+      end
+    end
+
     context "with a domain that isn't allowlisted" do
       it "rejects the login without creating an account" do
         auth = mock_google_auth(email: "someone@evil.com")
@@ -103,7 +149,7 @@ RSpec.describe "OmniauthCallbacks", type: :request do
         get "/auth/google_oauth2/callback"
 
         expect(User.find_by(email: "someone@evil.com")).to be_nil
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(consumer_welcome_path)
       end
     end
 
@@ -130,11 +176,37 @@ RSpec.describe "OmniauthCallbacks", type: :request do
     end
   end
 
+  describe "errors from an entry screen" do
+    it "sends a failed RRHH login back to /rrhh" do
+      OmniAuth.config.mock_auth[:google_oauth2] = mock_google_auth(email: "nadie@gmail.com")
+      post "/auth/google_oauth2", params: { origin: "/rrhh" }
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to("/rrhh")
+    end
+
+    it "sends a rejected consumer login back to /consumidor" do
+      OmniAuth.config.mock_auth[:google_oauth2] = mock_google_auth(email: "nadie@gmail.com")
+      post "/auth/google_oauth2", params: { origin: "/consumidor" }
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to("/consumidor")
+    end
+
+    it "ignores an origin that is not an entry screen" do
+      OmniAuth.config.mock_auth[:google_oauth2] = mock_google_auth(email: "nadie@gmail.com")
+      post "/auth/google_oauth2", params: { origin: "https://evil.com/x" }
+      get "/auth/google_oauth2/callback"
+
+      expect(response).to redirect_to(consumer_welcome_path)
+    end
+  end
+
   describe "GET /auth/failure" do
     it "redirects to sign in with an error" do
       get "/auth/failure"
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
   end
 

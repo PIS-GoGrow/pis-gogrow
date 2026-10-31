@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button"
 import {
   adminDashboard,
   consumerDashboard,
+  consumerWelcome,
   home,
   providerDashboard,
   providerSignIn,
-  sessions,
 } from "@/routes"
 
 export default function NotFound() {
@@ -35,7 +35,7 @@ export default function NotFound() {
         },
       }[auth.session.role]
     : {
-        href: inProviderArea ? providerSignIn() : sessions.new(),
+        href: inProviderArea ? providerSignIn() : consumerWelcome(),
         label: t("pages.errors.not_found.sign_in"),
       }
 

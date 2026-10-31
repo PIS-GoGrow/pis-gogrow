@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 class Session < ApplicationRecord
+  ENTRY_ROLES = {
+    "/consumidor" => "consumer",
+    "/rrhh" => "admin",
+    "/proveedor" => "provider"
+  }.freeze
+
   belongs_to :user
 
   before_create do

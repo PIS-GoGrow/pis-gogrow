@@ -924,9 +924,9 @@
           }
         },
         "provider": {
-          "description": "¡Hola {{username}}! {{company_name}} te invitó a unirte como proveedor de viandas.",
-          "heading": "Bienvenido a Viandas GoGrow",
-          "sign_in": "Unirse ahora"
+          "description": "Pedidos, menú y cobros, en un solo lugar",
+          "heading": "Viandas GoGrow",
+          "sign_in": "Continuar con Email"
         },
         "title": "Viandas GoGrow"
       },
@@ -1687,7 +1687,7 @@
       "provider_password_reset_codes": {
         "show": {
           "back": "Volver",
-          "description": "¡Gracias! Si hay una cuenta asociada con %{email}, vas a recibir un código de verificación de 6 dígitos. Si no recibiste un email después de unos minutos, revisá tu carpeta de spam.",
+          "description": "¡Gracias! Si hay una cuenta asociada con %{email} vas a recibir un código de verificación de 6 dígitos.\n\nSi no recibiste un email después de unos minutos, revisá tu carpeta de spam.",
           "resend": "Volver a mandar código",
           "resend_in": "Volver a mandar código en %{time}",
           "submit": "Verificar",
@@ -1726,6 +1726,7 @@
       "provider_sessions": {
         "new": {
           "description": "Ingresá a tu cuenta para continuar gestionando tus viandas.",
+          "email_label": "Email",
           "email_placeholder": "ejemplo@empresa.com",
           "forgot": {
             "description": "Ingresá tu email y te enviaremos un código para restablecer tu contraseña.",
@@ -1736,6 +1737,14 @@
           "heading": "¡Bienvenido de nuevo!",
           "submit": "Iniciar sesión",
           "title": "Iniciar sesión"
+        }
+      },
+      "provider_welcomes": {
+        "show": {
+          "description": "¡Hola %{username}! %{company_name} te invitó a unirte como proveedor de viandas.",
+          "heading": "Bienvenido a Viandas GoGrow",
+          "join": "Unirse ahora",
+          "title": "Bienvenido a Viandas GoGrow"
         }
       },
       "reviews": {

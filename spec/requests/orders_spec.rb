@@ -8,7 +8,7 @@ RSpec.describe "Orders", type: :request do
   describe "GET /pedidos" do
     it "redirects visitors to the sign in page" do
       get orders_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirects users with a different active role to the home page" do
@@ -129,7 +129,7 @@ RSpec.describe "Orders", type: :request do
   describe "GET /pedidos/:id" do
     it "redirects visitors to the sign in page" do
       get order_path(orders(:upcoming_confirmed_future))
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     context "when signed in as an employee" do
@@ -220,7 +220,7 @@ RSpec.describe "Orders", type: :request do
   describe "GET /pedidos/:id/editar" do
     it "redirects visitors to the sign in page" do
       get edit_order_path(orders(:upcoming_pending_future))
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     context "when signed in as an employee" do
@@ -483,7 +483,7 @@ RSpec.describe "Orders", type: :request do
       sign_out
 
       post orders_path, params: cart_params(company, schedule, options: [])
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirects users with provider role when posting an order" do
@@ -1214,7 +1214,7 @@ RSpec.describe "Orders", type: :request do
     it "redirects visitors to the sign in page" do
       patch cancel_consumer_order_path(orders(:upcoming_pending_future))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "rejects a session with a different active role" do
@@ -1379,7 +1379,7 @@ RSpec.describe "Orders", type: :request do
     it "redirects visitors to the sign in page" do
       patch order_path(order), params: update_params
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
       expect(order.reload.amount).to eq(1)
     end
 
