@@ -166,7 +166,10 @@ export default function Index({
               <div className="grid w-full gap-4">
                 {benefit_available > 0 && (
                   <Progress
-                    value={Math.min(100, (benefit_used / benefit_available) * 100)}
+                    value={Math.min(
+                      100,
+                      (benefit_used / benefit_available) * 100,
+                    )}
                     aria-label={t("pages.accounts.index.spending")}
                   />
                 )}
