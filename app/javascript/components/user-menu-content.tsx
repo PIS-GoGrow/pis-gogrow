@@ -76,15 +76,14 @@ export function UserMenuContent({ auth }: UserMenuContentProps) {
       <DropdownMenuGroup>
         <DropdownMenuItem asChild>
           <Link
-            className="block w-full"
+            className="flex items-center w-full"
             href={
               session.role === "provider"
-                ? providerAccount()
+                ? providerAccount().url
                 : session.role === "admin"
-                  ? adminAccount()
-                  : settingsProfiles.show()
+                  ? adminAccount().url
+                  : settingsProfiles.show().url
             }
-            as="button"
             prefetch
             onClick={cleanup}
           >
