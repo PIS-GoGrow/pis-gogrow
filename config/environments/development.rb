@@ -45,8 +45,9 @@ Rails.application.configure do
 
   end
 
-  # Set localhost to be used by links generated in mailer templates.
+  # Set localhost to be used by links generated in mailer templates and background jobs.
   config.action_mailer.default_url_options = { host: "localhost", port: 3001 }
+  Rails.application.routes.default_url_options = { host: "localhost", port: 3001 }
 
   if ENV["SMTP_HOST"].present?
     config.action_mailer.delivery_method = :smtp
