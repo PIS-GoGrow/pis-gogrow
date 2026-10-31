@@ -1750,8 +1750,77 @@ RSpec.describe "Orders", type: :request do
 
           expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2, notes: nil)
 
+          expect(response).to redirect_to(edit_order_path(confirmed))
+
           follow_redirect!
           expect(inertia).to have_flash(alert: I18n.t("validations.schedule_unavailable"))
+        end
+
+        context "when the dish changed after the employee accepted adding units" do
+          let(:group) do
+            confirmed.schedule.menu.option_groups.create!(name: "Salsa", options: [ "Filetto", "Bolognesa" ], limit: 1, required: false)
+          end
+
+          before do
+            confirmed.schedule.update_columns(amount: 20)
+            confirmed.update_columns(selected_options: [ { group_id: group.id, name: "Salsa", values: [ "Filetto" ] } ])
+          end
+
+          def add_units(address: "18 de Julio 1006")
+            patch order_path(confirmed), params: update_params(
+              quantity: 3, address:, options: [ { group_id: group.id, values: [ "Filetto" ] } ]
+            ).deep_merge(order: { add_units: true })
+          end
+
+          it "asks for the complementary order with the new name when the group was renamed" do
+            group.update!(name: "Salsa de la casa")
+
+            expect { add_units }.to change(Order, :count).by(1)
+
+            expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2)
+            expect(Order.last).to have_attributes(status: "pending", amount: 1)
+            expect(Order.last.selected_options.sole["name"]).to eq("Salsa de la casa")
+          end
+
+          it "keeps the confirmed order through several renames" do
+            group.update!(name: "Salsa de la casa")
+            add_units
+            group.update!(name: "Salsa del día")
+            add_units
+
+            expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2)
+            expect(Order.where(status: :pending, schedule: confirmed.schedule).filter_map { it.selected_options.first&.dig("name") })
+              .to contain_exactly("Salsa de la casa", "Salsa del día")
+          end
+
+          it "refuses without cancelling when the chosen group no longer exists" do
+            group.destroy!
+
+            expect { add_units }.not_to change(Order, :count)
+
+            expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2)
+            expect(response).to redirect_to(edit_order_path(confirmed))
+
+            follow_redirect!
+            expect(inertia).to have_flash(alert: I18n.t("validations.add_units_unavailable"))
+          end
+
+          it "refuses without cancelling when the chosen option no longer exists" do
+            group.update!(options: [ "Bolognesa" ])
+
+            expect { add_units }.not_to change(Order, :count)
+
+            expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2)
+          end
+
+          it "refuses without cancelling when the provider stopped delivering home" do
+            confirmed.update_columns(delivery_method: "home", address: "Colonia 1370")
+            confirmed.provider.update_columns(home_delivery: false)
+
+            expect { add_units(address: "Colonia 1370") }.not_to change(Order, :count)
+
+            expect(confirmed.reload).to have_attributes(status: "confirmed", delivery_method: "home", address: "Colonia 1370")
+          end
         end
 
         it "refuses to modify it on its delivery day" do

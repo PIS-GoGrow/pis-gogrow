@@ -273,7 +273,7 @@ class Order < ApplicationRecord
   #
   # Devuelve el pedido que queda con el cambio, o false si no se pudo: uno
   # confirmado no se reescribe (ver reorder_confirmed), así que puede ser otro.
-  def modify(by:, quantity:, notes:, delivery:, selected_options: nil)
+  def modify(by:, quantity:, notes:, delivery:, selected_options: nil, add_units: false)
     selected_options ||= self.selected_options
 
     transaction do
@@ -281,7 +281,7 @@ class Order < ApplicationRecord
 
       with_lock do
         return false unless modifiable?
-        return reorder_confirmed(by:, quantity:, notes:, delivery:, selected_options:) if confirmed?
+        return reorder_confirmed(by:, quantity:, notes:, delivery:, selected_options:, add_units:) if confirmed?
 
         schedule.with_lock do
           # Bajar o mantener cantidad no cuenta como pedir "de más": solo se
@@ -534,14 +534,20 @@ class Order < ApplicationRecord
   # cambio cancela este y pide uno nuevo. Los dos quedan pendientes, sujetos a
   # su aprobación. Se cancela primero para que el pedido nuevo cuente con el
   # cupo y los beneficios que este libera, y el savepoint deshace la
-  # cancelación si el nuevo no se puede pedir.
-  def reorder_confirmed(by:, quantity:, notes:, delivery:, selected_options:)
+  # cancelación si el nuevo no se puede pedir. Con add_units el empleado aceptó
+  # solo sumar unidades: si eso ya no es posible se rechaza, nunca se cancela.
+  def reorder_confirmed(by:, quantity:, notes:, delivery:, selected_options:, add_units:)
     same_details = notes.presence == self.notes &&
       delivery.values_at(:delivery_method, :address) == [ delivery_method, address ] &&
-      selected_options.as_json == self.selected_options.as_json
+      chosen_values(selected_options) == chosen_values(self.selected_options)
     return self if same_details && quantity == amount
 
     adding_units = same_details && quantity > amount
+    if add_units && !adding_units
+      errors.add(:base, I18n.t("validations.add_units_unavailable"))
+      return false
+    end
+
     units = adding_units ? quantity - amount : quantity
     chosen_benefit_ids = benefit_ids
     replacement = nil
@@ -568,6 +574,12 @@ class Order < ApplicationRecord
 
     replacement&.errors&.each { errors.add(:base, it.attribute == :schedule_id ? it.message : it.full_message) }
     false
+  end
+
+  # El nombre del grupo queda fuera: el pedido guarda el del momento en que se
+  # hizo y el proveedor puede renombrarlo sin que cambie lo elegido.
+  def chosen_values(options)
+    options.as_json.map { it.values_at("group_id", "values") }
   end
 
   def replace_benefits!(benefits)

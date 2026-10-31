@@ -78,6 +78,7 @@ es:
     invalid_email: "Ingresá un correo válido."
     password_required: "Ingresá una contraseña."
     order_not_modifiable: "Este pedido ya no se puede modificar."
+    add_units_unavailable: "El plato cambió, así que no se pueden sumar unidades a este pedido. Tu pedido sigue confirmado."
     password_challenge_invalid: "La verificación de contraseña no es válida"
     menu_import:
       name: "Falta el nombre del plato."

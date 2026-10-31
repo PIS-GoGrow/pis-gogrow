@@ -132,16 +132,17 @@ class Consumer::OrdersController < Consumer::InertiaController
       quantity: update_params[:quantity].to_i,
       notes: update_params[:notes],
       delivery:,
-      selected_options: selected_options_for(order.schedule&.menu, update_params[:options])
+      selected_options: selected_options_for(order.schedule&.menu, update_params[:options]),
+      add_units: ActiveModel::Type::Boolean.new.cast(update_params[:add_units])
     )
 
     if modified
       flash.inertia[:order_updated] = true
       redirect_to edit_order_path(modified), status: :see_other
     else
-      redirect_to order.modifiable? ? edit_order_path(order) : order_path(order),
-                  alert: order.errors.full_messages.first || t("validations.order_not_modifiable"),
-                  status: :see_other
+      alert = order.errors.full_messages.first || t("validations.order_not_modifiable")
+      # El rollback de un pedido de reemplazo no deshace la cancelación en memoria.
+      redirect_to order.reload.modifiable? ? edit_order_path(order) : order_path(order), alert:, status: :see_other
     end
   end
 
@@ -261,7 +262,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def update_params
-    params.expect(order: [ :quantity, :address, :notes, options: [ [ :group_id, { values: [] } ] ] ])
+    params.expect(order: [ :quantity, :address, :notes, :add_units, options: [ [ :group_id, { values: [] } ] ] ])
   end
 
   def order_params

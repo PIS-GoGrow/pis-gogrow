@@ -102,6 +102,7 @@ export default function Edit({
     transform(({ selections, ...rest }) => ({
       order: {
         ...rest,
+        add_units: confirmKind === "add_units",
         options: Object.entries(selections).map(([group_id, values]) => ({
           group_id: Number(group_id),
           values,
