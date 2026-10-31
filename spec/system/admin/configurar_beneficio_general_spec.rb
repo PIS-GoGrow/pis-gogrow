@@ -36,7 +36,7 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
     expect(page).to have_content("Hay un cambio programado para el " + date, wait: 30)
 
     new_config = BenefitConfiguration.joins(:benefit_rules)
-                                     .where(benefit_rules: { effective_from: Date.current.next_month.beginning_of_month })
+                                     .where(benefit_rules: { effective_from: Calendar.new.configurable_month })
                                      .last
     expect(new_config).to be_present
     expect(new_config.subsidy_percentage).to eq(65)
@@ -52,7 +52,7 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
       subsidy_percentage: 60,
       max_price: 200,
       limit: 20,
-      effective_from: Date.current.next_month.beginning_of_month
+      effective_from: Calendar.new.configurable_month
     ).save!
 
     visit admin_benefit_configurations_path
@@ -71,7 +71,7 @@ RSpec.describe "Configuración de beneficio general por RRHH", type: :system do
     expect(page).to have_content("Hay un cambio programado para el " + date, wait: 30)
 
     replaced_config = BenefitConfiguration.joins(:benefit_rules)
-                                          .where(benefit_rules: { effective_from: Date.current.next_month.beginning_of_month })
+                                          .where(benefit_rules: { effective_from: Calendar.new.configurable_month })
                                           .last
     expect(replaced_config).to be_present
     expect(replaced_config.subsidy_percentage).to eq(70)
