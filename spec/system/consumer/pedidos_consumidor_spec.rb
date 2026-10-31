@@ -193,15 +193,65 @@ RSpec.describe "Pedidos del consumidor" do
       click_link "Editar"
     end
 
-    expect(page).to have_current_path(/edit=1/)
-    within("[role=dialog]") do
-      expect(page).to have_content("Modificar pedido")
-      fill_in "notes", with: "Sin cebolla por favor"
-      click_button "Guardar cambios"
+    expect(page).to have_current_path(/editar/)
+    fill_in "notes", with: "Sin cebolla por favor"
+    click_button "Modificar"
+
+    confirm_order_modified
+    click_link "Milanesa con papas fritas", match: :first
+    expect(page).to have_content("Sin cebolla por favor")
+  end
+
+  it "vuelve a la lista de órdenes al salir de una edición abierta desde ahí" do
+    visit orders_path
+
+    within(find("[data-slot=card]", text: "Milanesa con papas fritas", match: :first)) do
+      click_link "Editar"
     end
 
-    expect(page).to have_content("Pedido actualizado")
-    expect(page).to have_content("Sin cebolla por favor")
+    click_button "Volver"
+
+    expect(page).to have_current_path(orders_path)
+  end
+
+  it "pide un complementario al agregar unidades a un pedido confirmado" do
+    confirmed = orders(:upcoming_confirmed_future)
+
+    visit order_path(confirmed)
+
+    click_link "Editar"
+    click_button "Agregar uno"
+    click_button "Modificar"
+
+    within("[role=dialog]", text: "¿Agregar más unidades?") do
+      click_button "Aumentar pedido"
+    end
+
+    confirm_order_modified
+
+    complementary = confirmed.consumer.orders.order(:id).last
+    expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2)
+    expect(complementary).to have_attributes(status: "pending", amount: 1)
+  end
+
+  it "cancela y vuelve a pedir un pedido confirmado al cambiarle otros datos" do
+    confirmed = orders(:upcoming_confirmed_future)
+
+    visit order_path(confirmed)
+
+    click_link "Editar"
+    fill_in "notes", with: "Sin sal"
+    click_button "Modificar"
+
+    within("[role=dialog]", text: "¿Modificar el pedido?") do
+      click_button "Modificar pedido"
+    end
+
+    confirm_order_modified
+
+    replacement = confirmed.consumer.orders.order(:id).last
+    expect(replacement).to have_attributes(status: "pending", notes: "Sin sal")
+    expect(confirmed.reload.status).to eq("cancelled")
   end
 
   it "permite modificar y cancelar desde la pantalla de detalle de la orden" do
@@ -210,13 +260,12 @@ RSpec.describe "Pedidos del consumidor" do
     visit order_path(order)
 
     # Modificar desde el detalle
-    click_button "Editar"
-    within("[role=dialog]") do
-      fill_in "notes", with: "Con servilletas extras"
-      click_button "Guardar cambios"
-    end
+    click_link "Editar"
+    fill_in "notes", with: "Con servilletas extras"
+    click_button "Modificar"
 
-    expect(page).to have_content("Pedido actualizado")
+    confirm_order_modified
+    visit_hydrated order_path(order)
     expect(page).to have_content("Con servilletas extras")
 
     # Cancelar desde el detalle
@@ -237,7 +286,7 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_button("Cancelar", disabled: true)
     expect(page).to have_button("Editar", disabled: true)
     expect(page).not_to have_content("Ya está confirmado para hoy, así que no se puede cancelar.")
-    expect(page).not_to have_content("El proveedor ya confirmó este pedido, así que no se puede modificar.")
+    expect(page).not_to have_content("Ya está confirmado para hoy, así que no se puede modificar.")
   end
 
 

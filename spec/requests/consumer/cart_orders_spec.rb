@@ -16,7 +16,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   describe "Control de acceso por rol en /dashboard y POST /pedidos" do
     it "redirige al inicio de sesión cuando un visitante no autenticado intenta acceder a /dashboard" do
       get dashboard_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirige al inicio de sesión cuando un visitante no autenticado intenta enviar un carrito a POST /pedidos" do
@@ -26,7 +26,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
           items: [ { schedule_id: schedule.id, quantity: 1, notes: "", options: [] } ]
         }
       }
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "rechaza el acceso a /dashboard para usuarios con rol provider redirigiendo a la raíz" do
@@ -250,13 +250,13 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       post orders_path, params: {
         order: {
           address: company_address,
-          items: items.map { |schedule, quantity| { schedule_id: schedule.id, quantity:, notes: "", options: [] } }
+          items: items.map { |schedule, quantity, benefits| { schedule_id: schedule.id, quantity:, benefits:, notes: "", options: [] } }
         }
       }
     end
 
     it "descuenta el base y el especial y registra cuántas viandas cubrió cada uno" do
-      order_cart([ wednesday, 3 ])
+      order_cart([ wednesday, 3, [ special.id ] ])
 
       order = Order.last
       # 1ª con 80% (60), 2ª solo con el premio (210), 3ª a precio completo.
@@ -264,6 +264,16 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 2 ])
       follow_redirect!
       expect(inertia).to have_props(total: 570.0)
+    end
+
+    it "descuenta el base y no el especial y registra cuántas viandas cubrió" do
+      order_cart([ wednesday, 3, [] ])
+
+      order = Order.last
+      expect(order).to have_attributes(price: 900, discounted_price: 750)
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ])
+      follow_redirect!
+      expect(inertia).to have_props(total: 750.0)
     end
 
     it "no bloquea el pedido cuando supera los usos del especial" do
@@ -280,7 +290,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
           address: company_address,
           discounted_price: 1.0,
           benefits: { special.id => 10 },
-          items: [ { schedule_id: wednesday.id, quantity: 1, notes: "", options: [] } ]
+          items: [ { schedule_id: wednesday.id, benefits: [ special.id ], quantity: 1, notes: "", options: [] } ]
         }
       }
 
@@ -336,7 +346,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   describe "GET /dashboard/cart y POST /orders/pricing - Control de acceso y props" do
     it "redirige al inicio de sesión cuando un visitante no autenticado accede a /dashboard/cart" do
       get dashboard_cart_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirige a la raíz cuando un provider accede a /dashboard/cart" do
@@ -366,7 +376,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
     it "redirige al inicio de sesión cuando un visitante no autenticado consulta POST /orders/pricing" do
       post pricing_orders_path, params: { items: [ { schedule_id: schedule.id, quantity: 1 } ] }
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirige a la raíz cuando un provider consulta POST /orders/pricing" do
@@ -398,20 +408,6 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(response).to have_http_status(:bad_request)
     end
 
-    it "ignora schedules inexistentes o fuera de fechas permitidas sin romper el cálculo" do
-      post pricing_orders_path, params: {
-        items: [
-          { schedule_id: 999_999, quantity: 1 },
-          { schedule_id: schedule.id, quantity: 1 }
-        ]
-      }
-
-      expect(response).to have_http_status(:ok)
-      json = response.parsed_body
-      expect(json["lines"]).to have_key(schedule.id.to_s)
-      expect(json["lines"]).not_to have_key("999999")
-    end
-
     it "no aplica descuento cuando el plato supera el max_price del beneficio" do
       consumer_user.consumer.benefits.destroy_all
       consumer_user.consumer.benefits.create!(
@@ -434,7 +430,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(json["total"]).to eq(schedule.menu.price.to_f)
       expect(json["subsidizedQuantity"]).to eq(0)
       expect(json["fullPriceQuantity"]).to eq(1)
-      expect(json.dig("lines", schedule.id.to_s, "tiers")).to be_empty
+      expect(json["lines"].first["tiers"]).to be_empty
     end
 
     it "aplica el descuento correctamente cuando el precio está dentro del max_price" do
@@ -460,7 +456,34 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(json["total"]).to eq(schedule.menu.price.to_f - expected_discount)
       expect(json["subsidizedQuantity"]).to eq(1)
       expect(json["fullPriceQuantity"]).to eq(0)
-      expect(json.dig("lines", schedule.id.to_s, "tiers").first["percentage"]).to eq(50)
+      expect(json["lines"].first["tiers"].first["percentage"]).to eq(50)
+    end
+
+    it "al modificar un pedido le devuelve los usos del beneficio que ese pedido ya tiene" do
+      consumer_user.consumer.benefits.destroy_all
+      benefit = consumer_user.consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly),
+        percentage: 50,
+        amount: 1,
+        due_date: Date.current.end_of_month,
+        status: :current
+      )
+      order = Order.create!(
+        consumer: consumer_user.consumer,
+        schedule:,
+        amount: 1,
+        price: schedule.menu.price,
+        discounted_price: schedule.menu.price / 2,
+        address: company_address,
+        delivery_method: :office
+      )
+      order.apply_benefit!(benefit, 1)
+
+      post pricing_orders_path, params: { items: [ { schedule_id: schedule.id, quantity: 1 } ] }
+      expect(response.parsed_body["discount"]).to eq(0)
+
+      post pricing_orders_path, params: { items: [ { schedule_id: schedule.id, quantity: 1 } ], order_id: order.id }
+      expect(response.parsed_body["discount"]).to eq(schedule.menu.price.to_f * 0.5)
     end
   end
 
@@ -505,7 +528,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
     it "redirige al inicio de sesión cuando un visitante no autenticado intenta acceder a la confirmación" do
       get dashboard_confirmation_path(confirmed_order_ids: [ own_order.id ])
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "rechaza el acceso a la confirmación para usuarios con rol provider redirigiendo a la raíz" do

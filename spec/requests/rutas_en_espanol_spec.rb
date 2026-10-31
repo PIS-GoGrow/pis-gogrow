@@ -21,18 +21,16 @@ RSpec.describe "Rutas en español, control de acceso y casos borde", type: :requ
   end
 
   describe "1. Resolución y renderizado de rutas en español" do
-    it "GET /iniciar-sesion resuelve y renderiza la pantalla de login" do
-      get sign_in_path
+    it "GET /iniciar-sesion redirige al login de empleados" do
+      get "/iniciar-sesion"
 
-      expect(response).to have_http_status(:ok)
-      expect(inertia).to render_component("sessions/new")
-      expect(request.path).to eq("/iniciar-sesion")
+      expect(response).to redirect_to("/consumidor")
     end
 
-    it "GET /menu-semanal redirige a /iniciar-sesion si no está autenticado" do
+    it "GET /menu-semanal redirige a /consumidor si no está autenticado" do
       get dashboard_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "GET /menu-semanal responde con éxito y entrega props para consumidor" do

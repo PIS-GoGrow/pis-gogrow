@@ -117,7 +117,7 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
       expect(page).to have_content("¿Cancelar pedido?")
       click_button "Cancelar pedido"
 
-      expect(page).to have_content("Pedido cancelado.")
+      expect(page).to have_content("Pedido cancelado")
       expect(order_c.reload.status).to eq("cancelled")
       expect(order_c.cancelled_by).to eq(consumer_user)
     end

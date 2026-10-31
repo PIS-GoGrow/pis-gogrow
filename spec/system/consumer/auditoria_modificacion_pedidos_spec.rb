@@ -15,12 +15,11 @@ RSpec.describe "Auditoría de modificación de pedidos", type: :system do
   it "registra en audit_logs los valores anteriores y nuevos al editar un pedido y no al cancelar" do
     visit_hydrated order_path(order)
 
-    click_button "Editar"
-    within("[role=dialog]") do
-      click_button "Agregar uno"
-      fill_in "notes", with: "Sin cebolla"
-      click_button "Guardar cambios"
-    end
+    click_link "Editar"
+    click_button "Agregar uno"
+    fill_in "notes", with: "Sin cebolla"
+    click_button "Modificar"
+    confirm_order_modified
 
     Timeout.timeout(Capybara.default_max_wait_time) do
       sleep 0.1 until order.reload.audit_logs.exists?
@@ -34,6 +33,7 @@ RSpec.describe "Auditoría de modificación de pedidos", type: :system do
     )
     expect(log.created_at).to be_present
 
+    visit_hydrated order_path(order)
     click_button "Cancelar"
     within("[role=dialog]") do
       click_button "Cancelar pedido"

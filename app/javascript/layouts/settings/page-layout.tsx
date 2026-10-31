@@ -1,5 +1,5 @@
 import { Link, usePage } from "@inertiajs/react"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, ChevronLeft } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -17,6 +17,7 @@ interface SettingsPageLayoutProps {
   adminBackLabel?: string
   consumerMobileBackHref?: string
   consumerMobileBackLabel?: string
+  titleVariant?: "default" | "prominent"
 }
 
 export default function SettingsPageLayout({
@@ -27,6 +28,7 @@ export default function SettingsPageLayout({
   adminBackLabel,
   consumerMobileBackHref,
   consumerMobileBackLabel,
+  titleVariant = "default",
 }: SettingsPageLayoutProps) {
   const { t } = useTranslation()
   const { auth } = usePage().props
@@ -74,19 +76,32 @@ export default function SettingsPageLayout({
           <Button
             variant="ghost"
             size="icon"
-            className="-ml-2 md:hidden"
+            className="-ml-2 size-9 rounded-[10px] md:hidden"
             asChild
           >
             <Link
               href={consumerMobileBackHref}
               aria-label={consumerMobileBackLabel}
             >
-              <ArrowLeft aria-hidden="true" />
+              <ChevronLeft aria-hidden="true" className="size-4" />
             </Link>
           </Button>
         )}
 
-        <HeadingSmall title={title} description={description} />
+        {titleVariant === "prominent" ? (
+          <header className="space-y-2">
+            <h2 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-100">
+              {title}
+            </h2>
+            {description && (
+              <p className="text-base text-[#737373] dark:text-neutral-400">
+                {description}
+              </p>
+            )}
+          </header>
+        ) : (
+          <HeadingSmall title={title} description={description} />
+        )}
 
         {children}
       </div>

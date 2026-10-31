@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe Consumer, type: :model do
-  fixtures :consumers, :companies, :providers, :benefit_configurations, :benefits, :menus, :schedules
+  fixtures :consumers, :companies, :providers, :benefit_configurations, :benefit_rules, :benefits, :menus, :schedules
 
   let(:consumer) { consumers(:one) }
   let(:company_address) { companies(:gogrow).address }
@@ -42,15 +42,28 @@ RSpec.describe Consumer, type: :model do
       Order.create!(consumer:, schedule:, amount: 1, price: 300, address:, delivery_method: :home, created_at:)
     end
 
-    it "lists the office, the profile address and the saved ones, newest first" do
-      consumer.saved_addresses.create!(name: "Flora Café", street: "Canelones 892", created_at: 2.days.ago)
-      consumer.saved_addresses.create!(name: "La Bicicleta Café", street: "Bv. España 2643", apartment: "Local 2")
+    it "lists the office and the saved addresses, newest first" do
+      consumer.saved_addresses.create!(
+        name: "Casa",
+        street: "Ellauri 1234",
+        created_at: 3.days.ago
+      )
+      consumer.saved_addresses.create!(
+        name: "Flora Café",
+        street: "Canelones 892",
+        created_at: 2.days.ago
+      )
+      consumer.saved_addresses.create!(
+        name: "La Bicicleta Café",
+        street: "Bv. España 2643",
+        apartment: "Local 2"
+      )
 
       expect(consumer.delivery_address_options.pluck(:label, :address)).to eq([
         [ "Oficina", company_address ],
-        [ "Casa", "Ellauri 1234" ],
         [ "La Bicicleta Café", "Bv. España 2643, Local 2" ],
-        [ "Flora Café", "Canelones 892" ]
+        [ "Flora Café", "Canelones 892" ],
+        [ "Casa", "Ellauri 1234" ]
       ])
     end
 
@@ -239,13 +252,28 @@ RSpec.describe Consumer, type: :model do
   end
 
   describe "#delivery_addresses" do
-    it "returns both consumer and company addresses when both are present" do
-      expect(consumer.delivery_addresses).to contain_exactly(consumer.address, consumer.company.address)
+    it "returns the company address and the saved addresses" do
+      casa = consumer.saved_addresses.create!(
+        name: "Casa",
+        street: "Julio Herrera y Reissig 565"
+      )
+
+      otra = consumer.saved_addresses.create!(
+        name: "Flora Café",
+        street: "Canelones 892"
+      )
+
+      expect(consumer.delivery_addresses).to contain_exactly(
+        consumer.company.address,
+        casa.full_address,
+        otra.full_address
+      )
     end
 
-    it "omits blank consumer addresses" do
-      consumer.update!(address: "")
-      expect(consumer.delivery_addresses).to eq([ consumer.company.address ])
+    it "does not expose the legacy consumer address" do
+      expect(consumer.address).to be_present
+
+      expect(consumer.delivery_addresses).not_to include(consumer.address)
     end
   end
 
@@ -273,6 +301,108 @@ RSpec.describe Consumer, type: :model do
       ).apply_benefit! benefits(:monthly), 4
 
       expect(consumer.monthly_benefit_used_this_month).to eq(3)
+    end
+  end
+
+  describe "#monthly_benefit_usages" do
+    before do
+      Order.destroy_all
+      Schedule.delete_all
+    end
+
+    let(:menu) { menus(:milanesa) }
+    let(:today_schedule) { Schedule.create!(menu:, date: Date.current, amount: 30) }
+
+    it "returns an ActiveRecord relation that can be queried and aggregated" do
+      relation = consumer.monthly_benefit_usages
+
+      expect(relation).to be_a(ActiveRecord::Relation)
+      expect(relation.to_sql).to include("benefit_id")
+    end
+
+    it "only includes monthly benefits and ignores special gift subsidies" do
+      special_benefit = Benefit.create!(
+        consumer:,
+        benefit_configuration: benefit_configurations(:gift),
+        status: :current,
+        percentage: 100,
+        amount: 2,
+        due_date: Date.current.end_of_month
+      )
+
+      monthly_order = Order.create!(
+        consumer:, schedule: today_schedule, amount: 2,
+        price: 600, address: consumer.company.address, delivery_method: :office, status: :confirmed
+      )
+      monthly_order.apply_benefit! benefits(:monthly), 2
+
+      special_order = Order.create!(
+        consumer:, schedule: today_schedule, amount: 1,
+        price: 300, address: consumer.company.address, delivery_method: :office, status: :confirmed
+      )
+      special_order.apply_benefit! special_benefit, 1
+
+      expect(consumer.monthly_benefit_usages.pluck(:benefit_id).uniq).to contain_exactly(benefits(:monthly).id)
+      expect(consumer.monthly_benefit_usages.sum(:benefit_used)).to eq(2)
+    end
+
+    it "counts benefit_used rather than total order amount when an order has unsubsidized meals" do
+      order = Order.create!(
+        consumer:, schedule: today_schedule, amount: 4,
+        price: 1200, address: consumer.company.address, delivery_method: :office, status: :confirmed
+      )
+      order.apply_benefit! benefits(:monthly), 1
+
+      expect(consumer.monthly_benefit_usages.sum(:benefit_used)).to eq(1)
+    end
+
+    it "isolates usage to the current consumer and does not include other consumers" do
+      other_consumer = consumers(:other)
+      other_benefit = Benefit.create!(
+        consumer: other_consumer,
+        benefit_configuration: benefit_configurations(:monthly),
+        status: :current,
+        percentage: 50,
+        amount: 20,
+        due_date: Date.current.end_of_month
+      )
+
+      other_order = Order.create!(
+        consumer: other_consumer, schedule: today_schedule, amount: 2,
+        price: 600, address: other_consumer.company.address, delivery_method: :office, status: :confirmed
+      )
+      other_order.apply_benefit! other_benefit, 2
+
+      expect(consumer.monthly_benefit_usages).to be_empty
+    end
+
+    it "strictly bounds dates to the current month" do
+      first_day_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month, amount: 10)
+      last_day_schedule = Schedule.create!(menu:, date: Date.current.end_of_month, amount: 10)
+      prev_month_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month - 1.day, amount: 10)
+      next_month_schedule = Schedule.create!(menu:, date: Date.current.end_of_month + 1.day, amount: 10)
+
+      Order.create!(
+        consumer:, schedule: first_day_schedule, amount: 1,
+        price: 300, address: consumer.company.address, delivery_method: :office, status: :confirmed
+      ).apply_benefit! benefits(:monthly), 1
+
+      Order.create!(
+        consumer:, schedule: last_day_schedule, amount: 2,
+        price: 600, address: consumer.company.address, delivery_method: :office, status: :pending
+      ).apply_benefit! benefits(:monthly), 2
+
+      Order.create!(
+        consumer:, schedule: prev_month_schedule, amount: 3,
+        price: 900, address: consumer.company.address, delivery_method: :office, status: :confirmed
+      ).apply_benefit! benefits(:monthly), 3
+
+      Order.create!(
+        consumer:, schedule: next_month_schedule, amount: 4,
+        price: 1200, address: consumer.company.address, delivery_method: :office, status: :confirmed
+      ).apply_benefit! benefits(:monthly), 4
+
+      expect(consumer.monthly_benefit_usages.sum(:benefit_used)).to eq(3)
     end
   end
 

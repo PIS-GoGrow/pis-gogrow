@@ -443,6 +443,30 @@ RSpec.describe Account, type: :model do
       expect(Account.pending).not_to include(zero_account)
       expect(Account.history).to include(paid_account)
     end
+
+    it "orders pending accounts by month descending regardless of creation sequence" do
+      oldest = Account.create!(
+        owner: consumer,
+        provider: provider,
+        month: 2.months.ago.beginning_of_month,
+        amount: 150
+      )
+      newest = Account.create!(
+        owner: consumer,
+        provider: provider,
+        month: Date.current.beginning_of_month,
+        amount: 350
+      )
+      middle = Account.create!(
+        owner: consumer,
+        provider: provider,
+        month: 1.month.ago.beginning_of_month,
+        amount: 250
+      )
+
+      pending_ordered = consumer.accounts.pending.order(month: :desc)
+      expect(pending_ordered.pluck(:id)).to eq([ newest.id, middle.id, oldest.id ])
+    end
   end
 
   describe "Consumer debt methods" do

@@ -105,7 +105,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   end
 
   def edit_order(order)
-    visit order_path(order, edit: 1)
+    visit edit_order_path(order)
   end
 
   # Las dos vistas del pedido muestran solo lo elegido, no todo lo que ofrece el plato.
@@ -154,13 +154,11 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       # E1 abre Mis pedidos y edita el pedido: cantidad, opción y nota.
       visit orders_path
       within(find("[data-slot=card]", text: "Milanesa al pan")) { click_link "Editar" }
-      within("[role=dialog]") do
-        click_button "Agregar uno"
-        pick_option("Guarnición", "Papas")
-        fill_in "notes", with: "Sin sal, con limón"
-        click_button "Guardar cambios"
-      end
-      expect(page).to have_content("Pedido actualizado")
+      click_button "Agregar uno"
+      pick_option("Guarnición", "Papas")
+      fill_in "notes", with: "Sin sal, con limón"
+      click_button "Modificar"
+      confirm_order_modified
 
       edited = Order.find(order.id)
       expect(e1.orders.count).to eq(1)
@@ -254,10 +252,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e2_user, role: :consumer
 
       edit_order(e2_order)
-      within("[role=dialog]") do
-        click_button "Agregar uno"
-        click_button "Guardar cambios"
-      end
+      click_button "Agregar uno"
+      click_button "Modificar"
 
       expect(page).to have_content("Este plato ya no está disponible para la fecha seleccionada.")
       expect(e2_order.reload.amount).to eq(1)
@@ -297,7 +293,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       edit_order(e1_order)
 
-      within("[role=dialog]") { expect(page).to have_button("Agregar uno", disabled: true) }
+      expect(page).to have_button("Agregar uno", disabled: true)
     end
 
     it "refleja para el empleado el stock que el proveedor sube en un menú publicado" do
@@ -571,8 +567,8 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
   describe "IBP-008: qué se puede modificar y cuándo" do
     let!(:milanesa_tuesday) { publish(p1_milanesa, tuesday) }
 
-    it "no deja editar un pedido que el proveedor ya confirmó" do
-      order = place_order(e1, milanesa_tuesday).tap { it.update!(status: :confirmed) }
+    it "no deja editar un pedido confirmado el día de la entrega" do
+      order = place_order(e1, publish(p1_milanesa, monday)).tap { it.update!(status: :confirmed) }
       sign_in e1_user, role: :consumer
 
       visit order_path(order)
@@ -586,15 +582,9 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e1_user, role: :consumer
 
       edit_order(order)
-      click_button "Ver mis direcciones"
-      within("[role=dialog]", text: "Mis direcciones") do
-        find("label", text: "Colonia 1370").click
-        click_button "Seleccionar"
-      end
-      within("[role=dialog]", text: "Modificar pedido") do
-        click_button "Guardar cambios"
-      end
-      expect(page).to have_content("Pedido actualizado")
+      find("label", text: "Colonia 1370").click
+      click_button "Modificar"
+      confirm_order_modified
       expect(order.reload).to have_attributes(delivery_method: "home", address: "Colonia 1370")
       sign_out
 
@@ -626,12 +616,10 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
         click_link "Editar"
       end
 
-      within("[role=dialog]") do
-        fill_in "notes", with: "a" * 141, fill_options: { rapid: false }
+      fill_in "notes", with: "a" * 141, fill_options: { rapid: false }
 
-        expect(find_field("notes").value.length).to eq(140)
-        expect(page).to have_content("140/140")
-      end
+      expect(find_field("notes").value.length).to eq(140)
+      expect(page).to have_content("140/140")
     end
   end
 
@@ -741,7 +729,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     it "un visitante sin sesión no ve el pedido" do
       visit order_path(e1_order)
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(consumer_welcome_path)
     end
   end
 end

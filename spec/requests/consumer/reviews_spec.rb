@@ -22,7 +22,7 @@ RSpec.describe "Consumer reviews", type: :request do
 
     it "redirige al inicio de sesión cuando el visitante no está autenticado" do
       get new_order_review_path(reviewable)
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirige a la lista con un aviso para un pedido pendiente" do

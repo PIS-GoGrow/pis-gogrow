@@ -10,9 +10,23 @@ class Consumer < ApplicationRecord
   has_many :saved_addresses, class_name: "DeliveryAddress", dependent: :destroy
   has_many :benefits, dependent: :destroy
   has_many :accounts, as: :owner
+  has_many :favorites, dependent: :destroy
 
   has_many :consumer_benefit_configurations
   has_many :benefit_configurations, through: :consumer_benefit_configurations
+
+  # Platos y proveedores que el empleado pide seguido, calculados con sus pedidos
+  # vigentes. Dos pedidos alcanzan para considerarlo frecuente; los más pedidos
+  # van primero.
+  def frequent(kind, limit: 5)
+    scope = orders.where(status: %i[pending confirmed]).joins(schedule: :menu)
+    scope = kind == :menu ? scope.group("COALESCE(menus.base_menu_id, menus.id)") : scope.group("menus.provider_id")
+    scope.having("COUNT(*) >= 2").order(Arel.sql("COUNT(*) DESC")).limit(limit).count.keys
+  end
+
+  def favorite_ids(type)
+    favorites.where(favoritable_type: type).pluck(:favoritable_id)
+  end
 
   def total_debt
     accounts.pending.sum :amount
@@ -42,8 +56,7 @@ class Consumer < ApplicationRecord
 
   # Devuelve todos los beneficios mensuales del cliente
   def monthly_benefits
-    benefits.joins(benefit_configuration: :benefit_rules)
-            .where(benefit_rules: { type: MonthlyBenefit.name })
+    benefits.monthly
   end
 
   def current_monthly_benefit
@@ -67,30 +80,22 @@ class Consumer < ApplicationRecord
     current_monthly_benefit&.amount || 0
   end
 
-  # Devuelve la cantidad de beneficios mensuales usados en total en un determinado
-  # rango de fechas y especificando si contar órdenes pendientes.
-  # Si se hizo una orden pidiendo dos viandas con un beneficio, esa orden cuenta
-  # por dos.
-  def monthly_benefit_used_in(date_range, count_pending: false)
-    valid_status = [ :rejected, :cancelled ]
-    valid_status << :pending if count_pending
-
+  # Los usos del cupo mensual en pedidos activos (pendientes y confirmados) con
+  # entrega este mes; una orden de dos viandas subsidiadas cuenta por dos. Es el
+  # único conteo del cupo: RR. HH., Pagos, Cuenta e Inicio lo leen de acá.
+  def monthly_benefit_usages
     OrderBenefit
       .joins(order: :schedule)
-      .where(schedules: { date: date_range })
-      .where.not(orders: { status:  valid_status })
+      .where(schedules: { date: Date.current.all_month })
+      .where.not(orders: { status: [ :rejected, :cancelled ] })
       .where(benefit_id: monthly_benefits)
-      .sum(:benefit_used)
   end
 
-  # Devuelve la cantidad de viandas compradas en órdenes confirmadas este mes, para
-  # las que se usó un beneficio mensual
   def monthly_benefit_used_this_month
-    monthly_benefit_used_in Date.current.all_month
+    monthly_benefit_usages.sum(:benefit_used)
   end
 
-  # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes,
-  # contando solo las órdenes confirmadas
+  # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes
   def remaining_monthly_benefit
     [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
   end
@@ -108,7 +113,10 @@ class Consumer < ApplicationRecord
 
   # Se espera que no se incluyan direcciones blank acá
   def delivery_addresses
-    [ address, company.address ].compact_blank
+    [
+      company.address,
+      *saved_addresses.map(&:full_address)
+    ].compact_blank
   end
 
   # La modalidad se deriva de la dirección elegida: la de la oficina es entrega en
@@ -126,17 +134,30 @@ class Consumer < ApplicationRecord
   # pidió, que es la que el carrito muestra junto a la oficina.
   def delivery_address_options
     last_used = orders.home.order(created_at: :desc).pick(:address)
+
     saved = saved_addresses.order(created_at: :desc).map do |delivery_address|
-      { id: "address-#{delivery_address.id}", label: delivery_address.name, address: delivery_address.full_address }
+      {
+        id: "address-#{delivery_address.id}",
+        label: delivery_address.name,
+        address: delivery_address.full_address
+      }
     end
+
     custom = [
-      { id: "home", label: I18n.t("pages.orders.addresses.home"), address: },
       *saved,
-      { id: "last_used", label: I18n.t("pages.orders.addresses.last_used"), address: last_used }
+      {
+        id: "last_used",
+        label: I18n.t("pages.orders.addresses.last_used"),
+        address: last_used
+      }
     ]
 
     [
-      { id: "office", label: I18n.t("pages.orders.addresses.office"), address: company.address },
+      {
+        id: "office",
+        label: I18n.t("pages.orders.addresses.office"),
+        address: company.address
+      },
       *custom.partition { it[:address] == last_used }.flatten
     ].select { it[:address].present? }.uniq { it[:address] }
   end

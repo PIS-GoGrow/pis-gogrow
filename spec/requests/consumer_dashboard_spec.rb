@@ -8,9 +8,31 @@ RSpec.describe "Consumer dashboard", type: :request do
 
   def consumer_user
     company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
-    user = User.create!(email: "consumer-menu@gmail.com", name: "Sofía", password: "password123456")
-    consumer = Consumer.create!(user:, company:, address: "Ellauri 1234")
-    consumer.benefits.create!(description: "Viandas mensuales", amount: 20, percentage: 50, due_date: Date.current + 3.days, benefit_configuration: benefit_configurations(:monthly))
+    user = User.create!(
+      email: "consumer-menu@gmail.com",
+      name: "Sofía",
+      password: "password123456"
+    )
+
+    consumer = Consumer.create!(
+      user:,
+      company:,
+      address: "Ellauri 1234"
+    )
+
+    consumer.saved_addresses.create!(
+      name: "Casa",
+      street: "Ellauri 1234"
+    )
+
+    consumer.benefits.create!(
+      description: "Viandas mensuales",
+      amount: 20,
+      percentage: 50,
+      due_date: Date.current + 3.days,
+      benefit_configuration: benefit_configurations(:monthly)
+    )
+
     user
   end
 
@@ -438,7 +460,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
       get dashboard_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     # Transversal — privacidad entre pares: el menú es común a todos los
@@ -703,7 +725,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
     it "redirects visitors to the sign in page" do
       get dashboard_confirmation_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirects users with another role to root_path" do

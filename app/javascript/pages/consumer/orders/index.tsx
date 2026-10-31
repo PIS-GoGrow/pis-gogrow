@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
+import OrderCancelledSheet from "@/components/orders/order-cancelled-sheet"
 import OrderCard from "@/components/orders/order-card"
 import {
   Empty,
@@ -140,6 +141,7 @@ export default function Index({
         </Tabs>
       </div>
 
+      <OrderCancelledSheet />
       <ConsumerMobileNav />
     </AppLayout>
   )
