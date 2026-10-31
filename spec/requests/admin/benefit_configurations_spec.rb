@@ -37,7 +37,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
 
       get admin_benefit_configurations_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer to the root page" do
@@ -280,7 +280,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
         }
       }.not_to change(BenefitConfiguration, :count)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer to the root page without creating a configuration" do

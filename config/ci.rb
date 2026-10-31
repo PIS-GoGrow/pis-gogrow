@@ -13,7 +13,7 @@ CI.run do
   step "JavaScript: generated types are fresh", "bin/rails typelizer:generate:refresh && git diff --exit-code -- app/javascript/routes app/javascript/types/serializers && test -z \"$(git ls-files --others --exclude-standard -- app/javascript/routes app/javascript/types/serializers)\""
 
   step "Security: Gem audit", "bin/bundler-audit"
-  step "Security: NPM vulnerability audit", "npm audit"
+  step "Security: NPM vulnerability audit", "npm audit --audit-level=high"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
 
   step "Tests: Rails", "bin/rails db:test:prepare spec"

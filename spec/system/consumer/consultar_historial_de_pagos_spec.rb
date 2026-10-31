@@ -223,7 +223,7 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
 
     visit accounts_path
 
-    expect(page).to have_current_path(sign_in_path)
+    expect(page).to have_current_path(consumer_welcome_path)
     expect(page).to have_no_content("$300")
   end
 

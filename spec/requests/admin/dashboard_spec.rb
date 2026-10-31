@@ -16,7 +16,7 @@ RSpec.describe "Admin::Dashboard", type: :request do
       it "redirects to the sign in page" do
         get admin_dashboard_path
 
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(admin_welcome_path)
       end
     end
 
