@@ -26,15 +26,11 @@ describe("FeatureCarousel", () => {
     const slides = container.querySelectorAll('[aria-roledescription="slide"]')
     expect(slides).toHaveLength(3)
 
-    expect(
-      screen.getByText("Tu menú, siempre actualizado"),
-    ).toBeInTheDocument()
+    expect(screen.getByText("Tu menú, siempre actualizado")).toBeInTheDocument()
     expect(
       screen.getByText("Todos tus pedidos bajo control"),
     ).toBeInTheDocument()
-    expect(
-      screen.getByText("Cobros claros y ordenados"),
-    ).toBeInTheDocument()
+    expect(screen.getByText("Cobros claros y ordenados")).toBeInTheDocument()
   })
 
   it("renders pagination buttons and scrolls on click", () => {

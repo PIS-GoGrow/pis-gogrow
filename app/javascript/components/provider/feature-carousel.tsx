@@ -44,16 +44,16 @@ export default function FeatureCarousel() {
           <Card
             key={key}
             aria-roledescription="slide"
-            className="bg-[#FAFAFA] dark:bg-muted w-full shrink-0 snap-center border-0 p-6 rounded-lg text-left shadow-none"
+            className="dark:bg-muted w-full shrink-0 snap-center rounded-lg border-0 bg-[#FAFAFA] p-6 text-left shadow-none"
           >
             <CardHeader className="gap-2 p-0">
-              <span className="bg-[#E5E5E5] dark:bg-neutral-800 mb-2 flex size-10 items-center justify-center rounded-full text-[#0A0A0A] dark:text-neutral-100">
+              <span className="mb-2 flex size-10 items-center justify-center rounded-full bg-[#E5E5E5] text-[#0A0A0A] dark:bg-neutral-800 dark:text-neutral-100">
                 <Icon className="size-6" aria-hidden="true" />
               </span>
-              <h2 className="text-base font-semibold leading-6 text-[#0A0A0A] dark:text-neutral-100">
+              <h2 className="text-base leading-6 font-semibold text-[#0A0A0A] dark:text-neutral-100">
                 {t(`pages.home.features.${key}.title`)}
               </h2>
-              <p className="text-sm font-normal leading-5 text-[#737373] dark:text-neutral-400">
+              <p className="text-sm leading-5 font-normal text-[#737373] dark:text-neutral-400">
                 {t(`pages.home.features.${key}.description`)}
               </p>
             </CardHeader>

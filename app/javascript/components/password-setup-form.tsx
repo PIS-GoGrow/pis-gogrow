@@ -33,7 +33,10 @@ export default function PasswordSetupForm({
   const ready = isStrongPassword(password) && confirmation !== "" && !mismatch
 
   return (
-    <Form action={action} className="flex flex-1 flex-col justify-between gap-6">
+    <Form
+      action={action}
+      className="flex flex-1 flex-col justify-between gap-6"
+    >
       {({ processing, errors }) => (
         <>
           <FieldGroup>

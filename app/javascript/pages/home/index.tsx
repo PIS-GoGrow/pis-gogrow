@@ -77,7 +77,11 @@ export default function Home({ variant, dev_login_enabled, errors }: Props) {
             </Button>
           </form>
 
-          {dev_login_enabled && <DevLoginForm origin={variant === "admin" ? "/rrhh" : "/consumidor"} />}
+          {dev_login_enabled && (
+            <DevLoginForm
+              origin={variant === "admin" ? "/rrhh" : "/consumidor"}
+            />
+          )}
         </>
       )}
     </AuthLayout>

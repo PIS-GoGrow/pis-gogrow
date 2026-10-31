@@ -37,9 +37,7 @@ export default function DevLoginForm({ origin }: Props) {
       >
         {({ processing }) => (
           <FieldGroup>
-            {origin && (
-              <input type="hidden" name="origin" value={origin} />
-            )}
+            {origin && <input type="hidden" name="origin" value={origin} />}
             <Field>
               <FieldLabel htmlFor="email">
                 {t("common.email_address")}

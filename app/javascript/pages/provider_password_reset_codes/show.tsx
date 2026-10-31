@@ -77,7 +77,10 @@ export default function ProviderPasswordResetCode({
         {({ processing, errors }) => (
           <>
             <div className="flex w-full flex-col items-center justify-center">
-              <Field data-invalid={!!errors.code} className="w-auto items-center">
+              <Field
+                data-invalid={!!errors.code}
+                className="w-auto items-center"
+              >
                 <InputOTP
                   name="code"
                   maxLength={CODE_LENGTH}
