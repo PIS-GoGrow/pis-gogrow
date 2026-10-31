@@ -189,7 +189,6 @@ es:
         too_many_rows: "La planilla no puede tener más de %{max} platos."
         missing_columns: "Faltan columnas en la planilla: %{columns}."
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
-    payment_closed: "Este pago ya fue aprobado y no puede modificarse."
     payment_current_account: "No se puede subir ni aprobar un comprobante mientras el mes siga en curso."
     payment_not_removable: "Solo podés eliminar comprobantes en revisión o rechazados."
     payment_not_reviewable: "Este comprobante ya fue revisado."

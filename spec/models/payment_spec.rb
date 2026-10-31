@@ -211,19 +211,16 @@ RSpec.describe Payment, type: :model do
       expect(payment.rejection_reason).to eq("La imagen está borrosa")
     end
 
-    it "is cleared when the employee sends the payment again" do
-      payment = payment_with_receipt(status: :rejected, rejection_reason: "La imagen está borrosa")
-      payment.save!
+    it "stays on the rejected payment when the employee sends a new receipt" do
+      rejected = payment_with_receipt
+      rejected.save!
+      rejected.reject_with("El pago es parcial")
 
-      # Es el reenvío de Consumer::PaymentsController#update: comprobante nuevo y
-      # el pago vuelve a "enviado".
-      payment.receipt.attach(
-        io: StringIO.new("comprobante nuevo"), filename: "nuevo.png", content_type: "image/png"
-      )
-      payment.update!(status: :submitted)
+      resent = payment_with_receipt(filename: "comprobante_2.png")
+      resent.save!
 
-      expect(payment.reload).to be_submitted
-      expect(payment.rejection_reason).to be_nil
+      expect(rejected.reload).to have_attributes(status: "rejected", rejection_reason: "El pago es parcial")
+      expect(resent.reload).to have_attributes(status: "submitted", rejection_reason: nil)
     end
   end
 

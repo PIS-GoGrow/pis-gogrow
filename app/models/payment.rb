@@ -8,7 +8,6 @@ class Payment < ApplicationRecord
 
   has_one_attached :receipt
 
-  before_validation :clear_rejection_reason, if: :submitted?
   after_commit :notify_receipt_submitted, if: -> { saved_change_to_status? && submitted? }
   after_commit :check_debt_alert, if: -> { account.owner.is_a?(Consumer) && (destroyed? || saved_change_to_status?) }
   after_commit :notify_company_admins, on: [ :create, :update ], if: -> { saved_change_to_status? && account.company? }
@@ -74,10 +73,6 @@ class Payment < ApplicationRecord
     owner = account.owner
 
     DebtReminders::EmployeeRequest.close_if_settled(owner) if owner.is_a?(Consumer)
-  end
-
-  def clear_rejection_reason
-    self.rejection_reason = nil
   end
 
   def notify_company_admins

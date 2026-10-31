@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Consumer::PaymentsController < Consumer::InertiaController
-  before_action :set_payment, only: [ :update, :destroy, :receipt ]
+  before_action :set_payment, only: [ :destroy, :receipt ]
 
   def create
     # La cuenta se busca dentro de las cuentas del consumidor autenticado. Esto
@@ -14,23 +14,6 @@ class Consumer::PaymentsController < Consumer::InertiaController
       receipt: payment_params[:receipt],
       status: :submitted
     )
-
-    persist_payment
-  end
-
-  def update
-    if @payment.approved?
-      return redirect_back fallback_location: dashboard_path, inertia: {
-        errors: { receipt: [ t("validations.payment_closed") ] }
-      }, status: :see_other
-    end
-
-    return reject_current_account if @payment.account.current?
-
-    # Active Storage reemplaza el comprobante anterior, manteniendo el mismo
-    # Payment y, por lo tanto, su asociación original con Account.
-    @payment.assign_attributes(receipt: payment_params[:receipt])
-    @payment.status = :submitted
 
     persist_payment
   end
