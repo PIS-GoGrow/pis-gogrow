@@ -38,7 +38,7 @@ RSpec.describe "Consumer Accounts", type: :request do
     it "redirects unauthenticated users to sign in" do
       get accounts_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirects users that do not have the consumer role" do
@@ -68,7 +68,7 @@ RSpec.describe "Consumer Accounts", type: :request do
       expect(inertia).to have_props { |props|
         p = props.deep_symbolize_keys
         p[:current_month_debt].to_d == 550.to_d &&
-          p[:current_month_ordered] == 3 &&
+          p[:benefit_used] == 0 &&
           p[:total_debt].to_d == 550.to_d &&
           p[:history] == false &&
           p[:accounts].one? &&
@@ -102,7 +102,7 @@ RSpec.describe "Consumer Accounts", type: :request do
         provider2_account = p[:accounts].find { |a| a[:provider_id] == provider2.id }
 
         p[:current_month_debt].to_d == 475.to_d &&
-          p[:current_month_ordered] == 3 &&
+          p[:benefit_used] == 0 &&
           p[:total_debt].to_d == 475.to_d &&
           provider1_account[:amount].to_d == 350.to_d &&
           provider1_account[:orders_amount_sum] == 2 &&
@@ -136,7 +136,7 @@ RSpec.describe "Consumer Accounts", type: :request do
       expect(inertia).to have_props { |props|
         p = props.deep_symbolize_keys
         p[:current_month_debt].to_d == 200.to_d &&
-          p[:current_month_ordered] == 1 &&
+          p[:benefit_used] == 0 &&
           p[:total_debt].to_d == 800.to_d &&
           p[:accounts].map { |a| a[:id] }.include?(past_account.id)
       }
@@ -157,7 +157,7 @@ RSpec.describe "Consumer Accounts", type: :request do
       expect(inertia).to have_props { |props|
         p = props.deep_symbolize_keys
         p[:current_month_debt].to_d == 250.to_d &&
-          p[:current_month_ordered] == 1 &&
+          p[:benefit_used] == 0 &&
           p[:total_debt].to_d == 250.to_d &&
           p[:accounts].one?
       }

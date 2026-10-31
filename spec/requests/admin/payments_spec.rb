@@ -36,11 +36,19 @@ RSpec.describe "Admin::Payments", type: :request do
     it "redirects to sign in without a session" do
       get admin_payments_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer to the home page" do
       sign_in users(:one), role: :consumer
+
+      get admin_payments_path
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects a provider to the home page" do
+      sign_in users(:provider_user), role: :provider
 
       get admin_payments_path
 
@@ -78,6 +86,61 @@ RSpec.describe "Admin::Payments", type: :request do
         get admin_payments_path
 
         expect(inertia.props[:history].pluck(:id)).to contain_exactly(accounts(:gogrow_tuviandita_previous).id)
+      end
+
+      it "lets HR download the invoice and the receipt of a confirmed period" do
+        account = accounts(:gogrow_tuviandita_previous)
+        payment = payments(:gogrow_previous_approved)
+        payment.receipt.attach(receipt_upload)
+        invoice = account.invoices.create!(issued_on: Date.current, total_amount: 900, file: receipt_upload(filename: "factura.png"))
+
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole).to include(
+          paid_on: DateFormat.short(payment.created_at),
+          receipt_download_url: receipt_admin_payment_path(payment),
+          invoice_download_url: file_admin_invoice_path(invoice, download: 1)
+        )
+      end
+
+      it "offers no invoice to download until the provider sends it" do
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole[:invoice_download_url]).to be_nil
+      end
+
+      it "uses the newest approved payment when an account has multiple approved payments" do
+        account = accounts(:gogrow_tuviandita_previous)
+        payment = payments(:gogrow_previous_approved)
+        payment.receipt.attach(receipt_upload(filename: "comprobante_1.png"))
+
+        newer_payment = account.payments.create!(
+          provider: account.provider,
+          status: :approved,
+          created_at: payment.created_at + 1.day
+        )
+        newer_payment.receipt.attach(receipt_upload(filename: "comprobante_2.png"))
+
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole).to include(
+          paid_on: DateFormat.short(newer_payment.created_at),
+          receipt_download_url: receipt_admin_payment_path(newer_payment)
+        )
+      end
+
+      it "does not offer invoice download when invoice is rejected" do
+        account = accounts(:gogrow_tuviandita_previous)
+        account.invoices.create!(
+          issued_on: Date.current,
+          total_amount: 900,
+          status: :rejected,
+          file: receipt_upload(filename: "factura_rechazada.png")
+        )
+
+        get admin_payments_path
+
+        expect(inertia.props[:history].sole[:invoice_download_url]).to be_nil
       end
 
       # Con un comprobante viejo sin revisar, el período sigue en revisión
@@ -245,7 +308,7 @@ RSpec.describe "Admin::Payments", type: :request do
     it "redirects to sign in without a session" do
       get admin_payment_path(accounts(:gogrow_tuviandita_current))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "answers with the detail of every provider of the period's month" do
@@ -429,7 +492,7 @@ RSpec.describe "Admin::Payments", type: :request do
         }
       }.not_to change(Payment, :count)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "rescues ActiveRecord::RecordNotUnique and redirects with already_under_review error prop" do
@@ -476,6 +539,35 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(response.body).to eq("company receipt")
     end
 
+    # Desde el historial de Empleados, RR. HH. descarga lo que cada empleado le
+    # mandó al proveedor.
+    it "allows HR to access the receipt of one of its employees" do
+      employee_account = accounts(:one_tuviandita_current)
+      payment = employee_account.payments.build(provider: employee_account.provider, status: :submitted)
+      payment.receipt.attach(io: StringIO.new("employee receipt"), filename: "receipt.png", content_type: "image/png")
+      payment.save!
+      sign_in users(:admin), role: :admin
+
+      get receipt_admin_payment_path(payment)
+
+      expect(response.body).to eq("employee receipt")
+    end
+
+    it "does not expose the receipt of another company's employee" do
+      company = Company.create!(name: "Otra", address: "Rivera 2000")
+      user = User.create!(email: "outsider@gmail.com", name: "Zoe Outsider", password: "password123456")
+      outsider = Consumer.create!(user:, company:, address: "Rivera 2001")
+      outsider_account = Account.create!(owner: outsider, provider: providers(:tuviandita), month: Date.current, amount: 100)
+      payment = outsider_account.payments.build(provider: providers(:tuviandita), status: :submitted)
+      payment.receipt.attach(io: StringIO.new("private"), filename: "private.png", content_type: "image/png")
+      payment.save!
+      sign_in users(:admin), role: :admin
+
+      get receipt_admin_payment_path(payment)
+
+      expect(response).to have_http_status(:not_found)
+    end
+
     it "does not expose receipts from another company" do
       payment = other_company_account.payments.build(
         provider: other_company_account.provider,
@@ -497,7 +589,7 @@ RSpec.describe "Admin::Payments", type: :request do
 
       get receipt_admin_payment_path(payment)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "does not allow a consumer to access a company receipt" do
@@ -577,7 +669,7 @@ RSpec.describe "Admin::Payments", type: :request do
         delete admin_payment_path(payment)
       }.not_to change(Payment, :count)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "does not allow a consumer to remove a company receipt" do

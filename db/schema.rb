@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_29_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -170,6 +170,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
     t.index ["consumer_id"], name: "index_delivery_addresses_on_consumer_id"
   end
 
+  create_table "favorites", force: :cascade do |t|
+    t.bigint "consumer_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "favoritable_id", null: false
+    t.string "favoritable_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["consumer_id", "favoritable_type", "favoritable_id"], name: "index_favorites_on_consumer_and_favoritable", unique: true
+    t.index ["consumer_id"], name: "index_favorites_on_consumer_id"
+    t.index ["favoritable_type", "favoritable_id"], name: "index_favorites_on_favoritable"
+  end
+
   create_table "invoices", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -246,6 +257,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
     t.datetime "created_at", null: false
     t.string "description"
     t.string "event", null: false
+    t.boolean "failed"
     t.bigint "notifiable_id", null: false
     t.string "notifiable_type", null: false
     t.bigint "notification_configuration_id", null: false
@@ -254,6 +266,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.datetime "whatsapp_sent_at"
     t.index ["notifiable_type", "notifiable_id", "event", "user_id"], name: "index_notifications_one_active_per_event", unique: true, where: "(closed_at IS NULL)"
     t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
     t.index ["notification_configuration_id"], name: "index_notifications_on_notification_configuration_id"
@@ -627,6 +640,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_25_120000) do
   add_foreign_key "consumers", "companies"
   add_foreign_key "consumers", "users"
   add_foreign_key "delivery_addresses", "consumers"
+  add_foreign_key "favorites", "consumers"
   add_foreign_key "invoices", "accounts"
   add_foreign_key "menu_agendas", "menus"
   add_foreign_key "menu_option_groups", "menus"

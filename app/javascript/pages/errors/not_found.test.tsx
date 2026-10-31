@@ -63,10 +63,10 @@ describe("NotFound Error Page", () => {
     render(<NotFound />)
 
     const signInLink = screen.getByRole("link", { name: "Iniciar sesión" })
-    expect(signInLink).toHaveAttribute("href", "/proveedor")
+    expect(signInLink).toHaveAttribute("href", "/proveedor/iniciar-sesion")
 
     const homeLink = screen.getByRole("link", { name: "Volver al inicio" })
-    expect(homeLink).toHaveAttribute("href", "/proveedor")
+    expect(homeLink).toHaveAttribute("href", "/proveedor/iniciar-sesion")
   })
 
   it("renders consumer session outside provider area linking to weekly menu and home", () => {
@@ -102,7 +102,7 @@ describe("NotFound Error Page", () => {
     render(<NotFound />)
 
     const signInLink = screen.getByRole("link", { name: "Iniciar sesión" })
-    expect(signInLink).toHaveAttribute("href", "/iniciar-sesion")
+    expect(signInLink).toHaveAttribute("href", "/consumidor")
 
     const homeLink = screen.getByRole("link", { name: "Volver al inicio" })
     expect(homeLink).toHaveAttribute("href", "/")

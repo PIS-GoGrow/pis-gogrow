@@ -7,7 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { sessions } from "@/routes"
 
-export default function DevLoginForm() {
+interface Props {
+  origin?: string
+}
+
+export default function DevLoginForm({ origin }: Props) {
   const { t } = useTranslation()
 
   return (
@@ -33,6 +37,7 @@ export default function DevLoginForm() {
       >
         {({ processing }) => (
           <FieldGroup>
+            {origin && <input type="hidden" name="origin" value={origin} />}
             <Field>
               <FieldLabel htmlFor="email">
                 {t("common.email_address")}

@@ -17,10 +17,10 @@ RSpec.describe "Admin::Consumers", type: :request do
   describe "GET /admin/empleados" do
     it "redirects visitors to the sign in page" do
       get admin_consumers_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
 
       get admin_consumers_path, params: { month: "2026-09", filter: "pending" }
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects users without an admin profile" do
@@ -66,81 +66,36 @@ RSpec.describe "Admin::Consumers", type: :request do
         expect(inertia).to have_props(filter: "pending")
       end
 
-      # El ranking del inicio se calcula con el mes elegido y su chevron trae ese mes.
-      it "summarizes the month the URL asks for" do
+      # Lo que el empleado dejó sin pagar de meses anteriores también es deuda:
+      # mirando solo el mes actual, RR. HH. no lo veía.
+      it "adds what the employee still owes from earlier months" do
         previous = 1.month.ago.to_date.beginning_of_month
         Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
 
-        get admin_consumers_path, params: { filter: "pending", month: previous.strftime("%Y-%m") }
+        get admin_consumers_path
 
         expect(inertia.props[:consumers]).to include(
-          hash_including(id: consumers(:one).id, amount: 0.0, status: nil),
-          hash_including(id: consumers(:other).id, amount: 80.0, status: "pending")
+          hash_including(id: consumers(:other).id, amount: 230.25, status: "pending")
         )
       end
 
-      it "sends the month it summarizes and the months to choose from" do
+      it "leaves out earlier months that were already paid" do
         previous = 1.month.ago.to_date.beginning_of_month
-        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+        paid = Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+        paid.payments.create!(provider: providers(:tuviandita), status: :approved)
 
-        get admin_consumers_path, params: { month: previous.strftime("%Y-%m") }
-
-        expect(inertia).to have_props(month: previous.strftime("%Y-%m"), current_month: Date.current.strftime("%Y-%m"))
-        expect(inertia.props[:months].pluck(:key)).to include(previous.strftime("%Y-%m"), Date.current.strftime("%Y-%m"))
-      end
-
-      it "sends the current month when the URL asks for none" do
         get admin_consumers_path
 
-        expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"))
-      end
-
-      it "summarizes the current month with an invalid or future month" do
-        [ "agosto", "2026-13", (Date.current + 2.months).strftime("%Y-%m") ].each do |month|
-          get admin_consumers_path, params: { month: }
-
-          expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"), current_month: Date.current.strftime("%Y-%m"))
-          expect(inertia.props[:consumers]).to include(
-            hash_including(id: consumers(:one).id, amount: 950.75, status: "pending")
-          )
-        end
-      end
-
-      it "falls back to the current month when given an empty or whitespace month" do
-        [ "", "   " ].each do |month|
-          get admin_consumers_path, params: { month: }
-
-          expect(inertia).to have_props(month: Date.current.strftime("%Y-%m"))
-        end
-      end
-
-      it "formats all month options with year-month keys and localized labels" do
-        get admin_consumers_path
-
-        months = inertia.props[:months]
-        expect(months).not_to be_empty
-        expect(months).to all(
-          match(
-            key: a_string_matching(/\A\d{4}-\d{2}\z/),
-            label: a_string_matching(/\A[a-zñáéíóú]+\s+\d{4}\z/i)
-          )
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:other).id, amount: 150.25, status: "submitted")
         )
       end
 
-      it "keeps the filter and month synchronized when both are requested" do
-        previous = 1.month.ago.to_date.beginning_of_month
-        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
-
-        get admin_consumers_path, params: { filter: "pending", month: previous.strftime("%Y-%m") }
-
-        expect(inertia).to have_props(filter: "pending", month: previous.strftime("%Y-%m"))
-      end
-
-      it "never includes consumers of another company when querying a previous month" do
+      it "never includes the debt of another company's employees" do
         previous = 1.month.ago.to_date.beginning_of_month
         Account.create!(owner: outsider, provider: providers(:tuviandita), month: previous, amount: 500)
 
-        get admin_consumers_path, params: { month: previous.strftime("%Y-%m") }
+        get admin_consumers_path
 
         expect(inertia.props[:consumers].pluck(:id)).not_to include(outsider.id)
       end
@@ -243,10 +198,10 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
         dates = month[:orders].to_h { [ it[:id], it[:date] ] }
-        expect(dates[order.id]).to eq(DateFormat.short(delivery))
+        expect(dates[order.id]).to eq(I18n.l(delivery, format: "%-d/%-m"))
       end
 
-      it "sorts confirmed orders in consumption history chronologically by delivery_date ascending" do
+      it "sorts confirmed orders in consumption history from the newest delivery, as in the design" do
         earlier = orders(:history_confirmed_past)
         later = orders(:upcoming_confirmed_future)
 
@@ -257,7 +212,7 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
         orders_in_month = month[:orders]
-        expect(orders_in_month.pluck(:id)).to eq([ earlier.id, later.id ])
+        expect(orders_in_month.pluck(:id)).to eq([ later.id, earlier.id ])
       end
 
       it "handles orders with nil delivery dates without 500 exceptions" do
@@ -269,7 +224,7 @@ RSpec.describe "Admin::Consumers", type: :request do
         expect(response).to have_http_status(:ok)
         month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
         order_prop = month[:orders].find { it[:id] == order.id }
-        expect(order_prop[:date]).to eq(DateFormat.short(order.created_at))
+        expect(order_prop[:date]).to eq(I18n.l(order.created_at.to_date, format: "%-d/%-m"))
       end
 
       it "retains and renders delivery_date even after the associated schedule is destroyed" do
@@ -285,8 +240,21 @@ RSpec.describe "Admin::Consumers", type: :request do
 
         month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
         dates = month[:orders].to_h { [ it[:id], it[:date] ] }
-        expect(dates[order.id]).to eq(DateFormat.short(delivery))
+        expect(dates[order.id]).to eq(I18n.l(delivery, format: "%-d/%-m"))
       end
+      it "links each provider of a month to the last receipt the employee sent it" do
+        account = accounts(:one_tuviandita_current)
+        payment = account.payments.build(provider: account.provider, status: :submitted)
+        payment.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+        payment.save!
+
+        get admin_consumer_path(consumers(:one))
+
+        month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
+        provider = month[:providers].find { it[:id] == account.provider_id }
+        expect(provider[:receipt_url]).to eq(receipt_admin_payment_path(payment))
+      end
+
       it "shows the active benefit percentage" do
         get admin_consumer_path(consumers(:one))
 
@@ -338,7 +306,7 @@ RSpec.describe "Admin::Consumers", type: :request do
       it "redirects visitors without a session to the sign in page" do
         get admin_consumer_path(consumers(:one))
 
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(admin_welcome_path)
       end
 
       it "redirects consumers to the root page" do

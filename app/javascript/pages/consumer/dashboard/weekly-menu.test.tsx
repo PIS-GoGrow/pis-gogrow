@@ -47,6 +47,7 @@ const sampleSchedule: Schedule = {
     description: "Clásica milanesa de carne",
     price: 350,
     provider_id: 1,
+    saved_menu_id: 1,
     option_groups: [],
     provider_name: "Tu Viandita",
     home_delivery: true,
@@ -66,6 +67,7 @@ const sampleCartItem: CartItem = {
   quantity: 1,
   notes: "",
   selections: {},
+  benefits: [],
   menu: sampleSchedule.menu,
 }
 
@@ -83,6 +85,8 @@ describe("WeeklyMenu (Acceso responsive al carrito)", () => {
       providers: [{ id: 1, name: "Tu Viandita", order_deadline: null }],
       schedules: [sampleSchedule],
       closures: [],
+      favorites: { menus: [], provider_ids: [] },
+      frequent: { menus: [], provider_ids: [] },
       cart: [],
       count: 0,
       total: 0,
