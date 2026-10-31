@@ -144,6 +144,16 @@ RSpec.describe CompanyPaymentNotifications do
       )
     end
 
+    it "does not classify a partial company payment as rejected or approved" do
+      payment = add_payment(status: :submitted)
+
+      payment.mark_partial
+
+      expect(payment.reload).to be_partial
+      expect(account.reload.collection_status).to eq("partial")
+      expect(active_events(admin_user)).not_to include("company_payment_rejected", "company_payment_approved")
+    end
+
     it "no avisa a RR.HH. por los pagos de los empleados" do
       consumer_account = Account.create!(owner: consumers(:one), provider: providers(:endulzate), month: Date.new(2026, 8, 1), amount: 200)
 

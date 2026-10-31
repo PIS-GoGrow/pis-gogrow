@@ -187,6 +187,18 @@ RSpec.describe "Provider payments", type: :request do
     expect(payment.rejection_reason).to be_nil
   end
 
+  it "does not treat the legacy partial rejection reason as a partial payment" do
+    user, payment = setup_submitted_payment
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "partial_payment" }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(payment.reload).to be_submitted
+    expect(payment.rejection_reason).to be_nil
+  end
+
   it "stores a trimmed custom rejection reason" do
     user, payment = setup_submitted_payment
     sign_in(user, role: :provider)
@@ -281,16 +293,16 @@ RSpec.describe "Provider payments", type: :request do
     expect(inertia).to render_component("errors/not_found")
   end
 
-  it "keeps a rejected partial payment receipt accessible only to its provider" do
+  it "keeps a partial payment receipt accessible only to its provider" do
     user, payment = setup_submitted_payment
-    payment.update!(status: :rejected, rejection_reason: "El pago es parcial")
+    payment.mark_partial
     sign_in(user, role: :provider)
 
     get receipt_provider_payment_path(payment)
 
     expect(response).to have_http_status(:ok)
     expect(response.media_type).to eq("image/png")
-    expect(payment.reload).to be_rejected
+    expect(payment.reload).to be_partial
 
     other = create_provider("other-receipt-provider@gmail.com")
     sign_in(other.user, role: :provider)
@@ -298,7 +310,7 @@ RSpec.describe "Provider payments", type: :request do
 
     expect(response).to have_http_status(:not_found)
     expect(inertia).to render_component("errors/not_found")
-    expect(payment.reload).to be_rejected
+    expect(payment.reload).to be_partial
   end
 
   it "returns 404 when opening a non-existent receipt file" do
@@ -370,21 +382,63 @@ RSpec.describe "Provider payments", type: :request do
     expect(payment.reload).to be_submitted
   end
 
-  it "handles partial payment rejection without notice and leaves the account rejected until a new receipt arrives" do
+  it "records a partial payment as partial without using a rejection reason" do
     user, payment = setup_submitted_payment
     account = payment.account
+    original_amount = account.amount
+    original_blob_id = payment.receipt.blob_id
 
     sign_in(user, role: :provider)
 
-    patch provider_payment_path(payment),
-          params: { status: "rejected", rejection_reason: "partial_payment" }
+    patch provider_payment_path(payment), params: { status: "partial" }
 
     expect(response).to redirect_to(provider_collections_path)
     expect(response).to have_http_status(:see_other)
     expect(flash[:notice]).to be_nil
-    expect(payment.reload.rejection_reason).to eq("El pago es parcial")
+    expect(payment.reload).to be_partial
+    expect(payment.rejection_reason).to be_nil
+    expect(payment.receipt.blob_id).to eq(original_blob_id)
+    expect(account.reload.amount).to eq(original_amount)
+    expect(account.payments.approved).to be_empty
+    expect(Account.pending).to include(account)
+    expect(Account.history).not_to include(account)
     expect(account.reload.payment_pending_review).to be_nil
-    expect(account.collection_status).to eq("rejected")
+    expect(account.collection_status).to eq("partial")
+  end
+
+  it "does not review a partial payment again as approved or rejected" do
+    user, payment = setup_submitted_payment
+    payment.mark_partial
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "approved" }
+    expect(response).to redirect_to(provider_collections_path)
+    expect(payment.reload).to be_partial
+
+    patch provider_payment_path(payment),
+          params: { status: "rejected", rejection_reason: "incorrect_receipt" }
+    expect(response).to redirect_to(provider_collections_path)
+    expect(payment.reload).to be_partial
+    expect(payment.rejection_reason).to be_nil
+  end
+
+  it "keeps the company invoice pending when its payment is partial" do
+    company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
+    provider = create_provider("invoice-partial-provider@gmail.com")
+    account = Account.create!(owner: company, provider:, month: Date.current.prev_month, amount: 500)
+    invoice = account.invoices.build(issued_on: Date.current, total_amount: 500)
+    invoice.file.attach(io: StringIO.new("%PDF-1.4"), filename: "factura.pdf", content_type: "application/pdf")
+    invoice.save!
+    payment = account.payments.build(provider:, status: :submitted)
+    payment.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+    payment.save!
+    sign_in(provider.user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "partial" }
+
+    expect(payment.reload).to be_partial
+    expect(account.reload.collection_status).to eq("partial")
+    expect(invoice.reload).to be_pending
   end
 
   describe "manual debt reminders closure on review" do

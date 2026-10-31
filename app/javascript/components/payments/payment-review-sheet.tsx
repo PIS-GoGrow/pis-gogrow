@@ -10,10 +10,6 @@ import ReceiptSheet from "@/components/payments/receipt-sheet"
 import RejectPaymentDialog from "@/components/payments/reject-payment-dialog"
 import { Button } from "@/components/ui/button"
 import { Spinner } from "@/components/ui/spinner"
-import {
-  PARTIAL_PAYMENT_REJECTION_REASON_KEY,
-  type PaymentRejectionReasonKey,
-} from "@/lib/payment-rejection-reasons"
 import { providerPayments } from "@/routes"
 
 interface PaymentReviewSheetProps {
@@ -60,11 +56,9 @@ export default function PaymentReviewSheet({
     )
   }
 
-  function handleReported(reason: PaymentRejectionReasonKey) {
+  function handleReviewed(result: "partial" | "rejected") {
     setSheetOpen(false)
-    showResult(
-      reason === PARTIAL_PAYMENT_REJECTION_REASON_KEY ? "partial" : "rejected",
-    )
+    showResult(result)
   }
 
   return (
@@ -86,7 +80,7 @@ export default function PaymentReviewSheet({
         <>
           <RejectPaymentDialog
             paymentId={paymentId}
-            onRejected={handleReported}
+            onReviewed={handleReviewed}
           >
             <AdaptableDialogTrigger asChild>
               <Button

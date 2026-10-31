@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", type: :system do
+RSpec.describe "Flujo de comprobantes múltiples y pago parcial", type: :system do
   fixtures :users, :consumers, :companies, :providers
 
   let(:employee_user) { users(:one) }
@@ -55,7 +55,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
       expect(page).to have_content("En revisión")
     end
 
-    # 2. El proveedor revisa el primer comprobante y lo rechaza con 'El pago es parcial'
+    # 2. El proveedor revisa el primer comprobante y lo registra como parcial
     sign_out
     sign_in provider_user, role: :provider
     visit provider_collections_path
@@ -81,7 +81,8 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     visit accounts_path
 
     within("[role=tabpanel]") do
-      expect(page).to have_content("Rechazado")
+      expect(page).to have_content("Pago parcial")
+      expect(page).to have_no_content("Rechazado")
       expect(page).to have_content(I18n.t("pages.accounts.show.partial_payment_warning"))
       expect(page).to have_no_content("La imagen está borrosa")
     end

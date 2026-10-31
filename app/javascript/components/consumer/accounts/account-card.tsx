@@ -12,7 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { SheetTrigger } from "@/components/ui/sheet"
 import { formatMoney } from "@/lib/money"
-import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
+import { paymentPresentationStatus } from "@/lib/payment-rejection-reasons"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
 
@@ -47,22 +47,33 @@ export default function AccountCard({
     account.payments.find(({ status }) => status === "approved")
   const showReceiptSection =
     !account.current || account.payments.some(({ receipt_url }) => receipt_url)
+  const presentationStatus = payment
+    ? paymentPresentationStatus(payment)
+    : "pending"
+  const showPaymentWarning =
+    payment !== undefined &&
+    ["partial", "rejected"].includes(presentationStatus)
+  const showSeparator = showReceiptSection ? true : showPaymentWarning
 
   // Sin comprobante todavía = pendiente; el mismo estado "submitted" cubre
   // tanto el primer envío como un reenvío luego de un rechazo.
   const statusLabel =
-    payment?.status === "rejected"
-      ? t("pages.accounts.show.status_rejected")
-      : payment?.status === "submitted"
-        ? t("pages.accounts.show.status_submitted")
-        : t("pages.accounts.show.status_pending")
+    presentationStatus === "partial"
+      ? t("pages.accounts.show.status_partial")
+      : presentationStatus === "rejected"
+        ? t("pages.accounts.show.status_rejected")
+        : presentationStatus === "submitted"
+          ? t("pages.accounts.show.status_submitted")
+          : t("pages.accounts.show.status_pending")
 
   const statusBadgeClassName =
-    payment?.status === "rejected"
-      ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
-      : payment?.status === "submitted"
-        ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400"
-        : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+    presentationStatus === "partial"
+      ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400"
+      : presentationStatus === "rejected"
+        ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
+        : presentationStatus === "submitted"
+          ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400"
+          : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
 
   async function handleClick() {
     setLoading(true)
@@ -132,17 +143,15 @@ export default function AccountCard({
           </SheetTrigger>
         </CardTitle>
 
-        {(payment?.status === "rejected" || showReceiptSection) && (
-          <Separator />
-        )}
+        {showSeparator && <Separator />}
 
-        {payment?.status === "rejected" &&
-          (payment.rejection_reason === PARTIAL_PAYMENT_REJECTION_REASON ? (
+        {payment &&
+          (presentationStatus === "partial" ? (
             <div className="flex items-start gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-400">
               <TriangleAlert className="mt-0.5 size-4 shrink-0" />
               <p>{t("pages.accounts.show.partial_payment_warning")}</p>
             </div>
-          ) : (
+          ) : presentationStatus === "rejected" ? (
             <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
               <CircleX className="mt-0.5 size-4 shrink-0" />
               <p>
@@ -152,12 +161,14 @@ export default function AccountCard({
                 {payment.rejection_reason}
               </p>
             </div>
-          ))}
+          ) : null)}
 
         {showReceiptSection && (
           <PaymentReceiptDialog
             accountId={account.id}
-            canUpload={!account.current}
+            canUpload={
+              !account.current && account.collection_status !== "approved"
+            }
             uploadDisabled={account.payments.some(
               ({ status }) => status === "submitted",
             )}

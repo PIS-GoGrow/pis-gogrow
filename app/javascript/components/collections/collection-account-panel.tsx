@@ -144,7 +144,9 @@ export default function CollectionAccountPanel({
           {t("pages.provider_collections.reminder.limit_reached")}
         </p>
       )}
-      {(showPaymentHistory || account.status === "rejected") && (
+      {(showPaymentHistory ||
+        account.status === "partial" ||
+        account.status === "rejected") && (
         <CollectionPaymentHistory
           payments={account.payments}
           showDownloadAll={showDownloadAll}

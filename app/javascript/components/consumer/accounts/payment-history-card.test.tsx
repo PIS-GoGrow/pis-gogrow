@@ -3,7 +3,6 @@ import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
 import { Sheet } from "@/components/ui/sheet"
-import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
 import type { Account, Payment } from "@/types"
 
 import PaymentHistoryCard from "./payment-history-card"
@@ -91,8 +90,8 @@ describe("PaymentHistoryCard", () => {
     const user = userEvent.setup()
     const payment1 = makePayment({
       id: 1,
-      status: "rejected",
-      rejection_reason: PARTIAL_PAYMENT_REJECTION_REASON,
+      status: "partial",
+      rejection_reason: null,
       created_at: "2026-09-15T10:00:00Z",
       receipt_url: "/comprobantes/1/archivo",
       receipt_filename: "comprobante_parcial.png",
@@ -130,11 +129,33 @@ describe("PaymentHistoryCard", () => {
 
     // Partial payment badge is rendered
     expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+    expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
 
     // Download buttons/links for both
     const downloadLinks = screen.getAllByRole("link", {
       name: /Descargar comprobante/i,
     })
     expect(downloadLinks).toHaveLength(2)
+  })
+
+  it("shows a historical partial rejection as one partial status", async () => {
+    const user = userEvent.setup()
+    const account = makeAccount({
+      payments: [
+        makePayment({
+          id: 1,
+          status: "rejected",
+          rejection_reason: "El pago es parcial",
+          receipt_filename: "parcial_historico.png",
+        }),
+        makePayment({ id: 2 }),
+      ],
+    })
+
+    renderCard(account)
+    await user.click(screen.getByRole("button", { name: /Ver comprobantes/i }))
+
+    expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+    expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
   })
 })

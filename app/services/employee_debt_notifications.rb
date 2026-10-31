@@ -52,7 +52,7 @@ class EmployeeDebtNotifications
     def unpaid(scope)
       scope.pending
            .preload(:payments, provider: :user, owner: :user)
-           .select { it.collection_status.in?(%w[pending rejected]) }
+           .select { it.collection_status.in?(%w[pending rejected partial]) }
     end
 
     def anchors_for(accounts)

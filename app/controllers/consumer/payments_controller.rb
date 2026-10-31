@@ -8,6 +8,7 @@ class Consumer::PaymentsController < Consumer::InertiaController
     # evita que un account_id enviado desde el navegador cree pagos para otro empleado.
     account = consumer_accounts.find(payment_account_id)
     return reject_current_account if account.current?
+    return reject_closed_payment if account.payments.approved.exists?
 
     @payment = account.payments.build(
       provider: account.provider,
@@ -19,11 +20,7 @@ class Consumer::PaymentsController < Consumer::InertiaController
   end
 
   def update
-    if @payment.approved?
-      return redirect_back fallback_location: dashboard_path, inertia: {
-        errors: { receipt: [ t("validations.payment_closed") ] }
-      }, status: :see_other
-    end
+    return reject_closed_payment if @payment.approved? || @payment.partial? || @payment.account.payments.approved.exists?
 
     return reject_current_account if @payment.account.current?
 
@@ -99,6 +96,12 @@ class Consumer::PaymentsController < Consumer::InertiaController
   def reject_current_account
     redirect_back fallback_location: accounts_path, inertia: {
       errors: { receipt: [ t("validations.payment_current_account") ] }
+    }, status: :see_other
+  end
+
+  def reject_closed_payment
+    redirect_back fallback_location: accounts_path, inertia: {
+      errors: { receipt: [ t("validations.payment_closed") ] }
     }, status: :see_other
   end
 end

@@ -337,6 +337,7 @@
           "see_receipts": "Ver comprobantes",
           "spending": "Consumo",
           "status_accepted": "Aprobado",
+          "status_partial": "Pago parcial",
           "status_pending": "Pendiente",
           "status_rejected": "Rechazado",
           "status_submitted": "En revisión",
@@ -1206,6 +1207,7 @@
         },
         "statuses": {
           "approved": "Aprobado",
+          "partial": "Pago parcial",
           "pending": "Pendiente",
           "rejected": "Rechazado",
           "submitted": "En revisión"

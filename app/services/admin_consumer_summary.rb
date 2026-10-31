@@ -2,7 +2,7 @@
 
 class AdminConsumerSummary
   # Estado que resume varias cuentas del mismo mes: el que más atención pide.
-  STATUS_PRIORITY = %w[pending rejected submitted approved].freeze
+  STATUS_PRIORITY = %w[partial pending rejected submitted approved].freeze
 
   ConsumerRow = Data.define(:consumer, :amount, :status) do
     delegate :id, to: :consumer

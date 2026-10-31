@@ -28,6 +28,47 @@ RSpec.describe Payment, type: :model do
     expect(described_class.new.status).to eq("pending")
   end
 
+  it "defines partial as a payment status distinct from rejected" do
+    expect(described_class.statuses).to include("partial" => 4)
+  end
+
+  it "transitions a submitted payment to partial without losing its receipt" do
+    payment = payment_with_receipt.tap(&:save!)
+    original_blob_id = payment.receipt.blob_id
+    original_amount = account.amount
+    payment.update_column(:rejection_reason, "Motivo anterior")
+
+    expect(payment.mark_partial).to be(true)
+
+    expect(payment.reload).to be_partial
+    expect(payment.rejection_reason).to be_nil
+    expect(payment.receipt).to be_attached
+    expect(payment.receipt.blob_id).to eq(original_blob_id)
+    expect(account.reload.amount).to eq(original_amount)
+  end
+
+  it "does not mark payments partial from incompatible statuses" do
+    payments = [
+      payment_with_receipt(status: :pending),
+      payment_with_receipt(status: :approved),
+      payment_with_receipt(status: :rejected, rejection_reason: "Monto incorrecto"),
+      payment_with_receipt(status: :partial)
+    ]
+    payments.each(&:save!)
+
+    expect(payments.map(&:mark_partial)).to all(be(false))
+    expect(payments.map { it.reload.status }).to eq(%w[pending approved rejected partial])
+  end
+
+  it "does not reopen a historical partial payment" do
+    payment = payment_with_receipt.tap(&:save!)
+    payment.mark_partial
+
+    expect(payment.update(status: :submitted)).to be(false)
+    expect(payment.errors[:status]).to be_present
+    expect(payment.reload).to be_partial
+  end
+
   # El recordatorio manual del proveedor quedaba activo para siempre después de
   # aprobarse el pago, y como requiere acción el empleado tampoco podía cerrarlo.
   describe "the provider's manual debt reminder" do
@@ -60,6 +101,15 @@ RSpec.describe Payment, type: :model do
       payment.save!
 
       payment.reject_with("El comprobante no corresponde")
+
+      expect(reminder.reload.closed_at).to be_nil
+    end
+
+    it "stays open when the payment is partial" do
+      reminder = manual_reminder
+      payment = payment_with_receipt(status: :submitted).tap(&:save!)
+
+      payment.mark_partial
 
       expect(reminder.reload.closed_at).to be_nil
     end
@@ -317,6 +367,24 @@ RSpec.describe Payment, type: :model do
       expect(rejected1).to be_persisted
       expect(rejected2).to be_persisted
       expect(account.payments.rejected.count).to eq(2)
+    end
+
+    it "allows several consecutive partial payments for the same account" do
+      first = payment_with_receipt(status: :partial, filename: "parcial_1.png").tap(&:save!)
+      second = payment_with_receipt(status: :partial, filename: "parcial_2.png").tap(&:save!)
+
+      expect(account.payments.partial).to contain_exactly(first, second)
+      expect(first.receipt.filename.to_s).to eq("parcial_1.png")
+      expect(second.receipt.filename.to_s).to eq("parcial_2.png")
+    end
+
+    it "allows one submitted payment after previous partial payments" do
+      payment_with_receipt(status: :partial, filename: "parcial_1.png").save!
+      payment_with_receipt(status: :partial, filename: "parcial_2.png").save!
+
+      submitted = payment_with_receipt(filename: "final.png")
+
+      expect(submitted).to be_valid
     end
   end
 

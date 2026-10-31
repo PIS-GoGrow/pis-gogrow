@@ -18,7 +18,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { SheetTrigger } from "@/components/ui/sheet"
 import { formatMoney } from "@/lib/money"
-import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
+import { paymentPresentationStatus } from "@/lib/payment-rejection-reasons"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
 
@@ -124,21 +124,10 @@ export default function PaymentHistoryCard({
                         date: payment.receipt_uploaded_at,
                       })}
                     </span>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      {payment.rejection_reason ===
-                        PARTIAL_PAYMENT_REJECTION_REASON && (
-                        <Badge
-                          variant="outline"
-                          className="gap-1.5 border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500"
-                        >
-                          <span className="size-1.5 rounded-full" />
-                          {t(
-                            "pages.provider_collections.partial_payment_badge",
-                          )}
-                        </Badge>
-                      )}
-                      <StatusBadge kind="payment" status={payment.status} />
-                    </div>
+                    <StatusBadge
+                      kind="payment"
+                      status={paymentPresentationStatus(payment)}
+                    />
                   </div>
 
                   <div className="flex min-w-0 items-center gap-2">

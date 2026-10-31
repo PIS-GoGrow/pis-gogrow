@@ -16,8 +16,9 @@ import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
-  PAYMENT_REJECTION_REASON_KEYS,
-  type PaymentRejectionReasonKey,
+  PARTIAL_PAYMENT_REJECTION_REASON_KEY,
+  PAYMENT_REVIEW_ISSUE_KEYS,
+  type PaymentReviewIssueKey,
 } from "@/lib/payment-rejection-reasons"
 import { cn } from "@/lib/utils"
 import { providerPayments as paymentsRoutes } from "@/routes"
@@ -25,23 +26,25 @@ import { providerPayments as paymentsRoutes } from "@/routes"
 interface RejectPaymentDialogProps {
   children: ReactNode
   paymentId: number
-  onRejected?: (reason: PaymentRejectionReasonKey) => void
+  onReviewed?: (result: "partial" | "rejected") => void
 }
 
 export default function RejectPaymentDialog({
   children,
   paymentId,
-  onRejected,
+  onReviewed,
 }: RejectPaymentDialogProps) {
   const { t } = useTranslation()
   const page = "pages.provider_collections.review"
   const [open, setOpen] = useState(false)
   const [selectedReason, setSelectedReason] =
-    useState<PaymentRejectionReasonKey | null>(null)
+    useState<PaymentReviewIssueKey | null>(null)
   const [rejectionDetails, setRejectionDetails] = useState("")
   const [processing, setProcessing] = useState(false)
 
   const isOtherReason = selectedReason === "other"
+  const isPartialPayment =
+    selectedReason === PARTIAL_PAYMENT_REJECTION_REASON_KEY
   const normalizedDetails = rejectionDetails.trim()
   const canSubmit =
     selectedReason !== null && (!isOtherReason || normalizedDetails.length > 0)
@@ -56,23 +59,23 @@ export default function RejectPaymentDialog({
 
     setProcessing(true)
 
-    router.patch(
-      paymentsRoutes.update(paymentId).url,
-      {
-        status: "rejected",
-        rejection_reason: selectedReason,
-        rejection_details: isOtherReason ? normalizedDetails : null,
+    const payload = isPartialPayment
+      ? { status: "partial" }
+      : {
+          status: "rejected",
+          rejection_reason: selectedReason,
+          rejection_details: isOtherReason ? normalizedDetails : null,
+        }
+
+    router.patch(paymentsRoutes.update(paymentId).url, payload, {
+      preserveState: true,
+      onSuccess: () => {
+        setOpen(false)
+        resetForm()
+        onReviewed?.(isPartialPayment ? "partial" : "rejected")
       },
-      {
-        preserveState: true,
-        onSuccess: () => {
-          setOpen(false)
-          resetForm()
-          onRejected?.(selectedReason)
-        },
-        onFinish: () => setProcessing(false),
-      },
-    )
+      onFinish: () => setProcessing(false),
+    })
   }
 
   return (
@@ -98,11 +101,11 @@ export default function RejectPaymentDialog({
         <RadioGroup
           value={selectedReason ?? ""}
           onValueChange={(reason) =>
-            setSelectedReason(reason as PaymentRejectionReasonKey)
+            setSelectedReason(reason as PaymentReviewIssueKey)
           }
           className="gap-2 px-4 sm:px-0"
         >
-          {PAYMENT_REJECTION_REASON_KEYS.map((reason) => {
+          {PAYMENT_REVIEW_ISSUE_KEYS.map((reason) => {
             const id = `payment-rejection-${reason}`
 
             return (

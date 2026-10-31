@@ -8,6 +8,6 @@ class Admin::ConsumerRowSerializer < ApplicationSerializer
   attributes :avatar_url
 
   # Sigue el enum de Payment; escrito a mano porque acá no hay un modelo del que inferirlo.
-  typelize "'pending' | 'submitted' | 'approved' | 'rejected' | null"
+  typelize "'pending' | 'submitted' | 'approved' | 'rejected' | 'partial' | null"
   attribute :status, &:status
 end

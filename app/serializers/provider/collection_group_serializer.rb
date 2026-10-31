@@ -36,7 +36,7 @@ class Provider::CollectionGroupSerializer < ApplicationSerializer
     group.employees_total.to_f
   end
 
-  typelize "'pending' | 'submitted' | 'approved' | 'rejected' | null"
+  typelize "'pending' | 'submitted' | 'approved' | 'rejected' | 'partial' | null"
   attribute :employees_status, &:employees_status
 
   typelize company: [ nullable: true ]

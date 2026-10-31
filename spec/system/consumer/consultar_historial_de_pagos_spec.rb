@@ -260,9 +260,8 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
       consumer: consumers(:one), provider:, month: previous_month,
       quantity: 2, discounted_price: 300
     )
-    rejected_payment = payment_for(
-      account, status: :rejected, filename: "comprobante_parcial.png",
-      rejection_reason: "El pago es parcial"
+    partial_payment = payment_for(
+      account, status: :partial, filename: "comprobante_parcial.png"
     )
 
     sign_in employee
@@ -277,11 +276,12 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
       expect(page).to have_content("comprobante.png")
       expect(page).to have_content("comprobante_parcial.png")
       expect(page).to have_content("Pago parcial")
+      expect(page).to have_no_content("Rechazado")
       expect(page).to have_link(
         "Descargar comprobante.png", href: receipt_payment_path(approved_payment)
       )
       expect(page).to have_link(
-        "Descargar comprobante_parcial.png", href: receipt_payment_path(rejected_payment)
+        "Descargar comprobante_parcial.png", href: receipt_payment_path(partial_payment)
       )
     end
   end

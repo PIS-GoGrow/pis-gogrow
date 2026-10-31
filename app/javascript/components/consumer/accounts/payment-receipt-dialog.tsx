@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/field"
 import { Progress } from "@/components/ui/progress"
 import { Spinner } from "@/components/ui/spinner"
+import { paymentPresentationStatus } from "@/lib/payment-rejection-reasons"
 import { consumerPayments } from "@/routes"
 import type { Payment } from "@/types"
 
@@ -118,7 +119,10 @@ export default function PaymentReceiptDialog({
               })}
             </span>
             <div className="shrink-0">
-              <StatusBadge kind="payment" status={payment.status} />
+              <StatusBadge
+                kind="payment"
+                status={paymentPresentationStatus(payment)}
+              />
             </div>
           </div>
 

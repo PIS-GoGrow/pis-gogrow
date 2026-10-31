@@ -44,7 +44,7 @@ class AccountSerializer < ApplicationSerializer
 
   # Sigue el enum de Payment; escrito a mano porque collection_status es un
   # método y no una columna de la que inferirlo.
-  typelize "'pending' | 'submitted' | 'approved' | 'rejected'"
+  typelize "'pending' | 'submitted' | 'approved' | 'rejected' | 'partial'"
   attribute :collection_status, &:collection_status
 
   typelize :number

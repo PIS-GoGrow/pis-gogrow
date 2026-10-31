@@ -26,7 +26,7 @@ module DebtReminders
       return :no_debt unless account.amount.to_d > MIN_AMOUNT
       return :not_overdue unless account.due_date < Date.current
       return :payment_under_review if account.collection_status == "submitted"
-      return :paid unless account.collection_status.in?(%w[pending rejected])
+      return :paid unless account.collection_status.in?(%w[pending rejected partial])
 
       nil
     end

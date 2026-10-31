@@ -33,14 +33,14 @@ RSpec.describe Provider::CollectionAccountSerializer do
 
   it "falls back to the last payment when no submitted payment exists" do
     account.payments.destroy_all
-    rejected = create_payment(account, status: :rejected, rejection_reason: "El pago es parcial", created_at: 1.day.ago)
+    partial = create_payment(account, status: :partial, created_at: 1.day.ago)
 
     row = ProviderCollectionSummary::AccountRow.new(account:, meals: 3)
     serialized = described_class.new(row).to_h
 
-    expect(serialized["payment_id"]).to eq(rejected.id)
-    expect(serialized["status"]).to eq("rejected")
-    expect(serialized["receipt_url"]).to eq(Rails.application.routes.url_helpers.receipt_provider_payment_path(rejected))
+    expect(serialized["payment_id"]).to eq(partial.id)
+    expect(serialized["status"]).to eq("partial")
+    expect(serialized["receipt_url"]).to eq(Rails.application.routes.url_helpers.receipt_provider_payment_path(partial))
   end
 
   it "returns nil payment_id and receipt_url when account has no payments" do
@@ -61,13 +61,13 @@ RSpec.describe Provider::CollectionAccountSerializer do
   def add_payment(account, status)
     account.payments.create!(
       provider: account.provider, status:,
-      rejection_reason: status == :rejected ? "El pago es parcial" : nil,
+      rejection_reason: status == :rejected ? "Comprobante ilegible" : nil,
       receipt: Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png")
     )
   end
 
   [ :consumer, :company ].each do |source|
-    [ [ 0, :submitted, false ], [ 1, :submitted, true ], [ 1, :rejected, false ], [ 1, :approved, false ] ].each do |months_ago, status, allowed|
+    [ [ 0, :submitted, false ], [ 1, :submitted, true ], [ 1, :partial, false ], [ 1, :rejected, false ], [ 1, :approved, false ] ].each do |months_ago, status, allowed|
       it "exposes approval eligibility for a #{source} account #{months_ago} months ago with #{status} payment" do
         owner = source == :consumer ? consumers(:one) : companies(:gogrow)
         account = Account.create!(owner:, provider: providers(:office_provider), month: Date.current.months_ago(months_ago), amount: 800)

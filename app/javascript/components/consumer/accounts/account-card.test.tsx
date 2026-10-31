@@ -83,31 +83,34 @@ describe("AccountCard", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("keeps the upload button enabled when an earlier payment was approved", () => {
+  it("does not offer another upload when the account is already approved", () => {
     const account = makeAccount({
+      collection_status: "approved",
       payments: [makePayment({ status: "approved" })],
     })
 
     renderCard(account)
 
     expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeEnabled()
-    expect(
-      screen.queryByText(/Ya hay un comprobante en revisión/),
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
     ).not.toBeInTheDocument()
   })
 
-  it("renders yellow warning when rejection reason is partial payment", () => {
+  it("renders partial as an independent status with the incomplete-payment warning", () => {
     const payment = makePayment({
-      status: "rejected",
-      rejection_reason: "El pago es parcial",
+      status: "partial",
+      rejection_reason: null,
     })
-    const account = makeAccount({ payments: [payment] })
+    const account = makeAccount({
+      collection_status: "partial",
+      payments: [payment],
+    })
 
     renderCard(account)
 
+    expect(screen.getAllByText("Pago parcial").length).toBeGreaterThan(0)
     expect(screen.getByText("Falta una parte del pago.")).toBeInTheDocument()
+    expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
     expect(screen.queryByText(/Rechazado:/)).not.toBeInTheDocument()
   })
 
@@ -126,11 +129,28 @@ describe("AccountCard", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("hides rejection alerts when a newer receipt has been submitted", () => {
-    const rejectedPayment = makePayment({
-      id: 1,
+  it("presents a historical partial rejection without changing its upload rules", () => {
+    const payment = makePayment({
       status: "rejected",
       rejection_reason: "El pago es parcial",
+    })
+    const account = makeAccount({ payments: [payment] })
+
+    renderCard(account)
+
+    expect(screen.getAllByText("Pago parcial").length).toBeGreaterThan(0)
+    expect(screen.getByText("Falta una parte del pago.")).toBeInTheDocument()
+    expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeEnabled()
+  })
+
+  it("hides rejection alerts when a newer receipt has been submitted", () => {
+    const partialPayment = makePayment({
+      id: 1,
+      status: "partial",
+      rejection_reason: null,
       created_at: "2026-10-01T12:00:00Z",
     })
     const newSubmittedPayment = makePayment({
@@ -140,7 +160,7 @@ describe("AccountCard", () => {
       created_at: "2026-10-02T12:00:00Z",
     })
     const account = makeAccount({
-      payments: [rejectedPayment, newSubmittedPayment],
+      payments: [partialPayment, newSubmittedPayment],
     })
 
     renderCard(account)

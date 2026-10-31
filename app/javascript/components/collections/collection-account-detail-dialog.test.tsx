@@ -166,7 +166,7 @@ describe("CollectionAccountDetailDialog", () => {
   })
 
   it.each(["consumer", "company"] as const)(
-    "does not link a %s account with one rejected partial payment to its history",
+    "does not link a %s account with one partial payment to its history",
     async (source) => {
       const user = userEvent.setup()
       const account = {
@@ -176,12 +176,12 @@ describe("CollectionAccountDetailDialog", () => {
         vat_rate: source === "company" ? 0.22 : 0,
         vat_amount: source === "company" ? 176 : 0,
         payable_amount: source === "company" ? 976 : 800,
-        status: "rejected",
+        status: "partial",
         payments: [
           {
             id: 1,
-            status: "rejected",
-            rejection_reason: "El pago es parcial",
+            status: "partial",
+            rejection_reason: null,
             date: "02/10/26",
             receipt_url: "/receipt.pdf",
             receipt_filename: "parcial.pdf",
@@ -193,7 +193,8 @@ describe("CollectionAccountDetailDialog", () => {
       render(<CollectionAccountDetailDialog account={account} />)
       await user.click(screen.getByRole("button", { name: "Ver detalle" }))
 
-      expect(screen.getByText("Rechazado")).toBeInTheDocument()
+      expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+      expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
       if (source === "company") {
         await user.click(screen.getByRole("tab", { name: "Viandas" }))
       }
@@ -208,7 +209,8 @@ describe("CollectionAccountDetailDialog", () => {
         expect(screen.getByText("$800")).toBeInTheDocument()
         expect(screen.getByText("$176")).toBeInTheDocument()
         expect(screen.getByText("$976")).toBeInTheDocument()
-        expect(screen.getByText("Rechazado")).toBeInTheDocument()
+        expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+        expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
       }
     },
   )
@@ -216,12 +218,12 @@ describe("CollectionAccountDetailDialog", () => {
 
 describe("Collections payment history destination", () => {
   it.each(["consumer", "company"] as const)(
-    "shows the date, rejected status and partial indicator for a %s account",
+    "shows the date and partial status for a %s account",
     (source) => {
       const payment = {
         id: 1,
-        status: "rejected",
-        rejection_reason: "El pago es parcial",
+        status: "partial",
+        rejection_reason: null,
         date: "02/10/26",
         receipt_url: "/receipt.pdf",
         receipt_filename: "parcial.pdf",
@@ -233,7 +235,7 @@ describe("Collections payment history destination", () => {
         vat_rate: source === "company" ? 0.22 : 0,
         vat_amount: source === "company" ? 176 : 0,
         payable_amount: source === "company" ? 976 : 800,
-        status: "rejected",
+        status: "partial",
         payments: [payment],
       } satisfies ProviderCollectionAccount
 
@@ -248,8 +250,8 @@ describe("Collections payment history destination", () => {
       expect(
         screen.getByText(`Comprobante enviado el ${payment.date}`),
       ).toBeInTheDocument()
-      expect(screen.getByText("Pago parcial")).toBeInTheDocument()
-      expect(screen.getAllByText("Rechazado")).toHaveLength(2)
+      expect(screen.getAllByText("Pago parcial")).toHaveLength(2)
+      expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
     },
   )
 })

@@ -146,6 +146,32 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(group[:employees_status]).to eq("rejected")
     end
 
+    it "keeps a partial account pending without classifying it as rejected or settled" do
+      partial_account = accounts(:one_tuviandita_current)
+      other_account = accounts(:other_tuviandita_current)
+      partial_account.payments.destroy_all
+      other_account.payments.destroy_all
+      partial = partial_account.payments.build(provider: partial_account.provider, status: :partial)
+      partial.receipt.attach(
+        io: Rails.root.join("public/icon.png").open,
+        filename: "parcial.png",
+        content_type: "image/png"
+      )
+      partial.save!
+      other_account.payments.create!(provider: other_account.provider, status: :approved)
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      group = group_for(:pending, Date.current)
+      employee = group[:employees].find { it[:id] == partial_account.id }
+      expect(employee).to include(status: "partial")
+      expect(employee[:payments].sole).to include(status: "partial", rejection_reason: nil)
+      expect(group[:employees_status]).to eq("partial")
+      expect(group[:rejected_count]).to eq(0)
+      expect(props[:history].flat_map { it[:employees] }.pluck(:id)).not_to include(partial_account.id)
+    end
+
     it "moves a month to the history once every account is confirmed" do
       sign_in provider_user, role: :provider
 

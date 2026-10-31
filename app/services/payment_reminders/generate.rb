@@ -8,7 +8,7 @@ module PaymentReminders
     AVAILABLE_EVENT = "payment_available"
     DUE_SOON_EVENT = "payment_due_soon"
 
-    ELIGIBLE_STATUSES = %w[pending rejected].freeze
+    ELIGIBLE_STATUSES = %w[pending rejected partial].freeze
 
     def self.call(date: Date.current)
       new(date:).call

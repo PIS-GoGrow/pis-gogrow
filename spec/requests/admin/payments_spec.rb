@@ -340,6 +340,13 @@ RSpec.describe "Admin::Payments", type: :request do
   describe "POST /admin/pagos" do
     let(:account) { accounts(:gogrow_tuviandita_current) }
 
+    def payment_with_receipt_for(account, status:, filename: "comprobante.png")
+      payment = account.payments.build(provider: account.provider, status:)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename:, content_type: "image/png")
+      payment.save!
+      payment
+    end
+
     it "creates a submitted payment with a receipt for the company account" do
       sign_in users(:admin), role: :admin
 
@@ -375,6 +382,36 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(response).to redirect_to(admin_payments_path)
       expect(account.payments.reload.submitted.count).to eq(1)
       expect(account.payments.submitted.sole.receipt.filename.to_s).to eq("comprobante_1.png")
+    end
+
+    it "creates a new payment after a partial one and preserves the historical receipt" do
+      partial = payment_with_receipt_for(account, status: :partial, filename: "parcial.png")
+      original_blob_id = partial.receipt.blob_id
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload(filename: "final.png") }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.to change(Payment, :count).by(1)
+
+      expect(partial.reload).to be_partial
+      expect(partial.receipt.blob_id).to eq(original_blob_id)
+      expect(partial.receipt.filename.to_s).to eq("parcial.png")
+      expect(account.reload.payments.map(&:status)).to contain_exactly("partial", "submitted")
+    end
+
+    it "does not accept a new receipt for a settled company account" do
+      account.payments.create!(provider: account.provider, status: :approved)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload(filename: "late.png") }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(account.reload.collection_status).to eq("approved")
     end
 
     it "resolves the pending payment alert of the account" do
@@ -644,6 +681,18 @@ RSpec.describe "Admin::Payments", type: :request do
       }.not_to change(Payment, :count)
 
       expect(payment.reload).to be_approved
+    end
+
+    it "does not remove a historical partial receipt" do
+      payment = payment_with_receipt(status: :partial)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        delete admin_payment_path(payment), headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(payment.reload).to be_partial
+      expect(payment.receipt).to be_attached
     end
 
     it "does not remove a receipt from another company" do

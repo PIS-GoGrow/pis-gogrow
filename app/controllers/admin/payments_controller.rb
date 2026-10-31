@@ -38,6 +38,8 @@ class Admin::PaymentsController < Admin::InertiaController
 
   def create
     account = company.accounts.find(payment_account_id)
+    return reject_closed_account if account.payments.approved.exists?
+
     payment = account.payments.build(
       provider: account.provider,
       receipt: payment_params[:receipt],
@@ -102,6 +104,12 @@ class Admin::PaymentsController < Admin::InertiaController
 
   def payment_account_id
     params.require(:payment).fetch(:account_id)
+  end
+
+  def reject_closed_account
+    redirect_back fallback_location: admin_payments_path, inertia: {
+      errors: { receipt: [ t("validations.payment_closed") ] }
+    }, status: :see_other
   end
 
   # Las viandas de todas las cuentas salen de una consulta sola y viajan como

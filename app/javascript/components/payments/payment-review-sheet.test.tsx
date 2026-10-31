@@ -95,11 +95,20 @@ describe("PaymentReviewSheet", () => {
   })
 
   it.each([
-    ["El pago es parcial", "partial_payment", "partial"],
-    ["El comprobante no corresponde", "incorrect_receipt", "rejected"],
+    ["El pago es parcial", "partial_payment", "partial", { status: "partial" }],
+    [
+      "El comprobante no corresponde",
+      "incorrect_receipt",
+      "rejected",
+      {
+        status: "rejected",
+        rejection_reason: "incorrect_receipt",
+        rejection_details: null,
+      },
+    ],
   ] as const)(
     "reports with reason %s only after confirmation",
-    async (label, reason, result) => {
+    async (label, _reason, result, expectedPayload) => {
       const user = await openReview()
       await user.click(screen.getByRole("button", { name: "Reportar" }))
       const dialog = screen.getByRole("dialog", {
@@ -115,11 +124,7 @@ describe("PaymentReviewSheet", () => {
       await user.click(submit)
       expect(patch).toHaveBeenCalledWith(
         providerPayments.update(17).url,
-        {
-          status: "rejected",
-          rejection_reason: reason,
-          rejection_details: null,
-        },
+        expectedPayload,
         expect.any(Object),
       )
       expect(

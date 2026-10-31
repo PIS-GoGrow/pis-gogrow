@@ -132,6 +132,17 @@ describe("PaymentReceiptDialog", () => {
     rejection_reason: null,
   }
 
+  const partialPayment: Payment = {
+    id: 104,
+    status: "partial",
+    created_at: "2026-10-03T10:00:00Z",
+    receipt_uploaded_at: "03/10/2026",
+    receipt_filename: "comprobante_parcial.png",
+    receipt_url: "/consumer/payments/104/receipt",
+    receipt_content_type: "image/png",
+    rejection_reason: null,
+  }
+
   it("renders upload button and no receipt cards when payments list is empty", () => {
     render(<PaymentReceiptDialog accountId={42} payments={[]} />)
 
@@ -183,27 +194,39 @@ describe("PaymentReceiptDialog", () => {
     render(
       <PaymentReceiptDialog
         accountId={42}
-        payments={[submittedPayment, rejectedPayment, approvedPayment]}
+        payments={[
+          submittedPayment,
+          rejectedPayment,
+          partialPayment,
+          approvedPayment,
+        ]}
       />,
     )
 
     expect(screen.getByText("comprobante_banco_1.png")).toBeInTheDocument()
     expect(screen.getByText("comprobante_banco_2.pdf")).toBeInTheDocument()
     expect(screen.getByText("comprobante_banco_3.jpg")).toBeInTheDocument()
+    expect(screen.getByText("comprobante_parcial.png")).toBeInTheDocument()
 
     const link1 = screen.getByText("comprobante_banco_1.png")
     expect(link1).toHaveAttribute("href", "/consumer/payments/101/receipt")
 
     expect(screen.getByText("En revisión")).toBeInTheDocument()
     expect(screen.getByText("Rechazado")).toBeInTheDocument()
+    expect(screen.getByText("Pago parcial")).toBeInTheDocument()
     expect(screen.getByText("Aprobado")).toBeInTheDocument()
   })
 
-  it("shows delete button for submitted and rejected receipts, but NOT for approved", () => {
+  it("shows delete for submitted and rejected receipts, but not for partial or approved", () => {
     render(
       <PaymentReceiptDialog
         accountId={42}
-        payments={[submittedPayment, rejectedPayment, approvedPayment]}
+        payments={[
+          submittedPayment,
+          rejectedPayment,
+          partialPayment,
+          approvedPayment,
+        ]}
       />,
     )
 
@@ -211,6 +234,26 @@ describe("PaymentReceiptDialog", () => {
       name: "Eliminar comprobante",
     })
     expect(deleteButtons).toHaveLength(2)
+  })
+
+  it("presents a historical partial rejection without changing its real actions", () => {
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        payments={[
+          {
+            ...rejectedPayment,
+            rejection_reason: "El pago es parcial",
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+    expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Eliminar comprobante" }),
+    ).toBeInTheDocument()
   })
 
   it("asks for confirmation before deleting a receipt", async () => {

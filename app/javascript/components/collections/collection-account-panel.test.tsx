@@ -75,17 +75,17 @@ describe("CollectionAccountPanel", () => {
     ).toBeInTheDocument()
   })
 
-  it("keeps the download available for a single rejected partial payment without allowing another review", () => {
+  it("keeps the download available for one partial payment without allowing another review", () => {
     render(
       <CollectionAccountPanel
         account={{
           ...account,
-          status: "rejected",
+          status: "partial",
           payments: [
             {
               id: 17,
-              status: "rejected",
-              rejection_reason: "El pago es parcial",
+              status: "partial",
+              rejection_reason: null,
               date: "09/10/26",
               receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "parcial.png",
@@ -142,6 +142,49 @@ describe("CollectionAccountPanel", () => {
       ).toHaveAttribute("href", "/provider/comprobantes/17/archivo")
     },
   )
+
+  it("keeps a partial receipt in history while allowing review of the newer submitted receipt", () => {
+    render(
+      <PaymentReviewResultProvider value={vi.fn()}>
+        <CollectionAccountPanel
+          account={{
+            ...account,
+            status: "submitted",
+            payment_id: 18,
+            receipt_url: "/provider/comprobantes/18/archivo",
+            receipt_content_type: "image/png",
+            payments: [
+              {
+                id: 17,
+                status: "partial",
+                rejection_reason: null,
+                date: "09/10/26",
+                receipt_url: "/provider/comprobantes/17/archivo",
+                receipt_filename: "parcial.png",
+                receipt_content_type: "image/png",
+              },
+              {
+                id: 18,
+                status: "submitted",
+                rejection_reason: null,
+                date: "10/10/26",
+                receipt_url: "/provider/comprobantes/18/archivo",
+                receipt_filename: "final.png",
+                receipt_content_type: "image/png",
+              },
+            ],
+          }}
+          showPaymentHistory
+        />
+      </PaymentReviewResultProvider>,
+    )
+
+    expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+    expect(screen.getByText("parcial.png")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Revisar pago" }),
+    ).toBeInTheDocument()
+  })
   it("shows a neutral due date for a pending account that is not overdue", () => {
     render(<CollectionAccountPanel account={account} />)
 

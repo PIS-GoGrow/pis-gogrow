@@ -823,6 +823,7 @@ es:
         status_accepted: "Aprobado"
         status_rejected: "Rechazado"
         status_submitted: "En revisión"
+        status_partial: "Pago parcial"
         partial_payment_warning: "Falta una parte del pago."
     orders:
       index:
@@ -926,6 +927,7 @@ es:
         submitted: "En revisión"
         approved: "Aprobado"
         rejected: "Rechazado"
+        partial: "Pago parcial"
       partial_payment_badge: "Pago parcial"
       receipt_sent_at: "Comprobante enviado el %{date}"
       meals_one: "%{count} vianda"

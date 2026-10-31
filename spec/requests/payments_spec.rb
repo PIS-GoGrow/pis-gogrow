@@ -53,6 +53,17 @@ RSpec.describe "Payments", type: :request do
     payment
   end
 
+  def partial_payment(account:, provider:, filename: "partial.png")
+    payment = account.payments.build(provider:, status: :partial)
+    payment.receipt.attach(
+      io: StringIO.new("partial receipt"),
+      filename:,
+      content_type: "image/png"
+    )
+    payment.save!
+    payment
+  end
+
   it "creates a submitted payment with a receipt for an account without payments" do
     user, account, provider = setup_payment_account
     sign_in(user, role: :consumer)
@@ -518,6 +529,68 @@ RSpec.describe "Payments", type: :request do
         payments.map { |p| p[:status] }.sort == %w[rejected submitted] &&
         payments.all? { |p| p[:receipt_url].present? && p[:receipt_filename].present? && p[:receipt_uploaded_at].present? }
     }
+  end
+
+  it "creates a new payment after a partial one and preserves the previous receipt" do
+    user, account, provider = setup_payment_account
+    partial = partial_payment(account:, provider:)
+    original_blob_id = partial.receipt.blob_id
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "final.png") }
+      }, headers: account_page_headers
+    }.to change(Payment, :count).by(1)
+
+    expect(response).to redirect_to(accounts_path)
+    expect(partial.reload).to be_partial
+    expect(partial.receipt.blob_id).to eq(original_blob_id)
+    expect(partial.receipt.filename.to_s).to eq("partial.png")
+    expect(account.reload.payments.map(&:status)).to contain_exactly("partial", "submitted")
+  end
+
+  it "does not replace the receipt of a partial payment" do
+    user, account, provider = setup_payment_account
+    partial = partial_payment(account:, provider:)
+    original_blob_id = partial.receipt.blob_id
+    sign_in(user, role: :consumer)
+
+    patch payment_path(partial), params: {
+      payment: { receipt: receipt_upload(filename: "replacement.png") }
+    }, headers: account_page_headers
+
+    expect(response).to redirect_to(accounts_path)
+    expect(partial.reload).to be_partial
+    expect(partial.receipt.blob_id).to eq(original_blob_id)
+    expect(partial.receipt.filename.to_s).to eq("partial.png")
+  end
+
+  it "does not remove a historical partial payment" do
+    user, account, provider = setup_payment_account
+    partial = partial_payment(account:, provider:)
+    sign_in(user, role: :consumer)
+
+    expect {
+      delete payment_path(partial), headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(partial.reload).to be_partial
+    expect(partial.receipt).to be_attached
+  end
+
+  it "does not accept a new receipt for an account that is already settled" do
+    user, account, provider = setup_payment_account
+    account.payments.create!(provider:, status: :approved)
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "late.png") }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(account.reload.collection_status).to eq("approved")
   end
 
   it "does not accept a second receipt while one is still under review" do

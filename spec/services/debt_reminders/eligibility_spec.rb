@@ -62,6 +62,21 @@ RSpec.describe DebtReminders::Eligibility do
       end
     end
 
+    it "mantiene elegible una cuenta vencida cuyo último pago es parcial" do
+      consumer_account.payments.destroy_all
+      consumer_account.update!(amount: 150)
+      payment = consumer_account.payments.build(provider: consumer_account.provider, status: :partial)
+      payment.receipt.attach(io: Rails.root.join("public/icon.png").open, filename: "parcial.png", content_type: "image/png")
+      payment.save!
+
+      travel_to consumer_account.due_date + 1.day do
+        eligibility = described_class.new(account: consumer_account)
+
+        expect(eligibility.reason).to be_nil
+        expect(eligibility).to be_eligible
+      end
+    end
+
     def create_reminder_notification(at:, closed: true)
       configuration = Notification::Configuration.find_or_create_by!(key: "provider_payment_reminders") do |c|
         c.roles = [ "consumer" ]

@@ -226,6 +226,22 @@ RSpec.describe PaymentReminders::Generate do
       }.by(1)
     end
 
+    it "still notifies when the last payment was partial, since the debt remains pending" do
+      payment = account.payments.build(provider: account.provider, status: :partial)
+      payment.receipt.attach(
+        io: Rails.root.join("public/icon.png").open,
+        filename: "parcial.png",
+        content_type: "image/png"
+      )
+      payment.save!
+
+      expect {
+        described_class.call(date: Date.new(2026, 11, 7))
+      }.to change {
+        Notification.where(user:, notifiable: account, event: "payment_due_soon").count
+      }.by(1)
+    end
+
     it "does not notify on another day" do
       expect {
         described_class.call(date: Date.new(2026, 11, 5))
