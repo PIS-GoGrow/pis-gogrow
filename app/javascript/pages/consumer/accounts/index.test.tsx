@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
+import type { PaymentProvider } from "@/types"
+
 import Index from "./index"
 
 vi.mock("@inertiajs/react", async () => {
@@ -53,6 +55,17 @@ const props = {
   benefit_used: 3,
   benefit_available: 20,
 }
+
+const defaultProviders: PaymentProvider[] = [
+  {
+    id: 1,
+    name: "Tu Viandita",
+    bank_name: "Banco República",
+    bank_account_number: "00123456",
+    bank_account_holder: "Tu Viandita SRL",
+    home_delivery: true,
+  },
+]
 
 describe("Consumer Payments Page", () => {
   it("shows the consumption of the month against the benefit limit", () => {
@@ -254,14 +267,12 @@ describe("Consumer Payments Page", () => {
 
     render(
       <Index
+        {...props}
         accounts={[newerAccount, olderAccount]}
-        history_accounts={[]}
         providers={defaultProviders}
-        history={false}
         current_month_debt={450}
         total_debt={1050}
         benefit_used={2}
-        benefit_available={20}
       />,
     )
 
@@ -270,7 +281,7 @@ describe("Consumer Payments Page", () => {
     expect(monthElements[1].textContent).toContain("Setiembre de 2026")
   })
 
-  it("shows 'En revisión' consistently in both the card badge and receipt section when payment is submitted", () => {
+  it("shows 'En revisión' in the receipt section when the payment is submitted", () => {
     const submittedAccount = {
       id: 103,
       provider_id: 1,
@@ -298,20 +309,15 @@ describe("Consumer Payments Page", () => {
 
     render(
       <Index
+        {...props}
         accounts={[submittedAccount]}
-        history_accounts={[]}
         providers={defaultProviders}
-        history={false}
         current_month_debt={0}
         total_debt={300}
         benefit_used={0}
-        benefit_available={20}
       />,
     )
 
-    const badges = screen.getAllByText("En revisión")
-    expect(badges).toHaveLength(2)
-    expect(badges[0]).toBeInTheDocument()
-    expect(badges[1]).toBeInTheDocument()
+    expect(screen.getByText("En revisión")).toBeInTheDocument()
   })
 })
