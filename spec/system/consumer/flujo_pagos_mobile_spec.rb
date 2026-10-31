@@ -115,7 +115,7 @@ RSpec.describe "Flujo de pagos del empleado en mobile", type: :system do
 
     within(find("[role=tabpanel]")) do
       expect(page).to have_content("$0")
-      expect(page).to have_content(I18n.t("pages.accounts.index.pending_meals", count: 0))
+      expect(page).to have_content(I18n.t("pages.accounts.index.pending_meals_other", count: 0))
       expect(page).to have_content(I18n.t("pages.accounts.index.no_debt"), count: 3)
     end
   end
