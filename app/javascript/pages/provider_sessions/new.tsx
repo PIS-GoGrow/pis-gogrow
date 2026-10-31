@@ -41,7 +41,7 @@ export default function ProviderSignIn() {
         action={providerSessions.proveedorIniciarSesion()}
         resetOnSuccess={["password"]}
         noValidate
-        className="flex flex-col gap-6"
+        className="flex flex-1 flex-col justify-between gap-6"
       >
         {({ processing }) => (
           <>
@@ -92,15 +92,17 @@ export default function ProviderSignIn() {
               </Field>
             </FieldGroup>
 
-            <Button
-              type="submit"
-              size="lg"
-              className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 disabled:opacity-50"
-              disabled={!email || !password || processing}
-            >
-              {processing && <Spinner />}
-              {t("pages.provider_sessions.new.submit")}
-            </Button>
+            <div className="mt-auto pt-6">
+              <Button
+                type="submit"
+                size="lg"
+                className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                disabled={!email || !password || processing}
+              >
+                {processing && <Spinner />}
+                {t("pages.provider_sessions.new.submit")}
+              </Button>
+            </div>
           </>
         )}
       </Form>

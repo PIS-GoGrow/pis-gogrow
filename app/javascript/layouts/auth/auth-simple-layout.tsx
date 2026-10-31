@@ -3,6 +3,7 @@ import { ChevronLeft } from "lucide-react"
 import type { PropsWithChildren, ReactNode } from "react"
 
 import AppLogoIcon from "@/components/app-logo-icon"
+import { cn } from "@/lib/utils"
 import { home } from "@/routes"
 
 interface AuthLayoutProps {
@@ -26,9 +27,25 @@ export default function AuthSimpleLayout({
   const shouldHideLogo = hideLogo ?? isForm
 
   return (
-    <div className="bg-background flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
-      <div className="w-full max-w-[354px]">
-        <div className="flex flex-col gap-6">
+    <div
+      className={cn(
+        "bg-background flex min-h-svh flex-col items-center justify-center p-6 md:p-10",
+        isForm && "justify-start py-8 md:py-10"
+      )}
+    >
+      <div
+        className={cn(
+          "w-full max-w-[354px]",
+          isForm && "flex flex-1 flex-col justify-between"
+        )}
+      >
+        <div
+          className={cn(
+            "flex flex-col gap-6",
+            isForm && "flex flex-1 flex-col justify-between"
+          )}
+        >
+          <div className="flex flex-col gap-6">
           {backHref && (
             <div>
               <Link
@@ -89,10 +106,11 @@ export default function AuthSimpleLayout({
               </div>
             </div>
           </div>
-
-          {children}
         </div>
+
+        {children}
       </div>
     </div>
-  )
+  </div>
+)
 }

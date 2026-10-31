@@ -72,50 +72,56 @@ export default function ProviderPasswordResetCode({
 
       <Form
         action={providerPasswordResetCodes.create()}
-        className="flex flex-col gap-6"
+        className="flex flex-1 flex-col justify-between gap-6"
       >
         {({ processing, errors }) => (
           <>
-            <Field data-invalid={!!errors.code} className="items-center">
-              <InputOTP
-                name="code"
-                maxLength={CODE_LENGTH}
-                pattern={REGEXP_ONLY_DIGITS}
-                autoFocus
-                pushPasswordManagerStrategy="none"
-                value={code}
-                onChange={setCode}
-                aria-invalid={!!errors.code}
-              >
-                <InputOTPGroup>
-                  {Array.from({ length: CODE_LENGTH }, (_, index) => (
-                    <InputOTPSlot
-                      key={index}
-                      index={index}
-                      aria-invalid={!!errors.code}
-                    />
-                  ))}
-                </InputOTPGroup>
-              </InputOTP>
-              <FieldError
-                errors={errors.code?.map((message) => ({ message }))}
-              />
-            </Field>
+            <div className="flex w-full flex-col items-center justify-center">
+              <Field data-invalid={!!errors.code} className="w-auto items-center">
+                <InputOTP
+                  name="code"
+                  maxLength={CODE_LENGTH}
+                  pattern={REGEXP_ONLY_DIGITS}
+                  autoFocus
+                  pushPasswordManagerStrategy="none"
+                  value={code}
+                  onChange={setCode}
+                  aria-invalid={!!errors.code}
+                  containerClassName="justify-center"
+                >
+                  <InputOTPGroup className="justify-center">
+                    {Array.from({ length: CODE_LENGTH }, (_, index) => (
+                      <InputOTPSlot
+                        key={index}
+                        index={index}
+                        aria-invalid={!!errors.code}
+                      />
+                    ))}
+                  </InputOTPGroup>
+                </InputOTP>
+                <FieldError
+                  errors={errors.code?.map((message) => ({ message }))}
+                  className="text-center"
+                />
+              </Field>
+            </div>
 
-            <Button
-              type="submit"
-              size="lg"
-              className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/90"
-              disabled={code.length < CODE_LENGTH || processing}
-            >
-              {processing && <Spinner />}
-              {t("pages.provider_password_reset_codes.show.submit")}
-            </Button>
+            <div className="mt-auto flex flex-col gap-3 pt-6">
+              <Button
+                type="submit"
+                size="lg"
+                className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/90"
+                disabled={code.length < CODE_LENGTH || processing}
+              >
+                {processing && <Spinner />}
+                {t("pages.provider_password_reset_codes.show.submit")}
+              </Button>
+
+              <ResendButton key={resend_in} email={email} seconds={resend_in} />
+            </div>
           </>
         )}
       </Form>
-
-      <ResendButton key={resend_in} email={email} seconds={resend_in} />
     </AuthLayout>
   )
 }

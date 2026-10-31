@@ -33,7 +33,7 @@ export default function PasswordSetupForm({
   const ready = isStrongPassword(password) && confirmation !== "" && !mismatch
 
   return (
-    <Form action={action} className="flex flex-col gap-6">
+    <Form action={action} className="flex flex-1 flex-col justify-between gap-6">
       {({ processing, errors }) => (
         <>
           <FieldGroup>
@@ -121,15 +121,17 @@ export default function PasswordSetupForm({
             </Field>
           </FieldGroup>
 
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full"
-            disabled={!ready || processing}
-          >
-            {processing && <Spinner />}
-            {submitLabel}
-          </Button>
+          <div className="mt-auto pt-6">
+            <Button
+              type="submit"
+              size="lg"
+              className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-white/90"
+              disabled={!ready || processing}
+            >
+              {processing && <Spinner />}
+              {submitLabel}
+            </Button>
+          </div>
         </>
       )}
     </Form>

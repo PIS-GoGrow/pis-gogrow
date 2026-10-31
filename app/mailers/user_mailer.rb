@@ -34,7 +34,10 @@ class UserMailer < ApplicationMailer
   private
 
   def attach_branding_images
-    attachments.inline["serving-food.png"] = Rails.root.join("public/serving-food.png").read
-    attachments.inline["gogrow-logo.png"] = Rails.root.join("public/gogrow-logo.png").read
+    serving_food = Rails.root.join("public/serving-food.png")
+    gogrow_logo = Rails.root.join("public/gogrow-logo.png")
+
+    attachments.inline["serving-food.png"] = serving_food.read if serving_food.file?
+    attachments.inline["gogrow-logo.png"] = gogrow_logo.read if gogrow_logo.file?
   end
 end
