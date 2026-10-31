@@ -15,7 +15,7 @@ export default function RejectionNotice({
 }: RejectionNoticeProps) {
   if (reason === PARTIAL_PAYMENT_REJECTION_REASON) {
     return (
-      <div className="flex items-start gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+      <div className="flex items-start gap-2 text-sm text-amber-700 dark:text-amber-400">
         <TriangleAlert className="mt-0.5 size-4 shrink-0" />
         <p>{partialPaymentWarning}</p>
       </div>
