@@ -45,6 +45,23 @@ RSpec.describe Notification, type: :model do
       expect(notification.errors[:title]).to be_present
       expect(notification.errors[:description]).to be_present
     end
+
+    it "define el enum de whatsapp_send_status con valor por defecto pending" do
+      expect(notification.whatsapp_send_status).to eq("pending")
+      expect(described_class.whatsapp_send_statuses.keys).to match_array(
+        %w[pending skipped sending accepted delivered send_failed delivery_failed]
+      )
+    end
+  end
+
+  describe "resolución de title y description dinámicos" do
+    it "resuelve el título y la descripción interpolando title_data y description_data" do
+      notification.title_data = { provider: "TuViandita" }
+      notification.description_data = { provider: "TuViandita", date: "15/11" }
+
+      expect(notification.title).to be_present
+      expect(notification.description).to be_present
+    end
   end
 
   describe "scopes y métodos de cierre" do
@@ -135,6 +152,12 @@ RSpec.describe Notification, type: :model do
   end
 
   describe "send_attempts_exceeded" do
+    it "devuelve false cuando la cantidad de intentos es menor al máximo" do
+      notification.whatsapp_send_attempts = Notification::MAX_SEND_ATTEMPTS - 1
+
+      expect(notification.send_attempts_exceeded?).to be(false)
+    end
+
     it "previene enviar notificaciones cuando se hicieron muchos intentos" do
       notification.whatsapp_send_attempts = Notification::MAX_SEND_ATTEMPTS
 
