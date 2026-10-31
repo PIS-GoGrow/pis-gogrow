@@ -8,7 +8,7 @@ RSpec.describe "Admin::BenefitUsage analysis", type: :request do
 
   it "requires a session" do
     get admin_benefit_usage_analysis_path
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(admin_welcome_path)
   end
 
   { one: :consumer, provider_user: :provider }.each do |user, role|

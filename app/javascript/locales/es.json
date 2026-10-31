@@ -563,12 +563,12 @@
         "consumers": {
           "index": {
             "all": "Todos",
+            "confirmed": "Confirmado",
             "count_one": "%{count} empleado",
             "count_other": "%{count} empleados",
             "empty_description": "Todavía no hay empleados en la organización.",
             "empty_title": "Sin empleados",
             "filter_label": "Filtrar empleados",
-            "month_label": "Mes de los saldos",
             "no_consumption": "Sin consumos",
             "no_results_description": "Probá con otro nombre o correo, o cambiá el filtro.",
             "no_results_title": "No se encontraron empleados",
@@ -584,29 +584,14 @@
             "close": "Cerrar",
             "consumption": "Consumo",
             "date": "Fecha",
+            "download_receipt": "Descargar el comprobante de %{provider}",
             "employee": "Empleado",
             "filters": {
               "all_providers": "Todos",
-              "all_statuses": "Todos",
-              "apply": "Aplicar",
-              "cancel": "Cancelar",
-              "clear": "Limpiar filtros",
-              "empty_description": "Probá cambiando o limpiando los filtros.",
+              "empty_description": "Probá eligiendo otro proveedor.",
               "empty_title": "No hay consumos que coincidan",
-              "open": "Filtrar historial",
-              "provider_chip": "Proveedor: %{provider}",
-              "providers": "Proveedores:",
-              "remove_provider": "Quitar filtro de proveedor %{provider}",
-              "remove_status": "Quitar filtro de estado",
-              "remove_subsidy": "Quitar filtro de subsidio",
-              "status": "Estado de pago",
-              "status_chip": "Estado: %{status}",
-              "subsidy": "Subsidio aplicado",
-              "subsidy_all": "Todos los consumos",
-              "subsidy_chip": "Subsidio: %{subsidy}",
-              "subsidy_with": "Con subsidio aplicado",
-              "subsidy_without": "Sin subsidio aplicado",
-              "title": "Filtros del historial"
+              "open": "Filtrar por proveedor",
+              "providers": "Proveedores:"
             },
             "history": "Historial de consumo",
             "history_empty_description": "Este empleado todavía no realizó ningún pedido de viandas.",
@@ -898,6 +883,16 @@
             "filtered": "No encontramos viandas disponibles entre los proveedores seleccionados. Volvé a consultar más tarde.",
             "title": "Menú no disponible"
           },
+          "favorites": {
+            "add": "Marcar %{name} como favorito",
+            "favorite_badge": "Favorito",
+            "filter_provider": "Ver platos de %{name}",
+            "frequent_badge": "Frecuente",
+            "frequent_title": "Los que pedís seguido",
+            "remove": "Quitar %{name} de favoritos",
+            "title": "Tus favoritos",
+            "unavailable": "No disponible este día"
+          },
           "modify": "Modificar",
           "orders_closed": "Este proveedor ya cerró la recepción de pedidos para hoy.",
           "provider_filter": {
@@ -1029,9 +1024,9 @@
           }
         },
         "provider": {
-          "description": "¡Hola {{username}}! {{company_name}} te invitó a unirte como proveedor de viandas.",
-          "heading": "Bienvenido a Viandas GoGrow",
-          "sign_in": "Unirse ahora"
+          "description": "Pedidos, menú y cobros, en un solo lugar",
+          "heading": "Viandas GoGrow",
+          "sign_in": "Continuar con Email"
         },
         "title": "Viandas GoGrow"
       },
@@ -1776,7 +1771,7 @@
       "provider_password_reset_codes": {
         "show": {
           "back": "Volver",
-          "description": "¡Gracias! Si hay una cuenta asociada con %{email}, vas a recibir un código de verificación de 6 dígitos. Si no recibiste un email después de unos minutos, revisá tu carpeta de spam.",
+          "description": "¡Gracias! Si hay una cuenta asociada con %{email} vas a recibir un código de verificación de 6 dígitos.\n\nSi no recibiste un email después de unos minutos, revisá tu carpeta de spam.",
           "resend": "Volver a mandar código",
           "resend_in": "Volver a mandar código en %{time}",
           "submit": "Verificar",
@@ -1815,6 +1810,7 @@
       "provider_sessions": {
         "new": {
           "description": "Ingresá a tu cuenta para continuar gestionando tus viandas.",
+          "email_label": "Email",
           "email_placeholder": "ejemplo@empresa.com",
           "forgot": {
             "description": "Ingresá tu email y te enviaremos un código para restablecer tu contraseña.",
@@ -1825,6 +1821,14 @@
           "heading": "¡Bienvenido de nuevo!",
           "submit": "Iniciar sesión",
           "title": "Iniciar sesión"
+        }
+      },
+      "provider_welcomes": {
+        "show": {
+          "description": "¡Hola %{username}! %{company_name} te invitó a unirte como proveedor de viandas.",
+          "heading": "Bienvenido a Viandas GoGrow",
+          "join": "Unirse ahora",
+          "title": "Bienvenido a Viandas GoGrow"
         }
       },
       "reviews": {

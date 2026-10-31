@@ -60,6 +60,7 @@ const schedules: ConsumerDashboardIndex["schedules"] = [26, 27].flatMap((day) =>
       description: null,
       price: 300,
       provider_id: provider.id,
+      saved_menu_id: provider.id,
       provider_name: provider.name,
       option_groups: [],
       home_delivery: true,
@@ -74,6 +75,8 @@ const props: ConsumerDashboardIndex = {
   providers,
   schedules,
   closures: [],
+  favorites: { menus: [], provider_ids: [] },
+  frequent: { menus: [], provider_ids: [] },
   week: {
     start_date: "2026-10-26",
     end_date: "2026-10-30",
@@ -281,12 +284,14 @@ describe("Consumer menu provider filter navigation", () => {
     expect(added[1]).toMatchObject({ id: 261, quantity: 2, notes: "Sin salsa" })
     await waitFor(() =>
       expect(priceItems).toHaveBeenCalledWith([
-        { schedule_id: 263, quantity: 2 },
-        { schedule_id: 261, quantity: 2 },
+        expect.objectContaining({ schedule_id: 263, quantity: 2 }),
+        expect.objectContaining({ schedule_id: 261, quantity: 2 }),
       ]),
     )
 
-    await user.click(screen.getByRole("button", { name: /Plato 1 día 26/ }))
+    await user.click(
+      screen.getByRole("button", { name: "Agregar Plato 1 día 26" }),
+    )
     await user.click(screen.getByRole("button", { name: "Agregar uno" }))
     await user.click(screen.getByRole("button", { name: /^Modificar$/ }))
     expectFilteredDay(26)
@@ -301,8 +306,8 @@ describe("Consumer menu provider filter navigation", () => {
     })
     await waitFor(() =>
       expect(priceItems).toHaveBeenCalledWith([
-        { schedule_id: 263, quantity: 2 },
-        { schedule_id: 261, quantity: 3 },
+        expect.objectContaining({ schedule_id: 263, quantity: 2 }),
+        expect.objectContaining({ schedule_id: 261, quantity: 3 }),
       ]),
     )
   })

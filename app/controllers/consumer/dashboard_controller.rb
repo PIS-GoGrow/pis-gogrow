@@ -7,6 +7,8 @@ class Consumer::DashboardController < Consumer::InertiaController
     @schedules = schedule_data
     @benefit = benefit_data
     @providers = Provider.includes(:user).all
+    @favorites = favorite_data
+    @frequent = frequent_data
     @closures = ProviderClosure.upcoming.includes(provider: :user)
   end
 
@@ -66,6 +68,7 @@ class Consumer::DashboardController < Consumer::InertiaController
           description: menu.description,
           price: menu.price.to_f,
           provider_id: menu.provider_id,
+          saved_menu_id: menu.base_menu_id || menu.id,
           option_groups: menu.option_groups.map do |group|
             { id: group.id, name: group.name, options: group.options, limit: group.limit, required: group.required }
           end,
@@ -83,6 +86,34 @@ class Consumer::DashboardController < Consumer::InertiaController
             }
           end
         }
+      }
+    end
+  end
+
+  def favorite_data
+    { menus: menu_shortcuts(@consumer.favorite_ids("Menu")), provider_ids: @consumer.favorite_ids("Provider") }
+  end
+
+  def frequent_data
+    { menus: menu_shortcuts(@consumer.frequent(:menu)), provider_ids: @consumer.frequent(:provider) }
+  end
+
+  # Los platos se muestran aunque hoy no tengan programación: sirven de
+  # referencia y el cliente decide si se pueden pedir según el día elegido.
+  def menu_shortcuts(menu_ids)
+    menus = Menu.where(id: menu_ids, archived_at: nil).includes(provider: :user).index_by(&:id)
+
+    menu_ids.filter_map do |id|
+      menu = menus[id]
+      next unless menu
+
+      {
+        id: menu.id,
+        name: menu.name,
+        description: menu.description,
+        price: menu.price.to_f,
+        provider_id: menu.provider_id,
+        provider_name: menu.provider_name
       }
     end
   end

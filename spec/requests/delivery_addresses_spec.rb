@@ -16,22 +16,22 @@ RSpec.describe "Delivery addresses", type: :request do
   it "redirects visitors to the sign in page" do
     post delivery_addresses_path, params: address_params
 
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(consumer_welcome_path)
   end
 
   it "redirects visitors on GET to the sign in page" do
     get delivery_addresses_path
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(consumer_welcome_path)
   end
 
   it "redirects visitors on PATCH to the sign in page" do
     patch delivery_address_path(id: 1), params: address_params
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(consumer_welcome_path)
   end
 
   it "redirects visitors on DELETE to the sign in page" do
     delete delivery_address_path(id: 1)
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(consumer_welcome_path)
   end
 
   it "rejects a session with a provider role" do

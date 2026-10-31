@@ -217,10 +217,10 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
       expect(AdminBenefitUsageStats).not_to receive(:new)
 
       get admin_benefit_usage_path
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
 
       post admin_benefit_usage_summary_path, params: { month: "2032-04" }
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer from GET and a provider from POST" do
@@ -328,7 +328,7 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
 
       4.times do
         post admin_benefit_usage_summary_path, params: { month: "2032-04" }
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(admin_welcome_path)
       end
 
       sign_in users(:one), role: :consumer
@@ -367,7 +367,8 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
     end
 
     it "accepts a valid Rails authenticity token and restores the test setting afterwards" do
-      get root_path
+      get admin_welcome_path
+      expect(response).to have_http_status(:ok)
       token = Nokogiri::HTML(response.body).at_css('meta[name="csrf-token"]')&.[]("content")
       expect(token).to be_present
       sign_in users(:admin), role: :admin

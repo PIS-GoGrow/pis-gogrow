@@ -6,16 +6,19 @@
 Rails.application.routes.draw do
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
-  get  "iniciar-sesion", to: "sessions#new", as: :sign_in
-  post "iniciar-sesion", to: "sessions#create", as: nil
+  get  "iniciar-sesion", to: redirect("/consumidor"), as: nil
+  post "iniciar-sesion", to: "sessions#create", as: :sign_in
 
-  get  "proveedor", to: "provider_sessions#new", as: :provider_sign_in
+  get  "proveedor", to: "home#provider", as: :provider_home
+  get  "proveedor/iniciar-sesion", to: "provider_sessions#new", as: :provider_sign_in
+  post "proveedor/iniciar-sesion", to: "provider_sessions#create"
   post "proveedor", to: "provider_sessions#create"
+  resource :provider_welcome, path: "proveedor/bienvenida", only: :show
   resource :provider_invitation, path: "proveedor/invitacion", only: [ :show, :update ]
   resource :provider_password_reset, path: "proveedor/contrasena", only: [ :create, :edit, :update ], path_names: { edit: "nueva" }
   resource :provider_password_reset_code, path: "proveedor/contrasena/codigo", only: [ :show, :create ]
 
-  get "provider", to: redirect("/proveedor"), as: :provider_welcome
+  get "provider", to: redirect("/proveedor")
   get "provider/*path", to: redirect("/proveedor/%{path}")
   get "admin", to: redirect("/rrhh")
   get "admin/*path", to: redirect("/rrhh/%{path}")
@@ -98,6 +101,8 @@ Rails.application.routes.draw do
     get "menu-semanal/error", to: "dashboard#error", as: :dashboard_error
 
     resources :menus, path: "menu-del-dia", only: [ :index ]
+    resource :favorite, path: "favoritos/:kind/:id", only: [ :update, :destroy ],
+                        constraints: { kind: /menus|providers/ }
     resources :delivery_addresses,
               path: "direcciones-de-entrega",
               only: %i[index create update destroy]
@@ -136,7 +141,7 @@ Rails.application.routes.draw do
     end
 
     resources :invoices, path: "facturas", only: [ :index ] do
-      get :file, on: :member, path: "archivo"
+      get "archivo(/:filename)", action: :file, on: :member, as: :file, constraints: { filename: %r{[^/]+} }
     end
     resources :order_events, path: "auditoria", only: [ :index ]
     resources :payments, path: "pagos", only: [ :index, :show, :create, :destroy ] do
@@ -145,6 +150,7 @@ Rails.application.routes.draw do
   end
 
   root "home#index"
+  get "consumidor", to: "home#consumer", as: :consumer_welcome
   get "rrhh", to: "home#admin", as: :admin_welcome
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
