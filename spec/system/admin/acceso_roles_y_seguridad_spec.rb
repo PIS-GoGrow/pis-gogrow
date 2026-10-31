@@ -91,7 +91,7 @@ RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system
     context "sin sesión activa (usuario no autenticado)" do
       it "redirige al inicio de sesión con mensaje informativo" do
         visit dashboard_path
-        expect(page).to have_current_path(admin_welcome_path)
+        expect(page).to have_current_path(consumer_welcome_path)
         expect(page).to have_content("Tenés que iniciar sesión para acceder a este recurso.")
 
         visit admin_benefit_configurations_path

@@ -229,7 +229,7 @@ RSpec.describe "Admin::Invoices", type: :request do
     it "redirects an unauthenticated visitor to the sign in page" do
       get file_admin_invoice_path(invoice, filename: "factura.png")
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer to the home page" do
