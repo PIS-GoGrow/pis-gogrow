@@ -31,6 +31,11 @@ class PaymentSerializer < ApplicationSerializer
   attribute :receipt_content_type do |payment|
     payment.receipt.content_type if payment.receipt.attached?
   end
+
+  typelize :number?
+  attribute :receipt_byte_size do |payment|
+    payment.receipt.blob.byte_size if payment.receipt.attached?
+  end
 end
 
 # == Schema Information

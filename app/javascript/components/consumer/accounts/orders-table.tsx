@@ -4,7 +4,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -15,7 +14,6 @@ import type { SimplifiedOrder } from "@/types"
 interface AccountProps {
   orders: SimplifiedOrder[]
   month: string
-  amount: number
 }
 
 function truncate(text: string, maxLength = 20): string {
@@ -23,7 +21,7 @@ function truncate(text: string, maxLength = 20): string {
   return text.slice(0, maxLength) + "..."
 }
 
-export default function OrdersTable({ orders, month, amount }: AccountProps) {
+export default function OrdersTable({ orders, month }: AccountProps) {
   const { t } = useTranslation()
 
   if (orders.length == 0) return
@@ -58,16 +56,6 @@ export default function OrdersTable({ orders, month, amount }: AccountProps) {
               </TableRow>
             ))}
           </TableBody>
-          <TableFooter>
-            <TableRow>
-              <TableCell colSpan={3}>
-                {t("pages.accounts.show.total")}
-              </TableCell>
-              <TableCell className="text-right">
-                {formatMoney(amount)}
-              </TableCell>
-            </TableRow>
-          </TableFooter>
         </Table>
       </div>
     </div>

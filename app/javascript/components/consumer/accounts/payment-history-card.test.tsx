@@ -40,11 +40,12 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
   }
 }
 
-function renderCard(account: Account) {
+function renderCard(account: Account, providerName?: string) {
   return render(
     <Sheet>
       <PaymentHistoryCard
         account={account}
+        providerName={providerName}
         setDetail={vi.fn()}
         setLoading={vi.fn()}
       />
@@ -53,6 +54,25 @@ function renderCard(account: Account) {
 }
 
 describe("PaymentHistoryCard", () => {
+  it("shows the due date, the provider with the month and the confirmed status", () => {
+    const account = makeAccount({ month: "Agosto 2026", due_date: "05/09/26" })
+
+    renderCard(account, "Endulzate by Noe")
+
+    expect(screen.getByText("05/09/26")).toBeInTheDocument()
+    expect(
+      screen.getByText("Endulzate by Noe: Agosto 2026"),
+    ).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+    expect(screen.queryByText("Aprobado")).not.toBeInTheDocument()
+  })
+
+  it("shows only the month when the provider is unknown", () => {
+    renderCard(makeAccount({ month: "Agosto 2026" }))
+
+    expect(screen.getByText("Agosto 2026")).toBeInTheDocument()
+  })
+
   it("renders the orders price sum formatted with formatMoney", () => {
     const account = makeAccount({ orders_price_sum: 150.5 })
     renderCard(account)
@@ -130,6 +150,9 @@ describe("PaymentHistoryCard", () => {
 
     // Partial payment badge is rendered
     expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+
+    // Approved receipts read "Confirmado", like the period badge
+    expect(screen.getAllByText("Confirmado")).toHaveLength(2)
 
     // Download buttons/links for both
     const downloadLinks = screen.getAllByRole("link", {

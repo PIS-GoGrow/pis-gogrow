@@ -388,15 +388,25 @@
     "pages": {
       "accounts": {
         "index": {
+          "all_providers": "Todos",
           "history": "Historial",
           "history_empty": "Todavía no hiciste ningún pago.",
+          "history_filtered_empty": "No hay pagos de este proveedor.",
+          "meals_used_one": "%{count} vianda consumida",
+          "meals_used_other": "%{count} viandas consumidas",
+          "meals_used_with_limit_one": "%{meals} de %{limit} vianda consumida",
+          "meals_used_with_limit_other": "%{meals} de %{limit} viandas consumidas",
           "no_debt": "¡Sin deudas pendientes con este proveedor!",
           "payments": "Pagos",
           "pending": "Pendientes",
+          "pending_meals_one": "(%{count} vianda)",
+          "pending_meals_other": "(%{count} viandas)",
           "pending_payments": "Pagos pendientes",
+          "providers_label": "Proveedores:",
           "spending": "Tu consumo",
           "this_month": "Este mes",
-          "total_debt": "Deuda total"
+          "total_debt": "Deuda total",
+          "view_detail": "Ver detalle del consumo"
         },
         "show": {
           "amount": "Cant.",
@@ -406,10 +416,11 @@
           "lunch": "vianda",
           "lunches": "viandas",
           "menu": "Plato",
-          "partial_payment_warning": "Falta una parte del pago.",
+          "partial_payment_warning": "Falta una parte del pago. Transferí la diferencia y subí el comprobante.",
           "price": "Monto",
           "receipt": "Subir comprobante de pago",
           "receipt_approved": "Pago aprobado",
+          "receipt_clear": "Quitar archivo",
           "receipt_description": "Adjuntá el comprobante correspondiente a este pago.",
           "receipt_error_action": "Entendido",
           "receipt_error_description": "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
@@ -431,16 +442,13 @@
           "receipt_unavailable": "Comprobante no disponible",
           "receipt_under_review_hint": "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva.",
           "receipt_update": "Actualizar comprobante",
-          "receipt_uploading": "Subiendo comprobante...",
+          "receipt_uploading": "Subiendo comprobante de pago",
           "receipt_view_edit": "Ver o editar comprobante",
           "see_detail": "Ver detalle",
           "see_receipts": "Ver comprobantes",
           "spending": "Consumo",
-          "status_accepted": "Aprobado",
-          "status_pending": "Pendiente",
-          "status_rejected": "Rechazado",
-          "status_submitted": "En revisión",
-          "total": "Total"
+          "status_accepted": "Confirmado",
+          "status_rejected": "Rechazado"
         }
       },
       "admin": {
