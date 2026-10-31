@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next"
 import {
   adminAccounts,
   adminBenefitConfigurations,
+  adminBenefitUsage,
   adminConsumers,
   adminDashboard,
   adminOrderEvents,
@@ -32,6 +33,10 @@ export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
     {
       title: t("nav.admin.home"),
       href: adminDashboard.index().url,
+      mobileActivePaths: [
+        adminDashboard.index().url,
+        adminBenefitUsage.analysis().url,
+      ],
       icon: House,
       mobileIcon: (
         <HugeiconsIcon
