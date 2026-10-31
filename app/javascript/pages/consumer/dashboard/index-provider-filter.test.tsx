@@ -289,7 +289,9 @@ describe("Consumer menu provider filter navigation", () => {
       ]),
     )
 
-    await user.click(screen.getByRole("button", { name: "Agregar Plato 1 día 26" }))
+    await user.click(
+      screen.getByRole("button", { name: "Agregar Plato 1 día 26" }),
+    )
     await user.click(screen.getByRole("button", { name: "Agregar uno" }))
     await user.click(screen.getByRole("button", { name: /^Modificar$/ }))
     expectFilteredDay(26)
