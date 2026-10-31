@@ -1820,6 +1820,19 @@ RSpec.describe "Orders", type: :request do
             expect(response).to redirect_to(edit_order_path(confirmed))
 
             follow_redirect!
+            expect(inertia).to have_flash(alert: I18n.t("validations.invalid_options"))
+          end
+
+          it "refuses without cancelling when it is no longer just adding units" do
+            expect {
+              patch order_path(confirmed), params: update_params(
+                quantity: 3, notes: "Sin sal", options: [ { group_id: group.id, values: [ "Filetto" ] } ]
+              ).deep_merge(order: { add_units: true })
+            }.not_to change(Order, :count)
+
+            expect(confirmed.reload).to have_attributes(status: "confirmed", amount: 2, notes: nil)
+
+            follow_redirect!
             expect(inertia).to have_flash(alert: I18n.t("validations.add_units_unavailable"))
           end
 
