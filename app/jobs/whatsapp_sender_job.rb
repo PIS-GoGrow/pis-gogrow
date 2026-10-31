@@ -30,7 +30,9 @@ class WhatsappSenderJob < ApplicationJob
 
     from = ENV.fetch("TWILIO_PHONE")
     content_sid = Notification::Registry.content_sid(notification.event, count: notification.description_data["count"].to_i)
-    status_callback = ENV.fetch("TWILIO_STATUS_CALLBACK_URL", nil) || Rails.application.routes.url_helpers.twilio_callback_url
+    status_callback = ENV["TWILIO_STATUS_CALLBACK_URL"].presence || (
+      Rails.application.routes.url_helpers.twilio_callback_url rescue nil
+    )
 
     # Cancelamos el job si la notificación ya llegó, ya se envió o ni se tenía que enviar
     return unless notification.with_lock do
