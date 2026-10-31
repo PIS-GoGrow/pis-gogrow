@@ -1056,6 +1056,7 @@ es:
         approved: "Aprobado"
         rejected: "Rechazado"
       partial_payment_badge: "Pago parcial"
+      partial_payment_warning: "Falta una parte del pago."
       receipt_sent_at: "Comprobante enviado el %{date}"
       meals_one: "%{count} vianda"
       meals_other: "%{count} viandas"

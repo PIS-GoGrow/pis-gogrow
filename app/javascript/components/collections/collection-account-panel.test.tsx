@@ -169,6 +169,70 @@ describe("CollectionAccountPanel", () => {
     expect(screen.getByText("$800")).toBeInTheDocument()
   })
 
+  it("keeps the rejection reason while a newer receipt is under review", () => {
+    render(
+      <PaymentReviewResultProvider value={vi.fn()}>
+        <CollectionAccountPanel
+          account={{
+            ...account,
+            status: "submitted",
+            payment_id: 18,
+            payments: [
+              {
+                id: 18,
+                status: "submitted",
+                rejection_reason: null,
+                date: "10/10/26",
+                receipt_url: "/provider/comprobantes/18/archivo",
+                receipt_filename: "completo.png",
+                receipt_content_type: "image/png",
+              },
+              {
+                id: 17,
+                status: "rejected",
+                rejection_reason: "El pago es parcial",
+                date: "09/10/26",
+                receipt_url: "/provider/comprobantes/17/archivo",
+                receipt_filename: "parcial.png",
+                receipt_content_type: "image/png",
+              },
+            ],
+          }}
+          showPaymentHistory
+        />
+      </PaymentReviewResultProvider>,
+    )
+
+    expect(screen.getByText("Falta una parte del pago.")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Revisar pago" }),
+    ).toBeInTheDocument()
+  })
+
+  it("shows the description of another rejection reason", () => {
+    render(
+      <CollectionAccountPanel
+        account={{
+          ...account,
+          status: "rejected",
+          payments: [
+            {
+              id: 17,
+              status: "rejected",
+              rejection_reason: "Transferiste a otra cuenta",
+              date: "09/10/26",
+              receipt_url: "/provider/comprobantes/17/archivo",
+              receipt_filename: "otro.png",
+              receipt_content_type: "image/png",
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.getByText(/Transferiste a otra cuenta/)).toBeInTheDocument()
+  })
+
   it("shows the payment date for an approved account in the history", () => {
     render(
       <CollectionAccountPanel

@@ -7,6 +7,9 @@ import type { Account, Payment } from "@/types"
 
 import AccountCard from "./account-card"
 
+const PARTIAL_PAYMENT_WARNING =
+  "Falta una parte del pago. Transferí la diferencia y subí el comprobante."
+
 function makePayment(overrides: Partial<Payment> = {}): Payment {
   return {
     id: 1,
@@ -148,11 +151,7 @@ describe("AccountCard", () => {
 
     renderCard(account)
 
-    expect(
-      screen.getByText(
-        "Falta una parte del pago. Transferí la diferencia y subí el comprobante.",
-      ),
-    ).toBeInTheDocument()
+    expect(screen.getByText(PARTIAL_PAYMENT_WARNING)).toBeInTheDocument()
     expect(screen.queryByText(/Rechazado:/)).not.toBeInTheDocument()
   })
 
@@ -166,34 +165,31 @@ describe("AccountCard", () => {
     renderCard(account)
 
     expect(screen.getByText(/Comprobante ilegible/)).toBeInTheDocument()
-    expect(
-      screen.queryByText(/Falta una parte del pago/),
-    ).not.toBeInTheDocument()
+    expect(screen.queryByText(PARTIAL_PAYMENT_WARNING)).not.toBeInTheDocument()
   })
 
-  it("hides rejection alerts when a newer receipt has been submitted", () => {
-    const rejectedPayment = makePayment({
-      id: 1,
-      status: "rejected",
-      rejection_reason: "El pago es parcial",
-      created_at: "2026-10-01T12:00:00Z",
-    })
-    const newSubmittedPayment = makePayment({
-      id: 2,
-      status: "submitted",
-      rejection_reason: null,
-      created_at: "2026-10-02T12:00:00Z",
-    })
+  it("keeps the partial payment warning while a newer receipt is under review", () => {
     const account = makeAccount({
-      payments: [rejectedPayment, newSubmittedPayment],
+      payments: [
+        makePayment({
+          id: 1,
+          status: "rejected",
+          rejection_reason: "El pago es parcial",
+          created_at: "2026-10-01T12:00:00Z",
+        }),
+        makePayment({
+          id: 2,
+          status: "submitted",
+          created_at: "2026-10-02T12:00:00Z",
+        }),
+      ],
     })
 
     renderCard(account)
 
-    expect(
-      screen.queryByText(/Falta una parte del pago/),
-    ).not.toBeInTheDocument()
-    expect(screen.queryByText(/Rechazado:/)).not.toBeInTheDocument()
+    expect(screen.getByText(PARTIAL_PAYMENT_WARNING)).toBeInTheDocument()
+    expect(screen.getByText("Rechazado")).toBeInTheDocument()
+    expect(screen.getByText("En revisión")).toBeInTheDocument()
   })
 
   it("shows the sent date and status of every receipt", () => {
@@ -233,5 +229,56 @@ describe("AccountCard", () => {
     renderCard(account)
 
     expect(screen.getByText("1.2 MB")).toBeInTheDocument()
+  })
+
+  it("shows the reason of the latest rejection while a newer receipt is under review", () => {
+    const account = makeAccount({
+      payments: [
+        makePayment({
+          id: 1,
+          status: "rejected",
+          rejection_reason: "Comprobante ilegible",
+          created_at: "2026-10-01T12:00:00Z",
+        }),
+        makePayment({
+          id: 2,
+          status: "rejected",
+          rejection_reason: "Transferiste a otra cuenta",
+          created_at: "2026-10-02T12:00:00Z",
+        }),
+        makePayment({
+          id: 3,
+          status: "submitted",
+          created_at: "2026-10-03T12:00:00Z",
+        }),
+      ],
+    })
+
+    renderCard(account)
+
+    expect(screen.getByText(/Transferiste a otra cuenta/)).toBeInTheDocument()
+    expect(screen.queryByText(/Comprobante ilegible/)).not.toBeInTheDocument()
+  })
+
+  it("hides the rejection warning once a payment is approved", () => {
+    const account = makeAccount({
+      payments: [
+        makePayment({
+          id: 1,
+          status: "rejected",
+          rejection_reason: "El pago es parcial",
+          created_at: "2026-10-01T12:00:00Z",
+        }),
+        makePayment({
+          id: 2,
+          status: "approved",
+          created_at: "2026-10-02T12:00:00Z",
+        }),
+      ],
+    })
+
+    renderCard(account)
+
+    expect(screen.queryByText(PARTIAL_PAYMENT_WARNING)).not.toBeInTheDocument()
   })
 })

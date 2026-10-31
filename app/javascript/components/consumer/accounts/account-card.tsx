@@ -1,6 +1,7 @@
-import { CircleX, Eye, TriangleAlert } from "lucide-react"
+import { Eye, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
+import RejectionNotice from "@/components/payments/rejection-notice"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,7 +13,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { SheetTrigger } from "@/components/ui/sheet"
 import { formatMoney } from "@/lib/money"
-import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
+import { pendingRejectionReason } from "@/lib/payment-rejection-reasons"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
 
@@ -36,15 +37,12 @@ export default function AccountCard({
   setLoading,
 }: AccountCardProps) {
   const { t } = useTranslation()
-  const payment =
-    [...account.payments]
-      .sort(
-        (first, second) =>
-          new Date(second.created_at).getTime() -
-          new Date(first.created_at).getTime(),
-      )
-      .find(({ status }) => status !== "approved") ??
-    account.payments.find(({ status }) => status === "approved")
+  const payments = [...account.payments].sort(
+    (first, second) =>
+      new Date(second.created_at).getTime() -
+      new Date(first.created_at).getTime(),
+  )
+  const rejectionReason = pendingRejectionReason(payments)
   const showReceiptSection =
     !account.current || account.payments.some(({ receipt_url }) => receipt_url)
 
@@ -114,27 +112,17 @@ export default function AccountCard({
           </SheetTrigger>
         </CardTitle>
 
-        {(payment?.status === "rejected" || showReceiptSection) && (
-          <Separator />
-        )}
+        {(rejectionReason !== null || showReceiptSection) && <Separator />}
 
-        {payment?.status === "rejected" &&
-          (payment.rejection_reason === PARTIAL_PAYMENT_REJECTION_REASON ? (
-            <div className="flex items-start gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-              <p>{t("pages.accounts.show.partial_payment_warning")}</p>
-            </div>
-          ) : (
-            <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
-              <CircleX className="mt-0.5 size-4 shrink-0" />
-              <p>
-                <span className="font-medium">
-                  {t("pages.accounts.show.status_rejected")}:
-                </span>{" "}
-                {payment.rejection_reason}
-              </p>
-            </div>
-          ))}
+        {rejectionReason && (
+          <RejectionNotice
+            reason={rejectionReason}
+            partialPaymentWarning={t(
+              "pages.accounts.show.partial_payment_warning",
+            )}
+            rejectedLabel={t("pages.accounts.show.status_rejected")}
+          />
+        )}
 
         {showReceiptSection && (
           <PaymentReceiptDialog
@@ -144,11 +132,7 @@ export default function AccountCard({
             uploadDisabled={account.payments.some(
               ({ status }) => status === "submitted",
             )}
-            payments={[...account.payments].sort(
-              (first, second) =>
-                new Date(second.created_at).getTime() -
-                new Date(first.created_at).getTime(),
-            )}
+            payments={payments}
           />
         )}
       </CardHeader>
