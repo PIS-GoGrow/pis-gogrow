@@ -97,7 +97,7 @@ RSpec.describe "Consumo y gasto mensual de cada empleado", type: :system do
       sign_out
       visit admin_consumers_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(admin_welcome_path)
     end
 
     it "keeps a consumer out of the employees list" do

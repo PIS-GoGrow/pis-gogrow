@@ -43,7 +43,7 @@ RSpec.describe "Settings::Profiles", type: :request do
     it "redirects unauthenticated visitors to sign in" do
       get settings_profile_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "falls back to the default locale when the locale is invalid" do
@@ -117,7 +117,7 @@ RSpec.describe "Settings::Profiles", type: :request do
     it "redirects unauthenticated visitors attempting to update profile" do
       patch settings_profile_path, params: { home_delivery: "0" }
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
       expect(providers(:tuviandita).reload.home_delivery).to be(true)
     end
 

@@ -9,7 +9,7 @@ RSpec.describe "Consumer::Profiles", type: :request do
     it "redirects visitors to the sign in page" do
       get profile_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirects a provider to the home page" do
