@@ -59,6 +59,7 @@ export default function PaymentReceiptDialog({
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [uploadResult, setUploadResult] = useState<UploadResult>(null)
+  const [resultOpen, setResultOpen] = useState(false)
   const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(
     null,
   )
@@ -96,13 +97,16 @@ export default function PaymentReceiptDialog({
 
   function handleUploadSuccess() {
     handleOpenChange(false)
+    setUploadErrorMessage(null)
     setUploadResult("success")
+    setResultOpen(true)
   }
 
   function handleUploadError(errors: Record<string, string | string[]>) {
     setUploadErrorMessage([errors.receipt].flat()[0] ?? null)
     handleOpenChange(false)
     setUploadResult("error")
+    setResultOpen(true)
   }
 
   return (
@@ -312,15 +316,7 @@ export default function PaymentReceiptDialog({
         </p>
       )}
 
-      <AdaptableDialog
-        open={uploadResult !== null}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) {
-            setUploadResult(null)
-            setUploadErrorMessage(null)
-          }
-        }}
-      >
+      <AdaptableDialog open={resultOpen} onOpenChange={setResultOpen}>
         <AdaptableDialogContent showCloseButton={false} className="p-5">
           <div className="flex flex-col gap-5">
             <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
@@ -337,7 +333,7 @@ export default function PaymentReceiptDialog({
             <Button
               type="button"
               className="h-12 w-full rounded-lg text-base font-medium"
-              onClick={() => setUploadResult(null)}
+              onClick={() => setResultOpen(false)}
             >
               {uploadResult === "success"
                 ? t("pages.accounts.show.receipt_success_action")

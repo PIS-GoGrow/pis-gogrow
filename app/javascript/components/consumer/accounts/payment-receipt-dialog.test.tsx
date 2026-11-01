@@ -418,6 +418,9 @@ describe("PaymentReceiptDialog", () => {
     await user.click(okButton)
 
     expect(screen.queryByText("Comprobante enviado")).not.toBeInTheDocument()
+    expect(
+      screen.queryByText("No se pudo subir el comprobante"),
+    ).not.toBeInTheDocument()
   })
 
   it("shows error sheet when upload fails", async () => {
@@ -446,6 +449,41 @@ describe("PaymentReceiptDialog", () => {
     expect(retryButton).toBeInTheDocument()
     await user.click(retryButton)
 
+    expect(
+      screen.queryByText("No se pudo subir el comprobante"),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText("Comprobante enviado")).not.toBeInTheDocument()
+  })
+
+  it("uses the result from each upload without reusing the previous one", async () => {
+    const user = userEvent.setup()
+    render(<PaymentReceiptDialog accountId={42} payments={[]} />)
+
+    await user.click(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    )
+
+    act(() => {
+      triggerError?.({ receipt: ["El archivo debe ser PDF, JPG o PNG."] })
+    })
+
+    expect(
+      await screen.findByText("El archivo debe ser PDF, JPG o PNG."),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Entendido" }))
+    await user.click(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    )
+
+    act(() => {
+      triggerSuccess?.()
+    })
+
+    expect(await screen.findByText("Comprobante enviado")).toBeInTheDocument()
+    expect(
+      screen.queryByText("El archivo debe ser PDF, JPG o PNG."),
+    ).not.toBeInTheDocument()
     expect(
       screen.queryByText("No se pudo subir el comprobante"),
     ).not.toBeInTheDocument()
