@@ -62,11 +62,10 @@ describe("PeriodCard", () => {
   it("highlights the provider name in history", () => {
     renderCard(makeAccount(), "TuViandita")
 
-    expect(screen.getByText("TuViandita")).toHaveClass(
+    expect(screen.getByText("TuViandita: Septiembre 2026")).toHaveClass(
       "font-semibold",
       "text-foreground",
     )
-    expect(screen.getByText("Septiembre 2026")).toHaveClass("font-semibold")
   })
 
   it("disables uploading another receipt while one is under review", () => {

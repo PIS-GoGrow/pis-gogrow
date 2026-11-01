@@ -57,11 +57,10 @@ describe("PaymentHistoryCard", () => {
   it("renders the provider name in bold with the foreground color", () => {
     renderCard(makeAccount(), "La Cocina")
 
-    expect(screen.getByText("La Cocina")).toHaveClass(
+    expect(screen.getByText("La Cocina: Septiembre 2026")).toHaveClass(
       "font-bold",
       "text-foreground",
     )
-    expect(screen.getByText("Septiembre 2026")).toHaveClass("font-bold")
   })
 
   it("renders the orders price sum formatted with formatMoney", () => {

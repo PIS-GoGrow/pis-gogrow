@@ -39,13 +39,9 @@ export default function PeriodCard({
       <CardHeader className="px-4">
         <CardDescription>
           {providerName ? (
-            <>
-              <span className="text-foreground font-semibold">
-                {providerName}
-              </span>
-              {": "}
-              <span className="font-semibold">{account.month}</span>
-            </>
+            <span className="text-foreground font-semibold">
+              {providerName}: {account.month}
+            </span>
           ) : (
             account.month
           )}

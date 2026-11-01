@@ -71,8 +71,9 @@ export default function PaymentHistoryCard({
       <CardHeader className="grid gap-4">
         <CardDescription className="flex items-center gap-2">
           <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-            <span className="text-foreground font-bold">{providerName}</span>
-            <span className="font-bold">{account.month}</span>
+            <span className="text-foreground font-bold">
+              {providerName}: {account.month}
+            </span>
           </span>
           {/* Como es historial los payments estan siempre aprobados */}
           <Badge className="ml-auto shrink-0 bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
