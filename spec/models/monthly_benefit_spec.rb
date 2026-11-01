@@ -63,9 +63,25 @@ RSpec.describe MonthlyBenefit, type: :model do
         end
       end
 
-      it "acepta decimales positivos" do
+      it "rechaza decimales positivos" do
         rule.max_price = 1234.5
-        expect(rule).to be_valid
+        expect(rule).not_to be_valid
+        expect(rule.errors[:max_price]).to be_present
+      end
+
+      it "rechaza valores no enteros como strings decimales o alfanuméricos" do
+        [ "150.75", "0.99", "abc" ].each do |val|
+          rule.max_price = val
+          expect(rule).not_to be_valid
+          expect(rule.errors[:max_price]).to be_present
+        end
+      end
+
+      it "acepta valores enteros válidos mayores a cero" do
+        [ 1, 500 ].each do |valid_price|
+          rule.max_price = valid_price
+          expect(rule).to be_valid
+        end
       end
     end
 

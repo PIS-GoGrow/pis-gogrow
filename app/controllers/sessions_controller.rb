@@ -1,32 +1,39 @@
 # frozen_string_literal: true
 
 class SessionsController < InertiaController
-  skip_before_action :authenticate, only: %i[new create]
-  before_action :require_no_authentication, only: %i[new create]
+  skip_before_action :authenticate, only: :create
+  before_action :require_no_authentication, only: :create
   before_action :set_session, only: %i[edit update destroy]
-
-  # El formulario de correo y contraseña solo se pinta donde se está probando.
-  # No cambia nada del endpoint: create ya existía y sigue igual.
-  def new
-    @dev_login_enabled = ENV.fetch("DEV_LOGIN_ENABLED", "false") == "true"
-  end
 
   def create
     if (user = User.authenticate_by(email: params[:email], password: params[:password]))
       user.sync_roles!
 
       if user.roles.empty?
-        redirect_to sign_in_path, alert: t("flash.role_not_available")
+        redirect_to entry_path, alert: t("flash.role_not_available"), inertia: {
+          errors: { auth: t("flash.role_not_available") }
+        }
         return
       end
 
-      role = user.roles.first.to_sym
-      @session = user.sessions.create!(role: role)
+      entry_role = Session::ENTRY_ROLES[origin_path]
+
+      if entry_role && user.roles.exclude?(entry_role)
+        redirect_to entry_path, alert: t("flash.role_not_available"), inertia: {
+          errors: { auth: t("flash.role_not_available") }
+        }
+        return
+      end
+
+      role = entry_role || user.roles.first
+      @session = user.sessions.create!(role:)
       cookies.signed.permanent[:session_token] = { value: @session.id, httponly: true }
 
       redirect_to root_path, notice: t("flash.signed_in")
     else
-      redirect_to sign_in_path, alert: t("flash.incorrect_credentials")
+      redirect_to entry_path, alert: t("flash.incorrect_credentials"), inertia: {
+        errors: { auth: t("flash.incorrect_credentials") }
+      }
     end
   end
 
@@ -54,6 +61,17 @@ class SessionsController < InertiaController
   end
 
   private
+
+  def origin_path
+    path = params[:origin].presence || request.referer.to_s
+    URI(path).path
+  rescue URI::InvalidURIError
+    nil
+  end
+
+  def entry_path
+    Session::ENTRY_ROLES.key?(origin_path) ? origin_path : consumer_welcome_path
+  end
 
   def set_session
     @session = Current.user.sessions.find(params[:id])

@@ -68,11 +68,56 @@ describe("Admin::Invoices Index Page", () => {
 
     expect(screen.getByRole("link", { name: "Ver" })).toHaveAttribute(
       "href",
-      "/rrhh/facturas/7/archivo",
+      "/rrhh/facturas/7/archivo/factura.pdf",
+    )
+    expect(screen.getByRole("link", { name: "Ver" })).toHaveAttribute(
+      "target",
+      "_blank",
+    )
+    expect(screen.getByRole("link", { name: "Ver" })).toHaveAttribute(
+      "rel",
+      "noreferrer",
     )
     expect(
       screen.getByRole("link", { name: "Descargar factura.pdf" }),
     ).toHaveAttribute("href", "/rrhh/facturas/7/archivo?download=1")
+  })
+
+  it("encodes file names with spaces and special characters in the view URL", () => {
+    const invoiceWithSpecialName: AdminInvoice = {
+      ...invoice,
+      id: 8,
+      file_name: "factura agosto 2026 (1).pdf",
+    }
+
+    render(<Index invoices={[invoiceWithSpecialName]} />)
+
+    expect(screen.getByRole("link", { name: "Ver" })).toHaveAttribute(
+      "href",
+      "/rrhh/facturas/8/archivo/factura%20agosto%202026%20(1).pdf",
+    )
+  })
+
+  it("links each invoice in a list to its own file name", () => {
+    const secondInvoice: AdminInvoice = {
+      ...invoice,
+      id: 9,
+      provider_name: "Endulzate",
+      file_name: "factura-endulzate.pdf",
+    }
+
+    render(<Index invoices={[invoice, secondInvoice]} />)
+
+    const viewLinks = screen.getAllByRole("link", { name: "Ver" })
+    expect(viewLinks).toHaveLength(2)
+    expect(viewLinks[0]).toHaveAttribute(
+      "href",
+      "/rrhh/facturas/7/archivo/factura.pdf",
+    )
+    expect(viewLinks[1]).toHaveAttribute(
+      "href",
+      "/rrhh/facturas/9/archivo/factura-endulzate.pdf",
+    )
   })
 
   it("explains the empty state instead of showing an empty table", () => {

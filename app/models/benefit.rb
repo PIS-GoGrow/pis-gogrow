@@ -35,6 +35,16 @@ class Benefit < ApplicationRecord
       .distinct
   }
 
+  scope :special, -> {
+      joins(benefit_configuration: :benefit_rules)
+        .where.not(
+          benefit_configuration: {
+            benefit_rules: { type: MonthlyBenefit.name }
+          }
+        )
+        .distinct
+    }
+
   # Expira beneficios pasados de fecha y que no deberían poder usarse más.
   # Incluye beneficios futuros pero pasados de fecha.
   def self.expire_old!(date)

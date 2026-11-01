@@ -12,21 +12,6 @@ import DeleteSpecialSubsidyDialog from "@/components/benefit-configurations/dele
 import SpecialSubsidyCard from "@/components/benefit-configurations/special-subsidy-card"
 import SpecialSubsidyForm from "@/components/benefit-configurations/special-subsidy-form"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty"
 import type { Employee, SpecialSubsidy } from "@/types/serializers"
 
 interface SpecialSubsidiesSectionProps {
@@ -51,63 +36,63 @@ export default function SpecialSubsidiesSection({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          {t("pages.admin.benefit_configurations.index.special.title")}
-        </CardTitle>
-        <CardDescription>
-          {t("pages.admin.benefit_configurations.index.special.description")}
-        </CardDescription>
-        <CardAction>
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center justify-between">
+          <h2 className="text-foreground text-xl font-bold">
+            {t("pages.admin.benefit_configurations.index.special.title")}
+          </h2>
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
+            className="text-foreground gap-1.5 font-semibold"
             onClick={() => openAdaptableDialog()}
           >
-            <PlusIcon aria-hidden="true" />
+            <PlusIcon className="size-4" aria-hidden="true" />
             {t("pages.admin.benefit_configurations.index.special.add")}
           </Button>
-        </CardAction>
-      </CardHeader>
+        </div>
+        <p className="text-muted-foreground text-sm">
+          {t("pages.admin.benefit_configurations.index.special.description")}
+        </p>
+      </div>
 
-      <CardContent>
-        {specialSubsidies.length === 0 ? (
-          <Empty className="border">
-            <EmptyHeader>
-              <EmptyMedia variant="icon">
-                <PercentIcon aria-hidden="true" />
-              </EmptyMedia>
-              <EmptyTitle>
-                {t(
-                  "pages.admin.benefit_configurations.index.special.empty.title",
-                )}
-              </EmptyTitle>
-              <EmptyDescription>
-                {t(
-                  "pages.admin.benefit_configurations.index.special.empty.description",
-                )}
-              </EmptyDescription>
-            </EmptyHeader>
-          </Empty>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {specialSubsidies.map((subsidy) => (
-              <SpecialSubsidyCard
-                key={subsidy.id}
-                subsidy={subsidy}
-                onEdit={() => openAdaptableDialog(subsidy)}
-                onDelete={() => setDeleting(subsidy)}
-              />
-            ))}
+      {specialSubsidies.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-4 px-10 py-7 text-center">
+          <div className="text-foreground flex size-10 items-center justify-center rounded-[10px] bg-[#F5F5F5] dark:bg-neutral-800">
+            <PercentIcon className="size-5" aria-hidden="true" />
           </div>
-        )}
-      </CardContent>
+          <div className="flex flex-col items-center gap-2">
+            <h3 className="text-foreground text-lg font-medium">
+              {t(
+                "pages.admin.benefit_configurations.index.special.empty.title",
+              )}
+            </h3>
+            <p className="text-muted-foreground max-w-[280px] text-sm">
+              {t(
+                "pages.admin.benefit_configurations.index.special.empty.description",
+              )}
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {specialSubsidies.map((subsidy) => (
+            <SpecialSubsidyCard
+              key={subsidy.id}
+              subsidy={subsidy}
+              onEdit={() => openAdaptableDialog(subsidy)}
+              onDelete={() => setDeleting(subsidy)}
+            />
+          ))}
+        </div>
+      )}
 
       <AdaptableDialog open={sheetOpen} onOpenChange={setAdaptableDialogOpen}>
         <AdaptableDialogContent showCloseButton={false} className="p-5">
+          <div className="bg-muted mx-auto mb-2 h-1.5 w-12 rounded-full sm:hidden" />
           <div className="flex flex-col gap-1">
-            <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
+            <AdaptableDialogTitle className="text-foreground text-base leading-6 font-semibold tracking-normal">
               {editing
                 ? t(
                     "pages.admin.benefit_configurations.index.special.form.edit_title",
@@ -116,7 +101,7 @@ export default function SpecialSubsidiesSection({
                     "pages.admin.benefit_configurations.index.special.form.add_title",
                   )}
             </AdaptableDialogTitle>
-            <AdaptableDialogDescription>
+            <AdaptableDialogDescription className="sr-only">
               {t(
                 "pages.admin.benefit_configurations.index.special.form.description",
               )}
@@ -139,6 +124,6 @@ export default function SpecialSubsidiesSection({
           if (!open) setDeleting(null)
         }}
       />
-    </Card>
+    </section>
   )
 }

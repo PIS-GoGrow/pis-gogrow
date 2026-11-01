@@ -1,5 +1,5 @@
 import { Head, router } from "@inertiajs/react"
-import { CircleCheck, Wallet } from "lucide-react"
+import { CircleCheck, SlidersHorizontal, Wallet } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -16,6 +16,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -27,7 +34,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
 import { adminPayments } from "@/routes"
-import type { Account, AdminPaymentsIndex, BreadcrumbItem } from "@/types"
+import type { AdminAccount, AdminPaymentsIndex, BreadcrumbItem } from "@/types"
 
 export default function Index({
   accounts,
@@ -48,6 +55,9 @@ export default function Index({
   const [detail, setDetail] = useState<ConsumptionDetail | null>(null)
   const [providerId, setProviderId] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  const [historyProviderId, setHistoryProviderId] = useState<number | null>(
+    null,
+  )
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -74,7 +84,7 @@ export default function Index({
     setOpen(true)
   }
 
-  async function openDetail(account: Account) {
+  async function openDetail(account: AdminAccount) {
     setProviderId(account.provider_id)
     setOpen(true)
     setLoading(true)
@@ -96,6 +106,11 @@ export default function Index({
 
   const providerName = (id: number) =>
     providers.find((provider) => provider.id === id)?.name
+
+  const filteredHistory =
+    historyProviderId === null
+      ? history
+      : history.filter((account) => account.provider_id === historyProviderId)
 
   const meals =
     summary.limit === null
@@ -214,7 +229,54 @@ export default function Index({
           </TabsContent>
 
           <TabsContent value="history" className="grid gap-4">
-            {history.length === 0 ? (
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm">
+                {t("pages.admin.payments.index.providers_filter")}{" "}
+                <span className="text-muted-foreground">
+                  {historyProviderId === null
+                    ? t("pages.admin.payments.index.all_providers")
+                    : providerName(historyProviderId)}
+                </span>
+              </p>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full"
+                    aria-label={t(
+                      "pages.admin.payments.index.filter_providers",
+                    )}
+                  >
+                    <SlidersHorizontal aria-hidden="true" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuRadioGroup
+                    value={String(historyProviderId ?? "all")}
+                    onValueChange={(value) =>
+                      setHistoryProviderId(
+                        value === "all" ? null : Number(value),
+                      )
+                    }
+                  >
+                    <DropdownMenuRadioItem value="all">
+                      {t("pages.admin.payments.index.all_providers")}
+                    </DropdownMenuRadioItem>
+                    {providers.map((provider) => (
+                      <DropdownMenuRadioItem
+                        key={provider.id}
+                        value={String(provider.id)}
+                      >
+                        {provider.name}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {filteredHistory.length === 0 ? (
               <Empty className="border">
                 <EmptyHeader>
                   <EmptyMedia variant="icon">
@@ -230,7 +292,7 @@ export default function Index({
               </Empty>
             ) : (
               <div className="grid gap-4 lg:grid-cols-2">
-                {history.map((account) => (
+                {filteredHistory.map((account) => (
                   <PeriodCard
                     key={account.id}
                     account={account}

@@ -108,7 +108,12 @@ export default function Index({ invoices }: AdminInvoicesIndex) {
                             responde el archivo, no una página. */}
                         <Button variant="ghost" size="sm" asChild>
                           <a
-                            href={adminInvoices.file(invoice.id).url}
+                            href={
+                              adminInvoices.file({
+                                id: invoice.id,
+                                filename: invoice.file_name,
+                              }).url
+                            }
                             target="_blank"
                             rel="noreferrer"
                           >
@@ -125,9 +130,10 @@ export default function Index({ invoices }: AdminInvoicesIndex) {
                         >
                           <a
                             href={
-                              adminInvoices.file(invoice.id, {
-                                query: { download: 1 },
-                              }).url
+                              adminInvoices.file(
+                                { id: invoice.id },
+                                { query: { download: 1 } },
+                              ).url
                             }
                           >
                             <Download aria-hidden="true" />

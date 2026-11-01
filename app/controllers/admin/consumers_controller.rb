@@ -2,13 +2,8 @@
 
 class Admin::ConsumersController < Admin::InertiaController
   def index
-    month = selected_month.beginning_of_month
-
-    @consumers = AdminConsumerSummary.rows_for(company, month:)
+    @consumers = AdminConsumerSummary.debt_rows_for(company)
     @filter = params[:filter].presence_in(%w[all pending]) || "all"
-    @month = month.strftime("%Y-%m")
-    @current_month = Date.current.strftime("%Y-%m")
-    @months = month_options(AdminMonthlySummary.new(company, month).months)
   end
 
   # El find va sobre los empleados de la empresa del admin y no sobre Consumer:
@@ -18,7 +13,7 @@ class Admin::ConsumersController < Admin::InertiaController
 
     summary = AdminConsumerSummary.new(@consumer)
     @summary = summary.current_month
-    @benefit_summary = OrderPricing.new(@consumer).summary
+    @benefit_summary = Orders::Pricing.new(@consumer).summary
     @months = summary.months
     @debt_reminder = debt_reminder_for(@consumer)
   end

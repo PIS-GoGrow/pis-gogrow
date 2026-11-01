@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
 import { Sheet } from "@/components/ui/sheet"
@@ -46,8 +47,11 @@ function renderCard(account: Account) {
   )
 }
 
+const newReceipt = () =>
+  new File(["contenido"], "nuevo.png", { type: "image/png" })
+
 describe("AccountCard", () => {
-  it("disables uploading another receipt while one is under review", () => {
+  it("shows the receipt under review with its sent date and status, without the upload form", () => {
     const account = makeAccount({
       payments: [makePayment({ status: "submitted" })],
     })
@@ -55,15 +59,47 @@ describe("AccountCard", () => {
     renderCard(account)
 
     expect(screen.getByText("receipt.png")).toBeInTheDocument()
+    expect(screen.getByText("Enviado: 01/10/26")).toBeInTheDocument()
+    expect(screen.getByText("En revisión")).toBeInTheDocument()
+    expect(screen.queryByLabelText("Comprobante")).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/Ya hay un comprobante en revisión/),
+    ).not.toBeInTheDocument()
+  })
+
+  it("shows the file selector with the upload button disabled until a file is chosen", async () => {
+    const user = userEvent.setup()
+    renderCard(makeAccount({ payments: [] }))
+
+    const upload = screen.getByRole("button", {
+      name: "Subir comprobante de pago",
+    })
+    expect(screen.getByText("Seleccionar archivo")).toBeInTheDocument()
+    expect(upload).toBeDisabled()
+
+    await user.upload(screen.getByLabelText("Comprobante"), newReceipt())
+
+    expect(screen.getByText("nuevo.png")).toBeInTheDocument()
+    expect(upload).toBeEnabled()
+  })
+
+  it("lets the user remove the chosen file before uploading it", async () => {
+    const user = userEvent.setup()
+    renderCard(makeAccount({ payments: [] }))
+
+    await user.upload(screen.getByLabelText("Comprobante"), newReceipt())
+    await user.click(screen.getByRole("button", { name: "Quitar archivo" }))
+
+    expect(screen.queryByText("nuevo.png")).not.toBeInTheDocument()
     expect(
       screen.getByRole("button", { name: "Subir comprobante de pago" }),
     ).toBeDisabled()
-    expect(
-      screen.getByText(/Ya hay un comprobante en revisión/),
-    ).toBeInTheDocument()
   })
 
-  it("offers uploading another receipt once the previous one was rejected", () => {
+  it("offers the selector again once the previous receipt was rejected", () => {
     const account = makeAccount({
       payments: [
         makePayment({
@@ -75,26 +111,31 @@ describe("AccountCard", () => {
 
     renderCard(account)
 
+    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
     expect(
       screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeEnabled()
+    ).toBeInTheDocument()
     expect(
       screen.queryByText(/Ya hay un comprobante en revisión/),
     ).not.toBeInTheDocument()
   })
 
-  it("keeps the upload button enabled when an earlier payment was approved", () => {
+  it("keeps the selector available when an earlier payment was approved", () => {
     const account = makeAccount({
       payments: [makePayment({ status: "approved" })],
     })
 
     renderCard(account)
 
+    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
+  })
+
+  it("does not offer uploading while the month is still in progress", () => {
+    renderCard(makeAccount({ current: true, payments: [] }))
+
+    expect(screen.queryByLabelText("Comprobante")).not.toBeInTheDocument()
     expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeEnabled()
-    expect(
-      screen.queryByText(/Ya hay un comprobante en revisión/),
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
     ).not.toBeInTheDocument()
   })
 
@@ -107,7 +148,11 @@ describe("AccountCard", () => {
 
     renderCard(account)
 
-    expect(screen.getByText("Falta una parte del pago.")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Falta una parte del pago. Transferí la diferencia y subí el comprobante.",
+      ),
+    ).toBeInTheDocument()
     expect(screen.queryByText(/Rechazado:/)).not.toBeInTheDocument()
   })
 
@@ -122,7 +167,7 @@ describe("AccountCard", () => {
 
     expect(screen.getByText(/Comprobante ilegible/)).toBeInTheDocument()
     expect(
-      screen.queryByText("Falta una parte del pago."),
+      screen.queryByText(/Falta una parte del pago/),
     ).not.toBeInTheDocument()
   })
 
@@ -146,11 +191,47 @@ describe("AccountCard", () => {
     renderCard(account)
 
     expect(
-      screen.queryByText("Falta una parte del pago."),
+      screen.queryByText(/Falta una parte del pago/),
     ).not.toBeInTheDocument()
     expect(screen.queryByText(/Rechazado:/)).not.toBeInTheDocument()
-    // La tarjeta muestra "En revisión" dos veces: el estado de la cuenta y el
-    // del comprobante enviado.
-    expect(screen.getAllByText("En revisión")).toHaveLength(2)
+  })
+
+  it("shows the sent date and status of every receipt", () => {
+    const account = makeAccount({
+      payments: [
+        makePayment({
+          id: 1,
+          status: "approved",
+          receipt_uploaded_at: "14/08/26",
+          created_at: "2026-08-14T12:00:00Z",
+        }),
+        makePayment({
+          id: 2,
+          status: "rejected",
+          rejection_reason: "Comprobante ilegible",
+          receipt_uploaded_at: "13/08/26",
+          created_at: "2026-08-13T12:00:00Z",
+        }),
+      ],
+    })
+
+    renderCard(account)
+
+    expect(screen.getByText("Enviado: 14/08/26")).toBeInTheDocument()
+    expect(screen.getByText("Enviado: 13/08/26")).toBeInTheDocument()
+    expect(screen.getByText("Aprobado")).toBeInTheDocument()
+    expect(screen.getByText("Rechazado")).toBeInTheDocument()
+  })
+
+  it("shows the size of each receipt", () => {
+    const account = makeAccount({
+      payments: [
+        makePayment({ status: "rejected", receipt_byte_size: 1258291 }),
+      ],
+    })
+
+    renderCard(account)
+
+    expect(screen.getByText("1.2 MB")).toBeInTheDocument()
   })
 })

@@ -20,6 +20,8 @@ export default function Index({
   schedules,
   providers,
   closures,
+  favorites,
+  frequent,
   benefit,
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
@@ -74,12 +76,12 @@ export default function Index({
     setView("menu")
   }
 
-  function addToCart() {
+  function addToCart(benefitsSelected: number[]) {
     if (!selected || selected.sold_out || selected.orders_closed) return
 
     // Dos veces el mismo plato con distinta personalización son dos líneas del
     // carrito, así que la clave incluye lo elegido además de las notas.
-    const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}`
+    const cartId = `${selected.id}-${JSON.stringify(selections)}-${notes}-${JSON.stringify(benefitsSelected)}`
 
     setCart((items) => {
       if (editingCartId) {
@@ -109,6 +111,7 @@ export default function Index({
           quantity: Math.min(selected.remaining, quantity),
           notes,
           selections,
+          benefits: benefitsSelected,
         }
 
         const next = [...items]
@@ -135,6 +138,7 @@ export default function Index({
               quantity: Math.min(selected.remaining, quantity),
               notes,
               selections,
+              benefits: benefitsSelected,
             },
           ]
     })
@@ -197,6 +201,8 @@ export default function Index({
             setActiveProviders={setActiveProviders}
             schedules={visibleSchedules}
             closures={closures}
+            favorites={favorites}
+            frequent={frequent}
             cart={cart}
             count={count}
             loading={loading}
@@ -218,6 +224,7 @@ export default function Index({
             add={addToCart}
             editingCartId={editingCartId}
             onRemove={editingCartId ? handleRemoveFromCartAndBack : undefined}
+            benefit={benefit}
           />
         )}
       </div>

@@ -14,7 +14,18 @@ export default function ConsumptionStatusBadge({
 }: ConsumptionStatusBadgeProps) {
   const { t } = useTranslation()
 
-  if (status) return <StatusBadge status={status} kind="payment" />
+  if (status)
+    return (
+      <StatusBadge
+        status={status}
+        kind="payment"
+        label={
+          status === "approved"
+            ? t("pages.admin.consumers.index.confirmed")
+            : undefined
+        }
+      />
+    )
 
   return (
     <Badge

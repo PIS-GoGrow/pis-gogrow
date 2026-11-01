@@ -4,10 +4,10 @@
 # owner Company guarda el subsidio, que es la parte que paga GoGrow; la parte
 # del empleado vive en su propia cuenta y no se muestra acá.
 class Admin::PaymentsController < Admin::InertiaController
-  before_action :set_payment, only: [ :destroy, :receipt ]
+  before_action :set_payment, only: [ :destroy ]
 
   def index
-    accounts = company.accounts.where.not(amount: ..0).preload(:payments).order(month: :desc)
+    accounts = company.accounts.where.not(amount: ..0).preload(:payments, :invoices).order(month: :desc)
     settled, unpaid = accounts.partition { it.collection_status == "approved" }
     sums = Account.amount_and_price_sum(accounts.map(&:id))
 
@@ -58,13 +58,18 @@ class Admin::PaymentsController < Admin::InertiaController
     }, status: :see_other
   end
 
+  # RR. HH. también ve los comprobantes que sus empleados le mandaron a cada
+  # proveedor, desde el historial de Empleados; borrar sigue siendo solo de los
+  # de la empresa.
   def receipt
-    return head :not_found unless @payment.receipt.attached?
+    accounts = Account.where(owner: company).or(Account.where(owner: company.consumers))
+    payment = Payment.where(account: accounts).find(params[:id])
+    return head :not_found unless payment.receipt.attached?
 
     send_data(
-      @payment.receipt.download,
-      filename: @payment.receipt.filename.to_s,
-      type: @payment.receipt.content_type,
+      payment.receipt.download,
+      filename: payment.receipt.filename.to_s,
+      type: payment.receipt.content_type,
       disposition: "inline"
     )
   end
@@ -102,6 +107,6 @@ class Admin::PaymentsController < Admin::InertiaController
   # Las viandas de todas las cuentas salen de una consulta sola y viajan como
   # params, que no llegan al serializer de la página: por eso se arma acá.
   def serialize(accounts, sums)
-    AccountSerializer.new(accounts, params: { orders_sum: sums }).serializable_hash
+    Admin::AccountSerializer.new(accounts, params: { orders_sum: sums }).serializable_hash
   end
 end

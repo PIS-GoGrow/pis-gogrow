@@ -1,15 +1,15 @@
 # frozen_string_literal: true
 
 # Reutiliza el AccountSerializer de "Mis pagos" del empleado: una cuenta de la
-# empresa se lee igual que la de un empleado, así que las dos pantallas
-# comparten el tipo Account.
+# empresa se lee igual que la de un empleado. Admin::AccountSerializer le suma
+# lo que solo RR. HH. descarga: la factura y el comprobante del pago aprobado.
 class Admin::PaymentsIndexSerializer < ApplicationSerializer
   CONSUMPTION_DETAIL = "{ month: string; providers: Array<{ id: number; name: string; meals: number; " \
                        "subtotal: number; vat_rate: number; vat_amount: number; payable_amount: number; paid: boolean; days: Array<{ date: string; " \
                        "orders: Array<{ id: number; consumer_name: string; avatar_url: string | null; meals: number; " \
                        "employee_amount: number; company_amount: number }> }> }> } | null"
 
-  typelize accounts: "Account[]", history: "Account[]", total_debt: :number, total_meals: :number
+  typelize accounts: "AdminAccount[]", history: "AdminAccount[]", total_debt: :number, total_meals: :number
   attributes :accounts, :history, :total_debt, :total_meals
 
   typelize month: :string, current_month: :string

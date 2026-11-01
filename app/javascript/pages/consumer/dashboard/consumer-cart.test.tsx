@@ -55,12 +55,14 @@ const cartItem = (
   quantity: 1,
   notes: "",
   selections: {},
+  benefits: [],
   menu: {
     id: id * 10,
     name: `Plato ${id}`,
     description: null,
     price: 280,
     provider_id: id,
+    saved_menu_id: id * 10,
     option_groups: [],
     provider_name: providerName,
     home_delivery: homeDelivery,
@@ -267,14 +269,14 @@ describe("ConsumerCart without subsidy", () => {
     subtotal: 301 * quantity,
     discount: 0,
     total: 301 * quantity,
-    lines: {
-      "1": {
+    lines: [
+      {
         subtotal: 301 * quantity,
         discount: 0,
         total: 301 * quantity,
         tiers: [],
       },
-    },
+    ],
     subsidizedQuantity: subsidized,
     fullPriceQuantity: quantity - subsidized,
   })

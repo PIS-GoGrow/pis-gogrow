@@ -20,12 +20,24 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(inertia).to have_props(base_subsidy: nil, benefit_configurations: [])
     end
 
+    it "renders the page with current benefit configuration props" do
+      get admin_benefit_configurations_path
+
+      expect(inertia).to render_component("admin/benefit_configurations/index")
+      expect(inertia.props).to include(
+        :benefit_configurations,
+        :configurable_month,
+        :special_subsidies,
+        :employees
+      )
+    end
+
     it "requires an admin session" do
       sign_out
 
       get admin_benefit_configurations_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer to the root page" do
@@ -59,7 +71,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       get admin_benefit_configurations_path
 
       expect(inertia.props[:base_subsidy][:id]).to eq(own_config.id)
-      expect(inertia.props[:benefit_configurations].length).to eq(3)
+      expect(inertia.props[:benefit_configurations].length).to eq(4)
       expect(inertia.props[:benefit_configurations].first[:id]).to eq(own_config.id)
       expect(inertia.props[:benefit_configurations].first[:created_by_name]).to eq(admin_user.name)
     end
@@ -102,7 +114,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(configuration.benefit_rules.first.limit).to eq(20)
     end
 
-    it "always applies the change from the first day of next month, regardless of what is posted" do
+    it "always applies the change from the configurable month, regardless of what is posted" do
       post admin_benefit_configurations_path, params: {
         benefit_configuration: {
           subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20,
@@ -110,7 +122,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
         }
       }
 
-      expect(BenefitConfiguration.last.benefit_rules.first.effective_from).to eq(Date.current.next_month.beginning_of_month)
+      expect(BenefitConfiguration.last.benefit_rules.first.effective_from).to eq(Calendar.new.configurable_month)
     end
 
     it "sets effective_from to two months ahead when posted on or after configuration cutoff date" do
@@ -202,7 +214,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       BenefitConfiguration.new_base_subsidy(
         company: company, created_by: admin_user,
         subsidy_percentage: 50, max_price: 150, limit: 20,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       ).save!
 
       expect {
@@ -219,7 +231,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       pending = BenefitConfiguration.new_base_subsidy(
         company: company, created_by: admin_user,
         subsidy_percentage: 50, max_price: 150, limit: 20,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       )
       pending.save!
 
@@ -232,7 +244,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(BenefitConfiguration.exists?(pending.id)).to be false
 
       new_pending =
-        BenefitConfiguration.joins(:benefit_rules).where(benefit_rules: { effective_from: Date.current.next_month.beginning_of_month }).last
+        BenefitConfiguration.joins(:benefit_rules).where(benefit_rules: { effective_from: Calendar.new.configurable_month }).last
       expect(new_pending.subsidy_percentage).to eq(60)
       expect(new_pending.benefit_rules.first.max_price).to eq(200)
       expect(new_pending.benefit_rules.first.limit).to eq(25)
@@ -248,7 +260,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       BenefitConfiguration.new_base_subsidy(
         company: company, created_by: admin_user,
         subsidy_percentage: 55, max_price: 160, limit: 22,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       ).save!
 
       post admin_benefit_configurations_path, params: {
@@ -268,7 +280,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
         }
       }.not_to change(BenefitConfiguration, :count)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer to the root page without creating a configuration" do
@@ -295,15 +307,15 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       expect(response).to redirect_to(root_path)
     end
 
-    it "accepts valid boundary values (1% subsidy, 100% subsidy, 0 monthly limit, decimal price)" do
+    it "accepts valid boundary values (1% subsidy, integer price, monthly limit of 1)" do
       post admin_benefit_configurations_path, params: {
-        benefit_configuration: { subsidy_percentage: 1, max_voucher_price: 99.99, monthly_voucher_limit: 1 }
+        benefit_configuration: { subsidy_percentage: 1, max_voucher_price: 99, monthly_voucher_limit: 1 }
       }
 
       expect(response).to redirect_to(admin_benefit_configurations_path)
       config = BenefitConfiguration.last
       expect(config.subsidy_percentage).to eq(1)
-      expect(config.benefit_rules.first.max_price).to eq(99.99)
+      expect(config.benefit_rules.first.max_price).to eq(99)
       expect(config.benefit_rules.first.limit).to eq(1)
     end
 
@@ -314,14 +326,14 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       other_pending = BenefitConfiguration.new_base_subsidy(
         company: other_company, created_by: other_admin,
         subsidy_percentage: 80, max_price: 300, limit: 10,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       )
       other_pending.save!
 
       own_pending = BenefitConfiguration.new_base_subsidy(
         company: company, created_by: admin_user,
         subsidy_percentage: 50, max_price: 150, limit: 20,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       )
       own_pending.save!
 
@@ -339,7 +351,7 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
       BenefitConfiguration.new_base_subsidy(
         company: company, created_by: admin_user,
         subsidy_percentage: 50, max_price: 150, limit: 20,
-        effective_from: Date.current.next_month.beginning_of_month
+        effective_from: Calendar.new.configurable_month
       ).save!
 
       expect {
@@ -375,7 +387,14 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
         expect(inertia.props[:errors][:benefit_configuration]).to have_key(:subsidy_percentage)
       end
 
-      it "rechaza precios máximos o límites negativos en las reglas" do
+      it "rechaza precios máximos decimales o negativos y límites negativos en las reglas" do
+        post admin_benefit_configurations_path, params: {
+          benefit_configuration: { subsidy_percentage: 50, max_voucher_price: 150.5, monthly_voucher_limit: 20 }
+        }
+
+        follow_redirect!
+        expect(inertia.props[:errors][:benefit_rules].first).to have_key(:max_price)
+
         post admin_benefit_configurations_path, params: {
           benefit_configuration: { subsidy_percentage: 50, max_voucher_price: -10, monthly_voucher_limit: -5 }
         }
@@ -384,6 +403,39 @@ RSpec.describe "Admin::BenefitConfigurations", type: :request do
         rule_errors = inertia.props[:errors][:benefit_rules].first
         expect(rule_errors).to have_key(:max_price)
         expect(rule_errors).to have_key(:limit)
+      end
+
+      it "mantiene la integridad de la base de datos ante bypass de interfaz con decimales o strings" do
+        expect {
+          post admin_benefit_configurations_path, params: {
+            benefit_configuration: { subsidy_percentage: 50, max_voucher_price: "150.75", monthly_voucher_limit: 20 }
+          }
+        }.not_to change(BenefitConfiguration, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors][:benefit_rules].first[:max_price]).to be_present
+
+        expect {
+          post admin_benefit_configurations_path, params: {
+            benefit_configuration: { subsidy_percentage: 50, max_voucher_price: "invalid_price", monthly_voucher_limit: 20 }
+          }
+        }.not_to change(BenefitConfiguration, :count)
+
+        follow_redirect!
+        expect(inertia.props[:errors][:benefit_rules].first[:max_price]).to be_present
+      end
+
+      it "bloquea el acceso a consumidores con mensaje de alerta" do
+        sign_in users(:one), role: :consumer
+
+        expect {
+          post admin_benefit_configurations_path, params: {
+            benefit_configuration: { subsidy_percentage: 50, max_voucher_price: 150, monthly_voucher_limit: 20 }
+          }
+        }.not_to change(BenefitConfiguration, :count)
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to be_present
       end
     end
   end

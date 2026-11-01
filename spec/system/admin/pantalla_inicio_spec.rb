@@ -97,7 +97,7 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
     it "sends a visitor to sign in" do
       visit admin_dashboard_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(admin_welcome_path)
     end
 
     it "keeps a consumer and a provider out of the HR home" do

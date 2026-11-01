@@ -79,6 +79,7 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
     const items = cart.map((item) => ({
       schedule_id: item.id,
       quantity: item.quantity,
+      benefits: item.benefits,
       notes: item.notes,
       options: Object.entries(item.selections).map(([groupId, values]) => ({
         group_id: Number(groupId),

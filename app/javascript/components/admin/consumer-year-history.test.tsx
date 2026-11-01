@@ -26,9 +26,19 @@ beforeAll(() => {
   })
 })
 
+const order: AdminConsumerMonth["orders"][number] = {
+  id: 1,
+  date: "14/10",
+  provider_id: 1,
+  provider_name: "Tu Viandita",
+  amount: 1,
+  subsidy: 150,
+  charged: 150,
+}
+
 function month(
   key: string,
-  label: string,
+  name: string,
   amount = 0,
   status: AdminConsumerMonth["status"] = null,
 ): AdminConsumerMonth {
@@ -37,21 +47,22 @@ function month(
     year: Number(key.slice(0, 4)),
     amount,
     subsidy: 0,
-    label,
+    label: `${name} ${key.slice(0, 4)}`,
+    name,
     status,
     providers: [],
-    orders: [],
+    orders: amount > 0 ? [order] : [],
   }
 }
 
 describe("ConsumerYearHistory", () => {
-  it("shows the year selector even when only the current year is available", () => {
+  it("lists every month of the year once the employee ordered, with the empty ones as Sin consumos", () => {
     render(
       <ConsumerYearHistory
         companyName="GoGrow"
         months={[
-          month("2026-12", "Diciembre 2026"),
-          month("2026-01", "Enero 2026"),
+          month("2026-12", "Diciembre"),
+          month("2026-01", "Enero", 150, "approved"),
         ]}
       />,
     )
@@ -62,8 +73,28 @@ describe("ConsumerYearHistory", () => {
     expect(
       screen.getAllByRole("button", { name: /Ver el detalle/ }),
     ).toHaveLength(2)
-    expect(screen.getAllByText("$0")).toHaveLength(2)
-    expect(screen.getAllByText("Sin consumos")).toHaveLength(2)
+    expect(screen.getByText("Diciembre")).toBeInTheDocument()
+    expect(screen.getByText("Sin consumos")).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
+  })
+
+  it("shows the empty state when the employee never ordered", () => {
+    render(
+      <ConsumerYearHistory
+        companyName="GoGrow"
+        months={[month("2026-12", "Diciembre"), month("2026-11", "Noviembre")]}
+      />,
+    )
+
+    expect(
+      screen.getByText(
+        "Este empleado todavía no realizó ningún pedido de viandas.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: /Ver el detalle/ }),
+    ).not.toBeInTheDocument()
   })
 
   it("shows only the months of the selected year", async () => {
@@ -72,22 +103,21 @@ describe("ConsumerYearHistory", () => {
       <ConsumerYearHistory
         companyName="GoGrow"
         months={[
-          month("2026-12", "Diciembre 2026"),
-          month("2025-11", "Noviembre 2025", 150, "approved"),
+          month("2026-12", "Diciembre"),
+          month("2025-11", "Noviembre", 150, "approved"),
         ]}
       />,
     )
 
-    expect(screen.getByText("Diciembre 2026")).toBeInTheDocument()
-    expect(screen.queryByText("Noviembre 2025")).not.toBeInTheDocument()
+    expect(screen.getByText("Diciembre")).toBeInTheDocument()
+    expect(screen.queryByText("Noviembre")).not.toBeInTheDocument()
 
     await user.click(screen.getByRole("combobox", { name: "Año" }))
     await user.click(screen.getByRole("option", { name: "2025" }))
 
-    expect(screen.queryByText("Diciembre 2026")).not.toBeInTheDocument()
-    expect(screen.getByText("Noviembre 2025")).toBeInTheDocument()
+    expect(screen.queryByText("Diciembre")).not.toBeInTheDocument()
+    expect(screen.getByText("Noviembre")).toBeInTheDocument()
     expect(screen.getByText("$150")).toBeInTheDocument()
-    expect(screen.getByText("Aprobado")).toBeInTheDocument()
   })
 
   it("keeps the existing navigation to the selected month detail", async () => {
@@ -95,7 +125,7 @@ describe("ConsumerYearHistory", () => {
     render(
       <ConsumerYearHistory
         companyName="GoGrow"
-        months={[month("2026-10", "Octubre 2026", 290, "pending")]}
+        months={[month("2026-10", "Octubre", 290, "pending")]}
       />,
     )
 

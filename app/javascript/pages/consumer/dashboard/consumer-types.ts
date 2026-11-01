@@ -9,5 +9,6 @@ export type CartItem = Schedule & {
   quantity: number
   notes: string
   selections: Selections
+  benefits: number[]
 }
 export type DeliveryAddressOption = ConsumerDashboardCart["addresses"][number]

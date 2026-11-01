@@ -9,7 +9,7 @@ import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
 import PageContainer from "@/components/page-container"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -22,7 +22,6 @@ import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
-import { cn } from "@/lib/utils"
 import { adminConsumers, adminDebtReminders } from "@/routes"
 import type { AdminConsumersShow, BreadcrumbItem } from "@/types"
 
@@ -66,16 +65,11 @@ export default function Show({
       <PageContainer
         title={t(`${page}.title`)}
         back={
-          <Link
-            href={adminConsumers.index()}
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "sm" }),
-              "-ml-2.5",
-            )}
-          >
-            <ArrowLeft aria-hidden="true" />
-            {t(`${page}.back`)}
-          </Link>
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={adminConsumers.index()} aria-label={t(`${page}.back`)}>
+              <ArrowLeft aria-hidden="true" />
+            </Link>
+          </Button>
         }
       >
         <div className="grid gap-4 lg:grid-cols-2">

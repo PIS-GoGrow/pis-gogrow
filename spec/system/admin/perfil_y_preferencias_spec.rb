@@ -179,7 +179,7 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
     it "sin sesión no entra a la cuenta de RRHH" do
       visit admin_account_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(admin_welcome_path)
     end
 
     it "un empleado no entra a la cuenta ni a las preferencias de RRHH aunque escriba la URL" do

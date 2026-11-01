@@ -14,7 +14,17 @@ vi.mock("@inertiajs/react", async () => {
     Form: ({ children }: { children: React.ReactNode }) => (
       <form>{children}</form>
     ),
-    Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
+    Link: ({
+      children,
+      href,
+      ...props
+    }: Omit<React.ComponentProps<"a">, "href"> & {
+      href?: string | { url: string }
+    }) => (
+      <a href={typeof href === "string" ? href : href?.url} {...props}>
+        {children}
+      </a>
+    ),
     usePage: () => ({ props: { locale: "es" } }),
   }
 })
@@ -75,6 +85,14 @@ describe("Admin::OrderEvents Index Page", () => {
 
     const table = screen.getByRole("table")
     expect(within(table).queryByRole("button")).not.toBeInTheDocument()
+  })
+
+  it("goes back to the account like the other account screens", () => {
+    render(<Index events={[event]} total={1} filters={{}} />)
+
+    expect(
+      screen.getByRole("link", { name: "Volver a Cuenta" }),
+    ).toHaveAttribute("href", "/rrhh/cuenta")
   })
 
   it("warns when only the most recent events are shown", () => {

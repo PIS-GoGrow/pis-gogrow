@@ -8,6 +8,11 @@ gift:
   company: gogrow
   created_by: admin
 
+gift2:
+  subsidy_percentage: 50
+  company: gogrow
+  created_by: admin
+
 seniority:
   subsidy_percentage: 25
   company: gogrow

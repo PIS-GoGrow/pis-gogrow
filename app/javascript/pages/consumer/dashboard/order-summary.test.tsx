@@ -5,6 +5,7 @@ import { OrderSummary } from "./order-summary"
 import type { DiscountTier } from "./pricing"
 
 const tier = (percentage: number, discount: number): DiscountTier => ({
+  id: 1,
   percentage,
   quantity: discount > 0 ? 1 : 0,
   discount,
@@ -23,8 +24,8 @@ describe("OrderSummary", () => {
         subtotal={960}
         total={384}
         tiers={[
-          { percentage: 80, quantity: 1, discount: 256 },
-          { percentage: 50, quantity: 2, discount: 320 },
+          { id: 1, percentage: 80, quantity: 1, discount: 256 },
+          { id: 2, percentage: 50, quantity: 2, discount: 320 },
         ]}
       />,
     )
