@@ -1301,8 +1301,8 @@ es:
           label: "Hora límite"
           help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
         profile:
-          title: "Complete su cuenta"
-          description: "Deje todo listo para empezar a recibir pedidos."
+          title: "Completá tu cuenta"
+          description: "Dejá todo listo para empezar a recibir pedidos."
         orders:
           title: "Pedidos"
           today: "Hoy"
