@@ -1879,7 +1879,7 @@ es:
       edit:
         title: "Nueva contraseña"
         heading: "Nueva Contraseña"
-        description: "Creá una nueva contraseña para su cuenta."
+        description: "Creá una nueva contraseña para tu cuenta."
         submit: "Confirmar nueva contraseña"
     settings:
       appearance:

@@ -1812,7 +1812,7 @@
       },
       "provider_password_resets": {
         "edit": {
-          "description": "Creá una nueva contraseña para su cuenta.",
+          "description": "Creá una nueva contraseña para tu cuenta.",
           "heading": "Nueva Contraseña",
           "submit": "Confirmar nueva contraseña",
           "title": "Nueva contraseña"
