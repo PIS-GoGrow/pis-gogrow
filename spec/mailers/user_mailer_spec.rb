@@ -44,6 +44,36 @@ RSpec.describe UserMailer, type: :mailer do
       expect(mail.attachments).to all(be_inline)
       expect(mail.html_part.body.decoded).to include("cid:")
     end
+
+    it "renders the branded layout with proper title, container and image alt attributes" do
+      body = mail.html_part.body.decoded
+
+      expect(body).to include("<title>Fuiste invitado a Viandas GoGrow</title>")
+      expect(body).to include("Fuiste invitado a Viandas GoGrow</h1>")
+      expect(body).to include("max-width: 480px")
+      expect(body).to include('alt="Viandas GoGrow"')
+      expect(body).to include('alt="GoGrow"')
+    end
+
+    context "when company or provider name contains special HTML characters" do
+      let(:user) { Providers::Invite.call(name: "Ana & Cía <Test>", email: "ana_special@proveedor.com", company: companies(:gogrow)) }
+
+      it "escapes HTML entities in the body" do
+        body = mail.html_part.body.decoded
+
+        expect(body).to include("Ana &amp; Cía &lt;Test&gt;")
+      end
+    end
+
+    context "when custom SMTP_FROM is configured" do
+      it "uses configured email address while keeping Viandas sender name" do
+        stub_const("ENV", ENV.to_hash.merge("SMTP_FROM" => "notificaciones@gogrow.com"))
+        custom_mail = described_class.with(otp_code: otp_code, company: companies(:gogrow)).invitation
+
+        expect(custom_mail.from).to eq([ "notificaciones@gogrow.com" ])
+        expect(custom_mail[:from].display_names).to eq([ "Viandas" ])
+      end
+    end
   end
 
   describe "password_reset_code" do
