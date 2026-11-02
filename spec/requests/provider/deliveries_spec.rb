@@ -151,6 +151,15 @@ RSpec.describe "Provider::Deliveries", type: :request do
         expect(providers(:office_provider).reload.home_delivery).to be(false)
       end
 
+      it "audits the home delivery change" do
+        patch provider_deliveries_path, params: { home_delivery: false }
+
+        expect(provider.audit_logs.sole).to have_attributes(
+          user: provider.user,
+          changeset: { "home_delivery" => [ true, false ] }
+        )
+      end
+
       it "keeps published menus and existing orders as they were" do
         schedule = schedules(:future)
         order = orders(:upcoming_pending_future)

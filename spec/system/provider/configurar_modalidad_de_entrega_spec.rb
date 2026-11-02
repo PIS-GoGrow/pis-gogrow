@@ -6,10 +6,9 @@ require "rails_helper"
 # domicilio o únicamente a la oficina de GoGrow, para que los empleados solo
 # puedan elegir modalidades que puedo cumplir."
 #
-# La pantalla es /settings/profile: es donde el sidebar de configuración de
-# cualquier rol manda "Perfil", y ahí vive el switch. El empleado no tiene
-# pantalla propia para esto — su mitad de la historia (elegir entre las
-# modalidades habilitadas) se cubre en
+# La configuración vive en Cuenta > Entregas dentro del flujo del proveedor.
+# El empleado no tiene pantalla propia para esto: su mitad de la historia
+# (elegir entre las modalidades habilitadas) se cubre en
 # consumer/elegir_modalidad_de_entrega_spec.rb.
 #
 # TODO(integración): falta un control para desactivar la entrega en la oficina
@@ -33,27 +32,24 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
 
   let(:provider) { providers(:tuviandita) }
 
-  # El switch de shadcn/radix es un <button role="switch">, no un checkbox:
-  # be_checked mira el atributo `checked`, que ese botón no tiene, así que el
-  # estado real vive en aria-checked.
-  def home_delivery_switch
-    find("#home_delivery", visible: :all)
+  def open_deliveries
+    visit provider_account_path
+    click_link I18n.t("pages.provider_accounts.show.deliveries")
+    expect(page).to have_current_path(provider_deliveries_path)
   end
 
   def home_delivery_checked?
-    home_delivery_switch[:"aria-checked"] == "true"
+    find("#delivery-home", visible: :all)[:"aria-checked"] == "true"
   end
 
-  # El switch es optimista: al clickearlo React lo voltea al toque, antes de que
-  # el server responda. Por eso el assert de persistencia tiene que ir contra la
-  # base y no contra el control — que ya está en el estado deseado aunque el
-  # guardado haya fallado.
   def wait_for_home_delivery(expected)
+    option = expected ? "home" : "office"
+
     Timeout.timeout(Capybara.default_max_wait_time) do
       loop do
         break if provider.reload.home_delivery == expected
 
-        home_delivery_switch.click if home_delivery_checked? != expected
+        find("label[for='delivery-#{option}']").click
         sleep 0.5
       end
     end
@@ -78,11 +74,10 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
   it "lets the provider turn home delivery off and saves it" do
     sign_in provider.user, role: :provider
 
-    visit settings_profile_path
+    open_deliveries
 
     expect(home_delivery_checked?).to be(true)
 
-    home_delivery_switch.click
     wait_for_home_delivery(false)
 
     expect(home_delivery_checked?).to be(false)
@@ -94,11 +89,10 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
     provider.update!(home_delivery: false)
     sign_in provider.user, role: :provider
 
-    visit settings_profile_path
+    open_deliveries
 
     expect(home_delivery_checked?).to be(false)
 
-    home_delivery_switch.click
     wait_for_home_delivery(true)
 
     expect(home_delivery_checked?).to be(true)
@@ -111,15 +105,15 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
     provider.update!(home_delivery: false)
     sign_in provider.user, role: :provider
 
-    visit settings_profile_path
+    open_deliveries
     expect(home_delivery_checked?).to be(false)
 
     sign_out
-    visit settings_profile_path
-    expect(page).to have_current_path(consumer_welcome_path)
+    visit provider_deliveries_path
+    expect(page).to have_current_path(provider_sign_in_path)
 
     sign_in provider.user, role: :provider
-    visit settings_profile_path
+    open_deliveries
 
     expect(home_delivery_checked?).to be(false)
     expect(provider.reload.home_delivery).to be(false)
@@ -131,8 +125,7 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
     other_provider = providers(:endulzate)
     sign_in provider.user, role: :provider
 
-    visit settings_profile_path
-    home_delivery_switch.click
+    open_deliveries
     wait_for_home_delivery(false)
 
     expect(provider.reload.home_delivery).to be(false)
@@ -147,8 +140,7 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
     schedule = publish(menus(:milanesa), Date.current)
     sign_in provider.user, role: :provider
 
-    visit settings_profile_path
-    home_delivery_switch.click
+    open_deliveries
     wait_for_home_delivery(false)
 
     expect(provider.reload.home_delivery).to be(false)
@@ -156,26 +148,22 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
     expect(Schedule.exists?(schedule.id)).to be(true)
   end
 
-  # Transversal — permisos: la sesión de empleado no ve el switch. El control se
-  # esconde en la pantalla (provider es nil en el serializer), pero además el
-  # PATCH se ignora: está el assert del request spec, y acá se chequea que el
-  # empleado tampoco pueda llegar al switch por la UI.
+  # Transversal — permisos: la sesión de empleado no entra al área del proveedor.
   it "does not show the delivery setting to a consumer" do
     sign_in users(:one), role: :consumer
 
-    visit settings_profile_path
+    visit provider_deliveries_path
 
-    expect(page).to have_current_path(settings_profile_path)
-    expect(page).to have_no_selector("#home_delivery")
-    expect(page).to have_no_content(I18n.t("pages.settings.profile.home_delivery.label"))
+    expect(page).to have_current_path(root_path)
+    expect(page).to have_no_selector("#delivery-home")
     expect(providers(:tuviandita).reload.home_delivery).to be(true)
   end
 
   # Transversal — permisos: sin sesión no se llega a la pantalla.
   it "keeps a visitor with no session out of the settings" do
-    visit settings_profile_path
+    visit provider_deliveries_path
 
-    expect(page).to have_current_path(consumer_welcome_path)
-    expect(page).to have_no_content(I18n.t("pages.settings.profile.home_delivery.label"))
+    expect(page).to have_current_path(provider_sign_in_path)
+    expect(page).to have_no_selector("#delivery-home")
   end
 end

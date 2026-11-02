@@ -1685,7 +1685,7 @@ es:
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
         profile: "Perfil"
-        profile_description: "Editá tu nombre, correo, teléfono y contraseña"
+        profile_description: "Editá tu nombre y teléfono"
     provider_onboarding:
       progress: "Paso %{current} de %{total}"
       back: "Volver al paso anterior"
@@ -1889,9 +1889,6 @@ es:
         phone_description: "Lo usamos para enviarte notificaciones por WhatsApp."
         email_description: "Este dato es solo de consulta y no se puede modificar."
         back: "Volver a Perfil y Apariencia"
-        home_delivery:
-          heading: "Editar información de pedidos"
-          label: "También realizo entregas a domicilio"
       password:
         title: "Configuración de contraseña"
         heading: "Actualizar contraseña"

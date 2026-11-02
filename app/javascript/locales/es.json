@@ -1153,7 +1153,7 @@
           "payment_details": "Datos de cobro",
           "payment_details_description": "Configurá dónde querés recibir tus cobros",
           "profile": "Perfil",
-          "profile_description": "Editá tu nombre, correo, teléfono y contraseña",
+          "profile_description": "Editá tu nombre y teléfono",
           "settings": "Configuración",
           "sign_out": "Salir",
           "title": "Cuenta"
@@ -1996,10 +1996,6 @@
           "description": "Actualizá tu nombre y tu teléfono",
           "email_description": "Este dato es solo de consulta y no se puede modificar.",
           "heading": "Información del perfil",
-          "home_delivery": {
-            "heading": "Editar información de pedidos",
-            "label": "También realizo entregas a domicilio"
-          },
           "phone": "Teléfono",
           "phone_description": "Lo usamos para enviarte notificaciones por WhatsApp.",
           "phone_placeholder": "+59899123456",
