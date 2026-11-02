@@ -12,7 +12,7 @@ interface AuthLayoutProps {
   description?: ReactNode
   backHref?: string
   hideLogo?: boolean
-  variant?: "welcome" | "form"
+  variant?: "welcome" | "form" | "landing"
   fullHeight?: boolean
 }
 
@@ -26,13 +26,16 @@ export default function AuthSimpleLayout({
   fullHeight,
 }: PropsWithChildren<AuthLayoutProps>) {
   const isForm = variant === "form"
+  const isLanding = variant === "landing"
   const isFullHeight = fullHeight ?? isForm
   const shouldHideLogo = hideLogo ?? isForm
 
   return (
     <div
       className={cn(
-        "bg-background flex min-h-svh flex-col items-center justify-center p-6 md:p-10",
+        "bg-background flex min-h-svh flex-col items-center p-6 md:p-10",
+        !isLanding && "justify-center",
+        isLanding && "md:justify-center",
         isFullHeight && "justify-start py-8 md:py-10",
       )}
     >
@@ -40,15 +43,24 @@ export default function AuthSimpleLayout({
         className={cn(
           "w-full max-w-[354px]",
           isFullHeight && "flex flex-1 flex-col justify-between",
+          isLanding &&
+            "flex min-h-[calc(100svh-3rem)] flex-col md:block md:min-h-0",
         )}
       >
         <div
           className={cn(
             "flex flex-col gap-6",
             isFullHeight && "flex flex-1 flex-col justify-between",
+            isLanding && "flex flex-1 flex-col justify-between md:block",
           )}
         >
-          <div className="flex flex-col gap-6">
+          <div
+            className={cn(
+              "flex flex-col gap-6",
+              isLanding &&
+                "flex-1 justify-center md:flex-none md:justify-start",
+            )}
+          >
             {backHref && (
               <div>
                 <Link
