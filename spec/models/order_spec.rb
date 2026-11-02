@@ -1027,7 +1027,8 @@ RSpec.describe Order, type: :model do
         notifiable: order
       )
 
-      expect(notification.title).to eq("Tu pedido fue cancelado")
+      expect(notification.title).to eq("Tu pedido fue rechazado")
+      expect(notification.description).to include("fue rechazado por")
       expect(notification.description).to include("no había stock disponible")
     end
 
