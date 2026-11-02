@@ -2,6 +2,9 @@
 
 class NotificationSerializer < ApplicationSerializer
   attributes :id, :title, :description, :requires_action
+
+  typelize title: "string | null"
+  typelize description: "string | null"
 end
 
 # == Schema Information
