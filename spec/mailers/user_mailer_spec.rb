@@ -55,6 +55,14 @@ RSpec.describe UserMailer, type: :mailer do
       expect(body).to include('alt="GoGrow"')
     end
 
+    it "renders gracefully without crashing when brand images are not attached" do
+      allow_any_instance_of(described_class).to receive(:attach_brand_images)
+      unbranded_mail = described_class.with(otp_code: otp_code, company: companies(:gogrow)).invitation
+      body = (unbranded_mail.html_part || unbranded_mail).body.decoded
+
+      expect(body).to include("Fuiste invitado a Viandas GoGrow</h1>")
+    end
+
     context "when company or provider name contains special HTML characters" do
       let(:user) { Providers::Invite.call(name: "Ana & Cía <Test>", email: "ana_special@proveedor.com", company: companies(:gogrow)) }
 
