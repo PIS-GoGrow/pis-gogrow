@@ -57,6 +57,23 @@ describe("Admin account page", () => {
       "href",
       "/rrhh/facturas",
     )
+    expect(
+      screen.getByText("Consultá las facturas de los proveedores"),
+    ).toBeInTheDocument()
+  })
+
+  it("places invoices between subsidies and order events in navigation items", () => {
+    render(<AdminAccount />)
+
+    const links = screen.getAllByRole("link")
+    const hrefs = links.map((link) => link.getAttribute("href"))
+    const subsidiesIndex = hrefs.indexOf("/rrhh/subsidios")
+    const invoicesIndex = hrefs.indexOf("/rrhh/facturas")
+    const orderEventsIndex = hrefs.indexOf("/rrhh/auditoria")
+
+    expect(subsidiesIndex).toBeGreaterThanOrEqual(0)
+    expect(invoicesIndex).toBeGreaterThan(subsidiesIndex)
+    expect(orderEventsIndex).toBeGreaterThan(invoicesIndex)
   })
 
   it("links to profile and appearance without security options", () => {

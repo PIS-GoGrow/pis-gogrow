@@ -171,4 +171,33 @@ describe("AdminMobileNav", () => {
       "aria-current",
     )
   })
+
+  it("mantiene Cuenta activo en Facturas con parámetros de consulta (/rrhh/facturas?estado=pendiente)", () => {
+    currentUrl = "/rrhh/facturas?estado=pendiente"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+    expect(menu.getByRole("link", { name: "Pagos" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("mantiene Cuenta activo en subrutas de Facturas (/rrhh/facturas/1)", () => {
+    currentUrl = "/rrhh/facturas/1"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
 })
