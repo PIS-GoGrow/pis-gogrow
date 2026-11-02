@@ -27,6 +27,7 @@ class UserMailer < ApplicationMailer
     @user = @otp_code.user
     @code = @otp_code.code
     @minutes = (OtpCode::TTL.fetch("password_reset") / 1.minute).to_i
+    @company = params[:company] || @user.consumer&.company || @user.admin&.company || Company.first
 
     attach_brand_images
 

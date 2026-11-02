@@ -93,11 +93,17 @@ RSpec.describe UserMailer, type: :mailer do
       expect(mail.subject).to eq("Restablecimiento de contraseña")
     end
 
-    it "shows the six digit code and how long it lasts" do
+    it "shows the six digit code, exact copy from Figma and how long it lasts" do
       body = mail.html_part.body.decoded
 
+      expect(body).to include("<title>Restablecimiento de Contraseña</title>")
+      expect(body).to include("Restablecimiento de Contraseña</h1>")
+      expect(body).to include("Hola #{users(:provider_user).name},")
+      expect(body).to include("Si fuiste vos, ingresá el siguiente código para crear una nueva contraseña:")
       expect(body).to include(otp_code.code)
-      expect(body).to include("20 minutos")
+      expect(body).to include("text-align: left;")
+      expect(body).to include("Este código es válido por los próximos 20 minutos. Si no solicitaste un restablecimiento de contraseña, contactá a nuestro equipo de soporte.")
+      expect(body).to include(companies(:gogrow).name)
     end
 
     it "is sent as Viandas with the brand images attached inline" do

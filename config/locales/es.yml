@@ -442,9 +442,9 @@ es:
       after: "Una vez que te unas, podés acceder a tu cuenta desde %{url}"
     password_reset_code:
       subject: "Restablecimiento de contraseña"
-      title: "Restablecimiento de contraseña"
+      title: "Restablecimiento de Contraseña"
       greeting: "Hola %{name},"
-      intro: "Recibimos una solicitud para restablecer la contraseña de tu cuenta en Viandas GoGrow. Si la solicitud fue tuya, ingresá el siguiente código para crear una nueva contraseña:"
+      intro: "Recibimos una solicitud para restablecer la contraseña de tu cuenta en Viandas GoGrow. Si fuiste vos, ingresá el siguiente código para crear una nueva contraseña:"
       validity: "Este código es válido por los próximos %{minutes} minutos."
       ignore: "Si no solicitaste un restablecimiento de contraseña, contactá a nuestro equipo de soporte."
     email_verification:
