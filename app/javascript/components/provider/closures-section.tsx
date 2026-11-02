@@ -76,7 +76,10 @@ export default function ClosuresSection({
           <CalendarCog className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
           <div>
             <h3 className="text-base font-semibold">
-              {title ?? (onboarding ? `${t(`${page}.title`)} (opcional)` : t(`${page}.title`))}
+              {title ??
+                (onboarding
+                  ? `${t(`${page}.title`)} (opcional)`
+                  : t(`${page}.title`))}
             </h3>
             <p className="text-muted-foreground text-sm">
               {t(`${page}.description`)}

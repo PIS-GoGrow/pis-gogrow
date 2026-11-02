@@ -82,7 +82,7 @@ export default function Onboarding({
       <Shell>
         <Head title={t(`${PAGE}.intro.title`)} />
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-[#0A0A0A] text-[#FAFAFA] text-base font-semibold text-center p-3">
+          <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-[#0A0A0A] p-3 text-center text-base font-semibold text-[#FAFAFA]">
             {provider.name || t("roles.provider")}
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-100">
@@ -93,7 +93,7 @@ export default function Onboarding({
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <Button asChild className="w-full h-11">
+          <Button asChild className="h-11 w-full">
             <Link href={`${providerOnboarding.show().url}?step=1`}>
               {t(`${PAGE}.intro.start`)}
             </Link>
@@ -103,7 +103,7 @@ export default function Onboarding({
             variant="ghost"
             disabled={skippingIntro}
             onClick={skipIntro}
-            className="w-full text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground w-full"
           >
             {t(`${PAGE}.intro.skip_later`)}
           </Button>

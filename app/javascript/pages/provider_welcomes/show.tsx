@@ -33,7 +33,9 @@ export default function ProviderWelcome({
             size="lg"
             className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
           >
-            <a href={invitation_path}>{t("pages.provider_welcomes.show.join")}</a>
+            <a href={invitation_path}>
+              {t("pages.provider_welcomes.show.join")}
+            </a>
           </Button>
         </div>
       </div>
