@@ -103,11 +103,73 @@ describe("Provider orders page", () => {
     expect(screen.getByText("Camila Herrera - GoGrow")).toBeInTheDocument()
   })
 
-  it("no ofrece exportar los pedidos todavía", () => {
+  it("ofrece exportar los pedidos visibles sin parámetros por defecto", () => {
     renderPage()
 
+    const link = screen.getByRole("link", { name: "Exportar pedidos" })
+
+    expect(link).toHaveAttribute("href", "/proveedor/pedidos/exportar")
+    expect(link).toHaveAttribute("download")
+  })
+
+  it("exporta con la pestaña, el estado, la entrega y la búsqueda aplicados", async () => {
+    const user = userEvent.setup()
+    render(
+      <Index
+        today={TODAY}
+        upcoming_orders={upcoming}
+        past_orders={[...past, order({ id: 11, date: "2026-10-05" })]}
+      />,
+    )
+
+    await user.click(screen.getByRole("tab", { name: "Historial" }))
+    await user.click(screen.getByRole("tab", { name: "Pendiente" }))
+    await user.click(
+      screen.getByRole("button", { name: "Filtrar por tipo de entrega" }),
+    )
+    await user.click(screen.getByLabelText("Oficina GoGrow"))
+    await user.click(screen.getByRole("button", { name: "Aplicar" }))
+    await user.type(
+      screen.getByPlaceholderText("Buscar pedido, plato, consumidor..."),
+      " ana gómez ",
+    )
+
+    const url = new URL(
+      screen
+        .getByRole("link", { name: "Exportar pedidos" })
+        .getAttribute("href") ?? "",
+      "http://localhost",
+    )
+
+    expect(url.pathname).toBe("/proveedor/pedidos/exportar")
+    expect(Object.fromEntries(url.searchParams)).toEqual({
+      periodo: "historial",
+      estado: "pending",
+      entrega: "office",
+      busqueda: "ana gómez",
+    })
+  })
+
+  it("no ofrece exportar cuando los filtros dejan la lista vacía", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(
+      screen.getByPlaceholderText("Buscar pedido, plato, consumidor..."),
+      "zzz",
+    )
+
     expect(
-      screen.queryByRole("button", { name: /exportar/i }),
+      screen.queryByRole("link", { name: "Exportar pedidos" }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("no ofrece exportar un día de hoy sin pedidos", () => {
+    render(<Index today={TODAY} upcoming_orders={[]} past_orders={past} />)
+
+    expect(screen.getByText("No hay pedidos")).toBeInTheDocument()
+    expect(
+      screen.queryByRole("link", { name: "Exportar pedidos" }),
     ).not.toBeInTheDocument()
   })
 

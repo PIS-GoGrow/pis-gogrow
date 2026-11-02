@@ -1,5 +1,6 @@
+import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { Head, Link } from "@inertiajs/react"
-import { X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import ReviewActions from "@/components/reviews/review-actions"
@@ -29,8 +30,13 @@ export default function Error() {
 
       <ReviewPage>
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-8 overflow-y-auto px-6 py-8 text-center">
-          <div className="text-foreground flex size-20 shrink-0 items-center justify-center rounded-full border-2 border-current">
-            <X className="size-10" strokeWidth={2.5} aria-hidden="true" />
+          <div className="bg-primary text-primary-foreground flex size-20 shrink-0 items-center justify-center rounded-full">
+            <HugeiconsIcon
+              icon={Cancel01Icon}
+              size={40}
+              strokeWidth={2}
+              aria-hidden="true"
+            />
           </div>
 
           <div className="grid w-full max-w-88 gap-3">

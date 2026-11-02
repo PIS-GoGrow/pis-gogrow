@@ -13,6 +13,9 @@ export default function ProviderInvitation({ email }: ProviderInvitationsShow) {
     <AuthLayout
       title={t("pages.provider_invitations.show.heading")}
       description={t("pages.provider_invitations.show.description")}
+      backHref="/proveedor"
+      hideLogo={false}
+      variant="form"
     >
       <Head title={t("pages.provider_invitations.show.title")} />
 

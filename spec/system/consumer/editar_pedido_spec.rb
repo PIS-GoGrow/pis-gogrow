@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe "Scroll al editar pedido con múltiples opciones", type: :system do
+RSpec.describe "Modificar un pedido desde la pantalla del plato", type: :system do
   fixtures :users, :consumers, :companies, :providers, :menus, :schedules, :orders, :menu_option_groups
 
   let(:consumer) { consumers(:one) }
@@ -50,30 +50,23 @@ RSpec.describe "Scroll al editar pedido con múltiples opciones", type: :system 
     sign_in user, role: :consumer
   end
 
-  it "habilita scroll en desktop con max-h-[90dvh] y overflow-y-auto, permitiendo acceder a 'Guardar cambios' y modificar el pedido" do
+  it "abre la misma pantalla que al pedir, con lo elegido cargado, y guarda los cambios" do
     visit_hydrated order_path(order)
 
-    expect(page).to have_content("Sorrentinos artesanales")
-    click_button "Editar"
+    click_link "Editar"
 
-    dialog = find("[role=dialog]")
-    expect(dialog[:class]).to include("max-h-[90dvh]")
-    expect(dialog[:class]).to include("overflow-y-auto")
+    expect(page).to have_current_path(edit_order_path(order))
+    expect(page).to have_content("Elegí tu/s salsa")
+    expect(page).to have_content("Elegí tu/s relleno")
+    expect(page).to have_content("Elegí tu/s queso rallado")
+    expect(page).to have_field("notes", with: "Nota inicial del pedido")
 
-    within(dialog) do
-      expect(page).to have_content("Modificar pedido")
-      expect(page).to have_content("Elegí tu/s salsa")
-      expect(page).to have_content("Elegí tu/s relleno")
-      expect(page).to have_content("Elegí tu/s queso rallado")
+    find("label", text: "Bolognesa").click
+    fill_in "notes", with: "Por favor enviar cubiertos extra"
+    click_button "Modificar"
 
-      find("label", text: "Bolognesa").click
-
-      fill_in "notes", with: "Por favor enviar cubiertos extra"
-
-      click_button "Guardar cambios"
-    end
-
-    expect(page).to have_content("Pedido actualizado")
+    confirm_order_modified
+    visit_hydrated order_path(order)
     expect(page).to have_content("Bolognesa")
     expect(page).to have_content("Por favor enviar cubiertos extra")
 
@@ -83,23 +76,16 @@ RSpec.describe "Scroll al editar pedido con múltiples opciones", type: :system 
     expect(salsa_selection["values"]).to eq([ "Bolognesa" ])
   end
 
-  it "mantiene el funcionamiento en viewport mobile" do
+  it "deja guardar los cambios en un viewport mobile" do
     page.current_window.resize_to(375, 667)
 
+    visit_hydrated edit_order_path(order)
+
+    fill_in "notes", with: "Edición desde mobile"
+    click_button "Modificar"
+
+    confirm_order_modified
     visit_hydrated order_path(order)
-
-    click_button "Editar"
-
-    dialog = find("[role=dialog]")
-    expect(dialog[:class]).to include("max-h-[90dvh]")
-    expect(dialog[:class]).to include("overflow-y-auto")
-
-    within(dialog) do
-      fill_in "notes", with: "Edición desde mobile"
-      click_button "Guardar cambios"
-    end
-
-    expect(page).to have_content("Pedido actualizado")
     expect(page).to have_content("Edición desde mobile")
     expect(order.reload.notes).to eq("Edición desde mobile")
   end

@@ -23,7 +23,12 @@ import { useFormatters } from "@/hooks/use-formatters"
 import { useInitials } from "@/hooks/use-initials"
 import AppLayout from "@/layouts/app-layout"
 import { cn } from "@/lib/utils"
-import { adminConsumers, adminDashboard, adminPayments } from "@/routes"
+import {
+  adminBenefitUsage,
+  adminConsumers,
+  adminDashboard,
+  adminPayments,
+} from "@/routes"
 import type { AdminDashboardIndex } from "@/types/serializers"
 
 const page = "pages.admin.dashboard"
@@ -151,6 +156,13 @@ export default function AdminDashboard({
                 className="w-full bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
               >
                 {t(`${page}.benefit.view_detail`)}
+              </Button>
+              <Button asChild variant="link" className="w-full">
+                <Link
+                  href={adminBenefitUsage.analysis({ query: { month } }).url}
+                >
+                  {t("benefit_usage.ui.analysis_link")}
+                </Link>
               </Button>
             </CardContent>
           </Card>

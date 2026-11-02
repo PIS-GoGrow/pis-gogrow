@@ -14,7 +14,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { useFormatters } from "@/hooks/use-formatters"
 import { consumerOrders, consumerReviews } from "@/routes"
 import type { Order } from "@/types"
 
@@ -25,11 +24,6 @@ interface OrderCardProps {
 
 export default function OrderCard({ order, section }: OrderCardProps) {
   const { t } = useTranslation()
-  const { formatMoney } = useFormatters()
-
-  // El empleado paga el precio ya subsidiado; el base se muestra al lado solo
-  // cuando el subsidio efectivamente lo bajó.
-  const charged = order.discounted_price ?? order.price
 
   const notReceived =
     order.status === "cancelled" || order.status === "rejected"
@@ -66,7 +60,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
         </CardAction>
       </CardHeader>
 
-      <CardContent className="flex items-baseline justify-between gap-3 px-4">
+      <CardContent className="px-4">
         <p className="text-muted-foreground text-sm">
           {order.address
             ? t(`pages.orders.index.${addressKey}`, {
@@ -76,14 +70,6 @@ export default function OrderCard({ order, section }: OrderCardProps) {
                 ),
               })
             : t("pages.orders.index.no_address")}
-        </p>
-
-        <p className="shrink-0 text-sm font-medium">
-          {charged == null ? (
-            t("pages.orders.index.no_price")
-          ) : (
-            <>{formatMoney(charged)}</>
-          )}
         </p>
       </CardContent>
 
@@ -158,9 +144,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               className="w-full"
               asChild
             >
-              <Link
-                href={consumerOrders.show(order.id, { query: { edit: 1 } })}
-              >
+              <Link href={consumerOrders.edit(order.id)}>
                 <Pencil aria-hidden="true" />
                 {t("pages.orders.show.edit")}
               </Link>

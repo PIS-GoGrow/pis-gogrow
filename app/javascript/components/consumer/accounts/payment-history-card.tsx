@@ -30,12 +30,14 @@ interface AccountDetail {
 
 interface PaymentHistoryCardProps {
   account: Account
+  providerName?: string
   setDetail: React.Dispatch<React.SetStateAction<AccountDetail | null>>
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export default function PaymentHistoryCard({
   account,
+  providerName,
   setDetail,
   setLoading,
 }: PaymentHistoryCardProps) {
@@ -65,15 +67,22 @@ export default function PaymentHistoryCard({
   }
 
   return (
-    <Card className="bg-zinc-50 dark:bg-zinc-900">
-      <CardHeader className="grid gap-4">
+    <Card className="bg-background py-4 shadow-none">
+      <CardHeader className="grid grid-cols-1 gap-3 px-4">
         <CardDescription className="flex items-center">
-          {account.month}
-          {/* Como es historial los payments estan siempre aprobados */}
-          <Badge className="ml-auto bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
-            {t("pages.accounts.show.status_accepted")}
-          </Badge>
+          {account.due_date}
+          <div className="ml-auto">
+            <StatusBadge
+              kind="payment"
+              status="approved"
+              label={t("pages.accounts.show.status_accepted")}
+            />
+          </div>
         </CardDescription>
+
+        <p className="text-sm font-semibold">
+          {providerName ? `${providerName}: ${account.month}` : account.month}
+        </p>
 
         <Separator />
 
@@ -94,7 +103,7 @@ export default function PaymentHistoryCard({
               onClick={() => {
                 void handleSeeDetail()
               }}
-              className="ml-auto"
+              className="ml-auto h-auto p-0 font-semibold hover:bg-transparent has-[>svg]:px-0 dark:hover:bg-transparent"
               variant="ghost"
             >
               <Eye aria-hidden="true" /> {t("pages.accounts.show.see_detail")}
@@ -102,12 +111,10 @@ export default function PaymentHistoryCard({
           </SheetTrigger>
         </CardTitle>
 
-        <Separator />
-
         {receipts.length > 1 ? (
           <Collapsible className="grid gap-2">
             <CollapsibleTrigger asChild>
-              <Button variant="outline">
+              <Button variant="secondary">
                 <Eye aria-hidden="true" />
                 {t("pages.accounts.show.see_receipts")}
               </Button>
@@ -137,7 +144,15 @@ export default function PaymentHistoryCard({
                           )}
                         </Badge>
                       )}
-                      <StatusBadge kind="payment" status={payment.status} />
+                      <StatusBadge
+                        kind="payment"
+                        status={payment.status}
+                        label={
+                          payment.status === "approved"
+                            ? t("pages.accounts.show.status_accepted")
+                            : undefined
+                        }
+                      />
                     </div>
                   </div>
 
@@ -165,14 +180,14 @@ export default function PaymentHistoryCard({
             </CollapsibleContent>
           </Collapsible>
         ) : receipts.length === 1 ? (
-          <Button variant="outline" asChild>
+          <Button variant="secondary" asChild>
             <a href={receipts[0].receipt_url} download>
               <Download aria-hidden="true" />{" "}
               {t("pages.accounts.show.download_receipt")}
             </a>
           </Button>
         ) : (
-          <Button variant="outline" disabled>
+          <Button variant="secondary" disabled>
             <Download aria-hidden="true" />{" "}
             {t("pages.accounts.show.download_receipt")}
           </Button>
