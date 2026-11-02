@@ -94,12 +94,17 @@ RSpec.describe UserMailer, type: :mailer do
     end
 
     it "shows the six digit code and how long it lasts" do
-      body = (mail.html_part || mail).body.decoded
+      body = mail.html_part.body.decoded
 
       expect(body).to include(otp_code.code)
       expect(body).to include("20 minutos")
-      expect(mail.attachments["serving-food.png"]).to be_present
-      expect(mail.attachments["gogrow-logo.png"]).to be_present
+    end
+
+    it "is sent as Viandas with the brand images attached inline" do
+      expect(mail[:from].display_names).to eq([ "Viandas" ])
+      expect(mail.attachments.map(&:filename)).to contain_exactly("logo-mark.png", "gogrow-wordmark.png")
+      expect(mail.attachments).to all(be_inline)
+      expect(mail.html_part.body.decoded).to include("cid:")
     end
   end
 end

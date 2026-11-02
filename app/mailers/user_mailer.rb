@@ -28,18 +28,10 @@ class UserMailer < ApplicationMailer
     @code = @otp_code.code
     @minutes = (OtpCode::TTL.fetch("password_reset") / 1.minute).to_i
 
-    attach_branding_images
+    attach_brand_images
 
-    mail to: @user.email, subject: t(".subject")
-  end
-
-  private
-
-  def attach_branding_images
-    serving_food = Rails.root.join("public/serving-food.png")
-    gogrow_logo = Rails.root.join("public/gogrow-logo.png")
-
-    attachments.inline["serving-food.png"] = serving_food.read if serving_food.file?
-    attachments.inline["gogrow-logo.png"] = gogrow_logo.read if gogrow_logo.file?
+    mail to: @user.email, subject: t(".subject"), template_name: "password_reset_code" do |format|
+      format.html { render layout: "branded_mailer" }
+    end
   end
 end
