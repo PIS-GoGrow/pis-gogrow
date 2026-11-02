@@ -10,6 +10,10 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
   let(:employee_user) { users(:one) }
   let(:consumer_account) { accounts(:one_tuviandita_current) }
 
+  around do |example|
+    travel_to(Date.current.change(day: 15).noon) { example.run }
+  end
+
   before do
     Notification::Configuration.find_or_create_by!(key: "provider_payment_reminders") do |c|
       c.roles = [ "consumer" ]
