@@ -98,6 +98,7 @@ es:
     close: "Cerrar"
     confirm_password: "Confirmar contraseña"
     current_password: "Contraseña actual"
+    email: "Email"
     email_address: "Correo electrónico"
     email_placeholder: "correo@ejemplo.com"
     full_name: "Nombre completo"
@@ -1854,6 +1855,7 @@ es:
         forgot:
           title: "¿Olvidaste tu contraseña?"
           description: "Ingresá tu email y te enviaremos un código para restablecer tu contraseña."
+          email_label: "Email"
           submit: "Enviar código"
     provider_welcomes:
       show:

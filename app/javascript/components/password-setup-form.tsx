@@ -43,7 +43,7 @@ export default function PasswordSetupForm({
             {email != null && (
               <Field>
                 <FieldLabel htmlFor="email">
-                  {t("common.email_address")}
+                  {t("common.email")}
                 </FieldLabel>
                 <Input
                   id="email"

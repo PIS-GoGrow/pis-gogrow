@@ -107,6 +107,7 @@
       "confirm_password": "Confirmar contraseña",
       "consumer": "Consumidor",
       "current_password": "Contraseña actual",
+      "email": "Email",
       "email_address": "Correo electrónico",
       "email_placeholder": "correo@ejemplo.com",
       "full_name": "Nombre completo",
@@ -1846,6 +1847,7 @@
           "email_placeholder": "ejemplo@empresa.com",
           "forgot": {
             "description": "Ingresá tu email y te enviaremos un código para restablecer tu contraseña.",
+            "email_label": "Email",
             "submit": "Enviar código",
             "title": "¿Olvidaste tu contraseña?"
           },
