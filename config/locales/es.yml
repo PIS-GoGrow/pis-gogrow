@@ -98,6 +98,7 @@ es:
     close: "Cerrar"
     confirm_password: "Confirmar contraseña"
     current_password: "Contraseña actual"
+    email: "Email"
     email_address: "Correo electrónico"
     email_placeholder: "correo@ejemplo.com"
     full_name: "Nombre completo"
@@ -282,8 +283,8 @@ es:
         other: "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} viandas para entregas del %{period}."
   notification_configurations:
     provider_orders:
-      title: "Pedidos nuevos"
-      description: "Recibí una notificación cuando un empleado te haga un pedido."
+      title: "Nuevos pedidos"
+      description: "Recibí una notificación cada vez que un cliente haga un pedido nuevo."
     provider_payments:
       title: "Comprobantes de pago"
       description: "Recibí una notificación cuando te envíen un comprobante de pago."
@@ -434,7 +435,7 @@ es:
     greeting: "Hola,"
     support: "¿Tenés dudas o necesitás ayuda? Respondé este correo y nuestro equipo de soporte te va a ayudar a resolverlo."
     invitation:
-      subject: "Invitación a Viandas GoGrow"
+      subject: "Fuiste invitado a Viandas GoGrow"
       title: "Fuiste invitado a Viandas GoGrow"
       greeting: "Hola %{name},"
       intro: "%{company} te invitó a unirte como proveedor de viandas a través de la plataforma Viandas GoGrow."
@@ -442,9 +443,9 @@ es:
       after: "Una vez que te unas, podés acceder a tu cuenta desde %{url}"
     password_reset_code:
       subject: "Restablecimiento de contraseña"
-      title: "Restablecimiento de contraseña"
+      title: "Restablecimiento de Contraseña"
       greeting: "Hola %{name},"
-      intro: "Recibimos una solicitud para restablecer la contraseña de tu cuenta en Viandas GoGrow. Si la solicitud fue tuya, ingresá el siguiente código para crear una nueva contraseña:"
+      intro: "Recibimos una solicitud para restablecer la contraseña de tu cuenta en Viandas GoGrow. Si fuiste vos, ingresá el siguiente código para crear una nueva contraseña:"
       validity: "Este código es válido por los próximos %{minutes} minutos."
       ignore: "Si no solicitaste un restablecimiento de contraseña, contactá a nuestro equipo de soporte."
     email_verification:
@@ -1303,8 +1304,8 @@ es:
           label: "Hora límite"
           help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
         profile:
-          title: "Complete su cuenta"
-          description: "Deje todo listo para empezar a recibir pedidos."
+          title: "Completá tu cuenta"
+          description: "Dejá todo listo para empezar a recibir pedidos."
         orders:
           title: "Pedidos"
           today: "Hoy"
@@ -1694,22 +1695,28 @@ es:
       continue: "Continuar"
       finish: "Finalizar"
       skip: "Omitir por ahora"
+      intro:
+        title: "¿Configuramos tu cuenta?"
+        description: "Completá los datos necesarios y dejá todo listo para recibir pedidos y gestionar tu negocio."
+        start: "Comenzar"
+        skip_later: "Configurar más tarde"
       steps:
         1:
           title: "Datos de cobro"
-          description: "Ingrese los datos de la cuenta donde recibirá los pagos de sus pedidos."
+          description: "Ingresá los datos de la cuenta donde recibirás los pagos de tus pedidos."
         2:
-          title: "Configure sus pedidos"
-          description: "Defina hasta qué hora recibe pedidos y qué días no estará disponible."
+          title: "Configurá tus pedidos"
+          description: "Definí hasta qué hora recibís pedidos y qué días no estarás disponible."
+          closures_title: "Cierres programados (opcional)"
         3:
-          title: "Configure sus entregas"
-          description: "Elija dónde realiza sus entregas y si acepta direcciones personalizadas."
+          title: "Configurá tus entregas"
+          description: "Elegí dónde realizás tus entregas y si aceptás direcciones personalizadas."
         4:
           title: "Notificaciones"
-          description: "Elija qué alertas desea recibir sobre sus pedidos y pagos."
+          description: "Configurá qué alertas querés recibir."
       done:
         title: "¡Todo listo!"
-        description: "Su cuenta ya está configurada y puede empezar a recibir pedidos."
+        description: "Tu cuenta ya está configurada y podés empezar a recibir pedidos."
         cta: "Ir al Inicio"
     provider_payment_details:
       show:
@@ -1850,6 +1857,7 @@ es:
         forgot:
           title: "¿Olvidaste tu contraseña?"
           description: "Ingresá tu email y te enviaremos un código para restablecer tu contraseña."
+          email_label: "Email"
           submit: "Enviar código"
     provider_welcomes:
       show:
@@ -1875,7 +1883,7 @@ es:
       edit:
         title: "Nueva contraseña"
         heading: "Nueva Contraseña"
-        description: "Creá una nueva contraseña para su cuenta."
+        description: "Creá una nueva contraseña para tu cuenta."
         submit: "Confirmar nueva contraseña"
     settings:
       appearance:

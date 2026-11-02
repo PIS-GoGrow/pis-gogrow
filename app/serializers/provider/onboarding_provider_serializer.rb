@@ -5,6 +5,11 @@ class Provider::OnboardingProviderSerializer < ApplicationSerializer
 
   attributes :bank_name, :bank_account_type, :bank_account_number, :bank_account_holder, :tax_id, :home_delivery
 
+  typelize :string
+  attribute :name do |provider|
+    provider.user&.name || ""
+  end
+
   typelize :string?
   attribute :order_deadline do |provider|
     provider.order_deadline&.strftime("%H:%M")
