@@ -454,6 +454,8 @@
       },
       "admin": {
         "account": {
+          "invoices": "Facturas",
+          "invoices_description": "Consultá las facturas de los proveedores",
           "more_options": "Más opciones",
           "notifications": "Notificaciones",
           "notifications_description": "Configurá qué alertas querés recibir",
@@ -677,6 +679,7 @@
         },
         "invoices": {
           "index": {
+            "back": "Volver a Cuenta",
             "description": "Las facturas que los proveedores le emiten a GoGrow, con su historial.",
             "download": "Descargar %{name}",
             "empty_description": "Cuando un proveedor cargue la factura de un período, va a aparecer acá.",
