@@ -1010,6 +1010,105 @@ RSpec.describe Order, type: :model do
       expect(notification.description).to start_with("#{order.consumer.user.name} pidió #{order.amount} de #{order.menu_name}")
     end
 
+    it "updates the active provider notification when the order quantity changes" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      notification = Notification.find_by!(
+        event: "order_received",
+        notifiable: order
+      )
+
+      expect(notification.description).to include("pidió #{order.amount} de")
+
+      delivery = {
+        delivery_method: order.delivery_method,
+        address: order.address
+      }
+
+      new_amount = order.amount + 1
+
+      expect(
+        order.modify(
+          by: users(:one),
+          quantity: new_amount,
+          notes: order.notes,
+          delivery:
+        )
+      ).to eq(order)
+
+      expect(notification.reload.description).to include("pidió #{new_amount} de")
+    end
+
+    it "creates a new provider notification when quantity changes after the previous one was closed" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      original_notification = Notification.find_by!(
+        event: "order_received",
+        notifiable: order
+      )
+      original_notification.close!
+
+      delivery = {
+        delivery_method: order.delivery_method,
+        address: order.address
+      }
+
+      new_amount = order.amount + 1
+
+      expect {
+        order.modify(
+          by: users(:one),
+          quantity: new_amount,
+          notes: order.notes,
+          delivery:
+        )
+      }.to change {
+        Notification.where(
+          event: "order_received",
+          notifiable: order
+        ).count
+      }.by(1)
+
+      new_notification = Notification.find_by!(
+        event: "order_received",
+        notifiable: order,
+        closed_at: nil
+      )
+
+      expect(new_notification.description).to include("pidió #{new_amount} de")
+      expect(original_notification.reload.closed_at).to be_present
+    end
+
+    it "does not update the provider notification when the quantity does not change" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      notification = Notification.find_by!(
+        event: "order_received",
+        notifiable: order
+      )
+
+      original_description = notification.description
+      original_updated_at = notification.updated_at
+
+      delivery = {
+        delivery_method: order.delivery_method,
+        address: order.address
+      }
+
+      order.modify(
+        by: users(:one),
+        quantity: order.amount,
+        notes: "Sin sal",
+        delivery:
+      )
+
+      expect(notification.reload.description).to eq(original_description)
+      expect(notification.updated_at).to eq(original_updated_at)
+    end
+
     it "notifies the consumer when the provider rejects an order" do
       order = orders(:upcoming_pending_today)
 
