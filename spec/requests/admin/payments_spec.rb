@@ -353,7 +353,6 @@ RSpec.describe "Admin::Payments", type: :request do
         bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: "Tu Viandita S.A."
       )
     end
-    end
 
     it "creates a submitted payment with a receipt for the company account" do
       sign_in users(:admin), role: :admin

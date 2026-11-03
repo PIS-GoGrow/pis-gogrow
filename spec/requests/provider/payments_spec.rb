@@ -543,4 +543,88 @@ RSpec.describe "Provider payments", type: :request do
       expect(reminder2.reload.closed_at).to be_nil
     end
   end
+
+  describe "robustness and security around partial payments" do
+    it "rejects marking as partial when payment is already approved (interface bypass)" do
+      user, payment = setup_submitted_payment
+      payment.approve
+      sign_in(user, role: :provider)
+
+      patch provider_payment_path(payment), params: { status: "partial" }
+
+      expect(response).to redirect_to(provider_collections_path)
+      expect(flash[:alert]).to eq(I18n.t("validations.payment_not_reviewable"))
+      expect(payment.reload).to be_approved
+    end
+
+    it "rejects marking as partial when payment is already rejected (interface bypass)" do
+      user, payment = setup_submitted_payment
+      payment.reject_with("Comprobante ilegible")
+      sign_in(user, role: :provider)
+
+      patch provider_payment_path(payment), params: { status: "partial" }
+
+      expect(response).to redirect_to(provider_collections_path)
+      expect(flash[:alert]).to eq(I18n.t("validations.payment_not_reviewable"))
+      expect(payment.reload).to be_rejected
+    end
+
+    it "returns 422 unprocessable_entity for unexpected data types in status" do
+      user, payment = setup_submitted_payment
+      sign_in(user, role: :provider)
+
+      patch provider_payment_path(payment), params: { status: "desconocido" }
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(payment.reload).to be_submitted
+
+      patch provider_payment_path(payment), params: { status: 9999 }
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(payment.reload).to be_submitted
+
+      patch provider_payment_path(payment), params: { status: [ "partial" ] }
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(payment.reload).to be_submitted
+
+      patch provider_payment_path(payment), params: {}
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(payment.reload).to be_submitted
+    end
+
+    it "enforces role access control: redirects consumers and admins" do
+      _user, payment = setup_submitted_payment
+      consumer_user = payment.account.owner.user
+
+      sign_in(consumer_user, role: :consumer)
+      patch provider_payment_path(payment), params: { status: "partial" }
+      expect(response).to redirect_to(root_path)
+      expect(payment.reload).to be_submitted
+
+      admin_user = User.create!(email: "admin-intruder@gmail.com", name: "Admin", password: "password123456")
+      Admin.create!(user: admin_user, company: payment.account.owner.company)
+      sign_in(admin_user, role: :admin)
+      patch provider_payment_path(payment), params: { status: "partial" }
+      expect(response).to redirect_to(root_path)
+      expect(payment.reload).to be_submitted
+    end
+
+    it "redirects unauthenticated requests to sign in" do
+      _user, payment = setup_submitted_payment
+
+      patch provider_payment_path(payment), params: { status: "partial" }
+
+      expect(response).to redirect_to(provider_sign_in_path)
+      expect(payment.reload).to be_submitted
+    end
+
+    it "returns 404 when a provider tries to review a payment of another provider" do
+      _user, payment = setup_submitted_payment
+      other_provider = create_provider("other-intruder-provider@gmail.com")
+      sign_in(other_provider.user, role: :provider)
+
+      patch provider_payment_path(payment), params: { status: "partial" }
+
+      expect(response).to have_http_status(:not_found)
+      expect(payment.reload).to be_submitted
+    end
+  end
 end

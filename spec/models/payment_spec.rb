@@ -60,12 +60,19 @@ RSpec.describe Payment, type: :model do
     expect(payments.map { it.reload.status }).to eq(%w[pending approved rejected partial])
   end
 
-  it "does not reopen a historical partial payment" do
+  it "does not reopen or modify a historical partial payment" do
     payment = payment_with_receipt.tap(&:save!)
     payment.mark_partial
 
     expect(payment.update(status: :submitted)).to be(false)
     expect(payment.errors[:status]).to be_present
+
+    expect(payment.update(status: :approved)).to be(false)
+    expect(payment.errors[:status]).to be_present
+
+    expect(payment.update(status: :rejected, rejection_reason: "Rechazo")).to be(false)
+    expect(payment.errors[:status]).to be_present
+
     expect(payment.reload).to be_partial
   end
 

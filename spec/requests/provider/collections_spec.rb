@@ -375,6 +375,24 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(props[:payments].pluck(:status)).to eq([ "rejected" ])
     end
 
+    it "renders the collection page with partial status in inertia props when account has a partial payment" do
+      account = accounts(:one_tuviandita_current)
+      account.payments.destroy_all
+      payment = account.payments.build(provider: account.provider, status: :partial)
+      payment.receipt.attach(io: StringIO.new("partial"), filename: "parcial.png", content_type: "image/png")
+      payment.save!
+
+      sign_in provider_user, role: :provider
+      get provider_collection_path(account)
+
+      expect(response).to have_http_status(:ok)
+      expect(inertia).to render_component("provider/collections/show")
+      expect(inertia).to have_props { |page|
+        page[:account][:status] == "partial" &&
+          page[:payments].first[:status] == "partial"
+      }
+    end
+
     it "does not find the account of another provider" do
       sign_in users(:other_provider_user), role: :provider
 
