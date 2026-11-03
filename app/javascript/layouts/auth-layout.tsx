@@ -14,6 +14,7 @@ export default function AuthLayout({
   backHref?: string
   hideLogo?: boolean
   variant?: "welcome" | "form"
+  fullHeight?: boolean
 }) {
   return (
     <AuthLayoutTemplate title={title} description={description} {...props}>

@@ -44,6 +44,9 @@ RSpec.describe "Invitación y registro de proveedor", type: :system do
 
     # Entra al onboarding del proveedor y completa los pasos para llegar al panel
     expect(page).to have_current_path(provider_onboarding_path)
+    expect(page).to have_content("¿Configuramos tu cuenta?")
+    click_link "Comenzar"
+
     expect(page).to have_content("Paso 1 de 4")
     find("button[aria-label='Omitir por ahora']").click
 
@@ -54,7 +57,7 @@ RSpec.describe "Invitación y registro de proveedor", type: :system do
     find("button[aria-label='Omitir por ahora']").click
 
     expect(page).to have_content("Paso 4 de 4")
-    find("button[aria-label='Omitir por ahora']").click
+    click_button "Finalizar"
 
     expect(page).to have_content("¡Todo listo!")
     click_on "Ir al Inicio"

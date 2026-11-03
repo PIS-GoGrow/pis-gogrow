@@ -187,11 +187,12 @@ RSpec.describe "Admin::Payments", type: :request do
 
         endulzate = inertia.props[:providers].find { it[:id] == providers(:endulzate).id }
         expect(endulzate).to include(
-          bank_name: "Banco Itaú", bank_account_number: "1951234", bank_account_holder: "Noelia Patricia Pinheiro"
+          bank_name: "Banco Itaú", bank_account_number: "1951234", bank_account_holder: "Noelia Patricia Pinheiro",
+          payment_details_complete: true
         )
         expect(endulzate).not_to have_key(:tax_id)
         expect(inertia.props[:providers].find { it[:id] == providers(:tuviandita).id })
-          .to include(bank_name: nil, bank_account_number: nil, bank_account_holder: nil)
+          .to include(bank_name: nil, bank_account_number: nil, bank_account_holder: nil, payment_details_complete: false)
       end
 
       it "lists every provider so the ones without debt also show up" do
@@ -345,6 +346,13 @@ RSpec.describe "Admin::Payments", type: :request do
       payment.receipt.attach(io: StringIO.new("receipt"), filename:, content_type: "image/png")
       payment.save!
       payment
+    end
+
+    before do
+      providers(:tuviandita).update!(
+        bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: "Tu Viandita S.A."
+      )
+    end
     end
 
     it "creates a submitted payment with a receipt for the company account" do
@@ -545,6 +553,69 @@ RSpec.describe "Admin::Payments", type: :request do
       follow_redirect!
       expect(inertia).to have_props(
         errors: { receipt: [ I18n.t("activerecord.errors.models.payment.attributes.receipt.already_under_review") ] }
+      )
+    end
+
+    it "does not accept a receipt while the provider has not loaded its payment details" do
+      providers(:tuviandita).update!(bank_account_number: nil)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(response).to have_http_status(:see_other)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: {
+          receipt: [
+            I18n.t("activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing")
+          ]
+        }
+      )
+    end
+
+    it "rejects direct POST when provider bank_name is blank or whitespace" do
+      providers(:tuviandita).update!(bank_name: "   ")
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(response).to have_http_status(:see_other)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: {
+          receipt: [
+            I18n.t("activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing")
+          ]
+        }
+      )
+    end
+
+    it "rejects direct POST when provider bank_account_holder is nil" do
+      providers(:tuviandita).update!(bank_account_holder: nil)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(response).to have_http_status(:see_other)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: {
+          receipt: [
+            I18n.t("activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing")
+          ]
+        }
       )
     end
 

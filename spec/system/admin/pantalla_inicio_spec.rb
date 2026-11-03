@@ -76,7 +76,7 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
       expect(page).to have_css("[data-active='true']", text: "Inicio")
       expect(page).to have_link("Subsidios")
       expect(page).to have_link("Empleados")
-      expect(page).to have_link("Cuenta")
+      expect(page).to have_no_link("Cuenta")
       expect(page).to have_link("Pagos", href: admin_payments_path)
     end
   end

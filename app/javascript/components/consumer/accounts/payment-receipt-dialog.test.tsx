@@ -170,6 +170,30 @@ describe("PaymentReceiptDialog", () => {
     )
   })
 
+  it("shows custom uploadDisabledHint instead of the default review hint when provided", () => {
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        payments={[]}
+        uploadDisabled
+        uploadDisabledHint="Podrás subir el comprobante cuando el proveedor cargue sus datos de cobro."
+      />,
+    )
+
+    const button = screen.getByRole("button", {
+      name: "Subir comprobante de pago",
+    })
+    expect(button).toBeDisabled()
+    expect(button).toHaveAccessibleDescription(
+      "Podrás subir el comprobante cuando el proveedor cargue sus datos de cobro.",
+    )
+    expect(
+      screen.getByText(
+        "Podrás subir el comprobante cuando el proveedor cargue sus datos de cobro.",
+      ),
+    ).toBeInTheDocument()
+  })
+
   it("does not open the upload dialog when clicking the button if uploadDisabled is set", async () => {
     const user = userEvent.setup()
     render(

@@ -26,7 +26,7 @@ export default function Index({
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")
-  const todayDate = today()
+  const todayDate = week.today ?? today()
   const initialDate =
     week.days.find((d) => d.date === todayDate)?.date ??
     week.days[0]?.date ??
@@ -208,6 +208,7 @@ export default function Index({
             loading={loading}
             total={pricing?.total}
             openDetail={openDetail}
+            todayDate={todayDate}
           />
         )}
         {view === "detail" && selected && (

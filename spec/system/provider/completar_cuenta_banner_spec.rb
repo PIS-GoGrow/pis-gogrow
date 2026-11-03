@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe "Banner 'Complete su cuenta' en el panel del proveedor" do
+RSpec.describe "Banner 'Completá tu cuenta' en el panel del proveedor" do
   fixtures :users, :providers, :companies, :consumers, :admins
 
   let(:provider) { providers(:tuviandita) }
@@ -20,11 +20,11 @@ RSpec.describe "Banner 'Complete su cuenta' en el panel del proveedor" do
       sign_in provider_user, role: :provider
       visit_hydrated provider_dashboard_path
 
-      expect(page).to have_content("Complete su cuenta")
-      expect(page).to have_content("Deje todo listo para empezar a recibir pedidos.")
+      expect(page).to have_content("Completá tu cuenta")
+      expect(page).to have_content("Dejá todo listo para empezar a recibir pedidos.")
       expect(page).to have_content("2/4")
 
-      click_on "Complete su cuenta"
+      click_on "Completá tu cuenta"
 
       expect(page).to have_current_path(provider_account_path)
     end
@@ -40,8 +40,8 @@ RSpec.describe "Banner 'Complete su cuenta' en el panel del proveedor" do
       sign_in provider_user, role: :provider
       visit_hydrated provider_dashboard_path
 
-      expect(page).to have_no_content("Complete su cuenta")
-      expect(page).to have_no_content("Deje todo listo para empezar a recibir pedidos.")
+      expect(page).to have_no_content("Completá tu cuenta")
+      expect(page).to have_no_content("Dejá todo listo para empezar a recibir pedidos.")
     end
   end
 end
