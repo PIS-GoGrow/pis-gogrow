@@ -31,7 +31,7 @@ describe("DateRangePicker", () => {
     expect(renderRange("2027-06-09", "")).toHaveTextContent("09/06/27")
   })
 
-  it("opens a calendar that starts on Sunday with the English header of the Figma", async () => {
+  it("opens a calendar in Spanish that starts on Sunday", async () => {
     const user = userEvent.setup()
     renderRange("2027-06-09", "2027-06-27")
 
@@ -39,10 +39,47 @@ describe("DateRangePicker", () => {
 
     expect(
       screen
-        .getAllByText(/^(Su|Mo|Tu|We|Th|Fr|Sa)$/)
+        .getAllByText(/^(do|lu|ma|mi|ju|vi|sá)$/)
         .map((header) => header.textContent),
-    ).toEqual(["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"])
-    expect(screen.getAllByText("Jun").length).toBeGreaterThan(0)
+    ).toEqual(["do", "lu", "ma", "mi", "ju", "vi", "sá"])
+    expect(screen.getAllByText("jun").length).toBeGreaterThan(0)
+  })
+
+  it("does not let you pick Saturdays or Sundays when only weekdays are allowed", async () => {
+    const user = userEvent.setup()
+    render(
+      <DateRangePicker
+        id="range"
+        from="2027-06-09"
+        to="2027-06-11"
+        weekdaysOnly
+        onChange={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByRole("button"))
+
+    for (const weekend of screen.getAllByRole("button", {
+      name: /^(sábado|domingo),/,
+    })) {
+      expect(weekend).toBeDisabled()
+    }
+    const weekdays = screen.getAllByRole("button", {
+      name: /^(lunes|martes|miércoles|jueves|viernes),/,
+    })
+    expect(weekdays.some((weekday) => !weekday.hasAttribute("disabled"))).toBe(
+      true,
+    )
+  })
+
+  it("lets you navigate to next year", async () => {
+    const user = userEvent.setup()
+    renderRange("", "")
+
+    await user.click(screen.getByRole("button"))
+
+    const nextYear = String(new Date().getFullYear() + 1)
+    expect(screen.getByRole("option", { name: nextYear })).toBeInTheDocument()
   })
 
   it("writes a single day once", () => {
