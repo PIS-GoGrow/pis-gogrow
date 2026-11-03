@@ -6,4 +6,7 @@ class PaymentProviderSerializer < ProviderSerializer
   typelize_from Provider
 
   attributes :bank_name, :bank_account_number, :bank_account_holder
+
+  typelize :boolean
+  attribute :payment_details_complete, &:payment_details_complete?
 end
