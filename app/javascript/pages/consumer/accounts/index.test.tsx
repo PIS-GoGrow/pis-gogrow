@@ -138,6 +138,7 @@ describe("Consumer Payments Page", () => {
       bank_name: null,
       bank_account_number: null,
       bank_account_holder: null,
+      payment_details_complete: false,
     })
 
     const closedPeriod = (

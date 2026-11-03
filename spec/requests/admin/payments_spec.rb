@@ -528,6 +528,49 @@ RSpec.describe "Admin::Payments", type: :request do
         }, headers: { "HTTP_REFERER" => admin_payments_url }
       }.not_to change(Payment, :count)
 
+      expect(response).to have_http_status(:see_other)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: {
+          receipt: [
+            I18n.t("activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing")
+          ]
+        }
+      )
+    end
+
+    it "rejects direct POST when provider bank_name is blank or whitespace" do
+      providers(:tuviandita).update!(bank_name: "   ")
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(response).to have_http_status(:see_other)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: {
+          receipt: [
+            I18n.t("activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing")
+          ]
+        }
+      )
+    end
+
+    it "rejects direct POST when provider bank_account_holder is nil" do
+      providers(:tuviandita).update!(bank_account_holder: nil)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.not_to change(Payment, :count)
+
+      expect(response).to have_http_status(:see_other)
       follow_redirect!
       expect(inertia).to have_props(
         errors: {
