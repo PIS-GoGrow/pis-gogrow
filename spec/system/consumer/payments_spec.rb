@@ -84,6 +84,13 @@ RSpec.describe "Consumer Payments and Bank Details", type: :system do
     end
 
     it "muestra el estado 'En revisión' en la tarjeta cuando el pago fue enviado con comprobante" do
+      payment = payments(:other_submitted)
+      payment.receipt.attach(
+        io: StringIO.new(File.binread(Rails.root.join("public/icon.png"))),
+        filename: "comprobante.png",
+        content_type: "image/png"
+      )
+
       sign_in users(:other_consumer_user), role: :consumer
       visit accounts_path
 

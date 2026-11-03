@@ -10,9 +10,23 @@ class Consumer < ApplicationRecord
   has_many :saved_addresses, class_name: "DeliveryAddress", dependent: :destroy
   has_many :benefits, dependent: :destroy
   has_many :accounts, as: :owner
+  has_many :favorites, dependent: :destroy
 
   has_many :consumer_benefit_configurations
   has_many :benefit_configurations, through: :consumer_benefit_configurations
+
+  # Platos y proveedores que el empleado pide seguido, calculados con sus pedidos
+  # vigentes. Dos pedidos alcanzan para considerarlo frecuente; los más pedidos
+  # van primero.
+  def frequent(kind, limit: 5)
+    scope = orders.where(status: %i[pending confirmed]).joins(schedule: :menu)
+    scope = kind == :menu ? scope.group("COALESCE(menus.base_menu_id, menus.id)") : scope.group("menus.provider_id")
+    scope.having("COUNT(*) >= 2").order(Arel.sql("COUNT(*) DESC")).limit(limit).count.keys
+  end
+
+  def favorite_ids(type)
+    favorites.where(favoritable_type: type).pluck(:favoritable_id)
+  end
 
   def total_debt
     accounts.pending.sum :amount

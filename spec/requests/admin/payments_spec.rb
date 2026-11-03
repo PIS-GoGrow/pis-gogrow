@@ -36,7 +36,7 @@ RSpec.describe "Admin::Payments", type: :request do
     it "redirects to sign in without a session" do
       get admin_payments_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "redirects a consumer to the home page" do
@@ -308,7 +308,7 @@ RSpec.describe "Admin::Payments", type: :request do
     it "redirects to sign in without a session" do
       get admin_payment_path(accounts(:gogrow_tuviandita_current))
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "answers with the detail of every provider of the period's month" do
@@ -492,7 +492,7 @@ RSpec.describe "Admin::Payments", type: :request do
         }
       }.not_to change(Payment, :count)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "rescues ActiveRecord::RecordNotUnique and redirects with already_under_review error prop" do
@@ -589,7 +589,7 @@ RSpec.describe "Admin::Payments", type: :request do
 
       get receipt_admin_payment_path(payment)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "does not allow a consumer to access a company receipt" do
@@ -669,7 +669,7 @@ RSpec.describe "Admin::Payments", type: :request do
         delete admin_payment_path(payment)
       }.not_to change(Payment, :count)
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "does not allow a consumer to remove a company receipt" do

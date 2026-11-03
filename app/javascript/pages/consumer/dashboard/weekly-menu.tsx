@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import ClosureBanner from "@/components/consumer/menus/closure-banner"
+import FavoritesPanel from "@/components/consumer/menus/favorites-panel"
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
 import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
@@ -19,6 +20,7 @@ import {
 import { Spinner } from "@/components/ui/spinner"
 import useSessionStorage from "@/hooks/use-session-storage"
 import { formatLongDate } from "@/lib/dates"
+import { toggleFavorite } from "@/lib/favorites"
 import { formatMoney } from "@/lib/money"
 import { dashboardCart } from "@/routes"
 import type { ConsumerClosure, ConsumerDashboardIndex } from "@/types"
@@ -36,11 +38,14 @@ interface Props {
   providers: ConsumerDashboardIndex["providers"]
   schedules: Schedule[]
   closures: ConsumerClosure[]
+  favorites: ConsumerDashboardIndex["favorites"]
+  frequent: ConsumerDashboardIndex["frequent"]
   cart: CartItem[]
   count: number
   loading: boolean
   total?: number
   openDetail: (item: Schedule) => void
+  todayDate?: string
 }
 
 export const today = () => {
@@ -60,11 +65,14 @@ export function WeeklyMenu({
   setActiveProviders,
   schedules,
   closures,
+  favorites,
+  frequent,
   cart,
   count,
   loading,
   total,
   openDetail,
+  todayDate,
 }: Props) {
   const { t } = useTranslation()
   // Se guarda en la sesión para que el aviso no vuelva al entrar a un plato y
@@ -74,7 +82,7 @@ export function WeeklyMenu({
     "dismissed-closure-notices",
     [],
   )
-  const currentDate = today()
+  const currentDate = todayDate ?? today()
 
   const filteredSchedules =
     activeProviders.size === 0
@@ -82,6 +90,8 @@ export function WeeklyMenu({
       : schedules.filter((schedule) =>
           activeProviders.has(schedule.menu.provider_id),
         )
+  const favoriteMenuIds = new Set(favorites.menus.map((menu) => menu.id))
+  const favoriteProviderIds = new Set(favorites.provider_ids)
   const filterLabel =
     activeProviders.size === 0
       ? t("pages.consumer_dashboard.index.provider_filter.all")
@@ -146,6 +156,16 @@ export function WeeklyMenu({
               </div>
             )}
 
+            <FavoritesPanel
+              favorites={favorites}
+              frequent={frequent}
+              providers={providers}
+              schedules={schedules}
+              activeProviders={activeProviders}
+              setActiveProviders={setActiveProviders}
+              openDetail={openDetail}
+            />
+
             <div className="mt-6 mb-3 flex items-center">
               <span className="text-foreground min-w-0 truncate text-sm font-medium">
                 {t("pages.consumer_dashboard.index.provider_filter.label")}{" "}
@@ -158,6 +178,10 @@ export function WeeklyMenu({
                 selectedProviders={activeProviders}
                 selectionMode="multiple"
                 onApply={setActiveProviders}
+                favoriteIds={favoriteProviderIds}
+                onToggleFavorite={(id, isFavorite) =>
+                  toggleFavorite("providers", id, isFavorite)
+                }
               />
             </div>
 
@@ -205,6 +229,14 @@ export function WeeklyMenu({
                       isPast={item.date < currentDate}
                       addedQuantity={addedQuantity || undefined}
                       onSelect={() => openDetail(item)}
+                      favorite={favoriteMenuIds.has(item.menu.saved_menu_id)}
+                      onToggleFavorite={() =>
+                        toggleFavorite(
+                          "menus",
+                          item.menu.saved_menu_id,
+                          favoriteMenuIds.has(item.menu.saved_menu_id),
+                        )
+                      }
                     />
                   )
                 })}

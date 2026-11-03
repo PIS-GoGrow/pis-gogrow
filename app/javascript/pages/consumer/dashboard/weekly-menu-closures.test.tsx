@@ -50,6 +50,7 @@ const schedule: Schedule = {
     description: "Salteado al wok",
     price: 140,
     provider_id: 2,
+    saved_menu_id: 10,
     option_groups: [],
     provider_name: "Endulzate by Noe",
     home_delivery: true,
@@ -91,6 +92,8 @@ function renderMenu(props: Partial<MenuProps> = {}, date = monday) {
       ]}
       schedules={[schedule]}
       closures={[]}
+      favorites={{ menus: [], provider_ids: [] }}
+      frequent={{ menus: [], provider_ids: [] }}
       cart={[]}
       count={0}
       total={0}

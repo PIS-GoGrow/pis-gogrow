@@ -273,7 +273,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
     it "turns away a visitor with no session" do
       visit admin_payments_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(admin_welcome_path)
     end
 
     it "turns away a role that is not HR" do
