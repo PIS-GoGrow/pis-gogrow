@@ -812,7 +812,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "charges the employee their part and the company the subsidy" do
-      expect { create_order(status: :confirmed) }
+      expect { create_order(status: :confirmed, schedule: schedules(:today)) }
         .to change { account_for(consumer).amount }.by(150.25.to_d)
         .and change { account_for(consumer.company).amount }.by(150.25.to_d)
     end
@@ -823,19 +823,18 @@ RSpec.describe Order, type: :model do
     end
 
     it "updates both accounts when the order is confirmed" do
-      order = create_order(status: :pending)
+      order = create_order(status: :pending, schedule: schedules(:today))
 
       expect { order.update!(status: :confirmed) }
         .to change { account_for(consumer).amount }.by(150.25.to_d)
         .and change { account_for(consumer.company).amount }.by(150.25.to_d)
     end
 
-    it "discounts both accounts when the order is cancelled" do
+    it "does not touch the accounts when an undelivered order is cancelled" do
       order = create_order(status: :confirmed)
 
-      expect { order.cancel(by: users(:one)) }
-        .to change { account_for(consumer).amount }.by(-150.25.to_d)
-        .and change { account_for(consumer.company).amount }.by(-150.25.to_d)
+      expect { order.cancel(by: users(:one)) }.not_to change { [ account_for(consumer).amount, account_for(consumer.company).amount ] }
+      expect(order.reload).to be_cancelled
     end
 
     it "does not duplicate accounts when it runs again" do
@@ -1294,6 +1293,8 @@ RSpec.describe Order, type: :model do
     it "charges the company the base and the special subsidy once confirmed" do
       order = place(3, benefits: [ special.id ])
       order.decide(:confirmed)
+      travel_to(schedule.date)
+      DeliveredOrdersSyncJob.perform_now
 
       expect(order.accounts.find { it.owner == consumer }.reload.amount).to eq(570)
       expect(order.accounts.find { it.owner == consumer.company }.reload.amount).to eq(330)

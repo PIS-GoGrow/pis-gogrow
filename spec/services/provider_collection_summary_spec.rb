@@ -9,6 +9,10 @@ RSpec.describe ProviderCollectionSummary do
   let(:consumer) { consumers(:one) }
   let(:menu) { provider.menus.create!(name: "Plato de prueba", description: "Con guarnición", price: 100) }
 
+  # Los pedidos se reparten por los días del mes y solo cuentan una vez
+  # entregados, así que los ejemplos corren el último día del mes.
+  before { travel_to Time.current.end_of_month.change(hour: 12) }
+
   it "suma los totales redondeados por cuenta sin recalcular IVA sobre el agregado" do
     allow(ENV).to receive(:[]).and_call_original
     allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
@@ -165,6 +169,23 @@ RSpec.describe ProviderCollectionSummary do
       expect(row.account.orders.map(&:id)).to eq([ confirmed.id ])
       expect(row.orders.map(&:id)).to eq([ confirmed.id ])
     end
+  end
+
+  it "no cuenta como viandas entregadas los pedidos confirmados con fecha de entrega futura" do
+    travel_to Time.zone.local(2026, 11, 3, 12)
+    delivered = create_order(menu:, date: Date.new(2026, 11, 2))
+    upcoming = create_order(menu:, date: Date.new(2026, 11, 5))
+
+    summary = described_class.new(provider:)
+    detail = summary.sales_detail
+    group = summary.pending.sole
+
+    expect(summary.sales).to eq(total: 200.0, meals: 2)
+    expect(summary.outstanding).to eq(total: 200.0, meals: 2)
+    expect(group.meals).to eq(2)
+    expect(group.rows.map { it.orders.map(&:id) }).to eq([ [ delivered.id ], [ delivered.id ] ])
+    expect(detail[:days].flat_map { it[:orders] }.pluck(:id)).to eq([ delivered.id ])
+    expect(described_class.row_for(upcoming.accounts.first.reload).orders.map(&:id)).to eq([ delivered.id ])
   end
 
   it "keeps index queries constant as pending orders with different schedules increase" do

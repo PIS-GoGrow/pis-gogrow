@@ -150,24 +150,23 @@ RSpec.describe "Consumer Accounts", type: :request do
         expect(all_keys).not_to include("tax_id", "bank_account_type", "user_id", "order_deadline")
       end
 
-      it "sends the confirmed orders of the current month as the consumption detail" do
+      it "sends the delivered orders of the current month as the consumption detail" do
         get accounts_path
 
         expect(inertia).to have_props { |props|
           detail = props.deep_symbolize_keys[:current_month_detail]
           detail[:month] == I18n.l(Date.current, format: :month_year) &&
-            detail[:amount].to_d == BigDecimal("450.75") &&
-            detail[:orders].map { |order| order[:id] }.sort ==
-              [ orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id ].sort
+            detail[:amount].to_d == BigDecimal("150.25") &&
+            detail[:orders].map { |order| order[:id] } == [ orders(:history_confirmed_past).id ]
         }
       end
 
       it "sends the number of meals behind the pending accounts" do
         get accounts_path
 
-        # 2 + 1 viandas de los pedidos confirmados de TuViandita; la cuenta de
-        # Endulzate de los fixtures no tiene pedidos.
-        expect(inertia).to have_props(total_meals: 3)
+        # La vianda del pedido confirmado y ya entregado de TuViandita; el de 2
+        # se entrega en tres días, y la cuenta de Endulzate no tiene pedidos.
+        expect(inertia).to have_props(total_meals: 1)
       end
 
       it "leaves out the orders of other employees and the ones that are not confirmed" do

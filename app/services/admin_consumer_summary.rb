@@ -26,7 +26,7 @@ class AdminConsumerSummary
     def status = AdminConsumerSummary.status_of(accounts)
 
     def orders
-      accounts.flat_map { it.orders.select(&:confirmed?) }.sort_by { [ it.delivery_date&.jd || 0, it.created_at ] }.reverse
+      accounts.flat_map { it.orders.select(&:consumed?) }.sort_by { [ it.delivery_date&.jd || 0, it.created_at ] }.reverse
     end
 
     def subsidy = orders.sum { it.subsidy || 0 }.to_f
