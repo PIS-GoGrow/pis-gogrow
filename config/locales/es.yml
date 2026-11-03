@@ -640,6 +640,7 @@ es:
       invoices:
         index:
           title: "Facturas de proveedores"
+          back: "Volver a Cuenta"
           description: "Las facturas que los proveedores le emiten a GoGrow, con su historial."
           period: "Período"
           provider: "Proveedor"
