@@ -1032,6 +1032,31 @@ RSpec.describe Order, type: :model do
       expect(notification.description).to include("no había stock disponible")
     end
 
+    it "ensures rejection notifications across all reasons never use cancellation wording and interpolate properly" do
+      order = orders(:upcoming_pending_today)
+
+      Order.rejection_reasons.keys.each do |reason|
+        details = reason == "other" ? "Sin ingredientes suficientes" : nil
+        notification_data = {
+          date: DateFormat.long(order.delivery_date, inline: true),
+          dish: order.menu_name,
+          provider: order.provider_name
+        }
+        reason_text = I18n.t!("notifications.order_rejection.reasons.#{reason}", details:)
+        description = I18n.t!(
+          "notifications.order_rejection.description",
+          **notification_data.merge(reason: reason_text)
+        )
+        title = I18n.t!("notifications.order_rejection.title")
+
+        expect(title).to eq("Tu pedido fue rechazado")
+        expect(title).not_to include("cancelado")
+        expect(description).to include("fue rechazado por")
+        expect(description).not_to include("fue cancelado por")
+        expect(description).not_to match(/%\{.*\}/)
+      end
+    end
+
     it "uses the rejection details when the provider selects other" do
       order = orders(:upcoming_pending_today)
 
