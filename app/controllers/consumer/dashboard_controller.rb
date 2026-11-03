@@ -36,6 +36,7 @@ class Consumer::DashboardController < Consumer::InertiaController
 
   def week_data
     {
+      today: Date.current.iso8601,
       start_date: week_range.first.iso8601,
       end_date: week_range.last.iso8601,
       days: week_range.map do |date|

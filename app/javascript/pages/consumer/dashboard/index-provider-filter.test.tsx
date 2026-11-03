@@ -78,6 +78,7 @@ const props: ConsumerDashboardIndex = {
   favorites: { menus: [], provider_ids: [] },
   frequent: { menus: [], provider_ids: [] },
   week: {
+    today: "2026-10-26",
     start_date: "2026-10-26",
     end_date: "2026-10-30",
     days: [26, 27].map((day) => ({
