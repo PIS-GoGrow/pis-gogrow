@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import type { Order } from "@/types"
@@ -79,6 +79,23 @@ describe("Consumer::Orders Show Page", () => {
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
     expect(screen.getByText("Sin stock disponible")).toBeInTheDocument()
+  })
+
+  it("displays the unit price instead of the total base price", () => {
+    const multipleOrder: Order = {
+      ...baseOrder,
+      amount: 2,
+      price: 600,
+      subsidy: 100,
+      discounted_price: 500,
+    }
+
+    render(<Show order={multipleOrder} />)
+
+    const priceRow = screen.getByText("Precio base").closest("div")
+
+    expect(priceRow).not.toBeNull()
+    expect(within(priceRow!).getByText("$300")).toBeInTheDocument()
   })
 
   it("displays custom rejection details when reason is 'other'", () => {
