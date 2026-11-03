@@ -75,7 +75,9 @@ describe("NotificationBanners", () => {
     render(<NotificationBanners />)
 
     expect(screen.getByText("Tu pedido fue rechazado")).toBeInTheDocument()
-    expect(screen.queryByText("Tu pedido fue cancelado")).not.toBeInTheDocument()
+    expect(
+      screen.queryByText("Tu pedido fue cancelado"),
+    ).not.toBeInTheDocument()
     expect(
       screen.getByText(
         "Tu pedido del 10 de octubre de Milanesa con puré fue rechazado por Tu Viandita porque no había stock disponible.",
