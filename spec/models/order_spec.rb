@@ -1302,7 +1302,7 @@ RSpec.describe Order, type: :model do
     it "raises the quantity without spending its own uses twice" do
       order = place(1, benefits: [ special.id ])
 
-      expect(modify(order, 3)).to be(true)
+      expect(modify(order, 3)).to eq(order)
 
       expect(order.reload.discounted_price).to eq(570)
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 2 ])
@@ -1311,7 +1311,7 @@ RSpec.describe Order, type: :model do
     it "lowers the quantity and gives the uses back" do
       order = place(3, benefits: [ special.id ])
 
-      expect(modify(order, 1)).to be(true)
+      expect(modify(order, 1)).to eq(order)
 
       expect(order.reload.discounted_price).to eq(60)
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])

@@ -110,13 +110,17 @@ describe("AdaptableDialog", () => {
     expect(screen.getByText("Título del diálogo")).toBeInTheDocument()
   })
 
-  it("renders as bottom sheet when on mobile", () => {
+  it("renders as bottom sheet with handle and no close button when on mobile", () => {
     mockUseIsMobile.mockReturnValue(true)
     render(<TestDialog defaultOpen />)
 
     const dialog = screen.getByRole("dialog")
     expect(dialog).toBeInTheDocument()
     expect(dialog.className).toContain("rounded-t-xl")
+    expect(
+      dialog.querySelector("[data-slot='sheet-handle']"),
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Close")).not.toBeInTheDocument()
   })
 
   it("throws an error when subcomponents are rendered outside of AdaptableDialog", () => {

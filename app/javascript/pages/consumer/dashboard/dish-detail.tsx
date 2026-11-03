@@ -1,4 +1,5 @@
 import { ChevronLeft, Star, TicketPercent } from "lucide-react"
+import type { ReactNode } from "react"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -9,6 +10,7 @@ import { QuantityInput } from "@/components/quantity-input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldContent, FieldLabel } from "@/components/ui/field"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { formatShortDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
@@ -33,6 +35,14 @@ interface Props {
   onRemove?: () => void
   add: (benefits: number[]) => void
   benefit: ConsumerDashboardIndex["benefit"]
+  // Al modificar un pedido: el precio descuenta lo que ese pedido ya reservó y
+  // conserva los cupones que ya tiene, sin dejar elegir otros.
+  orderId?: number
+  fixedBenefitIds?: number[]
+  badge?: ReactNode
+  processing?: boolean
+  submitDisabled?: boolean
+  children?: ReactNode
 }
 
 export function DishDetail({
@@ -49,6 +59,12 @@ export function DishDetail({
   editingCartId,
   onRemove,
   benefit,
+  orderId,
+  fixedBenefitIds,
+  badge,
+  processing = false,
+  submitDisabled = false,
+  children,
 }: Props) {
   const { t } = useTranslation()
   const [pricing, setPricing] = useState<Pricing | null>(null)
@@ -76,7 +92,9 @@ export function DishDetail({
   const specialBenefitIds = selectableBenefits.map((b) => b.id)
 
   // Al principio, todos los beneficios están activados
-  const [benefitIds, setBenefitIds] = useState<number[]>(specialBenefitIds)
+  const [benefitIds, setBenefitIds] = useState<number[]>(
+    fixedBenefitIds ?? specialBenefitIds,
+  )
   const [unusedBenefits, setUnusedBenefits] = useState<string[]>([])
 
   const isEditing = Boolean(editingCartId ?? onRemove)
@@ -109,12 +127,13 @@ export function DishDetail({
     const timeout = setTimeout(async () => {
       try {
         const cartToPrice = isEditing ? cartWithoutCurrent : cart
-        const result = await priceItems(
-          cartPricedItem([
-            ...cartToPrice,
-            { ...item, quantity, benefits: benefitIds },
-          ]),
-        )
+        const pricedItems = cartPricedItem([
+          ...cartToPrice,
+          { ...item, quantity, benefits: benefitIds },
+        ])
+        const result = await (orderId === undefined
+          ? priceItems(pricedItems)
+          : priceItems(pricedItems, orderId))
         if (cancelled || !result?.lines) return
 
         const usedBenefitIds = result.lines
@@ -153,6 +172,7 @@ export function DishDetail({
     quantity,
     benefitIds,
     benefit.specials,
+    orderId,
   ])
 
   // Agrega/borra un beneficio para que se aplique a la orden
@@ -168,7 +188,12 @@ export function DishDetail({
   const choicesMissing = item.menu.option_groups.some(
     (group) => group.required && !selections[group.id]?.length,
   )
-  const addDisabled = item.sold_out || item.orders_closed || choicesMissing
+  const addDisabled =
+    item.sold_out ||
+    item.orders_closed ||
+    choicesMissing ||
+    processing ||
+    submitDisabled
 
   return (
     <MobileCard>
@@ -186,7 +211,7 @@ export function DishDetail({
         <p className="text-muted-foreground text-xs">
           {item.menu.provider_name}
         </p>
-        {inCart > 0 && <AddedBadge />}
+        {badge ?? (inCart > 0 && <AddedBadge />)}
       </div>
       <h1 className="mt-1 text-xl font-bold">{item.menu.name}</h1>
       <p className="text-muted-foreground mt-2 text-xs leading-5">
@@ -270,6 +295,7 @@ export function DishDetail({
           {notes.length}/140
         </p>
       </section>
+      {children}
       {selectableBenefits.length > 0 && (
         <section className="border-border grid gap-2 border-b py-4 text-sm">
           {selectableBenefits.map((benefit) => (
@@ -325,6 +351,7 @@ export function DishDetail({
           onClick={() => add(benefitIds)}
           className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
         >
+          {processing && <Spinner />}
           {isEditing
             ? t("pages.consumer_dashboard.index.modify")
             : t("pages.consumer_dashboard.index.add")}

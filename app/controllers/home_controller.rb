@@ -6,6 +6,11 @@ class HomeController < InertiaController
   before_action :redirect_to_dashboard, if: -> { Current.session }
 
   def index
+    flash.keep
+    redirect_to consumer_welcome_path
+  end
+
+  def consumer
     render_welcome("consumer")
   end
 
@@ -30,7 +35,6 @@ class HomeController < InertiaController
     when "consumer" then redirect_to dashboard_path
     when "provider" then redirect_to provider_dashboard_path
     when "admin" then redirect_to admin_dashboard_path
-    else redirect_to sign_in_path
     end
   end
 end

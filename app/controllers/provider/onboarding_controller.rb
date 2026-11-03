@@ -20,6 +20,11 @@ class Provider::OnboardingController < Provider::InertiaController
   end
 
   def update
+    if params[:step] == "intro"
+      provider.update(onboarding_completed_at: Time.current) unless provider.onboarded?
+      return redirect_to provider_dashboard_path
+    end
+
     step = params[:step].to_i
     advance(step) if skipping? || save_step(step)
   end
@@ -31,7 +36,7 @@ class Provider::OnboardingController < Provider::InertiaController
   end
 
   def current_step
-    params[:step].presence_in(%w[1 2 3 4 done]) || (provider.onboarded? ? "done" : "1")
+    params[:step].presence_in(%w[intro 1 2 3 4 done]) || (provider.onboarded? ? "done" : "intro")
   end
 
   def skipping?

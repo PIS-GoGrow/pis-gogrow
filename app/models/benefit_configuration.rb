@@ -325,6 +325,14 @@ class BenefitConfiguration < ApplicationRecord
       .min
   end
 
+  # Igual a la anterior, para un beneficio futuro
+  def future_benefit_deadline(consumer, date)
+    benefit_rules
+      .map { |rule| rule.future_benefit_deadline consumer, date: }
+      .filter { |deadline| !deadline.nil? }
+      .min
+  end
+
   # Devuelve el mayor inicio impuesto por las reglas. Si no hay, devuelve nil
   def benefit_start
     benefit_rules.filter_map(&:benefit_start).max

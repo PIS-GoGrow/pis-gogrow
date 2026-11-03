@@ -2,6 +2,7 @@ import { Link, usePage } from "@inertiajs/react"
 import {
   CalendarDays,
   CalendarPlus,
+  ChartNoAxesCombined,
   ClipboardList,
   CreditCard,
   FileText,
@@ -27,7 +28,9 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
+  adminAccounts,
   adminBenefitConfigurations,
+  adminBenefitUsage,
   adminInvoices,
   adminOrderEvents,
   consumerAccounts,
@@ -72,7 +75,15 @@ export function AppSidebar() {
       },
     ],
     admin: [
-      ...adminPrimaryNavItems,
+      ...adminPrimaryNavItems.slice(0, 1),
+      {
+        title: t("benefit_usage.ui.title"),
+        href: adminBenefitUsage.analysis().url,
+        icon: ChartNoAxesCombined,
+      },
+      ...adminPrimaryNavItems
+        .slice(1)
+        .filter((item) => item.href !== adminAccounts.show().url),
       {
         title: t("nav.benefit_configurations"),
         href: adminBenefitConfigurations.index().url,

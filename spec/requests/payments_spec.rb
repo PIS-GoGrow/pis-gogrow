@@ -324,7 +324,7 @@ RSpec.describe "Payments", type: :request do
       delete payment_path(payment), headers: account_page_headers
     }.not_to change(Payment, :count)
 
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(consumer_welcome_path)
   end
 
   it "does not allow a provider to remove a consumer's receipt" do
@@ -369,7 +369,7 @@ RSpec.describe "Payments", type: :request do
 
     get receipt_payment_path(payment)
 
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(consumer_welcome_path)
   end
 
   it "does not allow another consumer to access the receipt" do
@@ -715,6 +715,6 @@ RSpec.describe "Payments", type: :request do
       }, headers: account_page_headers
     }.not_to change(Payment, :count)
 
-    expect(response).to redirect_to(sign_in_path)
+    expect(response).to redirect_to(consumer_welcome_path)
   end
 end

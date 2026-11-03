@@ -54,8 +54,9 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
   describe "consultar (CA1)" do
     it "llega a su cuenta desde el menú y ve su nombre y email" do
       sign_in admin_user, role: :admin
-      visit admin_dashboard_path
-      click_link "Cuenta", match: :first
+      visit_hydrated admin_dashboard_path
+      find("[data-sidebar=menu-button]", text: admin_user.name).click
+      find("[role=menuitem]", text: "Configuración").click
 
       expect(page).to have_current_path(admin_account_path)
       expect(page).to have_content("Admin User")
@@ -179,7 +180,7 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
     it "sin sesión no entra a la cuenta de RRHH" do
       visit admin_account_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(admin_welcome_path)
     end
 
     it "un empleado no entra a la cuenta ni a las preferencias de RRHH aunque escriba la URL" do

@@ -54,6 +54,8 @@ function SheetContent({
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
 }) {
+  const isBottom = side === "bottom"
+
   return (
     <SheetPortal>
       <SheetOverlay />
@@ -73,8 +75,15 @@ function SheetContent({
         )}
         {...props}
       >
+        {isBottom && (
+          <div
+            data-slot="sheet-handle"
+            aria-hidden="true"
+            className="mx-auto mt-2 h-1.5 w-12 shrink-0 rounded-full bg-neutral-300 dark:bg-neutral-600"
+          />
+        )}
         {children}
-        {showCloseButton && (
+        {showCloseButton && !isBottom && (
           <SheetPrimitive.Close className="absolute top-4 right-4 rounded-xs opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-secondary">
             <XIcon className="size-4" />
             <span className="sr-only">Close</span>

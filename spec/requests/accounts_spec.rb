@@ -38,7 +38,7 @@ RSpec.describe "Consumer Accounts", type: :request do
     it "redirects unauthenticated users to sign in" do
       get accounts_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirects users that do not have the consumer role" do
