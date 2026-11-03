@@ -255,6 +255,21 @@ RSpec.describe "Admin::Consumers", type: :request do
         expect(provider[:receipt_url]).to eq(receipt_admin_payment_path(payment))
       end
 
+      it "exposes partial status in inertia props when the employee has a partial payment" do
+        account = accounts(:one_tuviandita_current)
+        account.payments.destroy_all
+        payment = account.payments.build(provider: account.provider, status: :partial)
+        payment.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+        payment.save!
+
+        get admin_consumer_path(consumers(:one))
+
+        month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
+        provider = month[:providers].find { it[:id] == account.provider_id }
+        expect(month[:status]).to eq("partial")
+        expect(provider[:status]).to eq("partial")
+      end
+
       it "shows the active benefit percentage" do
         get admin_consumer_path(consumers(:one))
 

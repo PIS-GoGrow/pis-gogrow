@@ -947,6 +947,9 @@ es:
         see_receipts: "Ver comprobantes"
         status_accepted: "Confirmado"
         status_rejected: "Rechazado"
+        status_pending: "Pendiente"
+        status_submitted: "En revisión"
+        status_partial: "Pago parcial"
         partial_payment_warning: "Falta una parte del pago. Transferí la diferencia y subí el comprobante."
     orders:
       index:
@@ -1061,6 +1064,7 @@ es:
         pending: "Pendiente"
         submitted: "En revisión"
         approved: "Aprobado"
+        partial: "Pago parcial"
         rejected: "Rechazado"
       partial_payment_badge: "Pago parcial"
       receipt_sent_at: "Comprobante enviado el %{date}"

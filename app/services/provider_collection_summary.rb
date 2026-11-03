@@ -13,7 +13,7 @@
 # estado a otro.
 class ProviderCollectionSummary
   # Estado que muestra el grupo de empleados: el que más atención pide.
-  EMPLOYEES_STATUS_PRIORITY = %w[rejected pending submitted approved].freeze
+  EMPLOYEES_STATUS_PRIORITY = %w[rejected partial pending submitted approved].freeze
 
   AccountRow = Data.define(:account, :meals, :reminder_notifications) do
     def initialize(account:, meals:, reminder_notifications: [])

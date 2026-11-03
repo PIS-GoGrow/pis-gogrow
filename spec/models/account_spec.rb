@@ -257,6 +257,12 @@ RSpec.describe Account, type: :model do
       expect(account.collection_status).to eq("submitted")
     end
 
+    it "is partial when the latest payment is partial" do
+      create_payment(status: :partial)
+
+      expect(account.collection_status).to eq("partial")
+    end
+
     it "takes the most recent payment when there are several" do
       create_payment(status: :rejected, created_at: 2.days.ago)
       create_payment(status: :approved, created_at: 1.day.ago)
@@ -279,11 +285,26 @@ RSpec.describe Account, type: :model do
       expect(account.collection_status).to eq("submitted")
     end
 
-    it "remains submitted when older payment was rejected as partial payment but a newer one is submitted" do
-      create_payment(status: :rejected, rejection_reason: "El pago es parcial", created_at: 2.days.ago)
+    it "remains submitted when an older payment is partial but a newer one is submitted" do
+      create_payment(status: :partial, created_at: 2.days.ago)
       create_payment(status: :submitted, created_at: 1.day.ago)
 
       expect(account.collection_status).to eq("submitted")
+    end
+
+    it "uses the latest partial when there are several consecutive partial payments" do
+      create_payment(status: :partial, created_at: 2.days.ago)
+      create_payment(status: :partial, created_at: 1.day.ago)
+
+      expect(account.collection_status).to eq("partial")
+      expect(account.payments.partial.count).to eq(2)
+    end
+
+    it "is approved when a payment after a partial settles the account" do
+      create_payment(status: :partial, created_at: 2.days.ago)
+      create_payment(status: :approved, created_at: 1.day.ago)
+
+      expect(account.collection_status).to eq("approved")
     end
 
     # Una cuenta de empresa no debe la deuda final sino el subsidio: lo que la
@@ -342,7 +363,7 @@ RSpec.describe Account, type: :model do
     it "is nil again once the submitted payment is resolved" do
       submitted = create_payment(status: :submitted)
 
-      submitted.update!(status: :rejected, rejection_reason: "El pago es parcial")
+      submitted.update!(status: :partial)
 
       expect(account.reload.payment_pending_review).to be_nil
     end
@@ -442,6 +463,25 @@ RSpec.describe Account, type: :model do
       expect(Account.pending).not_to include(paid_account)
       expect(Account.pending).not_to include(zero_account)
       expect(Account.history).to include(paid_account)
+    end
+
+    it "keeps a partial account pending and out of history" do
+      partial_account = Account.create!(
+        owner: consumer,
+        provider:,
+        month: Date.current.prev_month,
+        amount: 300
+      )
+      payment = partial_account.payments.build(provider:, status: :partial)
+      payment.receipt.attach(
+        io: Rails.root.join("public/icon.png").open,
+        filename: "parcial.png",
+        content_type: "image/png"
+      )
+      payment.save!
+
+      expect(Account.pending).to include(partial_account)
+      expect(Account.history).not_to include(partial_account)
     end
 
     it "orders pending accounts by month descending regardless of creation sequence" do
