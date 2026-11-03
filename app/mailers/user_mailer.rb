@@ -13,8 +13,13 @@ class UserMailer < ApplicationMailer
     @user = @otp_code.user
     @company = params[:company]
     @token = "#{@user.id}.#{@otp_code.code}"
+    @company_token = @company.signed_id(purpose: :provider_invitation, expires_in: OtpCode::TTL.fetch("invitation"))
 
-    mail to: @user.email, subject: t(".subject")
+    attach_brand_images
+
+    mail to: @user.email, subject: t(".subject"), template_name: "invitation" do |format|
+      format.html { render layout: "branded_mailer" }
+    end
   end
 
   def password_reset_code
@@ -22,7 +27,12 @@ class UserMailer < ApplicationMailer
     @user = @otp_code.user
     @code = @otp_code.code
     @minutes = (OtpCode::TTL.fetch("password_reset") / 1.minute).to_i
+    @company = params[:company] || @user.consumer&.company || @user.admin&.company || Company.first
 
-    mail to: @user.email, subject: t(".subject")
+    attach_brand_images
+
+    mail to: @user.email, subject: t(".subject"), template_name: "password_reset_code" do |format|
+      format.html { render layout: "branded_mailer" }
+    end
   end
 end

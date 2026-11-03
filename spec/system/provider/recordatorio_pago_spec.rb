@@ -10,6 +10,10 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
   let(:employee_user) { users(:one) }
   let(:consumer_account) { accounts(:one_tuviandita_current) }
 
+  around do |example|
+    travel_to(Date.current.change(day: 15).noon) { example.run }
+  end
+
   before do
     Notification::Configuration.find_or_create_by!(key: "provider_payment_reminders") do |c|
       c.roles = [ "consumer" ]
@@ -84,9 +88,8 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
     expect(page).to have_content("Recordatorio de pago pendiente")
 
     # 2. El empleado sube el comprobante correspondiente a esa cuenta
-    visit accounts_path
-    within(find("[role=tabpanel]")) { click_on I18n.t("pages.accounts.show.receipt") }
-    within(find("[role=dialog]")) do
+    visit_hydrated accounts_path
+    within(find("[role=tabpanel]")) do
       attach_file(I18n.t("pages.accounts.show.receipt_file"), Rails.root.join("public/icon.png").to_s)
       click_on I18n.t("pages.accounts.show.receipt")
     end

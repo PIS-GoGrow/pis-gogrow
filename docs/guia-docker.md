@@ -132,6 +132,10 @@ Una vez que todo esté corriendo, en Docker Desktop vas a ver:
 
 ## 5. Uso del día a día
 
+**Bases temporales y credenciales locales**
+
+Si usás un override de Compose para una base de pruebas, definí allí solo el sufijo de base (`DATABASE_SUFFIX`) y las opciones propias de esa prueba. `DEV_USERS_PASSWORD` se lee del `.env` del repositorio mediante `dotenv-rails`: no copies su valor a `environment` en un Compose temporal. Una variable definida por Compose llega al proceso antes de que `dotenv-rails` lea `.env` y tiene prioridad sobre el valor del archivo. Si un login local falla, compará ambas fuentes sin imprimir la contraseña y corregí el override; no cambies automáticamente `.env` ni ejecutes seeds destructivos.
+
 **Levantar el entorno**
 
 ```bash
