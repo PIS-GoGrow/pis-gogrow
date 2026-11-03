@@ -33,7 +33,7 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
 
   # El estado del cobro es el del último comprobante, así que sigue el enum de
   # Payment; escrito a mano porque acá no hay un modelo del que inferirlo.
-  typelize "'pending' | 'submitted' | 'approved' | 'rejected'"
+  typelize "'pending' | 'submitted' | 'approved' | 'rejected' | 'partial'"
   attribute :status, &:collection_status
 
   typelize :boolean

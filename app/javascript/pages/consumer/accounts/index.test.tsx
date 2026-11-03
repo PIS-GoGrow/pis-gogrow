@@ -63,6 +63,7 @@ const defaultProviders: PaymentProvider[] = [
     bank_name: "Banco República",
     bank_account_number: "00123456",
     bank_account_holder: "Tu Viandita SRL",
+    payment_details_complete: true,
     home_delivery: true,
   },
 ]
@@ -137,6 +138,7 @@ describe("Consumer Payments Page", () => {
       bank_name: null,
       bank_account_number: null,
       bank_account_holder: null,
+      payment_details_complete: false,
     })
 
     const closedPeriod = (

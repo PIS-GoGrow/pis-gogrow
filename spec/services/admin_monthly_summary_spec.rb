@@ -140,6 +140,15 @@ RSpec.describe AdminMonthlySummary do
       expect(current.debtors.map(&:name)).to eq([ "Other Consumer User" ])
     end
 
+    it "keeps consumers with a partial payment among the debtors" do
+      payments(:one_rejected).update!(status: :partial, rejection_reason: nil)
+
+      debtor = current.debtors.find { it.consumer == consumers(:one) }
+
+      expect(debtor).to be_present
+      expect(debtor.status).to eq("partial")
+    end
+
     it "is empty for a month without debts" do
       expect(previous.debtors).to be_empty
     end

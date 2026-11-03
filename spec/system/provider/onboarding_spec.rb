@@ -53,6 +53,9 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     visit provider_dashboard_path
     expect(page).to have_current_path(provider_onboarding_path)
 
+    expect(page).to have_content("¿Configuramos tu cuenta?")
+    click_link "Comenzar"
+
     # Paso 1: Datos de cobro
     expect(page).to have_content("Paso 1 de 4")
     expect(page).to have_content("Datos de cobro")
@@ -84,7 +87,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
     # Paso 3: Entregas (RadioGroup: oficina / domicilio)
     expect(page).to have_content("Paso 3 de 4")
-    expect(page).to have_content("Configure sus entregas")
+    expect(page).to have_content("Configurá tus entregas")
 
     # "Continuar" está deshabilitado hasta elegir una opción
     find("label[for='delivery-office']").click
@@ -99,7 +102,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
     # Pantalla final de éxito
     expect(page).to have_content("¡Todo listo!")
-    expect(page).to have_content("Su cuenta ya está configurada")
+    expect(page).to have_content("Tu cuenta ya está configurada")
 
     click_on "Ir al Inicio"
 
@@ -133,7 +136,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
   it "muestra errores de validación si se ingresan datos de cobro inválidos" do
     sign_in provider_user, role: :provider
-    visit provider_onboarding_path
+    visit provider_onboarding_path(step: "1")
 
     expect(page).to have_content("Paso 1 de 4")
 
@@ -151,7 +154,7 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
   it "permite volver al paso anterior y omitir pasos del recorrido" do
     sign_in provider_user, role: :provider
-    visit provider_onboarding_path
+    visit provider_onboarding_path(step: "1")
 
     expect(page).to have_content("Paso 1 de 4")
     find("button[aria-label='Omitir por ahora']").click
@@ -161,5 +164,16 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
 
     find("button[aria-label='Volver al paso anterior']").click
     expect(page).to have_content("Paso 1 de 4")
+  end
+
+  it "permite posponer la configuración desde la pantalla inicial e ir directo al panel" do
+    sign_in provider_user, role: :provider
+    visit provider_onboarding_path
+
+    expect(page).to have_content("¿Configuramos tu cuenta?")
+    click_button "Configurar más tarde"
+
+    expect(page).to have_current_path(provider_dashboard_path)
+    expect(provider.reload).to be_onboarded
   end
 end

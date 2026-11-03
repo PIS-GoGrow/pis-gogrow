@@ -122,6 +122,14 @@ RSpec.describe EmployeeDebtNotifications do
       expect(alerts(admin_user).active.count).to eq(1)
     end
 
+    it "sigue considerando deuda un pago parcial" do
+      add_payment(status: :partial, to: one_account)
+
+      remind_on(Date.new(2026, 6, 11))
+
+      expect(alerts(admin_user).active.sole.description).to include("Test User tiene pendiente su pago")
+    end
+
     it "no avisa si la empresa no tiene cuenta con ese proveedor en ese mes" do
       company_account.destroy!
 
@@ -206,6 +214,16 @@ RSpec.describe EmployeeDebtNotifications do
     it "actualiza el mismo aviso cuando el proveedor rechaza un comprobante" do
       notification = alerts(admin_user).active.sole
       add_payment(status: :submitted, to: other_account).reject_with("Comprobante ilegible")
+
+      expect(alerts(admin_user).active.sole).to eq(notification)
+      expect(notification.reload.description).to start_with("2 empleados tienen pendiente")
+    end
+
+    it "actualiza el mismo aviso cuando un pago queda parcial sin tratarlo como rechazo" do
+      notification = alerts(admin_user).active.sole
+      payment = add_payment(status: :submitted, to: other_account)
+
+      payment.mark_partial
 
       expect(alerts(admin_user).active.sole).to eq(notification)
       expect(notification.reload.description).to start_with("2 empleados tienen pendiente")
