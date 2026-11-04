@@ -223,8 +223,8 @@ es:
       title: "Tu pedido fue confirmado"
       description: "Tu pedido del %{date} fue confirmado por %{provider}."
     order_rejection:
-      title: "Tu pedido fue cancelado"
-      description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}."
+      title: "Tu pedido fue rechazado"
+      description: "Tu pedido del %{date} de %{dish} fue rechazado por %{provider} %{reason}."
       reasons:
         out_of_stock: "porque no había stock disponible"
         duplicate_order: "porque el pedido estaba duplicado"
