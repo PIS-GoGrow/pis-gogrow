@@ -14,6 +14,37 @@ RSpec.describe Order, type: :model do
       .with_prefix(:rejection_reason)
   end
 
+  describe "amount and price validations" do
+    let(:order) { orders(:upcoming_pending_today) }
+
+    it "requires amount to be an integer strictly greater than zero" do
+      order.amount = 0
+      expect(order).not_to be_valid
+      expect(order.errors[:amount]).to be_present
+
+      order.amount = -1
+      expect(order).not_to be_valid
+
+      order.amount = 1.5
+      expect(order).not_to be_valid
+
+      order.amount = 2
+      expect(order).to be_valid
+    end
+
+    it "requires price to be non-negative" do
+      order.price = -10
+      expect(order).not_to be_valid
+      expect(order.errors[:price]).to be_present
+
+      order.price = 0
+      expect(order).to be_valid
+
+      order.price = 300.50
+      expect(order).to be_valid
+    end
+  end
+
   describe "rejection reason validations" do
     let(:order) { orders(:upcoming_pending_today) }
 
@@ -389,6 +420,60 @@ RSpec.describe Order, type: :model do
 
     it "excludes upcoming orders" do
       expect(described_class.history).not_to include(orders(:upcoming_confirmed_future))
+    end
+  end
+
+  describe ".consumed" do
+    it "includes confirmed orders whose delivery date has arrived or passed" do
+      expect(described_class.consumed).to include(orders(:history_confirmed_past))
+    end
+
+    it "excludes confirmed orders whose delivery date is in the future" do
+      expect(described_class.consumed).not_to include(orders(:upcoming_confirmed_future))
+    end
+
+    it "excludes non-confirmed orders even if their delivery date has arrived or passed" do
+      expect(described_class.consumed).not_to include(
+        orders(:upcoming_pending_today),
+        orders(:history_pending_past),
+        orders(:history_cancelled_future),
+        orders(:history_rejected_future)
+      )
+    end
+
+    it "treats confirmed orders without a delivery date as consumed" do
+      order = orders(:history_confirmed_past)
+      order.update_columns(delivery_date: nil, schedule_id: nil)
+
+      expect(described_class.consumed).to include(order)
+    end
+  end
+
+  describe "#consumed?" do
+    it "is true for confirmed orders delivered today or in the past" do
+      expect(orders(:history_confirmed_past)).to be_consumed
+
+      order_today = orders(:upcoming_pending_today)
+      order_today.update_columns(status: :confirmed)
+      expect(order_today).to be_consumed
+    end
+
+    it "is false for confirmed orders scheduled for future delivery" do
+      expect(orders(:upcoming_confirmed_future)).not_to be_consumed
+    end
+
+    it "is false for pending, cancelled or rejected orders regardless of date" do
+      expect(orders(:upcoming_pending_today)).not_to be_consumed
+      expect(orders(:history_pending_past)).not_to be_consumed
+      expect(orders(:history_cancelled_future)).not_to be_consumed
+      expect(orders(:history_rejected_future)).not_to be_consumed
+    end
+
+    it "is true for confirmed orders when delivery date is nil" do
+      order = orders(:history_confirmed_past)
+      order.update_columns(delivery_date: nil, schedule_id: nil)
+
+      expect(order).to be_consumed
     end
   end
 
@@ -812,7 +897,7 @@ RSpec.describe Order, type: :model do
     end
 
     it "charges the employee their part and the company the subsidy" do
-      expect { create_order(status: :confirmed) }
+      expect { create_order(status: :confirmed, schedule: schedules(:today)) }
         .to change { account_for(consumer).amount }.by(150.25.to_d)
         .and change { account_for(consumer.company).amount }.by(150.25.to_d)
     end
@@ -823,19 +908,18 @@ RSpec.describe Order, type: :model do
     end
 
     it "updates both accounts when the order is confirmed" do
-      order = create_order(status: :pending)
+      order = create_order(status: :pending, schedule: schedules(:today))
 
       expect { order.update!(status: :confirmed) }
         .to change { account_for(consumer).amount }.by(150.25.to_d)
         .and change { account_for(consumer.company).amount }.by(150.25.to_d)
     end
 
-    it "discounts both accounts when the order is cancelled" do
+    it "does not touch the accounts when an undelivered order is cancelled" do
       order = create_order(status: :confirmed)
 
-      expect { order.cancel(by: users(:one)) }
-        .to change { account_for(consumer).amount }.by(-150.25.to_d)
-        .and change { account_for(consumer.company).amount }.by(-150.25.to_d)
+      expect { order.cancel(by: users(:one)) }.not_to change { [ account_for(consumer).amount, account_for(consumer.company).amount ] }
+      expect(order.reload).to be_cancelled
     end
 
     it "does not duplicate accounts when it runs again" do
@@ -1010,6 +1094,147 @@ RSpec.describe Order, type: :model do
       expect(notification.description).to start_with("#{order.consumer.user.name} pidió #{order.amount} de #{order.menu_name}")
     end
 
+    it "updates the active provider notification when the order quantity changes" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      notification = Notification.find_by!(
+        event: "order_received",
+        notifiable: order
+      )
+
+      expect(notification.description).to include("pidió #{order.amount} de")
+
+      delivery = {
+        delivery_method: order.delivery_method,
+        address: order.address
+      }
+
+      new_amount = order.amount + 1
+
+      expect(
+        order.modify(
+          by: users(:one),
+          quantity: new_amount,
+          notes: order.notes,
+          delivery:
+        )
+      ).to eq(order)
+
+      expect(notification.reload.description).to include("pidió #{new_amount} de")
+    end
+
+    it "creates a new provider notification when quantity changes after the previous one was closed" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      original_notification = Notification.find_by!(
+        event: "order_received",
+        notifiable: order
+      )
+      original_notification.close!
+
+      delivery = {
+        delivery_method: order.delivery_method,
+        address: order.address
+      }
+
+      new_amount = order.amount + 1
+
+      expect {
+        order.modify(
+          by: users(:one),
+          quantity: new_amount,
+          notes: order.notes,
+          delivery:
+        )
+      }.to change {
+        Notification.where(
+          event: "order_received",
+          notifiable: order
+        ).count
+      }.by(1)
+
+      new_notification = Notification.find_by!(
+        event: "order_received",
+        notifiable: order,
+        closed_at: nil
+      )
+
+      expect(new_notification.description).to include("pidió #{new_amount} de")
+      expect(original_notification.reload.closed_at).to be_present
+    end
+
+    it "does not update the provider notification when the quantity does not change" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      notification = Notification.find_by!(
+        event: "order_received",
+        notifiable: order
+      )
+
+      original_description = notification.description
+      original_updated_at = notification.updated_at
+
+      delivery = {
+        delivery_method: order.delivery_method,
+        address: order.address
+      }
+
+      order.modify(
+        by: users(:one),
+        quantity: order.amount,
+        notes: "Sin sal",
+        delivery:
+      )
+
+      expect(notification.reload.description).to eq(original_description)
+      expect(notification.updated_at).to eq(original_updated_at)
+    end
+
+    it "maintains database uniqueness when updating quantity multiple times sequentially" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      delivery = {
+        delivery_method: order.delivery_method,
+        address: order.address
+      }
+
+      order.modify(by: users(:one), quantity: 2, notes: order.notes, delivery:)
+      order.modify(by: users(:one), quantity: 3, notes: order.notes, delivery:)
+
+      active_notifications = Notification.where(
+        event: "order_received",
+        notifiable: order,
+        closed_at: nil
+      )
+
+      expect(active_notifications.count).to eq(1)
+      expect(active_notifications.first.description).to include("pidió 3 de")
+    end
+
+    it "does not update or recreate order_received notification when changing quantity of a non-pending order" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      notification = Notification.find_by!(event: "order_received", notifiable: order)
+      order.update_columns(status: Order.statuses[:cancelled])
+
+      expect {
+        order.update!(amount: 5)
+      }.not_to change { notification.reload.description }
+    end
+
+    it "handles safely when provider has no associated user" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      allow(order).to receive(:provider).and_return(nil)
+      expect { order.send(:refresh_received_notification) }.not_to raise_error
+    end
+
     it "notifies the consumer when the provider rejects an order" do
       order = orders(:upcoming_pending_today)
 
@@ -1027,8 +1252,34 @@ RSpec.describe Order, type: :model do
         notifiable: order
       )
 
-      expect(notification.title).to eq("Tu pedido fue cancelado")
+      expect(notification.title).to eq("Tu pedido fue rechazado")
+      expect(notification.description).to include("fue rechazado por")
       expect(notification.description).to include("no había stock disponible")
+    end
+
+    it "ensures rejection notifications across all reasons never use cancellation wording and interpolate properly" do
+      order = orders(:upcoming_pending_today)
+
+      Order.rejection_reasons.keys.each do |reason|
+        details = reason == "other" ? "Sin ingredientes suficientes" : nil
+        notification_data = {
+          date: DateFormat.long(order.delivery_date, inline: true),
+          dish: order.menu_name,
+          provider: order.provider_name
+        }
+        reason_text = I18n.t!("notifications.order_rejection.reasons.#{reason}", details:)
+        description = I18n.t!(
+          "notifications.order_rejection.description",
+          **notification_data.merge(reason: reason_text)
+        )
+        title = I18n.t!("notifications.order_rejection.title")
+
+        expect(title).to eq("Tu pedido fue rechazado")
+        expect(title).not_to include("cancelado")
+        expect(description).to include("fue rechazado por")
+        expect(description).not_to include("fue cancelado por")
+        expect(description).not_to match(/%\{.*\}/)
+      end
     end
 
     it "uses the rejection details when the provider selects other" do
@@ -1294,6 +1545,8 @@ RSpec.describe Order, type: :model do
     it "charges the company the base and the special subsidy once confirmed" do
       order = place(3, benefits: [ special.id ])
       order.decide(:confirmed)
+      travel_to(schedule.date)
+      DeliveredOrdersSyncJob.perform_now
 
       expect(order.accounts.find { it.owner == consumer }.reload.amount).to eq(570)
       expect(order.accounts.find { it.owner == consumer.company }.reload.amount).to eq(330)
@@ -1302,7 +1555,7 @@ RSpec.describe Order, type: :model do
     it "raises the quantity without spending its own uses twice" do
       order = place(1, benefits: [ special.id ])
 
-      expect(modify(order, 3)).to be(true)
+      expect(modify(order, 3)).to eq(order)
 
       expect(order.reload.discounted_price).to eq(570)
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 2 ])
@@ -1311,7 +1564,7 @@ RSpec.describe Order, type: :model do
     it "lowers the quantity and gives the uses back" do
       order = place(3, benefits: [ special.id ])
 
-      expect(modify(order, 1)).to be(true)
+      expect(modify(order, 1)).to eq(order)
 
       expect(order.reload.discounted_price).to eq(60)
       expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ base.id, 1 ], [ special.id, 1 ])

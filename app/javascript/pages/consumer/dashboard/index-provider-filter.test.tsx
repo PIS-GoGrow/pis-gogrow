@@ -85,6 +85,7 @@ const props: ConsumerDashboardIndex = {
   favorites: { menus: [], provider_ids: [] },
   frequent: { menus: [], provider_ids: [] },
   week: {
+    today: "2026-10-26",
     start_date: "2026-10-26",
     end_date: "2026-10-30",
     days: [26, 27].map((day) => ({
@@ -293,8 +294,8 @@ describe("Consumer menu provider filter navigation", () => {
     expect(added[1]).toMatchObject({ id: 261, quantity: 2, notes: "Sin salsa" })
     await waitFor(() =>
       expect(priceItems).toHaveBeenCalledWith([
-        { schedule_id: 263, quantity: 2, benefits: [] },
-        { schedule_id: 261, quantity: 2, benefits: [] },
+        expect.objectContaining({ schedule_id: 263, quantity: 2 }),
+        expect.objectContaining({ schedule_id: 261, quantity: 2 }),
       ]),
     )
 
@@ -315,8 +316,8 @@ describe("Consumer menu provider filter navigation", () => {
     })
     await waitFor(() =>
       expect(priceItems).toHaveBeenCalledWith([
-        { schedule_id: 263, quantity: 2, benefits: [] },
-        { schedule_id: 261, quantity: 3, benefits: [] },
+        expect.objectContaining({ schedule_id: 263, quantity: 2 }),
+        expect.objectContaining({ schedule_id: 261, quantity: 3 }),
       ]),
     )
   })

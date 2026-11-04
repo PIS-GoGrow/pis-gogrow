@@ -4,7 +4,6 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import CancelOrderSheet from "@/components/orders/cancel-order-sheet"
-import EditOrderSheet from "@/components/orders/edit-order-sheet"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,15 +30,14 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-export default function Show({
-  order,
-  delivery_addresses,
-  max_quantity,
-  option_groups,
-  editing,
-}: ConsumerOrdersShow) {
+export default function Show({ order }: ConsumerOrdersShow) {
   const { t } = useTranslation()
   const { formatMoney, formatLongDate } = useFormatters()
+
+  const unitPrice =
+    order.price != null && order.amount != null && order.amount > 0
+      ? order.price / order.amount
+      : null
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -120,8 +118,8 @@ export default function Show({
               </Row>
 
               <Row label={t("pages.orders.show.base_price")}>
-                {order.price != null
-                  ? formatMoney(order.price)
+                {unitPrice != null
+                  ? formatMoney(unitPrice)
                   : t("pages.orders.index.no_price")}
               </Row>
 
@@ -175,13 +173,18 @@ export default function Show({
               </div>
             )}
             {order.modifiable ? (
-              <EditOrderSheet
-                order={order}
-                addresses={delivery_addresses}
-                optionGroups={option_groups}
-                maxQuantity={max_quantity}
-                editing={editing}
-              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full"
+                asChild
+              >
+                <Link href={consumerOrders.edit(order.id)}>
+                  <Pencil aria-hidden="true" />
+                  {t("pages.orders.show.edit")}
+                </Link>
+              </Button>
             ) : (
               <div className="flex flex-col gap-1">
                 <Button

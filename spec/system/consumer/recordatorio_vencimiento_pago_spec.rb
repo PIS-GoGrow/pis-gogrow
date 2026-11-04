@@ -70,9 +70,8 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
     visit_dashboard_as users(:one)
     expect(page).to have_content(title)
 
-    visit accounts_path
-    within(find("[role=tabpanel]")) { click_on I18n.t("pages.accounts.show.receipt") }
-    within(find("[role=dialog]")) do
+    visit_hydrated accounts_path
+    within(find("[role=tabpanel]")) do
       attach_file(I18n.t("pages.accounts.show.receipt_file"), Rails.root.join("public/icon.png").to_s)
       click_on I18n.t("pages.accounts.show.receipt")
     end

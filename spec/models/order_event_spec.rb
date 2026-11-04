@@ -84,7 +84,7 @@ RSpec.describe OrderEvent, type: :model do
   it "records an employee's modification with the quantity and both prices before and after" do
     Current.session = users(:one).sessions.create!(role: :consumer)
 
-    expect(order.modify(by: users(:one), quantity: 2, notes: nil, delivery: { delivery_method: "home", address: order.address })).to be(true)
+    expect(order.modify(by: users(:one), quantity: 2, notes: nil, delivery: { delivery_method: "home", address: order.address })).to eq(order)
 
     event = order.events.sole
     expect(event).to have_attributes(action: "modified", user: users(:one), role: "consumer")

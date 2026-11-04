@@ -10,7 +10,7 @@ RSpec.describe "Admin::Accounts", type: :request do
     it "redirects visitors without a session to sign in" do
       get admin_account_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
     end
 
     it "rejects sessions from another role" do
@@ -20,6 +20,33 @@ RSpec.describe "Admin::Accounts", type: :request do
 
       expect(response).to redirect_to(root_path)
       expect(flash[:alert]).to eq(I18n.t("flash.no_permission"))
+    end
+
+    it "rejects sessions from a provider role" do
+      sign_in users(:provider_user), role: :provider
+
+      get admin_account_path
+
+      expect(response).to redirect_to(root_path)
+      expect(flash[:alert]).to eq(I18n.t("flash.no_permission"))
+    end
+
+    it "handles unexpected or malformed query parameters gracefully" do
+      sign_in users(:admin), role: :admin
+
+      get admin_account_path, params: { unexpected: { nested: "malformed" } }
+
+      expect(response).to have_http_status(:ok)
+      expect(inertia).to render_component("admin/accounts/show")
+    end
+
+    it "is accessible through Spanish path /rrhh/cuenta" do
+      sign_in users(:admin), role: :admin
+
+      get "/rrhh/cuenta"
+
+      expect(response).to have_http_status(:ok)
+      expect(inertia).to render_component("admin/accounts/show")
     end
 
     it "renders the account page for RRHH with the authenticated user" do

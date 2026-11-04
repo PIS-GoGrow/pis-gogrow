@@ -2,23 +2,16 @@ import { Download, Eye, FileText } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import StatusBadge from "@/components/status-badge"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible"
-import { Separator } from "@/components/ui/separator"
 import { SheetTrigger } from "@/components/ui/sheet"
 import { formatMoney } from "@/lib/money"
-import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
+import { paymentPresentationStatus } from "@/lib/payment-rejection-reasons"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
 
@@ -30,12 +23,14 @@ interface AccountDetail {
 
 interface PaymentHistoryCardProps {
   account: Account
+  providerName?: string
   setDetail: React.Dispatch<React.SetStateAction<AccountDetail | null>>
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export default function PaymentHistoryCard({
   account,
+  providerName,
   setDetail,
   setLoading,
 }: PaymentHistoryCardProps) {
@@ -65,119 +60,126 @@ export default function PaymentHistoryCard({
   }
 
   return (
-    <Card className="bg-zinc-50 dark:bg-zinc-900">
-      <CardHeader className="grid gap-4">
-        <CardDescription className="flex items-center">
-          {account.month}
-          {/* Como es historial los payments estan siempre aprobados */}
-          <Badge className="ml-auto bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
-            {t("pages.accounts.show.status_accepted")}
-          </Badge>
-        </CardDescription>
+    <Card className="bg-background gap-4 rounded-lg p-4 shadow-none">
+      <div className="flex flex-col gap-1.5">
+        <div className="text-muted-foreground flex items-center justify-between text-sm font-medium">
+          <span>{account.due_date}</span>
+          <StatusBadge
+            kind="payment"
+            status="approved"
+            label={t("pages.accounts.show.status_accepted")}
+          />
+        </div>
 
-        <Separator />
+        <p className="text-foreground text-base font-semibold">
+          {providerName ? `${providerName}: ${account.month}` : account.month}
+        </p>
+      </div>
 
-        <CardTitle className="flex items-center">
-          <span>
-            {formatMoney(account.orders_price_sum ?? 0)}
-            <span className="text-zinc-500 dark:text-zinc-400">
-              {" | "}
-              {account.orders_amount_sum}{" "}
-              {account.orders_amount_sum == 1
-                ? t("pages.accounts.show.lunch")
-                : t("pages.accounts.show.lunches")}
-            </span>
+      <div className="border-border flex items-center justify-between border-y py-3">
+        <span className="text-foreground text-base font-semibold">
+          {formatMoney(account.orders_price_sum ?? 0)}
+          <span className="text-muted-foreground font-normal">
+            {" | "}
+            {account.orders_amount_sum}{" "}
+            {account.orders_amount_sum == 1
+              ? t("pages.accounts.show.lunch")
+              : t("pages.accounts.show.lunches")}
           </span>
+        </span>
 
-          <SheetTrigger asChild>
+        <SheetTrigger asChild>
+          <Button
+            onClick={() => {
+              void handleSeeDetail()
+            }}
+            className="text-foreground h-auto p-0 text-sm font-semibold hover:bg-transparent has-[>svg]:px-0 dark:hover:bg-transparent"
+            variant="ghost"
+          >
+            <Eye aria-hidden="true" className="size-4" />{" "}
+            {t("pages.accounts.show.see_detail")}
+          </Button>
+        </SheetTrigger>
+      </div>
+
+      {receipts.length > 1 ? (
+        <Collapsible className="grid gap-2">
+          <CollapsibleTrigger asChild>
             <Button
-              onClick={() => {
-                void handleSeeDetail()
-              }}
-              className="ml-auto"
-              variant="ghost"
+              variant="secondary"
+              className="h-10 w-full rounded-[10px] font-medium"
             >
-              <Eye aria-hidden="true" /> {t("pages.accounts.show.see_detail")}
+              <Eye aria-hidden="true" className="size-4" />
+              {t("pages.accounts.show.see_receipts")}
             </Button>
-          </SheetTrigger>
-        </CardTitle>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="grid gap-2 pt-1">
+            {receipts.map((payment) => (
+              <div
+                key={payment.id}
+                className="bg-background grid min-w-0 gap-2 rounded-md border p-3 text-sm"
+              >
+                <div className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
+                  <span>
+                    {t("pages.accounts.show.receipt_sent_at", {
+                      date: payment.receipt_uploaded_at,
+                    })}
+                  </span>
+                  <StatusBadge
+                    kind="payment"
+                    status={paymentPresentationStatus(payment)}
+                    label={
+                      paymentPresentationStatus(payment) === "approved"
+                        ? t("pages.accounts.show.status_accepted")
+                        : undefined
+                    }
+                  />
+                </div>
 
-        <Separator />
-
-        {receipts.length > 1 ? (
-          <Collapsible className="grid gap-2">
-            <CollapsibleTrigger asChild>
-              <Button variant="outline">
-                <Eye aria-hidden="true" />
-                {t("pages.accounts.show.see_receipts")}
-              </Button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="grid gap-2 pt-1">
-              {receipts.map((payment) => (
-                <div
-                  key={payment.id}
-                  className="bg-background grid min-w-0 gap-2 rounded-md border p-3 text-sm"
-                >
-                  <div className="text-muted-foreground flex items-center justify-between gap-2 text-xs">
-                    <span>
-                      {t("pages.accounts.show.receipt_sent_at", {
-                        date: payment.receipt_uploaded_at,
-                      })}
-                    </span>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      {payment.rejection_reason ===
-                        PARTIAL_PAYMENT_REJECTION_REASON && (
-                        <Badge
-                          variant="outline"
-                          className="gap-1.5 border-amber-200 bg-amber-50 px-2.5 py-1 text-amber-700 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500"
-                        >
-                          <span className="size-1.5 rounded-full" />
-                          {t(
-                            "pages.provider_collections.partial_payment_badge",
-                          )}
-                        </Badge>
-                      )}
-                      <StatusBadge kind="payment" status={payment.status} />
-                    </div>
-                  </div>
-
-                  <div className="flex min-w-0 items-center gap-2">
-                    <FileText aria-hidden="true" className="size-4 shrink-0" />
+                <div className="flex min-w-0 items-center gap-2">
+                  <FileText aria-hidden="true" className="size-4 shrink-0" />
+                  <a
+                    className="block min-w-0 flex-1 overflow-hidden font-medium text-ellipsis whitespace-nowrap hover:underline"
+                    href={payment.receipt_url}
+                    download
+                  >
+                    {payment.receipt_filename}
+                  </a>
+                  <Button asChild size="icon-sm" variant="ghost">
                     <a
-                      className="block min-w-0 flex-1 overflow-hidden font-medium text-ellipsis whitespace-nowrap hover:underline"
                       href={payment.receipt_url}
                       download
+                      aria-label={`Descargar ${payment.receipt_filename ?? "comprobante"}`}
                     >
-                      {payment.receipt_filename}
+                      <Download aria-hidden="true" />
                     </a>
-                    <Button asChild size="icon-sm" variant="ghost">
-                      <a
-                        href={payment.receipt_url}
-                        download
-                        aria-label={`Descargar ${payment.receipt_filename ?? "comprobante"}`}
-                      >
-                        <Download aria-hidden="true" />
-                      </a>
-                    </Button>
-                  </div>
+                  </Button>
                 </div>
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        ) : receipts.length === 1 ? (
-          <Button variant="outline" asChild>
-            <a href={receipts[0].receipt_url} download>
-              <Download aria-hidden="true" />{" "}
-              {t("pages.accounts.show.download_receipt")}
-            </a>
-          </Button>
-        ) : (
-          <Button variant="outline" disabled>
-            <Download aria-hidden="true" />{" "}
+              </div>
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      ) : receipts.length === 1 ? (
+        <Button
+          variant="secondary"
+          className="h-10 w-full rounded-[10px] font-medium"
+          asChild
+        >
+          <a href={receipts[0].receipt_url} download>
+            <Download aria-hidden="true" className="size-4" />{" "}
             {t("pages.accounts.show.download_receipt")}
-          </Button>
-        )}
-      </CardHeader>
+          </a>
+        </Button>
+      ) : (
+        <Button
+          variant="secondary"
+          className="h-10 w-full rounded-[10px] font-medium"
+          disabled
+        >
+          <Download aria-hidden="true" className="size-4" />{" "}
+          {t("pages.accounts.show.download_receipt")}
+        </Button>
+      )}
     </Card>
   )
 }

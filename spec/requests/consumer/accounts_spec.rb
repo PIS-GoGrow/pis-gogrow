@@ -149,6 +149,76 @@ RSpec.describe "Consumer Accounts", type: :request do
         all_keys = inertia.props[:providers].flat_map { |p| p.keys.map(&:to_s) }
         expect(all_keys).not_to include("tax_id", "bank_account_type", "user_id", "order_deadline")
       end
+
+      it "sends the delivered orders of the current month as the consumption detail" do
+        get accounts_path
+
+        expect(inertia).to have_props { |props|
+          detail = props.deep_symbolize_keys[:current_month_detail]
+          detail[:month] == I18n.l(Date.current, format: :month_year) &&
+            detail[:amount].to_d == BigDecimal("150.25") &&
+            detail[:orders].map { |order| order[:id] } == [ orders(:history_confirmed_past).id ]
+        }
+      end
+
+      it "sends the number of meals behind the pending accounts" do
+        get accounts_path
+
+        # La vianda del pedido confirmado y ya entregado de TuViandita; el de 2
+        # se entrega en tres días, y la cuenta de Endulzate no tiene pedidos.
+        expect(inertia).to have_props(total_meals: 1)
+      end
+
+      it "leaves out the orders of other employees and the ones that are not confirmed" do
+        get accounts_path
+
+        expect(inertia).to have_props { |props|
+          ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |order| order[:id] }
+          ids.exclude?(orders(:other_consumer_upcoming).id) && ids.exclude?(orders(:upcoming_pending_future).id)
+        }
+      end
+
+      it "does not include future confirmed orders in debt and meals until their delivery date" do
+        future_order = orders(:upcoming_confirmed_future)
+        past_order = orders(:history_confirmed_past)
+
+        get accounts_path
+
+        expect(inertia).to have_props(total_meals: 1, current_month_debt: "150.25")
+        expect(inertia).to have_props { |props|
+          order_ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |o| o[:id] }
+          expect(order_ids).to include(past_order.id)
+          expect(order_ids).not_to include(future_order.id)
+          true
+        }
+
+        travel_to future_order.delivery_date
+        DeliveredOrdersSyncJob.perform_now(date: future_order.delivery_date)
+
+        get accounts_path
+
+        expect(inertia).to have_props(total_meals: 3, current_month_debt: "450.75")
+        expect(inertia).to have_props { |props|
+          order_ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |o| o[:id] }
+          expect(order_ids).to contain_exactly(past_order.id, future_order.id)
+          true
+        }
+      end
+
+      it "serializes outstanding_amount for pending accounts and matches total_debt" do
+        account = accounts(:one_tuviandita_current)
+        account.update!(amount: 290.25)
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props { |props|
+          p = props.deep_symbolize_keys
+          target = p[:accounts].find { |a| a[:id] == account.id }
+          target[:outstanding_amount] == 290.25 &&
+            p[:total_debt].to_d >= 290.25.to_d
+        }
+      end
     end
 
     describe "Mandatory Edge Case 1: Interface Bypass" do
@@ -233,7 +303,7 @@ RSpec.describe "Consumer Accounts", type: :request do
       it "redirects unauthenticated users to sign in with alert flash" do
         get accounts_path
 
-        expect(response).to redirect_to(sign_in_path)
+        expect(response).to redirect_to(consumer_welcome_path)
         expect(flash[:alert]).to eq(I18n.t("flash.not_signed_in"))
       end
 
@@ -288,6 +358,7 @@ RSpec.describe "Consumer Accounts", type: :request do
         expect(inertia).to have_props { |props|
           p = props.deep_symbolize_keys
           p[:total_debt].to_d.zero? &&
+            p[:total_meals] == 0 &&
             p[:current_month_debt].to_d.zero? &&
             p[:benefit_used] == 0 &&
             p[:accounts].empty?
@@ -370,7 +441,7 @@ RSpec.describe "Consumer Accounts", type: :request do
     it "redirects an unauthenticated visitor to the sign in page" do
       get accounts_path
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(consumer_welcome_path)
     end
 
     it "redirects a user with provider role to the root path with an alert" do
