@@ -69,6 +69,8 @@ class WhatsappSenderJob < ApplicationJob
       }
       # Si la notificación cambió de estado entre que hicimos la request,
       # no la marcamos como aceptada si no que dejamos ese estado.
+      # (Puede ocurrir que haya lleagado el callback de Twilio, marcando la
+      # notificación como delivered/delivery_failed)
       attrs[:whatsapp_send_status] = :accepted if notification.sending?
       notification.update! attrs
     end
