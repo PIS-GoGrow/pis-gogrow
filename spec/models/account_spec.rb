@@ -331,6 +331,42 @@ RSpec.describe Account, type: :model do
       expect(Account.history).not_to include(account)
     end
 
+    it "clamps outstanding_amount to zero when paid amount exceeds payable amount" do
+      payment = create_payment(status: :approved)
+      payment.update_column(:expected_amount, account.payable_amount + 100)
+
+      expect(account.reload.outstanding_amount).to eq(0)
+      expect(account.settled?).to be(true)
+    end
+
+    it "is not settled when payable amount is zero without any approved payment" do
+      account.update!(amount: 0)
+
+      expect(account.outstanding_amount).to eq(0)
+      expect(account.settled?).to be(false)
+    end
+
+    it "calculates outstanding_amount and scopes correctly with VAT for company accounts" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+
+      company_account = consumer.company.accounts.create!(
+        provider:, month: Date.current.prev_month, amount: 1000.0, vat_rate: 0.22
+      )
+      # 1000 + 220 (22% IVA) = 1220
+      expect(company_account.payable_amount).to eq(1220.to_d)
+
+      payment = company_account.payments.build(provider:, status: :submitted)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename: "comprobante.png", content_type: "image/png")
+      payment.save!
+      expect(payment.expected_amount).to eq(1220.to_d)
+
+      payment.approve
+      expect(company_account.reload.settled?).to be(true)
+      expect(Account.history).to include(company_account)
+      expect(Account.pending).not_to include(company_account)
+    end
+
     it "is approved when a payment after a partial settles the account" do
       create_payment(status: :partial, created_at: 2.days.ago)
       create_payment(status: :approved, created_at: 1.day.ago)

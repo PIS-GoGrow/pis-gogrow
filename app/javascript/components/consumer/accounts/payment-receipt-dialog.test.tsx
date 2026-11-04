@@ -805,4 +805,22 @@ describe("PaymentReceiptDialog with inline upload", () => {
 
     expect(screen.queryByLabelText("Comprobante")).not.toBeInTheDocument()
   })
+
+  it("renders the expected amount of the receipt in review", () => {
+    const payment: Payment = {
+      ...submittedPayment,
+      expected_amount: 290.25,
+    }
+
+    render(
+      <PaymentReceiptDialog
+        accountId={42}
+        payments={[payment]}
+        canUpload={false}
+        inlineUpload
+      />,
+    )
+
+    expect(screen.getByText(/Importe:.*290,25/)).toBeInTheDocument()
+  })
 })

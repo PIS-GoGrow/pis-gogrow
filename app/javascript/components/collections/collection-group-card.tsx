@@ -209,7 +209,9 @@ export default function CollectionGroupCard({
                         detailMode="dialog"
                         settled={settled}
                         showPaymentHistory={
-                          settled || employee.payments.length > 1
+                          settled ||
+                          employee.payments.length > 1 ||
+                          employee.payments.some((p) => p.status === "approved")
                         }
                         showDownloadAll={settled}
                       />
@@ -236,7 +238,9 @@ export default function CollectionGroupCard({
                   detailMode="dialog"
                   settled={settled}
                   showPaymentHistory={
-                    settled || group.company.payments.length > 1
+                    settled ||
+                    group.company.payments.length > 1 ||
+                    group.company.payments.some((p) => p.status === "approved")
                   }
                   showDownloadAll={settled}
                   aside={

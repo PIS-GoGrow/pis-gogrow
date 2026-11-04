@@ -83,7 +83,11 @@ export default function CollectionAccountPanel({
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-foreground text-base font-semibold">
-          {formatMoney(account.payable_amount)}
+          {formatMoney(
+            settled
+              ? account.payable_amount
+              : (account.outstanding_amount ?? account.payable_amount),
+          )}
           <span className="text-muted-foreground font-normal">
             {" | "}
             {t("pages.provider_collections.meals", { count: account.meals })}
@@ -146,7 +150,8 @@ export default function CollectionAccountPanel({
       )}
       {(showPaymentHistory ||
         account.status === "partial" ||
-        account.status === "rejected") && (
+        account.status === "rejected" ||
+        account.payments.some((p) => p.status === "approved")) && (
         <CollectionPaymentHistory
           payments={account.payments}
           showDownloadAll={showDownloadAll}

@@ -26,6 +26,7 @@ const company = {
   vat_rate: 0,
   vat_amount: 0,
   payable_amount: 1000,
+  outstanding_amount: 1000,
   expected_amount: null,
   source: "company",
   status: "pending",

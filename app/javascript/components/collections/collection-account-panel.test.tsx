@@ -25,6 +25,7 @@ const account = {
   vat_rate: 0,
   vat_amount: 0,
   payable_amount: 800,
+  outstanding_amount: 800,
   expected_amount: null,
   source: "consumer",
   status: "pending",

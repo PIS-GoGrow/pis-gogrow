@@ -50,6 +50,21 @@ RSpec.describe Payment, type: :model do
 
       expect(payment_with_receipt.tap(&:save!).expected_amount).to eq(450.to_d)
     end
+
+    it "overrides a client-supplied expected_amount with the actual account outstanding amount" do
+      payment = account.payments.build(provider:, status: :submitted, expected_amount: 10.0)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename: "comprobante.png", content_type: "image/png")
+      payment.save!
+
+      expect(payment.expected_amount).to eq(500.to_d)
+    end
+
+    it "preserves exact decimal cents from the account outstanding amount" do
+      account.update!(amount: 290.25)
+      payment = payment_with_receipt.tap(&:save!)
+
+      expect(payment.expected_amount).to eq(290.25.to_d)
+    end
   end
 
   it "starts as pending" do

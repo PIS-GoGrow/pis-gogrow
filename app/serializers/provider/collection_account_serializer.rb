@@ -26,6 +26,11 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     row.payable_amount.to_f
   end
 
+  typelize :number
+  attribute :outstanding_amount do |row|
+    row.account.outstanding_amount.to_f
+  end
+
   typelize "'consumer' | 'company'"
   attribute :source do |row|
     row.company? ? "company" : "consumer"
