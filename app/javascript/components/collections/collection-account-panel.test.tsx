@@ -90,6 +90,7 @@ describe("CollectionAccountPanel", () => {
               receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "parcial.png",
               receipt_content_type: "image/png",
+              receipt_size: "63,8 KB",
             },
           ],
         }}
@@ -162,6 +163,7 @@ describe("CollectionAccountPanel", () => {
                 receipt_url: "/provider/comprobantes/17/archivo",
                 receipt_filename: "parcial.png",
                 receipt_content_type: "image/png",
+                receipt_size: "63,8 KB",
               },
               {
                 id: 18,
@@ -171,6 +173,7 @@ describe("CollectionAccountPanel", () => {
                 receipt_url: "/provider/comprobantes/18/archivo",
                 receipt_filename: "final.png",
                 receipt_content_type: "image/png",
+                receipt_size: "63,8 KB",
               },
             ],
           }}

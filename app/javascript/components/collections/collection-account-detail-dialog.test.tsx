@@ -148,6 +148,7 @@ describe("CollectionAccountDetailDialog", () => {
           receipt_url: "/receipt.pdf",
           receipt_filename: "comprobante.pdf",
           receipt_content_type: "application/pdf",
+          receipt_size: "63,8 KB",
         },
       ],
     } satisfies ProviderCollectionAccount
@@ -186,6 +187,7 @@ describe("CollectionAccountDetailDialog", () => {
             receipt_url: "/receipt.pdf",
             receipt_filename: "parcial.pdf",
             receipt_content_type: "application/pdf",
+            receipt_size: "63,8 KB",
           },
         ],
       } satisfies ProviderCollectionAccount
@@ -228,6 +230,7 @@ describe("Collections payment history destination", () => {
         receipt_url: "/receipt.pdf",
         receipt_filename: "parcial.pdf",
         receipt_content_type: "application/pdf",
+        receipt_size: "63,8 KB",
       } satisfies ProviderCollectionAccount["payments"][number]
       const account = {
         ...baseAccount,

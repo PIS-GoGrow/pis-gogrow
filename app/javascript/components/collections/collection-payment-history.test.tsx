@@ -17,6 +17,7 @@ function payment(
     receipt_url: "/provider/comprobantes/1/archivo",
     receipt_filename: "aprobado.png",
     receipt_content_type: "image/png",
+    receipt_size: "63,8 KB",
     ...overrides,
   }
 }
