@@ -53,11 +53,11 @@ function renderCard(account: Account, providerName?: string) {
 }
 
 describe("PaymentHistoryCard", () => {
-  it("renders the provider name in bold with the foreground color", () => {
+  it("renders the provider name in semibold with the foreground color", () => {
     renderCard(makeAccount(), "La Cocina")
 
     expect(screen.getByText("La Cocina: Septiembre 2026")).toHaveClass(
-      "font-bold",
+      "font-semibold",
       "text-foreground",
     )
   })
