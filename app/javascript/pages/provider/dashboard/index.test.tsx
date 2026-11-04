@@ -110,6 +110,51 @@ describe("Provider Dashboard Page", () => {
     expect(reload).not.toHaveBeenCalled()
   })
 
+  it("cancela el temporizador y evita la recarga si el componente se desmonta antes del cierre", () => {
+    vi.useFakeTimers()
+    const { unmount } = render(
+      <ProviderDashboard {...defaultProps} seconds_until_order_deadline={90} />,
+    )
+
+    unmount()
+    vi.runAllTimers()
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it("no programa la recarga si seconds_until_order_deadline es 0", () => {
+    vi.useFakeTimers()
+    render(
+      <ProviderDashboard {...defaultProps} seconds_until_order_deadline={0} />,
+    )
+
+    vi.runAllTimers()
+    expect(reload).not.toHaveBeenCalled()
+  })
+
+  it("reprograma la recarga cuando se actualiza seconds_until_order_deadline", () => {
+    vi.useFakeTimers()
+    const { rerender } = render(
+      <ProviderDashboard {...defaultProps} seconds_until_order_deadline={90} />,
+    )
+
+    rerender(
+      <ProviderDashboard {...defaultProps} seconds_until_order_deadline={30} />,
+    )
+
+    vi.advanceTimersByTime(29_000)
+    expect(reload).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(1_000)
+    expect(reload).toHaveBeenCalledTimes(1)
+    expect(reload).toHaveBeenCalledWith({
+      only: ["order_deadline_passed_today", "seconds_until_order_deadline"],
+    })
+
+    // El timeout anterior de 90s debe haber sido limpiado
+    vi.advanceTimersByTime(60_000)
+    expect(reload).toHaveBeenCalledTimes(1)
+  })
+
   it("muestra la hora de cierre si está configurada", () => {
     render(<ProviderDashboard {...defaultProps} order_deadline="11:30" />)
 

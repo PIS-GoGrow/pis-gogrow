@@ -38,6 +38,17 @@ RSpec.describe "Provider::Dashboard", type: :request do
       end
     end
 
+    context "con rol de proveedor sin onboarding completado" do
+      it "redirige al asistente de onboarding" do
+        provider.update_column(:onboarding_completed_at, nil)
+        sign_in provider_user, role: :provider
+
+        get provider_dashboard_path
+
+        expect(response).to redirect_to(provider_onboarding_path)
+      end
+    end
+
     context "con rol de proveedor" do
       before do
         sign_in provider_user, role: :provider
@@ -140,7 +151,59 @@ RSpec.describe "Provider::Dashboard", type: :request do
         end
       end
 
-      it "envía order_deadline como nil cuando no está configurada" do
+      context "al realizar una recarga parcial de Inertia" do
+        around do |example|
+          travel_to(Time.current.change(hour: 12)) { example.run }
+        end
+
+        it "retorna únicamente las props solicitadas para la actualización de recepción" do
+          provider.update!(order_deadline: Time.zone.parse("12:01"))
+
+          get provider_dashboard_path, headers: {
+            "X-Inertia" => "true",
+            "X-Inertia-Version" => RailsVite.digest,
+            "X-Inertia-Partial-Component" => "provider/dashboard/index",
+            "X-Inertia-Partial-Data" => "order_deadline_passed_today,seconds_until_order_deadline"
+          }
+
+          expect(response).to have_http_status(:success)
+          expect(inertia).to have_props(
+            order_deadline_passed_today: false,
+            seconds_until_order_deadline: 60
+          )
+        end
+
+        it "retorna el estado de cierre una vez alcanzada la hora límite mediante recarga parcial" do
+          provider.update!(order_deadline: Time.zone.parse("12:00"))
+
+          get provider_dashboard_path, headers: {
+            "X-Inertia" => "true",
+            "X-Inertia-Version" => RailsVite.digest,
+            "X-Inertia-Partial-Component" => "provider/dashboard/index",
+            "X-Inertia-Partial-Data" => "order_deadline_passed_today,seconds_until_order_deadline"
+          }
+
+          expect(response).to have_http_status(:success)
+          expect(inertia).to have_props(
+            order_deadline_passed_today: true,
+            seconds_until_order_deadline: nil
+          )
+        end
+
+        it "responde 409 Conflict si la petición parcial de Inertia tiene una versión desactualizada" do
+          get provider_dashboard_path, headers: {
+            "X-Inertia" => "true",
+            "X-Inertia-Version" => "outdated-version",
+            "X-Inertia-Partial-Component" => "provider/dashboard/index",
+            "X-Inertia-Partial-Data" => "order_deadline_passed_today,seconds_until_order_deadline"
+          }
+
+          expect(response).to have_http_status(:conflict)
+          expect(response.headers["X-Inertia-Location"]).to eq(provider_dashboard_url)
+        end
+      end
+
+      it "envía order_deadline y seconds_until_order_deadline como nil cuando no está configurada" do
         provider.update!(order_deadline: nil)
 
         get provider_dashboard_path
@@ -148,6 +211,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
         expect(inertia).to have_props(
           order_deadline: nil,
           order_deadline_passed_today: false,
+          seconds_until_order_deadline: nil,
           provider: { order_deadline: nil }
         )
       end
