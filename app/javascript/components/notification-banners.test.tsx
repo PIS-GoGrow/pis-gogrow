@@ -88,6 +88,38 @@ describe("NotificationBanners", () => {
     ).toBeInTheDocument()
   })
 
+  it("renders a new order notification with updated quantity for provider and can be dismissed", async () => {
+    const user = userEvent.setup()
+
+    mocks.notifications.push({
+      id: 77,
+      title: "Nuevo pedido",
+      description: "Juan Pérez pidió 3 de Milanesa con papas fritas para el viernes 6 de noviembre.",
+      requires_action: false,
+    })
+
+    render(<NotificationBanners />)
+
+    expect(screen.getByText("Nuevo pedido")).toBeInTheDocument()
+    expect(
+      screen.getByText("Juan Pérez pidió 3 de Milanesa con papas fritas para el viernes 6 de noviembre."),
+    ).toBeInTheDocument()
+
+    const closeButton = screen.getByRole("button", { name: "Cerrar notificación" })
+    await user.click(closeButton)
+
+    expect(mocks.patch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: "/notificaciones/77/cerrar",
+        method: "patch",
+      }),
+      {},
+      expect.objectContaining({
+        preserveScroll: true,
+      }),
+    )
+  })
+
   it("renders an HR debt payment reminder naming multiple creditors", () => {
     mocks.notifications.push({
       id: 2,

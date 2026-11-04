@@ -1140,6 +1140,48 @@ RSpec.describe Order, type: :model do
       expect(notification.updated_at).to eq(original_updated_at)
     end
 
+    it "maintains database uniqueness when updating quantity multiple times sequentially" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      delivery = {
+        delivery_method: order.delivery_method,
+        address: order.address
+      }
+
+      order.modify(by: users(:one), quantity: 2, notes: order.notes, delivery:)
+      order.modify(by: users(:one), quantity: 3, notes: order.notes, delivery:)
+
+      active_notifications = Notification.where(
+        event: "order_received",
+        notifiable: order,
+        closed_at: nil
+      )
+
+      expect(active_notifications.count).to eq(1)
+      expect(active_notifications.first.description).to include("pidió 3 de")
+    end
+
+    it "does not update or recreate order_received notification when changing quantity of a non-pending order" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      notification = Notification.find_by!(event: "order_received", notifiable: order)
+      order.update_columns(status: Order.statuses[:cancelled])
+
+      expect {
+        order.update!(amount: 5)
+      }.not_to change { notification.reload.description }
+    end
+
+    it "handles safely when provider has no associated user" do
+      order = orders(:upcoming_pending_future).dup
+      order.save!
+
+      allow(order).to receive(:provider).and_return(nil)
+      expect { order.send(:refresh_received_notification) }.not_to raise_error
+    end
+
     it "notifies the consumer when the provider rejects an order" do
       order = orders(:upcoming_pending_today)
 
