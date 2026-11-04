@@ -200,6 +200,15 @@ RSpec.describe "Orders", type: :request do
         sign_in users(:provider_user)
         get order_path(orders(:upcoming_confirmed_future))
         expect(response).to redirect_to(root_path)
+
+        sign_in users(:admin), role: :admin
+        get order_path(orders(:upcoming_confirmed_future))
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "returns not found for a non-existent order id" do
+        get order_path(id: 999_999)
+        expect(response).to have_http_status(:not_found)
       end
 
       it "serializes rejection reason and rejection details on a rejected order" do

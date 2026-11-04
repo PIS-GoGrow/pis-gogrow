@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import type { Order } from "@/types"
@@ -79,6 +79,84 @@ describe("Consumer::Orders Show Page", () => {
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
     expect(screen.getByText("Sin stock disponible")).toBeInTheDocument()
+  })
+
+  it("displays the unit price instead of the total base price", () => {
+    const multipleOrder: Order = {
+      ...baseOrder,
+      amount: 2,
+      price: 600,
+      subsidy: 100,
+      discounted_price: 500,
+    }
+
+    render(<Show order={multipleOrder} />)
+
+    const priceRow = screen.getByText("Precio base").closest("div")
+
+    expect(priceRow).not.toBeNull()
+    expect(within(priceRow!).getByText("$300")).toBeInTheDocument()
+  })
+
+  it("displays the single unit price when order has amount 1", () => {
+    const singleOrder: Order = {
+      ...baseOrder,
+      amount: 1,
+      price: 300,
+    }
+
+    render(<Show order={singleOrder} />)
+
+    const priceRow = screen.getByText("Precio base").closest("div")
+    expect(priceRow).not.toBeNull()
+    expect(within(priceRow!).getByText("$300")).toBeInTheDocument()
+  })
+
+  it("formats decimal unit prices with cents properly", () => {
+    const decimalOrder: Order = {
+      ...baseOrder,
+      amount: 2,
+      price: 601,
+      subsidy: 300.5,
+      discounted_price: 300.5,
+    }
+
+    render(<Show order={decimalOrder} />)
+
+    const priceRow = screen.getByText("Precio base").closest("div")
+    expect(priceRow).not.toBeNull()
+    expect(within(priceRow!).getByText("$300,50")).toBeInTheDocument()
+  })
+
+  it("displays fallback text when price is missing or amount is zero", () => {
+    const noPriceOrder: Order = {
+      ...baseOrder,
+      price: undefined,
+      amount: 2,
+    }
+
+    const { rerender } = render(<Show order={noPriceOrder} />)
+
+    let priceRow = screen.getByText("Precio base").closest("div")
+    expect(priceRow).not.toBeNull()
+    expect(
+      within(priceRow!).getByText("Importe no disponible"),
+    ).toBeInTheDocument()
+
+    const zeroAmountOrder: Order = {
+      ...baseOrder,
+      price: 500,
+      amount: 0,
+    }
+
+    rerender(<Show order={zeroAmountOrder} />)
+    priceRow = screen.getByText("Precio base").closest("div")
+    expect(priceRow).not.toBeNull()
+    expect(
+      within(priceRow!).getByText("Importe no disponible"),
+    ).toBeInTheDocument()
+    expect(within(priceRow!).queryByText("NaN")).not.toBeInTheDocument()
+    expect(within(priceRow!).queryByText("Infinity")).not.toBeInTheDocument()
   })
 
   it("displays custom rejection details when reason is 'other'", () => {

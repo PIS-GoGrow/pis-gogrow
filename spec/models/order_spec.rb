@@ -14,6 +14,37 @@ RSpec.describe Order, type: :model do
       .with_prefix(:rejection_reason)
   end
 
+  describe "amount and price validations" do
+    let(:order) { orders(:upcoming_pending_today) }
+
+    it "requires amount to be an integer strictly greater than zero" do
+      order.amount = 0
+      expect(order).not_to be_valid
+      expect(order.errors[:amount]).to be_present
+
+      order.amount = -1
+      expect(order).not_to be_valid
+
+      order.amount = 1.5
+      expect(order).not_to be_valid
+
+      order.amount = 2
+      expect(order).to be_valid
+    end
+
+    it "requires price to be non-negative" do
+      order.price = -10
+      expect(order).not_to be_valid
+      expect(order.errors[:price]).to be_present
+
+      order.price = 0
+      expect(order).to be_valid
+
+      order.price = 300.50
+      expect(order).to be_valid
+    end
+  end
+
   describe "rejection reason validations" do
     let(:order) { orders(:upcoming_pending_today) }
 

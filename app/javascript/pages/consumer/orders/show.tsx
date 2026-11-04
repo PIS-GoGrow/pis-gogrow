@@ -34,6 +34,11 @@ export default function Show({ order }: ConsumerOrdersShow) {
   const { t } = useTranslation()
   const { formatMoney, formatLongDate } = useFormatters()
 
+  const unitPrice =
+    order.price != null && order.amount != null && order.amount > 0
+      ? order.price / order.amount
+      : null
+
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: t("pages.orders.index.title"),
@@ -113,8 +118,8 @@ export default function Show({ order }: ConsumerOrdersShow) {
               </Row>
 
               <Row label={t("pages.orders.show.base_price")}>
-                {order.price != null
-                  ? formatMoney(order.price)
+                {unitPrice != null
+                  ? formatMoney(unitPrice)
                   : t("pages.orders.index.no_price")}
               </Row>
 
