@@ -6,7 +6,7 @@
 source "https://rubygems.org", cooldown: 7
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.3", ">= 8.1.3.1"
+gem "rails", "~> 8.1.4", ">= 8.1.4.1"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use pg as the database for Active Record
@@ -62,6 +62,9 @@ gem "rails-i18n", "~> 8.0"
 
 # Hacer requests HTTP cómodamente y poder testearlas
 gem "faraday"
+
+# Exportar planillas de Excel
+gem "caxlsx", "~> 4.5"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem

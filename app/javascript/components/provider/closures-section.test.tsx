@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -161,5 +162,29 @@ describe("ClosuresSection", () => {
     expect(
       screen.getByText("Ya tenés un cierre programado en esas fechas."),
     ).toBeInTheDocument()
+  })
+
+  it("deshabilita sábados y domingos en el calendario de selección de rango", async () => {
+    const user = userEvent.setup()
+    render(<ClosuresSection closures={[]} today="2026-10-12" />)
+
+    fireEvent.click(screen.getByRole("button", { name: "Programar cierre" }))
+
+    const datePickerButton = screen.getByRole("button", {
+      name: "Rango de fechas",
+    })
+    await user.click(datePickerButton)
+
+    for (const weekend of screen.getAllByRole("button", {
+      name: /^(sábado|domingo),/,
+    })) {
+      expect(weekend).toBeDisabled()
+    }
+    const weekdays = screen.getAllByRole("button", {
+      name: /^(lunes|martes|miércoles|jueves|viernes),/,
+    })
+    expect(weekdays.some((weekday) => !weekday.hasAttribute("disabled"))).toBe(
+      true,
+    )
   })
 })

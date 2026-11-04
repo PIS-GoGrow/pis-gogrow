@@ -76,7 +76,7 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
       expect(page).to have_css("[data-active='true']", text: "Inicio")
       expect(page).to have_link("Subsidios")
       expect(page).to have_link("Empleados")
-      expect(page).to have_link("Cuenta")
+      expect(page).to have_no_link("Cuenta")
       expect(page).to have_link("Pagos", href: admin_payments_path)
     end
   end
@@ -97,7 +97,7 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
     it "sends a visitor to sign in" do
       visit admin_dashboard_path
 
-      expect(page).to have_current_path(sign_in_path)
+      expect(page).to have_current_path(admin_welcome_path)
     end
 
     it "keeps a consumer and a provider out of the HR home" do

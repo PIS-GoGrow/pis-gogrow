@@ -2,7 +2,7 @@ import { Head, usePage } from "@inertiajs/react"
 import { useEffect, useMemo, useState } from "react"
 
 import { useConsumerMenuFilter } from "@/hooks/consumer-menu-filter"
-import useSessionStorage from "@/hooks/use-session-storage"
+import { useConsumerCart } from "@/hooks/use-consumer-cart"
 import AppLayout from "@/layouts/app-layout"
 import { consumerDashboard } from "@/routes"
 import type { ConsumerDashboardIndex } from "@/types"
@@ -20,11 +20,13 @@ export default function Index({
   schedules,
   providers,
   closures,
+  favorites,
+  frequent,
   benefit,
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const [view, setView] = useState<View>("menu")
-  const todayDate = today()
+  const todayDate = week.today ?? today()
   const initialDate =
     week.days.find((d) => d.date === todayDate)?.date ??
     week.days[0]?.date ??
@@ -32,10 +34,7 @@ export default function Index({
   const [date, setDate] = useState(initialDate)
   const { activeProviders, setActiveProviders } = useConsumerMenuFilter()
   const [selected, setSelected] = useState<Schedule | null>(null)
-  // Guardamos el carrito en sessionStorage. Así, se persiste si el consumidor
-  // recarga la página o navega por la aplicación, pero se borra si cierra la
-  // tab del navegador.
-  const [cart, setCart] = useSessionStorage<CartItem[]>("cart", [])
+  const [cart, setCart] = useConsumerCart()
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
   const [selections, setSelections] = useState<Selections>({})
@@ -199,11 +198,14 @@ export default function Index({
             setActiveProviders={setActiveProviders}
             schedules={visibleSchedules}
             closures={closures}
+            favorites={favorites}
+            frequent={frequent}
             cart={cart}
             count={count}
             loading={loading}
             total={pricing?.total}
             openDetail={openDetail}
+            todayDate={todayDate}
           />
         )}
         {view === "detail" && selected && (

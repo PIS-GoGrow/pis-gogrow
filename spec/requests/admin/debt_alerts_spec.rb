@@ -97,7 +97,7 @@ RSpec.describe "Admin::DebtAlerts", type: :request do
       sign_out
       patch admin_debt_alert_path, params: { company: { debt_alert_threshold: 1000 } }
 
-      expect(response).to redirect_to(sign_in_path)
+      expect(response).to redirect_to(admin_welcome_path)
       expect(company.reload.debt_alert_threshold).to eq(2000)
     end
   end

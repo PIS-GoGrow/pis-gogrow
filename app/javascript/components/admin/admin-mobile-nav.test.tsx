@@ -28,6 +28,17 @@ vi.mock("@inertiajs/react", async () => {
 })
 
 describe("AdminMobileNav", () => {
+  it("keeps four items and Inicio active in the analysis", () => {
+    currentUrl = "/rrhh/analisis-beneficio?month=2026-10"
+    const menu = nav()
+    expect(menu.getAllByRole("link")).toHaveLength(4)
+    expect(menu.getByRole("link", { name: "Inicio" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    currentUrl = "/rrhh/inicio"
+  })
+
   function nav() {
     render(<AdminMobileNav />)
     return within(
@@ -143,16 +154,49 @@ describe("AdminMobileNav", () => {
     )
   })
 
-  it("mantiene Pagos inactivo en facturas (/rrhh/facturas)", () => {
+  it("marca Cuenta como activo en Facturas (/rrhh/facturas)", () => {
     currentUrl = "/rrhh/facturas"
     const menu = nav()
 
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
     const pagosLink = menu.getByRole("link", { name: "Pagos" })
     expect(pagosLink).not.toHaveAttribute("aria-current")
     expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
       "aria-current",
     )
     expect(menu.getByRole("link", { name: "Empleados" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("mantiene Cuenta activo en Facturas con parámetros de consulta (/rrhh/facturas?estado=pendiente)", () => {
+    currentUrl = "/rrhh/facturas?estado=pendiente"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
+      "aria-current",
+    )
+    expect(menu.getByRole("link", { name: "Pagos" })).not.toHaveAttribute(
+      "aria-current",
+    )
+  })
+
+  it("mantiene Cuenta activo en subrutas de Facturas (/rrhh/facturas/1)", () => {
+    currentUrl = "/rrhh/facturas/1"
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(menu.getByRole("link", { name: "Inicio" })).not.toHaveAttribute(
       "aria-current",
     )
   })

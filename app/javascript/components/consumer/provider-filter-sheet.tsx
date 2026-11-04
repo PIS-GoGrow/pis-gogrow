@@ -8,6 +8,7 @@ import {
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
+import FavoriteButton from "@/components/consumer/menus/favorite-button"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -26,6 +27,8 @@ interface Props<Id extends string | number> {
   onApply: (providers: Set<Id>) => void
   selectionMode?: "multiple" | "single"
   allProvidersLabel?: string
+  favoriteIds?: Set<Id>
+  onToggleFavorite?: (id: Id, isFavorite: boolean) => void
 }
 
 export function ProviderFilterSheet<Id extends string | number>({
@@ -34,6 +37,8 @@ export function ProviderFilterSheet<Id extends string | number>({
   onApply,
   selectionMode = "multiple",
   allProvidersLabel,
+  favoriteIds,
+  onToggleFavorite,
 }: Props<Id>) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -148,6 +153,21 @@ export function ProviderFilterSheet<Id extends string | number>({
                 >
                   {provider.name}
                 </Label>
+                {favoriteIds && onToggleFavorite && (
+                  <FavoriteButton
+                    active={favoriteIds.has(provider.id)}
+                    label={t(
+                      `pages.consumer_dashboard.index.favorites.${favoriteIds.has(provider.id) ? "remove" : "add"}`,
+                      { name: provider.name },
+                    )}
+                    onToggle={() =>
+                      onToggleFavorite(
+                        provider.id,
+                        favoriteIds.has(provider.id),
+                      )
+                    }
+                  />
+                )}
               </div>
             ))}
           </div>

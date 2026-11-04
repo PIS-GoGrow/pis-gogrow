@@ -25,15 +25,21 @@ class Account < ApplicationRecord
   scope :current, -> { where(month: Date.current.beginning_of_month) }
   scope :companies, -> { where(owner_type: "Company") }
 
-  # Los dos scopes de abajo asumen que Payment.account_id no es NULL
-  # TODO: Hay que cambiar según qué estado sea el que se elija para pagos
-  # Cuentas con deuda que no tienen un pago aprobado
-  scope :pending, -> {
-    where.not(id: Payment.approved.select(:account_id)).where.not(amount: ..0)
-  }
-  # Cuentas con pago aprobado
+  # Lo mismo que outstanding_amount, en SQL. ROUND de PostgreSQL redondea la
+  # mitad hacia arriba, como vat_amount.
+  OUTSTANDING_AMOUNT_SQL = <<~SQL.squish
+    accounts.amount + ROUND(accounts.amount * accounts.vat_rate, 2) - COALESCE((
+      SELECT SUM(payments.expected_amount) FROM payments
+      WHERE payments.account_id = accounts.id AND payments.status = ?
+    ), 0)
+  SQL
+
+  # Cuentas con saldo que los comprobantes aprobados no cubren
+  scope :pending, -> { where("#{OUTSTANDING_AMOUNT_SQL} > 0", Payment.statuses[:approved]) }
+  # Cuentas saldadas
   scope :history, -> {
     where(id: Payment.approved.select(:account_id))
+      .where("#{OUTSTANDING_AMOUNT_SQL} <= 0", Payment.statuses[:approved])
   }
 
   def company?
@@ -50,6 +56,24 @@ class Account < ApplicationRecord
 
   def payable_amount
     amount.to_d + vat_amount
+  end
+
+  # Cada comprobante aprobado cubre el importe que se esperaba al enviarlo, no
+  # la deuda que la cuenta tenga después. Con los pagos ya cargados se suma en
+  # memoria, por lo mismo que last_payment; si no, se consulta sin cargarlos,
+  # para que Payment no deje la asociación cacheada sin el pago que guarda.
+  def paid_amount
+    return payments.approved.sum(:expected_amount) unless payments.loaded?
+
+    payments.select(&:approved?).sum { it.expected_amount.to_d }
+  end
+
+  def outstanding_amount
+    [ payable_amount - paid_amount, 0 ].max
+  end
+
+  def settled?
+    payments.any?(&:approved?) && outstanding_amount.zero?
   end
 
   def due_date
@@ -83,12 +107,13 @@ class Account < ApplicationRecord
   # estado es "submitted" aunque un pago más nuevo ya esté aprobado o
   # rechazado: si no, ese pago pendiente quedaría invisible para el proveedor.
   # Resuelto eso, manda el estado del último pago; uno en pending es un estado
-  # intermedio, no un comprobante informado.
+  # intermedio, no un comprobante informado. Un pago aprobado que no cubre la
+  # deuda generada después de enviarlo deja la cuenta otra vez pendiente.
   def collection_status
     return "submitted" if payment_pending_review
 
     last = last_payment
-    return "pending" if last.nil? || last.pending?
+    return "pending" if last.nil? || last.pending? || (last.approved? && !settled?)
 
     last.status
   end
@@ -102,9 +127,9 @@ class Account < ApplicationRecord
     # TODO: Habría que validar que se tengan solo en cuenta las órdenes confirmadas
     with_lock do
       if owner_type == "Consumer"
-        update! amount: orders.confirmed.sum("COALESCE(orders.discounted_price, orders.price)")
+        update! amount: orders.consumed.sum("COALESCE(orders.discounted_price, orders.price)")
       else
-        update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
+        update! amount: orders.consumed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
       end
     end
 
@@ -122,7 +147,7 @@ class Account < ApplicationRecord
     #   [id_cuenta, suma_montos, suma_precios]
     results =
       Order.joins(:order_accounts)
-           .confirmed
+           .consumed
            .where(order_accounts: { account_id: account_ids })
            .group("order_accounts.account_id")
            .pluck(
