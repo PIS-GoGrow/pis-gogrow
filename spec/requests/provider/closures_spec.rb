@@ -154,6 +154,32 @@ RSpec.describe "Provider::Closures", type: :request do
         follow_redirect!
         expect(inertia).to have_props(errors: { base: [ error_message(:base, :overlaps) ] })
       end
+
+      it "accepts a closure planned for 2027 and returns it in Inertia props" do
+        starts_on = Date.new(2027, 3, 1)
+        ends_on = Date.new(2027, 3, 5)
+
+        expect do
+          post provider_closures_path, params: { starts_on: starts_on.iso8601, ends_on: ends_on.iso8601, reason: "Cierre 2027" }
+        end.to change { provider.closures.count }.by(1)
+
+        expect(response).to redirect_to(provider_operational_settings_path)
+        follow_redirect!
+        expect(inertia).to render_component("provider/operational_settings/show")
+        expect(inertia.props[:closures].pluck(:reason)).to include("Cierre 2027")
+      end
+
+      it "accepts a range starting on Friday and ending on Monday spanning the weekend" do
+        friday = Date.new(2026, 10, 16)
+        monday = Date.new(2026, 10, 19)
+
+        post provider_closures_path, params: { starts_on: friday.iso8601, ends_on: monday.iso8601, reason: "Fin de semana largo" }
+
+        expect(response).to redirect_to(provider_operational_settings_path)
+        closure = provider.closures.last
+        expect(closure.covers?(friday + 1.day)).to be true
+        expect(closure.covers?(friday + 2.days)).to be true
+      end
     end
   end
 
@@ -251,6 +277,13 @@ RSpec.describe "Provider::Closures", type: :request do
 
         expect(response).to have_http_status(:not_found)
         expect(foreign.reload.reason).to eq("Vacaciones")
+      end
+
+      it "allows updating a closure to dates in 2027" do
+        patch provider_closure_path(closure), params: { starts_on: "2027-04-05", ends_on: "2027-04-09", reason: "Mantenimiento 2027" }
+
+        expect(response).to redirect_to(provider_operational_settings_path)
+        expect(closure.reload).to have_attributes(starts_on: Date.new(2027, 4, 5), ends_on: Date.new(2027, 4, 9), reason: "Mantenimiento 2027")
       end
     end
 

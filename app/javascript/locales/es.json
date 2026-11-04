@@ -356,7 +356,7 @@
         "title": "Nuevo pedido"
       },
       "order_rejection": {
-        "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}.",
+        "description": "Tu pedido del %{date} de %{dish} fue rechazado por %{provider} %{reason}.",
         "reasons": {
           "customer_request": "por solicitud del cliente",
           "dish_deleted": "porque el plato fue eliminado",
@@ -367,7 +367,7 @@
           "other": "por el siguiente motivo: %{details}",
           "out_of_stock": "porque no había stock disponible"
         },
-        "title": "Tu pedido fue cancelado"
+        "title": "Tu pedido fue rechazado"
       },
       "payment_available": {
         "description": "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!",
@@ -449,7 +449,10 @@
           "see_receipts": "Ver comprobantes",
           "spending": "Consumo",
           "status_accepted": "Confirmado",
-          "status_rejected": "Rechazado"
+          "status_partial": "Pago parcial",
+          "status_pending": "Pendiente",
+          "status_rejected": "Rechazado",
+          "status_submitted": "En revisión"
         }
       },
       "admin": {
@@ -764,7 +767,8 @@
               "copy": "Copiar número de cuenta",
               "copy_failed": "No pudimos copiar el número de cuenta",
               "holder": "Beneficiario: %{holder}",
-              "missing": "Este proveedor todavía no cargó sus datos de cobro."
+              "missing": "Este proveedor todavía no cargó sus datos de cobro.",
+              "missing_upload_hint": "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro."
             },
             "confirmed": "Confirmado",
             "detail": {
@@ -1334,6 +1338,7 @@
         },
         "statuses": {
           "approved": "Aprobado",
+          "partial": "Pago parcial",
           "pending": "Pendiente",
           "rejected": "Rechazado",
           "submitted": "En revisión"

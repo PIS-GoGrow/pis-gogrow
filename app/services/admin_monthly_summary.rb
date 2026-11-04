@@ -69,7 +69,7 @@ class AdminMonthlySummary
   # Los mismos empleados que Empleados > Pendientes: los que no saldaron el mes.
   def debtors(limit: 3)
     AdminConsumerSummary.rows_for(@company, month: @month)
-                        .select { it.status.in?(%w[pending rejected submitted]) }
+                        .select { it.status.in?(%w[pending rejected partial submitted]) }
                         .sort_by { [ -it.amount, it.name ] }
                         .first(limit)
   end

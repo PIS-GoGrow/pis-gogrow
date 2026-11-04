@@ -155,6 +155,39 @@ RSpec.describe Provider, type: :model do
     end
   end
 
+  describe "#payment_details_complete?" do
+    let(:provider) { providers(:tuviandita) }
+
+    it "is true with the bank, the account number and the holder" do
+      provider.assign_attributes(bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: "Tu Viandita S.A.")
+
+      expect(provider.payment_details_complete?).to be true
+    end
+
+    it "is false while any of them is missing" do
+      provider.assign_attributes(bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: nil)
+
+      expect(provider.payment_details_complete?).to be false
+    end
+
+    it "is false when attributes are blank strings or whitespace" do
+      provider.assign_attributes(bank_name: "   ", bank_account_number: "1150260", bank_account_holder: "Tu Viandita S.A.")
+      expect(provider.payment_details_complete?).to be false
+
+      provider.assign_attributes(bank_name: "Santander", bank_account_number: "", bank_account_holder: "Tu Viandita S.A.")
+      expect(provider.payment_details_complete?).to be false
+
+      provider.assign_attributes(bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: "\t\n")
+      expect(provider.payment_details_complete?).to be false
+    end
+
+    it "is false when all payment detail attributes are nil" do
+      provider.assign_attributes(bank_name: nil, bank_account_number: nil, bank_account_holder: nil)
+
+      expect(provider.payment_details_complete?).to be false
+    end
+  end
+
   describe "#order_deadline_passed_today?" do
     let(:provider) { providers(:tuviandita) }
 
