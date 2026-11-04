@@ -223,6 +223,27 @@ RSpec.describe Account, type: :model do
         expect(account.payable_amount).to eq(150.to_d)
       end
     end
+
+    it "no cuenta un pedido confirmado hasta su fecha de entrega" do
+      travel_to Time.zone.local(2026, 11, 3, 12)
+      menu = Menu.create!(provider:, name: "Wok", description: "De verduras", price: 400)
+      schedule = Schedule.create!(menu:, date: Date.new(2026, 11, 5), amount: 10)
+      order = Order.create!(
+        consumer:, schedule:, amount: 1, price: 400, discounted_price: 250,
+        address: company.address, delivery_method: :office, status: :confirmed
+      )
+      employee_account, company_account = order.accounts.partition { it.owner == consumer }.map(&:sole)
+
+      expect([ employee_account.reload.amount, company_account.reload.amount ]).to eq([ 0, 0 ])
+      expect(described_class.amount_and_price_sum([ employee_account.id ])).to be_empty
+
+      travel_to Time.zone.local(2026, 11, 5, 0, 5)
+      employee_account.sync_amount!
+      company_account.sync_amount!
+
+      expect([ employee_account.reload.amount, company_account.reload.amount ]).to eq([ 250, 150 ])
+      expect(described_class.amount_and_price_sum([ employee_account.id ])).to eq(employee_account.id => { amount: 1, price: 250 })
+    end
   end
 
   describe "#collection_status" do

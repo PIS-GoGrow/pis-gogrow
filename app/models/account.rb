@@ -102,9 +102,9 @@ class Account < ApplicationRecord
     # TODO: Habría que validar que se tengan solo en cuenta las órdenes confirmadas
     with_lock do
       if owner_type == "Consumer"
-        update! amount: orders.confirmed.sum("COALESCE(orders.discounted_price, orders.price)")
+        update! amount: orders.consumed.sum("COALESCE(orders.discounted_price, orders.price)")
       else
-        update! amount: orders.confirmed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
+        update! amount: orders.consumed.sum("orders.price - COALESCE(orders.discounted_price, orders.price)")
       end
     end
 
@@ -122,7 +122,7 @@ class Account < ApplicationRecord
     #   [id_cuenta, suma_montos, suma_precios]
     results =
       Order.joins(:order_accounts)
-           .confirmed
+           .consumed
            .where(order_accounts: { account_id: account_ids })
            .group("order_accounts.account_id")
            .pluck(

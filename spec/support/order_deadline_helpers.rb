@@ -9,6 +9,7 @@ module OrderDeadlineHelpers
       click_on "Agregar hora de cierre"
       find_by_id("order_deadline").click
       choose_time(time)
+      expect(page).to have_button("Guardar cambios", disabled: false)
       click_on "Guardar cambios"
     else
       find_button("Hora de cierre").click
@@ -22,7 +23,8 @@ module OrderDeadlineHelpers
 
   def choose_time(time)
     option = find("[role=option]", exact_text: time)
-    page.execute_script("arguments[0].scrollIntoView({ block: 'center' });", option)
+    page.execute_script("arguments[0].scrollIntoView({ block: 'center', behavior: 'instant' });", option)
+    sleep 0.1
     option.click
   end
 end
