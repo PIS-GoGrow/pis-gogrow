@@ -4,6 +4,11 @@ class PaymentSerializer < ApplicationSerializer
   typelize_from Payment
   attributes :id, :status, :created_at, :rejection_reason
 
+  typelize :number, nullable: true
+  attribute :expected_amount do |payment|
+    payment.expected_amount&.to_f
+  end
+
   typelize :string
   attribute :receipt_uploaded_at do |payment|
     DateFormat.short(payment.created_at)
@@ -43,6 +48,7 @@ end
 # Table name: payments
 #
 #  id               :bigint           not null, primary key
+#  expected_amount  :decimal(10, 2)
 #  rejection_reason :text
 #  status           :integer          default(0), not null
 #  created_at       :datetime         not null

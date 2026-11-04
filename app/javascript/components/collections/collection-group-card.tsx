@@ -209,7 +209,9 @@ export default function CollectionGroupCard({
                         detailMode="dialog"
                         settled={settled}
                         showPaymentHistory={
-                          settled || employee.payments.length > 1
+                          settled ||
+                          employee.payments.length > 1 ||
+                          employee.payments.some((p) => p.status === "approved")
                         }
                         showDownloadAll={settled}
                       />
@@ -228,7 +230,12 @@ export default function CollectionGroupCard({
                 icon={Building2}
                 title={t("pages.provider_collections.group.company")}
                 status={group.company.status}
-                amount={group.company.payable_amount}
+                amount={
+                  settled
+                    ? group.company.payable_amount
+                    : (group.company.outstanding_amount ??
+                      group.company.payable_amount)
+                }
               >
                 <CollectionAccountPanel
                   account={group.company}
@@ -236,7 +243,9 @@ export default function CollectionGroupCard({
                   detailMode="dialog"
                   settled={settled}
                   showPaymentHistory={
-                    settled || group.company.payments.length > 1
+                    settled ||
+                    group.company.payments.length > 1 ||
+                    group.company.payments.some((p) => p.status === "approved")
                   }
                   showDownloadAll={settled}
                   aside={

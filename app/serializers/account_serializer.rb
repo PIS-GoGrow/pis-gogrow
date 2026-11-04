@@ -22,6 +22,11 @@ class AccountSerializer < ApplicationSerializer
     account.payable_amount.to_f
   end
 
+  typelize :number
+  attribute :outstanding_amount do |account|
+    account.outstanding_amount.to_f
+  end
+
   typelize :boolean
   attribute :current do |account|
     account.current?

@@ -593,6 +593,111 @@ RSpec.describe "Payments", type: :request do
     expect(account.reload.collection_status).to eq("approved")
   end
 
+  it "keeps the debt generated after a receipt was sent as a separate balance that takes a new receipt" do
+    user, account, provider = setup_payment_account
+    account.update!(amount: 290.25)
+    sign_in(user, role: :consumer)
+
+    post payments_path, params: {
+      payment: { account_id: account.id, receipt: receipt_upload(filename: "first.png") }
+    }, headers: account_page_headers
+    first = account.payments.sole
+    account.update!(amount: 740.25)
+    first.approve
+
+    expect(first.reload.expected_amount).to eq(290.25.to_d)
+    expect(account.reload.collection_status).to eq("pending")
+    expect(user.consumer.total_debt).to eq(450.to_d)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "second.png") }
+      }, headers: account_page_headers
+    }.to change(Payment, :count).by(1)
+
+    expect(account.payments.submitted.sole.expected_amount).to eq(450.to_d)
+  end
+
+  it "does not accept a receipt when the account is already settled" do
+    user, account, provider = setup_payment_account
+    sign_in(user, role: :consumer)
+    payment = submitted_payment(account:, provider:)
+    payment.approve
+    expect(account.reload.settled?).to be(true)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "extra.png") }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_props(
+      errors: { receipt: [ I18n.t("validations.payment_closed") ] }
+    )
+  end
+
+  it "overrides an injected expected_amount parameter with the actual outstanding debt" do
+    user, account, provider = setup_payment_account
+    account.update!(amount: 290.25)
+    sign_in(user, role: :consumer)
+
+    post payments_path, params: {
+      payment: {
+        account_id: account.id,
+        receipt: receipt_upload,
+        expected_amount: 1.00
+      }
+    }, headers: account_page_headers
+
+    payment = account.payments.sole
+    expect(payment.expected_amount).to eq(290.25.to_d)
+  end
+
+  it "redirects back with inertia validation errors when submitted without a receipt file" do
+    user, account, _provider = setup_payment_account
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: nil }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+    follow_redirect!
+    expect(inertia).to have_props { |props|
+      props[:errors][:receipt].present?
+    }
+  end
+
+  it "rejects payment creation for another consumer's account with 404" do
+    user, account, _provider = setup_payment_account
+    other_user = User.create!(email: "other@gmail.com", name: "Other", password: "password123456")
+    Consumer.create!(user: other_user, company: account.owner.company, address: "Dirección")
+    sign_in(other_user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to have_http_status(:not_found)
+  end
+
+  it "redirects a provider attempting to create a consumer payment" do
+    _user, account, provider = setup_payment_account
+    sign_in(provider.user, role: :provider)
+
+    post payments_path, params: {
+      payment: { account_id: account.id, receipt: receipt_upload }
+    }, headers: account_page_headers
+
+    expect(response).to redirect_to(root_path)
+  end
+
   it "does not accept a second receipt while one is still under review" do
     user, account, provider = setup_payment_account
     first = submitted_payment(account:, provider:)

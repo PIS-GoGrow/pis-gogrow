@@ -14,7 +14,7 @@ class Admin::PaymentsController < Admin::InertiaController
     @accounts = serialize(unpaid, sums)
     @history = serialize(settled, sums)
     @providers = Provider.eager_load(:user).order("LOWER(users.name)")
-    @total_debt = unpaid.sum(&:payable_amount).to_f
+    @total_debt = unpaid.sum(&:outstanding_amount).to_f
     @total_meals = unpaid.sum { sums.dig(it.id, :amount).to_i }
 
     # La tarjeta "Tu consumo" muestra el mes de ?month=AAAA-MM, o el actual.
@@ -38,7 +38,7 @@ class Admin::PaymentsController < Admin::InertiaController
 
   def create
     account = company.accounts.find(payment_account_id)
-    return reject_closed_account if account.payments.approved.exists?
+    return reject_closed_account if account.settled?
 
     unless account.provider.payment_details_complete?
       return redirect_back fallback_location: admin_payments_path, inertia: {
