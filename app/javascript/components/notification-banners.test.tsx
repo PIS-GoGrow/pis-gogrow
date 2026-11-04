@@ -94,7 +94,8 @@ describe("NotificationBanners", () => {
     mocks.notifications.push({
       id: 77,
       title: "Nuevo pedido",
-      description: "Juan Pérez pidió 3 de Milanesa con papas fritas para el viernes 6 de noviembre.",
+      description:
+        "Juan Pérez pidió 3 de Milanesa con papas fritas para el viernes 6 de noviembre.",
       requires_action: false,
     })
 
@@ -102,10 +103,14 @@ describe("NotificationBanners", () => {
 
     expect(screen.getByText("Nuevo pedido")).toBeInTheDocument()
     expect(
-      screen.getByText("Juan Pérez pidió 3 de Milanesa con papas fritas para el viernes 6 de noviembre."),
+      screen.getByText(
+        "Juan Pérez pidió 3 de Milanesa con papas fritas para el viernes 6 de noviembre.",
+      ),
     ).toBeInTheDocument()
 
-    const closeButton = screen.getByRole("button", { name: "Cerrar notificación" })
+    const closeButton = screen.getByRole("button", {
+      name: "Cerrar notificación",
+    })
     await user.click(closeButton)
 
     expect(mocks.patch).toHaveBeenCalledWith(
