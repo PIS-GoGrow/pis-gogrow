@@ -26,6 +26,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Spinner } from "@/components/ui/spinner"
 import { formatFileSize } from "@/lib/format-file-size"
+import { formatMoney } from "@/lib/money"
 import { paymentPresentationStatus } from "@/lib/payment-rejection-reasons"
 import { consumerPayments } from "@/routes"
 import type { Payment } from "@/types"
@@ -133,6 +134,10 @@ export default function PaymentReceiptDialog({
               {t("pages.accounts.show.receipt_sent_at", {
                 date: payment.receipt_uploaded_at,
               })}
+              {payment.expected_amount != null &&
+                ` · ${t("pages.accounts.show.receipt_expected_amount", {
+                  amount: formatMoney(payment.expected_amount),
+                })}`}
             </span>
             <div className="shrink-0">
               <StatusBadge

@@ -8,6 +8,11 @@ class Provider::CollectionPaymentSerializer < ApplicationSerializer
 
   attributes :id, :status, :rejection_reason
 
+  typelize :number, nullable: true
+  attribute :expected_amount do |payment|
+    payment.expected_amount&.to_f
+  end
+
   typelize :string
   attribute :date do |payment|
     DateFormat.short(payment.created_at)
