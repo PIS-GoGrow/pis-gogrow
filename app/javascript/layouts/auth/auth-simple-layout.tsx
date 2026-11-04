@@ -13,6 +13,7 @@ interface AuthLayoutProps {
   backHref?: string
   hideLogo?: boolean
   variant?: "welcome" | "form"
+  fullHeight?: boolean
 }
 
 export default function AuthSimpleLayout({
@@ -22,27 +23,29 @@ export default function AuthSimpleLayout({
   backHref,
   hideLogo,
   variant = "welcome",
+  fullHeight,
 }: PropsWithChildren<AuthLayoutProps>) {
   const isForm = variant === "form"
+  const isFullHeight = fullHeight ?? isForm
   const shouldHideLogo = hideLogo ?? isForm
 
   return (
     <div
       className={cn(
         "bg-background flex min-h-svh flex-col items-center justify-center p-6 md:p-10",
-        isForm && "justify-start py-8 md:py-10",
+        isFullHeight && "justify-start py-8 md:py-10",
       )}
     >
       <div
         className={cn(
           "w-full max-w-[354px]",
-          isForm && "flex flex-1 flex-col justify-between",
+          isFullHeight && "flex flex-1 flex-col justify-between",
         )}
       >
         <div
           className={cn(
             "flex flex-col gap-6",
-            isForm && "flex flex-1 flex-col justify-between",
+            isFullHeight && "flex flex-1 flex-col justify-between",
           )}
         >
           <div className="flex flex-col gap-6">

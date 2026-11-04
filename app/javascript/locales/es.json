@@ -107,6 +107,7 @@
       "confirm_password": "Confirmar contraseña",
       "consumer": "Consumidor",
       "current_password": "Contraseña actual",
+      "email": "Email",
       "email_address": "Correo electrónico",
       "email_placeholder": "correo@ejemplo.com",
       "full_name": "Nombre completo",
@@ -282,8 +283,8 @@
         "title": "Actualizaciones de pedidos"
       },
       "provider_orders": {
-        "description": "Recibí una notificación cuando un empleado te haga un pedido.",
-        "title": "Pedidos nuevos"
+        "description": "Recibí una notificación cada vez que un cliente haga un pedido nuevo.",
+        "title": "Nuevos pedidos"
       },
       "provider_payment_reminders": {
         "description": "Recordatorios de pagos vencidos enviados por el proveedor.",
@@ -355,7 +356,7 @@
         "title": "Nuevo pedido"
       },
       "order_rejection": {
-        "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}.",
+        "description": "Tu pedido del %{date} de %{dish} fue rechazado por %{provider} %{reason}.",
         "reasons": {
           "customer_request": "por solicitud del cliente",
           "dish_deleted": "porque el plato fue eliminado",
@@ -366,7 +367,7 @@
           "other": "por el siguiente motivo: %{details}",
           "out_of_stock": "porque no había stock disponible"
         },
-        "title": "Tu pedido fue cancelado"
+        "title": "Tu pedido fue rechazado"
       },
       "payment_available": {
         "description": "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!",
@@ -448,11 +449,16 @@
           "see_receipts": "Ver comprobantes",
           "spending": "Consumo",
           "status_accepted": "Confirmado",
-          "status_rejected": "Rechazado"
+          "status_partial": "Pago parcial",
+          "status_pending": "Pendiente",
+          "status_rejected": "Rechazado",
+          "status_submitted": "En revisión"
         }
       },
       "admin": {
         "account": {
+          "invoices": "Facturas",
+          "invoices_description": "Consultá las facturas de los proveedores",
           "more_options": "Más opciones",
           "notifications": "Notificaciones",
           "notifications_description": "Configurá qué alertas querés recibir",
@@ -676,6 +682,7 @@
         },
         "invoices": {
           "index": {
+            "back": "Volver a Cuenta",
             "description": "Las facturas que los proveedores le emiten a GoGrow, con su historial.",
             "download": "Descargar %{name}",
             "empty_description": "Cuando un proveedor cargue la factura de un período, va a aparecer acá.",
@@ -760,7 +767,8 @@
               "copy": "Copiar número de cuenta",
               "copy_failed": "No pudimos copiar el número de cuenta",
               "holder": "Beneficiario: %{holder}",
-              "missing": "Este proveedor todavía no cargó sus datos de cobro."
+              "missing": "Este proveedor todavía no cargó sus datos de cobro.",
+              "missing_upload_hint": "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro."
             },
             "confirmed": "Confirmado",
             "detail": {
@@ -1330,6 +1338,7 @@
         },
         "statuses": {
           "approved": "Aprobado",
+          "partial": "Pago parcial",
           "pending": "Pendiente",
           "rejected": "Rechazado",
           "submitted": "En revisión"
@@ -1371,8 +1380,8 @@
             "total": "Deuda total"
           },
           "profile": {
-            "description": "Deje todo listo para empezar a recibir pedidos.",
-            "title": "Complete su cuenta"
+            "description": "Dejá todo listo para empezar a recibir pedidos.",
+            "title": "Completá tu cuenta"
           },
           "title": "Inicio",
           "top_rated": {
@@ -1643,27 +1652,34 @@
         "continue": "Continuar",
         "done": {
           "cta": "Ir al Inicio",
-          "description": "Su cuenta ya está configurada y puede empezar a recibir pedidos.",
+          "description": "Tu cuenta ya está configurada y podés empezar a recibir pedidos.",
           "title": "¡Todo listo!"
         },
         "finish": "Finalizar",
+        "intro": {
+          "description": "Completá los datos necesarios y dejá todo listo para recibir pedidos y gestionar tu negocio.",
+          "skip_later": "Configurar más tarde",
+          "start": "Comenzar",
+          "title": "¿Configuramos tu cuenta?"
+        },
         "progress": "Paso %{current} de %{total}",
         "skip": "Omitir por ahora",
         "steps": {
           "1": {
-            "description": "Ingrese los datos de la cuenta donde recibirá los pagos de sus pedidos.",
+            "description": "Ingresá los datos de la cuenta donde recibirás los pagos de tus pedidos.",
             "title": "Datos de cobro"
           },
           "2": {
-            "description": "Defina hasta qué hora recibe pedidos y qué días no estará disponible.",
-            "title": "Configure sus pedidos"
+            "closures_title": "Cierres programados (opcional)",
+            "description": "Definí hasta qué hora recibís pedidos y qué días no estarás disponible.",
+            "title": "Configurá tus pedidos"
           },
           "3": {
-            "description": "Elija dónde realiza sus entregas y si acepta direcciones personalizadas.",
-            "title": "Configure sus entregas"
+            "description": "Elegí dónde realizás tus entregas y si aceptás direcciones personalizadas.",
+            "title": "Configurá tus entregas"
           },
           "4": {
-            "description": "Elija qué alertas desea recibir sobre sus pedidos y pagos.",
+            "description": "Configurá qué alertas querés recibir.",
             "title": "Notificaciones"
           }
         }
@@ -1805,7 +1821,7 @@
       },
       "provider_password_resets": {
         "edit": {
-          "description": "Creá una nueva contraseña para su cuenta.",
+          "description": "Creá una nueva contraseña para tu cuenta.",
           "heading": "Nueva Contraseña",
           "submit": "Confirmar nueva contraseña",
           "title": "Nueva contraseña"
@@ -1839,6 +1855,7 @@
           "email_placeholder": "ejemplo@empresa.com",
           "forgot": {
             "description": "Ingresá tu email y te enviaremos un código para restablecer tu contraseña.",
+            "email_label": "Email",
             "submit": "Enviar código",
             "title": "¿Olvidaste tu contraseña?"
           },

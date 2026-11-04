@@ -30,7 +30,7 @@ class Consumer::AccountsController < Consumer::InertiaController
 
     current_month_debt = current_sums.reduce(0) { |acc, x| acc + x[:price] }
 
-    current_orders = Order.confirmed
+    current_orders = Order.consumed
                           .joins(:order_accounts)
                           .where(order_accounts: { account_id: current_accounts })
                           .order(:created_at)
@@ -56,7 +56,7 @@ class Consumer::AccountsController < Consumer::InertiaController
   # Este endpoint solo maneja JSON (no se accede directamente, sino que se
   # usa para darle datos al frontend)
   def show
-    orders = @account.orders.confirmed.order :created_at
+    orders = @account.orders.consumed.order :created_at
     month = I18n.l(@account.month, format: :month_year)
     amount = @account.amount
 

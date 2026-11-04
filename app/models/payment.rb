@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Payment < ApplicationRecord
-  enum :status, { pending: 0, submitted: 1, approved: 2, rejected: 3 }, default: :pending
+  enum :status, { pending: 0, submitted: 1, approved: 2, rejected: 3, partial: 4 }, default: :pending
 
   belongs_to :account
   belongs_to :provider, optional: true
@@ -20,6 +20,7 @@ class Payment < ApplicationRecord
   validate :receipt_has_allowed_type
   validate :receipt_is_within_size_limit
   validate :only_one_submitted_per_account, if: :submitted?
+  validate :partial_status_is_final
 
   after_update_commit :close_debt_reminder, if: -> { saved_change_to_status? && approved? }
   after_save_commit :close_payment_reminders,
@@ -39,6 +40,12 @@ class Payment < ApplicationRecord
 
   def reject_with(reason)
     update(status: :rejected, rejection_reason: reason)
+  end
+
+  def mark_partial
+    return false unless submitted?
+
+    update(status: :partial, rejection_reason: nil)
   end
 
   private
@@ -115,6 +122,12 @@ class Payment < ApplicationRecord
     others = self.class.submitted.where(account_id:)
     others = others.where.not(id:) if persisted?
     errors.add(:receipt, :already_under_review) if others.exists?
+  end
+
+  def partial_status_is_final
+    return unless status_in_database == "partial" && will_save_change_to_status?
+
+    errors.add(:status, :invalid)
   end
 
   def should_close_payment_reminders?

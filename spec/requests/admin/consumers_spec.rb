@@ -150,10 +150,7 @@ RSpec.describe "Admin::Consumers", type: :request do
         expect(month[:providers].pluck(:name, :status)).to contain_exactly(
           [ "Provider User", "rejected" ], [ "Other Provider User", "pending" ]
         )
-        expect(month[:orders].pluck(:id)).to contain_exactly(
-          orders(:upcoming_confirmed_future).id, orders(:history_confirmed_past).id
-        )
-        expect(month[:orders].pluck(:provider_id)).to contain_exactly(providers(:tuviandita).id, providers(:tuviandita).id)
+        expect(month[:orders].pluck(:id, :provider_id)).to eq([ [ orders(:history_confirmed_past).id, providers(:tuviandita).id ] ])
       end
 
       it "sends the current year from the current month to January and fills months without consumption" do
@@ -206,7 +203,7 @@ RSpec.describe "Admin::Consumers", type: :request do
         later = orders(:upcoming_confirmed_future)
 
         earlier.update_columns(created_at: Time.current)
-        later.update_columns(created_at: 10.days.ago)
+        later.update_columns(created_at: 10.days.ago, delivery_date: Date.current)
 
         get admin_consumer_path(consumers(:one))
 
@@ -253,6 +250,21 @@ RSpec.describe "Admin::Consumers", type: :request do
         month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
         provider = month[:providers].find { it[:id] == account.provider_id }
         expect(provider[:receipt_url]).to eq(receipt_admin_payment_path(payment))
+      end
+
+      it "exposes partial status in inertia props when the employee has a partial payment" do
+        account = accounts(:one_tuviandita_current)
+        account.payments.destroy_all
+        payment = account.payments.build(provider: account.provider, status: :partial)
+        payment.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+        payment.save!
+
+        get admin_consumer_path(consumers(:one))
+
+        month = inertia.props[:months].find { it[:key] == Date.current.strftime("%Y-%m") }
+        provider = month[:providers].find { it[:id] == account.provider_id }
+        expect(month[:status]).to eq("partial")
+        expect(provider[:status]).to eq("partial")
       end
 
       it "shows the active benefit percentage" do

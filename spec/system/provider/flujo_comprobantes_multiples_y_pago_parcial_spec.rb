@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", type: :system do
+RSpec.describe "Flujo de comprobantes múltiples y pago parcial", type: :system do
   fixtures :users, :consumers, :companies, :providers
 
   let(:employee_user) { users(:one) }
@@ -18,7 +18,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
   def create_closed_month_order
     travel_to(Time.zone.local(closed_month.year, closed_month.month, 10, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa con puré", description: "Clásica", price: 500)
-      schedule = Schedule.create!(menu:, date: closed_month + 12, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
 
       Order.create!(
         consumer:, schedule:,
@@ -51,7 +51,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
       expect(page).to have_content("En revisión")
     end
 
-    # 2. El proveedor revisa el primer comprobante y lo rechaza con 'El pago es parcial'
+    # 2. El proveedor revisa el primer comprobante y lo registra como parcial
     sign_out
     sign_in provider_user, role: :provider
     visit provider_collections_path
@@ -77,7 +77,8 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     visit_hydrated accounts_path
 
     within("[role=tabpanel]") do
-      expect(page).to have_content("Rechazado")
+      expect(page).to have_content("Pago parcial")
+      expect(page).to have_no_content("Rechazado")
       expect(page).to have_content(I18n.t("pages.accounts.show.partial_payment_warning"))
       expect(page).to have_no_content("La imagen está borrosa")
     end

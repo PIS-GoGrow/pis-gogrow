@@ -63,6 +63,7 @@ const defaultProviders: PaymentProvider[] = [
     bank_name: "Banco República",
     bank_account_number: "00123456",
     bank_account_holder: "Tu Viandita SRL",
+    payment_details_complete: true,
     home_delivery: true,
   },
 ]
@@ -96,6 +97,38 @@ describe("Consumer Payments Page", () => {
     expect(dialog).toHaveTextContent("Milanesa al pan")
     expect(dialog).toHaveTextContent("Tarta de jamón")
     expect(dialog).not.toHaveTextContent("Total")
+  })
+
+  it("displays only delivered consumption and excludes future orders from the detail dialog", () => {
+    render(
+      <Index
+        {...props}
+        current_month_debt={150.25}
+        current_month_detail={{
+          month: "Noviembre 2026",
+          amount: 150.25,
+          orders: [
+            {
+              id: 1,
+              amount: 1,
+              price: 150.25,
+              date: "03/11/26",
+              menu_name: "Milanesa consumida",
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.getByText("$150,25")).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    )
+
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveTextContent("Milanesa consumida")
+    expect(dialog).not.toHaveTextContent("Pedido futuro sin entregar")
   })
 
   it("shows how many meals the pending debt covers", () => {
@@ -137,6 +170,7 @@ describe("Consumer Payments Page", () => {
       bank_name: null,
       bank_account_number: null,
       bank_account_holder: null,
+      payment_details_complete: false,
     })
 
     const closedPeriod = (

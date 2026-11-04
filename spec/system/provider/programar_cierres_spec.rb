@@ -79,4 +79,28 @@ RSpec.describe "Programar cierres de recepción de pedidos como proveedor", type
     expect(page).to have_content("Ingresá el motivo del cierre.")
     expect(provider.closures.count).to eq(0)
   end
+
+  it "muestra el calendario en español, deshabilita sábados y domingos y permite seleccionar 2027" do
+    visit_hydrated provider_operational_settings_path
+
+    click_button "Programar cierre"
+    open_date_picker "#closure-range"
+
+    within DatePickerHelpers::OPEN_CALENDAR do
+      # Encabezados de días en español
+      headers = all("th").map(&:text).map(&:strip).reject(&:empty?)
+      expect(headers).to eq(%w[do lu ma mi ju vi sá])
+
+      # Sábados y domingos deshabilitados para selección
+      all("button.rdp-day").each do |btn|
+        label = btn[:'aria-label'].to_s.downcase
+        if label.start_with?("sábado", "domingo")
+          expect(btn[:disabled]).to eq("true")
+        end
+      end
+
+      # Permite navegar a 2027 en el selector de año
+      expect(page).to have_css("select.rdp-years_dropdown option", text: "2027")
+    end
+  end
 end
