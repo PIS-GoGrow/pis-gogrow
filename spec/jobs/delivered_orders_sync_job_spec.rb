@@ -53,7 +53,6 @@ RSpec.describe DeliveredOrdersSyncJob, type: :job do
       described_class.perform_now(date: Date.new(2026, 11, 15))
     }.not_to change { account.reload.amount }
   end
-
   it "sincroniza pedidos de días previos del mes si la ejecución diaria anterior no corrió" do
     travel_to Time.zone.local(2026, 11, 3, 12)
     yesterday = order_for(Date.new(2026, 11, 4))
