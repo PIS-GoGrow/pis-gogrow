@@ -59,6 +59,15 @@ function renderCard(account: AdminAccount, providerName?: string) {
 }
 
 describe("PeriodCard", () => {
+  it("highlights the provider name in history", () => {
+    renderCard(makeAccount(), "TuViandita")
+
+    expect(screen.getByText("TuViandita: Septiembre 2026")).toHaveClass(
+      "font-semibold",
+      "text-foreground",
+    )
+  })
+
   it("disables uploading another receipt while one is under review", () => {
     const account = makeAccount({
       collection_status: "submitted",

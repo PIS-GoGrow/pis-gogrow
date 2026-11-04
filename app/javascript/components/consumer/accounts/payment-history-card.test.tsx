@@ -53,6 +53,15 @@ function renderCard(account: Account, providerName?: string) {
 }
 
 describe("PaymentHistoryCard", () => {
+  it("renders the provider name in semibold with the foreground color", () => {
+    renderCard(makeAccount(), "La Cocina")
+
+    expect(screen.getByText("La Cocina: Septiembre 2026")).toHaveClass(
+      "font-semibold",
+      "text-foreground",
+    )
+  })
+
   it("shows the due date, the provider with the month and the confirmed status", () => {
     const account = makeAccount({ month: "Agosto 2026", due_date: "05/09/26" })
 

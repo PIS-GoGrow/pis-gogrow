@@ -384,7 +384,7 @@ class Order < ApplicationRecord
   def provider_name = super || provider&.user&.name
   def delivery_date = super || schedule&.date
 
-  def consumed? = confirmed? && !delivery_date&.after?(Date.current)
+  def consumed? = confirmed? && (delivery_date.nil? || delivery_date <= Date.current)
 
   # Asigna la orden a las dos cuentas que le corresponden y las hace recalcular
   # su monto: la del empleado, que paga su parte, y la de su empresa, que paga el
