@@ -1279,6 +1279,8 @@ es:
         empty_description: "Todavía no recibiste pedidos para los próximos días."
         empty_history_description: "Todavía no tenés pedidos anteriores."
         empty_filtered_description: "No tenés pedidos que coincidan con los filtros."
+        no_orders_title: "No tenés pedidos"
+        no_orders_description: "Cuando tus clientes hagan pedidos, van a aparecer acá."
         code: "PED-%{id}"
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"
