@@ -33,6 +33,7 @@ const item: CartItem = {
     description: null,
     price: 300,
     provider_id: 1,
+    saved_menu_id: 1,
     option_groups: [],
     provider_name: "Proveedor",
     home_delivery: false,

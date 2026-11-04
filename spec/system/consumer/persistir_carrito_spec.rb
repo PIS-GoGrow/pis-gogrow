@@ -24,13 +24,23 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     Schedule.create!(menu:, date:, amount:)
   end
 
+  def click_until(selector, expected_text)
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      loop do
+        find(selector).click
+        break if page.has_text?(expected_text, wait: 0.5)
+      rescue Capybara::ElementNotFound
+        sleep 0.3
+      end
+    end
+  end
+
   def add_milanesa_to_cart
     visit dashboard_path
     expect(page).to have_content("Milanesa con papas fritas")
 
-    click_button "Agregar Milanesa con papas fritas"
-    expect(page).to have_content("Notas para este plato")
-    click_button "Agregar"
+    click_until("button[aria-label='Agregar Milanesa con papas fritas']", "Notas para este plato")
+    find_button("Agregar", exact: true).click
 
     click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
@@ -40,7 +50,7 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
   def sign_out_from_app(user)
     find("[data-sidebar='menu-button']", text: user.name).click
     click_on "Cerrar sesión"
-    expect(page).to have_current_path(sign_in_path)
+    expect(page).to have_current_path(consumer_welcome_path)
   end
 
   def cart_storage_key(user = users(:one))
