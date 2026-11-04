@@ -22,6 +22,7 @@ export default function Home({ variant, dev_login_enabled, errors }: Props) {
     <AuthLayout
       title={t(`pages.home.${variant}.heading`)}
       description={t(`pages.home.${variant}.description`)}
+      variant={variant === "provider" ? "welcome" : "landing"}
     >
       <Head title={t("pages.home.title")} />
 
