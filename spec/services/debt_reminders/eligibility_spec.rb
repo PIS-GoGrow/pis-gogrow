@@ -135,5 +135,41 @@ RSpec.describe DebtReminders::Eligibility do
         expect(eligibility.eligible?).to be true
       end
     end
+
+    [
+      [ "rechazó", { status: :rejected, rejection_reason: "El comprobante no corresponde" } ],
+      [ "aceptó parcialmente", { status: :partial } ]
+    ].each do |action, attributes|
+      it "devuelve :cooldown cuando se #{action} el último comprobante hace menos de 3 días" do
+        consumer_account.update!(amount: 150)
+        reference_date = consumer_account.due_date + 10.days
+
+        travel_to reference_date - 1.day do
+          consumer_account.payments.create!(provider: consumer_account.provider, **attributes)
+        end
+
+        travel_to reference_date do
+          eligibility = described_class.new(account: consumer_account.reload)
+          expect(eligibility.reason).to eq(:cooldown)
+          expect(eligibility.next_available_at).to be_present
+        end
+      end
+    end
+
+    it "permite enviar cuando el último comprobante se rechazó hace más de 3 días" do
+      consumer_account.update!(amount: 150)
+      reference_date = consumer_account.due_date + 10.days
+
+      travel_to reference_date - 4.days do
+        consumer_account.payments.create!(
+          provider: consumer_account.provider, status: :rejected, rejection_reason: "El comprobante no corresponde"
+        )
+      end
+
+      travel_to reference_date do
+        eligibility = described_class.new(account: consumer_account.reload)
+        expect(eligibility.reason).to be_nil
+      end
+    end
   end
 end

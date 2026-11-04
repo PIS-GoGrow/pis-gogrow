@@ -90,7 +90,7 @@ describe("CollectionAccountDetailDialog", () => {
     ).toBeInTheDocument()
     expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
     expect(screen.getByText("Total: $800")).toBeInTheDocument()
-    expect(screen.getByText("En revisión")).toBeInTheDocument()
+    expect(screen.getByText("Por revisar")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
     ).not.toBeInTheDocument()
@@ -159,7 +159,7 @@ describe("CollectionAccountDetailDialog", () => {
     expect(screen.getByText("IVA (22 %)")).toBeInTheDocument()
     expect(screen.getByText("$176")).toBeInTheDocument()
     expect(screen.getByText("$976")).toBeInTheDocument()
-    expect(screen.getByText("Aprobado")).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
     ).not.toBeInTheDocument()

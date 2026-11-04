@@ -26,6 +26,11 @@ class Provider::CollectionPaymentSerializer < ApplicationSerializer
   end
 
   typelize :string, nullable: true
+  attribute :receipt_size do |payment|
+    ActiveSupport::NumberHelper.number_to_human_size(payment.receipt.byte_size) if payment.receipt.attached?
+  end
+
+  typelize :string, nullable: true
   attribute :receipt_content_type do |payment|
     payment.receipt.content_type if payment.receipt.attached?
   end
