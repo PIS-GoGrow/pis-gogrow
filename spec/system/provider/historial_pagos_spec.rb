@@ -38,7 +38,7 @@ RSpec.describe "Historial de pagos del proveedor" do
   def confirmed_order(month:)
     travel_to(Time.zone.local(month.year, month.month, 5, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa al pan", description: "Con papas", price: 1000)
-      schedule = Schedule.create!(menu:, date: month + 7, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
 
       Order.create!(
         consumer: consumers(:one), schedule:, amount: 1, price: 1000, discounted_price: 300,

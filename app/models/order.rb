@@ -83,6 +83,11 @@ class Order < ApplicationRecord
       .order(Schedule.arel_table[:date].asc)
   }
 
+  # Lo que ya generó deuda: un pedido confirmado se cobra recién desde el día de
+  # su entrega. Como ese corte depende de la fecha, DeliveredOrdersSyncJob
+  # recalcula cada día las cuentas de los pedidos que se entregan ese día.
+  scope :consumed, -> { confirmed.where(delivery_date: nil).or(confirmed.where(delivery_date: ..Date.current)) }
+
   # Definido como el complemento de upcoming para que las dos secciones
   # particionen las órdenes: sin esto, una orden sin schedule (schedule_id es
   # nullable por el dependent: :nullify) se caería de ambas listas.
@@ -378,6 +383,8 @@ class Order < ApplicationRecord
   def provider = super || schedule&.menu&.provider
   def provider_name = super || provider&.user&.name
   def delivery_date = super || schedule&.date
+
+  def consumed? = confirmed? && !delivery_date&.after?(Date.current)
 
   # Asigna la orden a las dos cuentas que le corresponden y las hace recalcular
   # su monto: la del empleado, que paga su parte, y la de su empresa, que paga el

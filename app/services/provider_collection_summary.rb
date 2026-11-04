@@ -23,7 +23,7 @@ class ProviderCollectionSummary
     delegate :id, :amount, :vat_amount, :payable_amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
 
     def orders
-      account.orders.select(&:confirmed?).sort_by do |order|
+      account.orders.select(&:consumed?).sort_by do |order|
         [ -(order.schedule&.date&.jd || 0), -order.id ]
       end
     end
@@ -165,7 +165,7 @@ class ProviderCollectionSummary
   end
 
   def current_month_orders
-    @current_month_orders ||= Order.confirmed
+    @current_month_orders ||= Order.consumed
       .joins(schedule: :menu)
       .where(menus: { provider_id: @provider.id }, schedules: { date: Date.current.all_month })
       .preload(:schedule, consumer: [ :user, :company ])
@@ -177,7 +177,7 @@ class ProviderCollectionSummary
   # que para sumar viandas de varias cuentas hay que contar cada pedido una vez.
   def order_units
     @order_units ||=
-      OrderAccount.joins(:order).merge(Order.confirmed)
+      OrderAccount.joins(:order).merge(Order.consumed)
                   .where(account_id: accounts.map(&:id))
                   .pluck(:account_id, :order_id, "orders.amount")
                   .group_by(&:first)
@@ -224,7 +224,7 @@ class ProviderCollectionSummary
       # Se precargan todas las cuentas para no disparar consultas al abrirlo.
       collection_accounts = grouped.flat_map(&:rows).map(&:account)
       if collection_accounts.any?
-        ActiveRecord::Associations::Preloader.new(records: collection_accounts, associations: :orders, scope: Order.confirmed).call
+        ActiveRecord::Associations::Preloader.new(records: collection_accounts, associations: :orders, scope: Order.consumed).call
         orders = collection_accounts.flat_map { it.orders.to_a }.uniq(&:id)
         ActiveRecord::Associations::Preloader.new(records: orders, associations: [ { consumer: :user }, { schedule: :menu } ]).call if orders.any?
       end

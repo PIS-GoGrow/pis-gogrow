@@ -53,8 +53,8 @@ RSpec.describe "Admin::Dashboard", type: :request do
           month: current_key,
           current_month: current_key,
           summary: {
-            "meals" => 4, "meals_limit" => 40, "participation" => 100,
-            "spending" => 601.0, "paid" => 0.0, "pending" => 601.0, "projected" => 0.0
+            "meals" => 1, "meals_limit" => 40, "participation" => 50,
+            "spending" => 601.0, "paid" => 0.0, "pending" => 601.0, "projected" => 450.75
           }
         )
         expect(inertia.props[:months].pluck("key")).to eq([ current_key, previous_key ])
