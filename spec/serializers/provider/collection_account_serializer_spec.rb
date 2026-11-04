@@ -31,6 +31,17 @@ RSpec.describe Provider::CollectionAccountSerializer do
     expect(serialized["receipt_url"]).to eq(Rails.application.routes.url_helpers.receipt_provider_payment_path(submitted))
   end
 
+  it "expects the amount the account owed when the receipt under review was sent" do
+    account.payments.destroy_all
+    account.update!(amount: 290.25)
+    create_payment(account, status: :submitted)
+    account.update!(amount: 740.25)
+
+    row = ProviderCollectionSummary::AccountRow.new(account: account.reload, meals: 3)
+
+    expect(described_class.new(row).to_h["expected_amount"]).to eq(290.25)
+  end
+
   it "falls back to the last payment when no submitted payment exists" do
     account.payments.destroy_all
     partial = create_payment(account, status: :partial, created_at: 1.day.ago)

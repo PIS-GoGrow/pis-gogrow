@@ -23,6 +23,7 @@ const historicalCompanyAccount = {
   vat_rate: 0.22,
   vat_amount: 6_600,
   payable_amount: 36_600,
+  expected_amount: null,
   source: "company",
   status: "approved",
   can_approve_payment: false,

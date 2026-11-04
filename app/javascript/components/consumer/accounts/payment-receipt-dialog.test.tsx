@@ -108,6 +108,7 @@ describe("PaymentReceiptDialog", () => {
     receipt_url: "/consumer/payments/101/receipt",
     receipt_content_type: "image/png",
     rejection_reason: null,
+    expected_amount: null,
   }
 
   const rejectedPayment: Payment = {
@@ -119,6 +120,7 @@ describe("PaymentReceiptDialog", () => {
     receipt_url: "/consumer/payments/102/receipt",
     receipt_content_type: "application/pdf",
     rejection_reason: "Comprobante ilegible",
+    expected_amount: null,
   }
 
   const approvedPayment: Payment = {
@@ -130,6 +132,7 @@ describe("PaymentReceiptDialog", () => {
     receipt_url: "/consumer/payments/103/receipt",
     receipt_content_type: "image/jpeg",
     rejection_reason: null,
+    expected_amount: null,
   }
 
   const partialPayment: Payment = {
@@ -141,6 +144,7 @@ describe("PaymentReceiptDialog", () => {
     receipt_url: "/consumer/payments/104/receipt",
     receipt_content_type: "image/png",
     rejection_reason: null,
+    expected_amount: null,
   }
 
   it("renders upload button and no receipt cards when payments list is empty", () => {
@@ -268,6 +272,7 @@ describe("PaymentReceiptDialog", () => {
           {
             ...rejectedPayment,
             rejection_reason: "El pago es parcial",
+            expected_amount: null,
           },
         ]}
       />,
@@ -642,6 +647,7 @@ describe("PaymentReceiptDialog with inline upload", () => {
     receipt_content_type: "image/png",
     receipt_byte_size: 1258291,
     rejection_reason: null,
+    expected_amount: null,
   }
 
   const chosenFile = () =>

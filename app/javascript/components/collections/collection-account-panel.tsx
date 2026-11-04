@@ -112,7 +112,7 @@ export default function CollectionAccountPanel({
           receiptUrl={account.receipt_url ?? ""}
           contentType={account.receipt_content_type}
           filename={account.owner_name}
-          expectedAmount={account.payable_amount}
+          expectedAmount={account.expected_amount ?? account.payable_amount}
           canApprove={account.can_approve_payment}
         >
           <AdaptableDialogTrigger asChild>

@@ -12,6 +12,7 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
     id: 1,
     status: "submitted",
     rejection_reason: null,
+    expected_amount: null,
     created_at: "2026-10-01T12:00:00Z",
     receipt_url: "/comprobantes/1/archivo",
     receipt_filename: "receipt.png",
@@ -32,6 +33,7 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
     amount: 500,
     vat_amount: 0,
     payable_amount: 500,
+    outstanding_amount: 500,
     orders_amount_sum: 2,
     orders_price_sum: 500,
     payments: [],
@@ -51,6 +53,22 @@ const newReceipt = () =>
   new File(["contenido"], "nuevo.png", { type: "image/png" })
 
 describe("AccountCard", () => {
+  it("shows the outstanding balance and the amount each receipt covered", () => {
+    const account = makeAccount({
+      amount: 740.25,
+      payable_amount: 740.25,
+      outstanding_amount: 450,
+      payments: [makePayment({ status: "approved", expected_amount: 290.25 })],
+    })
+
+    renderCard(account)
+
+    expect(screen.getByText("$450")).toBeInTheDocument()
+    expect(
+      screen.getByText("Enviado: 01/10/26 · Importe: $290,25"),
+    ).toBeInTheDocument()
+  })
+
   it("shows the receipt under review with its sent date and status, without the upload form", () => {
     const account = makeAccount({
       payments: [makePayment({ status: "submitted" })],
@@ -105,6 +123,7 @@ describe("AccountCard", () => {
         makePayment({
           status: "rejected",
           rejection_reason: "Comprobante ilegible",
+          expected_amount: null,
         }),
       ],
     })
@@ -147,6 +166,7 @@ describe("AccountCard", () => {
     const payment = makePayment({
       status: "partial",
       rejection_reason: null,
+      expected_amount: null,
     })
     const account = makeAccount({
       collection_status: "partial",
@@ -169,6 +189,7 @@ describe("AccountCard", () => {
     const payment = makePayment({
       status: "rejected",
       rejection_reason: "El pago es parcial",
+      expected_amount: null,
     })
     const account = makeAccount({ payments: [payment] })
 
@@ -189,6 +210,7 @@ describe("AccountCard", () => {
     const payment = makePayment({
       status: "rejected",
       rejection_reason: "Comprobante ilegible",
+      expected_amount: null,
     })
     const account = makeAccount({ payments: [payment] })
 
@@ -205,12 +227,14 @@ describe("AccountCard", () => {
       id: 1,
       status: "partial",
       rejection_reason: null,
+      expected_amount: null,
       created_at: "2026-10-01T12:00:00Z",
     })
     const newSubmittedPayment = makePayment({
       id: 2,
       status: "submitted",
       rejection_reason: null,
+      expected_amount: null,
       created_at: "2026-10-02T12:00:00Z",
     })
     const account = makeAccount({
@@ -238,6 +262,7 @@ describe("AccountCard", () => {
           id: 2,
           status: "rejected",
           rejection_reason: "Comprobante ilegible",
+          expected_amount: null,
           receipt_uploaded_at: "13/08/26",
           created_at: "2026-08-13T12:00:00Z",
         }),

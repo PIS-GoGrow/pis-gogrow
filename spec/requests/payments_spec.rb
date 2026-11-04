@@ -593,6 +593,31 @@ RSpec.describe "Payments", type: :request do
     expect(account.reload.collection_status).to eq("approved")
   end
 
+  it "keeps the debt generated after a receipt was sent as a separate balance that takes a new receipt" do
+    user, account, provider = setup_payment_account
+    account.update!(amount: 290.25)
+    sign_in(user, role: :consumer)
+
+    post payments_path, params: {
+      payment: { account_id: account.id, receipt: receipt_upload(filename: "first.png") }
+    }, headers: account_page_headers
+    first = account.payments.sole
+    account.update!(amount: 740.25)
+    first.approve
+
+    expect(first.reload.expected_amount).to eq(290.25.to_d)
+    expect(account.reload.collection_status).to eq("pending")
+    expect(user.consumer.total_debt).to eq(450.to_d)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "second.png") }
+      }, headers: account_page_headers
+    }.to change(Payment, :count).by(1)
+
+    expect(account.payments.submitted.sole.expected_amount).to eq(450.to_d)
+  end
+
   it "does not accept a second receipt while one is still under review" do
     user, account, provider = setup_payment_account
     first = submitted_payment(account:, provider:)

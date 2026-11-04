@@ -84,6 +84,11 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     row.account.payment_pending_review&.id || row.account.last_payment&.id
   end
 
+  typelize :number, nullable: true
+  attribute :expected_amount do |row|
+    row.account.payment_pending_review&.expected_amount&.to_f
+  end
+
   typelize :string, nullable: true
   attribute :receipt_url do |row|
     payment = row.account.payment_pending_review || row.account.last_payment

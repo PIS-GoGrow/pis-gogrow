@@ -205,6 +205,7 @@ RSpec.describe ProviderCollectionSummary do
     small_queries = select_queries { small_response = serialize_summary(described_class.new(provider:)) }
 
     (2...12).each { |day| create_order(menu:, date: month + day) }
+    provider.accounts.each { it.payments.update_all(expected_amount: it.reload.payable_amount) }
     large_response = nil
     large_queries = select_queries { large_response = serialize_summary(described_class.new(provider:)) }
 

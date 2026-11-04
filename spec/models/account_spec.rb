@@ -321,6 +321,16 @@ RSpec.describe Account, type: :model do
       expect(account.payments.partial.count).to eq(2)
     end
 
+    it "is pending again when debt is generated after the approved receipt was sent" do
+      create_payment(status: :approved)
+      account.update!(amount: account.amount + 450)
+
+      expect(account.reload.collection_status).to eq("pending")
+      expect(account.outstanding_amount).to eq(450.to_d)
+      expect(Account.pending).to include(account)
+      expect(Account.history).not_to include(account)
+    end
+
     it "is approved when a payment after a partial settles the account" do
       create_payment(status: :partial, created_at: 2.days.ago)
       create_payment(status: :approved, created_at: 1.day.ago)
