@@ -102,6 +102,8 @@ class Order < ApplicationRecord
 
   after_update_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
   after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
+  after_update_commit :refresh_received_notification,
+    if: -> { saved_change_to_amount? && pending? }
   after_create_commit :notify_received
 
   # Inicializa una orden con el precio que calculó OrderPricing. benefits es un arreglo
@@ -433,13 +435,37 @@ class Order < ApplicationRecord
       event_key: :order_received,
       user: provider.user,
       notifiable: self,
-      description_data: {
-        consumer: consumer.user.name,
-        amount:,
-        dish: menu_name,
-        date: DateFormat.long(schedule.date, inline: true)
-      }
+      description_data: order_received_description_data
     )
+  end
+
+  def refresh_received_notification
+    target_provider = provider
+    return unless target_provider&.user
+
+    notification = target_provider.user.notifications
+      .active
+      .find_by(event: "order_received", notifiable: self)
+
+    if notification
+      notification.update!(
+        description: I18n.t!(
+          "notifications.order_received.description",
+          **order_received_description_data
+        )
+      )
+    else
+      notify_received
+    end
+  end
+
+  def order_received_description_data
+    {
+      consumer: consumer.user.name,
+      amount:,
+      dish: menu_name,
+      date: DateFormat.long(schedule.date, inline: true)
+    }
   end
 
   def notify_rejected
