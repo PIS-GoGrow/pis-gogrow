@@ -415,6 +415,23 @@ RSpec.describe "Admin::Payments", type: :request do
       expect(account.reload.collection_status).to eq("approved")
     end
 
+    it "accepts a new receipt for a company account that has an approved receipt but owes new debt" do
+      account.payments.create!(
+        provider: account.provider, status: :approved, expected_amount: account.payable_amount
+      )
+      account.update!(amount: account.amount + 500)
+      sign_in users(:admin), role: :admin
+
+      expect {
+        post admin_payments_path, params: {
+          payment: { account_id: account.id, receipt: receipt_upload(filename: "second.png") }
+        }, headers: { "HTTP_REFERER" => admin_payments_url }
+      }.to change(Payment, :count).by(1)
+
+      second = account.payments.submitted.sole
+      expect(second.expected_amount).to eq(account.outstanding_amount)
+    end
+
     it "resolves the pending payment alert of the account" do
       sign_in users(:admin), role: :admin
       reminder = Notifier.call(

@@ -46,6 +46,7 @@ const provider = (id: number, name: string) => ({
   vat_rate: 22,
   vat_amount: 3564,
   payable_amount: 19764,
+  outstanding_amount: 19764,
   paid: false,
   days: [],
 })
@@ -61,6 +62,7 @@ const account: AdminAccount = {
   amount: 15000,
   vat_amount: 0,
   payable_amount: 15000,
+  outstanding_amount: 15000,
   current: false,
   month: "agosto de 2026",
   due_date: "10/09/26",
@@ -242,6 +244,7 @@ describe("Admin Payments Page", () => {
   it("shows the status the server resolved for each period", () => {
     const payment = {
       rejection_reason: null,
+      expected_amount: null,
       receipt_uploaded_at: "01/09/2026",
     }
 

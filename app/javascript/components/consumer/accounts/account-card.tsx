@@ -97,7 +97,7 @@ export default function AccountCard({
 
         <CardTitle className="flex items-center">
           <span>
-            {formatMoney(account.amount ?? 0)}
+            {formatMoney(account.outstanding_amount)}
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
               {account.orders_amount_sum}{" "}

@@ -24,6 +24,49 @@ RSpec.describe Payment, type: :model do
     payment
   end
 
+  describe "#expected_amount" do
+    it "keeps the debt the account had when the receipt was sent" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      account.update!(amount: 950)
+      payment.approve
+
+      expect(payment.reload.expected_amount).to eq(500.to_d)
+    end
+
+    it "takes the debt again when a rejected receipt is resent" do
+      payment = payment_with_receipt.tap(&:save!)
+      payment.reject_with("Ilegible")
+      account.update!(amount: 950)
+
+      payment.update!(status: :submitted)
+
+      expect(payment.expected_amount).to eq(950.to_d)
+    end
+
+    it "leaves out what earlier approved receipts already covered" do
+      payment_with_receipt.tap(&:save!).approve
+      account.update!(amount: 950)
+
+      expect(payment_with_receipt.tap(&:save!).expected_amount).to eq(450.to_d)
+    end
+
+    it "overrides a client-supplied expected_amount with the actual account outstanding amount" do
+      payment = account.payments.build(provider:, status: :submitted, expected_amount: 10.0)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename: "comprobante.png", content_type: "image/png")
+      payment.save!
+
+      expect(payment.expected_amount).to eq(500.to_d)
+    end
+
+    it "preserves exact decimal cents from the account outstanding amount" do
+      account.update!(amount: 290.25)
+      payment = payment_with_receipt.tap(&:save!)
+
+      expect(payment.expected_amount).to eq(290.25.to_d)
+    end
+  end
+
   it "starts as pending" do
     expect(described_class.new.status).to eq("pending")
   end
@@ -549,6 +592,7 @@ end
 # Table name: payments
 #
 #  id               :bigint           not null, primary key
+#  expected_amount  :decimal(10, 2)
 #  rejection_reason :text
 #  status           :integer          default(0), not null
 #  created_at       :datetime         not null

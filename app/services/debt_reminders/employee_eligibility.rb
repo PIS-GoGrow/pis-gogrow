@@ -30,7 +30,7 @@ module DebtReminders
       @overdue_accounts ||= consumer.accounts.select { Eligibility.new(account: it).debt_reason.nil? }
     end
 
-    def amount = overdue_accounts.sum { it.amount || 0 }
+    def amount = overdue_accounts.sum { it.outstanding_amount || 0 }
 
     # Los proveedores a los que les debe, con el nombre que el empleado conoce.
     # Un mismo proveedor puede tener varias cuentas vencidas, una por mes, así

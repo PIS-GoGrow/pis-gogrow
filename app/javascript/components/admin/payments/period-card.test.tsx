@@ -19,6 +19,7 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
     id: 1,
     status: "submitted",
     rejection_reason: null,
+    expected_amount: null,
     created_at: "2026-10-01T12:00:00Z",
     receipt_url: "/admin/pagos/1/archivo",
     receipt_filename: "receipt.png",
@@ -38,6 +39,7 @@ function makeAccount(overrides: Partial<AdminAccount> = {}): AdminAccount {
     amount: 500,
     vat_amount: 0,
     payable_amount: 500,
+    outstanding_amount: 500,
     orders_amount_sum: 2,
     orders_price_sum: 500,
     collection_status: "pending",
@@ -110,6 +112,7 @@ describe("PeriodCard", () => {
         makePayment({
           status: "rejected",
           rejection_reason: "Comprobante ilegible",
+          expected_amount: null,
         }),
       ],
     })
