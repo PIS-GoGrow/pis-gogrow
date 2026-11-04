@@ -31,4 +31,26 @@ RSpec.describe DeliveredOrdersSyncJob, type: :job do
 
     expect(later.accounts.map { it.reload.amount }).to contain_exactly(500, 300)
   end
+
+  it "permite especificar una fecha explícita y es idempotente" do
+    travel_to Time.zone.local(2026, 11, 3, 12)
+    order = order_for(Date.new(2026, 11, 7))
+
+    travel_to Time.zone.local(2026, 11, 7, 10, 0)
+    described_class.perform_now(date: Date.new(2026, 11, 7))
+    expect(order.accounts.map { it.reload.amount }).to contain_exactly(250, 150)
+
+    # Segunda ejecución: los montos se mantienen estables
+    described_class.perform_now(date: Date.new(2026, 11, 7))
+    expect(order.accounts.map { it.reload.amount }).to contain_exactly(250, 150)
+  end
+
+  it "no altera montos de cuentas cuando no hay pedidos a entregar para la fecha provista" do
+    order = order_for(Date.new(2026, 11, 8))
+    account = order.accounts.first
+
+    expect {
+      described_class.perform_now(date: Date.new(2026, 11, 15))
+    }.not_to change { account.reload.amount }
+  end
 end

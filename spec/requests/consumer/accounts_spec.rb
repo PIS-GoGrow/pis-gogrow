@@ -177,6 +177,33 @@ RSpec.describe "Consumer Accounts", type: :request do
           ids.exclude?(orders(:other_consumer_upcoming).id) && ids.exclude?(orders(:upcoming_pending_future).id)
         }
       end
+
+      it "does not include future confirmed orders in debt and meals until their delivery date" do
+        future_order = orders(:upcoming_confirmed_future)
+        past_order = orders(:history_confirmed_past)
+
+        get accounts_path
+
+        expect(inertia).to have_props(total_meals: 1, current_month_debt: "150.25")
+        expect(inertia).to have_props { |props|
+          order_ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |o| o[:id] }
+          expect(order_ids).to include(past_order.id)
+          expect(order_ids).not_to include(future_order.id)
+          true
+        }
+
+        travel_to future_order.delivery_date
+        DeliveredOrdersSyncJob.perform_now(date: future_order.delivery_date)
+
+        get accounts_path
+
+        expect(inertia).to have_props(total_meals: 3, current_month_debt: "450.75")
+        expect(inertia).to have_props { |props|
+          order_ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |o| o[:id] }
+          expect(order_ids).to contain_exactly(past_order.id, future_order.id)
+          true
+        }
+      end
     end
 
     describe "Mandatory Edge Case 1: Interface Bypass" do

@@ -99,6 +99,38 @@ describe("Consumer Payments Page", () => {
     expect(dialog).not.toHaveTextContent("Total")
   })
 
+  it("displays only delivered consumption and excludes future orders from the detail dialog", () => {
+    render(
+      <Index
+        {...props}
+        current_month_debt={150.25}
+        current_month_detail={{
+          month: "Noviembre 2026",
+          amount: 150.25,
+          orders: [
+            {
+              id: 1,
+              amount: 1,
+              price: 150.25,
+              date: "03/11/26",
+              menu_name: "Milanesa consumida",
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.getByText("$150,25")).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    )
+
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveTextContent("Milanesa consumida")
+    expect(dialog).not.toHaveTextContent("Pedido futuro sin entregar")
+  })
+
   it("shows how many meals the pending debt covers", () => {
     render(<Index {...props} total_debt={450} total_meals={3} />)
 

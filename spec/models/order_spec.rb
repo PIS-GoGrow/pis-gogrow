@@ -423,6 +423,60 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe ".consumed" do
+    it "includes confirmed orders whose delivery date has arrived or passed" do
+      expect(described_class.consumed).to include(orders(:history_confirmed_past))
+    end
+
+    it "excludes confirmed orders whose delivery date is in the future" do
+      expect(described_class.consumed).not_to include(orders(:upcoming_confirmed_future))
+    end
+
+    it "excludes non-confirmed orders even if their delivery date has arrived or passed" do
+      expect(described_class.consumed).not_to include(
+        orders(:upcoming_pending_today),
+        orders(:history_pending_past),
+        orders(:history_cancelled_future),
+        orders(:history_rejected_future)
+      )
+    end
+
+    it "treats confirmed orders without a delivery date as consumed" do
+      order = orders(:history_confirmed_past)
+      order.update_columns(delivery_date: nil, schedule_id: nil)
+
+      expect(described_class.consumed).to include(order)
+    end
+  end
+
+  describe "#consumed?" do
+    it "is true for confirmed orders delivered today or in the past" do
+      expect(orders(:history_confirmed_past)).to be_consumed
+
+      order_today = orders(:upcoming_pending_today)
+      order_today.update_columns(status: :confirmed)
+      expect(order_today).to be_consumed
+    end
+
+    it "is false for confirmed orders scheduled for future delivery" do
+      expect(orders(:upcoming_confirmed_future)).not_to be_consumed
+    end
+
+    it "is false for pending, cancelled or rejected orders regardless of date" do
+      expect(orders(:upcoming_pending_today)).not_to be_consumed
+      expect(orders(:history_pending_past)).not_to be_consumed
+      expect(orders(:history_cancelled_future)).not_to be_consumed
+      expect(orders(:history_rejected_future)).not_to be_consumed
+    end
+
+    it "is true for confirmed orders when delivery date is nil" do
+      order = orders(:history_confirmed_past)
+      order.update_columns(delivery_date: nil, schedule_id: nil)
+
+      expect(order).to be_consumed
+    end
+  end
+
   describe "#subsidy" do
     it "is what the company covers: the gap between the full price and what the employee pays" do
       expect(orders(:upcoming_confirmed_future).subsidy).to eq(300.50)
