@@ -1366,8 +1366,11 @@ es:
         search_label: "Buscar plato"
         search_placeholder: "Buscar plato..."
         empty:
-          title: "No hay platos publicados para el %{day} todavía"
+          title: "No tenés platos publicados para el %{day}"
           description: "Agregá platos a tu menú del %{day} y empezá a recibir pedidos."
+        empty_today:
+          title: "Hoy no tenés platos publicados"
+          description: "Agregá platos a tu menú de hoy y empezá a recibir pedidos."
         empty_unpublishable:
           title: "No se publicó menú para este día."
         no_results:
@@ -1400,9 +1403,13 @@ es:
             back: "Volver"
             confirm: "Eliminar"
             deleting: "Eliminando..."
+          deleted_sheet:
+            title: "Plato eliminado"
+            description: "El plato se eliminó de tus platos guardados. Podés volver a crearlo cuando quieras."
+            done: "Listo"
           empty:
-            title: "Todavía no tenés platos guardados"
-            description: "Cuando crees un plato lo vas a ver acá para editarlo o publicarlo."
+            title: "No tenés platos guardados"
+            description: "Importá o agregá platos para incluirlos al menú cuando quieras."
     provider_menus:
       new:
         title: "Agregar platos"
