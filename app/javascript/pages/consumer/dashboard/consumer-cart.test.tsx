@@ -187,6 +187,24 @@ describe("ConsumerCart delivery address", () => {
     expect(
       screen.getByRole("button", { name: "Ver mis direcciones" }),
     ).toBeDisabled()
+    expect(
+      screen.getByText(
+        "Endulzate by Noe solo entrega en la Oficina, así que este pedido no puede ir a otra dirección.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("does not say the order must go to the office when a provider delivers home", async () => {
+    await renderCart({
+      cart: [
+        cartItem("Tu Viandita", true),
+        cartItem("Endulzate by Noe", false),
+      ],
+    })
+
+    expect(
+      screen.queryByText(/así que este pedido no puede ir a otra dirección/),
+    ).not.toBeInTheDocument()
   })
 
   it("warns which provider only delivers to the office in a mixed cart", async () => {
