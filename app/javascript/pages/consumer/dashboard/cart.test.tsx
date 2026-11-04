@@ -43,10 +43,9 @@ vi.mock("@/pages/consumer/dashboard/pricing", () => ({
     cart.map((item) => ({ id: item.id, quantity: item.quantity })),
 }))
 
-vi.mock("@/hooks/use-session-storage", async () => {
+vi.mock("@/hooks/use-consumer-cart", async () => {
   const { useState } = await import("react")
-  const useSessionStorage = () => useState(mocks.state.initialCart)
-  return { default: useSessionStorage, useSessionStorage }
+  return { useConsumerCart: () => useState(mocks.state.initialCart) }
 })
 
 vi.mock("@/pages/consumer/dashboard/consumer-cart", () => {
@@ -454,6 +453,19 @@ describe("confirm", () => {
     act(() => options.onSuccess())
 
     expect(cartProps().cart).toEqual([])
+  })
+
+  it("conserva el carrito cuando la confirmación falla", async () => {
+    const utils = await renderCart({ cart: [makeItem("a")] })
+    act(() => cartProps().confirm())
+
+    mocks.form.errors = { order_error: "Sin saldo" }
+    mocks.form.hasErrors = true
+    await actAsync(() => {
+      utils.rerender(element([CALLE_1, CALLE_2]))
+    })
+
+    expect(cartProps().cart).toEqual([makeItem("a")])
   })
 
   it("muestra OrderError cuando el form tiene errores", async () => {
