@@ -459,6 +459,25 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(json["lines"].first["tiers"].first["percentage"]).to eq(50)
     end
 
+    it "cuenta una sola vez la vianda que acumula el beneficio base y un cupón" do
+      consumer_user.consumer.benefits.destroy_all
+      consumer_user.consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly), percentage: 50, amount: 2, due_date: 1.month.from_now
+      )
+      coupon = consumer_user.consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:gift), percentage: 25, amount: 1, due_date: 1.month.from_now
+      )
+
+      post pricing_orders_path, params: {
+        items: [ { schedule_id: schedule.id, quantity: 5, benefits: [ coupon.id ] } ]
+      }
+
+      json = response.parsed_body
+      expect(json["lines"].first["tiers"].sum { it["quantity"] }).to eq(3)
+      expect(json["subsidizedQuantity"]).to eq(2)
+      expect(json["fullPriceQuantity"]).to eq(3)
+    end
+
     it "al modificar un pedido le devuelve los usos del beneficio que ese pedido ya tiene" do
       consumer_user.consumer.benefits.destroy_all
       benefit = consumer_user.consumer.benefits.create!(
