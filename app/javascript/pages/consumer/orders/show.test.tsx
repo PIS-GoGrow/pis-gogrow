@@ -139,7 +139,9 @@ describe("Consumer::Orders Show Page", () => {
 
     let priceRow = screen.getByText("Precio base").closest("div")
     expect(priceRow).not.toBeNull()
-    expect(within(priceRow!).getByText("Importe no disponible")).toBeInTheDocument()
+    expect(
+      within(priceRow!).getByText("Importe no disponible"),
+    ).toBeInTheDocument()
 
     const zeroAmountOrder: Order = {
       ...baseOrder,
@@ -150,7 +152,9 @@ describe("Consumer::Orders Show Page", () => {
     rerender(<Show order={zeroAmountOrder} />)
     priceRow = screen.getByText("Precio base").closest("div")
     expect(priceRow).not.toBeNull()
-    expect(within(priceRow!).getByText("Importe no disponible")).toBeInTheDocument()
+    expect(
+      within(priceRow!).getByText("Importe no disponible"),
+    ).toBeInTheDocument()
     expect(within(priceRow!).queryByText("NaN")).not.toBeInTheDocument()
     expect(within(priceRow!).queryByText("Infinity")).not.toBeInTheDocument()
   })
