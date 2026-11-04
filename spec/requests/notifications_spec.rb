@@ -202,11 +202,11 @@ RSpec.describe "Notifications", type: :request do
         title: "Tu pedido fue rechazado",
         description: "Tu pedido del 10 de octubre fue rechazado."
       )
-      # Inicia sesión con rol provider
+      Provider.create!(user:, onboarding_completed_at: Time.current)
       session = user.sessions.create!(role: :provider)
       cookies[:session_token] = AuthenticationHelpers.signed_cookie(:session_token, session.id)
 
-      get provider_root_path
+      get provider_orders_path
 
       notifications_prop = inertia.props[:notifications]
       expect(notifications_prop).to be_empty
