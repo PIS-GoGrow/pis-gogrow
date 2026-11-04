@@ -26,6 +26,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Spinner } from "@/components/ui/spinner"
 import { formatFileSize } from "@/lib/format-file-size"
+import { paymentPresentationStatus } from "@/lib/payment-rejection-reasons"
 import { consumerPayments } from "@/routes"
 import type { Payment } from "@/types"
 
@@ -35,6 +36,7 @@ interface PaymentReceiptDialogProps {
   // Se muestra el botón pero deshabilitado, por ej. mientras hay un comprobante
   // en revisión: la cuenta solo admite uno a la vez.
   uploadDisabled?: boolean
+  uploadDisabledHint?: string
   payments: Payment[]
   allowDelete?: boolean
   inlineUpload?: boolean
@@ -48,6 +50,7 @@ export default function PaymentReceiptDialog({
   accountId,
   canUpload = true,
   uploadDisabled = false,
+  uploadDisabledHint,
   payments,
   allowDelete = true,
   inlineUpload = false,
@@ -61,6 +64,7 @@ export default function PaymentReceiptDialog({
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [uploadResult, setUploadResult] = useState<UploadResult>(null)
+  const [resultOpen, setResultOpen] = useState(false)
   const [uploadErrorMessage, setUploadErrorMessage] = useState<string | null>(
     null,
   )
@@ -104,7 +108,9 @@ export default function PaymentReceiptDialog({
 
   function handleUploadSuccess() {
     handleOpenChange(false)
+    setUploadErrorMessage(null)
     setUploadResult("success")
+    setResultOpen(true)
   }
 
   function handleUploadError(errors: Record<string, string | string[]>) {
@@ -112,6 +118,7 @@ export default function PaymentReceiptDialog({
     handleOpenChange(false)
     setInputKey((key) => key + 1)
     setUploadResult("error")
+    setResultOpen(true)
   }
 
   return (
@@ -128,7 +135,10 @@ export default function PaymentReceiptDialog({
               })}
             </span>
             <div className="shrink-0">
-              <StatusBadge kind="payment" status={payment.status} />
+              <StatusBadge
+                kind="payment"
+                status={paymentPresentationStatus(payment)}
+              />
             </div>
           </div>
 
@@ -413,19 +423,12 @@ export default function PaymentReceiptDialog({
 
       {!inlineUpload && canUpload && uploadDisabled && (
         <p id={uploadHintId} className="text-muted-foreground text-sm">
-          {t("pages.accounts.show.receipt_under_review_hint")}
+          {uploadDisabledHint ??
+            t("pages.accounts.show.receipt_under_review_hint")}
         </p>
       )}
 
-      <AdaptableDialog
-        open={uploadResult !== null}
-        onOpenChange={(nextOpen) => {
-          if (!nextOpen) {
-            setUploadResult(null)
-            setUploadErrorMessage(null)
-          }
-        }}
-      >
+      <AdaptableDialog open={resultOpen} onOpenChange={setResultOpen}>
         <AdaptableDialogContent showCloseButton={false} className="p-5">
           <div className="flex flex-col gap-5">
             <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
@@ -442,7 +445,7 @@ export default function PaymentReceiptDialog({
             <Button
               type="button"
               className="h-12 w-full rounded-lg text-base font-medium"
-              onClick={() => setUploadResult(null)}
+              onClick={() => setResultOpen(false)}
             >
               {uploadResult === "success"
                 ? t("pages.accounts.show.receipt_success_action")

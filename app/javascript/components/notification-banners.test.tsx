@@ -63,6 +63,31 @@ describe("NotificationBanners", () => {
     ).toBeInTheDocument()
   })
 
+  it("renders an order rejection notification with rejected title and reason and can be dismissed", () => {
+    mocks.notifications.push({
+      id: 99,
+      title: "Tu pedido fue rechazado",
+      description:
+        "Tu pedido del 10 de octubre de Milanesa con puré fue rechazado por Tu Viandita porque no había stock disponible.",
+      requires_action: false,
+    })
+
+    render(<NotificationBanners />)
+
+    expect(screen.getByText("Tu pedido fue rechazado")).toBeInTheDocument()
+    expect(
+      screen.queryByText("Tu pedido fue cancelado"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Tu pedido del 10 de octubre de Milanesa con puré fue rechazado por Tu Viandita porque no había stock disponible.",
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Cerrar notificación" }),
+    ).toBeInTheDocument()
+  })
+
   it("renders an HR debt payment reminder naming multiple creditors", () => {
     mocks.notifications.push({
       id: 2,

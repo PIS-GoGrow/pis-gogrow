@@ -223,8 +223,8 @@ es:
       title: "Tu pedido fue confirmado"
       description: "Tu pedido del %{date} fue confirmado por %{provider}."
     order_rejection:
-      title: "Tu pedido fue cancelado"
-      description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}."
+      title: "Tu pedido fue rechazado"
+      description: "Tu pedido del %{date} de %{dish} fue rechazado por %{provider} %{reason}."
       reasons:
         out_of_stock: "porque no había stock disponible"
         duplicate_order: "porque el pedido estaba duplicado"
@@ -371,6 +371,7 @@ es:
               invalid_content_type: "El archivo debe ser PDF, JPG o PNG."
               too_large: "El archivo no puede superar los 10 MB."
               already_under_review: "Ya hay un comprobante en revisión para esta cuenta. Esperá a que se resuelva para enviar otro."
+              provider_payment_details_missing: "El proveedor todavía no cargó sus datos de cobro. Podrás enviar el comprobante cuando los complete."
             rejection_reason:
               blank: "es obligatorio para rechazar un comprobante"
         invoice:
@@ -839,6 +840,7 @@ es:
             copied: "Número de cuenta copiado"
             copy_failed: "No pudimos copiar el número de cuenta"
             missing: "Este proveedor todavía no cargó sus datos de cobro."
+            missing_upload_hint: "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro."
           meals_one: "%{count} vianda"
           meals_other: "%{count} viandas"
           due: "Vence: %{date}"
@@ -945,6 +947,9 @@ es:
         see_receipts: "Ver comprobantes"
         status_accepted: "Confirmado"
         status_rejected: "Rechazado"
+        status_pending: "Pendiente"
+        status_submitted: "En revisión"
+        status_partial: "Pago parcial"
         partial_payment_warning: "Falta una parte del pago. Transferí la diferencia y subí el comprobante."
     orders:
       index:
@@ -1059,6 +1064,7 @@ es:
         pending: "Pendiente"
         submitted: "En revisión"
         approved: "Aprobado"
+        partial: "Pago parcial"
         rejected: "Rechazado"
       partial_payment_badge: "Pago parcial"
       receipt_sent_at: "Comprobante enviado el %{date}"

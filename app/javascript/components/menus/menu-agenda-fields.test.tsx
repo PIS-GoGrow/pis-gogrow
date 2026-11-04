@@ -228,4 +228,37 @@ describe("MenuAgendaFields component", () => {
       }),
     )
   })
+
+  it("deshabilita sábados y domingos en los selectores de fecha de la agenda", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <MenuAgendaFields
+        value={{
+          ...defaultDraft,
+          mode: "range",
+          starts_on: "2030-01-10",
+          ends_on: "2030-01-15",
+        }}
+        onChange={vi.fn()}
+        today="2030-01-09"
+        maximumPublishDate="2030-01-18"
+      />,
+    )
+
+    const fromButton = screen.getByLabelText("Desde")
+    await user.click(fromButton)
+
+    for (const weekend of screen.getAllByRole("button", {
+      name: /^(sábado|domingo),/,
+    })) {
+      expect(weekend).toBeDisabled()
+    }
+    const weekdays = screen.getAllByRole("button", {
+      name: /^(lunes|martes|miércoles|jueves|viernes),/,
+    })
+    expect(weekdays.some((weekday) => !weekday.hasAttribute("disabled"))).toBe(
+      true,
+    )
+  })
 })

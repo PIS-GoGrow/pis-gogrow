@@ -12,7 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { SheetTrigger } from "@/components/ui/sheet"
 import { formatMoney } from "@/lib/money"
-import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
+import { paymentPresentationStatus } from "@/lib/payment-rejection-reasons"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
 
@@ -47,6 +47,12 @@ export default function AccountCard({
     account.payments.find(({ status }) => status === "approved")
   const showReceiptSection =
     !account.current || account.payments.some(({ receipt_url }) => receipt_url)
+  const presentationStatus = payment
+    ? paymentPresentationStatus(payment)
+    : "pending"
+  const showPaymentWarning =
+    payment !== undefined &&
+    ["partial", "rejected"].includes(presentationStatus)
 
   async function handleClick() {
     setLoading(true)
@@ -114,17 +120,15 @@ export default function AccountCard({
           </SheetTrigger>
         </CardTitle>
 
-        {(payment?.status === "rejected" || showReceiptSection) && (
-          <Separator />
-        )}
+        {(showPaymentWarning || showReceiptSection) && <Separator />}
 
-        {payment?.status === "rejected" &&
-          (payment.rejection_reason === PARTIAL_PAYMENT_REJECTION_REASON ? (
+        {payment &&
+          (presentationStatus === "partial" ? (
             <div className="flex items-start gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
               <TriangleAlert className="mt-0.5 size-4 shrink-0" />
               <p>{t("pages.accounts.show.partial_payment_warning")}</p>
             </div>
-          ) : (
+          ) : presentationStatus === "rejected" ? (
             <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
               <CircleX className="mt-0.5 size-4 shrink-0" />
               <p>
@@ -134,13 +138,15 @@ export default function AccountCard({
                 {payment.rejection_reason}
               </p>
             </div>
-          ))}
+          ) : null)}
 
         {showReceiptSection && (
           <PaymentReceiptDialog
             accountId={account.id}
             inlineUpload
-            canUpload={!account.current}
+            canUpload={
+              !account.current && account.collection_status !== "approved"
+            }
             uploadDisabled={account.payments.some(
               ({ status }) => status === "submitted",
             )}

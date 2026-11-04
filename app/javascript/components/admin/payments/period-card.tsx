@@ -23,12 +23,14 @@ interface PeriodCardProps {
   // En el historial los períodos van todos juntos, así que cada tarjeta dice
   // de qué proveedor es.
   providerName?: string
+  paymentDetailsMissing?: boolean
   onOpenDetail: () => void
 }
 
 export default function PeriodCard({
   account,
   providerName,
+  paymentDetailsMissing = false,
   onOpenDetail,
 }: PeriodCardProps) {
   const { t } = useTranslation()
@@ -133,9 +135,15 @@ export default function PeriodCard({
 
         <PaymentReceiptDialog
           accountId={account.id}
-          uploadDisabled={account.payments.some(
-            ({ status }) => status === "submitted",
-          )}
+          uploadDisabled={
+            paymentDetailsMissing ||
+            account.payments.some(({ status }) => status === "submitted")
+          }
+          uploadDisabledHint={
+            paymentDetailsMissing
+              ? t("pages.admin.payments.index.bank.missing_upload_hint")
+              : undefined
+          }
           createAction={adminPayments.create()}
           destroyAction={adminPayments.destroy}
           payments={account.payments}

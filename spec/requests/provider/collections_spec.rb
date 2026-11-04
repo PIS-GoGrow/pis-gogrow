@@ -146,6 +146,32 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(group[:employees_status]).to eq("rejected")
     end
 
+    it "keeps a partial account pending without classifying it as rejected or settled" do
+      partial_account = accounts(:one_tuviandita_current)
+      other_account = accounts(:other_tuviandita_current)
+      partial_account.payments.destroy_all
+      other_account.payments.destroy_all
+      partial = partial_account.payments.build(provider: partial_account.provider, status: :partial)
+      partial.receipt.attach(
+        io: Rails.root.join("public/icon.png").open,
+        filename: "parcial.png",
+        content_type: "image/png"
+      )
+      partial.save!
+      other_account.payments.create!(provider: other_account.provider, status: :approved)
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      group = group_for(:pending, Date.current)
+      employee = group[:employees].find { it[:id] == partial_account.id }
+      expect(employee).to include(status: "partial")
+      expect(employee[:payments].sole).to include(status: "partial", rejection_reason: nil)
+      expect(group[:employees_status]).to eq("partial")
+      expect(group[:rejected_count]).to eq(0)
+      expect(props[:history].flat_map { it[:employees] }.pluck(:id)).not_to include(partial_account.id)
+    end
+
     it "moves a month to the history once every account is confirmed" do
       sign_in provider_user, role: :provider
 
@@ -347,6 +373,24 @@ RSpec.describe "Provider::Collections", type: :request do
       get provider_collection_path(accounts(:one_tuviandita_current))
 
       expect(props[:payments].pluck(:status)).to eq([ "rejected" ])
+    end
+
+    it "renders the collection page with partial status in inertia props when account has a partial payment" do
+      account = accounts(:one_tuviandita_current)
+      account.payments.destroy_all
+      payment = account.payments.build(provider: account.provider, status: :partial)
+      payment.receipt.attach(io: StringIO.new("partial"), filename: "parcial.png", content_type: "image/png")
+      payment.save!
+
+      sign_in provider_user, role: :provider
+      get provider_collection_path(account)
+
+      expect(response).to have_http_status(:ok)
+      expect(inertia).to render_component("provider/collections/show")
+      expect(inertia).to have_props { |page|
+        page[:account][:status] == "partial" &&
+          page[:payments].first[:status] == "partial"
+      }
     end
 
     it "does not find the account of another provider" do
