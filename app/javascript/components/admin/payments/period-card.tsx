@@ -10,9 +10,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { adminPayments } from "@/routes"
@@ -43,55 +41,63 @@ export default function PeriodCard({
 
   if (status === "approved") {
     return (
-      <Card className="gap-3 py-4">
-        <CardHeader className="px-4">
-          <CardDescription>{account.paid_on}</CardDescription>
-          <CardAction>
+      <Card className="bg-background gap-4 rounded-lg p-4 shadow-none">
+        <div className="flex flex-col gap-1.5">
+          <div className="text-muted-foreground flex items-center justify-between text-sm font-medium">
+            <span>{account.paid_on}</span>
             <StatusBadge
               status={status}
               kind="payment"
               label={t("pages.admin.payments.index.confirmed")}
             />
-          </CardAction>
-          <CardTitle className="text-foreground font-semibold">
+          </div>
+          <p className="text-foreground text-base font-semibold">
             {title}
-          </CardTitle>
-        </CardHeader>
+          </p>
+        </div>
 
-        <CardContent className="grid gap-3 px-4">
-          <Separator />
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <div className="grid gap-1">
-              <span className="text-muted-foreground text-sm">
-                {t("pages.admin.payments.index.total_paid")}
-              </span>
-              <strong className="text-xl">
-                {formatMoney(account.payable_amount)}
-              </strong>
-            </div>
-            <Button variant="ghost" size="sm" onClick={onOpenDetail}>
-              <Eye aria-hidden="true" />
+        <div className="border-border flex flex-col gap-3 border-y py-3">
+          <span className="text-muted-foreground text-sm font-medium">
+            {t("pages.admin.payments.index.total_paid")}
+          </span>
+          <div className="flex items-center justify-between">
+            <span className="text-foreground text-base font-semibold">
+              {formatMoney(account.payable_amount)}
+            </span>
+            <Button
+              variant="ghost"
+              onClick={onOpenDetail}
+              className="text-foreground h-auto p-0 text-sm font-semibold hover:bg-transparent has-[>svg]:px-0 dark:hover:bg-transparent"
+            >
+              <Eye aria-hidden="true" className="size-4" />
               {t("pages.admin.payments.index.see_detail")}
             </Button>
           </div>
+        </div>
 
-          {account.invoice_download_url && (
-            <Button asChild>
-              <a href={account.invoice_download_url}>
-                <Download aria-hidden="true" />
-                {t("pages.admin.payments.index.download_invoice")}
-              </a>
-            </Button>
-          )}
-          {account.receipt_download_url && (
-            <Button variant="secondary" asChild>
-              <a href={account.receipt_download_url} download>
-                <Download aria-hidden="true" />
-                {t("pages.admin.payments.index.download_receipt")}
-              </a>
-            </Button>
-          )}
-        </CardContent>
+        {account.invoice_download_url && (
+          <Button
+            className="h-10 w-full rounded-[10px] font-medium"
+            asChild
+          >
+            <a href={account.invoice_download_url}>
+              <Download aria-hidden="true" className="size-4" />
+              {t("pages.admin.payments.index.download_invoice")}
+            </a>
+          </Button>
+        )}
+        {account.receipt_download_url && (
+          <Button
+            variant="secondary"
+            className="h-10 w-full rounded-[10px] font-medium"
+            asChild
+          >
+            <a href={account.receipt_download_url} download>
+              <Download aria-hidden="true" className="size-4" />
+              {t("pages.admin.payments.index.download_receipt")}
+            </a>
+          </Button>
+        )}
       </Card>
     )
   }
