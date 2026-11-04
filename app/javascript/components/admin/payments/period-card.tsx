@@ -51,9 +51,7 @@ export default function PeriodCard({
               label={t("pages.admin.payments.index.confirmed")}
             />
           </div>
-          <p className="text-foreground text-base font-semibold">
-            {title}
-          </p>
+          <p className="text-foreground text-base font-semibold">{title}</p>
         </div>
 
         <div className="border-border flex flex-col gap-3 border-y py-3">
@@ -76,10 +74,7 @@ export default function PeriodCard({
         </div>
 
         {account.invoice_download_url && (
-          <Button
-            className="h-10 w-full rounded-[10px] font-medium"
-            asChild
-          >
+          <Button className="h-10 w-full rounded-[10px] font-medium" asChild>
             <a href={account.invoice_download_url}>
               <Download aria-hidden="true" className="size-4" />
               {t("pages.admin.payments.index.download_invoice")}
