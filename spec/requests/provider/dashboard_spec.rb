@@ -161,7 +161,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
           get provider_dashboard_path, headers: {
             "X-Inertia" => "true",
-            "X-Inertia-Version" => RailsVite.digest,
+            "X-Inertia-Version" => InertiaRails.configuration.version,
             "X-Inertia-Partial-Component" => "provider/dashboard/index",
             "X-Inertia-Partial-Data" => "order_deadline_passed_today,seconds_until_order_deadline"
           }
@@ -178,7 +178,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
           get provider_dashboard_path, headers: {
             "X-Inertia" => "true",
-            "X-Inertia-Version" => RailsVite.digest,
+            "X-Inertia-Version" => InertiaRails.configuration.version,
             "X-Inertia-Partial-Component" => "provider/dashboard/index",
             "X-Inertia-Partial-Data" => "order_deadline_passed_today,seconds_until_order_deadline"
           }
@@ -193,7 +193,7 @@ RSpec.describe "Provider::Dashboard", type: :request do
         it "responde 409 Conflict si la petición parcial de Inertia tiene una versión desactualizada" do
           get provider_dashboard_path, headers: {
             "X-Inertia" => "true",
-            "X-Inertia-Version" => "outdated-version",
+            "X-Inertia-Version" => "#{InertiaRails.configuration.version}-outdated",
             "X-Inertia-Partial-Component" => "provider/dashboard/index",
             "X-Inertia-Partial-Data" => "order_deadline_passed_today,seconds_until_order_deadline"
           }
