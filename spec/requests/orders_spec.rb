@@ -200,6 +200,15 @@ RSpec.describe "Orders", type: :request do
         sign_in users(:provider_user)
         get order_path(orders(:upcoming_confirmed_future))
         expect(response).to redirect_to(root_path)
+
+        sign_in users(:admin), role: :admin
+        get order_path(orders(:upcoming_confirmed_future))
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "returns not found for a non-existent order id" do
+        get order_path(id: 999_999)
+        expect(response).to have_http_status(:not_found)
       end
 
       it "serializes rejection reason and rejection details on a rejected order" do
@@ -1402,6 +1411,15 @@ RSpec.describe "Orders", type: :request do
       expect(order.reload.amount).to eq(1)
     end
 
+    it "rejects another consumer trying to modify someone else's order" do
+      sign_in users(:other_consumer_user), role: :consumer
+
+      patch order_path(order), params: update_params(quantity: 3)
+
+      expect(response).to have_http_status(:not_found)
+      expect(order.reload.amount).to eq(1)
+    end
+
     context "when signed in as an employee" do
       before do
         sign_in users(:one)
@@ -1941,6 +1959,90 @@ RSpec.describe "Orders", type: :request do
         expect(log.changeset).to include("notes" => [ "Nota previa", nil ])
         follow_redirect!
         expect(inertia).to have_flash(order_updated: true)
+      end
+
+      context "when managing provider notifications on order modifications" do
+        let!(:notification_config) do
+          Notification::Configuration.find_or_create_by!(key: "provider_orders") do |c|
+            c.roles = %w[provider]
+          end
+        end
+
+        it "updates active provider notification description and exposes it in Inertia props" do
+          order.notify_received
+          notification = Notification.find_by!(event: "order_received", notifiable: order)
+
+          expect {
+            patch order_path(order), params: update_params(quantity: 3)
+          }.not_to change { Notification.where(event: "order_received", notifiable: order).count }
+
+          expect(order.reload.amount).to eq(3)
+          expect(notification.reload.description).to include("pidió 3 de")
+
+          sign_in order.provider.user, role: :provider
+          get provider_dashboard_path
+          expect(response).to have_http_status(:ok)
+
+          received_notification = inertia.props[:notifications].find do |n|
+            (n["title"] || n[:title]) == I18n.t("notifications.order_received.title")
+          end
+
+          expect(received_notification).to be_present
+          expect(received_notification["description"] || received_notification[:description]).to include("pidió 3 de")
+        end
+
+        it "creates a new active provider notification when previous one was already closed" do
+          order.notify_received
+          original_notification = Notification.find_by!(event: "order_received", notifiable: order)
+          original_notification.close!
+
+          expect {
+            patch order_path(order), params: update_params(quantity: 4)
+          }.to change { Notification.where(event: "order_received", notifiable: order).count }.by(1)
+
+          new_notification = Notification.find_by!(event: "order_received", notifiable: order, closed_at: nil)
+          expect(new_notification.description).to include("pidió 4 de")
+          expect(original_notification.reload.closed_at).to be_present
+        end
+
+        it "does not update or duplicate provider notification when modifying non-quantity attributes" do
+          order.notify_received
+          notification = Notification.find_by!(event: "order_received", notifiable: order)
+          original_desc = notification.description
+          original_updated_at = notification.updated_at
+
+          patch order_path(order), params: update_params(quantity: order.amount, notes: "Sin pimienta", address: "18 de Julio 1006")
+
+          expect(notification.reload.description).to eq(original_desc)
+          expect(notification.updated_at).to eq(original_updated_at)
+          expect(Notification.where(event: "order_received", notifiable: order).count).to eq(1)
+        end
+
+        it "preserves notification untouched when parameter validation fails on interface bypass" do
+          order.notify_received
+          notification = Notification.find_by!(event: "order_received", notifiable: order)
+          original_desc = notification.description
+
+          [ "invalid", "-3", "0" ].each do |invalid_qty|
+            patch order_path(order), params: update_params(quantity: invalid_qty)
+            expect(order.reload.amount).to eq(1)
+            expect(notification.reload.description).to eq(original_desc)
+          end
+        end
+
+        it "preserves provider notification and DB integrity when schedule availability is exceeded" do
+          order.notify_received
+          notification = Notification.find_by!(event: "order_received", notifiable: order)
+          original_desc = notification.description
+
+          order.schedule.update!(amount: 1)
+
+          patch order_path(order), params: update_params(quantity: 10)
+
+          expect(order.reload.amount).to eq(1)
+          expect(notification.reload.description).to eq(original_desc)
+          expect(Notification.where(event: "order_received", notifiable: order, closed_at: nil).count).to eq(1)
+        end
       end
     end
   end
