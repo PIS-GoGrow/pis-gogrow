@@ -132,7 +132,7 @@ export default function CollectionAccountPanel({
           eligible={reminder.eligible}
           employeeName={account.owner_name}
           month={account.month}
-          amount={account.payable_amount}
+          amount={account.outstanding_amount ?? account.payable_amount}
         />
       )}
       {reminder.blocked_reason === "cooldown" && (

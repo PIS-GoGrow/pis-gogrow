@@ -230,7 +230,12 @@ export default function CollectionGroupCard({
                 icon={Building2}
                 title={t("pages.provider_collections.group.company")}
                 status={group.company.status}
-                amount={group.company.payable_amount}
+                amount={
+                  settled
+                    ? group.company.payable_amount
+                    : (group.company.outstanding_amount ??
+                      group.company.payable_amount)
+                }
               >
                 <CollectionAccountPanel
                   account={group.company}

@@ -30,15 +30,16 @@ class Account < ApplicationRecord
   OUTSTANDING_AMOUNT_SQL = <<~SQL.squish
     accounts.amount + ROUND(accounts.amount * accounts.vat_rate, 2) - COALESCE((
       SELECT SUM(payments.expected_amount) FROM payments
-      WHERE payments.account_id = accounts.id AND payments.status = #{Payment.statuses[:approved]}
+      WHERE payments.account_id = accounts.id AND payments.status = ?
     ), 0)
   SQL
 
   # Cuentas con saldo que los comprobantes aprobados no cubren
-  scope :pending, -> { where("#{OUTSTANDING_AMOUNT_SQL} > 0") }
+  scope :pending, -> { where("#{OUTSTANDING_AMOUNT_SQL} > 0", Payment.statuses[:approved]) }
   # Cuentas saldadas
   scope :history, -> {
-    where(id: Payment.approved.select(:account_id)).where("#{OUTSTANDING_AMOUNT_SQL} <= 0")
+    where(id: Payment.approved.select(:account_id))
+      .where("#{OUTSTANDING_AMOUNT_SQL} <= 0", Payment.statuses[:approved])
   }
 
   def company?

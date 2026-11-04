@@ -248,4 +248,14 @@ RSpec.describe ProviderCollectionSummary do
     expect(detail_orders.sum { it[:meals] }).to eq(4)
     expect(summary.sales).to eq(total: 400.0, meals: 4)
   end
+
+  it "calcula employees_total con el saldo pendiente restante cuando el grupo no está saldado" do
+    account = consumer.accounts.create!(provider:, month: Date.current.prev_month.beginning_of_month, amount: 740.25)
+    account.payments.create!(status: :approved, expected_amount: 290.25)
+
+    summary = described_class.new(provider:)
+    group = summary.pending.detect { it.client.id == consumer.company.id }
+
+    expect(group.employees_total).to eq(450.to_d)
+  end
 end

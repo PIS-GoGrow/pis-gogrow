@@ -114,4 +114,19 @@ describe("CollectionGroupCard", () => {
     expect(screen.queryByText("En revisión")).not.toBeInTheDocument()
     expect(screen.getByText("Vence: 10/10/26")).toBeInTheDocument()
   })
+
+  it("muestra el saldo pendiente en el encabezado de Empresa mientras está pendiente", () => {
+    render(
+      <CollectionGroupCard
+        group={groupWith({
+          ...company,
+          payable_amount: 1000,
+          outstanding_amount: 450,
+          status: "pending",
+        })}
+      />,
+    )
+
+    expect(screen.getByText("$450")).toBeInTheDocument()
+  })
 })

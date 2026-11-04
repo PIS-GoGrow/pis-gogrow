@@ -73,7 +73,7 @@ class ProviderCollectionSummary
 
     def settled? = rows.all?(&:approved?)
 
-    def employees_total = employee_rows.sum { it.settled? ? it.amount : it.outstanding_amount }
+    def employees_total = settled? ? employee_rows.sum(&:amount) : employee_rows.sum(&:outstanding_amount)
 
     def employees_status
       statuses = employee_rows.map(&:collection_status)
