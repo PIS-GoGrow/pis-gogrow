@@ -863,6 +863,12 @@
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
         "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+        "order_error": {
+          "description": "Hubo un problema al procesar tu pedido. Intentá de nuevo.",
+          "menu": "Volver al menú",
+          "retry": "Reintentar",
+          "title": "No se pudo procesar el pedido"
+        },
         "remove": "Quitar %{name}",
         "saved_addresses": {
           "cancel": "Cancelar",
@@ -871,6 +877,7 @@
           "title": "Mis direcciones"
         },
         "subtotal": "Precio vianda",
+        "title": "Tu carrito",
         "total": "Monto a pagar"
       },
       "consumer_dashboard": {

@@ -211,6 +211,7 @@ es:
     menu_publish:
       invalid_date: "Elegí un día de semana entre hoy y la fecha máxima de publicación."
       invalid_menus: "Algún plato elegido no existe."
+    inconsistent_pricing: "Los precios o los beneficios de tu pedido cambiaron desde que armaste el carrito. Revisá el pedido y confirmá de nuevo."
   notifications:
     order_received:
       title: "Nuevo pedido"
@@ -1549,6 +1550,7 @@ es:
             title: "¡Plato modificado!"
             description: "Tu plato fue modificado correctamente."
     cart:
+      title: "Tu carrito"
       delivery_address: "Dirección de entrega"
       add_address: "Agregar"
       my_addresses: "Ver mis direcciones"
@@ -1587,6 +1589,11 @@ es:
         description: "Elegí a qué dirección querés recibir el pedido."
         cancel: "Cancelar"
         submit: "Seleccionar"
+      order_error:
+        title: "No se pudo procesar el pedido"
+        description: "Hubo un problema al procesar tu pedido. Intentá de nuevo."
+        retry: "Reintentar"
+        menu: "Volver al menú"
     home:
       title: "Viandas GoGrow"
       consumer:

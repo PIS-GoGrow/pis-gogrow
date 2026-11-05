@@ -2,6 +2,7 @@
 
 class Consumer::OrdersController < Consumer::InertiaController
   before_action :set_consumer
+  class InconsistentPricing < StandardError; end
 
   def index
     orders = @consumer.orders.preload(:review, provider: :user, schedule: { menu: { provider: :user } })
@@ -76,6 +77,8 @@ class Consumer::OrdersController < Consumer::InertiaController
         end
       )
 
+      raise InconsistentPricing if !order_params[:expected_price].nil? && pricings.sum { it[1].discounted_price } != order_params[:expected_price]
+
       requested_items.zip(pricings).each do |item, pricing|
         quantity = item[:quantity].to_i
         schedule = schedules.fetch(item[:schedule_id].to_i)
@@ -116,6 +119,8 @@ class Consumer::OrdersController < Consumer::InertiaController
     reject_order(order_error_reason(error.record))
   rescue ActiveRecord::RecordNotFound, KeyError
     reject_order(:cart_unavailable)
+  rescue InconsistentPricing
+    reject_order(:inconsistent_pricing)
   end
 
   def update
@@ -269,7 +274,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def order_params
-    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] }, benefits: [] ] ] ])
+    params.expect(order: [ :address, :expected_price, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] }, benefits: [] ] ] ])
   end
 
   def pricing_params
