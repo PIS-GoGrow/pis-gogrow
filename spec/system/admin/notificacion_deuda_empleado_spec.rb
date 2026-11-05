@@ -57,10 +57,6 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
     visit admin_dashboard_path
   end
 
-  def period
-    I18n.l(month, format: :month_name_year).downcase
-  end
-
   def add_payment(status:, to:)
     payment = to.payments.build(provider: to.provider, status:)
     payment.receipt.attach(io: File.open(Rails.root.join("public/icon.png")), filename: "comprobante.png")
@@ -74,12 +70,10 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
     open_admin_home
 
     expect(page).to have_content(title)
-    # El criterio 2 pide además la antigüedad de la deuda, que el aviso todavía
-    # no muestra (EmployeeDebtNotifications#description_data sólo arma empleado,
-    # proveedor, período y monto).
+    # El criterio 2 pide empleado, proveedor, período y antigüedad, pero el aviso
+    # del Figma es uno por empresa y solo da la cantidad y el importe.
     expect(page).to have_content(
-      "Test User tiene pendiente su pago a Other Provider User correspondiente a #{period}. " \
-      "La deuda asciende a $200. Podés enviarle un recordatorio."
+      "1 empleado tiene una deuda total de $200. Podés enviarle un recordatorio."
     )
   end
 
@@ -99,8 +93,7 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
     open_admin_home
 
     expect(page).to have_content(
-      "2 empleados tienen pendiente su pago a Other Provider User correspondiente a #{period}. " \
-      "La deuda total asciende a $300. Podés enviarles un recordatorio."
+      "2 empleados tienen una deuda total de $300. Podés enviarles un recordatorio."
     )
   end
 
@@ -152,8 +145,7 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
 
     expect(page).to have_content(title)
     expect(page).to have_content(
-      "Test User tiene pendiente su pago a Other Provider User correspondiente a #{period}. " \
-      "La deuda asciende a $200. Podés enviarle un recordatorio."
+      "1 empleado tiene una deuda total de $200. Podés enviarle un recordatorio."
     )
   end
 
