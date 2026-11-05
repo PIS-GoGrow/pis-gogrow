@@ -121,7 +121,7 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
       expect_buttons_within_container_and_balanced
 
       # Acción Reintentar: vuelve a la vista del carrito
-      click_button "Reintentar"
+      click_link "Reintentar"
       expect(page).to have_content("Tu carrito")
     end
 
@@ -142,7 +142,7 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
       expect_buttons_within_container_and_balanced
 
       # Acción Volver a Menú: navega al dashboard de consumidor
-      click_link "Volver a Menú"
+      click_link "Volver al menú"
       expect(page).to have_current_path(dashboard_path)
       expect(page).to have_content("Menú semanal")
     end
