@@ -98,6 +98,7 @@ es:
     close: "Cerrar"
     confirm_password: "Confirmar contraseña"
     current_password: "Contraseña actual"
+    email: "Email"
     email_address: "Correo electrónico"
     email_placeholder: "correo@ejemplo.com"
     full_name: "Nombre completo"
@@ -221,8 +222,8 @@ es:
       title: "Tu pedido fue confirmado"
       description: "Tu pedido del %{date} fue confirmado por %{provider}."
     order_rejection:
-      title: "Tu pedido fue cancelado"
-      description: "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}."
+      title: "Tu pedido fue rechazado"
+      description: "Tu pedido del %{date} de %{dish} fue rechazado por %{provider} %{reason}."
       reasons:
         out_of_stock: "porque no había stock disponible"
         duplicate_order: "porque el pedido estaba duplicado"
@@ -281,8 +282,8 @@ es:
         other: "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} viandas para entregas del %{period}."
   notification_configurations:
     provider_orders:
-      title: "Pedidos nuevos"
-      description: "Recibí una notificación cuando un empleado te haga un pedido."
+      title: "Nuevos pedidos"
+      description: "Recibí una notificación cada vez que un cliente haga un pedido nuevo."
     provider_payments:
       title: "Comprobantes de pago"
       description: "Recibí una notificación cuando te envíen un comprobante de pago."
@@ -369,6 +370,7 @@ es:
               invalid_content_type: "El archivo debe ser PDF, JPG o PNG."
               too_large: "El archivo no puede superar los 10 MB."
               already_under_review: "Ya hay un comprobante en revisión para esta cuenta. Esperá a que se resuelva para enviar otro."
+              provider_payment_details_missing: "El proveedor todavía no cargó sus datos de cobro. Podrás enviar el comprobante cuando los complete."
             rejection_reason:
               blank: "es obligatorio para rechazar un comprobante"
         invoice:
@@ -433,7 +435,7 @@ es:
     greeting: "Hola,"
     support: "¿Tenés dudas o necesitás ayuda? Respondé este correo y nuestro equipo de soporte te va a ayudar a resolverlo."
     invitation:
-      subject: "Invitación a Viandas GoGrow"
+      subject: "Fuiste invitado a Viandas GoGrow"
       title: "Fuiste invitado a Viandas GoGrow"
       greeting: "Hola %{name},"
       intro: "%{company} te invitó a unirte como proveedor de viandas a través de la plataforma Viandas GoGrow."
@@ -441,9 +443,9 @@ es:
       after: "Una vez que te unas, podés acceder a tu cuenta desde %{url}"
     password_reset_code:
       subject: "Restablecimiento de contraseña"
-      title: "Restablecimiento de contraseña"
+      title: "Restablecimiento de Contraseña"
       greeting: "Hola %{name},"
-      intro: "Recibimos una solicitud para restablecer la contraseña de tu cuenta en Viandas GoGrow. Si la solicitud fue tuya, ingresá el siguiente código para crear una nueva contraseña:"
+      intro: "Recibimos una solicitud para restablecer la contraseña de tu cuenta en Viandas GoGrow. Si fuiste vos, ingresá el siguiente código para crear una nueva contraseña:"
       validity: "Este código es válido por los próximos %{minutes} minutos."
       ignore: "Si no solicitaste un restablecimiento de contraseña, contactá a nuestro equipo de soporte."
     email_verification:
@@ -542,6 +544,8 @@ es:
         settings: "Configuración"
         subsidies: "Subsidios"
         subsidies_description: "Gestioná los subsidios de tu empresa"
+        invoices: "Facturas"
+        invoices_description: "Consultá las facturas de los proveedores"
         order_events: "Auditoría de pedidos"
         order_events_description: "Consultá quién creó o cambió cada pedido"
         notifications: "Notificaciones"
@@ -636,6 +640,7 @@ es:
       invoices:
         index:
           title: "Facturas de proveedores"
+          back: "Volver a Cuenta"
           description: "Las facturas que los proveedores le emiten a GoGrow, con su historial."
           period: "Período"
           provider: "Proveedor"
@@ -834,6 +839,7 @@ es:
             copied: "Número de cuenta copiado"
             copy_failed: "No pudimos copiar el número de cuenta"
             missing: "Este proveedor todavía no cargó sus datos de cobro."
+            missing_upload_hint: "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro."
           meals_one: "%{count} vianda"
           meals_other: "%{count} viandas"
           due: "Vence: %{date}"
@@ -922,6 +928,7 @@ es:
         receipt_error_action: "Entendido"
         receipt_under_review_hint: "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva."
         receipt_sent_at: "Enviado: %{date}"
+        receipt_expected_amount: "Importe: %{amount}"
         receipt_remove: "Eliminar comprobante"
         receipt_remove_title: "¿Eliminar comprobante?"
         receipt_remove_description: "Esta acción no se puede deshacer. Podés volver a subir el comprobante mientras el pago no esté aprobado."
@@ -940,6 +947,9 @@ es:
         see_receipts: "Ver comprobantes"
         status_accepted: "Confirmado"
         status_rejected: "Rechazado"
+        status_pending: "Pendiente"
+        status_submitted: "En revisión"
+        status_partial: "Pago parcial"
         partial_payment_warning: "Falta una parte del pago. Transferí la diferencia y subí el comprobante."
     orders:
       index:
@@ -1054,6 +1064,7 @@ es:
         pending: "Pendiente"
         submitted: "En revisión"
         approved: "Aprobado"
+        partial: "Pago parcial"
         rejected: "Rechazado"
       partial_payment_badge: "Pago parcial"
       partial_payment_warning: "Falta una parte del pago."
@@ -1148,7 +1159,7 @@ es:
         expected_amount: "Importe esperado:"
         download: "Descargar comprobante"
         open_receipt: "Abrir comprobante completo"
-        check_receipt: "Comprobá el importe, la cuenta y el concepto del comprobante antes de aprobar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo."
+        check_receipt: "Comprobá el importe, la cuenta y el concepto del comprobante antes de aprobar. El importe esperado es lo que debía la cuenta al enviar el comprobante; el importe transferido debe verificarse en el archivo."
         current_month_restriction: "Todavía no podés aprobar este comprobante porque la cuenta corresponde al mes en curso. Podrás aprobarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo."
         confirm: "Aprobar"
         confirming: "Aprobando…"
@@ -1301,8 +1312,8 @@ es:
           label: "Hora límite"
           help: "Dejá el campo vacío para aceptar pedidos durante todo el día. Los cambios se aplican inmediatamente a los pedidos nuevos."
         profile:
-          title: "Complete su cuenta"
-          description: "Deje todo listo para empezar a recibir pedidos."
+          title: "Completá tu cuenta"
+          description: "Dejá todo listo para empezar a recibir pedidos."
         orders:
           title: "Pedidos"
           today: "Hoy"
@@ -1356,8 +1367,11 @@ es:
         search_label: "Buscar plato"
         search_placeholder: "Buscar plato..."
         empty:
-          title: "No hay platos publicados para el %{day} todavía"
+          title: "No tenés platos publicados para el %{day}"
           description: "Agregá platos a tu menú del %{day} y empezá a recibir pedidos."
+        empty_today:
+          title: "Hoy no tenés platos publicados"
+          description: "Agregá platos a tu menú de hoy y empezá a recibir pedidos."
         empty_unpublishable:
           title: "No se publicó menú para este día."
         no_results:
@@ -1390,9 +1404,13 @@ es:
             back: "Volver"
             confirm: "Eliminar"
             deleting: "Eliminando..."
+          deleted_sheet:
+            title: "Plato eliminado"
+            description: "El plato se eliminó de tus platos guardados. Podés volver a crearlo cuando quieras."
+            done: "Listo"
           empty:
-            title: "Todavía no tenés platos guardados"
-            description: "Cuando crees un plato lo vas a ver acá para editarlo o publicarlo."
+            title: "No tenés platos guardados"
+            description: "Importá o agregá platos para incluirlos al menú cuando quieras."
     provider_menus:
       new:
         title: "Agregar platos"
@@ -1692,22 +1710,28 @@ es:
       continue: "Continuar"
       finish: "Finalizar"
       skip: "Omitir por ahora"
+      intro:
+        title: "¿Configuramos tu cuenta?"
+        description: "Completá los datos necesarios y dejá todo listo para recibir pedidos y gestionar tu negocio."
+        start: "Comenzar"
+        skip_later: "Configurar más tarde"
       steps:
         1:
           title: "Datos de cobro"
-          description: "Ingrese los datos de la cuenta donde recibirá los pagos de sus pedidos."
+          description: "Ingresá los datos de la cuenta donde recibirás los pagos de tus pedidos."
         2:
-          title: "Configure sus pedidos"
-          description: "Defina hasta qué hora recibe pedidos y qué días no estará disponible."
+          title: "Configurá tus pedidos"
+          description: "Definí hasta qué hora recibís pedidos y qué días no estarás disponible."
+          closures_title: "Cierres programados (opcional)"
         3:
-          title: "Configure sus entregas"
-          description: "Elija dónde realiza sus entregas y si acepta direcciones personalizadas."
+          title: "Configurá tus entregas"
+          description: "Elegí dónde realizás tus entregas y si aceptás direcciones personalizadas."
         4:
           title: "Notificaciones"
-          description: "Elija qué alertas desea recibir sobre sus pedidos y pagos."
+          description: "Configurá qué alertas querés recibir."
       done:
         title: "¡Todo listo!"
-        description: "Su cuenta ya está configurada y puede empezar a recibir pedidos."
+        description: "Tu cuenta ya está configurada y podés empezar a recibir pedidos."
         cta: "Ir al Inicio"
     provider_payment_details:
       show:
@@ -1848,6 +1872,7 @@ es:
         forgot:
           title: "¿Olvidaste tu contraseña?"
           description: "Ingresá tu email y te enviaremos un código para restablecer tu contraseña."
+          email_label: "Email"
           submit: "Enviar código"
     provider_welcomes:
       show:
@@ -1873,7 +1898,7 @@ es:
       edit:
         title: "Nueva contraseña"
         heading: "Nueva Contraseña"
-        description: "Creá una nueva contraseña para su cuenta."
+        description: "Creá una nueva contraseña para tu cuenta."
         submit: "Confirmar nueva contraseña"
     settings:
       appearance:

@@ -89,7 +89,7 @@ export default function AccountCard({
 
         <CardTitle className="flex items-center">
           <span>
-            {formatMoney(account.amount ?? 0)}
+            {formatMoney(account.outstanding_amount)}
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
               {account.orders_amount_sum}{" "}
@@ -128,7 +128,9 @@ export default function AccountCard({
           <PaymentReceiptDialog
             accountId={account.id}
             inlineUpload
-            canUpload={!account.current}
+            canUpload={
+              !account.current && account.collection_status !== "approved"
+            }
             uploadDisabled={account.payments.some(
               ({ status }) => status === "submitted",
             )}

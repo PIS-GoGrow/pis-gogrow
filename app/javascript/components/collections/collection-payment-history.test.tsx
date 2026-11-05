@@ -13,6 +13,7 @@ function payment(
     id: 1,
     status: "approved",
     rejection_reason: null,
+    expected_amount: null,
     date: "02/10/26",
     receipt_url: "/provider/comprobantes/1/archivo",
     receipt_filename: "aprobado.png",
@@ -127,11 +128,12 @@ describe("CollectionPaymentHistory", () => {
     expect(downloadClick).toHaveBeenCalledTimes(2)
   })
 
-  it("shows partial payment badge when rejection reason is partial payment", () => {
+  it("shows partial as its own status without also showing rejected", () => {
     const partialPayment = payment({
       id: 4,
-      status: "rejected",
-      rejection_reason: "El pago es parcial",
+      status: "partial",
+      rejection_reason: null,
+      expected_amount: null,
       date: "01/10/26",
       receipt_url: "/provider/comprobantes/4/archivo",
       receipt_filename: "parcial.png",
@@ -140,5 +142,24 @@ describe("CollectionPaymentHistory", () => {
     render(<CollectionPaymentHistory payments={[partialPayment, approved]} />)
 
     expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+    expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
+  })
+
+  it("shows a historical partial rejection as one partial status", () => {
+    const historicalPartial = payment({
+      id: 4,
+      status: "rejected",
+      rejection_reason: "El pago es parcial",
+      expected_amount: null,
+      receipt_url: "/provider/comprobantes/4/archivo",
+      receipt_filename: "parcial-historico.png",
+    })
+
+    render(
+      <CollectionPaymentHistory payments={[historicalPartial, approved]} />,
+    )
+
+    expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+    expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
   })
 })

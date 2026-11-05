@@ -93,8 +93,8 @@ export default function AdminDashboard({
             </CardHeader>
 
             <CardContent className="space-y-4 px-4">
-              <p className="flex flex-wrap items-baseline gap-x-2">
-                <strong className="text-3xl font-semibold tracking-tight">
+              <p className="flex flex-wrap items-baseline gap-x-1">
+                <strong className="text-2xl font-semibold tracking-tight md:text-3xl">
                   {summary.meals_limit === null
                     ? summary.meals
                     : t(`${page}.benefit.meals_of_limit`, {
@@ -102,13 +102,12 @@ export default function AdminDashboard({
                         limit: summary.meals_limit,
                       })}
                 </strong>
-                <span className="text-lg font-medium">
+                <span className="text-base font-medium md:text-lg">
                   {t(`${page}.benefit.meals_ordered`, {
                     count: summary.meals_limit ?? summary.meals,
                   })}
                 </span>
               </p>
-
               {summary.meals_limit !== null && (
                 <Progress
                   value={progress}

@@ -25,6 +25,8 @@ const account = {
   vat_rate: 0,
   vat_amount: 0,
   payable_amount: 800,
+  outstanding_amount: 800,
+  expected_amount: null,
   source: "consumer",
   status: "pending",
   can_approve_payment: false,
@@ -55,6 +57,7 @@ describe("CollectionAccountPanel", () => {
       vat_rate: 0.22,
       vat_amount: 176,
       payable_amount: 976,
+      expected_amount: null,
     } satisfies ProviderCollectionAccount
     render(
       <CollectionAccountPanel account={company}>
@@ -75,17 +78,45 @@ describe("CollectionAccountPanel", () => {
     ).toBeInTheDocument()
   })
 
-  it("keeps the download available for a single rejected partial payment without allowing another review", () => {
+  it("expects the amount owed when the receipt was sent, not the current debt", async () => {
+    const user = userEvent.setup()
+    render(
+      <PaymentReviewResultProvider value={vi.fn()}>
+        <CollectionAccountPanel
+          account={{
+            ...account,
+            amount: 740.25,
+            payable_amount: 740.25,
+            expected_amount: 290.25,
+            status: "submitted",
+            can_approve_payment: true,
+            payment_id: 5,
+            receipt_url: "/proveedor/pagos/5/comprobante",
+            receipt_content_type: "image/png",
+          }}
+        />
+      </PaymentReviewResultProvider>,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Revisar pago" }))
+
+    expect(
+      within(screen.getByRole("dialog")).getByText("$290,25"),
+    ).toBeInTheDocument()
+  })
+
+  it("keeps the download available for one partial payment without allowing another review", () => {
     render(
       <CollectionAccountPanel
         account={{
           ...account,
-          status: "rejected",
+          status: "partial",
           payments: [
             {
               id: 17,
-              status: "rejected",
-              rejection_reason: "El pago es parcial",
+              status: "partial",
+              rejection_reason: null,
+              expected_amount: null,
               date: "09/10/26",
               receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "parcial.png",
@@ -121,6 +152,7 @@ describe("CollectionAccountPanel", () => {
               vat_rate: source === "company" ? 0.22 : 0,
               vat_amount: source === "company" ? 176 : 0,
               payable_amount: source === "company" ? 976 : 800,
+              expected_amount: null,
               status: "submitted",
               payment_id: 17,
               receipt_url: "/provider/comprobantes/17/archivo",
@@ -142,6 +174,51 @@ describe("CollectionAccountPanel", () => {
       ).toHaveAttribute("href", "/provider/comprobantes/17/archivo")
     },
   )
+
+  it("keeps a partial receipt in history while allowing review of the newer submitted receipt", () => {
+    render(
+      <PaymentReviewResultProvider value={vi.fn()}>
+        <CollectionAccountPanel
+          account={{
+            ...account,
+            status: "submitted",
+            payment_id: 18,
+            receipt_url: "/provider/comprobantes/18/archivo",
+            receipt_content_type: "image/png",
+            payments: [
+              {
+                id: 17,
+                status: "partial",
+                rejection_reason: null,
+                expected_amount: null,
+                date: "09/10/26",
+                receipt_url: "/provider/comprobantes/17/archivo",
+                receipt_filename: "parcial.png",
+                receipt_content_type: "image/png",
+              },
+              {
+                id: 18,
+                status: "submitted",
+                rejection_reason: null,
+                expected_amount: null,
+                date: "10/10/26",
+                receipt_url: "/provider/comprobantes/18/archivo",
+                receipt_filename: "final.png",
+                receipt_content_type: "image/png",
+              },
+            ],
+          }}
+          showPaymentHistory
+        />
+      </PaymentReviewResultProvider>,
+    )
+
+    expect(screen.getByText("Pago parcial")).toBeInTheDocument()
+    expect(screen.getByText("parcial.png")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Revisar pago" }),
+    ).toBeInTheDocument()
+  })
   it("shows a neutral due date for a pending account that is not overdue", () => {
     render(<CollectionAccountPanel account={account} />)
 

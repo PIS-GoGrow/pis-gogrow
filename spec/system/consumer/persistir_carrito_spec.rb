@@ -24,17 +24,38 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     Schedule.create!(menu:, date:, amount:)
   end
 
+  def click_until(selector, expected_text)
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      loop do
+        find(selector).click
+        break if page.has_text?(expected_text, wait: 0.5)
+      rescue Capybara::ElementNotFound
+        sleep 0.3
+      end
+    end
+  end
+
   def add_milanesa_to_cart
     visit dashboard_path
     expect(page).to have_content("Milanesa con papas fritas")
 
-    click_button "Agregar Milanesa con papas fritas"
-    expect(page).to have_content("Notas para este plato")
-    click_button "Agregar"
+    click_until("button[aria-label='Agregar Milanesa con papas fritas']", "Notas para este plato")
+    find_button("Agregar", exact: true).click
 
     click_link "Ver carrito"
     expect(page).to have_content("Tu carrito")
     expect(page).to have_content("Milanesa con papas fritas x1")
+  end
+
+  def sign_out_from_app(user)
+    find("[data-sidebar='menu-button']", text: user.name).click
+    click_on "Cerrar sesión"
+    expect(page).to have_current_path(consumer_welcome_path)
+  end
+
+  def cart_storage_key(user = users(:one))
+    session = user.sessions.order(:id).last
+    "consumer-cart:#{session.role}:#{session.id}"
   end
 
   it "mantiene los platos del carrito y sus datos al recargar la página" do
@@ -49,7 +70,7 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     expect(page).to have_content("Milanesa con papas fritas x1")
 
     # Verificamos que el contenido reside en sessionStorage
-    stored_cart = page.evaluate_script("sessionStorage.getItem('cart')")
+    stored_cart = page.evaluate_script("sessionStorage.getItem(#{cart_storage_key.inspect})")
     expect(stored_cart).to include("Milanesa con papas fritas")
   end
 
@@ -68,6 +89,28 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     expect(page).to have_content("Milanesa con papas fritas x1")
   end
 
+  it "no comparte el carrito con otro empleado que inicia sesión en la misma pestaña" do
+    add_milanesa_to_cart
+    sign_out_from_app(users(:one))
+
+    sign_in users(:other_consumer_user), role: :consumer
+    visit dashboard_cart_path
+
+    expect(page).to have_content("Todavía no agregaste platos.")
+    expect(page).to have_no_content("Milanesa con papas fritas x1")
+  end
+
+  it "empieza con el carrito vacío al iniciar una nueva sesión del mismo empleado" do
+    add_milanesa_to_cart
+    sign_out_from_app(users(:one))
+
+    sign_in users(:one), role: :consumer
+    visit dashboard_cart_path
+
+    expect(page).to have_content("Todavía no agregaste platos.")
+    expect(page).to have_no_content("Milanesa con papas fritas x1")
+  end
+
   it "vacía el carrito y limpia sessionStorage cuando el pedido se confirma con éxito" do
     add_milanesa_to_cart
 
@@ -78,7 +121,7 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     # Al volver al dashboard, el carrito debe estar vacío
     visit dashboard_path
 
-    stored_cart = page.evaluate_script("sessionStorage.getItem('cart')")
+    stored_cart = page.evaluate_script("sessionStorage.getItem(#{cart_storage_key.inspect})")
     expect(stored_cart).to eq("[]")
 
     expect(page).to have_no_button("Ver carrito")
@@ -92,7 +135,7 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
 
     # Al recargar la página, persiste vacío
     visit dashboard_path
-    stored_cart = page.evaluate_script("sessionStorage.getItem('cart')")
+    stored_cart = page.evaluate_script("sessionStorage.getItem(#{cart_storage_key.inspect})")
     expect(stored_cart).to eq("[]")
   end
 end

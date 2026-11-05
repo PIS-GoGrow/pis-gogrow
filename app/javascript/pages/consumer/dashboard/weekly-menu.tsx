@@ -45,6 +45,7 @@ interface Props {
   loading: boolean
   total?: number
   openDetail: (item: Schedule) => void
+  todayDate?: string
 }
 
 export const today = () => {
@@ -71,6 +72,7 @@ export function WeeklyMenu({
   loading,
   total,
   openDetail,
+  todayDate,
 }: Props) {
   const { t } = useTranslation()
   // Se guarda en la sesión para que el aviso no vuelva al entrar a un plato y
@@ -80,7 +82,7 @@ export function WeeklyMenu({
     "dismissed-closure-notices",
     [],
   )
-  const currentDate = today()
+  const currentDate = todayDate ?? today()
 
   const filteredSchedules =
     activeProviders.size === 0
