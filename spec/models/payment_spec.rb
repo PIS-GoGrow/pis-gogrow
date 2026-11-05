@@ -322,6 +322,21 @@ RSpec.describe Payment, type: :model do
       expect(rejected.reload).to have_attributes(status: "rejected", rejection_reason: "El pago es parcial")
       expect(resent.reload).to have_attributes(status: "submitted", rejection_reason: nil)
     end
+
+    it "preserves distinct rejection reasons across multiple rejections and resubmissions" do
+      first_rejected = payment_with_receipt(filename: "c1.png").tap(&:save!)
+      first_rejected.reject_with("Primer rechazo: borroso")
+
+      second_rejected = payment_with_receipt(filename: "c2.png").tap(&:save!)
+      second_rejected.reject_with("Segundo rechazo: monto incorrecto")
+
+      active_submitted = payment_with_receipt(filename: "c3.png").tap(&:save!)
+
+      expect(first_rejected.reload).to have_attributes(status: "rejected", rejection_reason: "Primer rechazo: borroso")
+      expect(second_rejected.reload).to have_attributes(status: "rejected", rejection_reason: "Segundo rechazo: monto incorrecto")
+      expect(active_submitted.reload).to have_attributes(status: "submitted", rejection_reason: nil)
+      expect(account.payments.pluck(:id)).to contain_exactly(first_rejected.id, second_rejected.id, active_submitted.id)
+    end
   end
 
   describe "#approve" do

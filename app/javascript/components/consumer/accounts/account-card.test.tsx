@@ -15,6 +15,7 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
     id: 1,
     status: "submitted",
     rejection_reason: null,
+    expected_amount: null,
     created_at: "2026-10-01T12:00:00Z",
     receipt_url: "/comprobantes/1/archivo",
     receipt_filename: "receipt.png",
@@ -35,6 +36,7 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
     amount: 500,
     vat_amount: 0,
     payable_amount: 500,
+    outstanding_amount: 500,
     orders_amount_sum: 2,
     orders_price_sum: 500,
     payments: [],
@@ -188,7 +190,7 @@ describe("AccountCard", () => {
     renderCard(account)
 
     expect(screen.getByText(PARTIAL_PAYMENT_WARNING)).toBeInTheDocument()
-    expect(screen.getByText("Rechazado")).toBeInTheDocument()
+    expect(screen.getAllByText("Pago parcial").length).toBeGreaterThan(0)
     expect(screen.getByText("En revisión")).toBeInTheDocument()
   })
 

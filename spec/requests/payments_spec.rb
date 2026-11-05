@@ -441,10 +441,29 @@ RSpec.describe "Payments", type: :request do
       inertia.props.deep_symbolize_keys[:accounts].find { it[:id] == account.id }[:payments]
     end
 
-    it "keeps the partial payment reason of the rejected receipt and shows it to the employee" do
-      rejected, resent, account, = reject_and_resend(rejection_reason: "partial_payment")
+    it "keeps the rejection reason of the rejected receipt and shows it to the employee" do
+      rejected, resent, account, = reject_and_resend(rejection_reason: "incorrect_receipt")
 
-      expect(rejected).to have_attributes(status: "rejected", rejection_reason: "El pago es parcial")
+      expect(rejected).to have_attributes(status: "rejected", rejection_reason: "El comprobante no corresponde")
+      expect(resent).to have_attributes(status: "submitted", rejection_reason: nil)
+      expect(payments_in_accounts_page(account)).to contain_exactly(
+        include(id: rejected.id, status: "rejected", rejection_reason: "El comprobante no corresponde"),
+        include(id: resent.id, status: "submitted", rejection_reason: nil)
+      )
+    end
+
+    it "keeps the historical partial payment reason of the rejected receipt and shows it to the employee" do
+      user, account, provider = setup_payment_account
+      rejected = account.payments.create!(provider:, status: :rejected, rejection_reason: "El pago es parcial")
+      rejected.receipt.attach(io: StringIO.new("receipt 1"), filename: "receipt_1.png", content_type: "image/png")
+
+      sign_in(user, role: :consumer)
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload(filename: "receipt_2.png") }
+      }, headers: account_page_headers
+
+      resent = account.payments.where.not(id: rejected.id).sole
+      expect(rejected.reload).to have_attributes(status: "rejected", rejection_reason: "El pago es parcial")
       expect(resent).to have_attributes(status: "submitted", rejection_reason: nil)
       expect(payments_in_accounts_page(account)).to contain_exactly(
         include(id: rejected.id, status: "rejected", rejection_reason: "El pago es parcial"),
@@ -465,7 +484,7 @@ RSpec.describe "Payments", type: :request do
     end
 
     it "keeps the reason in the provider's collections" do
-      rejected, resent, account, provider = reject_and_resend(rejection_reason: "partial_payment")
+      rejected, resent, account, provider = reject_and_resend(rejection_reason: "incorrect_receipt")
 
       sign_in(provider.user, role: :provider)
       get provider_collections_path
@@ -476,8 +495,41 @@ RSpec.describe "Payments", type: :request do
       expect(employee[:status]).to eq("submitted")
       expect(employee[:payments]).to contain_exactly(
         include(id: resent.id, status: "submitted", rejection_reason: nil),
-        include(id: rejected.id, status: "rejected", rejection_reason: "El pago es parcial")
+        include(id: rejected.id, status: "rejected", rejection_reason: "El comprobante no corresponde")
       )
+    end
+
+    it "ignores injected rejection_reason and status parameters on payment creation" do
+      user, account, = setup_payment_account
+      sign_in(user, role: :consumer)
+
+      expect {
+        post payments_path, params: {
+          payment: {
+            account_id: account.id,
+            receipt: receipt_upload(filename: "injected.png"),
+            rejection_reason: "Razon inyectada",
+            status: "rejected"
+          }
+        }, headers: account_page_headers
+      }.to change(Payment, :count).by(1)
+
+      payment = account.payments.sole
+      expect(payment).to be_submitted
+      expect(payment.rejection_reason).to be_nil
+    end
+
+    it "rejects PATCH on /comprobantes/:id as the route has been removed" do
+      user, account, provider = setup_payment_account
+      rejected = account.payments.create!(provider:, status: :rejected, rejection_reason: "Comprobante ilegible")
+      rejected.receipt.attach(io: StringIO.new("test"), filename: "test.png", content_type: "image/png")
+      sign_in(user, role: :consumer)
+
+      patch payment_path(rejected), params: {
+        payment: { receipt: receipt_upload(filename: "bypass.png") }
+      }, headers: account_page_headers
+
+      expect(response).to have_http_status(:not_found)
     end
   end
 
@@ -630,7 +682,6 @@ RSpec.describe "Payments", type: :request do
     }, headers: account_page_headers
 
     expect(response).to redirect_to(root_path)
-  end
   end
 
   it "does not accept a second receipt while one is still under review" do
