@@ -369,6 +369,10 @@
         },
         "title": "Tu pedido fue rechazado"
       },
+      "payment_approved": {
+        "description": "%{provider} aprobó tu comprobante de pago correspondiente a %{period}.",
+        "title": "Pago aprobado"
+      },
       "payment_available": {
         "description": "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!",
         "title": "¡Ya podés realizar tu pago!"
