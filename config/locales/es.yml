@@ -248,6 +248,9 @@ es:
     payment_due_soon:
       title: "Tu pago vence pronto..."
       description: "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!"
+    payment_approved:
+      title: "Pago aprobado"
+      description: "%{provider} aprobó tu comprobante de pago correspondiente a %{period}."
     company_payment_upcoming:
       title: "Se acerca el vencimiento de un pago"
       description: "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos."
