@@ -156,6 +156,25 @@ RSpec.describe DebtReminders::Eligibility do
       end
     end
 
+    it "permite enviar justo al cumplirse 3 días del rechazo, y no un segundo antes" do
+      consumer_account.update!(amount: 150)
+      rejected_at = consumer_account.due_date.in_time_zone + 10.days
+
+      travel_to rejected_at do
+        consumer_account.payments.create!(
+          provider: consumer_account.provider, status: :rejected, rejection_reason: "El comprobante no corresponde"
+        )
+      end
+
+      travel_to rejected_at + 3.days - 1.second do
+        expect(described_class.new(account: consumer_account.reload).reason).to eq(:cooldown)
+      end
+
+      travel_to rejected_at + 3.days do
+        expect(described_class.new(account: consumer_account.reload).reason).to be_nil
+      end
+    end
+
     it "permite enviar cuando el último comprobante se rechazó hace más de 3 días" do
       consumer_account.update!(amount: 150)
       reference_date = consumer_account.due_date + 10.days
