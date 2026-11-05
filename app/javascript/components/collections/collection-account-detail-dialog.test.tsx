@@ -92,7 +92,7 @@ describe("CollectionAccountDetailDialog", () => {
     ).toBeInTheDocument()
     expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
     expect(screen.getByText("Total: $800")).toBeInTheDocument()
-    expect(screen.getByText("En revisión")).toBeInTheDocument()
+    expect(screen.getByText("Por revisar")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
     ).not.toBeInTheDocument()
@@ -153,6 +153,7 @@ describe("CollectionAccountDetailDialog", () => {
           receipt_url: "/receipt.pdf",
           receipt_filename: "comprobante.pdf",
           receipt_content_type: "application/pdf",
+          receipt_size: "63,8 KB",
         },
       ],
     } satisfies ProviderCollectionAccount
@@ -164,7 +165,7 @@ describe("CollectionAccountDetailDialog", () => {
     expect(screen.getByText("IVA (22 %)")).toBeInTheDocument()
     expect(screen.getByText("$176")).toBeInTheDocument()
     expect(screen.getByText("$976")).toBeInTheDocument()
-    expect(screen.getByText("Aprobado")).toBeInTheDocument()
+    expect(screen.getByText("Confirmado")).toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Ver historial de pagos" }),
     ).not.toBeInTheDocument()
@@ -193,6 +194,7 @@ describe("CollectionAccountDetailDialog", () => {
             receipt_url: "/receipt.pdf",
             receipt_filename: "parcial.pdf",
             receipt_content_type: "application/pdf",
+            receipt_size: "63,8 KB",
           },
         ],
       } satisfies ProviderCollectionAccount
@@ -236,6 +238,7 @@ describe("Collections payment history destination", () => {
         receipt_url: "/receipt.pdf",
         receipt_filename: "parcial.pdf",
         receipt_content_type: "application/pdf",
+        receipt_size: "63,8 KB",
       } satisfies ProviderCollectionAccount["payments"][number]
       const account = {
         ...baseAccount,

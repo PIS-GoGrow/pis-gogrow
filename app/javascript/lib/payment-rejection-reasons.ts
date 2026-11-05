@@ -20,6 +20,33 @@ export type PaymentReviewIssueKey = (typeof PAYMENT_REVIEW_ISSUE_KEYS)[number]
 // Los pagos existentes guardan el texto visible, por eso esta comparación se
 // mantiene separada de las claves estables que usa el formulario de revisión.
 export const PARTIAL_PAYMENT_REJECTION_REASON = "El pago es parcial"
+// El motivo del último rechazo o pago parcial sigue vigente aunque después haya
+// otro comprobante en revisión; deja de importar recién cuando se aprueba un pago.
+export function pendingRejectionReason(
+  paymentsNewestFirst: {
+    status: PaymentStatus
+    rejection_reason: string | null
+  }[],
+) {
+  if (paymentsNewestFirst.some(({ status }) => status === "approved")) {
+    return null
+  }
+
+  const latestIssue = paymentsNewestFirst.find(
+    ({ status }) => status === "rejected" || status === "partial",
+  )
+
+  if (!latestIssue) {
+    return null
+  }
+
+  if (latestIssue.status === "partial") {
+    return PARTIAL_PAYMENT_REJECTION_REASON
+  }
+
+  return latestIssue.rejection_reason
+}
+
 interface PaymentStatusPresentation {
   status: PaymentStatus
   rejection_reason: string | null
