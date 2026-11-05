@@ -84,6 +84,25 @@ describe("Provider payment details", () => {
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument()
   })
 
+  it("muestra el número guardado cuando los datos tienen un solo bloque", () => {
+    render(
+      <PaymentDetails
+        provider={{
+          ...provider,
+          bank_name: "BROU",
+          bank_account_details: "Cuenta: 001234567-00001\nMoneda: UYU",
+        }}
+        bank_names={["BROU", "Santander"]}
+        editing={false}
+      />,
+    )
+
+    expect(
+      screen.getByText("Nº de cuenta: 001234567-00001"),
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Moneda: UYU")).not.toBeInTheDocument()
+  })
+
   it("muestra sólo los tres campos de Figma al editar", () => {
     render(
       <PaymentDetails

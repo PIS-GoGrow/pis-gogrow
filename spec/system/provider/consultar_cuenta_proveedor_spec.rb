@@ -41,7 +41,7 @@ RSpec.describe "Consultar la cuenta del proveedor" do
     click_link "Datos de cobro"
 
     expect(page).to have_current_path(provider_payment_details_path)
-    expect(page).to have_content("Indicá la cuenta donde querés recibir los pagos")
+    expect(page).to have_content("Ingresá los datos de la cuenta donde recibirás los pagos de tus pedidos.")
   end
 
   it "no deja entrar a un consumidor ni a RRHH" do

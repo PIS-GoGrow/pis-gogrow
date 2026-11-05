@@ -33,8 +33,8 @@ RSpec.describe "Configurar los datos de cobro del proveedor" do
 
     expect(page).to have_content("Datos de cobro actualizados")
     expect(page).to have_content("BROU")
-    expect(page).to have_content("Cuenta: 001234567-00001")
-    expect(page).to have_content("Moneda: UYU")
+    expect(page).to have_content("Nº de cuenta: 001234567-00001")
+    expect(page).to have_no_content("Moneda: UYU")
     expect(page).to have_content("Tu Vianda SRL")
     expect(page).to have_link("Editar")
     expect(page).to have_no_field("bank_account_details")
@@ -67,7 +67,7 @@ RSpec.describe "Configurar los datos de cobro del proveedor" do
     fill_in "beneficiary", with: "Tu Viandita SRL"
     click_on "Guardar"
 
-    expect(page).to have_content("Cuenta: UY00 0000 1150 260")
+    expect(page).to have_content("Nº de cuenta: UY00 0000 1150 260")
     expect(page).to have_content("Sucursal: 70 - Golf")
     expect(provider.reload.bank_account_details).to eq("Cuenta: UY00 0000 1150 260\nSucursal: 70 - Golf")
   end
@@ -85,7 +85,7 @@ RSpec.describe "Configurar los datos de cobro del proveedor" do
     fill_in "bank_account_details", with: "Cambio sin guardar"
     click_link "Cancelar"
 
-    expect(page).to have_content("Cuenta: 1150260")
+    expect(page).to have_content("Nº de cuenta: 1150260")
     expect(page).to have_no_content("Cambio sin guardar")
     expect(provider.reload.bank_account_details).to eq("Cuenta: 1150260")
   end
