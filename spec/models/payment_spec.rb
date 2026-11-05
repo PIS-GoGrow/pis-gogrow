@@ -247,6 +247,32 @@ RSpec.describe Payment, type: :model do
     end
   end
 
+  describe "the consumer approval notification" do
+    let(:notifications) do
+      Notification.where(event: "payment_approved", user: consumer.user)
+    end
+
+    it "notifies the consumer when the provider approves the payment" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      expect { payment.approve }
+        .to change { notifications.count }
+        .from(0).to(1)
+
+      expect(notifications.sole).to have_attributes(
+        role: "consumer",
+        title: "Pago aprobado",
+        description: include("Rotisería Central")
+      )
+    end
+
+    it "does not notify just because a historical approved payment is created" do
+      payment_with_receipt(status: :approved).save!
+
+      expect(notifications).to be_empty
+    end
+  end
+
   describe "the receipt" do
     it "is required to send a payment" do
       payment = account.payments.build(provider:, status: :submitted)

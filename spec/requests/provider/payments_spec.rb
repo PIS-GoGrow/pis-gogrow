@@ -25,14 +25,19 @@ RSpec.describe "Provider payments", type: :request do
     [ provider.user, payment ]
   end
 
-  it "approves a submitted payment" do
+  it "approves a submitted payment and notifies the consumer" do
     user, payment = setup_submitted_payment
+    consumer_user = payment.account.owner.user
     sign_in(user, role: :provider)
 
     patch provider_payment_path(payment), params: { status: "approved" }
 
     expect(response).to redirect_to(provider_collections_path)
     expect(payment.reload).to be_approved
+    expect(consumer_user.notifications.active.sole).to have_attributes(
+      event: "payment_approved",
+      notifiable: payment
+    )
   end
 
   it "lets HR know when the payment of the company is approved" do

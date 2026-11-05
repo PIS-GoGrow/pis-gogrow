@@ -24,6 +24,8 @@ class Payment < ApplicationRecord
   validate :partial_status_is_final
 
   after_update_commit :close_debt_reminder, if: -> { saved_change_to_status? && approved? }
+  after_update_commit :notify_payment_approved,
+                    if: -> { saved_change_to_status? && approved? && account.owner.is_a?(Consumer) }
   after_save_commit :close_payment_reminders,
                     if: :should_close_payment_reminders?
 
@@ -68,6 +70,18 @@ class Payment < ApplicationRecord
       description_data: {
         payer: account.owner.is_a?(Consumer) ? account.owner.user.name : account.owner.name,
         month: I18n.l(account.month, format: "%B %Y")
+      }
+    )
+  end
+
+  def notify_payment_approved
+    Notifier.call(
+      event_key: :payment_approved,
+      user: account.owner.user,
+      notifiable: self,
+      description_data: {
+        provider: account.provider.user.name,
+        period: I18n.l(account.month, format: "%B %Y")
       }
     )
   end
