@@ -92,7 +92,7 @@ RSpec.describe "Flujo de comprobantes múltiples y pago parcial", type: :system 
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     within("[role=tabpanel]") do
       expect(page).to have_content("En revisión")
-      expect(page).to have_content("Rechazado")
+      expect(page).to have_content("Pago parcial")
       expect(page).to have_content(I18n.t("pages.accounts.show.partial_payment_warning"))
     end
 
