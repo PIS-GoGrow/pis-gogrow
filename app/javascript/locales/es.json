@@ -561,8 +561,10 @@
                 "select_employees": "Seleccionar empleados",
                 "selected_employees": "Empleados seleccionados",
                 "subsidy_percentage": "% de descuento",
+                "subsidy_percentage_placeholder": "25",
                 "update": "Modificar",
                 "validity": "Validez",
+                "validity_max": "La validez no puede superar los %{count} días.",
                 "validity_unit": "Unidad de validez",
                 "validity_units": {
                   "days": "días",

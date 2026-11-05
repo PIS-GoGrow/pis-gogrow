@@ -346,6 +346,10 @@ es:
           attributes:
             effective_from:
               taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
+        benefit_rule:
+          attributes:
+            deadline_days:
+              less_than_or_equal_to: "La validez no puede superar los %{count} días."
         provider_closure:
           attributes:
             reason:
@@ -715,6 +719,7 @@ es:
               name: "Nombre del subsidio"
               name_placeholder: "Ej. Antigüedad, Cumpleaños"
               subsidy_percentage: "% de descuento"
+              subsidy_percentage_placeholder: "25"
               applies_to: "Aplicar a:"
               all_employees: "Todos los empleados"
               select_employees: "Seleccionar empleados"
@@ -732,6 +737,7 @@ es:
               limit_prefix: "Cantidad de"
               limit_suffix: "vianda(s)"
               validity: "Validez"
+              validity_max: "La validez no puede superar los %{count} días."
               validity_unit: "Unidad de validez"
               validity_units:
                 days: "días"
