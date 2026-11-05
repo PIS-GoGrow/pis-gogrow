@@ -88,7 +88,7 @@ class AdminConsumerSummary
 
     {
       amount: self.class.amount_of(current),
-      status: self.class.status_of(current),
+      status: self.class.status_of(accounts.select { it.current? || it.outstanding_amount.positive? }),
       meals_used: @consumer.monthly_benefit_used_this_month,
       meals_limit: @consumer.monthly_benefit_available,
       providers: meals_by_provider
