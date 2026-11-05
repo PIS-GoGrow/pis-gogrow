@@ -91,6 +91,38 @@ RSpec.describe "Admin::Consumers", type: :request do
         )
       end
 
+      it "does not add a current month that is already paid to the debt of earlier months" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+        payments(:other_submitted).update_columns(status: Payment.statuses[:approved], expected_amount: 150.25)
+
+        get admin_consumers_path
+
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:other).id, amount: 80.0, status: "pending")
+        )
+      end
+
+      it "shows the balance when an approved payment covers part of the account" do
+        payments(:other_submitted).update_columns(status: Payment.statuses[:approved], expected_amount: 100)
+
+        get admin_consumers_path
+
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:other).id, amount: 50.25, status: "pending")
+        )
+      end
+
+      it "keeps the consumption of the month for an employee who owes nothing" do
+        payments(:other_submitted).update_columns(status: Payment.statuses[:approved], expected_amount: 150.25)
+
+        get admin_consumers_path
+
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:other).id, amount: 150.25, status: "approved")
+        )
+      end
+
       it "never includes the debt of another company's employees" do
         previous = 1.month.ago.to_date.beginning_of_month
         Account.create!(owner: outsider, provider: providers(:tuviandita), month: previous, amount: 500)
