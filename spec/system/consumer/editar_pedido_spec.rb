@@ -62,7 +62,9 @@ RSpec.describe "Modificar un pedido desde la pantalla del plato", type: :system 
     expect(page).to have_field("notes", with: "Nota inicial del pedido")
 
     find("label", text: "Bolognesa").click
-    fill_in "notes", with: "Por favor enviar cubiertos extra"
+    # Capybara escribe por JS (sin disparar "input") los textos de más de 30
+    # caracteres, y el textarea controlado por React descarta ese tramo.
+    fill_in "notes", with: "Por favor enviar cubiertos extra", fill_options: { rapid: false }
     click_button "Modificar"
 
     confirm_order_modified

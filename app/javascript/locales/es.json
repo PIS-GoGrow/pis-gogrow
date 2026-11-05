@@ -369,6 +369,10 @@
         },
         "title": "Tu pedido fue rechazado"
       },
+      "payment_approved": {
+        "description": "%{provider} aprobó tu comprobante de pago correspondiente a %{period}.",
+        "title": "Pago aprobado"
+      },
       "payment_available": {
         "description": "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!",
         "title": "¡Ya podés realizar tu pago!"
@@ -1774,6 +1778,8 @@
           "empty_title": "No hay pedidos",
           "export": "Exportar pedidos",
           "no_address": "Sin dirección de entrega",
+          "no_orders_description": "Cuando tus clientes hagan pedidos, van a aparecer acá.",
+          "no_orders_title": "No tenés pedidos",
           "quantity": "x%{count}",
           "search_label": "Buscar pedidos",
           "search_placeholder": "Buscar pedido, plato, consumidor...",

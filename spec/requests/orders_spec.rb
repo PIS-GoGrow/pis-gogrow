@@ -140,6 +140,18 @@ RSpec.describe "Orders", type: :request do
         expect(inertia).to render_component("consumer/orders/show")
       end
 
+      it "identifies an upcoming order outside the history" do
+        get order_path(orders(:upcoming_confirmed_future))
+
+        expect(inertia).to have_props(historical: false)
+      end
+
+      it "identifies an order from the history" do
+        get order_path(orders(:history_confirmed_past))
+
+        expect(inertia).to have_props(historical: true)
+      end
+
       it "exposes the breakdown the employee needs to check the order" do
         get order_path(orders(:upcoming_confirmed_future))
 

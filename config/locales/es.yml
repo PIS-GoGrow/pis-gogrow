@@ -248,6 +248,9 @@ es:
     payment_due_soon:
       title: "Tu pago vence pronto..."
       description: "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!"
+    payment_approved:
+      title: "Pago aprobado"
+      description: "%{provider} aprobó tu comprobante de pago correspondiente a %{period}."
     company_payment_upcoming:
       title: "Se acerca el vencimiento de un pago"
       description: "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos."
@@ -1296,6 +1299,8 @@ es:
         empty_description: "Todavía no recibiste pedidos para los próximos días."
         empty_history_description: "Todavía no tenés pedidos anteriores."
         empty_filtered_description: "No tenés pedidos que coincidan con los filtros."
+        no_orders_title: "No tenés pedidos"
+        no_orders_description: "Cuando tus clientes hagan pedidos, van a aparecer acá."
         code: "PED-%{id}"
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"

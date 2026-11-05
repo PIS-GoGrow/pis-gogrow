@@ -69,15 +69,15 @@ export default function AccountCard({
   return (
     <Card className="bg-muted py-4 shadow-none">
       <CardHeader className="grid grid-cols-1 gap-3 px-4">
-        <CardDescription className="flex items-center gap-2">
-          {account.month}
+        <CardDescription className="flex flex-wrap items-center gap-2">
+          <span className="shrink-0 whitespace-nowrap">{account.month}</span>
 
           <Badge
             variant="ghost"
             className={
               account.due_date_passed
-                ? "ml-auto text-red-600 dark:text-red-400"
-                : "ml-auto text-amber-600 dark:text-amber-400"
+                ? "ml-auto shrink-0 text-red-600 dark:text-red-400"
+                : "ml-auto shrink-0 text-amber-600 dark:text-amber-400"
             }
           >
             <TriangleAlert />
@@ -87,8 +87,8 @@ export default function AccountCard({
 
         <Separator />
 
-        <CardTitle className="flex items-center">
-          <span>
+        <CardTitle className="flex flex-wrap items-center gap-2">
+          <span className="shrink-0 whitespace-nowrap">
             {formatMoney(account.outstanding_amount)}
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
@@ -103,7 +103,7 @@ export default function AccountCard({
               onClick={() => {
                 void handleClick()
               }}
-              className="ml-auto h-auto p-0 font-semibold hover:bg-transparent has-[>svg]:px-0 dark:hover:bg-transparent"
+              className="ml-auto h-auto shrink-0 p-0 font-semibold hover:bg-transparent has-[>svg]:px-0 dark:hover:bg-transparent"
               variant="ghost"
             >
               {" "}

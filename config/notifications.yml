@@ -110,6 +110,11 @@ events:
     role: consumer
     requires_action: false
 
+  payment_approved:
+    configuration: automatic_payment_reminders
+    role: consumer
+    requires_action: false
+
   payment_due_soon:
     configuration: automatic_payment_reminders
     role: consumer
