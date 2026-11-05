@@ -72,6 +72,15 @@ RSpec.describe "Admin::SpecialSubsidies", type: :request do
       expect(inertia.props[:errors].keys).to include("name", "consumer_ids", "limit", "validity_amount")
     end
 
+    it "explica en días el tope de validez del cumpleaños" do
+      params[:special_subsidy].merge!(condition: { type: "birthday", limit: 1, validity_amount: 30, validity_unit: "weeks" })
+
+      post(admin_special_subsidies_path, params:)
+
+      follow_redirect!
+      expect(inertia.props[:errors]["validity_amount"]).to eq([ "La validez no puede superar los 100 días." ])
+    end
+
     it "no acepta empleados de otra compañía" do
       other_company = Company.create!(name: "Otra", address: "Calle 1")
       params[:special_subsidy][:consumer_ids] = [ Consumer.create!(company: other_company, user: users(:two)).id ]

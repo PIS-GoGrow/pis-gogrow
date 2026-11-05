@@ -69,7 +69,7 @@ RSpec.describe "Importe esperado del comprobante y saldo pendiente (B4)", type: 
       expect(page).to have_content("Importe esperado:")
       expect(page).to have_content("290,25")
       expect(page).to have_no_content("740,25")
-      click_on "Aprobar"
+      click_on "Confirmar"
     end
 
     expect(page).to have_content("Cobro aprobado")

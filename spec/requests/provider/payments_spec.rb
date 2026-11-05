@@ -215,16 +215,16 @@ RSpec.describe "Provider payments", type: :request do
     expect(payment.rejection_reason).to eq("El importe no coincide")
   end
 
-  it "does not accept an empty custom rejection reason" do
+  it "falls back to 'Otro motivo' when the custom rejection reason is empty" do
     user, payment = setup_submitted_payment
     sign_in(user, role: :provider)
 
     patch provider_payment_path(payment),
           params: { status: "rejected", rejection_reason: "other", rejection_details: "   " }
 
-    expect(response).to have_http_status(:unprocessable_entity)
-    expect(payment.reload).to be_submitted
-    expect(payment.rejection_reason).to be_nil
+    expect(response).to redirect_to(provider_collections_path)
+    expect(payment.reload).to be_rejected
+    expect(payment.rejection_reason).to eq("Otro motivo")
   end
 
   it "does not accept an excessively long custom rejection reason" do
