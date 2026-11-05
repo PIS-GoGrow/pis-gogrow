@@ -1271,6 +1271,7 @@
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
         "partial_payment_badge": "Pago parcial",
+        "partial_payment_warning": "Falta una parte del pago.",
         "provider_statuses": {
           "approved": "Confirmado",
           "partial": "Pago parcial",

@@ -8,7 +8,6 @@ class Payment < ApplicationRecord
 
   has_one_attached :receipt
 
-  before_validation :clear_rejection_reason, if: :submitted?
   before_save :capture_expected_amount, if: -> { (submitted? && will_save_change_to_status?) || expected_amount.nil? }
   after_commit :notify_receipt_submitted, if: -> { saved_change_to_status? && submitted? }
   after_commit :check_debt_alert, if: -> { account.owner.is_a?(Consumer) && (destroyed? || saved_change_to_status?) }
@@ -87,11 +86,6 @@ class Payment < ApplicationRecord
   def capture_expected_amount
     self.expected_amount = account.outstanding_amount
   end
-
-  def clear_rejection_reason
-    self.rejection_reason = nil
-  end
-
   def notify_company_admins
     CompanyPaymentNotifications.payment_status_changed(self)
   end

@@ -9,9 +9,11 @@ import CollectionAccountDetailDialog from "@/components/collections/collection-a
 import CollectionPaymentHistory from "@/components/collections/collection-payment-history"
 import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
 import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
+import RejectionNotice from "@/components/payments/rejection-notice"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
+import { pendingRejectionReason } from "@/lib/payment-rejection-reasons"
 import { cn } from "@/lib/utils"
 import { providerCollections, providerDebtReminders } from "@/routes"
 import type { ProviderCollectionAccount } from "@/types"
@@ -43,6 +45,7 @@ export default function CollectionAccountPanel({
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
   const reminder = account.debt_reminder
+  const rejectionReason = pendingRejectionReason(account.payments)
 
   return (
     <div className="bg-muted/60 grid min-w-0 grid-cols-1 gap-3 rounded-lg p-3">
@@ -111,7 +114,16 @@ export default function CollectionAccountPanel({
         )}
       </div>
 
-      {account.status === "partial" && (
+      {rejectionReason && (
+        <RejectionNotice
+          reason={rejectionReason}
+          partialPaymentWarning={t(
+            "pages.provider_collections.partial_payment_warning",
+          )}
+          rejectedLabel={t("pages.provider_collections.statuses.rejected")}
+        />
+      )}
+      {account.status === "partial" && !rejectionReason && (
         <p className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
           <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
           {t("pages.provider_collections.group.partial_missing")}
