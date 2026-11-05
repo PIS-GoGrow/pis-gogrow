@@ -232,7 +232,7 @@ export function ConsumerCart({
             })}
             {!cart.length && (
               <p className="text-muted-foreground py-6 text-center">
-                Todavía no agregaste platos.
+                {t("pages.cart.empty")}
               </p>
             )}
           </section>
@@ -256,10 +256,10 @@ export function ConsumerCart({
               {processing ? (
                 <>
                   <Spinner />
-                  Confirmando pedido
+                  {t("pages.cart.confirming")}
                 </>
               ) : (
-                "Confirmar pedido"
+                t("pages.cart.confirm")
               )}
             </Button>
           </BottomAction>

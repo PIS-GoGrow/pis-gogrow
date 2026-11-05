@@ -833,9 +833,12 @@
       "cart": {
         "add_address": "Agregar",
         "benefit": "Subsidio Base (%{percentage}%)",
+        "confirm": "Confirmar pedido",
+        "confirming": "Confirmando pedido",
         "decrease": "Quitar una unidad de %{name}",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
+        "empty": "Todavía no agregaste platos.",
         "increase": "Agregar una unidad de %{name}",
         "monthly": {
           "full_price_one": "La vianda de este pedido se cobra a precio completo.",
