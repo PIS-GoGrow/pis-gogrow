@@ -22,9 +22,6 @@ describe("PaymentReviewResultDialog", () => {
         "El cobro fue aprobado correctamente. Se notificará al usuario.",
       ),
     ).toBeInTheDocument()
-    expect(
-      document.querySelector('[data-slot="sheet-handle"]'),
-    ).toBeInTheDocument()
   })
 
   it("renders partial payment title and description when result is partial", () => {

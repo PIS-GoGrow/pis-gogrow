@@ -66,7 +66,7 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
     expect(notification.notifiable).to eq(consumer_account)
 
     # Ahora debe mostrarse el mensaje de cooldown en la cuenta
-    expect(page).to have_content("Podés enviar otro recordatorio el")
+    expect(page).to have_content("Próximo envío disponible el")
     expect(page).not_to have_button(I18n.t("pages.provider_collections.reminder.trigger"))
   end
 
@@ -112,7 +112,7 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
     end
 
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Aprobar" }
+    within(find("[role=dialog]")) { click_on "Confirmar" }
     expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     click_on I18n.t("pages.provider_collections.review.done")
 
