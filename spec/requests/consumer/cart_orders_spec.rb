@@ -617,7 +617,9 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
       expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
-      expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.inconsistent_pricing"))
+      expect(inertia.props.dig(:errors, :order_error)).to eq(
+        I18n.t("validations.inconsistent_pricing" **{expected_price: 1, price: schedule.menu.price / 2})
+      )
     end
   end
 end
