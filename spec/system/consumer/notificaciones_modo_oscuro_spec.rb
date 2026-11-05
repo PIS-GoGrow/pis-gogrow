@@ -21,8 +21,7 @@ RSpec.describe "Notificaciones en modo oscuro", type: :system do
       event: "order_confirmation",
       requires_action: false,
       notifiable: consumer_user,
-      title: "Tu pedido fue confirmado",
-      description: "Tu pedido fue confirmado por el proveedor."
+      description_data: { provider: "TuViandita", date: "31/10" }
     )
   end
 
@@ -32,7 +31,7 @@ RSpec.describe "Notificaciones en modo oscuro", type: :system do
 
     # Modo claro
     expect(page).to have_content("Tu pedido fue confirmado")
-    expect(page).to have_content("Tu pedido fue confirmado por el proveedor.")
+    expect(page).to have_content("Tu pedido del 31/10 fue confirmado por TuViandita.")
     expect(page).to have_css("[role=alert] svg circle[stroke='currentColor']")
     expect(page).to have_no_css("[role=alert] svg [stroke='#0A0A0A']")
 
@@ -45,7 +44,7 @@ RSpec.describe "Notificaciones en modo oscuro", type: :system do
     visit dashboard_path
     expect(page).to have_css("html.dark")
     expect(page).to have_content("Tu pedido fue confirmado")
-    expect(page).to have_content("Tu pedido fue confirmado por el proveedor.")
+    expect(page).to have_content("Tu pedido del 31/10 fue confirmado por TuViandita.")
     expect(page).to have_css("[role=alert] svg circle[stroke='currentColor']")
     expect(page).to have_no_css("[role=alert] svg [stroke='#0A0A0A']")
 

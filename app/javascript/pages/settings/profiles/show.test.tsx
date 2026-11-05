@@ -7,6 +7,7 @@ import Profile from "./show"
 
 const patchMock = vi.fn()
 let currentRole = "provider"
+let formErrors: Record<string, string[]> = {}
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -37,7 +38,7 @@ vi.mock("@inertiajs/react", async () => {
     }) => (
       <form>
         {children({
-          errors: {},
+          errors: formErrors,
           processing: false,
           recentlySuccessful: false,
         })}
@@ -68,6 +69,7 @@ describe("Settings Profiles Show Page", () => {
   beforeEach(() => {
     patchMock.mockClear()
     currentRole = "provider"
+    formErrors = {}
   })
 
   it("shows RRHH email as read-only and hides account deletion", () => {
@@ -194,5 +196,25 @@ describe("Settings Profiles Show Page", () => {
         preserveScroll: true,
       }),
     )
+  })
+
+  it("renders phone validation error message when present", () => {
+    formErrors = { phone: ["El formato del celular es inválido."] }
+
+    render(<Profile provider={null} phone="2900 1234" />)
+
+    expect(
+      screen.getByText("El formato del celular es inválido."),
+    ).toBeInTheDocument()
+  })
+
+  it("renders phone helper description", () => {
+    render(<Profile provider={null} phone="+59899123456" />)
+
+    expect(
+      screen.getByText(
+        "Lo usamos para enviarte notificaciones por WhatsApp. Si tu celular no es de Uruguay, escribilo con + y el código de país.",
+      ),
+    ).toBeInTheDocument()
   })
 })
