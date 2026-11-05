@@ -27,7 +27,8 @@ class Provider::DashboardController < Provider::InertiaController
     @sections_total = @provider.total_sections_count
 
     @total_dishes_count =
-      Order.where(
+      Order.confirmed
+           .where(
               id: OrderAccount.where(account_id: pending_accounts.select(:id)).select(:order_id)
            )
            .sum(:amount)
