@@ -95,6 +95,7 @@ class Consumer::DashboardController < Consumer::InertiaController
           name: benefit.description.to_s,
           percentage: benefit.percentage,
           remaining: pricing.remaining_uses(benefit),
+          starts_on: benefit.starts_on&.iso8601,
           due_date: benefit.due_date&.iso8601
         }
       end

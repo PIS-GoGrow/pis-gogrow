@@ -55,6 +55,9 @@ function toNumber(value: string): number | "" {
   return value === "" ? "" : Number(value)
 }
 
+const MAX_VALIDITY_DAYS = 100
+const DAYS_PER_UNIT = { days: 1, weeks: 7, months: 30 }
+
 function isPositiveInteger(value: number | ""): value is number {
   return value !== "" && Number.isInteger(value) && value > 0
 }
@@ -82,10 +85,10 @@ export default function SpecialSubsidyForm({
     consumer_ids: subsidy?.consumer_ids ?? [],
     condition: {
       type: subsidy?.condition?.type ?? "",
-      min_years: subsidy?.condition?.min_years ?? "",
-      limit: subsidy?.condition?.limit ?? "",
-      validity_amount: subsidy?.condition?.validity_amount ?? "",
-      validity_unit: subsidy?.condition?.validity_unit ?? "days",
+      min_years: subsidy?.condition?.min_years ?? 1,
+      limit: subsidy?.condition?.limit ?? 1,
+      validity_amount: subsidy?.condition?.validity_amount ?? 2,
+      validity_unit: subsidy?.condition?.validity_unit ?? "weeks",
       effective_from: subsidy?.condition?.effective_from ?? "",
     },
   })
@@ -110,12 +113,23 @@ export default function SpecialSubsidyForm({
     setData("condition", { ...condition, ...changes })
   }
 
+  // Cumpleaños y onboarding guardan la validez en días, con el tope del modelo.
+  const maxValidity =
+    condition.type === "birthday" || condition.type === "onboarding"
+      ? Math.floor(MAX_VALIDITY_DAYS / DAYS_PER_UNIT[condition.validity_unit])
+      : undefined
+  const validityTooLong =
+    maxValidity !== undefined &&
+    condition.validity_amount !== "" &&
+    condition.validity_amount > maxValidity
+
   const conditionIsValid =
     condition.type === "seniority"
       ? isPositiveInteger(condition.min_years)
       : condition.type !== "" &&
         isPositiveInteger(condition.limit) &&
         isPositiveInteger(condition.validity_amount) &&
+        !validityTooLong &&
         (condition.type !== "gift" ||
           (condition.effective_from !== "" &&
             (condition.effective_from >= today ||
@@ -193,8 +207,8 @@ export default function SpecialSubsidyForm({
       <div className="flex flex-col gap-1">
         <Field
           orientation="horizontal"
-          className="w-fit max-w-full flex-wrap items-center gap-3 [&>[data-slot=field-label]]:flex-none"
-          data-invalid={!!errors.validity_amount}
+          className="items-center gap-3 [&>[data-slot=field-label]]:flex-none"
+          data-invalid={!!errors.validity_amount || validityTooLong}
         >
           <FieldLabel
             htmlFor="condition_validity_amount"
@@ -209,9 +223,10 @@ export default function SpecialSubsidyForm({
             name="validity_amount"
             type="number"
             min="1"
+            max={maxValidity}
             className="bg-background h-10 w-16 rounded-lg border border-[#E5E5E5] text-center text-sm font-medium shadow-xs dark:border-neutral-700"
             value={condition.validity_amount}
-            aria-invalid={!!errors.validity_amount}
+            aria-invalid={!!errors.validity_amount || validityTooLong}
             onChange={(event) =>
               setCondition({ validity_amount: toNumber(event.target.value) })
             }
@@ -226,7 +241,7 @@ export default function SpecialSubsidyForm({
             }
           >
             <SelectTrigger
-              className="bg-background h-10 w-36 rounded-lg border border-[#E5E5E5] text-sm font-medium shadow-xs dark:border-neutral-700"
+              className="bg-background h-10 min-w-0 flex-1 rounded-lg border border-[#E5E5E5] text-sm font-medium shadow-xs dark:border-neutral-700"
               aria-label={t(
                 "pages.admin.benefit_configurations.index.special.form.validity_unit",
               )}
@@ -244,7 +259,20 @@ export default function SpecialSubsidyForm({
             </SelectContent>
           </Select>
         </Field>
-        <FieldError errors={fieldErrors("validity_amount")} />
+        <FieldError
+          errors={
+            validityTooLong
+              ? [
+                  {
+                    message: t(
+                      "pages.admin.benefit_configurations.index.special.form.validity_max",
+                      { count: MAX_VALIDITY_DAYS },
+                    ),
+                  },
+                ]
+              : fieldErrors("validity_amount")
+          }
+        />
       </div>
     </div>
   )
@@ -254,7 +282,10 @@ export default function SpecialSubsidyForm({
       <FieldGroup className="gap-5">
         <div className="grid grid-cols-2 gap-4">
           <Field data-invalid={!!errors.name}>
-            <FieldLabel htmlFor="special_subsidy_name">
+            <FieldLabel
+              htmlFor="special_subsidy_name"
+              className="text-[#737373] dark:text-neutral-400"
+            >
               {t("pages.admin.benefit_configurations.index.special.form.name")}
             </FieldLabel>
             <Input
@@ -271,7 +302,10 @@ export default function SpecialSubsidyForm({
           </Field>
 
           <Field data-invalid={!!errors.subsidy_percentage}>
-            <FieldLabel htmlFor="special_subsidy_percentage">
+            <FieldLabel
+              htmlFor="special_subsidy_percentage"
+              className="text-[#737373] dark:text-neutral-400"
+            >
               {t(
                 "pages.admin.benefit_configurations.index.special.form.subsidy_percentage",
               )}
@@ -283,6 +317,9 @@ export default function SpecialSubsidyForm({
               min="1"
               max="100"
               value={data.subsidy_percentage}
+              placeholder={t(
+                "pages.admin.benefit_configurations.index.special.form.subsidy_percentage_placeholder",
+              )}
               aria-invalid={!!errors.subsidy_percentage}
               onChange={(event) =>
                 setData("subsidy_percentage", toNumber(event.target.value))
@@ -293,7 +330,10 @@ export default function SpecialSubsidyForm({
         </div>
 
         <FieldSet data-invalid={!!errors.consumer_ids}>
-          <FieldLegend variant="label">
+          <FieldLegend
+            variant="label"
+            className="text-sm font-medium text-[#737373] dark:text-neutral-400"
+          >
             {t(
               "pages.admin.benefit_configurations.index.special.form.applies_to",
             )}
@@ -340,7 +380,7 @@ export default function SpecialSubsidyForm({
                   )}
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  className="pr-9"
+                  className="pr-9 [&::-webkit-search-cancel-button]:appearance-none"
                 />
                 <SearchIcon
                   className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2"
@@ -532,7 +572,7 @@ export default function SpecialSubsidyForm({
                 <div className="flex flex-col gap-1">
                   <Field
                     orientation="horizontal"
-                    className="w-fit max-w-full flex-wrap items-center gap-3 [&>[data-slot=field-label]]:flex-none"
+                    className="items-center gap-3 [&>[data-slot=field-label]]:flex-none"
                     data-invalid={!!errors.effective_from}
                   >
                     <FieldLabel
@@ -546,6 +586,7 @@ export default function SpecialSubsidyForm({
                     <DatePicker
                       id="condition_effective_from"
                       min={today}
+                      className="min-w-0 flex-1 [&>button]:w-full"
                       value={condition.effective_from}
                       onChange={(effective_from) =>
                         setCondition({ effective_from })

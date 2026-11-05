@@ -26,6 +26,8 @@ const company = {
   vat_rate: 0,
   vat_amount: 0,
   payable_amount: 1000,
+  outstanding_amount: 1000,
+  expected_amount: null,
   source: "company",
   status: "pending",
   can_approve_payment: false,
@@ -97,10 +99,12 @@ describe("CollectionGroupCard", () => {
               id: 17,
               status: "rejected",
               rejection_reason: "El comprobante no corresponde",
+              expected_amount: null,
               date: "09/10/26",
               receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "comprobante.png",
               receipt_content_type: "image/png",
+              receipt_size: "63,8 KB",
             },
           ],
         })}
@@ -110,5 +114,20 @@ describe("CollectionGroupCard", () => {
 
     expect(screen.queryByText("En revisión")).not.toBeInTheDocument()
     expect(screen.getByText("Vence: 10/10/26")).toBeInTheDocument()
+  })
+
+  it("muestra el saldo pendiente en el encabezado de Empresa mientras está pendiente", () => {
+    render(
+      <CollectionGroupCard
+        group={groupWith({
+          ...company,
+          payable_amount: 1000,
+          outstanding_amount: 450,
+          status: "pending",
+        })}
+      />,
+    )
+
+    expect(screen.getByText("$450")).toBeInTheDocument()
   })
 })

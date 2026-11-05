@@ -136,7 +136,9 @@ RSpec.describe AdminMonthlySummary do
 
     it "leaves out who already paid" do
       Payment.new(account: accounts(:one_endulzate_current), status: :approved).save!(validate: false)
-      payments(:one_rejected).update_column(:status, Payment.statuses[:approved])
+      payments(:one_rejected).update_columns(
+        status: Payment.statuses[:approved], expected_amount: accounts(:one_tuviandita_current).payable_amount
+      )
 
       expect(current.debtors.map(&:name)).to eq([ "Other Consumer User" ])
     end

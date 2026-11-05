@@ -10,16 +10,22 @@ vi.mock("@inertiajs/react", async () => {
   return {
     ...actual,
     Head: () => null,
-    usePage: () => ({ props: { locale: "es" } }),
+    usePage: () => ({ props: { locale: "es" }, url: "/pedidos/1" }),
     Link: ({
       children,
       href,
+      prefetch,
       ...props
     }: {
       children: React.ReactNode
       href: string | { url: string }
+      prefetch?: boolean
     }) => (
-      <a href={typeof href === "string" ? href : href.url} {...props}>
+      <a
+        href={typeof href === "string" ? href : href.url}
+        data-prefetch={prefetch ? "true" : undefined}
+        {...props}
+      >
         {children}
       </a>
     ),
@@ -55,7 +61,7 @@ describe("Consumer::Orders Show Page", () => {
   }
 
   it("renders order information correctly", () => {
-    render(<Show order={baseOrder} />)
+    render(<Show order={baseOrder} historical={false} />)
 
     expect(screen.getByText("TuViandita")).toBeInTheDocument()
     expect(screen.getByText("Milanesa Napolitana")).toBeInTheDocument()
@@ -75,7 +81,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_closed",
     }
 
-    render(<Show order={rejectedOrder} />)
+    render(<Show order={rejectedOrder} historical />)
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
     expect(screen.getByText("Sin stock disponible")).toBeInTheDocument()
@@ -90,7 +96,7 @@ describe("Consumer::Orders Show Page", () => {
       discounted_price: 500,
     }
 
-    render(<Show order={multipleOrder} />)
+    render(<Show order={multipleOrder} historical={false} />)
 
     const priceRow = screen.getByText("Precio base").closest("div")
 
@@ -105,7 +111,7 @@ describe("Consumer::Orders Show Page", () => {
       price: 300,
     }
 
-    render(<Show order={singleOrder} />)
+    render(<Show order={singleOrder} historical={false} />)
 
     const priceRow = screen.getByText("Precio base").closest("div")
     expect(priceRow).not.toBeNull()
@@ -121,7 +127,7 @@ describe("Consumer::Orders Show Page", () => {
       discounted_price: 300.5,
     }
 
-    render(<Show order={decimalOrder} />)
+    render(<Show order={decimalOrder} historical={false} />)
 
     const priceRow = screen.getByText("Precio base").closest("div")
     expect(priceRow).not.toBeNull()
@@ -135,7 +141,9 @@ describe("Consumer::Orders Show Page", () => {
       amount: 2,
     }
 
-    const { rerender } = render(<Show order={noPriceOrder} />)
+    const { rerender } = render(
+      <Show order={noPriceOrder} historical={false} />,
+    )
 
     let priceRow = screen.getByText("Precio base").closest("div")
     expect(priceRow).not.toBeNull()
@@ -149,7 +157,7 @@ describe("Consumer::Orders Show Page", () => {
       amount: 0,
     }
 
-    rerender(<Show order={zeroAmountOrder} />)
+    rerender(<Show order={zeroAmountOrder} historical={false} />)
     priceRow = screen.getByText("Precio base").closest("div")
     expect(priceRow).not.toBeNull()
     expect(
@@ -171,7 +179,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_closed",
     }
 
-    render(<Show order={rejectedOrder} />)
+    render(<Show order={rejectedOrder} historical />)
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
     expect(
@@ -179,16 +187,17 @@ describe("Consumer::Orders Show Page", () => {
     ).toBeInTheDocument()
   })
 
-  it("links to the edit page when the order is modifiable", () => {
-    render(<Show order={baseOrder} />)
+  it("renders both actions when the order is cancellable and modifiable", () => {
+    render(<Show order={baseOrder} historical={false} />)
 
+    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeEnabled()
     expect(screen.getByRole("link", { name: /Editar/i })).toHaveAttribute(
       "href",
       "/pedidos/1/editar",
     )
   })
 
-  it("does not show block reason texts when order is confirmed and shows disabled buttons", () => {
+  it("does not render unavailable actions for a historical order", () => {
     const confirmedOrder: Order = {
       ...baseOrder,
       status: "confirmed",
@@ -198,40 +207,76 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "confirmed_for_today",
     }
 
-    render(<Show order={confirmedOrder} />)
+    render(<Show order={confirmedOrder} historical />)
 
     expect(
-      screen.queryByText(
-        "Ya está confirmado para hoy, así que no se puede cancelar.",
-      ),
+      screen.queryByRole("button", { name: /Cancelar/i }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByText(
-        "Ya está confirmado para hoy, así que no se puede modificar.",
-      ),
+      screen.queryByRole("link", { name: /Editar/i }),
     ).not.toBeInTheDocument()
+  })
+
+  it("keeps unavailable actions disabled for an upcoming order", () => {
+    const confirmedOrder: Order = {
+      ...baseOrder,
+      status: "confirmed",
+      cancellable: false,
+      cancellation_block_reason: "confirmed_for_today",
+      modifiable: false,
+      modification_block_reason: "confirmed_for_today",
+    }
+
+    render(<Show order={confirmedOrder} historical={false} />)
+
     expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()
     expect(screen.getByRole("button", { name: /Editar/i })).toBeDisabled()
   })
 
-  it("displays block reason when pending order is past order deadline", () => {
-    const closedPendingOrder: Order = {
+  it("renders only the available cancel action for a historical order", () => {
+    const cancellableOrder: Order = {
       ...baseOrder,
-      status: "pending",
-      cancellable: false,
-      cancellation_block_reason: "order_deadline_passed",
+      cancellable: true,
       modifiable: false,
       modification_block_reason: "already_closed",
     }
 
-    render(<Show order={closedPendingOrder} />)
+    render(<Show order={cancellableOrder} historical />)
+
+    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeEnabled()
+    expect(
+      screen.queryByRole("link", { name: /Editar/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("renders only the available edit action for a historical order", () => {
+    const modifiableOrder: Order = {
+      ...baseOrder,
+      cancellable: false,
+      cancellation_block_reason: "already_closed",
+      modifiable: true,
+    }
+
+    render(<Show order={modifiableOrder} historical />)
 
     expect(
-      screen.getByText(
-        "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()
+      screen.queryByRole("button", { name: /Cancelar/i }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Editar/i })).toHaveAttribute(
+      "href",
+      "/pedidos/1/editar",
+    )
+  })
+
+  it("keeps the consumer mobile navigation and reserves space for it", () => {
+    const { container } = render(<Show order={baseOrder} historical={false} />)
+
+    expect(screen.getByRole("navigation")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Pedidos" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(container.querySelector(".pb-24")).toHaveClass("md:pb-5")
   })
 
   it("renders long notes without spaces with text wrapping styling to prevent overflow", () => {
@@ -241,7 +286,7 @@ describe("Consumer::Orders Show Page", () => {
       notes: longNote,
     }
 
-    render(<Show order={orderWithLongNote} />)
+    render(<Show order={orderWithLongNote} historical={false} />)
 
     const notesElement = screen.getByText(longNote)
     expect(notesElement).toBeInTheDocument()

@@ -190,7 +190,6 @@ es:
         too_many_rows: "La planilla no puede tener más de %{max} platos."
         missing_columns: "Faltan columnas en la planilla: %{columns}."
     invalid_order_deadline: "Ingresá una hora válida en formato HH:MM."
-    payment_closed: "Este pago ya fue aprobado y no puede modificarse."
     payment_current_account: "No se puede subir ni aprobar un comprobante mientras el mes siga en curso."
     payment_not_removable: "Solo podés eliminar comprobantes en revisión o rechazados."
     payment_not_reviewable: "Este comprobante ya fue revisado."
@@ -347,6 +346,10 @@ es:
           attributes:
             effective_from:
               taken: "Ya hay un cambio guardado para el próximo período. Solo puede haber uno pendiente por vez."
+        benefit_rule:
+          attributes:
+            deadline_days:
+              less_than_or_equal_to: "La validez no puede superar los %{count} días."
         provider_closure:
           attributes:
             reason:
@@ -716,6 +719,7 @@ es:
               name: "Nombre del subsidio"
               name_placeholder: "Ej. Antigüedad, Cumpleaños"
               subsidy_percentage: "% de descuento"
+              subsidy_percentage_placeholder: "25"
               applies_to: "Aplicar a:"
               all_employees: "Todos los empleados"
               select_employees: "Seleccionar empleados"
@@ -733,6 +737,7 @@ es:
               limit_prefix: "Cantidad de"
               limit_suffix: "vianda(s)"
               validity: "Validez"
+              validity_max: "La validez no puede superar los %{count} días."
               validity_unit: "Unidad de validez"
               validity_units:
                 days: "días"
@@ -929,6 +934,7 @@ es:
         receipt_error_action: "Entendido"
         receipt_under_review_hint: "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva."
         receipt_sent_at: "Enviado: %{date}"
+        receipt_expected_amount: "Importe: %{amount}"
         receipt_remove: "Eliminar comprobante"
         receipt_remove_title: "¿Eliminar comprobante?"
         receipt_remove_description: "Esta acción no se puede deshacer. Podés volver a subir el comprobante mientras el pago no esté aprobado."
@@ -1066,7 +1072,14 @@ es:
         approved: "Aprobado"
         partial: "Pago parcial"
         rejected: "Rechazado"
+      provider_statuses:
+        pending: "Pendiente"
+        submitted: "Por revisar"
+        approved: "Confirmado"
+        partial: "Pago parcial"
+        rejected: "Rechazado"
       partial_payment_badge: "Pago parcial"
+      partial_payment_warning: "Falta una parte del pago."
       receipt_sent_at: "Comprobante enviado el %{date}"
       meals_one: "%{count} vianda"
       meals_other: "%{count} viandas"
@@ -1103,14 +1116,16 @@ es:
         empty_pending_title: "Sin deudas pendientes"
         empty_pending_all: "Por ahora no hay deudas pendientes de ningún cliente seleccionado. Volvé a consultar el mes que viene."
         empty_pending_client: "Por ahora no hay deudas pendientes de este cliente. Volvé a consultar el mes que viene."
-        empty_history_title: "Sin cobros aprobados"
+        empty_history_title: "Sin cobros confirmados"
         empty_history_all: "Todavía no hay meses cobrados por completo."
         empty_history_client: "Todavía no hay meses cobrados por completo de este cliente."
       group:
         total: "Total a cobrar"
-        confirmed: "%{amount} en cobros aprobados"
-        awaiting_one: "%{count} en revisión"
-        awaiting_other: "%{count} cobros en revisión"
+        confirmed: "%{amount} en cobros confirmados"
+        awaiting_one: "%{count} cobro pendiente de confirmación"
+        awaiting_other: "%{count} cobros pendientes de confirmación"
+        review_payment: "Revisar pago"
+        partial_missing: "Falta una parte del pago."
         rejected_one: "%{count} cobro rechazado"
         rejected_other: "%{count} cobros rechazados"
         employees: "Empleados"
@@ -1137,7 +1152,7 @@ es:
       reminder:
         trigger: "Recordar pago pendiente"
         sent: "Recordatorio enviado"
-        next_available: "Podés enviar otro recordatorio el %{date}."
+        next_available: "Recordatorio enviado con éxito. Próximo envío disponible el %{date}."
         limit_reached: "Alcanzaste el límite de recordatorios para este pago."
         confirm:
           title: "Recordar pago pendiente"
@@ -1158,10 +1173,10 @@ es:
         expected_amount: "Importe esperado:"
         download: "Descargar comprobante"
         open_receipt: "Abrir comprobante completo"
-        check_receipt: "Comprobá el importe, la cuenta y el concepto del comprobante antes de aprobar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo."
-        current_month_restriction: "Todavía no podés aprobar este comprobante porque la cuenta corresponde al mes en curso. Podrás aprobarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo."
-        confirm: "Aprobar"
-        confirming: "Aprobando…"
+        check_receipt: "Chequeá que el total, la cuenta y el concepto del pago sean correctos antes de confirmar."
+        current_month_restriction: "Todavía no podés confirmar este comprobante porque la cuenta corresponde al mes en curso. Podrás confirmarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo."
+        confirm: "Confirmar"
+        confirming: "Confirmando…"
         continue: "Continuar"
         continuing: "Continuando…"
         report: "Reportar"
@@ -1278,6 +1293,8 @@ es:
         empty_description: "Todavía no recibiste pedidos para los próximos días."
         empty_history_description: "Todavía no tenés pedidos anteriores."
         empty_filtered_description: "No tenés pedidos que coincidan con los filtros."
+        no_orders_title: "No tenés pedidos"
+        no_orders_description: "Cuando tus clientes hagan pedidos, van a aparecer acá."
         code: "PED-%{id}"
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"
@@ -1366,8 +1383,11 @@ es:
         search_label: "Buscar plato"
         search_placeholder: "Buscar plato..."
         empty:
-          title: "No hay platos publicados para el %{day} todavía"
+          title: "No tenés platos publicados para el %{day}"
           description: "Agregá platos a tu menú del %{day} y empezá a recibir pedidos."
+        empty_today:
+          title: "Hoy no tenés platos publicados"
+          description: "Agregá platos a tu menú de hoy y empezá a recibir pedidos."
         empty_unpublishable:
           title: "No se publicó menú para este día."
         no_results:
@@ -1400,9 +1420,13 @@ es:
             back: "Volver"
             confirm: "Eliminar"
             deleting: "Eliminando..."
+          deleted_sheet:
+            title: "Plato eliminado"
+            description: "El plato se eliminó de tus platos guardados. Podés volver a crearlo cuando quieras."
+            done: "Listo"
           empty:
-            title: "Todavía no tenés platos guardados"
-            description: "Cuando crees un plato lo vas a ver acá para editarlo o publicarlo."
+            title: "No tenés platos guardados"
+            description: "Importá o agregá platos para incluirlos al menú cuando quieras."
     provider_menus:
       new:
         title: "Agregar platos"

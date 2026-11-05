@@ -72,7 +72,7 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
     click_on "Revisar pago"
 
     if decision == :approve
-      within(find("[role=dialog]")) { click_on "Aprobar" }
+      within(find("[role=dialog]")) { click_on "Confirmar" }
       expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     else
       within(find("[role=dialog]")) { click_on "Reportar" }
