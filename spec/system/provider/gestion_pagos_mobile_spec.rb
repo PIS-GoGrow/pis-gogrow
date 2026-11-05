@@ -68,7 +68,9 @@ RSpec.describe "Gestión de pagos del proveedor en mobile", type: :system do
     within(find("[role=dialog]")) { click_on "Reportar" }
     within(find("[role=dialog]", text: "Reportar un problema")) do
       find("[data-testid=provider-payment-report-reason-#{reason}]").click
-      fill_in "Describir el motivo", with: details if details
+      # Sin rapid: false, Capybara inyecta por script lo que pasa de 30
+      # caracteres, React no lo ve y en CI se guardaba solo "aaa".
+      fill_in "Describir el motivo", with: details, fill_options: { rapid: false } if details
       click_on "Continuar"
     end
   end
