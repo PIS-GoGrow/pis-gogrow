@@ -67,7 +67,8 @@ describe("NotificationBanners", () => {
     mocks.notifications.push({
       id: 88,
       title: "Pago aprobado",
-      description: "Rotisería Central aprobó tu comprobante de pago correspondiente a octubre 2026.",
+      description:
+        "Rotisería Central aprobó tu comprobante de pago correspondiente a octubre 2026.",
       requires_action: false,
     })
 
