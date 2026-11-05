@@ -164,6 +164,16 @@
       "month_select": {
         "this_month": "Este mes"
       },
+      "network_status": {
+        "offline": {
+          "description": "No pudimos cargar la página. Revisá tu conexión y volvé a intentar.",
+          "title": "Sin conexión a internet"
+        },
+        "online": {
+          "description": "Ya podés seguir navegando.",
+          "title": "Volvió la conexión"
+        }
+      },
       "password_fields": {
         "confirm_label": "Confirmar contraseña",
         "create_label": "Crear contraseña",
