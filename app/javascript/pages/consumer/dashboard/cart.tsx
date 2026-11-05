@@ -1,13 +1,13 @@
 import { useForm } from "@inertiajs/react"
 import { useEffect, useMemo, useState } from "react"
 
-import useSessionStorage from "@/hooks/use-session-storage"
+import { useConsumerCart } from "@/hooks/use-consumer-cart"
 import AppLayout from "@/layouts/app-layout"
 import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardCart } from "@/types"
 
 import { ConsumerCart } from "./consumer-cart"
-import type { CartItem, DeliveryAddressOption } from "./consumer-types"
+import type { DeliveryAddressOption } from "./consumer-types"
 import { OrderError } from "./order-error"
 import type { Pricing } from "./pricing"
 import { cartPricedItem, priceItems } from "./pricing"
@@ -42,7 +42,7 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
       options: { group_id: number; values: string[] }[]
     }[],
   })
-  const [cart, setCart] = useSessionStorage<CartItem[]>("cart", [])
+  const [cart, setCart] = useConsumerCart()
 
   function addAddress(option: DeliveryAddressOption, saved: boolean) {
     if (!saved) {

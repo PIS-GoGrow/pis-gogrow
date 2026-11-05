@@ -20,7 +20,7 @@ class ProviderCollectionSummary
       super
     end
 
-    delegate :id, :amount, :vat_amount, :payable_amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
+    delegate :id, :amount, :vat_amount, :payable_amount, :outstanding_amount, :settled?, :paid_amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
 
     def orders
       account.orders.select(&:consumed?).sort_by do |order|
@@ -65,7 +65,7 @@ class ProviderCollectionSummary
 
     def total = rows.sum(&:payable_amount)
 
-    def confirmed_total = rows.select(&:approved?).sum(&:payable_amount)
+    def confirmed_total = rows.sum { it.account.paid_amount }
 
     def awaiting_count = rows.count { it.collection_status.in?(%w[pending submitted]) }
 
@@ -73,7 +73,7 @@ class ProviderCollectionSummary
 
     def settled? = rows.all?(&:approved?)
 
-    def employees_total = employee_rows.sum(&:amount)
+    def employees_total = settled? ? employee_rows.sum(&:amount) : employee_rows.sum(&:outstanding_amount)
 
     def employees_status
       statuses = employee_rows.map(&:collection_status)

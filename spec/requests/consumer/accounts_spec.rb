@@ -204,6 +204,21 @@ RSpec.describe "Consumer Accounts", type: :request do
           true
         }
       end
+
+      it "serializes outstanding_amount for pending accounts and matches total_debt" do
+        account = accounts(:one_tuviandita_current)
+        account.update!(amount: 290.25)
+
+        get accounts_path
+
+        expect(response).to have_http_status(:ok)
+        expect(inertia).to have_props { |props|
+          p = props.deep_symbolize_keys
+          target = p[:accounts].find { |a| a[:id] == account.id }
+          target[:outstanding_amount] == 290.25 &&
+            p[:total_debt].to_d >= 290.25.to_d
+        }
+      end
     end
 
     describe "Mandatory Edge Case 1: Interface Bypass" do

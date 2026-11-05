@@ -60,7 +60,7 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
       expect(page).to have_content("¿Rechazar pedido?")
 
       find("label", text: "Otro motivo").click
-      fill_in "rejection-details", with: "Sin insumos para la preparación"
+      fill_in "rejection-details", with: "Sin insumos para la preparación", fill_options: { rapid: false }
 
       click_button "Rechazar pedido"
       expect(page).to have_content("Pedido rechazado.")
