@@ -1176,6 +1176,8 @@
           "awaiting_other": "%{count} cobros pendientes de confirmación",
           "company": "Empresa",
           "confirmed": "%{amount} en cobros confirmados",
+          "consumed_in_month_one": "%{count} vianda consumida en %{month}",
+          "consumed_in_month_other": "%{count} viandas consumidas en %{month}",
           "detail": "Ver detalle",
           "detail_dialog": {
             "amount": "Monto",
@@ -1197,6 +1199,7 @@
           "download_receipts": "Descargar comprobantes",
           "due": "Vence: %{date}",
           "employees": "Empleados",
+          "outstanding_amount": "Saldo pendiente",
           "partial_missing": "Falta una parte del pago.",
           "rejected_one": "%{count} cobro rechazado",
           "rejected_other": "%{count} cobros rechazados",

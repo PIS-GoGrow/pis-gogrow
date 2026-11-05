@@ -36,6 +36,7 @@ const historicalCompanyAccount = {
     blocked_reason: null,
   },
   month: "Septiembre 2026",
+  month_name: "septiembre",
   due_date: "05/10/26",
   paid_on: "05/09/26",
   payment_id: 10,

@@ -1121,6 +1121,9 @@ es:
         empty_history_client: "Todavía no hay meses cobrados por completo de este cliente."
       group:
         total: "Total a cobrar"
+        outstanding_amount: "Saldo pendiente"
+        consumed_in_month_one: "%{count} vianda consumida en %{month}"
+        consumed_in_month_other: "%{count} viandas consumidas en %{month}"
         confirmed: "%{amount} en cobros confirmados"
         awaiting_one: "%{count} cobro pendiente de confirmación"
         awaiting_other: "%{count} cobros pendientes de confirmación"

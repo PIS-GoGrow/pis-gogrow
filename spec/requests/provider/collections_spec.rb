@@ -84,6 +84,24 @@ RSpec.describe "Provider::Collections", type: :request do
       expect(props[:outstanding]).to include(total: 1202.0, meals: 1)
     end
 
+    it "muestra solo los cargos nuevos de una cuenta con un pago aprobado" do
+      sign_in provider_user, role: :provider
+      get provider_collections_path
+      previous_outstanding = props[:outstanding][:total]
+      account = Account.create!(
+        owner: Company.create!(name: "Cliente con deuda nueva", address: "Rivera 123"),
+        provider: providers(:tuviandita), month: Date.current.prev_month, amount: "500.25"
+      )
+      account.payments.create!(provider: account.provider, status: :approved)
+      account.update!(amount: "650.25")
+
+      get provider_collections_path
+
+      expect(props[:outstanding][:total]).to eq(previous_outstanding + 150.0)
+      expect(props[:pending].flat_map { [ it[:company], *it[:employees] ] }.compact)
+        .to include(include(id: account.id, outstanding_amount: 150.0, status: "pending"))
+    end
+
     %i[beginning_of_month end_of_month].each do |boundary|
       it "includes the confirmed sales detail grouped by delivery day at #{boundary}" do
         month = Date.current.beginning_of_month
