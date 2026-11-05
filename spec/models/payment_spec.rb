@@ -280,6 +280,24 @@ RSpec.describe Payment, type: :model do
 
       expect(notifications.count).to eq(1)
     end
+
+    it "does not notify the consumer when a company payment is approved" do
+      company = Company.create!(name: "GoGrow Test", address: "18 de Julio 1006")
+      company_account = Account.create!(owner: company, provider:, month: Date.current.prev_month, amount: 500)
+      payment = company_account.payments.build(provider:, status: :submitted)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+      payment.save!
+
+      expect { payment.approve }.not_to change { Notification.where(event: "payment_approved").count }
+    end
+
+    it "does not notify when payment transitions to rejected or partial" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      expect {
+        payment.update!(status: :rejected, rejection_reason: "Comprobante ilegible")
+      }.not_to change { notifications.count }
+    end
   end
 
   describe "the receipt" do

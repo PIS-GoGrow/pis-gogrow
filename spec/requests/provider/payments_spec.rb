@@ -40,6 +40,31 @@ RSpec.describe "Provider payments", type: :request do
     )
   end
 
+  it "does not notify the consumer when approving with invalid parameters" do
+    user, payment = setup_submitted_payment
+    consumer_user = payment.account.owner.user
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "invalid_status" }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(payment.reload).not_to be_approved
+    expect(consumer_user.notifications.where(event: "payment_approved")).to be_empty
+  end
+
+  it "does not let another provider approve the payment" do
+    _user, payment = setup_submitted_payment
+    consumer_user = payment.account.owner.user
+    other_provider = create_provider("other-intruder@gmail.com")
+    sign_in(other_provider.user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "approved" }
+
+    expect(response).to have_http_status(:not_found)
+    expect(payment.reload).not_to be_approved
+    expect(consumer_user.notifications.where(event: "payment_approved")).to be_empty
+  end
+
   it "lets HR know when the payment of the company is approved" do
     company = Company.create!(name: "GoGrow", address: "18 de Julio 1006")
     admin_user = User.create!(email: "review-admin@gmail.com", name: "RRHH", password: "password123456")
