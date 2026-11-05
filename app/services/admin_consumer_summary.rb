@@ -4,7 +4,7 @@ class AdminConsumerSummary
   # Estado que resume varias cuentas del mismo mes: el que más atención pide.
   STATUS_PRIORITY = %w[partial pending rejected submitted approved].freeze
 
-  ConsumerRow = Data.define(:consumer, :amount, :status) do
+  ConsumerRow = Data.define(:consumer, :amount, :status, :debt) do
     delegate :id, to: :consumer
 
     def name = consumer.user.name
@@ -63,27 +63,21 @@ class AdminConsumerSummary
     STATUS_PRIORITY.find { it.in?(statuses) }
   end
 
-  def self.rows_for(company, month: Date.current)
-    rows(company) { it.where(month: month.beginning_of_month) }
-  end
-
-  # Lo de este mes más lo que quedó sin pagar de los anteriores: mirando un solo
-  # mes no se ve lo que el empleado todavía debe de antes.
+  # Lo que el empleado debe de todos los períodos, igual que Consumer#total_debt:
+  # las cuentas saldadas del mes actual no suman porque no tienen saldo. Quien no
+  # debe nada queda con su consumo del mes.
   def self.debt_rows_for(company)
-    rows(company) { it.where(month: Date.current.beginning_of_month).or(it.pending) }
-  end
-
-  def self.rows(company)
     consumers = company.consumers.joins(:user).preload(:user).order("users.name").to_a
-    accounts = yield(Account.where(owner_type: "Consumer", owner_id: consumers.map(&:id)))
-               .preload(:payments).group_by(&:owner_id)
+    scope = Account.where(owner_type: "Consumer", owner_id: consumers.map(&:id))
+    accounts = scope.where(month: Date.current.beginning_of_month).or(scope.pending)
+                    .preload(:payments).group_by(&:owner_id)
 
     consumers.map do |consumer|
       owed = accounts.fetch(consumer.id, [])
-      ConsumerRow.new(consumer:, amount: amount_of(owed), status: status_of(owed))
+      debt = owed.sum(&:outstanding_amount).to_f
+      ConsumerRow.new(consumer:, amount: debt.positive? ? debt : amount_of(owed), status: status_of(owed), debt:)
     end
   end
-  private_class_method :rows
 
   def initialize(consumer)
     @consumer = consumer

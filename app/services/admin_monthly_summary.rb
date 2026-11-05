@@ -67,11 +67,12 @@ class AdminMonthlySummary
             .sort_by(&:name)
   end
 
-  # Los mismos empleados que Empleados > Pendientes: los que no saldaron el mes.
+  # Los mismos importes que Empleados: la deuda de todos los períodos, sin
+  # importar el mes elegido.
   def debtors(limit: 3)
-    AdminConsumerSummary.rows_for(@company, month: @month)
-                        .select { it.status.in?(%w[pending rejected partial submitted]) }
-                        .sort_by { [ -it.amount, it.name ] }
+    AdminConsumerSummary.debt_rows_for(@company)
+                        .select { it.debt.positive? }
+                        .sort_by { [ -it.debt, it.name ] }
                         .first(limit)
   end
 
