@@ -61,7 +61,7 @@ describe("Consumer::Orders Show Page", () => {
   }
 
   it("renders order information correctly", () => {
-    render(<Show order={baseOrder} />)
+    render(<Show order={baseOrder} historical={false} />)
 
     expect(screen.getByText("TuViandita")).toBeInTheDocument()
     expect(screen.getByText("Milanesa Napolitana")).toBeInTheDocument()
@@ -81,7 +81,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_closed",
     }
 
-    render(<Show order={rejectedOrder} />)
+    render(<Show order={rejectedOrder} historical />)
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
     expect(screen.getByText("Sin stock disponible")).toBeInTheDocument()
@@ -96,7 +96,7 @@ describe("Consumer::Orders Show Page", () => {
       discounted_price: 500,
     }
 
-    render(<Show order={multipleOrder} />)
+    render(<Show order={multipleOrder} historical={false} />)
 
     const priceRow = screen.getByText("Precio base").closest("div")
 
@@ -111,7 +111,7 @@ describe("Consumer::Orders Show Page", () => {
       price: 300,
     }
 
-    render(<Show order={singleOrder} />)
+    render(<Show order={singleOrder} historical={false} />)
 
     const priceRow = screen.getByText("Precio base").closest("div")
     expect(priceRow).not.toBeNull()
@@ -127,7 +127,7 @@ describe("Consumer::Orders Show Page", () => {
       discounted_price: 300.5,
     }
 
-    render(<Show order={decimalOrder} />)
+    render(<Show order={decimalOrder} historical={false} />)
 
     const priceRow = screen.getByText("Precio base").closest("div")
     expect(priceRow).not.toBeNull()
@@ -141,7 +141,9 @@ describe("Consumer::Orders Show Page", () => {
       amount: 2,
     }
 
-    const { rerender } = render(<Show order={noPriceOrder} />)
+    const { rerender } = render(
+      <Show order={noPriceOrder} historical={false} />,
+    )
 
     let priceRow = screen.getByText("Precio base").closest("div")
     expect(priceRow).not.toBeNull()
@@ -155,7 +157,7 @@ describe("Consumer::Orders Show Page", () => {
       amount: 0,
     }
 
-    rerender(<Show order={zeroAmountOrder} />)
+    rerender(<Show order={zeroAmountOrder} historical={false} />)
     priceRow = screen.getByText("Precio base").closest("div")
     expect(priceRow).not.toBeNull()
     expect(
@@ -177,7 +179,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_closed",
     }
 
-    render(<Show order={rejectedOrder} />)
+    render(<Show order={rejectedOrder} historical />)
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
     expect(
@@ -186,7 +188,7 @@ describe("Consumer::Orders Show Page", () => {
   })
 
   it("renders both actions when the order is cancellable and modifiable", () => {
-    render(<Show order={baseOrder} />)
+    render(<Show order={baseOrder} historical={false} />)
 
     expect(screen.getByRole("button", { name: /Cancelar/i })).toBeEnabled()
     expect(screen.getByRole("link", { name: /Editar/i })).toHaveAttribute(
@@ -195,7 +197,7 @@ describe("Consumer::Orders Show Page", () => {
     )
   })
 
-  it("does not render actions when the order is neither cancellable nor modifiable", () => {
+  it("does not render unavailable actions for a historical order", () => {
     const confirmedOrder: Order = {
       ...baseOrder,
       status: "confirmed",
@@ -205,7 +207,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "confirmed_for_today",
     }
 
-    render(<Show order={confirmedOrder} />)
+    render(<Show order={confirmedOrder} historical />)
 
     expect(
       screen.queryByRole("button", { name: /Cancelar/i }),
@@ -215,7 +217,23 @@ describe("Consumer::Orders Show Page", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("renders only the cancel action when the order is cancellable", () => {
+  it("keeps unavailable actions disabled for an upcoming order", () => {
+    const confirmedOrder: Order = {
+      ...baseOrder,
+      status: "confirmed",
+      cancellable: false,
+      cancellation_block_reason: "confirmed_for_today",
+      modifiable: false,
+      modification_block_reason: "confirmed_for_today",
+    }
+
+    render(<Show order={confirmedOrder} historical={false} />)
+
+    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()
+    expect(screen.getByRole("button", { name: /Editar/i })).toBeDisabled()
+  })
+
+  it("renders only the available cancel action for a historical order", () => {
     const cancellableOrder: Order = {
       ...baseOrder,
       cancellable: true,
@@ -223,7 +241,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_closed",
     }
 
-    render(<Show order={cancellableOrder} />)
+    render(<Show order={cancellableOrder} historical />)
 
     expect(screen.getByRole("button", { name: /Cancelar/i })).toBeEnabled()
     expect(
@@ -231,7 +249,7 @@ describe("Consumer::Orders Show Page", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("renders only the edit action when the order is modifiable", () => {
+  it("renders only the available edit action for a historical order", () => {
     const modifiableOrder: Order = {
       ...baseOrder,
       cancellable: false,
@@ -239,7 +257,7 @@ describe("Consumer::Orders Show Page", () => {
       modifiable: true,
     }
 
-    render(<Show order={modifiableOrder} />)
+    render(<Show order={modifiableOrder} historical />)
 
     expect(
       screen.queryByRole("button", { name: /Cancelar/i }),
@@ -251,7 +269,7 @@ describe("Consumer::Orders Show Page", () => {
   })
 
   it("keeps the consumer mobile navigation and reserves space for it", () => {
-    const { container } = render(<Show order={baseOrder} />)
+    const { container } = render(<Show order={baseOrder} historical={false} />)
 
     expect(screen.getByRole("navigation")).toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Pedidos" })).toHaveAttribute(
@@ -268,7 +286,7 @@ describe("Consumer::Orders Show Page", () => {
       notes: longNote,
     }
 
-    render(<Show order={orderWithLongNote} />)
+    render(<Show order={orderWithLongNote} historical={false} />)
 
     const notesElement = screen.getByText(longNote)
     expect(notesElement).toBeInTheDocument()

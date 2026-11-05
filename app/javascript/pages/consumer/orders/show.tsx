@@ -1,5 +1,5 @@
 import { Head, Link } from "@inertiajs/react"
-import { ArrowLeft, Pencil } from "lucide-react"
+import { ArrowLeft, Pencil, X } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -31,7 +31,7 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-export default function Show({ order }: ConsumerOrdersShow) {
+export default function Show({ order, historical }: ConsumerOrdersShow) {
   const { t } = useTranslation()
   const { formatMoney, formatLongDate } = useFormatters()
 
@@ -39,6 +39,8 @@ export default function Show({ order }: ConsumerOrdersShow) {
     order.price != null && order.amount != null && order.amount > 0
       ? order.price / order.amount
       : null
+  const showCancelAction = !historical || order.cancellable
+  const showEditAction = !historical || order.modifiable
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -150,17 +152,41 @@ export default function Show({ order }: ConsumerOrdersShow) {
             </div>
           </CardContent>
 
-          {/* Sin acciones disponibles no se reserva un pie vacío en la tarjeta. */}
-          {(order.cancellable || order.modifiable) && (
+          {/* En el historial no se reserva espacio para acciones no disponibles. */}
+          {(showCancelAction || showEditAction) && (
             <CardFooter
               className={
-                order.cancellable && order.modifiable
+                showCancelAction && showEditAction
                   ? "grid grid-cols-2 items-start gap-2"
                   : "grid grid-cols-1 items-start gap-2"
               }
             >
-              {order.cancellable && <CancelOrderSheet order={order} />}
-              {order.modifiable && (
+              {order.cancellable ? (
+                <CancelOrderSheet order={order} />
+              ) : (
+                showCancelAction && (
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      disabled
+                    >
+                      <X aria-hidden="true" />
+                      {t("pages.orders.index.cancel")}
+                    </Button>
+                    {order.status !== "confirmed" && (
+                      <p className="text-muted-foreground text-xs">
+                        {t(
+                          `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )
+              )}
+              {order.modifiable ? (
                 <Button
                   type="button"
                   variant="outline"
@@ -173,6 +199,28 @@ export default function Show({ order }: ConsumerOrdersShow) {
                     {t("pages.orders.show.edit")}
                   </Link>
                 </Button>
+              ) : (
+                showEditAction && (
+                  <div className="flex flex-col gap-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      disabled
+                    >
+                      <Pencil aria-hidden="true" />
+                      {t("pages.orders.show.edit")}
+                    </Button>
+                    {order.status !== "confirmed" && (
+                      <p className="text-muted-foreground text-xs">
+                        {t(
+                          `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )
               )}
             </CardFooter>
           )}
