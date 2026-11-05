@@ -88,7 +88,7 @@ class Consumer::OrdersController < Consumer::InertiaController
       )
 
       total = pricings.sum { it[1].discounted_price }
-      expected_price = order_params[:expected_price].round 2
+      expected_price = order_params[:expected_price]&.to_f&.round 2
 
       if !order_params[:expected_price].nil? && total != expected_price
         raise InconsistentPricing.new(price: total, expected_price: expected_price)
