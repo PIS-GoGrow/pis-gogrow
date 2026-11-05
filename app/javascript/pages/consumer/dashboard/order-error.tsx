@@ -1,10 +1,10 @@
 import { Link } from "@inertiajs/react"
 import { X } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
 import { Button } from "@/components/ui/button"
 import { consumerDashboard } from "@/routes"
-import { useTranslation } from "react-i18next"
 
 interface Props {
   retry: () => void

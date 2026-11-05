@@ -165,13 +165,16 @@ export function ConsumerCart({
         </Alert>
       )}
 
-      {loading ? (
+      {loading && !pricing ? (
+        // Solo mostramos el spinner la primera vez que carga el carrito.
+        // Cuando el usuario toca el + o - en un plato, no queremos borrar toda la vista
+        // solo para mostrar el spinner
         <Spinner className="mx-auto my-3" />
       ) : (
         <>
           <section className="border-border mt-6 pb-4 text-sm md:border-b">
             {cart.map((item, i) => {
-              const line = pricing?.lines?.[i]?.subtotal || 0
+              const line = pricing?.lines?.[i]?.subtotal ?? 0 // El caso de 0 nunca va a ocurrir
               return (
                 <div
                   key={item.cartId}
