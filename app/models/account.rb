@@ -134,6 +134,7 @@ class Account < ApplicationRecord
     end
 
     owner.check_debt_alert! if owner.is_a?(Consumer)
+    EmployeeDebtNotifications.refresh(self) if saved_change_to_amount?
   end
 
   # Acepta un arreglo de ids de cuentas.
