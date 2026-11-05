@@ -10,16 +10,22 @@ vi.mock("@inertiajs/react", async () => {
   return {
     ...actual,
     Head: () => null,
-    usePage: () => ({ props: { locale: "es" } }),
+    usePage: () => ({ props: { locale: "es" }, url: "/pedidos/1" }),
     Link: ({
       children,
       href,
+      prefetch,
       ...props
     }: {
       children: React.ReactNode
       href: string | { url: string }
+      prefetch?: boolean
     }) => (
-      <a href={typeof href === "string" ? href : href.url} {...props}>
+      <a
+        href={typeof href === "string" ? href : href.url}
+        data-prefetch={prefetch ? "true" : undefined}
+        {...props}
+      >
         {children}
       </a>
     ),
@@ -179,16 +185,17 @@ describe("Consumer::Orders Show Page", () => {
     ).toBeInTheDocument()
   })
 
-  it("links to the edit page when the order is modifiable", () => {
+  it("renders both actions when the order is cancellable and modifiable", () => {
     render(<Show order={baseOrder} />)
 
+    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeEnabled()
     expect(screen.getByRole("link", { name: /Editar/i })).toHaveAttribute(
       "href",
       "/pedidos/1/editar",
     )
   })
 
-  it("does not show block reason texts when order is confirmed and shows disabled buttons", () => {
+  it("does not render actions when the order is neither cancellable nor modifiable", () => {
     const confirmedOrder: Order = {
       ...baseOrder,
       status: "confirmed",
@@ -201,37 +208,57 @@ describe("Consumer::Orders Show Page", () => {
     render(<Show order={confirmedOrder} />)
 
     expect(
-      screen.queryByText(
-        "Ya está confirmado para hoy, así que no se puede cancelar.",
-      ),
+      screen.queryByRole("button", { name: /Cancelar/i }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByText(
-        "Ya está confirmado para hoy, así que no se puede modificar.",
-      ),
+      screen.queryByRole("link", { name: /Editar/i }),
     ).not.toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()
-    expect(screen.getByRole("button", { name: /Editar/i })).toBeDisabled()
   })
 
-  it("displays block reason when pending order is past order deadline", () => {
-    const closedPendingOrder: Order = {
+  it("renders only the cancel action when the order is cancellable", () => {
+    const cancellableOrder: Order = {
       ...baseOrder,
-      status: "pending",
-      cancellable: false,
-      cancellation_block_reason: "order_deadline_passed",
+      cancellable: true,
       modifiable: false,
       modification_block_reason: "already_closed",
     }
 
-    render(<Show order={closedPendingOrder} />)
+    render(<Show order={cancellableOrder} />)
+
+    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeEnabled()
+    expect(
+      screen.queryByRole("link", { name: /Editar/i }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("renders only the edit action when the order is modifiable", () => {
+    const modifiableOrder: Order = {
+      ...baseOrder,
+      cancellable: false,
+      cancellation_block_reason: "already_closed",
+      modifiable: true,
+    }
+
+    render(<Show order={modifiableOrder} />)
 
     expect(
-      screen.getByText(
-        "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
-      ),
-    ).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()
+      screen.queryByRole("button", { name: /Cancelar/i }),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole("link", { name: /Editar/i })).toHaveAttribute(
+      "href",
+      "/pedidos/1/editar",
+    )
+  })
+
+  it("keeps the consumer mobile navigation and reserves space for it", () => {
+    const { container } = render(<Show order={baseOrder} />)
+
+    expect(screen.getByRole("navigation")).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: "Pedidos" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    expect(container.querySelector(".pb-24")).toHaveClass("md:pb-5")
   })
 
   it("renders long notes without spaces with text wrapping styling to prevent overflow", () => {

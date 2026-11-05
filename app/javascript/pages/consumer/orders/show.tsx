@@ -1,8 +1,9 @@
 import { Head, Link } from "@inertiajs/react"
-import { ArrowLeft, Pencil, X } from "lucide-react"
+import { ArrowLeft, Pencil } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import CancelOrderSheet from "@/components/orders/cancel-order-sheet"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
@@ -54,7 +55,8 @@ export default function Show({ order }: ConsumerOrdersShow) {
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.orders.show.title")} />
 
-      <div className="mx-auto grid w-full max-w-128 gap-4 p-5">
+      {/* La navegación mobile es fija; este espacio evita que cubra el contenido. */}
+      <div className="mx-auto grid w-full max-w-128 gap-4 p-5 pb-24 md:pb-5">
         <Button
           variant="ghost"
           size="sm"
@@ -148,67 +150,37 @@ export default function Show({ order }: ConsumerOrdersShow) {
             </div>
           </CardContent>
 
-          <CardFooter className="grid grid-cols-2 items-start gap-2">
-            {order.cancellable ? (
-              <CancelOrderSheet order={order} />
-            ) : (
-              <div className="flex flex-col gap-1">
+          {/* Sin acciones disponibles no se reserva un pie vacío en la tarjeta. */}
+          {(order.cancellable || order.modifiable) && (
+            <CardFooter
+              className={
+                order.cancellable && order.modifiable
+                  ? "grid grid-cols-2 items-start gap-2"
+                  : "grid grid-cols-1 items-start gap-2"
+              }
+            >
+              {order.cancellable && <CancelOrderSheet order={order} />}
+              {order.modifiable && (
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   className="w-full"
-                  disabled
+                  asChild
                 >
-                  <X aria-hidden="true" />
-                  {t("pages.orders.index.cancel")}
+                  <Link href={consumerOrders.edit(order.id)}>
+                    <Pencil aria-hidden="true" />
+                    {t("pages.orders.show.edit")}
+                  </Link>
                 </Button>
-                {order.status !== "confirmed" && (
-                  <p className="text-muted-foreground text-xs">
-                    {t(
-                      `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
-                    )}
-                  </p>
-                )}
-              </div>
-            )}
-            {order.modifiable ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full"
-                asChild
-              >
-                <Link href={consumerOrders.edit(order.id)}>
-                  <Pencil aria-hidden="true" />
-                  {t("pages.orders.show.edit")}
-                </Link>
-              </Button>
-            ) : (
-              <div className="flex flex-col gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="w-full"
-                  disabled
-                >
-                  <Pencil aria-hidden="true" />
-                  {t("pages.orders.show.edit")}
-                </Button>
-                {order.status !== "confirmed" && (
-                  <p className="text-muted-foreground text-xs">
-                    {t(
-                      `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
-                    )}
-                  </p>
-                )}
-              </div>
-            )}
-          </CardFooter>
+              )}
+            </CardFooter>
+          )}
         </Card>
       </div>
+
+      {/* Mantiene en el detalle la misma navegación mobile del listado. */}
+      <ConsumerMobileNav />
     </AppLayout>
   )
 }
