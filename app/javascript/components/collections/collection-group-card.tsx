@@ -66,7 +66,7 @@ function OwnerGroup({
 
         <span className="grid min-w-0 flex-1 justify-items-start gap-1">
           <span className="text-sm font-semibold">{title}</span>
-          <StatusBadge status={status} kind="payment" />
+          <StatusBadge status={status} kind="provider_payment" />
         </span>
 
         <span className="col-start-2 row-start-2 min-w-0 font-semibold wrap-anywhere">
@@ -77,7 +77,7 @@ function OwnerGroup({
         </span>
       </CollapsibleTrigger>
 
-      <CollapsibleContent className="grid gap-2 pt-2">
+      <CollapsibleContent className="grid min-w-0 grid-cols-1 gap-2 pt-2">
         {children}
       </CollapsibleContent>
     </Collapsible>
@@ -119,7 +119,7 @@ export default function CollectionGroupCard({
         </div>
       </CardHeader>
 
-      <CardContent className="grid gap-4 px-4">
+      <CardContent className="grid min-w-0 grid-cols-1 gap-4 px-4">
         <div className="grid gap-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-muted-foreground text-sm">
@@ -173,7 +173,7 @@ export default function CollectionGroupCard({
           )}
         </ul>
 
-        <div className="grid">
+        <div className="grid min-w-0 grid-cols-1">
           {group.employees.length > 0 && (
             <>
               <Separator />
@@ -185,7 +185,10 @@ export default function CollectionGroupCard({
                 amount={group.employees_total}
               >
                 {group.employees.map((employee) => (
-                  <Collapsible key={employee.id} className="rounded-lg border">
+                  <Collapsible
+                    key={employee.id}
+                    className="min-w-0 rounded-lg border"
+                  >
                     <CollapsibleTrigger className="group flex w-full items-center gap-3 px-3 py-2.5 text-left">
                       <span className="min-w-0 flex-1 text-sm wrap-anywhere">
                         {employee.owner_name}
@@ -196,7 +199,10 @@ export default function CollectionGroupCard({
                           {employee.paid_on}
                         </span>
                       ) : (
-                        <StatusBadge status={employee.status} kind="payment" />
+                        <StatusBadge
+                          status={employee.status}
+                          kind="provider_payment"
+                        />
                       )}
 
                       <Chevron />
@@ -224,7 +230,7 @@ export default function CollectionGroupCard({
 
           {group.company && (
             <>
-              <Separator />
+              {group.employees.length === 0 && <Separator />}
 
               <OwnerGroup
                 icon={Building2}

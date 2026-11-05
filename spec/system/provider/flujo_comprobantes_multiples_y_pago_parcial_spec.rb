@@ -110,7 +110,7 @@ RSpec.describe "Flujo de comprobantes múltiples y pago parcial", type: :system 
 
     # 6. El proveedor revisa y aprueba el segundo comprobante
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Aprobar" }
+    within(find("[role=dialog]")) { click_on "Confirmar" }
     expect(page).to have_content("Cobro aprobado")
     click_on "Listo"
 

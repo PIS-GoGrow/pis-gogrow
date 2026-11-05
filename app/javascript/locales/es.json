@@ -1170,10 +1170,10 @@
       },
       "provider_collections": {
         "group": {
-          "awaiting_one": "%{count} en revisión",
-          "awaiting_other": "%{count} cobros en revisión",
+          "awaiting_one": "%{count} cobro pendiente de confirmación",
+          "awaiting_other": "%{count} cobros pendientes de confirmación",
           "company": "Empresa",
-          "confirmed": "%{amount} en cobros aprobados",
+          "confirmed": "%{amount} en cobros confirmados",
           "detail": "Ver detalle",
           "detail_dialog": {
             "amount": "Monto",
@@ -1195,8 +1195,10 @@
           "download_receipts": "Descargar comprobantes",
           "due": "Vence: %{date}",
           "employees": "Empleados",
+          "partial_missing": "Falta una parte del pago.",
           "rejected_one": "%{count} cobro rechazado",
           "rejected_other": "%{count} cobros rechazados",
+          "review_payment": "Revisar pago",
           "total": "Total a cobrar"
         },
         "index": {
@@ -1219,7 +1221,7 @@
           "delivered_meals_other": "%{count} viandas entregadas",
           "empty_history_all": "Todavía no hay meses cobrados por completo.",
           "empty_history_client": "Todavía no hay meses cobrados por completo de este cliente.",
-          "empty_history_title": "Sin cobros aprobados",
+          "empty_history_title": "Sin cobros confirmados",
           "empty_pending_all": "Por ahora no hay deudas pendientes de ningún cliente seleccionado. Volvé a consultar el mes que viene.",
           "empty_pending_client": "Por ahora no hay deudas pendientes de este cliente. Volvé a consultar el mes que viene.",
           "empty_pending_title": "Sin deudas pendientes",
@@ -1267,6 +1269,13 @@
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
         "partial_payment_badge": "Pago parcial",
+        "provider_statuses": {
+          "approved": "Confirmado",
+          "partial": "Pago parcial",
+          "pending": "Pendiente",
+          "rejected": "Rechazado",
+          "submitted": "Por revisar"
+        },
         "receipt_sent_at": "Comprobante enviado el %{date}",
         "reminder": {
           "back": "Volver",
@@ -1280,7 +1289,7 @@
             "title": "No pudimos enviar el recordatorio"
           },
           "limit_reached": "Alcanzaste el límite de recordatorios para este pago.",
-          "next_available": "Podés enviar otro recordatorio el %{date}.",
+          "next_available": "Recordatorio enviado con éxito. Próximo envío disponible el %{date}.",
           "retry": "Reintentar",
           "send": "Enviar recordatorio",
           "sending": "Enviando...",
@@ -1295,12 +1304,12 @@
           "approved_description": "El cobro fue aprobado correctamente. Se notificará al usuario.",
           "approved_title": "Cobro aprobado",
           "back": "Volver",
-          "check_receipt": "Comprobá el importe, la cuenta y el concepto del comprobante antes de aprobar. El importe esperado es lo que debía la cuenta al enviar el comprobante; el importe transferido debe verificarse en el archivo.",
-          "confirm": "Aprobar",
-          "confirming": "Aprobando…",
+          "check_receipt": "Chequeá que el total, la cuenta y el concepto del pago sean correctos antes de confirmar.",
+          "confirm": "Confirmar",
+          "confirming": "Confirmando…",
           "continue": "Continuar",
           "continuing": "Continuando…",
-          "current_month_restriction": "Todavía no podés aprobar este comprobante porque la cuenta corresponde al mes en curso. Podrás aprobarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo.",
+          "current_month_restriction": "Todavía no podés confirmar este comprobante porque la cuenta corresponde al mes en curso. Podrás confirmarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo.",
           "details_label": "Describir el motivo",
           "details_placeholder": "Describir el motivo",
           "done": "Listo",
