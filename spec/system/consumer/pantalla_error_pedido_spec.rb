@@ -50,7 +50,7 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
     bounds = page.evaluate_script(<<~JS)
       (() => {
         const retryBtn = Array.from(document.querySelectorAll("a, button")).find(b => b.textContent.trim() === "Reintentar");
-        const menuBtn = Array.from(document.querySelectorAll("a, button")).find(b => b.textContent.trim() === "Volver a Menú");
+        const menuBtn = Array.from(document.querySelectorAll("a, button")).find(b => b.textContent.trim() === "Volver al menú");
         if (!retryBtn || !menuBtn) return null;
 
         const container = retryBtn.parentElement;
