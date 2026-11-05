@@ -247,6 +247,59 @@ RSpec.describe Payment, type: :model do
     end
   end
 
+  describe "the consumer approval notification" do
+    let(:notifications) do
+      Notification.where(event: "payment_approved", user: consumer.user)
+    end
+
+    it "notifies the consumer when the provider approves the payment" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      expect { payment.approve }
+        .to change { notifications.count }
+        .from(0).to(1)
+
+      expect(notifications.sole).to have_attributes(
+        role: "consumer",
+        title: "Pago aprobado",
+        description: include("Rotisería Central")
+      )
+    end
+
+    it "does not notify just because a historical approved payment is created" do
+      payment_with_receipt(status: :approved).save!
+
+      expect(notifications).to be_empty
+    end
+
+    it "does not notify the consumer twice when an approved payment is approved again" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      payment.approve
+      payment.approve
+
+      expect(notifications.count).to eq(1)
+    end
+
+    it "does not notify the consumer when a company payment is approved" do
+      company = Company.create!(name: "GoGrow Test", address: "18 de Julio 1006")
+      company_account = Account.create!(owner: company, provider:, month: Date.current.prev_month, amount: 500)
+      payment = company_account.payments.build(provider:, status: :submitted)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+      payment.save!
+
+      expect { payment.approve }.not_to change { Notification.where(event: "payment_approved").count }
+    end
+
+    it "does not notify when payment transitions to rejected or partial" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      expect {
+        payment.update!(status: :rejected, rejection_reason: "Comprobante ilegible")
+      }.not_to change { notifications.count }
+    end
+  end
+
   describe "the receipt" do
     it "is required to send a payment" do
       payment = account.payments.build(provider:, status: :submitted)
