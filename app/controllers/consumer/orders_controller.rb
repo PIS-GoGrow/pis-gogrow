@@ -28,6 +28,8 @@ class Consumer::OrdersController < Consumer::InertiaController
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
     @order = @consumer.orders.preload(:review).find(params[:id])
+    # El detalle usa la misma clasificación que la pestaña Historial.
+    @historical = @consumer.orders.history.exists?(@order.id)
   end
 
   def edit

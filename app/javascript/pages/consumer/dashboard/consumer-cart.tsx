@@ -204,7 +204,9 @@ export function ConsumerCart({
                       </p>
                     ))}
                   {item.notes && (
-                    <p className="text-muted-foreground mt-2">{item.notes}</p>
+                    <p className="text-muted-foreground mt-2 [overflow-wrap:anywhere]">
+                      {item.notes}
+                    </p>
                   )}
                   <div className="mt-2">
                     <QuantityInput

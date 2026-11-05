@@ -12,6 +12,7 @@ interface PageContainerProps {
   titleVariant?: "default" | "prominent"
   compactHeading?: boolean
   centered?: boolean
+  mobileCentered?: boolean
   children: ReactNode
 }
 
@@ -25,6 +26,7 @@ export default function PageContainer({
   titleVariant,
   compactHeading,
   centered,
+  mobileCentered,
   children,
 }: PageContainerProps) {
   return (
@@ -39,6 +41,7 @@ export default function PageContainer({
         titleVariant={titleVariant}
         compact={compactHeading}
         centered={centered}
+        mobileCentered={mobileCentered}
       />
       <div className="flex flex-col gap-4">{children}</div>
     </div>

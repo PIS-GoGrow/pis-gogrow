@@ -12,6 +12,7 @@ export default function Heading({
   titleVariant = "default",
   compact = false,
   centered = false,
+  mobileCentered = false,
 }: {
   title: string
   description?: string
@@ -22,18 +23,33 @@ export default function Heading({
   titleVariant?: "default" | "prominent"
   compact?: boolean
   centered?: boolean
+  mobileCentered?: boolean
 }) {
   return (
     <div className={cn("grid gap-4", compact ? "mb-4" : "mb-8")}>
-      {back && !centered && <div className="flex">{back}</div>}
+      {back && !centered && !mobileCentered && (
+        <div className="flex">{back}</div>
+      )}
+
+      {back && mobileCentered && <div className="hidden md:flex">{back}</div>}
       <div
         className={cn(
           "flex flex-wrap items-end gap-4",
-          centered ? "relative justify-center text-center" : "justify-between",
+          centered
+            ? "relative justify-center text-center"
+            : mobileCentered
+              ? "relative justify-center text-center md:justify-between md:text-left"
+              : "justify-between",
         )}
       >
         {back && centered && (
           <div className="absolute top-1/2 left-0 -translate-y-1/2">{back}</div>
+        )}
+
+        {back && mobileCentered && (
+          <div className="absolute top-1/2 left-0 -translate-y-1/2 md:hidden">
+            {back}
+          </div>
         )}
         <div className="space-y-0.5">
           {eyebrow && (
