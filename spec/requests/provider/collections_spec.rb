@@ -32,11 +32,11 @@ RSpec.describe "Provider::Collections", type: :request do
       end
 
       get provider_collections_path
-      expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 }, outstanding: { total: 2178.0, meals: 4 })
+      expect(inertia).to have_props(sales: { total: 1202.0, meals: 1 }, outstanding: { total: 2178.0, meals: 1 })
 
       company.payments.create!(provider: company.provider, status: :approved)
       get provider_collections_path
-      expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 }, outstanding: { total: 1202.0, meals: 4 })
+      expect(inertia).to have_props(sales: { total: 1202.0, meals: 1 }, outstanding: { total: 1202.0, meals: 1 })
       expect(inertia).to have_props { |page|
         group = page[:history].find { it[:company][:id] == company.id }
         expect(group[:confirmed_total]).to eq(976.0)
@@ -77,10 +77,11 @@ RSpec.describe "Provider::Collections", type: :request do
       get provider_collections_path
 
       expect(inertia).to render_component("provider/collections/index")
-      # Cuatro viandas confirmadas: cada pedido se cuenta una vez aunque cuelgue
-      # de la cuenta del empleado y de la de la empresa.
-      expect(props[:sales]).to include(total: 1202.0, meals: 4)
-      expect(props[:outstanding]).to include(total: 1202.0, meals: 4)
+      # De las cuatro viandas confirmadas solo una ya se entregó: cada pedido se
+      # cuenta una vez aunque cuelgue de la cuenta del empleado y de la de la
+      # empresa.
+      expect(props[:sales]).to include(total: 1202.0, meals: 1)
+      expect(props[:outstanding]).to include(total: 1202.0, meals: 1)
     end
 
     %i[beginning_of_month end_of_month].each do |boundary|
@@ -89,25 +90,27 @@ RSpec.describe "Provider::Collections", type: :request do
         dates = month.all_month.reject { it == schedules(:today).date }
         schedules(:past).update!(date: dates.first)
         schedules(:future).update!(date: dates.last)
+        Order.where(schedule: [ schedules(:past), schedules(:future) ]).find_each { it.update_columns(delivery_date: it.schedule.date) }
+        delivered = boundary == :end_of_month ? [ dates.last, dates.first ] : [ dates.first ]
+        delivered_orders = [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ]
+                             .select { delivered.include?(it.reload.delivery_date) }
 
         travel_to Time.zone.local(month.year, month.month, month.public_send(boundary).day, 12) do
           sign_in provider_user, role: :provider
 
           get provider_collections_path
 
-          expect(inertia).to have_props(sales: { total: 1202.0, meals: 4 })
+          expect(inertia).to have_props(sales: { total: 1202.0, meals: delivered_orders.sum(&:amount) })
           expect(inertia).to have_props { |page|
             detail = page[:sales_detail]
             detail_orders = detail[:days].flat_map { it[:orders] }
 
             expect(detail[:month]).to eq(I18n.l(month, format: :month_name_year))
             expect(detail[:clients]).to eq([ { "id" => companies(:gogrow).id, "name" => "GoGrow", "subtotal" => 1202.0, "vat_amount" => 0.0, "payable_amount" => 1202.0 } ])
-            expect(detail_orders.pluck(:id)).to match_array(
-              [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
-            )
-            expect(detail_orders.sum { it[:meals] }).to eq(4)
-            expect(detail_orders.sum { it[:amount] }).to eq(1202.0)
-            expect(detail[:days].pluck(:date)).to eq([ dates.last, dates.first ].map { DateFormat.short(it) })
+            expect(detail_orders.pluck(:id)).to match_array(delivered_orders.map(&:id))
+            expect(detail_orders.sum { it[:meals] }).to eq(delivered_orders.sum(&:amount))
+            expect(detail_orders.sum { it[:amount] }).to eq(delivered_orders.sum(&:price).to_f)
+            expect(detail[:days].pluck(:date)).to eq(delivered.map { DateFormat.short(it) })
             true
           }
         end
@@ -121,17 +124,13 @@ RSpec.describe "Provider::Collections", type: :request do
 
       group = group_for(:pending, Date.current)
 
-      expect(group).to include(client_name: "GoGrow", total: 1202.0, confirmed_total: 0.0, meals: 4)
+      expect(group).to include(client_name: "GoGrow", total: 1202.0, confirmed_total: 0.0, meals: 1)
       expect(group[:company]).to include(owner_name: "GoGrow", amount: 601.0, status: "pending")
       expect(group[:employees].pluck(:owner_name, :status)).to eq(
         [ [ "Other Consumer User", "submitted" ], [ "Test User", "rejected" ] ]
       )
-      expect(group[:company][:orders].pluck(:id)).to match_array(
-        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
-      )
-      expect(group[:employees].flat_map { it[:orders] }.pluck(:id)).to match_array(
-        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
-      )
+      expect(group[:company][:orders].pluck(:id)).to eq([ orders(:history_confirmed_past).id ])
+      expect(group[:employees].flat_map { it[:orders] }.pluck(:id)).to eq([ orders(:history_confirmed_past).id ])
     end
 
     it "counts what is awaiting confirmation and what was rejected" do
@@ -317,7 +316,7 @@ RSpec.describe "Provider::Collections", type: :request do
         account.payments.create!(provider: account.provider, status: :approved)
       end
       account = accounts(:gogrow_tuviandita_current)
-      order_ids = account.orders.confirmed.ids
+      order_ids = account.orders.consumed.ids
       sign_in provider_user, role: :provider
 
       get provider_collections_path
@@ -346,18 +345,14 @@ RSpec.describe "Provider::Collections", type: :request do
 
       expect(inertia).to render_component("provider/collections/show")
       expect(props[:account]).to include(owner_name: "GoGrow", amount: 601.0)
-      expect(props[:orders].pluck(:id)).to match_array(
-        [ orders(:upcoming_confirmed_future), orders(:history_confirmed_past), orders(:other_consumer_upcoming) ].map(&:id)
-      )
-      expect(props[:orders].sum { it[:subsidy] }).to eq(601.0)
-      upcoming = props[:orders].find { it[:id] == orders(:upcoming_confirmed_future).id }
-      expect(upcoming[:delivery_date]).to eq(orders(:upcoming_confirmed_future).delivery_date.strftime("%d/%m/%y"))
+      expect(props[:orders].pluck(:id)).to eq([ orders(:history_confirmed_past).id ])
+      expect(props[:orders].sole).to include(subsidy: 150.25, delivery_date: orders(:history_confirmed_past).delivery_date.strftime("%d/%m/%y"))
     end
 
     it "retains delivery_date in orders props even when schedule is nil" do
       sign_in provider_user, role: :provider
 
-      order = orders(:upcoming_confirmed_future)
+      order = orders(:history_confirmed_past)
       delivery = order.delivery_date
       order.update_columns(schedule_id: nil)
 

@@ -4,6 +4,7 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { AdaptableDialogTrigger } from "@/components/adaptable-dialog"
+import { WhatsappMark } from "@/components/branding/whatsapp-mark"
 import CollectionAccountDetailDialog from "@/components/collections/collection-account-detail-dialog"
 import CollectionPaymentHistory from "@/components/collections/collection-payment-history"
 import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
@@ -44,7 +45,7 @@ export default function CollectionAccountPanel({
   const reminder = account.debt_reminder
 
   return (
-    <div className="bg-muted/60 grid gap-3 rounded-lg p-3">
+    <div className="bg-muted/60 grid min-w-0 grid-cols-1 gap-3 rounded-lg p-3">
       {heading === "paid_on" && (
         <>
           <span className="text-muted-foreground text-sm">
@@ -83,7 +84,11 @@ export default function CollectionAccountPanel({
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-foreground text-base font-semibold">
-          {formatMoney(account.payable_amount)}
+          {formatMoney(
+            settled
+              ? account.payable_amount
+              : (account.outstanding_amount ?? account.payable_amount),
+          )}
           <span className="text-muted-foreground font-normal">
             {" | "}
             {t("pages.provider_collections.meals", { count: account.meals })}
@@ -106,17 +111,26 @@ export default function CollectionAccountPanel({
         )}
       </div>
 
+      {account.status === "partial" && (
+        <p className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+          <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
+          {t("pages.provider_collections.group.partial_missing")}
+        </p>
+      )}
       {account.status === "submitted" && account.payment_id && (
         <PaymentReviewSheet
           paymentId={account.payment_id}
           receiptUrl={account.receipt_url ?? ""}
           contentType={account.receipt_content_type}
           filename={account.owner_name}
-          expectedAmount={account.payable_amount}
+          expectedAmount={account.expected_amount ?? account.payable_amount}
           canApprove={account.can_approve_payment}
         >
           <AdaptableDialogTrigger asChild>
-            <Button className="h-10 w-full rounded-[10px]">Revisar pago</Button>
+            <Button className="h-10 w-full rounded-[10px]">
+              <Eye aria-hidden="true" />
+              {t("pages.provider_collections.group.review_payment")}
+            </Button>
           </AdaptableDialogTrigger>
         </PaymentReviewSheet>
       )}
@@ -128,12 +142,14 @@ export default function CollectionAccountPanel({
           eligible={reminder.eligible}
           employeeName={account.owner_name}
           month={account.month}
-          amount={account.payable_amount}
+          amount={account.outstanding_amount ?? account.payable_amount}
+          showWhenBlocked
+          icon={<WhatsappMark className="size-4" />}
         />
       )}
       {reminder.blocked_reason === "cooldown" && (
-        <p className="text-muted-foreground flex items-center gap-2 text-sm">
-          <CircleCheck className="size-4" aria-hidden="true" />
+        <p className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
+          <CircleCheck className="size-4 shrink-0" aria-hidden="true" />
           {t("pages.provider_collections.reminder.next_available", {
             date: reminder.next_available_at,
           })}
@@ -146,7 +162,8 @@ export default function CollectionAccountPanel({
       )}
       {(showPaymentHistory ||
         account.status === "partial" ||
-        account.status === "rejected") && (
+        account.status === "rejected" ||
+        account.payments.some((p) => p.status === "approved")) && (
         <CollectionPaymentHistory
           payments={account.payments}
           showDownloadAll={showDownloadAll}

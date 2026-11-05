@@ -315,4 +315,27 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_content("Motivo de rechazo")
     expect(page).to have_content("La cocina cerró por corte de agua")
   end
+
+  it "muestra el precio unitario de la vianda en el detalle para pedidos de múltiples unidades" do
+    order = orders(:upcoming_confirmed_future)
+
+    visit order_path(order)
+
+    within(find("dt", text: "Cantidad").find(:xpath, "..")) do
+      expect(page).to have_content("2")
+    end
+
+    within(find("dt", text: "Precio base").find(:xpath, "..")) do
+      expect(page).to have_content("$300,50")
+      expect(page).not_to have_content("$601")
+    end
+
+    within(find("dt", text: "Beneficio aplicado").find(:xpath, "..")) do
+      expect(page).to have_content("$300,50")
+    end
+
+    within(find("dt", text: "Importe final").find(:xpath, "..")) do
+      expect(page).to have_content("$300,50")
+    end
+  end
 end

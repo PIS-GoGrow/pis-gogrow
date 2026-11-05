@@ -18,7 +18,7 @@ RSpec.describe "Flujo de comprobantes múltiples y pago parcial", type: :system 
   def create_closed_month_order
     travel_to(Time.zone.local(closed_month.year, closed_month.month, 10, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa con puré", description: "Clásica", price: 500)
-      schedule = Schedule.create!(menu:, date: closed_month + 12, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
 
       Order.create!(
         consumer:, schedule:,
@@ -110,7 +110,7 @@ RSpec.describe "Flujo de comprobantes múltiples y pago parcial", type: :system 
 
     # 6. El proveedor revisa y aprueba el segundo comprobante
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Aprobar" }
+    within(find("[role=dialog]")) { click_on "Confirmar" }
     expect(page).to have_content("Cobro aprobado")
     click_on "Listo"
 

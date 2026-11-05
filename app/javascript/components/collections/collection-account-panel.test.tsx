@@ -25,6 +25,8 @@ const account = {
   vat_rate: 0,
   vat_amount: 0,
   payable_amount: 800,
+  outstanding_amount: 800,
+  expected_amount: null,
   source: "consumer",
   status: "pending",
   can_approve_payment: false,
@@ -55,6 +57,7 @@ describe("CollectionAccountPanel", () => {
       vat_rate: 0.22,
       vat_amount: 176,
       payable_amount: 976,
+      expected_amount: null,
     } satisfies ProviderCollectionAccount
     render(
       <CollectionAccountPanel account={company}>
@@ -75,6 +78,33 @@ describe("CollectionAccountPanel", () => {
     ).toBeInTheDocument()
   })
 
+  it("expects the amount owed when the receipt was sent, not the current debt", async () => {
+    const user = userEvent.setup()
+    render(
+      <PaymentReviewResultProvider value={vi.fn()}>
+        <CollectionAccountPanel
+          account={{
+            ...account,
+            amount: 740.25,
+            payable_amount: 740.25,
+            expected_amount: 290.25,
+            status: "submitted",
+            can_approve_payment: true,
+            payment_id: 5,
+            receipt_url: "/proveedor/pagos/5/comprobante",
+            receipt_content_type: "image/png",
+          }}
+        />
+      </PaymentReviewResultProvider>,
+    )
+
+    await user.click(screen.getByRole("button", { name: "Revisar pago" }))
+
+    expect(
+      within(screen.getByRole("dialog")).getByText("$290,25"),
+    ).toBeInTheDocument()
+  })
+
   it("keeps the download available for one partial payment without allowing another review", () => {
     render(
       <CollectionAccountPanel
@@ -86,23 +116,25 @@ describe("CollectionAccountPanel", () => {
               id: 17,
               status: "partial",
               rejection_reason: null,
+              expected_amount: null,
               date: "09/10/26",
               receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "parcial.png",
               receipt_content_type: "image/png",
+              receipt_size: "63,8 KB",
             },
           ],
         }}
       />,
     )
     expect(
-      screen.getByRole("link", { name: "Descargar comprobante" }),
+      screen.getByRole("link", { name: "Descargar parcial.png" }),
     ).toHaveAttribute("href", "/provider/comprobantes/17/archivo")
     expect(
       screen.queryByRole("button", { name: "Revisar pago" }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole("button", { name: "Aprobar" }),
+      screen.queryByRole("button", { name: "Confirmar" }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole("button", { name: "Reportar" }),
@@ -121,6 +153,7 @@ describe("CollectionAccountPanel", () => {
               vat_rate: source === "company" ? 0.22 : 0,
               vat_amount: source === "company" ? 176 : 0,
               payable_amount: source === "company" ? 976 : 800,
+              expected_amount: null,
               status: "submitted",
               payment_id: 17,
               receipt_url: "/provider/comprobantes/17/archivo",
@@ -135,7 +168,7 @@ describe("CollectionAccountPanel", () => {
         within(dialog).getByText(source === "company" ? "$976" : "$800"),
       ).toBeInTheDocument()
       expect(
-        within(dialog).getByRole("button", { name: "Aprobar" }),
+        within(dialog).getByRole("button", { name: "Confirmar" }),
       ).toBeDisabled()
       expect(
         within(dialog).getByRole("link", { name: "Descargar comprobante" }),
@@ -158,19 +191,23 @@ describe("CollectionAccountPanel", () => {
                 id: 17,
                 status: "partial",
                 rejection_reason: null,
+                expected_amount: null,
                 date: "09/10/26",
                 receipt_url: "/provider/comprobantes/17/archivo",
                 receipt_filename: "parcial.png",
                 receipt_content_type: "image/png",
+                receipt_size: "63,8 KB",
               },
               {
                 id: 18,
                 status: "submitted",
                 rejection_reason: null,
+                expected_amount: null,
                 date: "10/10/26",
                 receipt_url: "/provider/comprobantes/18/archivo",
                 receipt_filename: "final.png",
                 receipt_content_type: "image/png",
+                receipt_size: "63,8 KB",
               },
             ],
           }}
