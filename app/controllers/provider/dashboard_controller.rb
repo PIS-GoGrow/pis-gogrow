@@ -32,7 +32,8 @@ class Provider::DashboardController < Provider::InertiaController
               id: OrderAccount.where(account_id: pending_accounts.select(:id)).select(:order_id)
            )
            .sum(:amount)
-    @total_debt = pending_accounts.select(:amount, :vat_rate).sum(&:payable_amount)
+           .to_i
+    @total_debt = pending_accounts.select(:amount, :vat_rate).sum(&:payable_amount).to_i
   end
 
   private
