@@ -121,19 +121,20 @@ describe("CollectionAccountPanel", () => {
               receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "parcial.png",
               receipt_content_type: "image/png",
+              receipt_size: "63,8 KB",
             },
           ],
         }}
       />,
     )
     expect(
-      screen.getByRole("link", { name: "Descargar comprobante" }),
+      screen.getByRole("link", { name: "Descargar parcial.png" }),
     ).toHaveAttribute("href", "/provider/comprobantes/17/archivo")
     expect(
       screen.queryByRole("button", { name: "Revisar pago" }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole("button", { name: "Aprobar" }),
+      screen.queryByRole("button", { name: "Confirmar" }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole("button", { name: "Reportar" }),
@@ -167,7 +168,7 @@ describe("CollectionAccountPanel", () => {
         within(dialog).getByText(source === "company" ? "$976" : "$800"),
       ).toBeInTheDocument()
       expect(
-        within(dialog).getByRole("button", { name: "Aprobar" }),
+        within(dialog).getByRole("button", { name: "Confirmar" }),
       ).toBeDisabled()
       expect(
         within(dialog).getByRole("link", { name: "Descargar comprobante" }),
@@ -195,6 +196,7 @@ describe("CollectionAccountPanel", () => {
                 receipt_url: "/provider/comprobantes/17/archivo",
                 receipt_filename: "parcial.png",
                 receipt_content_type: "image/png",
+                receipt_size: "63,8 KB",
               },
               {
                 id: 18,
@@ -205,6 +207,7 @@ describe("CollectionAccountPanel", () => {
                 receipt_url: "/provider/comprobantes/18/archivo",
                 receipt_filename: "final.png",
                 receipt_content_type: "image/png",
+                receipt_size: "63,8 KB",
               },
             ],
           }}
