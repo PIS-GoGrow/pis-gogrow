@@ -13,17 +13,17 @@ const page = "pages.admin.payments.index.bank"
 
 export default function BankDetails({ provider }: BankDetailsProps) {
   const { t } = useTranslation()
-  const { bank_name, bank_account_number, bank_account_holder } = provider
+  const { bank_name, bank_account_details, beneficiary } = provider
 
-  if (!bank_name || !bank_account_number || !bank_account_holder) {
+  if (!bank_name || !bank_account_details || !beneficiary) {
     return (
       <p className="text-muted-foreground text-sm">{t(`${page}.missing`)}</p>
     )
   }
 
-  async function copyAccountNumber(number: string) {
+  async function copyAccountDetails(details: string) {
     try {
-      await navigator.clipboard.writeText(number)
+      await navigator.clipboard.writeText(details)
       toast.success(t(`${page}.copied`))
     } catch {
       toast.error(t(`${page}.copy_failed`))
@@ -33,19 +33,19 @@ export default function BankDetails({ provider }: BankDetailsProps) {
   return (
     <div className="grid gap-1 rounded-xl border p-4 text-sm">
       <p className="font-medium">{bank_name}</p>
-      <p className="text-muted-foreground flex items-center gap-1">
-        {t(`${page}.account_number`, { number: bank_account_number })}
+      <div className="text-muted-foreground flex items-start gap-1">
+        <p className="whitespace-pre-line">{bank_account_details}</p>
         <Button
           variant="ghost"
           size="icon-xs"
-          onClick={() => void copyAccountNumber(bank_account_number)}
+          onClick={() => void copyAccountDetails(bank_account_details)}
           aria-label={t(`${page}.copy`)}
         >
           <Copy aria-hidden="true" />
         </Button>
-      </p>
+      </div>
       <p className="text-muted-foreground">
-        {t(`${page}.holder`, { holder: bank_account_holder })}
+        {t(`${page}.beneficiary`, { beneficiary })}
       </p>
     </div>
   )

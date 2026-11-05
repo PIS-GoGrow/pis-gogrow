@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { providerDashboard, providerOnboarding } from "@/routes"
 import type { ProviderOnboardingShow } from "@/types/serializers/ProviderOnboardingShow"
 
@@ -34,24 +35,21 @@ const PAGE = "pages.provider_onboarding"
 
 const REQUIRED_STEP_1_FIELDS = [
   "provider[bank_name]",
-  "provider[bank_account_type]",
-  "provider[bank_account_number]",
-  "provider[bank_account_holder]",
-  "provider[tax_id]",
+  "provider[bank_account_details]",
+  "provider[beneficiary]",
 ] as const
 
 function step1Complete(provider: ProviderOnboardingShow["provider"]) {
   return [
     provider.bank_name,
-    provider.bank_account_type,
-    provider.bank_account_number,
-    provider.bank_account_holder,
-    provider.tax_id,
+    provider.bank_account_details,
+    provider.beneficiary,
   ].every((value) => (value ?? "").toString().trim() !== "")
 }
 
 export default function Onboarding({
   provider,
+  bank_names,
   step,
   notification_configurations,
   subscribed_keys,
@@ -192,12 +190,17 @@ export default function Onboarding({
           action={providerOnboarding.update()}
           options={{ preserveScroll: true }}
           className="flex flex-1 flex-col"
+          noValidate
         >
           {({ errors, processing }) => (
             <>
               <input type="hidden" name="step" value={current} />
               <div className="flex-1" onChange={handleStep1Change}>
-                <PaymentDetailsFields provider={provider} errors={errors} />
+                <PaymentDetailsFields
+                  provider={provider}
+                  bankNames={bank_names}
+                  errors={errors}
+                />
               </div>
               <Footer
                 processing={processing}
@@ -363,9 +366,11 @@ function ControlledFooter({
 
 function PaymentDetailsFields({
   provider,
+  bankNames,
   errors,
 }: {
   provider: ProviderOnboardingShow["provider"]
+  bankNames: ProviderOnboardingShow["bank_names"]
   errors: Record<string, ErrorValue>
 }) {
   const { t } = useTranslation()
@@ -379,84 +384,54 @@ function PaymentDetailsFields({
           <FieldLabel htmlFor="bank_name">
             {t(`${fields}.bank_name`)}
           </FieldLabel>
-          <Input
-            id="bank_name"
-            name="provider[bank_name]"
-            defaultValue={provider.bank_name ?? ""}
-            placeholder={t(`${fields}.bank_name_placeholder`)}
-            aria-invalid={!!errors.bank_name}
-          />
-          <FieldError>{errors.bank_name}</FieldError>
-        </Field>
-
-        <Field data-invalid={!!errors.bank_account_type}>
-          <FieldLabel htmlFor="bank_account_type">
-            {t(`${fields}.bank_account_type`)}
-          </FieldLabel>
           <Select
-            name="provider[bank_account_type]"
-            defaultValue={provider.bank_account_type ?? undefined}
+            name="provider[bank_name]"
+            defaultValue={provider.bank_name ?? undefined}
           >
             <SelectTrigger
-              id="bank_account_type"
+              id="bank_name"
               className="w-full"
-              aria-invalid={!!errors.bank_account_type}
+              aria-invalid={!!errors.bank_name}
             >
-              <SelectValue
-                placeholder={t(`${fields}.bank_account_type_placeholder`)}
-              />
+              <SelectValue placeholder={t(`${fields}.bank_name_placeholder`)} />
             </SelectTrigger>
             <SelectContent>
-              {(["savings", "checking"] as const).map((type) => (
-                <SelectItem key={type} value={type}>
-                  {t(`${fields}.bank_account_types.${type}`)}
+              {bankNames.map((bankName) => (
+                <SelectItem key={bankName} value={bankName}>
+                  {bankName}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <FieldError>{errors.bank_account_type}</FieldError>
+          <FieldError>{errors.bank_name}</FieldError>
         </Field>
 
-        <Field data-invalid={!!errors.bank_account_number}>
-          <FieldLabel htmlFor="bank_account_number">
-            {t(`${fields}.bank_account_number`)}
+        <Field data-invalid={!!errors.bank_account_details}>
+          <FieldLabel htmlFor="bank_account_details">
+            {t(`${fields}.bank_account_details`)}
+          </FieldLabel>
+          <Textarea
+            id="bank_account_details"
+            name="provider[bank_account_details]"
+            defaultValue={provider.bank_account_details ?? ""}
+            placeholder={t(`${fields}.bank_account_details_placeholder`)}
+            className="min-h-36"
+            aria-invalid={!!errors.bank_account_details}
+          />
+          <FieldError>{errors.bank_account_details}</FieldError>
+        </Field>
+
+        <Field data-invalid={!!errors.beneficiary}>
+          <FieldLabel htmlFor="beneficiary">
+            {t(`${fields}.beneficiary`)}
           </FieldLabel>
           <Input
-            id="bank_account_number"
-            name="provider[bank_account_number]"
-            inputMode="numeric"
-            defaultValue={provider.bank_account_number ?? ""}
-            aria-invalid={!!errors.bank_account_number}
+            id="beneficiary"
+            name="provider[beneficiary]"
+            defaultValue={provider.beneficiary ?? ""}
+            aria-invalid={!!errors.beneficiary}
           />
-          <FieldError>{errors.bank_account_number}</FieldError>
-        </Field>
-
-        <Field data-invalid={!!errors.bank_account_holder}>
-          <FieldLabel htmlFor="bank_account_holder">
-            {t(`${fields}.bank_account_holder`)}
-          </FieldLabel>
-          <Input
-            id="bank_account_holder"
-            name="provider[bank_account_holder]"
-            defaultValue={provider.bank_account_holder ?? ""}
-            aria-invalid={!!errors.bank_account_holder}
-          />
-          <FieldError>{errors.bank_account_holder}</FieldError>
-        </Field>
-
-        <Field data-invalid={!!errors.tax_id}>
-          <FieldLabel htmlFor="tax_id">{t(`${fields}.tax_id`)}</FieldLabel>
-          <Input
-            id="tax_id"
-            name="provider[tax_id]"
-            inputMode="numeric"
-            defaultValue={provider.tax_id ?? ""}
-            aria-invalid={!!errors.tax_id}
-          />
-          <FieldDescription>
-            {t(`${fields}.tax_id_description`)}
-          </FieldDescription>
-          <FieldError>{errors.tax_id}</FieldError>
+          <FieldError>{errors.beneficiary}</FieldError>
         </Field>
       </FieldGroup>
     </>

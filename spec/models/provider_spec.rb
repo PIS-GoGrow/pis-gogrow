@@ -158,31 +158,31 @@ RSpec.describe Provider, type: :model do
   describe "#payment_details_complete?" do
     let(:provider) { providers(:tuviandita) }
 
-    it "is true with the bank, the account number and the holder" do
-      provider.assign_attributes(bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: "Tu Viandita S.A.")
+    it "is true with the bank, account details and beneficiary" do
+      provider.assign_attributes(bank_name: "Santander", bank_account_details: "Cuenta: 1150260", beneficiary: "Tu Viandita S.A.")
 
       expect(provider.payment_details_complete?).to be true
     end
 
     it "is false while any of them is missing" do
-      provider.assign_attributes(bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: nil)
+      provider.assign_attributes(bank_name: "Santander", bank_account_details: "Cuenta: 1150260", beneficiary: nil)
 
       expect(provider.payment_details_complete?).to be false
     end
 
     it "is false when attributes are blank strings or whitespace" do
-      provider.assign_attributes(bank_name: "   ", bank_account_number: "1150260", bank_account_holder: "Tu Viandita S.A.")
+      provider.assign_attributes(bank_name: "   ", bank_account_details: "Cuenta: 1150260", beneficiary: "Tu Viandita S.A.")
       expect(provider.payment_details_complete?).to be false
 
-      provider.assign_attributes(bank_name: "Santander", bank_account_number: "", bank_account_holder: "Tu Viandita S.A.")
+      provider.assign_attributes(bank_name: "Santander", bank_account_details: "", beneficiary: "Tu Viandita S.A.")
       expect(provider.payment_details_complete?).to be false
 
-      provider.assign_attributes(bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: "\t\n")
+      provider.assign_attributes(bank_name: "Santander", bank_account_details: "Cuenta: 1150260", beneficiary: "\t\n")
       expect(provider.payment_details_complete?).to be false
     end
 
     it "is false when all payment detail attributes are nil" do
-      provider.assign_attributes(bank_name: nil, bank_account_number: nil, bank_account_holder: nil)
+      provider.assign_attributes(bank_name: nil, bank_account_details: nil, beneficiary: nil)
 
       expect(provider.payment_details_complete?).to be false
     end
@@ -360,10 +360,8 @@ RSpec.describe Provider, type: :model do
     let(:valid_attributes) do
       {
         bank_name: "BROU",
-        bank_account_type: "savings",
-        bank_account_number: "001234567-00001",
-        bank_account_holder: "Tu Vianda SRL",
-        tax_id: "212345670012"
+        bank_account_details: "Cuenta: 001234567-00001\nMoneda: UYU",
+        beneficiary: "Tu Vianda SRL"
       }
     end
 
@@ -376,60 +374,31 @@ RSpec.describe Provider, type: :model do
     it "requiere presencia de todos los campos en el contexto de cobro" do
       provider.assign_attributes(
         bank_name: nil,
-        bank_account_type: nil,
-        bank_account_number: nil,
-        bank_account_holder: nil,
-        tax_id: nil
+        bank_account_details: nil,
+        beneficiary: nil
       )
 
       expect(provider.valid?(:payment_details)).to be false
       expect(provider.errors[:bank_name]).to be_present
-      expect(provider.errors[:bank_account_type]).to be_present
-      expect(provider.errors[:bank_account_number]).to be_present
-      expect(provider.errors[:bank_account_holder]).to be_present
-      expect(provider.errors[:tax_id]).to be_present
+      expect(provider.errors[:bank_account_details]).to be_present
+      expect(provider.errors[:beneficiary]).to be_present
     end
 
-    it "valida el formato de tax_id (acepta CI de 7 u 8 dígitos o RUT de 12 dígitos)" do
-      provider.assign_attributes(valid_attributes.merge(tax_id: "1234567"))
+    it "acepta texto libre con múltiples líneas en los datos de la cuenta" do
+      provider.assign_attributes(
+        valid_attributes.merge(
+          bank_account_details: "Transferencias desde otros bancos\nCuenta: UY00 1234 ABCD\nSucursal: 70 - Golf"
+        )
+      )
+
       expect(provider.valid?(:payment_details)).to be true
-
-      provider.assign_attributes(valid_attributes.merge(tax_id: "12345678"))
-      expect(provider.valid?(:payment_details)).to be true
-
-      provider.assign_attributes(valid_attributes.merge(tax_id: "212345670012"))
-      expect(provider.valid?(:payment_details)).to be true
-
-      provider.assign_attributes(valid_attributes.merge(tax_id: "12345"))
-      expect(provider.valid?(:payment_details)).to be false
-      expect(provider.errors[:tax_id]).to be_present
-
-      provider.assign_attributes(valid_attributes.merge(tax_id: "1234567890123"))
-      expect(provider.valid?(:payment_details)).to be false
-      expect(provider.errors[:tax_id]).to be_present
-    end
-
-    it "valida el formato de bank_account_number (solo dígitos, guiones o espacios de 4 a 30 caracteres)" do
-      provider.assign_attributes(valid_attributes.merge(bank_account_number: "123"))
-      expect(provider.valid?(:payment_details)).to be false
-      expect(provider.errors[:bank_account_number]).to be_present
-
-      provider.assign_attributes(valid_attributes.merge(bank_account_number: "1234ABCD"))
-      expect(provider.valid?(:payment_details)).to be false
-      expect(provider.errors[:bank_account_number]).to be_present
-
-      provider.assign_attributes(valid_attributes.merge(bank_account_number: "1" * 31))
-      expect(provider.valid?(:payment_details)).to be false
-      expect(provider.errors[:bank_account_number]).to be_present
     end
 
     it "no aplica las validaciones de cobro fuera del contexto :payment_details" do
       provider.assign_attributes(
         bank_name: nil,
-        bank_account_type: nil,
-        bank_account_number: nil,
-        bank_account_holder: nil,
-        tax_id: nil
+        bank_account_details: nil,
+        beneficiary: nil
       )
 
       expect(provider.valid?).to be true
@@ -447,12 +416,12 @@ RSpec.describe Provider, type: :model do
 
     it "hace strip de espacios en blanco en campos bancarios" do
       provider.bank_name = "  BROU  "
-      provider.bank_account_number = "  001234567-00001  "
-      provider.bank_account_holder = "  Tu Vianda SRL  "
+      provider.bank_account_details = "  Cuenta: 001234567-00001\nMoneda: UYU  "
+      provider.beneficiary = "  Tu Vianda SRL  "
 
       expect(provider.bank_name).to eq("BROU")
-      expect(provider.bank_account_number).to eq("001234567-00001")
-      expect(provider.bank_account_holder).to eq("Tu Vianda SRL")
+      expect(provider.bank_account_details).to eq("Cuenta: 001234567-00001\nMoneda: UYU")
+      expect(provider.beneficiary).to eq("Tu Vianda SRL")
     end
   end
 end
@@ -462,10 +431,10 @@ end
 # Table name: providers
 #
 #  id                            :bigint           not null, primary key
-#  bank_account_holder           :string
-#  bank_account_number           :string
+#  bank_account_details          :text
 #  bank_account_type             :integer
 #  bank_name                     :string
+#  beneficiary                   :string
 #  deliveries_configured_at      :datetime
 #  home_delivery                 :boolean          default(TRUE), not null
 #  notifications_configured_at   :datetime

@@ -15,13 +15,13 @@ RSpec.describe "Consumer Payments and Bank Details", type: :system do
     before do
       provider_with_bank.update!(
         bank_name: "Banco Itaú",
-        bank_account_number: "1951234",
-        bank_account_holder: "Tu Vianda SRL"
+        bank_account_details: "1951234",
+        beneficiary: "Tu Vianda SRL"
       )
       provider_without_bank.update!(
         bank_name: nil,
-        bank_account_number: nil,
-        bank_account_holder: nil
+        bank_account_details: nil,
+        beneficiary: nil
       )
       sign_in consumer_user, role: :consumer
     end

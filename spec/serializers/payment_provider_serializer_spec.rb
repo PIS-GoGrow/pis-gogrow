@@ -12,8 +12,8 @@ RSpec.describe PaymentProviderSerializer do
       before do
         provider.update!(
           bank_name: "Banco Itaú",
-          bank_account_number: "1951234",
-          bank_account_holder: "Tu Vianda SRL"
+          bank_account_details: "Cuenta: 1951234\nMoneda: UYU",
+          beneficiary: "Tu Vianda SRL"
         )
       end
 
@@ -25,8 +25,8 @@ RSpec.describe PaymentProviderSerializer do
           "name" => provider.user.name,
           "home_delivery" => true,
           "bank_name" => "Banco Itaú",
-          "bank_account_number" => "1951234",
-          "bank_account_holder" => "Tu Vianda SRL",
+          "bank_account_details" => "Cuenta: 1951234\nMoneda: UYU",
+          "beneficiary" => "Tu Vianda SRL",
           "payment_details_complete" => true
         )
       end
@@ -51,8 +51,8 @@ RSpec.describe PaymentProviderSerializer do
           "name" => provider.user.name,
           "home_delivery" => true,
           "bank_name" => nil,
-          "bank_account_number" => nil,
-          "bank_account_holder" => nil,
+          "bank_account_details" => nil,
+          "beneficiary" => nil,
           "payment_details_complete" => false
         )
       end
@@ -62,8 +62,8 @@ RSpec.describe PaymentProviderSerializer do
       before do
         provider.update!(
           bank_name: "BROU",
-          bank_account_number: nil,
-          bank_account_holder: nil
+          bank_account_details: nil,
+          beneficiary: nil
         )
       end
 
@@ -71,8 +71,8 @@ RSpec.describe PaymentProviderSerializer do
         serialized = described_class.new(provider).to_h
 
         expect(serialized["bank_name"]).to eq("BROU")
-        expect(serialized["bank_account_number"]).to be_nil
-        expect(serialized["bank_account_holder"]).to be_nil
+        expect(serialized["bank_account_details"]).to be_nil
+        expect(serialized["beneficiary"]).to be_nil
       end
     end
 
@@ -80,8 +80,8 @@ RSpec.describe PaymentProviderSerializer do
       before do
         provider.update!(
           bank_name: "Banco Santander - Sucursal 01 / Cta Cte",
-          bank_account_number: "0012-345678/90 (CA$)",
-          bank_account_holder: "María & José S.A. — Gastronomía"
+          bank_account_details: "Cuenta: 0012-345678/90 (CA$)\nSucursal: 01",
+          beneficiary: "María & José S.A. — Gastronomía"
         )
       end
 
@@ -89,8 +89,8 @@ RSpec.describe PaymentProviderSerializer do
         serialized = described_class.new(provider).to_h
 
         expect(serialized["bank_name"]).to eq("Banco Santander - Sucursal 01 / Cta Cte")
-        expect(serialized["bank_account_number"]).to eq("0012-345678/90 (CA$)")
-        expect(serialized["bank_account_holder"]).to eq("María & José S.A. — Gastronomía")
+        expect(serialized["bank_account_details"]).to eq("Cuenta: 0012-345678/90 (CA$)\nSucursal: 01")
+        expect(serialized["beneficiary"]).to eq("María & José S.A. — Gastronomía")
       end
     end
   end

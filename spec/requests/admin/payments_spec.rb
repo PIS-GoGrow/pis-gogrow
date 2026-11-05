@@ -179,20 +179,20 @@ RSpec.describe "Admin::Payments", type: :request do
 
       it "sends the payment details each provider loaded, without its tax id" do
         providers(:endulzate).update!(
-          bank_name: "Banco Itaú", bank_account_type: :checking, bank_account_number: "1951234",
-          bank_account_holder: "Noelia Patricia Pinheiro", tax_id: "211234560019"
+          bank_name: "Banco Itaú", bank_account_type: :checking, bank_account_details: "1951234",
+          beneficiary: "Noelia Patricia Pinheiro", tax_id: "211234560019"
         )
 
         get admin_payments_path
 
         endulzate = inertia.props[:providers].find { it[:id] == providers(:endulzate).id }
         expect(endulzate).to include(
-          bank_name: "Banco Itaú", bank_account_number: "1951234", bank_account_holder: "Noelia Patricia Pinheiro",
+          bank_name: "Banco Itaú", bank_account_details: "1951234", beneficiary: "Noelia Patricia Pinheiro",
           payment_details_complete: true
         )
         expect(endulzate).not_to have_key(:tax_id)
         expect(inertia.props[:providers].find { it[:id] == providers(:tuviandita).id })
-          .to include(bank_name: nil, bank_account_number: nil, bank_account_holder: nil, payment_details_complete: false)
+          .to include(bank_name: nil, bank_account_details: nil, beneficiary: nil, payment_details_complete: false)
       end
 
       it "lists every provider so the ones without debt also show up" do
@@ -344,7 +344,7 @@ RSpec.describe "Admin::Payments", type: :request do
 
     before do
       providers(:tuviandita).update!(
-        bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: "Tu Viandita S.A."
+        bank_name: "Santander", bank_account_details: "1150260", beneficiary: "Tu Viandita S.A."
       )
     end
 
@@ -567,7 +567,7 @@ RSpec.describe "Admin::Payments", type: :request do
     end
 
     it "does not accept a receipt while the provider has not loaded its payment details" do
-      providers(:tuviandita).update!(bank_account_number: nil)
+      providers(:tuviandita).update!(bank_account_details: nil)
       sign_in users(:admin), role: :admin
 
       expect {
@@ -608,8 +608,8 @@ RSpec.describe "Admin::Payments", type: :request do
       )
     end
 
-    it "rejects direct POST when provider bank_account_holder is nil" do
-      providers(:tuviandita).update!(bank_account_holder: nil)
+    it "rejects direct POST when provider beneficiary is nil" do
+      providers(:tuviandita).update!(beneficiary: nil)
       sign_in users(:admin), role: :admin
 
       expect {

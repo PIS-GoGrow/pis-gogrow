@@ -65,10 +65,8 @@ vi.mock("@inertiajs/react", async () => {
 const defaultProvider: ProviderOnboardingProvider = {
   name: "Tu Viandita",
   bank_name: "BROU",
-  bank_account_type: "savings",
-  bank_account_number: "001234567-00001",
-  bank_account_holder: "Tu Vianda SRL",
-  tax_id: "212345670012",
+  bank_account_details: "Cuenta: 001234567-00001\nMoneda: UYU",
+  beneficiary: "Tu Vianda SRL",
   home_delivery: true,
   order_deadline: "12:00",
   deliveries_configured: false,
@@ -98,6 +96,7 @@ function renderPage(
   return render(
     <Onboarding
       provider={{ ...defaultProvider, ...overrides }}
+      bank_names={["BROU", "Itaú", "Santander"]}
       step={step}
       notification_configurations={mockConfigurations}
       subscribed_keys={["order_created"] as unknown as [string]}
@@ -144,16 +143,11 @@ describe("Provider Onboarding Show Page", () => {
 
       expect(screen.getByText("Paso 1 de 4")).toBeInTheDocument()
       expect(screen.getByText("Datos de cobro")).toBeInTheDocument()
-      expect(screen.getByLabelText("Banco")).toHaveValue("BROU")
-      expect(screen.getByLabelText("Número de cuenta")).toHaveValue(
-        "001234567-00001",
+      expect(screen.getByLabelText("Banco")).toHaveTextContent("BROU")
+      expect(screen.getByLabelText("Datos de la cuenta")).toHaveValue(
+        "Cuenta: 001234567-00001\nMoneda: UYU",
       )
-      expect(screen.getByLabelText("Titular de la cuenta")).toHaveValue(
-        "Tu Vianda SRL",
-      )
-      expect(screen.getByLabelText("RUT o CI del titular")).toHaveValue(
-        "212345670012",
-      )
+      expect(screen.getByLabelText("Beneficiario")).toHaveValue("Tu Vianda SRL")
       expect(
         screen.queryByLabelText("Volver al paso anterior"),
       ).not.toBeInTheDocument()
@@ -168,7 +162,8 @@ describe("Provider Onboarding Show Page", () => {
     it("muestra errores de validación en los campos cuando el servidor los devuelve", () => {
       mockErrors = {
         bank_name: "El banco no puede estar en blanco",
-        tax_id: "El RUT debe tener 12 dígitos",
+        bank_account_details:
+          "Los datos de la cuenta no pueden estar en blanco",
       }
 
       renderPage("1")
@@ -177,7 +172,7 @@ describe("Provider Onboarding Show Page", () => {
         screen.getByText("El banco no puede estar en blanco"),
       ).toBeInTheDocument()
       expect(
-        screen.getByText("El RUT debe tener 12 dígitos"),
+        screen.getByText("Los datos de la cuenta no pueden estar en blanco"),
       ).toBeInTheDocument()
     })
   })

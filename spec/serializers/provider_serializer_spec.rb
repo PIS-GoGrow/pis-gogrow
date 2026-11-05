@@ -31,10 +31,10 @@ end
 # Table name: providers
 #
 #  id                            :bigint           not null, primary key
-#  bank_account_holder           :string
-#  bank_account_number           :string
+#  bank_account_details          :text
 #  bank_account_type             :integer
 #  bank_name                     :string
+#  beneficiary                   :string
 #  deliveries_configured_at      :datetime
 #  home_delivery                 :boolean          default(TRUE), not null
 #  notifications_configured_at   :datetime

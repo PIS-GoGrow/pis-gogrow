@@ -103,8 +103,8 @@ RSpec.describe "Consumer Accounts", type: :request do
       it "includes provider bank details in props[:providers] when configured" do
         provider.update!(
           bank_name: "Banco Itaú",
-          bank_account_number: "1951234",
-          bank_account_holder: "Tu Vianda SRL"
+          bank_account_details: "1951234",
+          beneficiary: "Tu Vianda SRL"
         )
 
         get accounts_path
@@ -114,8 +114,8 @@ RSpec.describe "Consumer Accounts", type: :request do
           p = props.deep_symbolize_keys
           serialized = p[:providers].find { |pr| pr[:id] == provider.id }
           serialized[:bank_name] == "Banco Itaú" &&
-            serialized[:bank_account_number] == "1951234" &&
-            serialized[:bank_account_holder] == "Tu Vianda SRL" &&
+            serialized[:bank_account_details] == "1951234" &&
+            serialized[:beneficiary] == "Tu Vianda SRL" &&
             serialized[:name] == provider.user.name &&
             serialized[:home_delivery] == true
         }
@@ -129,8 +129,8 @@ RSpec.describe "Consumer Accounts", type: :request do
           p = props.deep_symbolize_keys
           serialized = p[:providers].find { |pr| pr[:id] == other_provider.id }
           serialized[:bank_name].nil? &&
-            serialized[:bank_account_number].nil? &&
-            serialized[:bank_account_holder].nil?
+            serialized[:bank_account_details].nil? &&
+            serialized[:beneficiary].nil?
         }
       end
 
@@ -139,8 +139,8 @@ RSpec.describe "Consumer Accounts", type: :request do
           tax_id: "219999990019",
           bank_account_type: 1,
           bank_name: "Banco República",
-          bank_account_number: "001-987654",
-          bank_account_holder: "Viandas SRL"
+          bank_account_details: "001-987654",
+          beneficiary: "Viandas SRL"
         )
 
         get accounts_path
@@ -263,8 +263,8 @@ RSpec.describe "Consumer Accounts", type: :request do
       it "safely serializes bank fields containing special characters and symbols" do
         provider.update!(
           bank_name: "Banco Santander - Sucursal 01 / Cta Cte",
-          bank_account_number: "0012-345678/90 (CA$)",
-          bank_account_holder: "María & José S.A. — Gastronomía"
+          bank_account_details: "0012-345678/90 (CA$)",
+          beneficiary: "María & José S.A. — Gastronomía"
         )
 
         get accounts_path
@@ -274,16 +274,16 @@ RSpec.describe "Consumer Accounts", type: :request do
           p = props.deep_symbolize_keys
           serialized = p[:providers].find { |pr| pr[:id] == provider.id }
           serialized[:bank_name] == "Banco Santander - Sucursal 01 / Cta Cte" &&
-            serialized[:bank_account_number] == "0012-345678/90 (CA$)" &&
-            serialized[:bank_account_holder] == "María & José S.A. — Gastronomía"
+            serialized[:bank_account_details] == "0012-345678/90 (CA$)" &&
+            serialized[:beneficiary] == "María & José S.A. — Gastronomía"
         }
       end
 
       it "safely serializes partial bank details where only bank_name is provided" do
         provider.update!(
           bank_name: "BROU",
-          bank_account_number: nil,
-          bank_account_holder: nil
+          bank_account_details: nil,
+          beneficiary: nil
         )
 
         get accounts_path
@@ -293,8 +293,8 @@ RSpec.describe "Consumer Accounts", type: :request do
           p = props.deep_symbolize_keys
           serialized = p[:providers].find { |pr| pr[:id] == provider.id }
           serialized[:bank_name] == "BROU" &&
-            serialized[:bank_account_number].nil? &&
-            serialized[:bank_account_holder].nil?
+            serialized[:bank_account_details].nil? &&
+            serialized[:beneficiary].nil?
         }
       end
     end
