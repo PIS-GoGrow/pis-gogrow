@@ -596,4 +596,28 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       end
     end
   end
+
+  describe "POST /orders con precio esperado inconsistente" do
+    before do
+      sign_in consumer_user, role: :consumer
+    end
+
+    it "no hace el pedido y muestra error" do
+      expect {
+        post orders_path, params: {
+          order: {
+            address: company_address,
+            items: [
+              { schedule_id: schedule.id, quantity: 1, notes: "Sin cubiertos", options: [] }
+            ],
+            expected_price: 1
+          }
+        }
+      }.to change(Order, :count).by(0)
+
+      expect(response).to redirect_to(dashboard_cart_path)
+      follow_redirect!
+      expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.inconsistent_pricing"))
+    end
+  end
 end
