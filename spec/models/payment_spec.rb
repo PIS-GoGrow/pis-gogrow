@@ -271,6 +271,15 @@ RSpec.describe Payment, type: :model do
 
       expect(notifications).to be_empty
     end
+
+    it "does not notify the consumer twice when an approved payment is approved again" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      payment.approve
+      payment.approve
+
+      expect(notifications.count).to eq(1)
+    end
   end
 
   describe "the receipt" do
