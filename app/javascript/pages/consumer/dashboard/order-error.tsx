@@ -25,7 +25,7 @@ export function OrderError({ retry, error }: Props) {
           {t("pages.cart.order_error.title")}
         </h1>
 
-        <p className="text-muted-foreground mt-2 max-w-sm text-center text-base leading-6">
+        <p className="text-muted-foreground mt-2 max-w-sm text-center text-base leading-6 whitespace-pre-line">
           {error ?? t("pages.cart.order_error.description")}
         </p>
       </div>

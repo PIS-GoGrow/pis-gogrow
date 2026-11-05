@@ -211,7 +211,9 @@ es:
     menu_publish:
       invalid_date: "Elegí un día de semana entre hoy y la fecha máxima de publicación."
       invalid_menus: "Algún plato elegido no existe."
-    inconsistent_pricing: "Los precios o los beneficios de tu pedido cambiaron desde que armaste el carrito. Revisá el pedido y confirmá de nuevo."
+    inconsistent_pricing: |-
+        Los precios o los beneficios de tu pedido cambiaron desde que armaste el carrito. Revisá el pedido y confirmá de nuevo.
+        Total en carrito: $%{expected_price}. Total real: $%{price}.
   notifications:
     order_received:
       title: "Nuevo pedido"
