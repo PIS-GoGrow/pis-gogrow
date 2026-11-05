@@ -84,7 +84,11 @@ export default function CollectionAccountPanel({
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-foreground text-base font-semibold">
-          {formatMoney(account.payable_amount)}
+          {formatMoney(
+            settled
+              ? account.payable_amount
+              : (account.outstanding_amount ?? account.payable_amount),
+          )}
           <span className="text-muted-foreground font-normal">
             {" | "}
             {t("pages.provider_collections.meals", { count: account.meals })}
@@ -119,7 +123,7 @@ export default function CollectionAccountPanel({
           receiptUrl={account.receipt_url ?? ""}
           contentType={account.receipt_content_type}
           filename={account.owner_name}
-          expectedAmount={account.payable_amount}
+          expectedAmount={account.expected_amount ?? account.payable_amount}
           canApprove={account.can_approve_payment}
         >
           <AdaptableDialogTrigger asChild>
@@ -138,7 +142,7 @@ export default function CollectionAccountPanel({
           eligible={reminder.eligible}
           employeeName={account.owner_name}
           month={account.month}
-          amount={account.payable_amount}
+          amount={account.outstanding_amount ?? account.payable_amount}
           showWhenBlocked
           icon={<WhatsappMark className="size-4" />}
         />
@@ -158,7 +162,8 @@ export default function CollectionAccountPanel({
       )}
       {(showPaymentHistory ||
         account.status === "partial" ||
-        account.status === "rejected") && (
+        account.status === "rejected" ||
+        account.payments.some((p) => p.status === "approved")) && (
         <CollectionPaymentHistory
           payments={account.payments}
           showDownloadAll={showDownloadAll}

@@ -29,6 +29,8 @@ const baseAccount = {
   vat_rate: 0,
   vat_amount: 0,
   payable_amount: 800,
+  outstanding_amount: 800,
+  expected_amount: null,
   source: "consumer",
   status: "submitted",
   can_approve_payment: false,
@@ -106,6 +108,7 @@ describe("CollectionAccountDetailDialog", () => {
       vat_rate: 0.22,
       vat_amount: 176,
       payable_amount: 976,
+      expected_amount: null,
       status: "pending",
     } satisfies ProviderCollectionAccount
 
@@ -138,12 +141,14 @@ describe("CollectionAccountDetailDialog", () => {
       vat_rate: 0.22,
       vat_amount: 176,
       payable_amount: 976,
+      expected_amount: null,
       status: "approved",
       payments: [
         {
           id: 1,
           status: "approved",
           rejection_reason: null,
+          expected_amount: null,
           date: "02/10/26",
           receipt_url: "/receipt.pdf",
           receipt_filename: "comprobante.pdf",
@@ -177,12 +182,14 @@ describe("CollectionAccountDetailDialog", () => {
         vat_rate: source === "company" ? 0.22 : 0,
         vat_amount: source === "company" ? 176 : 0,
         payable_amount: source === "company" ? 976 : 800,
+        expected_amount: null,
         status: "partial",
         payments: [
           {
             id: 1,
             status: "partial",
             rejection_reason: null,
+            expected_amount: null,
             date: "02/10/26",
             receipt_url: "/receipt.pdf",
             receipt_filename: "parcial.pdf",
@@ -226,6 +233,7 @@ describe("Collections payment history destination", () => {
         id: 1,
         status: "partial",
         rejection_reason: null,
+        expected_amount: null,
         date: "02/10/26",
         receipt_url: "/receipt.pdf",
         receipt_filename: "parcial.pdf",
@@ -238,6 +246,7 @@ describe("Collections payment history destination", () => {
         vat_rate: source === "company" ? 0.22 : 0,
         vat_amount: source === "company" ? 176 : 0,
         payable_amount: source === "company" ? 976 : 800,
+        expected_amount: null,
         status: "partial",
         payments: [payment],
       } satisfies ProviderCollectionAccount

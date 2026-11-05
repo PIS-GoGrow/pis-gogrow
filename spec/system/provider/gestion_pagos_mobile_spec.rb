@@ -253,7 +253,11 @@ RSpec.describe "Gestión de pagos del proveedor en mobile", type: :system do
       find_all(:button, "Ver detalle", exact: true).last.click
     end
     within(find("[role=dialog]")) do
-      find("[role=tab]", text: "Viandas").click
+      # El click puede llegar antes de que el diálogo termine de abrir; se reintenta.
+      3.times do
+        find("[role=tab]", text: "Viandas").click
+        break if page.has_css?("[role=tab][data-state=active]", text: "Viandas", wait: 1)
+      end
       expect(page).to have_content("Milanesa napolitana")
     end
     expect(no_horizontal_overflow?).to be(true)

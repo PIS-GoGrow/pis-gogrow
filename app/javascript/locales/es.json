@@ -426,6 +426,7 @@
           "receipt_error_action": "Entendido",
           "receipt_error_description": "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
           "receipt_error_title": "No se pudo subir el comprobante",
+          "receipt_expected_amount": "Importe: %{amount}",
           "receipt_file": "Comprobante",
           "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
           "receipt_preview": "Vista previa del comprobante",
@@ -1914,7 +1915,11 @@
           "edit_dish": "Editar %{name}",
           "empty": {
             "description": "Agregá platos a tu menú del %{day} y empezá a recibir pedidos.",
-            "title": "No hay platos publicados para el %{day} todavía"
+            "title": "No tenés platos publicados para el %{day}"
+          },
+          "empty_today": {
+            "description": "Agregá platos a tu menú de hoy y empezá a recibir pedidos.",
+            "title": "Hoy no tenés platos publicados"
           },
           "empty_unpublishable": {
             "title": "No se publicó menú para este día."
@@ -1955,9 +1960,14 @@
               "pending": "Los pedidos pendientes se cancelarán.",
               "title": "¿Eliminar plato guardado?"
             },
+            "deleted_sheet": {
+              "description": "El plato se eliminó de tus platos guardados. Podés volver a crearlo cuando quieras.",
+              "done": "Listo",
+              "title": "Plato eliminado"
+            },
             "empty": {
-              "description": "Cuando crees un plato lo vas a ver acá para editarlo o publicarlo.",
-              "title": "Todavía no tenés platos guardados"
+              "description": "Importá o agregá platos para incluirlos al menú cuando quieras.",
+              "title": "No tenés platos guardados"
             }
           },
           "search_label": "Buscar plato",
