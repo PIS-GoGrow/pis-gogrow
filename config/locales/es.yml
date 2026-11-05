@@ -842,6 +842,7 @@ es:
           pending_meals_other: "(%{count} viandas)"
           no_debt: "¡Sin deudas pendientes con este proveedor!"
           bank:
+            account_number: "Nº de cuenta: %{number}"
             beneficiary: "Beneficiario: %{beneficiary}"
             copy: "Copiar datos de la cuenta"
             copied: "Datos de la cuenta copiados"

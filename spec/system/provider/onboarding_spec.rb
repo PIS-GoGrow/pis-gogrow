@@ -119,8 +119,8 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     # Comprueba que la configuración se refleje en las pantallas de cuenta
     visit provider_payment_details_path
     expect(page).to have_content("BROU")
-    expect(page).to have_content("Cuenta: 001234567-00001")
-    expect(page).to have_content("Moneda: UYU")
+    expect(page).to have_content("Nº de cuenta: 001234567-00001")
+    expect(page).to have_no_content("Moneda: UYU")
     expect(page).to have_content("Tu Vianda SRL")
     expect(page).to have_link("Editar")
 
@@ -140,7 +140,8 @@ RSpec.describe "Recorrido guiado de alta del proveedor (Onboarding)", type: :sys
     choose_bank "BROU"
     fill_in "bank_account_details", with: "Cuenta: 001234567-00001"
 
-    continue_onboarding
+    expect(page).to have_button("Continuar", disabled: true)
+    page.execute_script("document.querySelector('form').requestSubmit();")
 
     expect(page).to have_content("Paso 1 de 4")
     expect(page).to have_css("[data-slot=field-error]", text: "no puede estar en blanco")

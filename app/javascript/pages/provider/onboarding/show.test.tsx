@@ -175,6 +175,12 @@ describe("Provider Onboarding Show Page", () => {
         screen.getByText("Los datos de la cuenta no pueden estar en blanco"),
       ).toBeInTheDocument()
     })
+
+    it("deshabilita Continuar mientras falte un dato de cobro obligatorio", () => {
+      renderPage("1", { beneficiary: undefined })
+
+      expect(screen.getByRole("button", { name: "Continuar" })).toBeDisabled()
+    })
   })
 
   describe("Paso 2: Configurar pedidos", () => {

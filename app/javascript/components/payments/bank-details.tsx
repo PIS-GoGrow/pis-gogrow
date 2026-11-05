@@ -30,11 +30,23 @@ export default function BankDetails({ provider }: BankDetailsProps) {
     }
   }
 
+  const accountDetailLines = bank_account_details.split("\n")
+  const accountDetails = accountDetailLines
+    .map((line) => {
+      const account = /^cuenta\s*:\s*(.+)$/i.exec(line)?.[1]
+      const number =
+        account ??
+        (accountDetailLines.length === 1 && !line.includes(":") ? line : null)
+
+      return number ? t(`${page}.account_number`, { number }) : line
+    })
+    .join("\n")
+
   return (
     <div className="grid gap-1 rounded-xl border p-4 text-sm">
       <p className="font-medium">{bank_name}</p>
       <div className="text-muted-foreground flex items-start gap-1">
-        <p className="whitespace-pre-line">{bank_account_details}</p>
+        <p className="whitespace-pre-line">{accountDetails}</p>
         <Button
           variant="ghost"
           size="icon-xs"

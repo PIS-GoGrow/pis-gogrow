@@ -769,6 +769,7 @@
           "index": {
             "all_providers": "Todos",
             "bank": {
+              "account_number": "Nº de cuenta: %{number}",
               "beneficiary": "Beneficiario: %{beneficiary}",
               "copied": "Datos de la cuenta copiados",
               "copy": "Copiar datos de la cuenta",

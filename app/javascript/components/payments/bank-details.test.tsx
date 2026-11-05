@@ -22,7 +22,7 @@ describe("BankDetails", () => {
     render(<BankDetails provider={provider} />)
 
     expect(screen.getByText("Banco Itaú")).toBeInTheDocument()
-    expect(screen.getByText(/Cuenta: 1951234/)).toBeInTheDocument()
+    expect(screen.getByText(/Nº de cuenta: 1951234/)).toBeInTheDocument()
     expect(
       screen.getByText("Beneficiario: Noelia Patricia Pinheiro"),
     ).toBeInTheDocument()
