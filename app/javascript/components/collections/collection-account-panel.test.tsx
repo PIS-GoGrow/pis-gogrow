@@ -121,19 +121,20 @@ describe("CollectionAccountPanel", () => {
               receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "parcial.png",
               receipt_content_type: "image/png",
+              receipt_size: "63,8 KB",
             },
           ],
         }}
       />,
     )
     expect(
-      screen.getByRole("link", { name: "Descargar comprobante" }),
+      screen.getByRole("link", { name: "Descargar parcial.png" }),
     ).toHaveAttribute("href", "/provider/comprobantes/17/archivo")
     expect(
       screen.queryByRole("button", { name: "Revisar pago" }),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole("button", { name: "Aprobar" }),
+      screen.queryByRole("button", { name: "Confirmar" }),
     ).not.toBeInTheDocument()
     expect(
       screen.queryByRole("button", { name: "Reportar" }),
@@ -167,7 +168,7 @@ describe("CollectionAccountPanel", () => {
         within(dialog).getByText(source === "company" ? "$976" : "$800"),
       ).toBeInTheDocument()
       expect(
-        within(dialog).getByRole("button", { name: "Aprobar" }),
+        within(dialog).getByRole("button", { name: "Confirmar" }),
       ).toBeDisabled()
       expect(
         within(dialog).getByRole("link", { name: "Descargar comprobante" }),
@@ -195,6 +196,7 @@ describe("CollectionAccountPanel", () => {
                 receipt_url: "/provider/comprobantes/17/archivo",
                 receipt_filename: "parcial.png",
                 receipt_content_type: "image/png",
+                receipt_size: "63,8 KB",
               },
               {
                 id: 18,
@@ -205,6 +207,7 @@ describe("CollectionAccountPanel", () => {
                 receipt_url: "/provider/comprobantes/18/archivo",
                 receipt_filename: "final.png",
                 receipt_content_type: "image/png",
+                receipt_size: "63,8 KB",
               },
             ],
           }}
@@ -244,6 +247,76 @@ describe("CollectionAccountPanel", () => {
     expect(screen.queryByText("Vence: 10/11/26")).not.toBeInTheDocument()
     expect(screen.getByText("Octubre 2026")).toBeInTheDocument()
     expect(screen.getByText("$800")).toBeInTheDocument()
+  })
+
+  it("keeps the rejection reason while a newer receipt is under review", () => {
+    render(
+      <PaymentReviewResultProvider value={vi.fn()}>
+        <CollectionAccountPanel
+          account={{
+            ...account,
+            status: "submitted",
+            payment_id: 18,
+            payments: [
+              {
+                id: 18,
+                status: "submitted",
+                rejection_reason: null,
+                expected_amount: null,
+                date: "10/10/26",
+                receipt_url: "/provider/comprobantes/18/archivo",
+                receipt_filename: "completo.png",
+                receipt_size: "63,8 KB",
+                receipt_content_type: "image/png",
+              },
+              {
+                id: 17,
+                status: "rejected",
+                rejection_reason: "El pago es parcial",
+                expected_amount: null,
+                date: "09/10/26",
+                receipt_url: "/provider/comprobantes/17/archivo",
+                receipt_filename: "parcial.png",
+                receipt_size: "63,8 KB",
+                receipt_content_type: "image/png",
+              },
+            ],
+          }}
+          showPaymentHistory
+        />
+      </PaymentReviewResultProvider>,
+    )
+
+    expect(screen.getByText("Falta una parte del pago.")).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Revisar pago" }),
+    ).toBeInTheDocument()
+  })
+
+  it("shows the description of another rejection reason", () => {
+    render(
+      <CollectionAccountPanel
+        account={{
+          ...account,
+          status: "rejected",
+          payments: [
+            {
+              id: 17,
+              status: "rejected",
+              rejection_reason: "Transferiste a otra cuenta",
+              expected_amount: null,
+              date: "09/10/26",
+              receipt_url: "/provider/comprobantes/17/archivo",
+              receipt_filename: "otro.png",
+              receipt_size: "63,8 KB",
+              receipt_content_type: "image/png",
+            },
+          ],
+        }}
+      />,
+    )
+
+    expect(screen.getByText(/Transferiste a otra cuenta/)).toBeInTheDocument()
   })
 
   it("shows the payment date for an approved account in the history", () => {
