@@ -25,14 +25,44 @@ RSpec.describe "Provider payments", type: :request do
     [ provider.user, payment ]
   end
 
-  it "approves a submitted payment" do
+  it "approves a submitted payment and notifies the consumer" do
     user, payment = setup_submitted_payment
+    consumer_user = payment.account.owner.user
     sign_in(user, role: :provider)
 
     patch provider_payment_path(payment), params: { status: "approved" }
 
     expect(response).to redirect_to(provider_collections_path)
     expect(payment.reload).to be_approved
+    expect(consumer_user.notifications.active.sole).to have_attributes(
+      event: "payment_approved",
+      notifiable: payment
+    )
+  end
+
+  it "does not notify the consumer when approving with invalid parameters" do
+    user, payment = setup_submitted_payment
+    consumer_user = payment.account.owner.user
+    sign_in(user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "invalid_status" }
+
+    expect(response).to have_http_status(:unprocessable_entity)
+    expect(payment.reload).not_to be_approved
+    expect(consumer_user.notifications.where(event: "payment_approved")).to be_empty
+  end
+
+  it "does not let another provider approve the payment" do
+    _user, payment = setup_submitted_payment
+    consumer_user = payment.account.owner.user
+    other_provider = create_provider("other-intruder@gmail.com")
+    sign_in(other_provider.user, role: :provider)
+
+    patch provider_payment_path(payment), params: { status: "approved" }
+
+    expect(response).to have_http_status(:not_found)
+    expect(payment.reload).not_to be_approved
+    expect(consumer_user.notifications.where(event: "payment_approved")).to be_empty
   end
 
   it "lets HR know when the payment of the company is approved" do
@@ -215,16 +245,16 @@ RSpec.describe "Provider payments", type: :request do
     expect(payment.rejection_reason).to eq("El importe no coincide")
   end
 
-  it "does not accept an empty custom rejection reason" do
+  it "falls back to 'Otro motivo' when the custom rejection reason is empty" do
     user, payment = setup_submitted_payment
     sign_in(user, role: :provider)
 
     patch provider_payment_path(payment),
           params: { status: "rejected", rejection_reason: "other", rejection_details: "   " }
 
-    expect(response).to have_http_status(:unprocessable_entity)
-    expect(payment.reload).to be_submitted
-    expect(payment.rejection_reason).to be_nil
+    expect(response).to redirect_to(provider_collections_path)
+    expect(payment.reload).to be_rejected
+    expect(payment.rejection_reason).to eq("Otro motivo")
   end
 
   it "does not accept an excessively long custom rejection reason" do

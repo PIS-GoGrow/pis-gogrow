@@ -2,7 +2,8 @@
 
 class Provider::PaymentsController < Provider::InertiaController
   REJECTION_REASONS = {
-    "incorrect_receipt" => "El comprobante no corresponde"
+    "incorrect_receipt" => "El comprobante no corresponde",
+    "other" => "Otro motivo"
   }.freeze
   MAX_REJECTION_REASON_LENGTH = 500
 
@@ -70,8 +71,8 @@ class Provider::PaymentsController < Provider::InertiaController
 
   def normalized_rejection_reason
     reason_key = params[:rejection_reason].to_s
-    return params[:rejection_details].to_s.strip if reason_key == "other"
+    details = params[:rejection_details].to_s.strip if reason_key == "other"
 
-    REJECTION_REASONS[reason_key]
+    details.presence || REJECTION_REASONS[reason_key]
   end
 end

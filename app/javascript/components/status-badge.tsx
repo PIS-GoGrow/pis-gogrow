@@ -49,7 +49,7 @@ interface StatusBadgeProps {
   status?: OrderStatus | PaymentStatus | InvoiceStatus | null
   // pending y rejected existen en los dos enums, así que el valor solo no
   // alcanza para saber qué color y qué texto corresponden.
-  kind?: "order" | "payment" | "invoice" | "provider_order"
+  kind?: "order" | "payment" | "provider_payment" | "invoice" | "provider_order"
   label?: string
 }
 
@@ -74,6 +74,12 @@ export default function StatusBadge({
     payment: {
       className: paymentStyles[status as PaymentStatus],
       label: customLabel ?? t(`pages.provider_collections.statuses.${status}`),
+    },
+    provider_payment: {
+      className: paymentStyles[status as PaymentStatus],
+      label:
+        customLabel ??
+        t(`pages.provider_collections.provider_statuses.${status}`),
     },
     invoice: {
       className: invoiceStyles[status as InvoiceStatus],

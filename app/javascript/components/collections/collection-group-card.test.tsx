@@ -104,6 +104,7 @@ describe("CollectionGroupCard", () => {
               receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "comprobante.png",
               receipt_content_type: "image/png",
+              receipt_size: "63,8 KB",
             },
           ],
         })}

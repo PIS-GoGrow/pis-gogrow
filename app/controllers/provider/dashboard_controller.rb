@@ -9,6 +9,7 @@ class Provider::DashboardController < Provider::InertiaController
            .where(schedules: { date: Date.current })
            .where.not(status: [ :cancelled, :rejected ])
     month = Provider::ActivitySummary.new(@provider, Date.current.all_month)
+    pending_accounts = Account.pending.where(provider: @provider)
 
     @today = DateFormat.long(Date.current)
     @today_orders_count = today_orders.count
@@ -24,6 +25,15 @@ class Provider::DashboardController < Provider::InertiaController
     @top_rated = top_rated_dishes
     @completed_sections_count = @provider.completed_sections_count
     @sections_total = @provider.total_sections_count
+
+    @total_dishes_count =
+      Order.consumed
+           .where(
+              id: OrderAccount.where(account_id: pending_accounts.select(:id)).select(:order_id)
+           )
+           .sum(:amount)
+           .to_i
+    @total_debt = pending_accounts.select(:amount, :vat_rate).sum(&:payable_amount).to_i
   end
 
   private

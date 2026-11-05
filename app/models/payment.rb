@@ -8,7 +8,6 @@ class Payment < ApplicationRecord
 
   has_one_attached :receipt
 
-  before_validation :clear_rejection_reason, if: :submitted?
   before_save :capture_expected_amount, if: -> { (submitted? && will_save_change_to_status?) || expected_amount.nil? }
   after_commit :notify_receipt_submitted, if: -> { saved_change_to_status? && submitted? }
   after_commit :check_debt_alert, if: -> { account.owner.is_a?(Consumer) && (destroyed? || saved_change_to_status?) }
@@ -24,6 +23,8 @@ class Payment < ApplicationRecord
   validate :partial_status_is_final
 
   after_update_commit :close_debt_reminder, if: -> { saved_change_to_status? && approved? }
+  after_update_commit :notify_payment_approved,
+                    if: -> { saved_change_to_status? && approved? && account.owner.is_a?(Consumer) }
   after_save_commit :close_payment_reminders,
                     if: :should_close_payment_reminders?
 
@@ -80,6 +81,18 @@ class Payment < ApplicationRecord
     )
   end
 
+  def notify_payment_approved
+    Notifier.call(
+      event_key: :payment_approved,
+      user: account.owner.user,
+      notifiable: self,
+      description_data: {
+        provider: account.provider.user.name,
+        period: I18n.l(account.month, format: "%B %Y")
+      }
+    )
+  end
+
   def check_debt_alert
     account.owner.check_debt_alert!
   end
@@ -95,11 +108,6 @@ class Payment < ApplicationRecord
   def capture_expected_amount
     self.expected_amount = Account.find(account_id).outstanding_amount
   end
-
-  def clear_rejection_reason
-    self.rejection_reason = nil
-  end
-
   def notify_company_admins
     CompanyPaymentNotifications.payment_status_changed(self)
   end
