@@ -43,19 +43,18 @@ RSpec.describe AdminBenefitUsageSummary do
                                         "trends", "anomalies", "warnings")
     expect(json.dig("consumption", "company_subsidy_amount")).to eq("1500.25")
     expect(arguments.fetch(:payload_json)).not_to include("Nombre privado", "privado@example.com", "Dirección privada")
-    expect(arguments.fetch(:system)).to include("null significa desconocido", "sin IVA", "No compares la participación")
+    expect(arguments.fetch(:system)).to include("null significa desconocido", "sin IVA", "difference_points")
     expect(arguments.keys).to contain_exactly(:system, :payload_json)
   end
 
   it "asks for evidence-backed findings without repeating every metric" do
     prompt = described_class::SYSTEM_PROMPT
 
-    expect(prompt).to include("series de tendencias", "diferencias absolutas y porcentuales", "anomalías precalculadas")
-    expect(prompt).to include("no repitas todas las métricas", "sin aplicar un umbral porcentual fijo")
-    expect(prompt).to include("null significa desconocido", "No solicites información personal", "No compares la participación")
-    expect(prompt).to include("mes abierto es parcial", "sin IVA", "no dinero efectivamente pagado")
-    expect(prompt).to include("capacity.monthly_available_meals en viandas", "sin recalcularlo",
-                             "no inventes saldos históricos")
+    expect(prompt).to include("120 a 180 palabras", "dos o tres párrafos", "Si los datos son escasos")
+    expect(prompt).to include("null significa desconocido", "sin IVA", "no dinero pagado")
+    expect(prompt).to include("incomplete", "missing_snapshot", "sin cierre exacto verificado")
+    expect(prompt).to include("difference_points", "puntos porcentuales", "No recalcules")
+    expect(prompt).to include("no es necesariamente bueno o malo", "No atribuyas cambios")
   end
 
   it "returns a controlled error for oversized payloads without sending them" do
@@ -63,6 +62,13 @@ RSpec.describe AdminBenefitUsageSummary do
     expect(client).not_to receive(:create_summary)
 
     expect(summary.call).to eq(ok: false, error: { code: "payload_too_large" })
+  end
+
+  it "does not call Claude when historical information is insufficient" do
+    allow(payload).to receive(:to_h).and_raise(AdminBenefitUsageAiPayload::InsufficientData)
+    expect(client).not_to receive(:create_summary)
+
+    expect(summary.call).to eq(ok: false, error: { code: "insufficient_data" })
   end
 
   it "rejects a raw hash instead of sending unreviewed fields" do

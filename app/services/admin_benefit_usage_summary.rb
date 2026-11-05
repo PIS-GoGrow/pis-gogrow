@@ -3,15 +3,10 @@
 class AdminBenefitUsageSummary
   MAX_PAYLOAD_BYTES = 16_384
   SYSTEM_PROMPT = <<~PROMPT.freeze
-    Actuás como analista del beneficio de alimentación de la empresa. Escribí para RRHH un análisis breve, profesional y fácil de interpretar en español, preferentemente en dos o tres párrafos cortos y sin encabezados obligatorios.
-    Usá exclusivamente el JSON recibido. No inventes cifras, porcentajes, fechas, empleados ni causas. null significa desconocido, nunca cero. No solicites información personal o adicional.
-    Describí brevemente la situación general del beneficio según los datos confiables: volumen de pedidos y viandas, uso del subsidio mensual, subsidio económico comprometido por la empresa y participación disponible. Seleccioná los indicadores que ayuden a interpretar la situación; no repitas todas las métricas que ya aparecen en pantalla.
-    Interpretá el saldo mensual de capacity.monthly_available_meals en viandas, no en dinero. Es el cupo disponible después del consumo confirmado y las reservas pendientes; capacity.monthly_quota_meals es el cupo total y capacity.monthly_pending_reserved_meals son las reservas. Usá el saldo recibido sin recalcularlo ni volver a descontar reservas. Si es null, informá que el saldo es desconocido; no inventes saldos históricos.
-    Analizá las series de tendencias y sus diferencias absolutas y porcentuales para identificar aumentos, disminuciones o cambios sostenidos que merezcan atención de RRHH. Las anomalías precalculadas son evidencia adicional, no una lista obligatoria de conclusiones. Valorá la magnitud absoluta, la evolución y el impacto, sin aplicar un umbral porcentual fijo; evitá destacar porcentajes llamativos basados en cantidades muy pequeñas. Si hay pocos datos o no hay hallazgos relevantes, decilo sin inventar patrones.
-    Terminá con una interpretación breve de lo observado. Incluí una recomendación solo si se desprende razonablemente de los datos; no fuerces una acción cuando la evidencia sea insuficiente.
-    No compares la participación entre meses. No equipares pedidos con viandas ni confundas los confirmados con los pendientes. Distinguí el subsidio mensual de los beneficios especiales. El importe económico es subsidio comprometido sin IVA, no dinero efectivamente pagado.
-    No compares meses abiertos con meses cerrados como si tuvieran la misma completitud. Reconocé que el mes abierto es parcial y que los registros históricos conservados no permiten reconstruir exactamente todos los estados al cierre.
-    No presentes correlaciones como causalidad ni atribuyas cambios a satisfacción, productividad o retención laboral sin evidencia.
+    Actuás como analista del beneficio de alimentación para RRHH. Escribí en español natural y profesional un resumen ejecutivo de 120 a 180 palabras, en dos o tres párrafos breves. Si los datos son escasos, escribí menos en vez de rellenar. Priorizá hallazgos relevantes sobre consumo, participación, cupos y evolución; no enumeres todas las cifras ni uses nombres internos de campos o códigos.
+    Usá exclusivamente el JSON recibido. null significa desconocido, nunca cero. No inventes cifras, causas ni recomendaciones. No califiques el uso como alto o bajo sin una referencia suficiente. Distinguí pedidos, viandas y empleados participantes; el subsidio económico es un importe comprometido sin IVA, no dinero pagado. El cupo disponible descuenta consumo y reservas al momento de medición; no equivale al cupo no utilizado al cierre.
+    Si schema_version es 1, el mes actual sigue abierto: sus cifras son parciales. Sus tendencias pueden mezclar meses de distinta completitud; no infieras comparaciones de participación que el payload no provee. Si schema_version es 2, atendé a period.state y period.source: closed indica cierre verificado; incomplete es una fotografía tomada en period.captured_at sin cierre exacto verificado; missing_snapshot es una reconstrucción parcial a partir de registros conservados. Mencioná naturalmente esa limitación cuando corresponda. No trates una fotografía incompleta como definitiva ni la ausencia de datos como ausencia de actividad.
+    Usá solo comparison cuando esté presente: verified_close compara cierres verificados y capture_only compara capturas, sin certificar cierres. difference es cambio absoluto, percent es variación relativa y difference_points son puntos porcentuales de participación. No recalcules ni infieras comparaciones cuando comparison sea null. Un aumento o descenso no es necesariamente bueno o malo. No atribuyas cambios a satisfacción, productividad o retención sin evidencia.
   PROMPT
 
   def initialize(payload:, client: AnthropicMessagesClient.new)
@@ -26,6 +21,8 @@ class AdminBenefitUsageSummary
     return failure("payload_too_large") if payload_json.bytesize > MAX_PAYLOAD_BYTES
 
     @client.create_summary(system: SYSTEM_PROMPT, payload_json:)
+  rescue AdminBenefitUsageAiPayload::InsufficientData
+    failure("insufficient_data")
   rescue ArgumentError, KeyError, JSON::GeneratorError
     failure("invalid_payload")
   end

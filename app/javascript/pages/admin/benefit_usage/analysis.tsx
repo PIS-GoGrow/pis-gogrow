@@ -13,7 +13,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
 import { useBenefitUsage } from "@/hooks/use-benefit-usage"
 import AppLayout from "@/layouts/app-layout"
-import { formatBenefitMonth } from "@/lib/benefit-usage"
+import {
+  canGenerateBenefitUsageSummary,
+  formatBenefitMonth,
+} from "@/lib/benefit-usage"
 import { adminBenefitUsage, adminDashboard } from "@/routes"
 import type { AdminBenefitUsageAnalysis } from "@/types/serializers"
 
@@ -56,18 +59,34 @@ function AnalysisMonth({
         {t(`${p}.ai_description`)}
       </p>
       <Button
-        disabled={!usage.stats || usage.generating || navigating}
+        disabled={
+          !usage.stats ||
+          !canGenerateBenefitUsageSummary(usage.stats) ||
+          usage.summaryError === "stale_analysis" ||
+          usage.generating ||
+          navigating
+        }
         onClick={() => void usage.generate()}
         className="w-full sm:w-auto"
       >
         {usage.generating && <Spinner aria-hidden="true" />}
         {t(`${p}.${usage.generating ? "generating" : "generate"}`)}
       </Button>
+      {usage.stats?.history && !canGenerateBenefitUsageSummary(usage.stats) && (
+        <p className="text-xs leading-relaxed text-violet-800 dark:text-violet-200">
+          {t(`${p}.history.ai_insufficient`)}
+        </p>
+      )}
       <div aria-live="polite" aria-atomic="true">
         {usage.summaryError && (
           <Alert variant="destructive">
             <AlertDescription>
               {t(`${p}.errors.${usage.summaryError}`)}
+              {usage.summaryError === "stale_analysis" && (
+                <Button variant="outline" onClick={usage.retry}>
+                  {t(`${p}.refresh_stats`)}
+                </Button>
+              )}
             </AlertDescription>
           </Alert>
         )}

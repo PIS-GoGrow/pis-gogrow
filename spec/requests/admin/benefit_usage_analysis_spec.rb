@@ -34,12 +34,16 @@ RSpec.describe "Admin::BenefitUsage analysis", type: :request do
       }
     end
 
-    it "keeps historical URLs outside the initial twelve months" do
-      get admin_benefit_usage_analysis_path, params: { month: "2020-01" }
-      expect(inertia).to have_props(month: "2020-01")
-      expect(inertia).to have_props { |props|
-        props[:months].size == 13 && props[:months].last[:key] == "2020-01"
-      }
+    it "accepts the current and oldest permitted months but redirects the preceding month" do
+      get admin_benefit_usage_analysis_path, params: { month: "2032-04" }
+      expect(inertia).to have_props(month: "2032-04")
+
+      get admin_benefit_usage_analysis_path, params: { month: "2031-05" }
+      expect(inertia).to have_props(month: "2031-05")
+      expect(inertia).to have_props { |props| props[:months].size == 12 }
+
+      get admin_benefit_usage_analysis_path, params: { month: "2031-04" }
+      expect(response).to redirect_to(admin_benefit_usage_analysis_path)
     end
 
     it "keeps a selected month on reload" do

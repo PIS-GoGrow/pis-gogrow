@@ -10,6 +10,15 @@
 #     schedule: at 5am every day
 
 production:
+  benefit_usage_monthly_capture:
+    class: BenefitUsageMonthlyCaptureJob
+    schedule: every hour at minute 0 America/Montevideo
+  benefit_usage_month_end_capture:
+    class: BenefitUsageMonthEndCaptureJob
+    schedule: every day at 11:55pm America/Montevideo
+  benefit_usage_snapshot_retention:
+    class: BenefitUsageSnapshotRetentionJob
+    schedule: every day at 2am America/Montevideo
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12

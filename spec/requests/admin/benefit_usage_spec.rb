@@ -106,6 +106,30 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
   end
 
   describe "POST /rrhh/uso-beneficio/resumen" do
+    it "generates from the same current-month statistics returned by GET" do
+      sign_in users(:admin), role: :admin
+      get admin_benefit_usage_path, params: { month: "2032-04" }
+      revision = response.parsed_body.fetch("analysis_revision")
+
+      post admin_benefit_usage_summary_path, params: { month: "2032-04", analysis_revision: revision }
+
+      expect(response).to have_http_status(:ok)
+      expect(summary_service).to have_received(:call)
+    end
+
+    it "rejects changed current-month statistics before generating" do
+      sign_in users(:admin), role: :admin
+      get admin_benefit_usage_path, params: { month: "2032-04" }
+      revision = response.parsed_body.fetch("analysis_revision")
+      stats[:orders][:confirmed_meals] = 4
+
+      post admin_benefit_usage_summary_path, params: { month: "2032-04", analysis_revision: revision }
+
+      expect(response).to have_http_status(:conflict)
+      expect(response.parsed_body.dig("error", "code")).to eq("stale_analysis")
+      expect(summary_service).not_to have_received(:call)
+    end
+
     it "formats the generation date on the server in Montevideo, including UTC day boundaries" do
       sign_in users(:admin), role: :admin
 
@@ -469,7 +493,7 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
         expect(response.body).not_to match(/"(?:company_id|consumer_id|user_id|order_id|benefit_id|address|email|name)"\s*:/)
         expect(response.parsed_body.keys).to contain_exactly(
           "schema_version", "period", "consumption", "capacity", "participation", "employee_activity",
-          "trends", "anomalies", "warnings"
+          "trends", "anomalies", "warnings", "analysis_revision"
         )
       end
       expect(requests).to be_empty
@@ -489,7 +513,7 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
         expect(outbound[:headers]).to include("Authorization" => "Bearer test-only-key",
                                               "anthropic-version" => "2026-10-21")
         body = JSON.parse(outbound[:body])
-        expect(body).to include("model" => "configured-test-model", "max_tokens" => 500)
+        expect(body).to include("model" => "configured-test-model", "max_tokens" => 1500)
         payload = JSON.parse(body.fetch("messages").sole.fetch("content"))
         expect(payload.fetch("capacity").keys).to contain_exactly(
           "monthly_quota_meals", "monthly_pending_reserved_meals", "monthly_available_meals"

@@ -2,13 +2,15 @@
   "es": {
     "benefit_usage": {
       "errors": {
+        "insufficient_data": "No hay estadísticas suficientes de este período para generar un resumen confiable.",
         "invalid_month": "Seleccioná un mes válido que no sea futuro.",
         "invalid_request": "Enviá únicamente el mes que querés consultar.",
         "rate_limited": "Alcanzaste el límite de resúmenes. Intentá de nuevo en unos minutos.",
+        "stale_analysis": "Los datos de este período cambiaron. Actualizalos antes de generar un nuevo resumen.",
         "summary_unavailable": "No pudimos generar el resumen. Intentá nuevamente más tarde."
       },
       "ui": {
-        "ai_description": "Generá una lectura de las estadísticas de este mes. Es opcional y no modifica los indicadores.",
+        "ai_description": "Generá una lectura de las estadísticas del período seleccionado. Es opcional y no modifica los indicadores.",
         "ai_notice": "Texto generado mediante IA. Contrastalo con los indicadores y sus advertencias.",
         "ai_title": "Resumen con IA",
         "analysis_link": "Ver análisis del beneficio",
@@ -28,7 +30,9 @@
         "empty": "No hay pedidos confirmados en este período.",
         "errors": {
           "configuration_missing": "La generación con IA todavía no está configurada. Las estadísticas siguen disponibles.",
+          "insufficient_data": "No hay estadísticas suficientes de este período para generar un resumen confiable.",
           "rate_limited": "Alcanzaste el límite de generación. Intentá nuevamente más tarde.",
+          "stale_analysis": "Los datos de este período cambiaron. Actualizalos antes de generar un nuevo resumen.",
           "summary_unavailable": "No pudimos generar el resumen. Intentá nuevamente más tarde. Las estadísticas siguen disponibles."
         },
         "generate": "Generar resumen con IA",
@@ -39,6 +43,77 @@
         "historical_capacity": "No se conserva el estado del cupo al cierre de los meses históricos.",
         "historical_limitations": "Limitaciones históricas",
         "historical_warnings_grouped": "Algunas estadísticas históricas no pueden calcularse completamente con los registros disponibles.",
+        "history": {
+          "ai_insufficient": "No hay estadísticas suficientes de este período para generar un resumen confiable.",
+          "available_at_capture": "Cupo disponible al momento de la captura",
+          "available_note": "El cupo disponible descuenta consumo y reservas pendientes al momento de la captura; no equivale al cupo no utilizado al cierre.",
+          "captured_at": "Datos registrados el %{date}",
+          "comparison_period": "%{from} a %{to}",
+          "comparison_title": "Comparación con el mes anterior",
+          "eligible_employees": "Empleados elegibles",
+          "eligible_participants": "Elegibles con pedidos confirmados",
+          "employees_of_period": "Empleados del período",
+          "fictional": "Datos de prueba",
+          "incomplete_notice": "Cierre no verificado. Los valores corresponden a la última captura, no al instante exacto de cierre.",
+          "indicator": {
+            "average_confirmed_meals_per_employee": "Promedio de viandas por empleado",
+            "company_subsidy_amount": "Subsidio comprometido sin IVA",
+            "confirmed_meals": "Viandas confirmadas",
+            "confirmed_meals_without_monthly_subsidy": "Viandas sin subsidio mensual",
+            "confirmed_orders": "Pedidos confirmados",
+            "eligible_employees": "Empleados elegibles",
+            "eligible_with_confirmed_orders": "Elegibles con pedidos confirmados",
+            "eligible_without_orders": "Elegibles sin pedidos confirmados",
+            "employees": "Empleados del período",
+            "employees_with_confirmed_orders": "Empleados con pedidos confirmados",
+            "monthly_available_meals": "Cupo disponible al momento de la captura",
+            "monthly_pending_reserved_meals": "Viandas con cupo reservado",
+            "monthly_quota_meals": "Cupo mensual total",
+            "monthly_subsidized_meals": "Viandas con subsidio mensual",
+            "monthly_unused_closed_meals": "Cupo no utilizado al cierre",
+            "other": "Indicador",
+            "participation_percent": "Participación",
+            "pending_meals": "Viandas pendientes",
+            "pending_orders": "Pedidos pendientes",
+            "period": "Estado del período",
+            "reconstructed_orders": "Reconstrucción de pedidos"
+          },
+          "limitations_note": "Algunos indicadores no cuentan con información suficiente. Sin datos no equivale a cero.",
+          "meals_unit": "viandas",
+          "missing_notice": "No hay fotografía de este mes. Se muestran solo los datos que pueden reconstruirse con los registros disponibles.",
+          "not_comparable": "No hay una comparación confiable con el mes anterior.",
+          "points_unit": "puntos porcentuales",
+          "quality": {
+            "capture_only": "Comparación de capturas; cierres no verificados",
+            "verified_close": "Cierres verificados"
+          },
+          "reason": {
+            "close_not_verified": "No se verificó el cierre exacto de este período.",
+            "eligibility_unknown": "No se conoce la elegibilidad completa del período.",
+            "historical_snapshot_missing": "No existe una fotografía persistida para este período.",
+            "no_eligible_employees": "No había empleados elegibles para calcular participación.",
+            "no_employees": "No había empleados para calcular el promedio.",
+            "period_open": "El período todavía está abierto.",
+            "quota_unknown_or_zero": "El cupo del período es desconocido o cero.",
+            "retained_records_current_roster": "Los registros conservados pueden no reflejar toda la nómina histórica.",
+            "source_unavailable": "La fuente no permite verificar este indicador."
+          },
+          "relative_change": "%{percent} respecto al mes anterior",
+          "source": {
+            "current_calculation": "Cálculo del mes actual",
+            "historical_reconstruction": "Reconstrucción de registros disponibles",
+            "historical_snapshot": "Fotografía histórica"
+          },
+          "state": {
+            "closed": "Cierre verificado",
+            "incomplete": "Fotografía sin cierre verificado",
+            "missing_snapshot": "Sin fotografía histórica",
+            "provisional": "Mes abierto · parcial"
+          },
+          "trends_note": "Viandas confirmadas por mes. Cada barra representa un mes por separado; la procedencia y calidad pueden variar.",
+          "unknown": "Sin datos",
+          "unused_at_close": "Cupo no utilizado al cierre"
+        },
         "indicators": {
           "company_subsidy_amount": "Subsidio comprometido por la empresa, sin IVA",
           "confirmed_meals": "Viandas confirmadas",
@@ -60,6 +135,7 @@
         "pending_orders_one": "%{count} pedido",
         "pending_orders_other": "%{count} pedidos",
         "quota": "Cupo mensual total",
+        "refresh_stats": "Actualizar datos",
         "reserved": "Viandas con cupo reservado",
         "retry": "Reintentar",
         "specific_limitations": "Otras limitaciones detectadas",
