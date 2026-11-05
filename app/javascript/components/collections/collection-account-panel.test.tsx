@@ -266,6 +266,7 @@ describe("CollectionAccountPanel", () => {
                 date: "10/10/26",
                 receipt_url: "/provider/comprobantes/18/archivo",
                 receipt_filename: "completo.png",
+                receipt_size: "63,8 KB",
                 receipt_content_type: "image/png",
               },
               {
@@ -276,6 +277,7 @@ describe("CollectionAccountPanel", () => {
                 date: "09/10/26",
                 receipt_url: "/provider/comprobantes/17/archivo",
                 receipt_filename: "parcial.png",
+                receipt_size: "63,8 KB",
                 receipt_content_type: "image/png",
               },
             ],
@@ -306,6 +308,7 @@ describe("CollectionAccountPanel", () => {
               date: "09/10/26",
               receipt_url: "/provider/comprobantes/17/archivo",
               receipt_filename: "otro.png",
+              receipt_size: "63,8 KB",
               receipt_content_type: "image/png",
             },
           ],
