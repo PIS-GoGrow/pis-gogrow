@@ -396,3 +396,22 @@ describe("ConsumerCart quantity", () => {
     ).toBeDisabled()
   })
 })
+
+describe("ConsumerCart notes", () => {
+  it("wraps long notes without spaces so they do not overflow the cart", async () => {
+    const longNote = "a".repeat(140)
+
+    await renderCart({
+      cart: [
+        {
+          ...cartItem("Tu Viandita", true),
+          notes: longNote,
+        },
+      ],
+    })
+
+    const notes = screen.getByText(longNote)
+
+    expect(notes).toHaveClass("[overflow-wrap:anywhere]")
+  })
+})

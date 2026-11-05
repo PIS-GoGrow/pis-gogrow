@@ -89,7 +89,7 @@ export default function Show({
               {account.month}
             </Row>
             <Row label={t("pages.provider_collections.show.status")}>
-              <StatusBadge status={account.status} kind="payment" />
+              <StatusBadge status={account.status} kind="provider_payment" />
             </Row>
             <Row label={t("pages.provider_collections.show.due_date")}>
               {account.due_date}
@@ -171,7 +171,7 @@ export default function Show({
                 >
                   <StatusBadge
                     status={paymentPresentationStatus(payment)}
-                    kind="payment"
+                    kind="provider_payment"
                   />
                 </Row>
               ))}

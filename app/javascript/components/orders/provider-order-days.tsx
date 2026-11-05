@@ -1,3 +1,5 @@
+import { ShoppingBasket01Icon } from "@hugeicons/core-free-icons"
+import { HugeiconsIcon } from "@hugeicons/react"
 import { ChevronDown, Package } from "lucide-react"
 import { type ReactNode, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -59,6 +61,36 @@ export default function ProviderOrderDays({
     period === "upcoming" && !hasActiveFilters(filters)
       ? withToday(grouped, today)
       : grouped
+
+  const noOrders = (
+    <Empty className="min-h-[50svh]">
+      <EmptyHeader>
+        <EmptyMedia variant="icon" className="size-10">
+          <HugeiconsIcon
+            icon={ShoppingBasket01Icon}
+            size={20}
+            aria-hidden="true"
+          />
+        </EmptyMedia>
+        <EmptyTitle className="text-base">
+          {t("pages.provider_orders.index.no_orders_title")}
+        </EmptyTitle>
+        <EmptyDescription>
+          {t("pages.provider_orders.index.no_orders_description")}
+        </EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  )
+
+  if (
+    days.length === 0 &&
+    period === "upcoming" &&
+    filters.status === "pending" &&
+    filters.delivery === "all" &&
+    filters.search.trim() === ""
+  ) {
+    return noOrders
+  }
 
   if (days.length === 0) {
     const description = hasActiveFilters(filters)
@@ -130,9 +162,12 @@ export default function ProviderOrderDays({
               style={{ gridRow: "1 / -1" }}
             >
               {day.orders.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  {t("pages.provider_orders.index.empty_title")}
-                </p>
+                <>
+                  <p className="text-muted-foreground text-sm lg:hidden">
+                    {t("pages.provider_orders.index.empty_title")}
+                  </p>
+                  <div className="hidden lg:flex">{noOrders}</div>
+                </>
               ) : (
                 <div className="grid gap-3 @2xl:grid-cols-2">
                   {day.orders.map((order) => (
