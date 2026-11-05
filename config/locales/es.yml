@@ -591,7 +591,7 @@ es:
         debts:
           title: "Ranking deuda de empleados"
           view: "Ver empleados con saldos pendientes"
-          empty: "Ningún empleado tiene saldos pendientes en este mes."
+          empty: "Ningún empleado tiene saldos pendientes."
       order_events:
         index:
           title: "Auditoría de pedidos"
