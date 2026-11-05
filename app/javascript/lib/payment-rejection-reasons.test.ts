@@ -13,9 +13,7 @@ describe("pendingRejectionReason", () => {
 
   it("returns null when no payment has been rejected", () => {
     expect(
-      pendingRejectionReason([
-        { status: "submitted", rejection_reason: null },
-      ]),
+      pendingRejectionReason([{ status: "submitted", rejection_reason: null }]),
     ).toBeNull()
   })
 
@@ -40,7 +38,10 @@ describe("pendingRejectionReason", () => {
     expect(
       pendingRejectionReason([
         { status: "submitted", rejection_reason: null },
-        { status: "rejected", rejection_reason: "Segundo rechazo: datos incorrectos" },
+        {
+          status: "rejected",
+          rejection_reason: "Segundo rechazo: datos incorrectos",
+        },
         { status: "rejected", rejection_reason: "Primer rechazo: borroso" },
       ]),
     ).toBe("Segundo rechazo: datos incorrectos")

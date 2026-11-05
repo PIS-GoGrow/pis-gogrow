@@ -29,7 +29,11 @@ describe("RejectionNotice", () => {
     )
 
     expect(screen.getByText("Rechazado:")).toBeInTheDocument()
-    expect(screen.getByText(/Comprobante ilegible o cortado/)).toBeInTheDocument()
-    expect(screen.queryByText("Falta una parte del pago.")).not.toBeInTheDocument()
+    expect(
+      screen.getByText(/Comprobante ilegible o cortado/),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText("Falta una parte del pago."),
+    ).not.toBeInTheDocument()
   })
 })
