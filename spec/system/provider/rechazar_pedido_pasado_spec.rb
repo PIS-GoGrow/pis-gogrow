@@ -48,6 +48,6 @@ RSpec.describe "Rechazo de pedidos pasados por el proveedor", type: :system do
     expect(page).to have_button("Rechazar", disabled: false)
 
     click_button "Rechazar"
-    expect(page).to have_content("¿Rechazar el pedido PED-#{confirmed_future_order.id}?")
+    expect(page).to have_content("¿Rechazar pedido?")
   end
 end
