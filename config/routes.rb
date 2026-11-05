@@ -118,7 +118,7 @@ Rails.application.routes.draw do
     get "calificacion/gracias", to: "reviews#thanks", as: :review_thanks
     get "calificacion/error", to: "reviews#error", as: :review_error
 
-    resources :payments, path: "comprobantes", only: [ :create, :update, :destroy ] do
+    resources :payments, path: "comprobantes", only: [ :create, :destroy ] do
       get :receipt, on: :member, path: "archivo"
     end
 

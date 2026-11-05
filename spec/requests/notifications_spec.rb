@@ -161,5 +161,53 @@ RSpec.describe "Notifications", type: :request do
       )
       expect(notifications_prop.map { |n| n[:id] }).not_to include(closed_notification.id)
     end
+
+    it "envía la notificación de pedido rechazado con el título y la descripción corregidos y sin términos de cancelación" do
+      rejected_notification = Notification.create!(
+        notification_configuration: notification_configuration,
+        user:,
+        role: "consumer",
+        event: "order_rejection",
+        requires_action: false,
+        notifiable: user,
+        title: "Tu pedido fue rechazado",
+        description: "Tu pedido del 10 de octubre de Milanesa fue rechazado por Tu Viandita porque no había stock disponible."
+      )
+      sign_in(user)
+
+      get dashboard_path
+
+      expect(response).to have_http_status(:ok)
+      notifications_prop = inertia.props[:notifications]
+      item = notifications_prop.find { |n| n[:id] == rejected_notification.id }
+
+      expect(item).to be_present
+      expect(item[:title]).to eq("Tu pedido fue rechazado")
+      expect(item[:title]).not_to include("cancelado")
+      expect(item[:description]).to include("fue rechazado por")
+      expect(item[:description]).to include("porque no había stock disponible")
+      expect(item[:description]).not_to include("cancelado")
+    end
+
+    it "no expone la notificación del consumidor si la sesión activa es de rol proveedor" do
+      Notification.create!(
+        notification_configuration: notification_configuration,
+        user:,
+        role: "consumer",
+        event: "order_rejection",
+        requires_action: false,
+        notifiable: user,
+        title: "Tu pedido fue rechazado",
+        description: "Tu pedido del 10 de octubre fue rechazado."
+      )
+      Provider.create!(user:, onboarding_completed_at: Time.current)
+      session = user.sessions.create!(role: :provider)
+      cookies[:session_token] = AuthenticationHelpers.signed_cookie(:session_token, session.id)
+
+      get provider_orders_path
+
+      notifications_prop = inertia.props[:notifications]
+      expect(notifications_prop).to be_empty
+    end
   end
 end

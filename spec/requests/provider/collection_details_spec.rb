@@ -45,7 +45,7 @@ RSpec.describe "Provider collection details", type: :request do
         create_order(2, status: :pending)
         account = orders.first.accounts.find { it.company? == (source == :company) }
         if status == :approved
-          account.payments.create!(
+          account.reload.payments.create!(
             provider:, status: :approved,
             receipt: Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png")
           )

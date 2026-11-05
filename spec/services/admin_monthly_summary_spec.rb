@@ -4,7 +4,8 @@ require "rails_helper"
 
 # En los fixtures, el mes en curso tiene la cuenta de GoGrow con Tu Viandita
 # (601 de subsidio, sin comprobante) y cuatro viandas confirmadas de los dos
-# empleados; el mes anterior, una cuenta de 900 ya aprobada y sin pedidos.
+# empleados, de las que solo una ya se entregó; el mes anterior, una cuenta de
+# 900 ya aprobada y sin pedidos.
 RSpec.describe AdminMonthlySummary do
   fixtures :users, :companies, :admins, :providers, :consumers, :menus, :schedules,
            :orders, :accounts, :order_accounts, :payments, :benefit_configurations, :benefit_rules
@@ -41,13 +42,13 @@ RSpec.describe AdminMonthlySummary do
     it "projects the pending orders with the VAT of their account" do
       OrderAccount.create!(order: orders(:upcoming_pending_today), account: taxed)
 
-      expect(current.projected).to eq(183.31)
+      expect(current.projected).to eq(634.06)
     end
   end
 
   describe "#meals" do
-    it "counts the confirmed meals of the month" do
-      expect(current.meals).to eq(4)
+    it "counts the confirmed meals of the month already delivered" do
+      expect(current.meals).to eq(1)
     end
 
     it "is zero for a month without orders" do
@@ -66,12 +67,12 @@ RSpec.describe AdminMonthlySummary do
   end
 
   describe "#participation" do
-    it "is the share of employees with a confirmed order in the month" do
-      expect(current.participation).to eq(100)
+    it "is the share of employees with a delivered order in the month" do
+      expect(current.participation).to eq(50)
 
       create_consumer("Sin Pedidos")
 
-      expect(described_class.new(company).participation).to eq(67)
+      expect(described_class.new(company).participation).to eq(33)
     end
 
     it "is zero for a month without orders" do
@@ -97,11 +98,11 @@ RSpec.describe AdminMonthlySummary do
     it "adds up the subsidy of the orders the provider has not confirmed yet" do
       OrderAccount.create!(order: orders(:upcoming_pending_today), account: accounts(:gogrow_tuviandita_current))
 
-      expect(current.projected).to eq(150.25)
+      expect(current.projected).to eq(601.0)
     end
 
-    it "is zero when every order is resolved" do
-      expect(current.projected).to eq(0.0)
+    it "adds up the subsidy of the confirmed orders not delivered yet" do
+      expect(current.projected).to eq(450.75)
     end
   end
 
@@ -135,9 +136,20 @@ RSpec.describe AdminMonthlySummary do
 
     it "leaves out who already paid" do
       Payment.new(account: accounts(:one_endulzate_current), status: :approved).save!(validate: false)
-      payments(:one_rejected).update_column(:status, Payment.statuses[:approved])
+      payments(:one_rejected).update_columns(
+        status: Payment.statuses[:approved], expected_amount: accounts(:one_tuviandita_current).payable_amount
+      )
 
       expect(current.debtors.map(&:name)).to eq([ "Other Consumer User" ])
+    end
+
+    it "keeps consumers with a partial payment among the debtors" do
+      payments(:one_rejected).update!(status: :partial, rejection_reason: nil)
+
+      debtor = current.debtors.find { it.consumer == consumers(:one) }
+
+      expect(debtor).to be_present
+      expect(debtor.status).to eq("partial")
     end
 
     it "is empty for a month without debts" do
