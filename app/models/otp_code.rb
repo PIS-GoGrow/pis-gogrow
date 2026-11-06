@@ -19,7 +19,7 @@ class OtpCode < ApplicationRecord
 
   def self.issue(user, purpose)
     otp = find_or_initialize_by(user: user, purpose: purpose)
-    return if otp.persisted? && otp.sent_at > RESEND_COOLDOWN.fetch(otp.purpose).ago
+    return if otp.persisted? && within_resend_cooldown?(otp.sent_at, otp.purpose)
 
     otp.update!(nonce: SecureRandom.hex(16), expires_at: TTL.fetch(otp.purpose).from_now, attempts: 0, sent_at: Time.current)
     otp
@@ -45,8 +45,8 @@ class OtpCode < ApplicationRecord
     find_by(user: user, purpose: purpose)&.expired? == false
   end
 
-  def self.sent_at(user, purpose)
-    find_by(user: user, purpose: purpose)&.sent_at
+  def self.within_resend_cooldown?(last_sent_at, purpose)
+    last_sent_at > RESEND_COOLDOWN.fetch(purpose).ago
   end
 
   def self.consume(user, purpose)

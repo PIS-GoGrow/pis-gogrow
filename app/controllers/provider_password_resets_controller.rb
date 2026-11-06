@@ -17,12 +17,13 @@ class ProviderPasswordResetsController < InertiaController
 
     user = User.find_by(email: email)
 
-    # Si el usuario ya pidió un código OTP, no le dejamos pedir otro
-    if (sent_at = OtpCode.sent_at(user, :password_reset))
-      session[:password_reset] = { "email" => email, "sent_at" => sent_at.to_i }
-      redirect_to provider_password_reset_code_path, alert: "Ya se envió un código. Esperá para enviar el siguiente."
+    prev = session[:password_reset]
 
-      return
+    # Si el usuario ya pidió un código OTP se lo alertamos y no le dejamos pedir otro.
+    # Esta validación se hace solo con datos de la sesión y no de la base de datos, para
+    # no exponer información.
+    if prev && prev["email"] == email && OtpCode.within_resend_cooldown?(Time.zone.at(prev["sent_at"]), "password_reset")
+      redirect_to provider_password_reset_code_path, alert: t("flash.password_reset_requested")
     end
 
     if user&.provider? && (otp = OtpCode.issue(user, :password_reset))
@@ -30,6 +31,7 @@ class ProviderPasswordResetsController < InertiaController
     end
 
     session[:password_reset] = { "email" => email, "sent_at" => Time.current.to_i }
+
     redirect_to provider_password_reset_code_path
   end
 
