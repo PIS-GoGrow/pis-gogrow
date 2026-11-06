@@ -27,12 +27,13 @@ RSpec.describe "Comprobante en revisión en pagos de empresa", type: :system do
     account
   end
 
-  it "muestra el botón deshabilitado con leyenda cuando hay un comprobante en revisión y se habilita al rechazarlo" do
+  it "bloquea la carga con leyenda cuando hay un comprobante en revisión y la habilita al rechazarlo" do
     sign_in admin_user, role: :admin
     visit admin_payments_path
 
     within(find("[data-slot=card]", text: provider_user.name)) do
-      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: false)
+      expect(page).to have_field(I18n.t("pages.accounts.show.receipt_file"), disabled: false)
+      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: true)
     end
 
     payment = account.payments.build(provider:, status: :submitted)
@@ -42,7 +43,8 @@ RSpec.describe "Comprobante en revisión en pagos de empresa", type: :system do
     visit admin_payments_path
 
     within(find("[data-slot=card]", text: provider_user.name)) do
-      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: true)
+      expect(page).to have_no_field(I18n.t("pages.accounts.show.receipt_file"))
+      expect(page).to have_no_button(I18n.t("pages.accounts.show.receipt"))
       expect(page).to have_content(I18n.t("pages.accounts.show.receipt_under_review_hint"))
     end
 
@@ -50,7 +52,8 @@ RSpec.describe "Comprobante en revisión en pagos de empresa", type: :system do
     visit admin_payments_path
 
     within(find("[data-slot=card]", text: provider_user.name)) do
-      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: false)
+      expect(page).to have_field(I18n.t("pages.accounts.show.receipt_file"), disabled: false)
+      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: true)
       expect(page).to have_no_content(I18n.t("pages.accounts.show.receipt_under_review_hint"))
     end
   end

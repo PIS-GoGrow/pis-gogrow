@@ -73,29 +73,6 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
     form.clearErrors()
   }
 
-  function confirm() {
-    if (!cart.length || form.processing || !address) return
-
-    const items = cart.map((item) => ({
-      schedule_id: item.id,
-      quantity: item.quantity,
-      benefits: item.benefits,
-      notes: item.notes,
-      options: Object.entries(item.selections).map(([groupId, values]) => ({
-        group_id: Number(groupId),
-        values,
-      })),
-    }))
-
-    form.transform(() => ({ order: { address, items } }))
-
-    form.post(consumerOrders.create().url, {
-      preserveState: true,
-      preserveScroll: false,
-      onSuccess: () => setCart([]),
-    })
-  }
-
   const items = useMemo(() => cartPricedItem(cart), [cart])
   const requestKey = useMemo(() => JSON.stringify(items), [items])
 
@@ -128,6 +105,31 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
   const isEmpty = items.length === 0
   const loading = !isEmpty && priced?.key !== requestKey
   const pricing = isEmpty ? null : (priced?.pricing ?? null)
+
+  function confirm() {
+    if (!cart.length || form.processing || !address) return
+
+    const items = cart.map((item) => ({
+      schedule_id: item.id,
+      quantity: item.quantity,
+      benefits: item.benefits,
+      notes: item.notes,
+      options: Object.entries(item.selections).map(([groupId, values]) => ({
+        group_id: Number(groupId),
+        values,
+      })),
+    }))
+
+    form.transform(() => ({
+      order: { address, items, expected_price: pricing?.total },
+    }))
+
+    form.post(consumerOrders.create().url, {
+      preserveState: true,
+      preserveScroll: false,
+      onSuccess: () => setCart([]),
+    })
+  }
 
   return (
     <AppLayout

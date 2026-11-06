@@ -253,7 +253,12 @@ describe("Consumer Payments Page", () => {
       await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
       expect(
-        screen.getByText("No hay pagos de este proveedor."),
+        screen.getByText("No hay pagos de este proveedor"),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "Todavía no le pagaste ninguna cuenta a este proveedor.",
+        ),
       ).toBeInTheDocument()
     })
 
@@ -261,7 +266,10 @@ describe("Consumer Payments Page", () => {
       render(<Index {...historyProps} history_accounts={[]} />)
 
       expect(
-        screen.getByText("Todavía no hiciste ningún pago."),
+        screen.getByText("Todavía no hiciste ningún pago"),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText("Cuando pagues una cuenta, va a aparecer acá."),
       ).toBeInTheDocument()
       expect(screen.queryByText("Proveedores:")).not.toBeInTheDocument()
     })

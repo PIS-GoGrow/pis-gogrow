@@ -32,6 +32,8 @@ import type { ProviderOnboardingShow } from "@/types/serializers/ProviderOnboard
 
 const TOTAL_STEPS = 4
 const PAGE = "pages.provider_onboarding"
+const PRIMARY_BUTTON = "h-12 w-full rounded-[10px] text-base font-medium"
+const SECONDARY_BUTTON = "h-12 w-full text-base font-medium"
 
 const REQUIRED_STEP_1_FIELDS = [
   "provider[bank_name]",
@@ -80,9 +82,7 @@ export default function Onboarding({
       <Shell>
         <Head title={t(`${PAGE}.intro.title`)} />
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-[#0A0A0A] p-3 text-center text-base font-semibold text-[#FAFAFA]">
-            {provider.name || t("roles.provider")}
-          </div>
+          <ProviderAvatar name={provider.name} />
           <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-100">
             {t(`${PAGE}.intro.title`)}
           </h1>
@@ -91,7 +91,7 @@ export default function Onboarding({
           </p>
         </div>
         <div className="flex flex-col gap-2">
-          <Button asChild className="h-11 w-full">
+          <Button asChild size="lg" className={PRIMARY_BUTTON}>
             <Link href={`${providerOnboarding.show().url}?step=1`}>
               {t(`${PAGE}.intro.start`)}
             </Link>
@@ -99,9 +99,10 @@ export default function Onboarding({
           <Button
             type="button"
             variant="ghost"
+            size="lg"
             disabled={skippingIntro}
             onClick={skipIntro}
-            className="text-muted-foreground hover:text-foreground w-full"
+            className={SECONDARY_BUTTON}
           >
             {t(`${PAGE}.intro.skip_later`)}
           </Button>
@@ -115,12 +116,15 @@ export default function Onboarding({
       <Shell>
         <Head title={t(`${PAGE}.done.title`)} />
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <h1 className="text-2xl font-semibold">{t(`${PAGE}.done.title`)}</h1>
-          <p className="text-muted-foreground mt-3 max-w-xs">
+          <ProviderAvatar name={provider.name} />
+          <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-100">
+            {t(`${PAGE}.done.title`)}
+          </h1>
+          <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-relaxed">
             {t(`${PAGE}.done.description`)}
           </p>
         </div>
-        <Button asChild className="w-full">
+        <Button asChild size="lg" className={PRIMARY_BUTTON}>
           <Link href={providerDashboard.index()}>{t(`${PAGE}.done.cta`)}</Link>
         </Button>
       </Shell>
@@ -216,6 +220,16 @@ export default function Onboarding({
   )
 }
 
+function ProviderAvatar({ name }: { name: string }) {
+  const { t } = useTranslation()
+
+  return (
+    <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-[#0A0A0A] p-3 text-center text-base font-semibold text-[#FAFAFA]">
+      {name || t("roles.provider")}
+    </div>
+  )
+}
+
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="bg-background flex min-h-svh justify-center p-6">
@@ -277,7 +291,7 @@ function StepIntro({ step }: { step: number }) {
 
   return (
     <div className="mb-6">
-      <h1 className="text-2xl font-semibold">
+      <h1 className="text-2xl font-bold tracking-tight">
         {t(`${PAGE}.steps.${step}.title`)}
       </h1>
       <p className="text-muted-foreground mt-2">
@@ -306,8 +320,9 @@ function Footer({
         type="submit"
         name="commit"
         value="continue"
+        size="lg"
         disabled={processing || !canContinue}
-        className="w-full"
+        className={PRIMARY_BUTTON}
       >
         {isLast ? t(`${PAGE}.finish`) : t(`${PAGE}.continue`)}
       </Button>
@@ -315,8 +330,10 @@ function Footer({
         <Button
           type="button"
           variant="ghost"
+          size="lg"
           disabled={processing}
           onClick={onSkip}
+          className={SECONDARY_BUTTON}
         >
           {t(`${PAGE}.skip`)}
         </Button>
@@ -346,7 +363,7 @@ function ControlledFooter({
         type="button"
         disabled={processing || !canContinue}
         onClick={onContinue}
-        className="w-full"
+        className={PRIMARY_BUTTON}
       >
         {isLast ? t(`${PAGE}.finish`) : t(`${PAGE}.continue`)}
       </Button>
@@ -354,8 +371,10 @@ function ControlledFooter({
         <Button
           type="button"
           variant="ghost"
+          size="lg"
           disabled={processing}
           onClick={onSkip}
+          className={SECONDARY_BUTTON}
         >
           {t(`${PAGE}.skip`)}
         </Button>

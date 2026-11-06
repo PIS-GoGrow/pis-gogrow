@@ -10,11 +10,7 @@ class Provider::OnboardingController < Provider::InertiaController
     @bank_names = Provider::BANK_NAMES | [ provider.bank_name ].compact
     @step = current_step
     @notification_configurations = provider_notification_configurations
-    @subscribed_keys =
-      @notification_configurations
-        .joins(:notification_configuration_users)
-        .where(notification_configuration_users: { user_id: Current.user.id })
-        .pluck(:key)
+    @subscribed_keys = subscribed_keys
     @closures = provider.closures.upcoming
     @today = Date.current.iso8601
     @order_deadline_passed_today = provider.order_deadline_passed_today?
@@ -117,5 +113,14 @@ class Provider::OnboardingController < Provider::InertiaController
 
   def provider_notification_configurations
     Notification::Configuration.where(configurable: true).for_role(:provider)
+  end
+
+  def subscribed_keys
+    return @notification_configurations.pluck(:key) unless provider.notifications_configured_at?
+
+    @notification_configurations
+      .joins(:notification_configuration_users)
+      .where(notification_configuration_users: { user_id: Current.user.id })
+      .pluck(:key)
   end
 end

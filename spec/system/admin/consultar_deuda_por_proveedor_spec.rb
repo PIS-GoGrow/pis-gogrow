@@ -151,7 +151,8 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
     it "shows a period nobody paid as pending, with the day it falls due" do
       sign_in_as_hr
 
-      within(:css, "[data-status='pending']") { expect(page).to have_content("Pendiente") }
+      expect(page).to have_css("[role='tab'][aria-selected='true']", text: "Pendientes")
+      expect(page).to have_content(month_label(current_period.month))
       expect(page).to have_content(due_label(current_period))
     end
 
