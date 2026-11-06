@@ -5,7 +5,7 @@ require "inertia_rails/rspec"
 
 RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   fixtures :users, :consumers, :companies, :providers, :menus, :schedules,
-           :benefit_configurations, :benefits, :orders
+           :benefit_configurations, :benefits, :orders, :menu_option_groups
 
   let(:consumer_user) { users(:one) }
   let(:provider_user) { users(:provider_user) }
@@ -594,6 +594,58 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
           discounted_price: own_order.discounted_price.to_f
         )
       end
+    end
+  end
+
+  describe "POST /orders con precio esperado inconsistente" do
+    before do
+      sign_in consumer_user, role: :consumer
+    end
+
+    it "no hace el pedido y muestra error" do
+      expect {
+        post orders_path, params: {
+          order: {
+            address: company_address,
+            items: [
+              { schedule_id: schedule.id, quantity: 1, notes: "Sin cubiertos", options: [] }
+            ],
+            expected_price: 1
+          }
+        }
+      }.to change(Order, :count).by(0)
+
+      expect(response).to redirect_to(dashboard_cart_path)
+      follow_redirect!
+      expect(inertia.props.dig(:errors, :order_error)).to eq(
+        I18n.t("validations.inconsistent_pricing", **{ expected_price: 1.0, price: schedule.menu.price / 2 })
+      )
+    end
+
+    # El total del carrito llega como Float: 100,10 + 220,20 al 50 % suma 160.14999999999998.
+    it "acepta el total que calculó el carrito aunque arrastre error de punto flotante" do
+      schedule.menu.update!(price: 100.1)
+      schedules(:sorrentinos_today).menu.update!(price: 220.2)
+
+      items = [
+        { schedule_id: schedule.id, quantity: 1, notes: "", options: [] },
+        {
+          schedule_id: schedules(:sorrentinos_today).id, quantity: 1, notes: "",
+          options: [
+            { group_id: menu_option_groups(:salsa_sorrentinos).id, values: [ "Filetto" ] },
+            { group_id: menu_option_groups(:relleno_sorrentinos).id, values: [ "Ricota y nuez" ] }
+          ]
+        }
+      ]
+
+      post pricing_orders_path, params: { items: items.map { it.slice(:schedule_id, :quantity) } }, as: :json
+      cart_total = response.parsed_body["total"]
+      expect(cart_total).not_to eq(cart_total.round(2))
+
+      expect {
+        post orders_path, params: { order: { address: company_address, items:, expected_price: cart_total } }, as: :json
+      }.to change(Order, :count).by(2)
+      expect(response).not_to redirect_to(dashboard_cart_path)
     end
   end
 end

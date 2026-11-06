@@ -5,12 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { consumerOrders } from "@/routes"
 
-// AJUSTAR: ruta real del componente
 import Cart from "./cart"
-
-// ---------------------------------------------------------------------------
-// Mocks compartidos (vi.hoisted para poder usarlos dentro de vi.mock)
-// ---------------------------------------------------------------------------
 
 const mocks = vi.hoisted(() => ({
   priceItems: vi.fn(),
@@ -26,10 +21,6 @@ const mocks = vi.hoisted(() => ({
     hasErrors: false,
   },
 }))
-
-// AJUSTAR: todas las rutas de vi.mock tienen que coincidir con los imports
-// reales del componente (y si el import es nombrado en vez de default, también
-// la forma del objeto devuelto).
 
 vi.mock("@inertiajs/react", () => ({ useForm: () => mocks.form }))
 
@@ -63,10 +54,6 @@ vi.mock("@/pages/consumer/dashboard/order-error", () => {
   }
   return { default: OrderError, OrderError }
 })
-
-// ---------------------------------------------------------------------------
-// Helpers y fixtures
-// ---------------------------------------------------------------------------
 
 interface Addr {
   address: string
