@@ -104,11 +104,23 @@ RSpec.describe Provider::OrdersExport do
     end
 
     it "ends with the totals of the exported orders as numbers" do
-      orders = [ order(id: 1, amount: 2, price: 601), order(id: 2, amount: 1, price: 300.50, status: :cancelled) ]
+      orders = [ order(id: 1, amount: 2, price: 601), order(id: 2, amount: 1, price: 300.50, status: :confirmed) ]
       total = xlsx_cells(export(orders).to_xlsx).last
 
       expect(total.map(&:value)).to eq([ "Total", nil, nil, nil, nil, nil, nil, nil, 3, nil, nil, nil, 901.5 ])
       expect(total[12].format).to eq("#,##0.00")
+    end
+
+    it "lists cancelled and rejected orders but leaves them out of the totals" do
+      orders = [
+        order(id: 1, amount: 2, price: 601),
+        order(id: 2, amount: 1, price: 300.50, status: :cancelled),
+        order(id: 3, amount: 1, price: 300.50, status: :rejected)
+      ]
+      sheet = rows(export(orders))
+
+      expect(sheet.size).to eq(5)
+      expect(sheet.last).to eq([ "Total", nil, nil, nil, nil, nil, nil, nil, 2, nil, nil, nil, 601 ])
     end
 
     it "writes headers and a zero total without orders" do
