@@ -1112,6 +1112,7 @@
           "history_empty_title": "No tenés pedidos anteriores",
           "history_filtered_empty_description": "No tenés pedidos anteriores realizados a este proveedor.",
           "history_filtered_empty_title": "No hay pedidos de este proveedor",
+          "history_loading": "Cargando pedidos anteriores…",
           "history_tab": "Historial",
           "no_address": "Sin dirección de entrega",
           "no_date": "Sin fecha de entrega",

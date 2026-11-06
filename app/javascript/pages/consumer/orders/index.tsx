@@ -1,4 +1,4 @@
-import { Head } from "@inertiajs/react"
+import { Head, InfiniteScroll } from "@inertiajs/react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -12,6 +12,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty"
+import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
@@ -49,44 +50,44 @@ export default function Index({
     },
   ]
 
-  const renderSection = (
+  const renderEmpty = (section: "upcoming" | "history") => (
+    <Empty>
+      <EmptyHeader>
+        <EmptyTitle>
+          {t(
+            section === "history" && activeProviders.size > 0
+              ? "pages.orders.index.history_filtered_empty_title"
+              : `pages.orders.index.${section}_empty_title`,
+          )}
+        </EmptyTitle>
+        <EmptyDescription>
+          {t(
+            section === "history" && activeProviders.size > 0
+              ? "pages.orders.index.history_filtered_empty_description"
+              : `pages.orders.index.${section}_empty_description`,
+          )}
+        </EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  )
+
+  const renderGroups = (
     section: "upcoming" | "history",
     sectionOrders: Order[],
   ) =>
-    sectionOrders.length === 0 ? (
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>
-            {t(
-              section === "history" && activeProviders.size > 0
-                ? "pages.orders.index.history_filtered_empty_title"
-                : `pages.orders.index.${section}_empty_title`,
-            )}
-          </EmptyTitle>
-          <EmptyDescription>
-            {t(
-              section === "history" && activeProviders.size > 0
-                ? "pages.orders.index.history_filtered_empty_description"
-                : `pages.orders.index.${section}_empty_description`,
-            )}
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    ) : (
-      groupByDate(sectionOrders).map((group) => (
-        <section key={group.date ?? "undated"} className="grid gap-2">
-          <h2 className="text-muted-foreground text-sm">
-            {group.date
-              ? formatLongDate(group.date)
-              : t("pages.orders.index.no_date")}
-          </h2>
+    groupByDate(sectionOrders).map((group) => (
+      <section key={group.date ?? "undated"} className="grid gap-2">
+        <h2 className="text-muted-foreground text-sm">
+          {group.date
+            ? formatLongDate(group.date)
+            : t("pages.orders.index.no_date")}
+        </h2>
 
-          {group.orders.map((order) => (
-            <OrderCard key={order.id} order={order} section={section} />
-          ))}
-        </section>
-      ))
-    )
+        {group.orders.map((order) => (
+          <OrderCard key={order.id} order={order} section={section} />
+        ))}
+      </section>
+    ))
 
   const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
   const selectedProviderId = activeProviders.values().next().value
@@ -116,7 +117,9 @@ export default function Index({
           </TabsList>
 
           <TabsContent value="upcoming" className="grid gap-5">
-            {renderSection("upcoming", upcoming_orders)}
+            {upcoming_orders.length === 0
+              ? renderEmpty("upcoming")
+              : renderGroups("upcoming", upcoming_orders)}
           </TabsContent>
 
           <TabsContent value="history" className="grid gap-5">
@@ -136,7 +139,23 @@ export default function Index({
               />
             </div>
 
-            {renderSection("history", filteredPastOrders)}
+            <InfiniteScroll
+              data="past_orders"
+              preserveUrl
+              className="grid gap-5"
+              next={({ loading, hasMore }) =>
+                loading ? (
+                  <div className="text-muted-foreground flex items-center justify-center gap-2 py-4 text-sm">
+                    <Spinner aria-hidden="true" />
+                    {t("pages.orders.index.history_loading")}
+                  </div>
+                ) : hasMore || filteredPastOrders.length > 0 ? null : (
+                  renderEmpty("history")
+                )
+              }
+            >
+              {renderGroups("history", filteredPastOrders)}
+            </InfiniteScroll>
           </TabsContent>
         </Tabs>
       </div>
