@@ -3,6 +3,15 @@
 class Consumer::OrdersController < Consumer::InertiaController
   before_action :set_consumer
 
+  class InconsistentPricing < StandardError
+    attr_reader :price, :expected_price
+
+    def initialize(price: nil, expected_price: nil)
+      @price = price
+      @expected_price = expected_price
+    end
+  end
+
   def index
     orders = @consumer.orders.preload(:review, provider: :user, schedule: { menu: { provider: :user } })
 
@@ -74,6 +83,13 @@ class Consumer::OrdersController < Consumer::InertiaController
         end
       )
 
+      total = pricings.sum { it[1].discounted_price }
+      expected_price = order_params[:expected_price]&.to_f&.round 2
+
+      if !order_params[:expected_price].nil? && total != expected_price
+        raise InconsistentPricing.new(price: total, expected_price: expected_price)
+      end
+
       requested_items.zip(pricings).each do |item, pricing|
         quantity = item[:quantity].to_i
         schedule = schedules.fetch(item[:schedule_id].to_i)
@@ -114,6 +130,10 @@ class Consumer::OrdersController < Consumer::InertiaController
     reject_order(order_error_reason(error.record))
   rescue ActiveRecord::RecordNotFound, KeyError
     reject_order(:cart_unavailable)
+  rescue InconsistentPricing => error
+    reject_order(:inconsistent_pricing, data: {
+      price: Account.format_amount(error.price), expected_price: Account.format_amount(error.expected_price)
+    })
   end
 
   def update
@@ -210,9 +230,9 @@ class Consumer::OrdersController < Consumer::InertiaController
     redirect_to edit_order_path(order), alert: t("validations.#{reason}"), status: :see_other
   end
 
-  def reject_order(reason)
+  def reject_order(reason, data: {})
     redirect_to dashboard_cart_path, inertia: {
-      errors: { order_error: t("validations.#{reason}") }
+      errors: { order_error: t("validations.#{reason}", **data) }
     }, status: :see_other
   end
 
@@ -284,7 +304,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def order_params
-    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] }, benefits: [] ] ] ])
+    params.expect(order: [ :address, :expected_price, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] }, benefits: [] ] ] ])
   end
 
   def pricing_params

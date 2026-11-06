@@ -13,6 +13,67 @@ RSpec.describe ProviderCollectionSummary do
   # entregados, así que los ejemplos corren el último día del mes.
   before { travel_to Time.current.end_of_month.change(hour: 12) }
 
+  it "muestra solo el saldo pendiente cuando una cuenta saldada recibe cargos nuevos" do
+    account = provider.accounts.create!(owner: consumer, month: Date.current.prev_month, amount: "500.25")
+
+    expect(described_class.new(provider:).outstanding[:total]).to eq(500.25)
+
+    first = account.payments.create!(provider:, status: :approved)
+    expect(first.expected_amount).to eq(500.25.to_d)
+    expect(account.reload.outstanding_amount).to be_zero
+    expect(described_class.new(provider:).outstanding[:total]).to be_zero
+
+    account.update!(amount: "650.25")
+    expect(account.reload.outstanding_amount).to eq(150.to_d)
+    expect(described_class.new(provider:).outstanding[:total]).to eq(150.0)
+
+    second = account.payments.create!(
+      provider:, status: :submitted,
+      receipt: Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png")
+    )
+    expect(second).to be_submitted
+    expect(second.expected_amount).to eq(150.to_d)
+    expect(described_class.new(provider:).outstanding[:total]).to eq(150.0)
+
+    second.approve
+    expect(account.reload.outstanding_amount).to be_zero
+    expect(account.payments.reload.map(&:id)).to contain_exactly(first.id, second.id)
+    expect(described_class.new(provider:).outstanding[:total]).to be_zero
+  end
+
+  it "suma los saldos de cuentas sin pagos, parcialmente cubiertas y saldadas" do
+    unpaid = provider.accounts.create!(owner: consumer, month: Date.current.prev_month, amount: 100)
+    partially_covered = provider.accounts.create!(owner: consumer.company, month: Date.current.prev_month, amount: 300)
+    partially_covered.payments.create!(provider:, status: :approved)
+    partially_covered.update!(amount: "500.25")
+    settled = provider.accounts.create!(
+      owner: Company.create!(name: "Otra empresa", address: "Rivera 123"),
+      month: Date.current.prev_month, amount: 75
+    )
+    settled.payments.create!(provider:, status: :approved)
+
+    expect(unpaid.outstanding_amount).to eq(100.to_d)
+    expect(partially_covered.reload.outstanding_amount).to eq(200.25.to_d)
+    expect(settled.reload.outstanding_amount).to be_zero
+    expect(described_class.new(provider:).outstanding[:total]).to eq(300.25)
+  end
+
+  it "incluye el IVA en el saldo pendiente de una cuenta de empresa" do
+    allow(ENV).to receive(:[]).and_call_original
+    allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+    account = provider.accounts.create!(owner: consumer.company, month: Date.current.prev_month, amount: "500.25")
+
+    expect(account.payable_amount).to eq(610.31.to_d)
+    expect(described_class.new(provider:).outstanding[:total]).to eq(610.31)
+
+    account.payments.create!(provider:, status: :approved)
+    account.update!(amount: "650.25")
+
+    expect(account.reload.payable_amount).to eq(793.31.to_d)
+    expect(account.outstanding_amount).to eq(183.to_d)
+    expect(described_class.new(provider:).outstanding[:total]).to eq(183.0)
+  end
+
   it "suma los totales redondeados por cuenta sin recalcular IVA sobre el agregado" do
     allow(ENV).to receive(:[]).and_call_original
     allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")

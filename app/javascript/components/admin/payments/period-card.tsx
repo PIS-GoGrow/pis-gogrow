@@ -11,6 +11,7 @@ import {
   CardDescription,
   CardHeader,
 } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
 import { cn } from "@/lib/utils"
 import { adminPayments } from "@/routes"
@@ -100,7 +101,7 @@ export default function PeriodCard({
   return (
     <Card className="bg-muted/50 gap-3 py-4">
       <CardHeader className="px-4">
-        <CardDescription>
+        <CardDescription className="whitespace-nowrap">
           {providerName ? (
             <span className="text-foreground font-semibold">{title}</span>
           ) : (
@@ -119,11 +120,15 @@ export default function PeriodCard({
             <TriangleAlert className="size-3.5" aria-hidden="true" />
             {t("pages.admin.payments.index.due", { date: account.due_date })}
           </span>
-          <StatusBadge status={status} kind="payment" />
+          {status !== "pending" && (
+            <StatusBadge status={status} kind="payment" />
+          )}
         </CardAction>
       </CardHeader>
 
-      <CardContent className="grid gap-2 px-4">
+      <CardContent className="flex flex-1 flex-col gap-3 px-4">
+        <Separator />
+
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="flex flex-wrap items-baseline gap-x-2">
             {/* El monto es un decimal de Rails, así que viaja como texto. */}
@@ -142,21 +147,26 @@ export default function PeriodCard({
           </Button>
         </div>
 
-        <PaymentReceiptDialog
-          accountId={account.id}
-          uploadDisabled={
-            paymentDetailsMissing ||
-            account.payments.some(({ status }) => status === "submitted")
-          }
-          uploadDisabledHint={
-            paymentDetailsMissing
-              ? t("pages.admin.payments.index.bank.missing_upload_hint")
-              : undefined
-          }
-          createAction={adminPayments.create()}
-          destroyAction={adminPayments.destroy}
-          payments={account.payments}
-        />
+        <Separator />
+
+        <div className="flex flex-1 flex-col justify-center">
+          <PaymentReceiptDialog
+            accountId={account.id}
+            inlineUpload
+            uploadDisabled={
+              paymentDetailsMissing ||
+              account.payments.some(({ status }) => status === "submitted")
+            }
+            uploadDisabledHint={
+              paymentDetailsMissing
+                ? t("pages.admin.payments.index.bank.missing_upload_hint")
+                : t("pages.accounts.show.receipt_under_review_hint")
+            }
+            createAction={adminPayments.create()}
+            destroyAction={adminPayments.destroy}
+            payments={account.payments}
+          />
+        </div>
       </CardContent>
     </Card>
   )
