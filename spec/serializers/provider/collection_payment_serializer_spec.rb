@@ -72,4 +72,18 @@ RSpec.describe Provider::CollectionPaymentSerializer do
     expect(serialized["status"]).to eq("rejected")
     expect(serialized["rejection_reason"]).to eq("El comprobante no corresponde")
   end
+
+  it "serializes the receipt size in human units, and nil without a receipt" do
+    payment = account.payments.build(provider:, status: :submitted)
+    expect(described_class.new(payment).to_h["receipt_size"]).to be_nil
+
+    payment.receipt.attach(
+      io: Rails.root.join("public/icon.png").open,
+      filename: "comprobante.png",
+      content_type: "image/png"
+    )
+    payment.save!
+
+    expect(described_class.new(payment).to_h["receipt_size"]).to eq("4,07 KB")
+  end
 end

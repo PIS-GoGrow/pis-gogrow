@@ -140,6 +140,18 @@ RSpec.describe "Orders", type: :request do
         expect(inertia).to render_component("consumer/orders/show")
       end
 
+      it "identifies an upcoming order outside the history" do
+        get order_path(orders(:upcoming_confirmed_future))
+
+        expect(inertia).to have_props(historical: false)
+      end
+
+      it "identifies an order from the history" do
+        get order_path(orders(:history_confirmed_past))
+
+        expect(inertia).to have_props(historical: true)
+      end
+
       it "exposes the breakdown the employee needs to check the order" do
         get order_path(orders(:upcoming_confirmed_future))
 
@@ -1105,6 +1117,9 @@ RSpec.describe "Orders", type: :request do
       before do
         travel_back
         travel_to Time.zone.local(2026, 10, 31, 14, 0)
+        # Las fixtures usan la fecha real: schedules(:past) cae el 31-10 si hoy es 05-11.
+        Schedule.where(date: [ Date.new(2026, 10, 31), Date.new(2026, 11, 4) ])
+                .where.not(id: [ schedules(:today).id, schedules(:future).id ]).destroy_all
         schedules(:today).update_columns(date: Date.new(2026, 10, 31))
         schedules(:future).update_columns(date: Date.new(2026, 11, 4))
       end

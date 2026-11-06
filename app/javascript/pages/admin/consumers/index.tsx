@@ -102,7 +102,7 @@ export default function Index({
 
         <div className="relative">
           <Search
-            className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2"
+            className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 md:right-auto md:left-3"
             aria-hidden="true"
           />
           <Input
@@ -111,12 +111,12 @@ export default function Index({
             onChange={(event) => setSearch(event.target.value)}
             placeholder={t(`${page}.search_placeholder`)}
             aria-label={t(`${page}.search_label`)}
-            className="pl-9"
+            className="pr-9 md:pr-3 md:pl-9"
           />
         </div>
 
         {shown.length === 0 ? (
-          <Empty className="border">
+          <Empty className="min-h-[50svh] border-0 md:min-h-0 md:border">
             <EmptyHeader>
               <EmptyMedia variant="icon">
                 <Users aria-hidden="true" />

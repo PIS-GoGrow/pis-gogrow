@@ -436,8 +436,42 @@ describe("benefit specials", () => {
     name: "Descuento día del padre",
     percentage: 30,
     remaining: 5,
+    starts_on: null,
     due_date: null,
     ...overrides,
+  })
+
+  it("does not offer a special that starts after the dish date", () => {
+    renderDetail({
+      benefit: { ...benefit, specials: [special({ starts_on: "2026-09-17" })] },
+    })
+
+    expect(
+      screen.queryByText(/Descuento día del padre/),
+    ).not.toBeInTheDocument()
+  })
+
+  it("does not offer a special that expires before the dish date", () => {
+    renderDetail({
+      benefit: { ...benefit, specials: [special({ due_date: "2026-09-15" })] },
+    })
+
+    expect(
+      screen.queryByText(/Descuento día del padre/),
+    ).not.toBeInTheDocument()
+  })
+
+  it("offers a special in force on the dish date", () => {
+    renderDetail({
+      benefit: {
+        ...benefit,
+        specials: [
+          special({ starts_on: "2026-09-16", due_date: "2026-09-16" }),
+        ],
+      },
+    })
+
+    expect(screen.getByText(/Descuento día del padre/)).toBeInTheDocument()
   })
 
   it("shows the special and its checkbox when it has remaining units", () => {
@@ -485,6 +519,7 @@ describe("benefits message and lines", () => {
       name: "Descuento día del padre",
       percentage: 30,
       remaining: 5,
+      starts_on: null,
       due_date: null,
     }
 
@@ -517,6 +552,7 @@ describe("benefits message and lines", () => {
       name: "Descuento día del padre",
       percentage: 30,
       remaining: 5,
+      starts_on: null,
       due_date: null,
     }
 

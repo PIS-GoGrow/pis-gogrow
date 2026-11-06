@@ -83,7 +83,7 @@ RSpec.describe "Flujo de comprobantes múltiples y pago parcial", type: :system 
       expect(page).to have_no_content("La imagen está borrosa")
     end
 
-    # 4. El empleado sube un segundo comprobante y la advertencia de pago parcial desaparece
+    # 4. El empleado sube un segundo comprobante y la advertencia de pago parcial se mantiene
     within("[role=tabpanel]") do
       attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
@@ -92,7 +92,8 @@ RSpec.describe "Flujo de comprobantes múltiples y pago parcial", type: :system 
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     within("[role=tabpanel]") do
       expect(page).to have_content("En revisión")
-      expect(page).to have_no_content(I18n.t("pages.accounts.show.partial_payment_warning"))
+      expect(page).to have_content("Pago parcial")
+      expect(page).to have_content(I18n.t("pages.accounts.show.partial_payment_warning"))
     end
 
     # 5. El proveedor vuelve a Cobros pendientes y ve ambos comprobantes en el historial del empleado
@@ -104,13 +105,14 @@ RSpec.describe "Flujo de comprobantes múltiples y pago parcial", type: :system 
     within(month_card) { click_on "Empleados" }
     click_on employee_user.name
 
-    # Se observan ambos comprobantes en el panel desplegado
+    # Se observan ambos comprobantes en el panel desplegado y el motivo del rechazo
+    expect(page).to have_content(I18n.t("pages.provider_collections.partial_payment_warning"))
     expect(page).to have_content("Pago parcial")
     expect(page).to have_button("Revisar pago")
 
     # 6. El proveedor revisa y aprueba el segundo comprobante
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Aprobar" }
+    within(find("[role=dialog]")) { click_on "Confirmar" }
     expect(page).to have_content("Cobro aprobado")
     click_on "Listo"
 

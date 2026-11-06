@@ -45,6 +45,7 @@ interface DatePickerProps {
   min?: string
   max?: string
   weekdaysOnly?: boolean
+  className?: string
 }
 
 export function DatePicker({
@@ -54,13 +55,14 @@ export function DatePicker({
   min,
   max,
   weekdaysOnly,
+  className,
 }: DatePickerProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const selected = toDate(value)
 
   return (
-    <div>
+    <div className={className}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
