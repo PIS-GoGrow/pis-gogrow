@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import AuthLayout from "@/layouts/auth-layout"
 import { readAuthenticityToken } from "@/lib/utils"
+import { providerSessions } from "@/routes"
 import type { HomeIndex } from "@/types"
 
 interface Props extends HomeIndex {
@@ -23,6 +24,7 @@ export default function Home({ variant, dev_login_enabled, errors }: Props) {
       title={t(`pages.home.${variant}.heading`)}
       description={t(`pages.home.${variant}.description`)}
       variant={variant === "provider" ? "welcome" : "landing"}
+      fullHeight={variant === "provider"}
     >
       <Head title={t("pages.home.title")} />
 
@@ -34,21 +36,23 @@ export default function Home({ variant, dev_login_enabled, errors }: Props) {
       )}
 
       {variant === "provider" ? (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-1 flex-col justify-between gap-6">
           <FeatureCarousel />
 
-          <Button
-            asChild
-            size="lg"
-            className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90"
-          >
-            <Link href="/proveedor/iniciar-sesion">
-              <Mail className="mr-2 size-4" aria-hidden="true" />
-              {t("pages.home.provider.sign_in")}
-            </Link>
-          </Button>
+          <div className="mt-auto flex flex-col gap-6 pt-6">
+            <Button
+              asChild
+              size="lg"
+              className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+            >
+              <Link href={providerSessions.new().url}>
+                <Mail className="mr-2 size-4" aria-hidden="true" />
+                {t("pages.home.provider.sign_in")}
+              </Link>
+            </Button>
 
-          {dev_login_enabled && <DevLoginForm origin="/proveedor" />}
+            {dev_login_enabled && <DevLoginForm origin="/proveedor" />}
+          </div>
         </div>
       ) : (
         <>
