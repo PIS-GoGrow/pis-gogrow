@@ -395,8 +395,10 @@
         "index": {
           "all_providers": "Todos",
           "history": "Historial",
-          "history_empty": "Todavía no hiciste ningún pago.",
-          "history_filtered_empty": "No hay pagos de este proveedor.",
+          "history_empty_description": "Cuando pagues una cuenta, va a aparecer acá.",
+          "history_empty_title": "Todavía no hiciste ningún pago",
+          "history_filtered_empty_description": "Todavía no le pagaste ninguna cuenta a este proveedor.",
+          "history_filtered_empty_title": "No hay pagos de este proveedor",
           "meals_used_one": "%{count} vianda consumida",
           "meals_used_other": "%{count} viandas consumidas",
           "meals_used_with_limit_one": "%{meals} de %{limit} vianda consumida",
@@ -1141,6 +1143,8 @@
           "upcoming_address": "Lo recibís en: %{address} (%{delivery_method})",
           "upcoming_empty_description": "No tenés viandas en camino.",
           "upcoming_empty_title": "No tenés pedidos próximos",
+          "upcoming_filtered_empty_description": "No tenés pedidos próximos con este proveedor.",
+          "upcoming_filtered_empty_title": "No hay pedidos de este proveedor",
           "upcoming_tab": "Próximos"
         },
         "show": {
