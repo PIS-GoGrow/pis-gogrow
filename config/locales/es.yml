@@ -1305,8 +1305,6 @@ es:
         delivery_methods:
           office: "Oficina"
           home: "Casa"
-        empty_title: "No hay pedidos"
-        empty_filtered_description: "No tenés pedidos que coincidan con los filtros."
         no_orders_title: "No tenés pedidos"
         no_orders_description: "Cuando tus clientes hagan pedidos, van a aparecer acá."
         code: "PED-%{id}"

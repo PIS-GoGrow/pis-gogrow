@@ -239,8 +239,18 @@ describe("ProviderOrderDays", () => {
     expect(screen.getByText("Matías Rodríguez - GoGrow")).toBeInTheDocument()
   })
 
-  it("sin pedidos en el período usa los textos del diseño aunque haya filtros", () => {
-    renderDays({ orders: [], filters: { ...noFilters, search: "zzz" } })
+  it.each([
+    ["una búsqueda", { orders, filters: { ...noFilters, search: "zzz" } }],
+    [
+      "la pestaña de estado",
+      { orders: [orders[0]], filters: { ...noFilters, status: "confirmed" } },
+    ],
+    [
+      "un período sin pedidos con filtros",
+      { orders: [], filters: { ...noFilters, search: "zzz" } },
+    ],
+  ] as const)("usa los textos del diseño con %s sin resultados", (_, props) => {
+    renderDays({ ...props, orders: [...props.orders] })
 
     expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
     expect(
@@ -249,27 +259,7 @@ describe("ProviderOrderDays", () => {
       ),
     ).toBeInTheDocument()
     expect(screen.queryByText("No hay pedidos")).not.toBeInTheDocument()
-  })
-
-  it("avisa con el mismo layout cuando los filtros no encuentran nada", () => {
-    renderDays({ filters: { ...noFilters, search: "zzz" } })
-
-    expect(screen.getByText("No hay pedidos")).toBeInTheDocument()
-    expect(
-      screen.getByText("No tenés pedidos que coincidan con los filtros."),
-    ).toBeInTheDocument()
-    expect(screen.queryByText("No tenés pedidos")).not.toBeInTheDocument()
-  })
-
-  it("avisa lo mismo si el filtro de estado deja la lista vacía", () => {
-    renderDays({
-      orders: [orders[0]],
-      filters: { ...noFilters, status: "confirmed" },
-    })
-
-    expect(
-      screen.getByText("No tenés pedidos que coincidan con los filtros."),
-    ).toBeInTheDocument()
+    expect(screen.queryByText(/coincidan/)).not.toBeInTheDocument()
   })
 
   describe("historial", () => {

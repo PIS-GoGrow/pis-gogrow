@@ -57,13 +57,11 @@ export default function ProviderOrderDays({
   const days = groupByDate(filtered)
 
   if (days.length === 0) {
-    const noOrders = orders.length === 0
-
     return (
       <Empty
         className={cn(
           "min-h-[50svh]",
-          noOrders && "max-lg:min-h-[calc(100svh-15rem)]",
+          orders.length === 0 && "max-lg:min-h-[calc(100svh-15rem)]",
         )}
       >
         <EmptyHeader>
@@ -76,14 +74,10 @@ export default function ProviderOrderDays({
             />
           </EmptyMedia>
           <EmptyTitle className="text-base">
-            {t(
-              `pages.provider_orders.index.${noOrders ? "no_orders_title" : "empty_title"}`,
-            )}
+            {t("pages.provider_orders.index.no_orders_title")}
           </EmptyTitle>
           <EmptyDescription className="text-wrap">
-            {t(
-              `pages.provider_orders.index.${noOrders ? "no_orders_description" : "empty_filtered_description"}`,
-            )}
+            {t("pages.provider_orders.index.no_orders_description")}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>

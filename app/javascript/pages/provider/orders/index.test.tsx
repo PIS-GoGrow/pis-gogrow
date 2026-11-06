@@ -201,9 +201,7 @@ describe("Provider orders page", () => {
       "zzz",
     )
 
-    expect(
-      screen.getByText("No tenés pedidos que coincidan con los filtros."),
-    ).toBeInTheDocument()
+    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
     expect(
       screen
         .getByRole("tab", { name: "Por revisar" })
@@ -275,9 +273,7 @@ describe("Provider orders page", () => {
     )
     await user.click(screen.getByRole("tab", { name: "Historial" }))
 
-    expect(
-      screen.getByText("No tenés pedidos que coincidan con los filtros."),
-    ).toBeInTheDocument()
+    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
     expect(
       screen.getByPlaceholderText("Buscar pedido, plato, consumidor..."),
     ).toHaveValue("zzz")
