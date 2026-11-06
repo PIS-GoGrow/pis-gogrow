@@ -112,6 +112,17 @@ describe("DishDetail", () => {
     renderDetail({ item: { ...schedule(), remaining: 2 }, quantity: 2 })
 
     expect(screen.getByRole("button", { name: "Agregar uno" })).toBeDisabled()
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Solo quedan 2 viandas disponibles de este plato.",
+    )
+  })
+
+  it("does not warn about the quota before reaching it", () => {
+    renderDetail({ item: { ...schedule(), remaining: 2 }, quantity: 1 })
+
+    expect(
+      screen.queryByText(/disponibles? de este plato/),
+    ).not.toBeInTheDocument()
   })
 
   it("marks the dish as added when it is already in the cart", () => {
