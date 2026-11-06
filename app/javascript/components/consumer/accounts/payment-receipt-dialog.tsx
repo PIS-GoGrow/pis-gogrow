@@ -426,7 +426,7 @@ export default function PaymentReceiptDialog({
         </AdaptableDialog>
       )}
 
-      {!inlineUpload && canUpload && uploadDisabled && (
+      {(!inlineUpload || uploadDisabledHint) && canUpload && uploadDisabled && (
         <p id={uploadHintId} className="text-muted-foreground text-sm">
           {uploadDisabledHint ??
             t("pages.accounts.show.receipt_under_review_hint")}

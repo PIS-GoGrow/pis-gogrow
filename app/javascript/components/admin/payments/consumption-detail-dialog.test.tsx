@@ -147,11 +147,13 @@ describe("ConsumptionDetailDialog", () => {
 
     await user.click(screen.getByRole("tab", { name: "Viandas" }))
 
-    expect(
-      screen.getByRole("button", {
-        name: "Día: 30/08 | Viandas: 3 | Monto: $470",
-      }),
-    ).toBeInTheDocument()
+    const day = screen.getByRole("button", {
+      name: "Día: 30/08 | Viandas: 3 | Monto: $470",
+    })
+    expect(day).toHaveAttribute("aria-expanded", "false")
+    expect(screen.queryByRole("table")).not.toBeInTheDocument()
+
+    await user.click(day)
 
     const table = screen.getByRole("table")
     expect(

@@ -8,7 +8,6 @@ import ConsumptionDetailDialog, {
   type ConsumptionDetail,
 } from "@/components/admin/payments/consumption-detail-dialog"
 import PeriodCard from "@/components/admin/payments/period-card"
-import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
 import BankDetails from "@/components/payments/bank-details"
 import Stat from "@/components/stat"
@@ -55,6 +54,7 @@ export default function Index({
   const [detail, setDetail] = useState<ConsumptionDetail | null>(null)
   const [providerId, setProviderId] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  const [mealsOnly, setMealsOnly] = useState(false)
   const [historyProviderId, setHistoryProviderId] = useState<number | null>(
     null,
   )
@@ -81,11 +81,13 @@ export default function Index({
   function openMonthDetail() {
     setDetail(consumption)
     setProviderId(null)
+    setMealsOnly(true)
     setOpen(true)
   }
 
   async function openDetail(account: AdminAccount) {
     setProviderId(account.provider_id)
+    setMealsOnly(false)
     setOpen(true)
     setLoading(true)
 
@@ -139,8 +141,10 @@ export default function Index({
             />
           }
           value={formatMoney(summary.amount)}
-          detail={`| ${meals}`}
-          className="lg:max-w-[50%]"
+          detail={
+            <span className="text-foreground font-semibold">{`| ${meals}`}</span>
+          }
+          className="lg:mx-auto lg:w-full lg:max-w-[50%]"
           action={
             <div className="grid w-full gap-4">
               {summary.limit !== null && (
@@ -160,7 +164,9 @@ export default function Index({
           }
         />
 
-        <HeadingSmall title={t("pages.admin.payments.index.section")} />
+        <h2 className="text-xl font-bold">
+          {t("pages.admin.payments.index.section")}
+        </h2>
 
         <Tabs defaultValue="pending" className="gap-4">
           <TabsList className="w-full">
@@ -313,6 +319,7 @@ export default function Index({
           providerId={providerId}
           onProviderChange={setProviderId}
           loading={loading}
+          mealsOnly={mealsOnly}
           open={open}
           onOpenChange={setOpen}
         />
