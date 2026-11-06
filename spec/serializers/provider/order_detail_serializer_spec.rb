@@ -18,7 +18,7 @@ RSpec.describe Provider::OrderDetailSerializer do
 
     serialized = described_class.new(order.reload).to_h
 
-    expect(serialized).to include("created_on" => "2026-10-15", "time" => "22:15")
+    expect(serialized).to include("created_on" => "2026-10-15", "time" => "10:15 PM")
   end
 
   it "serializes missing schedule and legacy selections without inventing data" do

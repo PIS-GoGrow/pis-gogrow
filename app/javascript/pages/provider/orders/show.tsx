@@ -51,7 +51,7 @@ function InfoRow({
 
 export default function Show({ order }: ProviderOrdersShow) {
   const { t } = useTranslation()
-  const { formatMoney, formatShortDate } = useFormatters()
+  const { formatMoney, formatDateWithYear } = useFormatters()
   const [decision, setDecision] = useState<ProviderOrderDecision | null>(null)
 
   // Solo lo que el empleado eligió: los pedidos anteriores a la personalización
@@ -113,7 +113,7 @@ export default function Show({ order }: ProviderOrdersShow) {
                 {t("pages.provider_orders.show.title", { code })}
               </h3>
               <p className="text-muted-foreground text-sm">
-                {`${formatShortDate(order.created_on)} · ${order.time}`}
+                {`${formatDateWithYear(order.created_on)} · ${order.time}`}
               </p>
             </div>
 

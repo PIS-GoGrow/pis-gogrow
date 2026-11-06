@@ -1,11 +1,24 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  formatDateWithYear,
   formatLongDate,
   formatLongDateInline,
   formatShortDate,
   formatShortDateTime,
 } from "./dates"
+
+describe("formatDateWithYear", () => {
+  it("escribe el día, el mes en minúscula, una coma y el año", () => {
+    expect(formatDateWithYear("2026-09-11", "es")).toBe(
+      "11 de septiembre, 2026",
+    )
+  })
+
+  it("devuelve vacío si la fecha no es válida", () => {
+    expect(formatDateWithYear("ayer")).toBe("")
+  })
+})
 
 describe("formatLongDate", () => {
   it("escribe el día de la semana con mayúscula y el mes en minúscula", () => {

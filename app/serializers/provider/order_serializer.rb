@@ -22,7 +22,7 @@ class Provider::OrderSerializer < ApplicationSerializer
 
   typelize :string
   attribute :time do |order|
-    order.created_at.strftime("%H:%M")
+    order.created_at.strftime("%-I:%M %p")
   end
 
   typelize :string

@@ -43,7 +43,7 @@ function order(overrides: Partial<ProviderOrderDetail> = {}) {
     delivery_method: "office",
     price: 600,
     date: "2026-10-15",
-    time: "10:15",
+    time: "10:15 AM",
     consumer_name: "Matías Rodríguez",
     consumer_company: "GoGrow",
     menu_name: "Wok de verduras + arroz",
@@ -73,7 +73,9 @@ describe("Provider::Orders Show Page", () => {
       screen.getByText("Por revisar").closest("[data-status]"),
     ).toHaveAttribute("data-status", "pending")
     expect(screen.getByText("Pedido #1")).toBeInTheDocument()
-    expect(screen.getByText("11/09/26 · 10:15")).toBeInTheDocument()
+    expect(
+      screen.getByText("11 de septiembre, 2026 · 10:15 AM"),
+    ).toBeInTheDocument()
   })
 
   it("muestra los datos del empleado y deja el teléfono como no disponible", () => {
