@@ -127,6 +127,27 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
     end
   end
 
+  it "muestra el estado vacío con ícono cuando el proveedor filtrado no tiene pagos" do
+    paid_month(
+      consumer: consumers(:one), provider:, month: previous_month,
+      quantity: 1, discounted_price: 300
+    )
+    sign_in employee
+
+    open_history
+    find("button[aria-label='Filtrar por proveedores']").click
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{providers(:office_provider).id}").click
+      click_button "Aplicar"
+    end
+
+    within(find("[role=tabpanel]:not([hidden])")) do
+      expect(page).to have_content("No hay pagos de este proveedor")
+      expect(page).to have_content("Todavía no le pagaste ninguna cuenta a este proveedor.")
+      expect(page).to have_css("[data-slot='empty'] [data-slot='empty-icon'] svg")
+    end
+  end
+
   # Criterio 2
   it "opens a payment to see the debt it settles and reaches its receipt" do
     _account, payment = paid_month(
