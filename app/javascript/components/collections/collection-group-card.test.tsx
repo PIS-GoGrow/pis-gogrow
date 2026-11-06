@@ -33,6 +33,7 @@ const company = {
   can_approve_payment: false,
   overdue: false,
   month: "Septiembre 2026",
+  month_name: "septiembre",
   due_date: "10/10/26",
   paid_on: null,
   payment_id: null,

@@ -63,6 +63,9 @@ export function ConsumerCart({
         .map((item) => item.menu.provider_name),
     ),
   ]
+  const officeOnlyNames = new Intl.ListFormat("es", {
+    type: "conjunction",
+  }).format(officeOnlyProviders)
   const missingOffice = officeOnlyProviders.length > 0 && !office
   // Sin ningún proveedor que entregue a domicilio, todo el pedido va a la oficina.
   const homeDeliveryAvailable = cart.some((item) => item.menu.home_delivery)
@@ -103,7 +106,7 @@ export function ConsumerCart({
           <ChevronLeft aria-hidden="true" className="size-5" />
         </Button>
       </Link>
-      <h1 className="text-xl font-bold">Tu carrito</h1>
+      <h1 className="text-xl font-bold">{t("pages.cart.title")}</h1>
       {singleDeliveryDate && (
         <p className="text-muted-foreground mt-2 text-sm">
           {deliveryLabel(singleDeliveryDate)}
@@ -135,6 +138,14 @@ export function ConsumerCart({
           disabled={customDisabled}
           onSelect={setAddress}
         />
+        {!homeDeliveryAvailable && office && cart.length > 0 && (
+          <p className="text-muted-foreground mt-3 text-sm">
+            {t("pages.cart.office_only", {
+              count: officeOnlyProviders.length,
+              providers: officeOnlyNames,
+            })}
+          </p>
+        )}
         {showDeliveryWarning && (
           <Alert className="mt-3 border-0 bg-transparent p-0 text-amber-700">
             <TriangleAlert aria-hidden="true" className="text-amber-500" />
@@ -145,9 +156,7 @@ export function ConsumerCart({
                 <p>
                   {t("pages.cart.office_delivery_warning", {
                     count: officeOnlyProviders.length,
-                    providers: new Intl.ListFormat("es", {
-                      type: "conjunction",
-                    }).format(officeOnlyProviders),
+                    providers: officeOnlyNames,
                   })}
                 </p>
               )}
@@ -165,101 +174,114 @@ export function ConsumerCart({
         </Alert>
       )}
 
-      <section className="border-border mt-6 pb-4 text-sm md:border-b">
-        {cart.map((item, i) => {
-          const line = item.menu.price * item.quantity
-          return (
-            <div
-              key={item.cartId}
-              className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
+      {loading && !pricing ? (
+        // Solo mostramos el spinner la primera vez que carga el carrito.
+        // Cuando el usuario toca el + o - en un plato, no queremos borrar toda la vista
+        // solo para mostrar el spinner
+        <Spinner className="mx-auto my-3" />
+      ) : (
+        <>
+          <section className="border-border mt-6 pb-4 text-sm md:border-b">
+            {cart.map((item, i) => {
+              const line = pricing?.lines?.[i]?.subtotal ?? 0 // El caso de 0 nunca va a ocurrir
+              return (
+                <div
+                  key={item.cartId}
+                  className="border-border mb-3 border-b pb-3 last:mb-0 last:border-b-0 last:pb-0"
+                >
+                  {!singleDeliveryDate && (
+                    <p className="text-muted-foreground mb-2">
+                      {deliveryLabel(item.date)}
+                    </p>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      {item.menu.name} x{item.quantity}
+                    </span>
+                    <span>{formatMoney(line)}</span>
+                  </div>
+                  {pricing?.lines?.[i] && (
+                    <ItemBenefitLines tiers={pricing.lines[i].tiers} />
+                  )}
+                  {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
+                    aparte, así que el carrito lo muestra por su cuenta. */}
+                  {item.menu.option_groups
+                    .filter((group) => item.selections[group.id]?.length)
+                    .map((group) => (
+                      <p key={group.id} className="text-muted-foreground mt-2">
+                        {group.name}: {item.selections[group.id].join(", ")}
+                      </p>
+                    ))}
+                  {item.notes && (
+                    <p className="text-muted-foreground mt-2 [overflow-wrap:anywhere]">
+                      {item.notes}
+                    </p>
+                  )}
+                  <div className="mt-2">
+                    <QuantityInput
+                      size="sm"
+                      value={item.quantity}
+                      max={item.remaining}
+                      disabled={processing}
+                      onChange={(quantity) =>
+                        setQuantity(item.cartId, quantity)
+                      }
+                      onRemove={() => remove(item.cartId)}
+                      decreaseLabel={t("pages.cart.decrease", {
+                        name: item.menu.name,
+                      })}
+                      increaseLabel={t("pages.cart.increase", {
+                        name: item.menu.name,
+                      })}
+                      removeLabel={t("pages.cart.remove", {
+                        name: item.menu.name,
+                      })}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+            {!cart.length && (
+              <p className="text-muted-foreground py-6 text-center">
+                {t("pages.cart.empty")}
+              </p>
+            )}
+          </section>
+          <BottomAction>
+            <OrderSummary
+              loading={loading}
+              subtotal={pricing?.subtotal}
+              total={pricing?.total}
+              compact
+            />
+            <Button
+              disabled={
+                !cart.length || processing || !selectedAddress || missingOffice
+              }
+              onClick={confirm}
+              className={cn(
+                "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
+                processing && "bg-muted hover:bg-muted",
+              )}
             >
-              {!singleDeliveryDate && (
-                <p className="text-muted-foreground mb-2">
-                  {deliveryLabel(item.date)}
-                </p>
+              {processing ? (
+                <>
+                  <Spinner />
+                  {t("pages.cart.confirming")}
+                </>
+              ) : (
+                t("pages.cart.confirm")
               )}
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">
-                  {item.menu.name} x{item.quantity}
-                </span>
-                <span>{formatMoney(line)}</span>
-              </div>
-              {pricing?.lines?.[i] && (
-                <ItemBenefitLines tiers={pricing.lines[i].tiers} />
-              )}
-              {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
-                  aparte, así que el carrito lo muestra por su cuenta. */}
-              {item.menu.option_groups
-                .filter((group) => item.selections[group.id]?.length)
-                .map((group) => (
-                  <p key={group.id} className="text-muted-foreground mt-2">
-                    {group.name}: {item.selections[group.id].join(", ")}
-                  </p>
-                ))}
-              {item.notes && (
-                <p className="text-muted-foreground mt-2 [overflow-wrap:anywhere]">
-                  {item.notes}
-                </p>
-              )}
-              <div className="mt-2">
-                <QuantityInput
-                  size="sm"
-                  value={item.quantity}
-                  max={item.remaining}
-                  disabled={processing}
-                  onChange={(quantity) => setQuantity(item.cartId, quantity)}
-                  onRemove={() => remove(item.cartId)}
-                  decreaseLabel={t("pages.cart.decrease", {
-                    name: item.menu.name,
-                  })}
-                  increaseLabel={t("pages.cart.increase", {
-                    name: item.menu.name,
-                  })}
-                  removeLabel={t("pages.cart.remove", { name: item.menu.name })}
-                />
-              </div>
-            </div>
-          )
-        })}
-        {!cart.length && (
-          <p className="text-muted-foreground py-6 text-center">
-            Todavía no agregaste platos.
-          </p>
-        )}
-      </section>
-      <BottomAction>
-        <OrderSummary
-          loading={loading}
-          subtotal={pricing?.subtotal}
-          total={pricing?.total}
-          compact
-        />
-        <Button
-          disabled={
-            !cart.length || processing || !selectedAddress || missingOffice
-          }
-          onClick={confirm}
-          className={cn(
-            "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
-            processing && "bg-muted hover:bg-muted",
+            </Button>
+          </BottomAction>
+          {error && (
+            <Alert variant="destructive" className="mt-3">
+              <AlertDescription>
+                {Array.isArray(error) ? error.join(" ") : error}
+              </AlertDescription>
+            </Alert>
           )}
-        >
-          {processing ? (
-            <>
-              <Spinner />
-              Confirmando pedido
-            </>
-          ) : (
-            "Confirmar pedido"
-          )}
-        </Button>
-      </BottomAction>
-      {error && (
-        <Alert variant="destructive" className="mt-3">
-          <AlertDescription>
-            {Array.isArray(error) ? error.join(" ") : error}
-          </AlertDescription>
-        </Alert>
+        </>
       )}
     </MobileCard>
   )

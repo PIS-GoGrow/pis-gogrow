@@ -99,10 +99,13 @@ export function initialDate(days: OrderDay[], today: string) {
 }
 
 export function summarize(orders: ProviderOrder[]) {
-  const total = orders.reduce((sum, order) => sum + order.price, 0)
+  const counted = orders.filter(
+    (order) => order.status !== "cancelled" && order.status !== "rejected",
+  )
+  const total = counted.reduce((sum, order) => sum + order.price, 0)
 
   return {
-    meals: orders.reduce((sum, order) => sum + (order.amount ?? 0), 0),
+    meals: counted.reduce((sum, order) => sum + (order.amount ?? 0), 0),
     total: Math.round(total * 100) / 100,
   }
 }

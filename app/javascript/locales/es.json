@@ -369,6 +369,10 @@
         },
         "title": "Tu pedido fue rechazado"
       },
+      "payment_approved": {
+        "description": "%{provider} aprobó tu comprobante de pago correspondiente a %{period}.",
+        "title": "Pago aprobado"
+      },
       "payment_available": {
         "description": "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!",
         "title": "¡Ya podés realizar tu pago!"
@@ -782,6 +786,7 @@
               "filter_providers": "Filtrar por proveedor",
               "loading_title": "Detalle del consumo",
               "meals_tab": "Viandas",
+              "meals_title": "%{provider}: Consumos %{month}",
               "payment_tab": "Pago",
               "provider": "Proveedor:",
               "quantity": "Cant.",
@@ -833,9 +838,12 @@
       "cart": {
         "add_address": "Agregar",
         "benefit": "Subsidio Base (%{percentage}%)",
+        "confirm": "Confirmar pedido",
+        "confirming": "Confirmando pedido",
         "decrease": "Quitar una unidad de %{name}",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
+        "empty": "Todavía no agregaste platos.",
         "increase": "Agregar una unidad de %{name}",
         "monthly": {
           "full_price_one": "La vianda de este pedido se cobra a precio completo.",
@@ -863,6 +871,14 @@
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
         "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+        "office_only_one": "%{providers} solo entrega en la Oficina, así que este pedido no puede ir a otra dirección.",
+        "office_only_other": "%{providers} solo entregan en la Oficina, así que este pedido no puede ir a otra dirección.",
+        "order_error": {
+          "description": "Hubo un problema al procesar tu pedido. Intentá de nuevo.",
+          "menu": "Volver al menú",
+          "retry": "Reintentar",
+          "title": "No se pudo procesar el pedido"
+        },
         "remove": "Quitar %{name}",
         "saved_addresses": {
           "cancel": "Cancelar",
@@ -871,6 +887,7 @@
           "title": "Mis direcciones"
         },
         "subtotal": "Precio vianda",
+        "title": "Tu carrito",
         "total": "Monto a pagar"
       },
       "consumer_dashboard": {
@@ -885,7 +902,9 @@
           "reached_100": {
             "one": "Se llegó al 100%, no se aplicará el beneficio %{benefits}",
             "other": "Se llegó al 100%, no se aplicarán los beneficios: %{benefits}"
-          }
+          },
+          "stock_limit_one": "Solo queda 1 vianda disponible de este plato.",
+          "stock_limit_other": "Solo quedan %{count} viandas disponibles de este plato."
         },
         "index": {
           "add": "Agregar",
@@ -1176,6 +1195,8 @@
           "awaiting_other": "%{count} cobros pendientes de confirmación",
           "company": "Empresa",
           "confirmed": "%{amount} en cobros confirmados",
+          "consumed_in_month_one": "%{count} vianda consumida en %{month}",
+          "consumed_in_month_other": "%{count} viandas consumidas en %{month}",
           "detail": "Ver detalle",
           "detail_dialog": {
             "amount": "Monto",
@@ -1197,6 +1218,7 @@
           "download_receipts": "Descargar comprobantes",
           "due": "Vence: %{date}",
           "employees": "Empleados",
+          "outstanding_amount": "Saldo pendiente",
           "partial_missing": "Falta una parte del pago.",
           "rejected_one": "%{count} cobro rechazado",
           "rejected_other": "%{count} cobros rechazados",
@@ -1735,15 +1757,25 @@
       "provider_orders": {
         "actions": {
           "confirm": "Confirmar",
+          "confirmed_sheet": {
+            "description": "El pedido %{code} quedó confirmado y %{name} recibirá una notificación.",
+            "done": "Listo",
+            "title": "Pedido confirmado"
+          },
           "reject": "Rechazar",
           "reject_dialog": {
             "back": "Volver",
             "confirm": "Rechazar pedido",
-            "description": "Seleccioná el motivo de la cancelación. El empleado va a ver el cambio en sus pedidos.",
+            "description": "Esta acción no se puede deshacer. El empleado recibirá una notificación con el motivo que elijas.",
             "details_label": "Describí el motivo",
-            "details_placeholder": "Ingresá el motivo…",
+            "details_placeholder": "Describir el motivo",
             "reason_label": "Motivo",
-            "title": "¿Rechazar el pedido %{code}?"
+            "title": "¿Rechazar pedido?"
+          },
+          "rejected_sheet": {
+            "description": "El pedido %{code} fue cancelado y %{name} recibirá una notificación.",
+            "done": "Listo",
+            "title": "Pedido rechazado"
           }
         },
         "index": {
@@ -1781,7 +1813,7 @@
           "status_filters": {
             "all": "Todos",
             "confirmed": "Confirmados",
-            "pending": "Pendiente"
+            "pending": "Por revisar"
           },
           "tabs": {
             "history": "Historial",
@@ -1807,11 +1839,11 @@
           "employee_company": "Empleado %{company}",
           "heading": "Detalle de pedido",
           "no_price": "Importe no disponible",
-          "notes": "Notas",
+          "not_charged": "Este pedido no será cobrado",
+          "notes": "Comentarios",
           "order_detail": "Detalle del pedido",
           "phone_unavailable": "No disponible",
-          "rejection_details": "Detalle del rechazo",
-          "rejection_reason": "Motivo de rechazo",
+          "rejection_reason": "Motivo de cancelación",
           "subsidy": "Beneficio aplicado",
           "title": "Pedido %{code}",
           "total": "Total"
@@ -1820,7 +1852,7 @@
           "cancelled": "Cancelado",
           "confirmed": "Confirmado",
           "delivered": "Entregado",
-          "pending": "Pendiente",
+          "pending": "Por revisar",
           "rejected": "Rechazado"
         }
       },
