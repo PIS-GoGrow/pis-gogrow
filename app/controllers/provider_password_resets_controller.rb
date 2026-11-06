@@ -24,6 +24,7 @@ class ProviderPasswordResetsController < InertiaController
     # no exponer información.
     if prev && prev["email"] == email && OtpCode.within_resend_cooldown?(Time.zone.at(prev["sent_at"]), "password_reset")
       redirect_to provider_password_reset_code_path, alert: t("flash.password_reset_requested")
+      return
     end
 
     if user&.provider? && (otp = OtpCode.issue(user, :password_reset))
