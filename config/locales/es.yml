@@ -303,8 +303,8 @@ es:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
     automatic_payment_reminders:
-      title: "Recordatorios automáticos de pago"
-      description: "Avisos sobre la apertura y el vencimiento próximo de pagos."
+      title: "Recordatorios de pago"
+      description: "Avisos sobre la apertura y el vencimiento próximo de tus pagos."
     company_payments:
       title: "Pagos a proveedores"
       description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
@@ -1647,7 +1647,7 @@ es:
         provider: "Panel del proveedor"
     consumer_profiles:
       show:
-        title: "Mi cuenta"
+        title: "Cuenta"
         sign_out: "Salir"
         benefit: "Mi beneficio"
         monthly_limit: "Viandas subsidiadas por mes"
@@ -1985,7 +1985,7 @@ es:
         preferences_heading: "Preferencias de RR. HH."
         preferences_description: "Activá o desactivá las categorías de avisos que querés recibir."
         back: "Volver a Cuenta"
-        back_to_account: "Volver a Mi cuenta"
+        back_to_account: "Volver a Cuenta"
     consumer_delivery_addresses:
       index:
         title: "Direcciones"

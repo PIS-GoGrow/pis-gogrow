@@ -161,10 +161,7 @@ export default function Show({
           </section>
         )}
 
-        <section
-          aria-labelledby="consumer-settings-title"
-          className="md:hidden"
-        >
+        <section aria-labelledby="consumer-settings-title">
           <h3 id="consumer-settings-title" className="mb-3 text-xl font-bold">
             {t(`${page}.settings`)}
           </h3>

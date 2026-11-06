@@ -223,8 +223,8 @@
     },
     "notification_configurations": {
       "automatic_payment_reminders": {
-        "description": "Avisos sobre la apertura y el vencimiento próximo de pagos.",
-        "title": "Recordatorios automáticos de pago"
+        "description": "Avisos sobre la apertura y el vencimiento próximo de tus pagos.",
+        "title": "Recordatorios de pago"
       },
       "company_payments": {
         "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
@@ -1002,7 +1002,7 @@
           "notifications_description": "Configurá qué alertas querés recibir",
           "settings": "Configuración",
           "sign_out": "Salir",
-          "title": "Mi cuenta"
+          "title": "Cuenta"
         }
       },
       "dashboard": {
@@ -2045,7 +2045,7 @@
         },
         "notifications": {
           "back": "Volver a Cuenta",
-          "back_to_account": "Volver a Mi cuenta",
+          "back_to_account": "Volver a Cuenta",
           "description": "Configurá qué alertas querés recibir por WhatsApp",
           "heading": "Notificaciones",
           "preferences_description": "Activá o desactivá las categorías de avisos que querés recibir.",
