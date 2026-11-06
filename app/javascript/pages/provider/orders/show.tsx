@@ -204,16 +204,6 @@ export default function Show({ order }: ProviderOrdersShow) {
                     </DetailLine>
                   )}
                   <Separator />
-                  {order.subsidy != null && (
-                    <DetailLine label={t("pages.provider_orders.show.subsidy")}>
-                      -{formatMoney(order.subsidy)}
-                    </DetailLine>
-                  )}
-                  <DetailLine label={t("pages.provider_orders.show.charged")}>
-                    {order.discounted_price == null
-                      ? t("pages.provider_orders.show.no_price")
-                      : formatMoney(order.discounted_price)}
-                  </DetailLine>
                   <div className="flex items-baseline justify-between gap-4">
                     <span className="text-muted-foreground text-sm">
                       {t("pages.provider_orders.show.total")}
