@@ -19,6 +19,7 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
     id: 1,
     status: "submitted",
     rejection_reason: null,
+    expected_amount: null,
     created_at: "2026-10-01T12:00:00Z",
     receipt_url: "/admin/pagos/1/archivo",
     receipt_filename: "receipt.png",
@@ -38,6 +39,7 @@ function makeAccount(overrides: Partial<AdminAccount> = {}): AdminAccount {
     amount: 500,
     vat_amount: 0,
     payable_amount: 500,
+    outstanding_amount: 500,
     orders_amount_sum: 2,
     orders_price_sum: 500,
     collection_status: "pending",
@@ -59,6 +61,15 @@ function renderCard(account: AdminAccount, providerName?: string) {
 }
 
 describe("PeriodCard", () => {
+  it("highlights the provider name in history", () => {
+    renderCard(makeAccount(), "TuViandita")
+
+    expect(screen.getByText("TuViandita: Septiembre 2026")).toHaveClass(
+      "font-semibold",
+      "text-foreground",
+    )
+  })
+
   it("disables uploading another receipt while one is under review", () => {
     const account = makeAccount({
       collection_status: "submitted",
@@ -75,6 +86,25 @@ describe("PeriodCard", () => {
     ).toBeInTheDocument()
   })
 
+  it("disables uploading a receipt while the provider has no payment details", () => {
+    render(
+      <Sheet>
+        <PeriodCard
+          account={makeAccount()}
+          paymentDetailsMissing
+          onOpenDetail={vi.fn()}
+        />
+      </Sheet>,
+    )
+
+    expect(
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeDisabled()
+    expect(
+      screen.getByText(/cuando el proveedor cargue sus datos de cobro/),
+    ).toBeInTheDocument()
+  })
+
   it("enables the upload button when there is no submitted receipt", () => {
     const account = makeAccount({
       collection_status: "rejected",
@@ -82,6 +112,7 @@ describe("PeriodCard", () => {
         makePayment({
           status: "rejected",
           rejection_reason: "Comprobante ilegible",
+          expected_amount: null,
         }),
       ],
     })

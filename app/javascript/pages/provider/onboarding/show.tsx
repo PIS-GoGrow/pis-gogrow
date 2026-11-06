@@ -63,6 +63,54 @@ export default function Onboarding({
   const [canContinue, setCanContinue] = useState(() =>
     step === "1" ? step1Complete(provider) : true,
   )
+  const [skippingIntro, setSkippingIntro] = useState(false)
+
+  if (step === "intro") {
+    function skipIntro() {
+      setSkippingIntro(true)
+      router.patch(
+        providerOnboarding.update().url,
+        { step: "intro", commit: "skip" },
+        {
+          preserveScroll: true,
+          onFinish: () => setSkippingIntro(false),
+        },
+      )
+    }
+
+    return (
+      <Shell>
+        <Head title={t(`${PAGE}.intro.title`)} />
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
+          <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-[#0A0A0A] p-3 text-center text-base font-semibold text-[#FAFAFA]">
+            {provider.name || t("roles.provider")}
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-100">
+            {t(`${PAGE}.intro.title`)}
+          </h1>
+          <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-relaxed">
+            {t(`${PAGE}.intro.description`)}
+          </p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button asChild className="h-11 w-full">
+            <Link href={`${providerOnboarding.show().url}?step=1`}>
+              {t(`${PAGE}.intro.start`)}
+            </Link>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={skippingIntro}
+            onClick={skipIntro}
+            className="text-muted-foreground hover:text-foreground w-full"
+          >
+            {t(`${PAGE}.intro.skip_later`)}
+          </Button>
+        </div>
+      </Shell>
+    )
+  }
 
   if (step === "done") {
     return (
@@ -204,16 +252,18 @@ function StepHeader({
         {t(`${PAGE}.progress`, { current, total: TOTAL_STEPS })}
       </span>
       <div className="flex flex-1 justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="rounded-full"
-          aria-label={t(`${PAGE}.skip`)}
-          onClick={onSkip}
-        >
-          <ChevronRight aria-hidden="true" />
-        </Button>
+        {current < TOTAL_STEPS && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="rounded-full"
+            aria-label={t(`${PAGE}.skip`)}
+            onClick={onSkip}
+          >
+            <ChevronRight aria-hidden="true" />
+          </Button>
+        )}
       </div>
     </div>
   )
@@ -258,14 +308,16 @@ function Footer({
       >
         {isLast ? t(`${PAGE}.finish`) : t(`${PAGE}.continue`)}
       </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        disabled={processing}
-        onClick={onSkip}
-      >
-        {t(`${PAGE}.skip`)}
-      </Button>
+      {!isLast && (
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={processing}
+          onClick={onSkip}
+        >
+          {t(`${PAGE}.skip`)}
+        </Button>
+      )}
     </div>
   )
 }
@@ -280,7 +332,7 @@ function ControlledFooter({
   processing: boolean
   isLast: boolean
   onContinue: () => void
-  onSkip: () => void
+  onSkip?: () => void
   canContinue?: boolean
 }) {
   const { t } = useTranslation()
@@ -295,14 +347,16 @@ function ControlledFooter({
       >
         {isLast ? t(`${PAGE}.finish`) : t(`${PAGE}.continue`)}
       </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        disabled={processing}
-        onClick={onSkip}
-      >
-        {t(`${PAGE}.skip`)}
-      </Button>
+      {!isLast && onSkip && (
+        <Button
+          type="button"
+          variant="ghost"
+          disabled={processing}
+          onClick={onSkip}
+        >
+          {t(`${PAGE}.skip`)}
+        </Button>
+      )}
     </div>
   )
 }

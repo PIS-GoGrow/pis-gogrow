@@ -39,11 +39,11 @@ RSpec.describe "Provider::Onboarding", type: :request do
   describe "GET /provider/primeros-pasos" do
     before { sign_in provider.user, role: :provider }
 
-    it "arranca en el primer paso" do
+    it "arranca en la pantalla de bienvenida/intro" do
       get provider_onboarding_path
 
       expect(inertia).to render_component("provider/onboarding/show")
-      expect(inertia).to have_props { |props| props["step"] == "1" }
+      expect(inertia).to have_props { |props| props["step"] == "intro" }
     end
 
     it "muestra el paso pedido en la URL" do
@@ -97,12 +97,12 @@ RSpec.describe "Provider::Onboarding", type: :request do
       end)
     end
 
-    it "hace fallback al paso 1 si se pasa un parámetro de paso inválido" do
+    it "hace fallback al intro si se pasa un parámetro de paso inválido" do
       get provider_onboarding_path(step: 99)
-      expect(inertia).to have_props { |props| props["step"] == "1" }
+      expect(inertia).to have_props { |props| props["step"] == "intro" }
 
       get provider_onboarding_path(step: "invalido")
-      expect(inertia).to have_props { |props| props["step"] == "1" }
+      expect(inertia).to have_props { |props| props["step"] == "intro" }
     end
   end
 
@@ -117,6 +117,13 @@ RSpec.describe "Provider::Onboarding", type: :request do
         bank_account_holder: "Tu Vianda SRL",
         tax_id: "212345670012"
       }
+    end
+
+    it "permite configurar más tarde desde el intro completando el onboarding y yendo a inicio" do
+      patch provider_onboarding_path, params: { step: "intro", commit: "skip" }
+
+      expect(response).to redirect_to(provider_dashboard_path)
+      expect(provider.reload.onboarded?).to be(true)
     end
 
     it "guarda los datos de cobro y avanza al paso 2" do

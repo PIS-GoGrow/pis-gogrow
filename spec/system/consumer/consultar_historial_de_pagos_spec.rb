@@ -33,7 +33,7 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
   def confirmed_order(consumer:, provider:, month:, quantity:, discounted_price:)
     travel_to(Time.zone.local(month.year, month.month, month.day, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa al pan", description: "Con papas", price: 1000)
-      schedule = Schedule.create!(menu:, date: month + 7, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
 
       Order.create!(
         consumer:, schedule:,
@@ -257,9 +257,8 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
       consumer: consumers(:one), provider:, month: previous_month,
       quantity: 2, discounted_price: 300
     )
-    rejected_payment = payment_for(
-      account, status: :rejected, filename: "comprobante_parcial.png",
-      rejection_reason: "El pago es parcial"
+    partial_payment = payment_for(
+      account, status: :partial, filename: "comprobante_parcial.png"
     )
 
     sign_in employee
@@ -274,11 +273,12 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
       expect(page).to have_content("comprobante.png")
       expect(page).to have_content("comprobante_parcial.png")
       expect(page).to have_content("Pago parcial")
+      expect(page).to have_no_content("Rechazado")
       expect(page).to have_link(
         "Descargar comprobante.png", href: receipt_payment_path(approved_payment)
       )
       expect(page).to have_link(
-        "Descargar comprobante_parcial.png", href: receipt_payment_path(rejected_payment)
+        "Descargar comprobante_parcial.png", href: receipt_payment_path(partial_payment)
       )
     end
   end

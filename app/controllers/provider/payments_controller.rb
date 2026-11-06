@@ -2,8 +2,8 @@
 
 class Provider::PaymentsController < Provider::InertiaController
   REJECTION_REASONS = {
-    "partial_payment" => "El pago es parcial",
-    "incorrect_receipt" => "El comprobante no corresponde"
+    "incorrect_receipt" => "El comprobante no corresponde",
+    "other" => "Otro motivo"
   }.freeze
   MAX_REJECTION_REASON_LENGTH = 500
 
@@ -23,6 +23,7 @@ class Provider::PaymentsController < Provider::InertiaController
     reviewed =
       case params[:status]
       when "approved" then @payment.approve
+      when "partial" then @payment.mark_partial
       when "rejected"
         rejection_reason = normalized_rejection_reason
         return head :unprocessable_entity if rejection_reason.blank? ||
@@ -34,8 +35,7 @@ class Provider::PaymentsController < Provider::InertiaController
 
     if reviewed
       # Sin notice: el frontend ya confirma el resultado con su propio diálogo
-      # (PaymentReviewSheet), distinto según se aprobó, se rechazó por pago
-      # parcial o por otro motivo.
+      # (PaymentReviewSheet), distinto según se aprobó, quedó parcial o se rechazó.
       redirect_to provider_collections_path, status: :see_other
     else
       redirect_back fallback_location: provider_collections_path,
@@ -68,8 +68,8 @@ class Provider::PaymentsController < Provider::InertiaController
 
   def normalized_rejection_reason
     reason_key = params[:rejection_reason].to_s
-    return params[:rejection_details].to_s.strip if reason_key == "other"
+    details = params[:rejection_details].to_s.strip if reason_key == "other"
 
-    REJECTION_REASONS[reason_key]
+    details.presence || REJECTION_REASONS[reason_key]
   end
 end

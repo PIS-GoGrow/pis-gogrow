@@ -175,7 +175,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       expect_chosen_garnish("Papas", instead_of: "Puré")
       expect(page).to have_content("Colonia 1370")
       expect(page).to have_content("Pendiente")
-      expect(page).to have_content(uyu(edited.price))
+      expect(page).to have_content(uyu(edited.price / edited.amount))
       sign_out
 
       # P1 consulta el mismo pedido y ve los mismos datos.
@@ -185,7 +185,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       expect(page).to have_content("Sin sal, con limón")
       expect_chosen_garnish("Papas", instead_of: "Puré")
       expect(page).to have_content("Colonia 1370")
-      expect(page).to have_content("Pendiente")
+      expect(page).to have_content("Por revisar")
       expect(page).to have_content(confirmation_money(edited.price))
       expect(page).to have_content(confirmation_money(edited.discounted_price))
       sign_out
@@ -195,7 +195,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       visit order_path(edited)
       expect(page).to have_content("Sin sal, con limón")
       expect_chosen_garnish("Papas", instead_of: "Puré")
-      expect(page).to have_content(uyu(edited.price))
+      expect(page).to have_content(uyu(edited.price / edited.amount))
     end
   end
 
@@ -241,7 +241,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
       expect(e2_order.reload).to be_pending
       visit provider_order_path(e2_order)
-      expect(page).to have_content("Pendiente")
+      expect(page).to have_content("Por revisar")
       expect(page).to have_button("Confirmar")
       expect(page).to have_button("Rechazar")
     end

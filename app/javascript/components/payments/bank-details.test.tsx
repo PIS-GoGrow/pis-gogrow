@@ -14,6 +14,7 @@ const provider = {
   bank_name: "Banco Itaú",
   bank_account_number: "1951234",
   bank_account_holder: "Noelia Patricia Pinheiro",
+  payment_details_complete: true,
 }
 
 describe("BankDetails", () => {
@@ -47,6 +48,7 @@ describe("BankDetails", () => {
           bank_name: null,
           bank_account_number: null,
           bank_account_holder: null,
+          payment_details_complete: false,
         }}
       />,
     )

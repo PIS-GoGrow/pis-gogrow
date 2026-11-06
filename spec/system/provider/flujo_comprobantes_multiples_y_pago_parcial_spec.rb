@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", type: :system do
+RSpec.describe "Flujo de comprobantes múltiples y pago parcial", type: :system do
   fixtures :users, :consumers, :companies, :providers
 
   let(:employee_user) { users(:one) }
@@ -18,7 +18,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
   def create_closed_month_order
     travel_to(Time.zone.local(closed_month.year, closed_month.month, 10, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa con puré", description: "Clásica", price: 500)
-      schedule = Schedule.create!(menu:, date: closed_month + 12, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
 
       Order.create!(
         consumer:, schedule:,
@@ -51,7 +51,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
       expect(page).to have_content("En revisión")
     end
 
-    # 2. El proveedor revisa el primer comprobante y lo rechaza con 'El pago es parcial'
+    # 2. El proveedor revisa el primer comprobante y lo registra como parcial
     sign_out
     sign_in provider_user, role: :provider
     visit provider_collections_path
@@ -77,12 +77,13 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     visit_hydrated accounts_path
 
     within("[role=tabpanel]") do
-      expect(page).to have_content("Rechazado")
+      expect(page).to have_content("Pago parcial")
+      expect(page).to have_no_content("Rechazado")
       expect(page).to have_content(I18n.t("pages.accounts.show.partial_payment_warning"))
       expect(page).to have_no_content("La imagen está borrosa")
     end
 
-    # 4. El empleado sube un segundo comprobante y la advertencia de pago parcial desaparece
+    # 4. El empleado sube un segundo comprobante y la advertencia de pago parcial se mantiene
     within("[role=tabpanel]") do
       attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
@@ -91,7 +92,8 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     within("[role=tabpanel]") do
       expect(page).to have_content("En revisión")
-      expect(page).to have_no_content(I18n.t("pages.accounts.show.partial_payment_warning"))
+      expect(page).to have_content("Pago parcial")
+      expect(page).to have_content(I18n.t("pages.accounts.show.partial_payment_warning"))
     end
 
     # 5. El proveedor vuelve a Cobros pendientes y ve ambos comprobantes en el historial del empleado
@@ -103,13 +105,14 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
     within(month_card) { click_on "Empleados" }
     click_on employee_user.name
 
-    # Se observan ambos comprobantes en el panel desplegado
+    # Se observan ambos comprobantes en el panel desplegado y el motivo del rechazo
+    expect(page).to have_content(I18n.t("pages.provider_collections.partial_payment_warning"))
     expect(page).to have_content("Pago parcial")
     expect(page).to have_button("Revisar pago")
 
     # 6. El proveedor revisa y aprueba el segundo comprobante
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Aprobar" }
+    within(find("[role=dialog]")) { click_on "Confirmar" }
     expect(page).to have_content("Cobro aprobado")
     click_on "Listo"
 

@@ -13,17 +13,17 @@
 # estado a otro.
 class ProviderCollectionSummary
   # Estado que muestra el grupo de empleados: el que más atención pide.
-  EMPLOYEES_STATUS_PRIORITY = %w[rejected pending submitted approved].freeze
+  EMPLOYEES_STATUS_PRIORITY = %w[rejected partial pending submitted approved].freeze
 
   AccountRow = Data.define(:account, :meals, :reminder_notifications) do
     def initialize(account:, meals:, reminder_notifications: [])
       super
     end
 
-    delegate :id, :amount, :vat_amount, :payable_amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
+    delegate :id, :amount, :vat_amount, :payable_amount, :outstanding_amount, :settled?, :paid_amount, :collection_status, :month, :due_date, :latest_invoice, to: :account
 
     def orders
-      account.orders.select(&:confirmed?).sort_by do |order|
+      account.orders.select(&:consumed?).sort_by do |order|
         [ -(order.schedule&.date&.jd || 0), -order.id ]
       end
     end
@@ -65,7 +65,7 @@ class ProviderCollectionSummary
 
     def total = rows.sum(&:payable_amount)
 
-    def confirmed_total = rows.select(&:approved?).sum(&:payable_amount)
+    def confirmed_total = rows.sum { it.account.paid_amount }
 
     def awaiting_count = rows.count { it.collection_status.in?(%w[pending submitted]) }
 
@@ -73,7 +73,7 @@ class ProviderCollectionSummary
 
     def settled? = rows.all?(&:approved?)
 
-    def employees_total = employee_rows.sum(&:amount)
+    def employees_total = settled? ? employee_rows.sum(&:amount) : employee_rows.sum(&:outstanding_amount)
 
     def employees_status
       statuses = employee_rows.map(&:collection_status)
@@ -134,7 +134,7 @@ class ProviderCollectionSummary
   def outstanding
     owed = rows.reject(&:approved?).map(&:account)
 
-    { total: amount_of(owed), meals: meals_of(owed) }
+    { total: owed.sum(&:outstanding_amount).to_f, meals: meals_of(owed) }
   end
 
   def clients
@@ -165,7 +165,7 @@ class ProviderCollectionSummary
   end
 
   def current_month_orders
-    @current_month_orders ||= Order.confirmed
+    @current_month_orders ||= Order.consumed
       .joins(schedule: :menu)
       .where(menus: { provider_id: @provider.id }, schedules: { date: Date.current.all_month })
       .preload(:schedule, consumer: [ :user, :company ])
@@ -177,7 +177,7 @@ class ProviderCollectionSummary
   # que para sumar viandas de varias cuentas hay que contar cada pedido una vez.
   def order_units
     @order_units ||=
-      OrderAccount.joins(:order).merge(Order.confirmed)
+      OrderAccount.joins(:order).merge(Order.consumed)
                   .where(account_id: accounts.map(&:id))
                   .pluck(:account_id, :order_id, "orders.amount")
                   .group_by(&:first)
@@ -224,7 +224,7 @@ class ProviderCollectionSummary
       # Se precargan todas las cuentas para no disparar consultas al abrirlo.
       collection_accounts = grouped.flat_map(&:rows).map(&:account)
       if collection_accounts.any?
-        ActiveRecord::Associations::Preloader.new(records: collection_accounts, associations: :orders, scope: Order.confirmed).call
+        ActiveRecord::Associations::Preloader.new(records: collection_accounts, associations: :orders, scope: Order.consumed).call
         orders = collection_accounts.flat_map { it.orders.to_a }.uniq(&:id)
         ActiveRecord::Associations::Preloader.new(records: orders, associations: [ { consumer: :user }, { schedule: :menu } ]).call if orders.any?
       end

@@ -63,6 +63,7 @@ vi.mock("@inertiajs/react", async () => {
 })
 
 const defaultProvider: ProviderOnboardingProvider = {
+  name: "Tu Viandita",
   bank_name: "BROU",
   bank_account_type: "savings",
   bank_account_number: "001234567-00001",
@@ -117,6 +118,26 @@ describe("Provider Onboarding Show Page", () => {
     mockProcessing = false
   })
 
+  describe("Paso 'intro': Pantalla inicial", () => {
+    it("muestra el avatar, título, descripción y botones de navegación", () => {
+      renderPage("intro")
+
+      expect(screen.getByText("¿Configuramos tu cuenta?")).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "Completá los datos necesarios y dejá todo listo para recibir pedidos y gestionar tu negocio.",
+        ),
+      ).toBeInTheDocument()
+      expect(screen.getByRole("link", { name: "Comenzar" })).toHaveAttribute(
+        "href",
+        "/proveedor/primeros-pasos?step=1",
+      )
+      expect(
+        screen.getByRole("button", { name: "Configurar más tarde" }),
+      ).toBeInTheDocument()
+    })
+  })
+
   describe("Paso 1: Datos de cobro", () => {
     it("muestra los campos de cobro y el progreso del paso 1", () => {
       renderPage("1")
@@ -166,7 +187,7 @@ describe("Provider Onboarding Show Page", () => {
       renderPage("2")
 
       expect(screen.getByText("Paso 2 de 4")).toBeInTheDocument()
-      expect(screen.getByText("Configure sus pedidos")).toBeInTheDocument()
+      expect(screen.getByText("Configurá tus pedidos")).toBeInTheDocument()
       expect(
         screen.getByLabelText("Volver al paso anterior"),
       ).toBeInTheDocument()
@@ -282,7 +303,7 @@ describe("Provider Onboarding Show Page", () => {
       expect(screen.getByText("¡Todo listo!")).toBeInTheDocument()
       expect(
         screen.getByText(
-          "Su cuenta ya está configurada y puede empezar a recibir pedidos.",
+          "Tu cuenta ya está configurada y podés empezar a recibir pedidos.",
         ),
       ).toBeInTheDocument()
 

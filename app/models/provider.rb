@@ -63,13 +63,18 @@ class Provider < ApplicationRecord
     delivery_methods.include?(method.to_s)
   end
 
-  def order_deadline_passed_today?
-    deadline = order_deadline
-    return false unless deadline
+  def payment_details_complete?
+    [ bank_name, bank_account_number, bank_account_holder ].all?(&:present?)
+  end
 
-    today = Date.current
-    deadline_at = Time.zone.local(today.year, today.month, today.day, deadline.hour, deadline.min, deadline.sec)
-    Time.current >= deadline_at
+  def order_deadline_passed_today?
+    deadline_at = order_deadline_today
+    deadline_at.present? && Time.current >= deadline_at
+  end
+
+  def seconds_until_order_deadline
+    deadline_at = order_deadline_today
+    (deadline_at - Time.current).ceil if deadline_at && Time.current < deadline_at
   end
 
   # Mira todos los cierres en memoria: así un includes(:closures) sirve a todas
@@ -82,6 +87,10 @@ class Provider < ApplicationRecord
 
   def section_completeness
     CONFIGURABLE_SECTIONS.transform_values { |column| self[column].present? }
+  end
+
+  def order_deadline_today
+    order_deadline && Time.current.change(hour: order_deadline.hour, min: order_deadline.min, sec: order_deadline.sec)
   end
 end
 
