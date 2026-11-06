@@ -60,7 +60,7 @@ export default function Show({ order }: ProviderOrdersShow) {
     (option) => option.values.length > 0,
   )
 
-  const code = t("pages.provider_orders.index.code", { id: order.id })
+  const code = t("pages.provider_orders.index.number", { id: order.id })
   const heading = t("pages.provider_orders.show.heading")
   // Un pedido caído no se le cobra a nadie: el total queda tachado.
   const notCharged = order.status === "cancelled" || order.status === "rejected"

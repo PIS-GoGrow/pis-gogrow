@@ -21,12 +21,12 @@ RSpec.describe "Rechazo de pedidos pasados por el proveedor", type: :system do
 
     click_on "Historial"
 
-    within("[data-slot='card']", text: "PED-#{confirmed_past_order.id}") do
+    within(provider_order_card(confirmed_past_order)) do
       expect(page).to have_no_button("Rechazar")
       expect(page).to have_no_button("Confirmar")
     end
 
-    within("[data-slot='card']", text: "PED-#{pending_past_order.id}") do
+    within(provider_order_card(pending_past_order)) do
       expect(page).to have_button("Rechazar", disabled: false)
     end
   end

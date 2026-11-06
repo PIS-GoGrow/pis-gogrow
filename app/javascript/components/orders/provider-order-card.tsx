@@ -51,9 +51,6 @@ export default function ProviderOrderCard({
           >
             {customer}
           </Link>
-          <span className="block text-xs">
-            {t("pages.provider_orders.index.code", { id: order.id })}
-          </span>
         </CardDescription>
         <CardAction>
           <StatusBadge status={order.status} kind="provider_order" />

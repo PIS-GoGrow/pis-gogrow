@@ -318,7 +318,7 @@ describe("Provider orders page", () => {
       expect(screen.getByText("Pedido confirmado")).toBeInTheDocument()
       expect(
         screen.getByText(
-          "El pedido PED-1 quedó confirmado y Bruno Pérez recibirá una notificación.",
+          "El pedido #1 quedó confirmado y Bruno Pérez recibirá una notificación.",
         ),
       ).toBeInTheDocument()
 

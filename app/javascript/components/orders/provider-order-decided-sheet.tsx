@@ -50,7 +50,7 @@ export default function ProviderOrderDecidedSheet({
           </AdaptableDialogTitle>
           <AdaptableDialogDescription className="text-base">
             {t(`${key}.description`, {
-              code: t("pages.provider_orders.index.code", { id: shown.id }),
+              code: t("pages.provider_orders.index.number", { id: shown.id }),
               name: shown.consumer_name,
             })}
           </AdaptableDialogDescription>

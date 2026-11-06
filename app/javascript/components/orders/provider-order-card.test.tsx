@@ -47,6 +47,13 @@ function order(overrides: Partial<ProviderOrder>): ProviderOrder {
 }
 
 describe("ProviderOrderCard", () => {
+  it("no muestra el código del pedido", () => {
+    render(<ProviderOrderCard order={order({})} onDecided={vi.fn()} />)
+
+    expect(screen.queryByText(/PED-/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/#1/)).not.toBeInTheDocument()
+  })
+
   it("ofrece rechazar y confirmar un pedido por revisar", () => {
     render(<ProviderOrderCard order={order({})} onDecided={vi.fn()} />)
 

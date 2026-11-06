@@ -72,7 +72,7 @@ describe("Provider::Orders Show Page", () => {
     expect(
       screen.getByText("Por revisar").closest("[data-status]"),
     ).toHaveAttribute("data-status", "pending")
-    expect(screen.getByText("Pedido PED-1")).toBeInTheDocument()
+    expect(screen.getByText("Pedido #1")).toBeInTheDocument()
     expect(screen.getByText("11/09/26 · 10:15")).toBeInTheDocument()
   })
 
@@ -244,7 +244,7 @@ describe("Provider::Orders Show Page", () => {
       render(<Show order={order({ notes: value, date: null })} />)
 
       expect(screen.getByText("Wok de verduras + arroz")).toBeInTheDocument()
-      expect(screen.getByText("Pedido PED-1")).toBeInTheDocument()
+      expect(screen.getByText("Pedido #1")).toBeInTheDocument()
       expect(screen.queryByText("Comentarios")).not.toBeInTheDocument()
       expect(screen.queryByText("Sin sal")).not.toBeInTheDocument()
     },

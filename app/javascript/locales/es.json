@@ -1798,6 +1798,7 @@
           "no_address": "Sin dirección de entrega",
           "no_orders_description": "Cuando tus clientes hagan pedidos, van a aparecer acá.",
           "no_orders_title": "No tenés pedidos",
+          "number": "#%{id}",
           "quantity": "x%{count}",
           "search_label": "Buscar pedidos",
           "search_placeholder": "Buscar pedido, plato, consumidor...",

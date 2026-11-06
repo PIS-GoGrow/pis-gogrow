@@ -65,7 +65,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
   it "muestra de cada pedido su identificación, plato, cantidad, modalidad y estado" do
     order = orders(:upcoming_pending_today)
 
-    within("[data-slot='card']", text: "PED-#{order.id}") do
+    within(provider_order_card(order)) do
       expect(page).to have_content("Test User - GoGrow")
       expect(page).to have_content("Milanesa con papas fritas")
       expect(page).to have_content("x1")

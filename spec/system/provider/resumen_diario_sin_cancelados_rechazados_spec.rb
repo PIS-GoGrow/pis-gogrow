@@ -51,20 +51,20 @@ RSpec.describe "Resumen diario del proveedor sin cancelados ni rechazados", type
     click_button day_label
 
     @confirmed.each do |order|
-      within("[data-slot='card']", text: "PED-#{order.id}") do
+      within(provider_order_card(order)) do
         expect(page).to have_content("Confirmado")
       end
     end
 
-    within("[data-slot='card']", text: "PED-#{@rejected.id}") do
+    within(provider_order_card(@rejected)) do
       expect(page).to have_content("Rechazado")
     end
-    within("[data-slot='card']", text: "PED-#{@cancelled.id}") do
+    within(provider_order_card(@cancelled)) do
       expect(page).to have_content("Cancelado")
     end
 
     # Los tres pedidos que no cuentan siguen en la lista del día.
-    expect(page).to have_content("PED-#{@rejected.id}")
-    expect(page).to have_content("PED-#{@cancelled.id}")
+    expect(page).to have_css(provider_order_card(@rejected))
+    expect(page).to have_css(provider_order_card(@cancelled))
   end
 end

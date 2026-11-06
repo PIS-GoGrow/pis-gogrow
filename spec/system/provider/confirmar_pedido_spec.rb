@@ -24,7 +24,7 @@ RSpec.describe "Confirmar un pedido", type: :system do
     sign_in users(:provider_user), role: :provider
     visit_hydrated provider_orders_path
 
-    within("[data-slot='card']", text: "PED-#{order.id}") do
+    within(provider_order_card(order)) do
       click_button "Confirmar"
       expect(page).to have_content("Confirmado")
     end
