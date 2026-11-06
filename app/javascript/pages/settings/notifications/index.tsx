@@ -85,7 +85,6 @@ export default function Notifications({
                     onCheckedChange={() => {
                       changeSubscription(id, !subscribed)
                     }}
-                    className="data-[state=checked]:bg-green-600 dark:data-[state=checked]:bg-green-600"
                   />
                 </div>
               )

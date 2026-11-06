@@ -73,7 +73,7 @@ describe("Provider::Orders Show Page", () => {
       screen.getByRole("heading", { name: "Detalle de pedido" }),
     ).toBeInTheDocument()
     expect(
-      screen.getByText("Pendiente").closest("[data-status]"),
+      screen.getByText("Por revisar").closest("[data-status]"),
     ).toHaveAttribute("data-status", "pending")
     expect(screen.getByText("Pedido PED-1")).toBeInTheDocument()
     expect(screen.getByText("11/09/26 · 10:15")).toBeInTheDocument()
@@ -161,7 +161,7 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.queryByText("Beneficio aplicado")).not.toBeInTheDocument()
   })
 
-  it("muestra el motivo y el detalle de un rechazo", () => {
+  it("muestra el texto libre como motivo cuando el rechazo fue «Otro motivo»", () => {
     render(
       <Show
         order={order({
@@ -173,10 +173,13 @@ describe("Provider::Orders Show Page", () => {
       />,
     )
 
-    expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
-    expect(screen.getByText("Otro motivo")).toBeInTheDocument()
+    expect(screen.getByText("Motivo de cancelación")).toBeInTheDocument()
     expect(screen.getByText("Cerrado por reformas")).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
+    // "Otro motivo" no aporta nada al lado del texto que escribió el proveedor.
+    expect(screen.queryByText("Otro motivo")).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Confirmar" }),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Rechazar" })).toBeDisabled()
   })
 
@@ -186,7 +189,9 @@ describe("Provider::Orders Show Page", () => {
     expect(
       screen.getByText("Confirmado").closest("[data-status]"),
     ).toHaveAttribute("data-status", "confirmed")
-    expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
+    expect(
+      screen.queryByRole("button", { name: "Confirmar" }),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Rechazar" })).toBeEnabled()
   })
 
@@ -307,17 +312,21 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.getAllByRole("button")).toEqual([confirm, reject])
   })
 
-  it("deja los botones a la vista, deshabilitados, en un pedido cancelado", () => {
+  it("esconde Confirmar y deshabilita Rechazar en un pedido cancelado", () => {
     render(<Show order={order({ status: "cancelled", rejectable: false })} />)
 
-    expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
+    expect(
+      screen.queryByRole("button", { name: "Confirmar" }),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Rechazar" })).toBeDisabled()
   })
 
   it("deshabilita Rechazar en un pedido confirmado que ya no se puede rechazar", () => {
     render(<Show order={order({ status: "confirmed", rejectable: false })} />)
 
-    expect(screen.getByRole("button", { name: "Confirmar" })).toBeDisabled()
+    expect(
+      screen.queryByRole("button", { name: "Confirmar" }),
+    ).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Rechazar" })).toBeDisabled()
   })
 })
