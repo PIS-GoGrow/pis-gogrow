@@ -53,8 +53,6 @@ function order(overrides: Partial<ProviderOrderDetail> = {}) {
     menu_description: "Con salsa de soja",
     menu_option_groups: [],
     selected_options: [],
-    discounted_price: 300,
-    subsidy: 300,
     schedule_amount: 10,
     remaining_amount: 8,
     rejection_reason: null,

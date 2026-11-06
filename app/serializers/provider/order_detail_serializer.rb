@@ -36,16 +36,6 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
     order.selected_options
   end
 
-  typelize :number, nullable: true
-  attribute :discounted_price do |order|
-    order.discounted_price&.to_f
-  end
-
-  typelize :number, nullable: true
-  attribute :subsidy do |order|
-    order.subsidy&.to_f
-  end
-
   # Cupo del día del plato: cuánto se publicó y cuánto queda sin comprometer.
   typelize :number, nullable: true
   attribute :schedule_amount do |order|

@@ -273,9 +273,9 @@ RSpec.describe "Provider::Orders", type: :request do
       get provider_order_path(order)
 
       expect(inertia).to have_props { |props|
-        props["order"].slice("menu_name", "menu_description", "amount", "price", "discounted_price", "subsidy") == {
+        props["order"].slice("menu_name", "menu_description", "amount", "price") == {
           "menu_name" => original_name, "menu_description" => original_description,
-          "amount" => 2, "price" => 601.0, "discounted_price" => 300.50, "subsidy" => 300.50
+          "amount" => 2, "price" => 601.0
         }
       }
     end
@@ -298,8 +298,6 @@ RSpec.describe "Provider::Orders", type: :request do
           order[:consumer_company] == "GoGrow" &&
           order[:menu_name] == "Milanesa con papas fritas" &&
           order[:menu_description] == "Opción de carne o pollo" &&
-          order[:discounted_price] == 150.25 &&
-          order[:subsidy] == 150.25 &&
           order[:schedule_amount] == 5 &&
           order[:remaining_amount] == 4
       }
