@@ -12,7 +12,7 @@
 # esa orden ya tenía reservado, para no rechazarla contra su propio consumo.
 class Orders::Pricing
   BenefitUsed = Data.define(:units_used, :discount)
-  OrderItemPricing = Data.define(:price, :discounted_price, :benefits)
+  OrderItemPricing = Data.define(:price, :discounted_price, :benefits, :subsidized_quantity)
   # total contiene el porcentaje total de subsidios aplicable, base el porcentaje de
   # subsidio mensual, y specials es un arreglo de hashes de la forma
   #   { name:, percentage: }
@@ -135,7 +135,8 @@ class Orders::Pricing
     OrderItemPricing.new(
       price: unit_price * quantity,
       discounted_price: discounted_price.round(2),
-      benefits: benefit_used
+      benefits: benefit_used,
+      subsidized_quantity: pct_sum.count(&:positive?)
     )
   end
 
