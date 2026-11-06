@@ -239,6 +239,18 @@ describe("ProviderOrderDays", () => {
     expect(screen.getByText("Matías Rodríguez - GoGrow")).toBeInTheDocument()
   })
 
+  it("sin pedidos en el período usa los textos del diseño aunque haya filtros", () => {
+    renderDays({ orders: [], filters: { ...noFilters, search: "zzz" } })
+
+    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Cuando tus clientes hagan pedidos, van a aparecer acá.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText("No hay pedidos")).not.toBeInTheDocument()
+  })
+
   it("avisa con el mismo layout cuando los filtros no encuentran nada", () => {
     renderDays({ filters: { ...noFilters, search: "zzz" } })
 
