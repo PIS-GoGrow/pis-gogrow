@@ -83,7 +83,7 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
     end
   end
 
-  it "muestra las secciones de configuración en la cuenta del empleado" do
+  it "muestra las secciones de configuración en la cuenta del empleado y permite ingresar a cuenta" do
     sign_in employee
 
     visit profile_path
@@ -93,7 +93,16 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
       expect(page).to have_content("Modificá tu teléfono, nombre, correo, contraseña y apariencia")
       expect(page).to have_link("Direcciones", href: delivery_addresses_path)
       expect(page).to have_link("Notificaciones", href: settings_notifications_path)
+      click_link "Cuenta"
     end
+
+    expect(page).to have_current_path(settings_profile_path)
+    expect(page).to have_field("name", with: employee.name)
+    expect(page).to have_field("phone")
+    expect(page).to have_field("consumer_email", with: employee.email)
+    expect(page).to have_field("password")
+    expect(page).to have_content("Configuración de apariencia")
+    expect(page).to have_link("Volver a Cuenta", href: profile_path)
   end
 
   # Criterio 2 -- cerrar sesión. No alcanza con que el botón exista: tiene que

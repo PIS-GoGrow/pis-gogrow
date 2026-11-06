@@ -62,7 +62,7 @@ describe("SettingsPageLayout", () => {
     ).toHaveAttribute("href", "/proveedor/cuenta")
   })
 
-  it("preserves the settings sidebar for employees", () => {
+  it("renders consumer settings as a standalone page with account navigation", () => {
     role = "consumer"
 
     render(
@@ -74,6 +74,11 @@ describe("SettingsPageLayout", () => {
       </SettingsPageLayout>,
     )
 
-    expect(screen.getByTestId("settings-sidebar-layout")).toBeInTheDocument()
+    expect(
+      screen.queryByTestId("settings-sidebar-layout"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("link", { name: "Volver a Cuenta" }),
+    ).toHaveAttribute("href", "/cuenta")
   })
 })

@@ -7,7 +7,7 @@ import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
 import { Button } from "@/components/ui/button"
 import SettingsLayout from "@/layouts/settings/layout"
-import { adminAccount, providerAccount } from "@/routes"
+import { adminAccount, consumerProfiles, providerAccount } from "@/routes"
 
 interface SettingsPageLayoutProps {
   title: string
@@ -34,14 +34,17 @@ export default function SettingsPageLayout({
   const { auth } = usePage().props
   const role = auth.session.role
 
-  // Admin y proveedor navegan sus ajustes desde el hub de Cuenta, con flecha de
-  // volver; el empleado usa el panel lateral de configuración.
-  if (role === "admin" || role === "provider") {
-    const backHref = role === "provider" ? providerAccount().url : adminBackHref
-    const backLabel =
+  if (role === "admin" || role === "provider" || role === "consumer") {
+    const backHref =
       role === "provider"
-        ? t("components.settings_layout.back_to_account")
-        : adminBackLabel
+        ? providerAccount().url
+        : role === "consumer"
+          ? consumerProfiles.show().url
+          : adminBackHref
+    const backLabel =
+      role === "admin"
+        ? adminBackLabel
+        : t("components.settings_layout.back_to_account")
 
     return (
       <PageContainer

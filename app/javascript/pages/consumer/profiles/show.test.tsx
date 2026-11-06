@@ -175,4 +175,16 @@ describe("Consumer account page", () => {
       }),
     ).toHaveAttribute("href", settingsProfiles.show().url)
   })
+
+  it("applies bottom padding on mobile to clear the fixed navigation bar", () => {
+    const { container } = render(
+      <Show benefit={benefit} benefit_summary={summary} coupons={[]} />,
+    )
+
+    const section = container.querySelector(
+      "section[aria-labelledby='consumer-settings-title']",
+    )
+    expect(section).toHaveClass("pb-32")
+    expect(section).toHaveClass("md:pb-0")
+  })
 })

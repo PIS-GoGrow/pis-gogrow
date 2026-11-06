@@ -100,4 +100,32 @@ describe("Settings Profiles Show Page", () => {
 
     expect(screen.getByTestId("delete-user")).toBeInTheDocument()
   })
+
+  it("renders all setting sections in order for consumers as a standalone scrollable page", () => {
+    currentRole = "consumer"
+
+    render(<Profile phone="+59899123456" />)
+
+    expect(
+      screen.getByRole("link", { name: "Volver a Cuenta" }),
+    ).toHaveAttribute("href", "/cuenta")
+    expect(screen.queryByTestId("settings-layout")).not.toBeInTheDocument()
+
+    // 1. Perfil
+    expect(screen.getByLabelText("Nombre")).toBeInTheDocument()
+    expect(screen.getByLabelText("Teléfono")).toBeInTheDocument()
+
+    // 2. Correo electrónico
+    expect(screen.getByLabelText("Correo electrónico")).toBeInTheDocument()
+
+    // 3. Contraseña
+    expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument()
+    expect(screen.getByLabelText("Confirmar contraseña")).toBeInTheDocument()
+
+    // 4. Apariencia
+    expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
+
+    // 5. Eliminar cuenta
+    expect(screen.getByTestId("delete-user")).toBeInTheDocument()
+  })
 })
