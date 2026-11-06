@@ -439,8 +439,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.reload).to be_confirmed
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "redirects back to the order detail when deciding from the detail page" do
@@ -498,8 +497,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
       expect(order.reload).to be_confirmed
       expect(response).to redirect_to(provider_orders_path)
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+      expect(flash[:notice]).to be_nil
     end
   end
 
@@ -544,8 +542,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.rejected_at).to be_present
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "rejects a pending order with 'other' reason and details" do
@@ -559,8 +556,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.rejection_details).to eq("Cerrado por reformas")
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "refuses to reject without a reason and returns an error flash" do

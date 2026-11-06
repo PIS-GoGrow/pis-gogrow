@@ -43,7 +43,7 @@ class Provider::OrdersController < Provider::InertiaController
     order = provider_orders.find(params[:id])
 
     if order.decide(status, reason:, details:, by: Current.user)
-      redirect_back_or_to provider_orders_path, notice: t("flash.order_#{status}"), status: :see_other
+      redirect_back_or_to provider_orders_path, status: :see_other
     else
       alert = order.errors.full_messages.to_sentence.presence || t("validations.order_not_pending")
       redirect_back_or_to provider_orders_path, alert:, status: :see_other

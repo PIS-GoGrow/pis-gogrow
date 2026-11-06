@@ -116,8 +116,6 @@ es:
   flash:
     cart_confirmed: "Pedido realizado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
-    order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
-    order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     review_unavailable: "Este pedido ya no se puede calificar."
     already_signed_in: "Ya iniciaste sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
