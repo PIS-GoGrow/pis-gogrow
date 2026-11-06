@@ -989,6 +989,8 @@
       },
       "consumer_profiles": {
         "show": {
+          "account": "Cuenta",
+          "account_description": "Modificá tu teléfono, nombre, correo, contraseña y apariencia",
           "addresses": "Direcciones",
           "addresses_description": "Gestioná tus direcciones de entrega",
           "benefit": "Mi beneficio",

@@ -83,6 +83,19 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
     end
   end
 
+  it "muestra las secciones de configuración en la cuenta del empleado" do
+    sign_in employee
+
+    visit profile_path
+
+    within(find("section[aria-labelledby=consumer-settings-title]")) do
+      expect(page).to have_link("Cuenta", href: settings_profile_path)
+      expect(page).to have_content("Modificá tu teléfono, nombre, correo, contraseña y apariencia")
+      expect(page).to have_link("Direcciones", href: delivery_addresses_path)
+      expect(page).to have_link("Notificaciones", href: settings_notifications_path)
+    end
+  end
+
   # Criterio 2 -- cerrar sesión. No alcanza con que el botón exista: tiene que
   # mandar el DELETE y dejar la pantalla sin acceso.
   #

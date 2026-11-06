@@ -22,6 +22,7 @@ import {
   consumerProfiles,
   sessions,
   settingsNotifications,
+  settingsProfiles,
 } from "@/routes"
 import type { BreadcrumbItem, ConsumerProfilesShow } from "@/types"
 
@@ -167,6 +168,26 @@ export default function Show({
           </h3>
 
           <div className="border-t">
+            <Link
+              href={settingsProfiles.show().url}
+              prefetch
+              className="hover:bg-accent/50 flex w-full cursor-pointer items-center gap-4 border-b px-1 py-5 transition-colors"
+            >
+              <span className="min-w-0 flex-1 text-left">
+                <span className="block text-base font-medium">
+                  {t(`${page}.account`)}
+                </span>
+                <span className="text-muted-foreground block text-sm">
+                  {t(`${page}.account_description`)}
+                </span>
+              </span>
+
+              <ChevronRight
+                className="text-muted-foreground size-5 shrink-0"
+                aria-hidden="true"
+              />
+            </Link>
+
             <Link
               href={consumerDeliveryAddresses.index().url}
               prefetch

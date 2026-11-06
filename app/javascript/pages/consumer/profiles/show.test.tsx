@@ -2,7 +2,11 @@ import { render, screen } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
-import { consumerDeliveryAddresses, settingsNotifications } from "@/routes"
+import {
+  consumerDeliveryAddresses,
+  settingsNotifications,
+  settingsProfiles,
+} from "@/routes"
 
 import Show from "./show"
 
@@ -160,5 +164,15 @@ describe("Consumer account page", () => {
       "href",
       consumerDeliveryAddresses.index().url,
     )
+  })
+
+  it("links to account settings", () => {
+    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
+
+    expect(
+      screen.getByRole("link", {
+        name: /Modificá tu teléfono, nombre, correo, contraseña y apariencia/,
+      }),
+    ).toHaveAttribute("href", settingsProfiles.show().url)
   })
 })
