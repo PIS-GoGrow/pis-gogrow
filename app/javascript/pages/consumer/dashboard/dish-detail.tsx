@@ -343,23 +343,32 @@ export function DishDetail({
         total={line?.total}
         tiers={line?.tiers}
       />
-      <BottomAction className="flex">
-        <QuantityInput
-          value={quantity}
-          max={maxQuantity}
-          onChange={setQuantity}
-          onRemove={onRemove}
-        />
-        <Button
-          disabled={addDisabled}
-          onClick={() => add(benefitIds)}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
-        >
-          {processing && <Spinner />}
-          {isEditing
-            ? t("pages.consumer_dashboard.index.modify")
-            : t("pages.consumer_dashboard.index.add")}
-        </Button>
+      <BottomAction>
+        {!item.sold_out && maxQuantity > 0 && quantity >= maxQuantity && (
+          <p role="status" className="text-muted-foreground text-sm">
+            {t("pages.consumer_dashboard.detail.stock_limit", {
+              count: maxQuantity,
+            })}
+          </p>
+        )}
+        <div className="flex gap-2">
+          <QuantityInput
+            value={quantity}
+            max={maxQuantity}
+            onChange={setQuantity}
+            onRemove={onRemove}
+          />
+          <Button
+            disabled={addDisabled}
+            onClick={() => add(benefitIds)}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
+          >
+            {processing && <Spinner />}
+            {isEditing
+              ? t("pages.consumer_dashboard.index.modify")
+              : t("pages.consumer_dashboard.index.add")}
+          </Button>
+        </div>
       </BottomAction>
     </MobileCard>
   )

@@ -871,6 +871,8 @@
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
         "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+        "office_only_one": "%{providers} solo entrega en la Oficina, así que este pedido no puede ir a otra dirección.",
+        "office_only_other": "%{providers} solo entregan en la Oficina, así que este pedido no puede ir a otra dirección.",
         "order_error": {
           "description": "Hubo un problema al procesar tu pedido. Intentá de nuevo.",
           "menu": "Volver al menú",
@@ -900,7 +902,9 @@
           "reached_100": {
             "one": "Se llegó al 100%, no se aplicará el beneficio %{benefits}",
             "other": "Se llegó al 100%, no se aplicarán los beneficios: %{benefits}"
-          }
+          },
+          "stock_limit_one": "Solo queda 1 vianda disponible de este plato.",
+          "stock_limit_other": "Solo quedan %{count} viandas disponibles de este plato."
         },
         "index": {
           "add": "Agregar",
