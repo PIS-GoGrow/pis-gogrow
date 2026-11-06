@@ -89,6 +89,18 @@ describe("DishDetail", () => {
     expect(screen.getByText("$320")).toBeInTheDocument()
   })
 
+  it("keeps the amount to pay in the bottom bar, next to the add button", () => {
+    renderDetail()
+
+    const bar = screen.getByText("Monto a pagar").closest(".fixed")
+
+    expect(bar).not.toBeNull()
+    expect(bar).toContainElement(
+      screen.getByRole("button", { name: "Agregar" }),
+    )
+    expect(screen.getByText("Precio vianda").closest(".fixed")).toBeNull()
+  })
+
   // Criterio 3: sin descripción no se inventa texto, y sobre todo no se filtra
   // el "null" del prop a la pantalla, que es la forma más común de que esto
   // salga mal.

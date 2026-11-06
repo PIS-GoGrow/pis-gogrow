@@ -122,7 +122,7 @@ RSpec.describe "Consultar el historial de pagos visto por el empleado" do
     open_history
 
     within(find("[role=tabpanel]")) do
-      expect(page).to have_content("Todavía no hiciste ningún pago.")
+      expect(page).to have_content("Todavía no hiciste ningún pago")
       expect(page).to have_no_link("Descargar comprobante de pago")
     end
   end

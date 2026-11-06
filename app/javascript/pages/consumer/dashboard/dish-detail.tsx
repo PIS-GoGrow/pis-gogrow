@@ -200,7 +200,7 @@ export function DishDetail({
     submitDisabled
 
   return (
-    <MobileCard>
+    <MobileCard className="pb-36">
       <Button
         type="button"
         variant="ghost"
@@ -340,26 +340,34 @@ export function DishDetail({
       <OrderSummary
         loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede
         subtotal={line?.subtotal}
-        total={line?.total}
         tiers={line?.tiers}
+        showTotal={false}
       />
-      <BottomAction className="flex">
-        <QuantityInput
-          value={quantity}
-          max={maxQuantity}
-          onChange={setQuantity}
-          onRemove={onRemove}
+      <BottomAction>
+        <OrderSummary
+          loading={line === null}
+          total={line?.total}
+          compact
+          className="pt-0"
         />
-        <Button
-          disabled={addDisabled}
-          onClick={() => add(benefitIds)}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
-        >
-          {processing && <Spinner />}
-          {isEditing
-            ? t("pages.consumer_dashboard.index.modify")
-            : t("pages.consumer_dashboard.index.add")}
-        </Button>
+        <div className="flex gap-2">
+          <QuantityInput
+            value={quantity}
+            max={maxQuantity}
+            onChange={setQuantity}
+            onRemove={onRemove}
+          />
+          <Button
+            disabled={addDisabled}
+            onClick={() => add(benefitIds)}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground h-12 flex-1 rounded-lg disabled:opacity-100"
+          >
+            {processing && <Spinner />}
+            {isEditing
+              ? t("pages.consumer_dashboard.index.modify")
+              : t("pages.consumer_dashboard.index.add")}
+          </Button>
+        </div>
       </BottomAction>
     </MobileCard>
   )
