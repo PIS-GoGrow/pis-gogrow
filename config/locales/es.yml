@@ -1753,7 +1753,7 @@ es:
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
         profile: "Perfil"
-        profile_description: "Editá tu nombre, correo, teléfono y contraseña"
+        profile_description: "Actualizá tu nombre y tu teléfono"
     provider_onboarding:
       progress: "Paso %{current} de %{total}"
       back: "Volver al paso anterior"
