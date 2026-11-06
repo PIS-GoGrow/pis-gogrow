@@ -184,11 +184,6 @@ export default function Show({ order }: ProviderOrdersShow) {
                       {option.values.join(" · ")}
                     </DetailLine>
                   ))}
-                  {order.notes && (
-                    <DetailLine label={t("pages.provider_orders.show.notes")}>
-                      {order.notes}
-                    </DetailLine>
-                  )}
                   {order.date && (
                     <DetailLine
                       label={t("pages.provider_orders.show.delivery_date")}
@@ -221,6 +216,17 @@ export default function Show({ order }: ProviderOrdersShow) {
                     <p className="text-destructive text-sm">
                       {t("pages.provider_orders.show.not_charged")}
                     </p>
+                  )}
+                  {order.notes && (
+                    <>
+                      <Separator />
+                      <div className="grid gap-1">
+                        <span className="text-muted-foreground text-sm font-medium">
+                          {t("pages.provider_orders.show.notes")}
+                        </span>
+                        <p className="text-sm break-words">{order.notes}</p>
+                      </div>
+                    </>
                   )}
                 </CardContent>
               </Card>

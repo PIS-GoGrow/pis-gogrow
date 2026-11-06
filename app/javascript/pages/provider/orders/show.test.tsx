@@ -150,6 +150,19 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.queryByText("$300,25")).not.toBeInTheDocument()
   })
 
+  it("muestra los comentarios debajo del total", () => {
+    render(<Show order={order()} />)
+
+    const total = screen.getByText("Total")
+    const comments = screen.getByText("Comentarios")
+
+    expect(
+      total.compareDocumentPosition(comments) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    expect(comments.parentElement).toHaveTextContent("Sin sal")
+  })
+
   it("muestra el texto libre como motivo cuando el rechazo fue «Otro motivo»", () => {
     render(
       <Show
