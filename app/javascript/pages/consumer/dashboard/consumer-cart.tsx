@@ -63,6 +63,9 @@ export function ConsumerCart({
         .map((item) => item.menu.provider_name),
     ),
   ]
+  const officeOnlyNames = new Intl.ListFormat("es", {
+    type: "conjunction",
+  }).format(officeOnlyProviders)
   const missingOffice = officeOnlyProviders.length > 0 && !office
   // Sin ningún proveedor que entregue a domicilio, todo el pedido va a la oficina.
   const homeDeliveryAvailable = cart.some((item) => item.menu.home_delivery)
@@ -135,6 +138,14 @@ export function ConsumerCart({
           disabled={customDisabled}
           onSelect={setAddress}
         />
+        {!homeDeliveryAvailable && office && cart.length > 0 && (
+          <p className="text-muted-foreground mt-3 text-sm">
+            {t("pages.cart.office_only", {
+              count: officeOnlyProviders.length,
+              providers: officeOnlyNames,
+            })}
+          </p>
+        )}
         {showDeliveryWarning && (
           <Alert className="mt-3 border-0 bg-transparent p-0 text-amber-700">
             <TriangleAlert aria-hidden="true" className="text-amber-500" />
@@ -145,9 +156,7 @@ export function ConsumerCart({
                 <p>
                   {t("pages.cart.office_delivery_warning", {
                     count: officeOnlyProviders.length,
-                    providers: new Intl.ListFormat("es", {
-                      type: "conjunction",
-                    }).format(officeOnlyProviders),
+                    providers: officeOnlyNames,
                   })}
                 </p>
               )}

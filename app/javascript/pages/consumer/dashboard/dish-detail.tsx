@@ -350,6 +350,13 @@ export function DishDetail({
           compact
           className="pt-0"
         />
+        {!item.sold_out && maxQuantity > 0 && quantity >= maxQuantity && (
+          <p role="status" className="text-muted-foreground text-sm">
+            {t("pages.consumer_dashboard.detail.stock_limit", {
+              count: maxQuantity,
+            })}
+          </p>
+        )}
         <div className="flex gap-2">
           <QuantityInput
             value={quantity}

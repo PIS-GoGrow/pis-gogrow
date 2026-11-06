@@ -79,8 +79,8 @@ describe("PeriodCard", () => {
     renderCard(account)
 
     expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeDisabled()
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
     expect(
       screen.getByText(/Ya hay un comprobante en revisión/),
     ).toBeInTheDocument()
@@ -98,14 +98,14 @@ describe("PeriodCard", () => {
     )
 
     expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeDisabled()
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
     expect(
       screen.getByText(/cuando el proveedor cargue sus datos de cobro/),
     ).toBeInTheDocument()
   })
 
-  it("enables the upload button when there is no submitted receipt", () => {
+  it("offers the receipt upload inline when there is no submitted receipt", () => {
     const account = makeAccount({
       collection_status: "rejected",
       payments: [
@@ -119,20 +119,37 @@ describe("PeriodCard", () => {
 
     renderCard(account)
 
+    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
     expect(
       screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeEnabled()
+    ).toBeDisabled()
     expect(
       screen.queryByText(/Ya hay un comprobante en revisión/),
     ).not.toBeInTheDocument()
   })
 
-  it("shows the due date in the header next to the status", () => {
+  it("shows the due date in the header without a pending badge", () => {
     renderCard(makeAccount())
 
     const header = document.querySelector("[data-slot='card-header']")
     expect(header).toHaveTextContent("Vence: 10/10/26")
-    expect(header?.querySelector("[data-status='pending']")).toBeInTheDocument()
+    expect(
+      header?.querySelector("[data-status='pending']"),
+    ).not.toBeInTheDocument()
+  })
+
+  it("shows the status next to the due date once a receipt was sent", () => {
+    renderCard(
+      makeAccount({
+        collection_status: "submitted",
+        payments: [makePayment({ status: "submitted" })],
+      }),
+    )
+
+    const header = document.querySelector("[data-slot='card-header']")
+    expect(
+      header?.querySelector("[data-status='submitted']"),
+    ).toBeInTheDocument()
   })
 
   it("highlights overdue date when due_date_passed is true", () => {
