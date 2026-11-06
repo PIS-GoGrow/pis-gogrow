@@ -135,7 +135,9 @@ class Consumer::OrdersController < Consumer::InertiaController
   rescue ActiveRecord::RecordNotFound, KeyError
     reject_order(:cart_unavailable)
   rescue InconsistentPricing => error
-    reject_order(:inconsistent_pricing, data: { price: error.price, expected_price: error.expected_price })
+    reject_order(:inconsistent_pricing, data: {
+      price: Account.format_amount(error.price), expected_price: Account.format_amount(error.expected_price)
+    })
   end
 
   def update
