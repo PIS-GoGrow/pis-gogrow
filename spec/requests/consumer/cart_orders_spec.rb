@@ -284,6 +284,34 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(Order.last.discounted_price).to eq(450)
     end
 
+    # Dos pestañas con el mismo cupón al que le queda un uso: la segunda confirma
+    # con el total que vio, pero el cupón ya se gastó en la primera.
+    it "rechaza el pedido armado con un cupón que se agotó en otra pestaña y muestra el importe nuevo" do
+      special.update!(amount: 1)
+      base.update!(amount: 5)
+      cart = [ { schedule_id: wednesday.id, quantity: 1, benefits: [ special.id ], notes: "", options: [] } ]
+
+      post pricing_orders_path, params: { items: cart }, as: :json
+      stale_total = response.parsed_body["total"]
+      expect(stale_total).to eq(60)
+
+      order_cart([ wednesday, 1, [ special.id ] ])
+      expect(Order.last.discounted_price).to eq(60)
+
+      expect {
+        post orders_path, params: { order: { address: company_address, items: cart, expected_price: stale_total } }
+      }.not_to change(Order, :count)
+
+      expect(response).to redirect_to(dashboard_cart_path)
+      follow_redirect!
+      expect(inertia.props.dig(:errors, :order_error)).to eq(
+        I18n.t("validations.inconsistent_pricing", expected_price: "$60", price: "$150")
+      )
+
+      post pricing_orders_path, params: { items: cart }, as: :json
+      expect(response.parsed_body["total"]).to eq(150)
+    end
+
     it "ignora un discounted_price o benefits manipulados en el payload y calcula el precio en el servidor" do
       post orders_path, params: {
         order: {
@@ -618,7 +646,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
       expect(inertia.props.dig(:errors, :order_error)).to eq(
-        I18n.t("validations.inconsistent_pricing", **{ expected_price: 1.0, price: schedule.menu.price / 2 })
+        I18n.t("validations.inconsistent_pricing", expected_price: "$1", price: Account.format_amount(schedule.menu.price / 2))
       )
     end
 
