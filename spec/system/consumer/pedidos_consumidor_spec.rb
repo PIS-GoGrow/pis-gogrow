@@ -18,7 +18,7 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_selector("[role=dialog]")
   end
 
-  it "permite consultar pedidos próximos e historial de los últimos 3 meses" do
+  it "permite consultar pedidos próximos e historial" do
     visit orders_path
 
     expect(page).to have_content("Mis pedidos")
@@ -32,6 +32,17 @@ RSpec.describe "Pedidos del consumidor" do
     find("[role=tab]", text: "Historial").click
     expect(page).to have_content("Rechazado")
     expect(page).to have_content("Cancelado")
+  end
+
+  it "carga al hacer scroll los pedidos entregados hace más de 3 meses" do
+    old_order = orders(:history_confirmed_past)
+    old_order.update_columns(schedule_id: nil, delivery_date: Date.current - 4.months, menu_name: "Guiso de lentejas")
+
+    visit orders_path
+    find("[role=tab]", text: "Historial").click
+
+    expect(page).to have_content("Rechazado")
+    expect(page).to have_content("Guiso de lentejas")
   end
 
   it "filtra el historial por proveedor sin conservar el filtro al recargar" do

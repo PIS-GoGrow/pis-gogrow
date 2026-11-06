@@ -980,6 +980,7 @@ es:
         history_empty_description: "Tus pedidos completados aparecerán aquí."
         history_filtered_empty_title: "No hay pedidos de este proveedor"
         history_filtered_empty_description: "No tenés pedidos anteriores realizados a este proveedor."
+        history_loading: "Cargando pedidos anteriores…"
         providers_label: "Proveedores:"
         all_providers: "Todos los proveedores"
         quantity: "x%{count}"
