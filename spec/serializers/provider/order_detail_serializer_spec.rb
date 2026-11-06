@@ -5,11 +5,11 @@ require "rails_helper"
 RSpec.describe Provider::OrderDetailSerializer do
   fixtures :users, :companies, :providers, :consumers, :menus, :schedules, :orders
 
-  it "does not expose what the employee and the company pay" do
+  it "does not expose what the employee and the company pay nor the dish description" do
     serialized = described_class.new(orders(:upcoming_pending_today)).to_h
 
     expect(serialized).to include("price" => 300.50)
-    expect(serialized).not_to include("discounted_price", "subsidy")
+    expect(serialized).not_to include("discounted_price", "subsidy", "menu_description")
   end
 
   it "sends the creation date and time in Montevideo when UTC is already the next day" do

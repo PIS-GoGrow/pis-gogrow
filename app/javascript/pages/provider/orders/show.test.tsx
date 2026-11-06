@@ -50,7 +50,6 @@ function order(overrides: Partial<ProviderOrderDetail> = {}) {
     address: "Av. 18 de Julio 1234, Centro",
     consumer_email: "matias.rodriguez@gogrow.dev",
     created_on: "2026-09-11",
-    menu_description: "Con salsa de soja",
     menu_option_groups: [],
     selected_options: [],
     schedule_amount: 10,
@@ -99,12 +98,11 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.getByText("$600")).toBeInTheDocument()
   })
 
-  it("completa el detalle con las notas y la fecha de entrega, sin la descripción del plato", () => {
+  it("completa el detalle con las notas y la fecha de entrega", () => {
     render(<Show order={order()} />)
 
     expect(screen.getByText("Sin sal")).toBeInTheDocument()
     expect(screen.getByText("Jueves 15 de octubre")).toBeInTheDocument()
-    expect(screen.queryByText("Con salsa de soja")).not.toBeInTheDocument()
   })
 
   it("muestra lo que el empleado eligió del plato", () => {
@@ -240,13 +238,9 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.queryByText("Detalle del rechazo")).not.toBeInTheDocument()
   })
   it.each([null, ""])(
-    "omite notas y descripción ausentes (%s) sin perder los datos del pedido",
+    "omite notas ausentes (%s) sin perder los datos del pedido",
     (value) => {
-      render(
-        <Show
-          order={order({ notes: value, menu_description: value, date: null })}
-        />,
-      )
+      render(<Show order={order({ notes: value, date: null })} />)
 
       expect(screen.getByText("Wok de verduras + arroz")).toBeInTheDocument()
       expect(screen.getByText("Pedido PED-1")).toBeInTheDocument()

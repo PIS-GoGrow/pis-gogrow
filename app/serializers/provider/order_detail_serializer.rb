@@ -13,11 +13,6 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
     order.created_at.to_date.iso8601
   end
 
-  typelize :string, nullable: true
-  attribute :menu_description do |order|
-    order.menu_description
-  end
-
   # El snapshot conserva el id de cada grupo para poder cruzarlo con la elección
   # del empleado en selected_options. Los pedidos hechos antes de que existiera
   # el snapshot no lo tienen, y ahí se recurre al grupo real del plato.
