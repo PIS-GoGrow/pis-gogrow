@@ -131,6 +131,7 @@ es:
     incorrect_credentials: "El correo electrónico o la contraseña son incorrectos"
     password_changed: "Tu contraseña fue modificada"
     password_reset_expired: "Tu solicitud venció. Solicitá un código nuevo para continuar."
+    password_reset_requested: "Ya se envió un código. Esperá para enviar el siguiente."
     invitation_invalid: "La invitación no es válida o ya fue usada. Solicitá a tu administrador que te la envíe nuevamente."
     too_many_attempts: "Realizó demasiados intentos. Espere unos minutos y vuelva a probar."
     profile_updated: "Tu perfil fue actualizado"
