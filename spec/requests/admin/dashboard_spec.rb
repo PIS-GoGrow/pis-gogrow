@@ -79,7 +79,7 @@ RSpec.describe "Admin::Dashboard", type: :request do
         )
       end
 
-      it "ranks at most three employees with an unsettled month" do
+      it "ranks at most three employees with debt" do
         2.times do |index|
           user = User.create!(name: "Deudor #{index}", email: "deudor#{index}@example.com", password: "secret-password-123")
           consumer = Consumer.create!(user:, company: companies(:gogrow))
@@ -96,6 +96,20 @@ RSpec.describe "Admin::Dashboard", type: :request do
         expect(inertia.props[:debtors].first[:id]).to eq(Consumer.joins(:user).find_by(users: { name: "Deudor 1" }).id)
       end
 
+      it "ranks by the total debt of each employee, whatever the selected month" do
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous_month, amount: 2_000)
+
+        [ {}, { month: previous_key }, { month: "2020-01" } ].each do |params|
+          get(admin_dashboard_path, params:)
+
+          expect(inertia.props[:debtors].first.values_at(:id, :amount, :status)).to eq([ consumers(:other).id, 2_150.25, "pending" ])
+        end
+
+        get admin_consumers_path
+
+        expect(inertia.props[:consumers]).to include(hash_including(id: consumers(:other).id, amount: 2_150.25, status: "pending"))
+      end
+
       it "summarizes another month without figures from the current one" do
         get admin_dashboard_path, params: { month: previous_key }
 
@@ -104,8 +118,7 @@ RSpec.describe "Admin::Dashboard", type: :request do
           summary: {
             "meals" => 0, "meals_limit" => nil, "participation" => 0,
             "spending" => 900.0, "paid" => 900.0, "pending" => 0.0, "projected" => 0.0
-          },
-          debtors: []
+          }
         )
         expect(inertia.props[:payment_month]).to eq(I18n.l(previous_month.prev_month, format: "%B").downcase)
       end
@@ -119,8 +132,7 @@ RSpec.describe "Admin::Dashboard", type: :request do
             "meals" => 0, "meals_limit" => nil, "participation" => 0,
             "spending" => 0.0, "paid" => 0.0, "pending" => 0.0, "projected" => 0.0
           },
-          payments: [],
-          debtors: []
+          payments: []
         )
         expect(inertia.props[:months].last).to eq("key" => "2020-01", "label" => "Enero 2020")
       end

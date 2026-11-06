@@ -270,8 +270,8 @@ es:
     employee_debt_overdue:
       title: "Hay empleados con pagos pendientes"
       description:
-        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio."
-        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarle un recordatorio."
+        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarles un recordatorio."
     order_cancellation:
       title: "Un pedido fue cancelado"
       description: "El pedido de %{consumer} del %{date} de %{dish} fue cancelado."
@@ -595,7 +595,7 @@ es:
         debts:
           title: "Ranking deuda de empleados"
           view: "Ver empleados con saldos pendientes"
-          empty: "Ningún empleado tiene saldos pendientes en este mes."
+          empty: "Ningún empleado tiene saldos pendientes."
       order_events:
         index:
           title: "Auditoría de pedidos"
