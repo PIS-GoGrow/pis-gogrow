@@ -213,7 +213,7 @@ es:
       invalid_menus: "Algún plato elegido no existe."
     inconsistent_pricing: |-
         Los precios o los beneficios de tu pedido cambiaron desde que armaste el carrito. Revisá el pedido y confirmá de nuevo.
-        Total en carrito: $%{expected_price}. Total real: $%{price}.
+        Total en carrito: %{expected_price}. Total real: %{price}.
   notifications:
     order_received:
       title: "Nuevo pedido"
@@ -1127,6 +1127,9 @@ es:
         empty_history_client: "Todavía no hay meses cobrados por completo de este cliente."
       group:
         total: "Total a cobrar"
+        outstanding_amount: "Saldo pendiente"
+        consumed_in_month_one: "%{count} vianda consumida en %{month}"
+        consumed_in_month_other: "%{count} viandas consumidas en %{month}"
         confirmed: "%{amount} en cobros confirmados"
         awaiting_one: "%{count} cobro pendiente de confirmación"
         awaiting_other: "%{count} cobros pendientes de confirmación"
@@ -1246,13 +1249,21 @@ es:
         confirm: "Confirmar"
         reject: "Rechazar"
         reject_dialog:
-          title: "¿Rechazar el pedido %{code}?"
-          description: "Seleccioná el motivo de la cancelación. El empleado va a ver el cambio en sus pedidos."
+          title: "¿Rechazar pedido?"
+          description: "Esta acción no se puede deshacer. El empleado recibirá una notificación con el motivo que elijas."
           reason_label: "Motivo"
           details_label: "Describí el motivo"
-          details_placeholder: "Ingresá el motivo…"
+          details_placeholder: "Describir el motivo"
           back: "Volver"
           confirm: "Rechazar pedido"
+        confirmed_sheet:
+          title: "Pedido confirmado"
+          description: "El pedido %{code} quedó confirmado y %{name} recibirá una notificación."
+          done: "Listo"
+        rejected_sheet:
+          title: "Pedido rechazado"
+          description: "El pedido %{code} fue cancelado y %{name} recibirá una notificación."
+          done: "Listo"
       rejection_reasons:
         out_of_stock: "Sin stock disponible"
         duplicate_order: "Pedido duplicado"
@@ -1263,7 +1274,7 @@ es:
         dish_deleted: "Plato eliminado"
         dish_unpublished: "Plato retirado del menú"
       statuses:
-        pending: "Pendiente"
+        pending: "Por revisar"
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
@@ -1275,7 +1286,7 @@ es:
           history: "Historial"
         status_filter_label: "Filtrar pedidos por estado"
         status_filters:
-          pending: "Pendiente"
+          pending: "Por revisar"
           confirmed: "Confirmados"
           all: "Todos"
         delivery_label: "Entregas:"
@@ -1313,14 +1324,14 @@ es:
         employee_company: "Empleado %{company}"
         phone_unavailable: "No disponible"
         order_detail: "Detalle del pedido"
-        notes: "Notas"
+        notes: "Comentarios"
         delivery_date: "Entrega"
         total: "Total"
         subsidy: "Beneficio aplicado"
         charged: "Paga el empleado"
         no_price: "Importe no disponible"
-        rejection_reason: "Motivo de rechazo"
-        rejection_details: "Detalle del rechazo"
+        not_charged: "Este pedido no será cobrado"
+        rejection_reason: "Motivo de cancelación"
     provider_dashboard:
       index:
         title: "Inicio"
