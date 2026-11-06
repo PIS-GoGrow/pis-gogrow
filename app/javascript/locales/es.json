@@ -843,6 +843,7 @@
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
         "empty": "Todavía no agregaste platos.",
+        "empty_cart": "Todavía no agregaste platos al carrito.",
         "increase": "Agregar una unidad de %{name}",
         "monthly": {
           "full_price_one": "La vianda de este pedido se cobra a precio completo.",

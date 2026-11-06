@@ -22,6 +22,7 @@ import useSessionStorage from "@/hooks/use-session-storage"
 import { formatLongDate } from "@/lib/dates"
 import { toggleFavorite } from "@/lib/favorites"
 import { formatMoney } from "@/lib/money"
+import { cn } from "@/lib/utils"
 import { dashboardCart } from "@/routes"
 import type { ConsumerClosure, ConsumerDashboardIndex } from "@/types"
 
@@ -261,11 +262,22 @@ export function WeeklyMenu({
               </p>
               <Button
                 type="button"
-                disabled={count === 0}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-8 w-full"
                 asChild
+                className={cn(
+                  "mt-8 w-full",
+                  count === 0 && "pointer-events-none opacity-50",
+                )}
               >
-                <Link href={dashboardCart().url}>Ver carrito</Link>
+                <Link
+                  href={dashboardCart().url}
+                  aria-disabled={count === 0}
+                  tabIndex={count === 0 ? -1 : undefined}
+                  onClick={(event) => {
+                    if (count === 0) event.preventDefault()
+                  }}
+                >
+                  Ver carrito
+                </Link>
               </Button>
             </div>
           </aside>
