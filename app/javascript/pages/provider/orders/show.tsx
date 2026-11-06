@@ -73,6 +73,17 @@ export default function Show({ order }: ProviderOrdersShow) {
 
   const code = t("pages.provider_orders.index.code", { id: order.id })
   const heading = t("pages.provider_orders.show.heading")
+  // Un pedido caído no se le cobra a nadie: el total queda tachado.
+  const notCharged = order.status === "cancelled" || order.status === "rejected"
+  // Con "Otro motivo" el texto libre es el motivo: repetir la etiqueta
+  // genérica al lado no agrega nada.
+  const details = order.rejection_details?.trim()
+  const rejectionText =
+    details && details.length > 0
+      ? details
+      : order.rejection_reason
+        ? t(`pages.provider_orders.rejection_reasons.${order.rejection_reason}`)
+        : null
   const DeliveryIcon = order.delivery_method === "home" ? House : Building2
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -189,16 +200,7 @@ export default function Show({ order }: ProviderOrdersShow) {
                     <DetailLine
                       label={t("pages.provider_orders.show.rejection_reason")}
                     >
-                      {t(
-                        `pages.provider_orders.rejection_reasons.${order.rejection_reason}`,
-                      )}
-                    </DetailLine>
-                  )}
-                  {order.rejection_details && (
-                    <DetailLine
-                      label={t("pages.provider_orders.show.rejection_details")}
-                    >
-                      {order.rejection_details}
+                      {rejectionText}
                     </DetailLine>
                   )}
                   <Separator />
@@ -216,10 +218,20 @@ export default function Show({ order }: ProviderOrdersShow) {
                     <span className="text-muted-foreground text-sm">
                       {t("pages.provider_orders.show.total")}
                     </span>
-                    <span className="text-lg font-semibold">
+                    <span
+                      className={cn(
+                        "text-lg font-semibold",
+                        notCharged && "text-muted-foreground line-through",
+                      )}
+                    >
                       {formatMoney(order.price)}
                     </span>
                   </div>
+                  {notCharged && (
+                    <p className="text-destructive text-sm">
+                      {t("pages.provider_orders.show.not_charged")}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </div>
