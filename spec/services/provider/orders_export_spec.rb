@@ -88,7 +88,7 @@ RSpec.describe Provider::OrdersExport do
       row = xlsx_cells(xlsx)[1]
 
       expect(row.map(&:value)).to eq([
-        "PED-1247", Date.new(2026, 10, 26), "21:30", "Pendiente", "Test User", "GoGrow", "Milanesa con papas fritas",
+        "PED-1247", Date.new(2026, 10, 26), "21:30", "Por revisar", "Test User", "GoGrow", "Milanesa con papas fritas",
         "Guarnición: Papas, Ensalada; Salsa: Criolla", 2, "Oficina", "Julio Herrera y Reissig 565", "Timbre 2", 1234.5
       ])
       expect(row[1].format).to eq("dd/mm/yyyy")

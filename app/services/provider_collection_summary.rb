@@ -134,7 +134,7 @@ class ProviderCollectionSummary
   def outstanding
     owed = rows.reject(&:approved?).map(&:account)
 
-    { total: amount_of(owed), meals: meals_of(owed) }
+    { total: owed.sum(&:outstanding_amount).to_f, meals: meals_of(owed) }
   end
 
   def clients

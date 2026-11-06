@@ -1,4 +1,5 @@
-import { Settings2 } from "lucide-react"
+import { Check, Settings2 } from "lucide-react"
+import { Checkbox as CheckboxPrimitive } from "radix-ui"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -10,10 +11,6 @@ import {
 } from "@/components/adaptable-dialog"
 import FavoriteButton from "@/components/consumer/menus/favorite-button"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { cn } from "@/lib/utils"
 import type { Provider } from "@/types"
 
 interface ProviderFilterOption<Id extends string | number> {
@@ -31,6 +28,34 @@ interface Props<Id extends string | number> {
   onToggleFavorite?: (id: Id, isFavorite: boolean) => void
 }
 
+interface OptionProps {
+  id: string
+  label: string
+  checked: boolean
+  onToggle: () => void
+}
+
+function Option({ id, label, checked, onToggle }: OptionProps) {
+  return (
+    <CheckboxPrimitive.Root
+      id={id}
+      checked={checked}
+      onCheckedChange={onToggle}
+      aria-labelledby={`${id}-label`}
+      className="hover:bg-muted focus-visible:ring-ring/50 flex min-h-12 min-w-0 flex-1 items-center gap-2 rounded-lg px-2 text-left text-base leading-6 font-medium tracking-normal outline-none focus-visible:ring-[3px]"
+    >
+      <span className="flex size-6 shrink-0 items-center justify-center">
+        <CheckboxPrimitive.Indicator>
+          <Check aria-hidden="true" className="size-4" />
+        </CheckboxPrimitive.Indicator>
+      </span>
+      <span id={`${id}-label`} className="min-w-0 flex-1 wrap-anywhere">
+        {label}
+      </span>
+    </CheckboxPrimitive.Root>
+  )
+}
+
 export function ProviderFilterSheet<Id extends string | number>({
   providers,
   selectedProviders,
@@ -44,10 +69,7 @@ export function ProviderFilterSheet<Id extends string | number>({
   const [open, setOpen] = useState(false)
   const [draftProviders, setDraftProviders] = useState<Set<Id>>(new Set())
 
-  const allProvidersSelected =
-    draftProviders.size === 0 ||
-    (selectionMode === "multiple" &&
-      providers.every((provider) => draftProviders.has(provider.id)))
+  const allProvidersSelected = draftProviders.size === 0
 
   function toggleProvider(providerId: Id) {
     setDraftProviders((selected) => {
@@ -55,16 +77,14 @@ export function ProviderFilterSheet<Id extends string | number>({
         return selected.has(providerId) ? new Set() : new Set([providerId])
       }
 
-      const next = new Set(
-        selected.size === 0
-          ? providers.map((provider) => provider.id)
-          : selected,
-      )
+      const next = new Set(selected)
 
       if (next.has(providerId)) next.delete(providerId)
       else next.add(providerId)
 
-      return next
+      return providers.every((provider) => next.has(provider.id))
+        ? new Set()
+        : next
     })
   }
 
@@ -101,76 +121,41 @@ export function ProviderFilterSheet<Id extends string | number>({
           {t("pages.consumer_dashboard.index.provider_filter.title")}
         </AdaptableDialogTitle>
 
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div
-            className={cn(
-              "border-border bg-card flex min-h-12 shrink-0 items-center gap-3 rounded-lg border p-3",
-              allProvidersSelected && "border-primary bg-muted",
-            )}
-          >
-            <Checkbox
-              id="dashboard-filter-all"
-              checked={allProvidersSelected}
-              onCheckedChange={() => setDraftProviders(new Set())}
-              className="border-input bg-background text-primary data-[state=checked]:bg-background dark:data-[state=checked]:bg-background [&_[data-slot=checkbox-indicator]]:bg-primary flex items-center justify-center rounded-full shadow-none [&_[data-slot=checkbox-indicator]]:size-2 [&_[data-slot=checkbox-indicator]]:rounded-full [&_svg]:hidden"
-            />
-            <Label
-              htmlFor="dashboard-filter-all"
-              className="min-w-0 flex-1 cursor-pointer text-base leading-6 font-medium tracking-normal wrap-anywhere"
-            >
-              {allProvidersLabel ??
-                t("pages.consumer_dashboard.index.provider_filter.all")}
-            </Label>
-          </div>
-
-          <Separator className="my-2 shrink-0" />
-          <div
-            data-provider-filter-list
-            className="flex min-h-0 flex-col gap-3 overflow-x-hidden overflow-y-auto overscroll-contain p-1"
-          >
-            {providers.map((provider) => (
-              <div
-                key={provider.id}
-                className={cn(
-                  "border-border bg-card flex min-h-12 shrink-0 items-center gap-3 rounded-lg border p-3",
-                  (draftProviders.has(provider.id) ||
-                    (selectionMode === "multiple" && allProvidersSelected)) &&
-                    "border-primary bg-muted",
-                )}
-              >
-                <Checkbox
-                  id={`dashboard-filter-${provider.id}`}
-                  checked={
-                    draftProviders.has(provider.id) ||
-                    (selectionMode === "multiple" && allProvidersSelected)
+        <div
+          data-provider-filter-list
+          className="-mx-2 flex min-h-0 flex-1 flex-col overflow-x-hidden overflow-y-auto overscroll-contain"
+        >
+          <Option
+            id="dashboard-filter-all"
+            label={
+              allProvidersLabel ??
+              t("pages.consumer_dashboard.index.provider_filter.all")
+            }
+            checked={allProvidersSelected}
+            onToggle={() => setDraftProviders(new Set())}
+          />
+          {providers.map((provider) => (
+            <div key={provider.id} className="flex items-center gap-1">
+              <Option
+                id={`dashboard-filter-${provider.id}`}
+                label={provider.name}
+                checked={draftProviders.has(provider.id)}
+                onToggle={() => toggleProvider(provider.id)}
+              />
+              {favoriteIds && onToggleFavorite && (
+                <FavoriteButton
+                  active={favoriteIds.has(provider.id)}
+                  label={t(
+                    `pages.consumer_dashboard.index.favorites.${favoriteIds.has(provider.id) ? "remove" : "add"}`,
+                    { name: provider.name },
+                  )}
+                  onToggle={() =>
+                    onToggleFavorite(provider.id, favoriteIds.has(provider.id))
                   }
-                  onCheckedChange={() => toggleProvider(provider.id)}
-                  className="border-input bg-background text-primary data-[state=checked]:bg-background dark:data-[state=checked]:bg-background [&_[data-slot=checkbox-indicator]]:bg-primary flex items-center justify-center rounded-full shadow-none [&_[data-slot=checkbox-indicator]]:size-2 [&_[data-slot=checkbox-indicator]]:rounded-full [&_svg]:hidden"
                 />
-                <Label
-                  htmlFor={`dashboard-filter-${provider.id}`}
-                  className="min-w-0 flex-1 cursor-pointer text-base leading-6 font-medium tracking-normal wrap-anywhere"
-                >
-                  {provider.name}
-                </Label>
-                {favoriteIds && onToggleFavorite && (
-                  <FavoriteButton
-                    active={favoriteIds.has(provider.id)}
-                    label={t(
-                      `pages.consumer_dashboard.index.favorites.${favoriteIds.has(provider.id) ? "remove" : "add"}`,
-                      { name: provider.name },
-                    )}
-                    onToggle={() =>
-                      onToggleFavorite(
-                        provider.id,
-                        favoriteIds.has(provider.id),
-                      )
-                    }
-                  />
-                )}
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          ))}
         </div>
 
         <div className="grid shrink-0 grid-cols-2 gap-3">
@@ -186,11 +171,7 @@ export function ProviderFilterSheet<Id extends string | number>({
             type="button"
             className="bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-lg text-base font-medium shadow-none"
             onClick={() => {
-              onApply(
-                selectionMode === "multiple" && allProvidersSelected
-                  ? new Set()
-                  : new Set(draftProviders),
-              )
+              onApply(new Set(draftProviders))
               setOpen(false)
             }}
           >

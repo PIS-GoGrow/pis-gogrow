@@ -70,7 +70,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
       expect(page).to have_content("Milanesa con papas fritas")
       expect(page).to have_content("x1")
       expect(page).to have_content("(Casa)")
-      expect(page).to have_content("Pendiente")
+      expect(page).to have_content("Por revisar")
     end
   end
 
@@ -99,7 +99,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
       expect(page).to have_css("[data-status='confirmed']")
       expect(page).to have_no_css("[data-status='pending'], [data-status='cancelled'], [data-status='rejected']")
 
-      click_on "Pendiente"
+      click_on "Por revisar"
 
       expect(page).to have_css("button", text: day_label(today))
       expect(page).to have_css("[data-status='pending']")
