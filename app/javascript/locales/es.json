@@ -1826,7 +1826,6 @@
         },
         "show": {
           "back": "Volver a pedidos",
-          "delivery_date": "Entrega",
           "employee": "Empleado",
           "employee_company": "Empleado %{company}",
           "heading": "Detalle de pedido",

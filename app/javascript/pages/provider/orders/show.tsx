@@ -49,24 +49,9 @@ function InfoRow({
   )
 }
 
-function DetailLine({
-  label,
-  children,
-}: {
-  label: string
-  children: ReactNode
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-4 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="min-w-0 flex-1 text-right break-words">{children}</span>
-    </div>
-  )
-}
-
 export default function Show({ order }: ProviderOrdersShow) {
   const { t } = useTranslation()
-  const { formatMoney, formatLongDate, formatShortDate } = useFormatters()
+  const { formatMoney, formatShortDate } = useFormatters()
   const [decision, setDecision] = useState<ProviderOrderDecision | null>(null)
 
   // Solo lo que el empleado eligió: los pedidos anteriores a la personalización
@@ -191,13 +176,6 @@ export default function Show({ order }: ProviderOrdersShow) {
                       </p>
                     ))}
                   </div>
-                  {order.date && (
-                    <DetailLine
-                      label={t("pages.provider_orders.show.delivery_date")}
-                    >
-                      {formatLongDate(order.date)}
-                    </DetailLine>
-                  )}
                   <Separator />
                   <div className="flex items-baseline justify-between gap-4">
                     <span className="text-muted-foreground text-sm">

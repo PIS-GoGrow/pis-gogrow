@@ -1324,7 +1324,6 @@ es:
         phone_unavailable: "No disponible"
         order_detail: "Detalle del pedido"
         notes: "Comentarios"
-        delivery_date: "Entrega"
         total: "Total"
         not_charged: "Este pedido no será cobrado"
         rejection_reason: "Motivo de cancelación"

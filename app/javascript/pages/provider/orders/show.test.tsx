@@ -98,11 +98,12 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.getByText("$600")).toBeInTheDocument()
   })
 
-  it("completa el detalle con las notas y la fecha de entrega", () => {
+  it("completa el detalle con las notas, sin la fecha de entrega", () => {
     render(<Show order={order()} />)
 
     expect(screen.getByText("Sin sal")).toBeInTheDocument()
-    expect(screen.getByText("Jueves 15 de octubre")).toBeInTheDocument()
+    expect(screen.queryByText("Entrega")).not.toBeInTheDocument()
+    expect(screen.queryByText("Jueves 15 de octubre")).not.toBeInTheDocument()
   })
 
   it("muestra lo que el empleado eligió del plato", () => {
@@ -245,7 +246,6 @@ describe("Provider::Orders Show Page", () => {
       expect(screen.getByText("Wok de verduras + arroz")).toBeInTheDocument()
       expect(screen.getByText("Pedido PED-1")).toBeInTheDocument()
       expect(screen.queryByText("Comentarios")).not.toBeInTheDocument()
-      expect(screen.queryByText("Entrega")).not.toBeInTheDocument()
       expect(screen.queryByText("Sin sal")).not.toBeInTheDocument()
     },
   )
