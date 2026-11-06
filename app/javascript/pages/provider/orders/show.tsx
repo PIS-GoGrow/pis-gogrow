@@ -240,7 +240,6 @@ export default function Show({ order }: ProviderOrdersShow) {
 
         <ProviderOrderActions
           order={order}
-          keepVisible
           stackOnMobile
           className="mx-auto w-full pb-[env(safe-area-inset-bottom)] md:mt-6 md:max-w-md md:pb-0"
         />

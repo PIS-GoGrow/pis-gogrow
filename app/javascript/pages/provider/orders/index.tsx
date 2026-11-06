@@ -38,6 +38,9 @@ export default function Index({
   const [search, setSearch] = useState("")
 
   const orders = period === "upcoming" ? upcoming_orders : past_orders
+  // Sin pedidos en el período no hay nada que filtrar: el estado vacío mobile
+  // va solo, debajo de las pestañas.
+  const hiddenWhenEmpty = orders.length === 0 && "max-lg:hidden"
   const filters = { status, delivery, search }
   const visible = filterOrders(orders, filters, (order) =>
     searchableText(order, t),
@@ -84,7 +87,7 @@ export default function Index({
           <Tabs
             value={status}
             onValueChange={(value) => setStatus(value as StatusFilter)}
-            className="lg:col-start-2 lg:row-start-2"
+            className={cn("lg:col-start-2 lg:row-start-2", hiddenWhenEmpty)}
           >
             <TabsList
               className="w-full"
@@ -98,7 +101,12 @@ export default function Index({
             </TabsList>
           </Tabs>
 
-          <div className="grid gap-4 lg:col-span-2 lg:row-start-1 lg:flex lg:flex-row-reverse lg:items-center lg:gap-6">
+          <div
+            className={cn(
+              "grid gap-4 lg:col-span-2 lg:row-start-1 lg:flex lg:flex-row-reverse lg:items-center lg:gap-6",
+              hiddenWhenEmpty,
+            )}
+          >
             <div className="flex items-center justify-between gap-2 lg:shrink-0 lg:gap-3">
               <p className="text-sm">
                 {t("pages.provider_orders.index.delivery_label")}{" "}
@@ -135,7 +143,6 @@ export default function Index({
           key={period}
           orders={orders}
           today={today}
-          period={period}
           filters={filters}
           footer={
             visible.length > 0 && (

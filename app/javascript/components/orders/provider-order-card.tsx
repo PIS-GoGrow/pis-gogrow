@@ -72,12 +72,10 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
         </p>
       </CardContent>
 
-      <CardFooter>
-        <ProviderOrderActions
-          order={order}
-          keepVisible
-          className="relative w-full"
-        />
+      {/* Sin acciones queda vacío, pero las acciones siguen montadas: de ellas
+          depende el aviso que confirma la decisión recién tomada. */}
+      <CardFooter className="empty:hidden">
+        <ProviderOrderActions order={order} className="relative w-full" />
       </CardFooter>
     </ListItemCard>
   )

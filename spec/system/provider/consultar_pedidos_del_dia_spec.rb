@@ -74,19 +74,19 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
     end
   end
 
-  it "deja los botones visibles: confirmar solo si está por revisar y rechazar también si está confirmado" do
+  it "muestra solo las acciones disponibles: confirmar si está por revisar y rechazar también si está confirmado" do
     expect(page).to have_button("Confirmar", disabled: false, count: 1)
     expect(page).to have_button("Rechazar", disabled: false, count: 1)
 
     click_button day_label(future_day)
 
-    expect(page).to have_button("Confirmar", disabled: true, minimum: 1)
     expect(page).to have_button("Confirmar", disabled: false, count: 1)
     confirmed_card = find("[data-slot='card']", text: "Confirmado", match: :first)
     expect(confirmed_card).to have_button("Rechazar", disabled: false)
-    expect(confirmed_card).to have_button("Confirmar", disabled: true)
+    expect(confirmed_card).to have_no_button("Confirmar")
     cancelled_card = find("[data-slot='card']", text: "Cancelado")
-    expect(cancelled_card).to have_button("Rechazar", disabled: true)
+    expect(cancelled_card).to have_no_button("Rechazar")
+    expect(cancelled_card).to have_no_button("Confirmar")
   end
 
   # CA3: filtros por estado y otros criterios operativos.
@@ -141,7 +141,8 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
     it "avisa cuando ningún pedido coincide" do
       fill_in "Buscar pedido, plato, consumidor...", with: "zzz"
 
-      expect(page).to have_content("No tenés pedidos que coincidan con los filtros.")
+      expect(page).to have_content("No tenés pedidos")
+      expect(page).to have_content("Cuando tus clientes hagan pedidos, van a aparecer acá.")
     end
   end
 

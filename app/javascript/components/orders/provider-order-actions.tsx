@@ -35,9 +35,6 @@ const REJECTION_REASONS: OrderRejectionReason[] = [
   "other",
 ]
 
-const disabledStyle =
-  "disabled:border-transparent disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none"
-
 // Inertia considera exitosa la visita aunque el servidor haya rechazado la
 // decisión: el flash de error es lo que distingue los dos casos.
 function alertFrom(page: { props: unknown; flash?: { alert?: string } }) {
@@ -50,14 +47,12 @@ function alertFrom(page: { props: unknown; flash?: { alert?: string } }) {
 interface ProviderOrderActionsProps {
   order: Pick<ProviderOrder, "id" | "status" | "rejectable" | "consumer_name">
   className?: string
-  keepVisible?: boolean
   stackOnMobile?: boolean
 }
 
 export default function ProviderOrderActions({
   order,
   className,
-  keepVisible = false,
   stackOnMobile = false,
 }: ProviderOrderActionsProps) {
   const { t } = useTranslation()
@@ -70,8 +65,7 @@ export default function ProviderOrderActions({
 
   const canConfirm = order.status === "pending"
   const canDecideReject = order.rejectable
-
-  if (!canDecideReject && !keepVisible) return null
+  const bothActions = canConfirm && canDecideReject
 
   const code = t("pages.provider_orders.index.code", { id: order.id })
 
@@ -133,17 +127,11 @@ export default function ProviderOrderActions({
     }
   }
 
-  // En el detalle el botón de confirmar directamente no va si el pedido ya no
-  // se puede confirmar; en las tarjetas de la lista queda, deshabilitado, para
-  // que todas las tarjetas tengan la misma altura.
-  const showConfirm = canConfirm || !stackOnMobile
-
-  const confirmButton = (
+  const confirmButton = canConfirm && (
     <Button
       type="button"
       size="lg"
-      disabled={processing || !canConfirm}
-      className={disabledStyle}
+      disabled={processing}
       onClick={handleConfirm}
     >
       <Check aria-hidden="true" />
@@ -155,101 +143,110 @@ export default function ProviderOrderActions({
 
   return (
     <>
-      <div
-        className={cn(
-          "grid gap-2",
-          stackOnMobile ? "grid-cols-1 md:grid-cols-2" : "grid-cols-2",
-          className,
-        )}
-      >
-        {stackOnMobile && showConfirm && confirmButton}
-        <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
-          <AdaptableDialogTrigger asChild>
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              disabled={!canDecideReject}
-              className={cn(disabledStyle, stackOnMobile && "md:order-first")}
-            >
-              <X aria-hidden="true" />
-              {t("pages.provider_orders.actions.reject")}
-            </Button>
-          </AdaptableDialogTrigger>
-
-          <AdaptableDialogContent
-            showCloseButton={false}
-            className="p-5 md:p-6"
-          >
-            <AdaptableDialogHeader className="p-0">
-              <AdaptableDialogTitle>
-                {t("pages.provider_orders.actions.reject_dialog.title")}
-              </AdaptableDialogTitle>
-              <AdaptableDialogDescription>
-                {t("pages.provider_orders.actions.reject_dialog.description")}
-              </AdaptableDialogDescription>
-            </AdaptableDialogHeader>
-
-            <div className="grid gap-3 py-2">
-              <RadioGroup
-                value={reason}
-                onValueChange={(val) => setReason(val as OrderRejectionReason)}
-                className="gap-3"
-              >
-                {REJECTION_REASONS.map((r) => (
-                  <FieldLabel key={r} htmlFor={`reason-${r}`}>
-                    <Field orientation="horizontal">
-                      <RadioGroupItem value={r} id={`reason-${r}`} />
-                      <FieldContent>
-                        <FieldTitle>
-                          {t(`pages.provider_orders.rejection_reasons.${r}`)}
-                        </FieldTitle>
-                      </FieldContent>
-                    </Field>
-                  </FieldLabel>
-                ))}
-              </RadioGroup>
-
-              {reason === "other" && (
-                <Input
-                  id="rejection-details"
-                  value={details}
-                  onChange={(e) => setDetails(e.target.value)}
-                  aria-label={t(
-                    "pages.provider_orders.actions.reject_dialog.details_label",
-                  )}
-                  placeholder={t(
-                    "pages.provider_orders.actions.reject_dialog.details_placeholder",
-                  )}
-                />
-              )}
-            </div>
-
-            <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
-              <AdaptableDialogClose asChild>
+      {(canConfirm || canDecideReject) && (
+        <div
+          className={cn(
+            "grid gap-2",
+            bothActions && (stackOnMobile ? "md:grid-cols-2" : "grid-cols-2"),
+            className,
+          )}
+        >
+          {stackOnMobile && confirmButton}
+          {canDecideReject && (
+            <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
+              <AdaptableDialogTrigger asChild>
                 <Button
                   type="button"
-                  variant="outline"
-                  className="max-md:flex-1"
+                  variant="secondary"
+                  size="lg"
+                  className={cn(stackOnMobile && "md:order-first")}
                 >
-                  {t("pages.provider_orders.actions.reject_dialog.back")}
+                  <X aria-hidden="true" />
+                  {t("pages.provider_orders.actions.reject")}
                 </Button>
-              </AdaptableDialogClose>
-              <Button
-                type="button"
-                disabled={!canReject}
-                className="max-md:flex-1"
-                onClick={handleReject}
-              >
-                {processing && <Spinner />}
-                {t("pages.provider_orders.actions.reject_dialog.confirm")}
-              </Button>
-            </AdaptableDialogFooter>
-          </AdaptableDialogContent>
-        </AdaptableDialog>
+              </AdaptableDialogTrigger>
 
-        {!stackOnMobile && confirmButton}
-      </div>
+              <AdaptableDialogContent
+                showCloseButton={false}
+                className="p-5 md:p-6"
+              >
+                <AdaptableDialogHeader className="p-0">
+                  <AdaptableDialogTitle>
+                    {t("pages.provider_orders.actions.reject_dialog.title")}
+                  </AdaptableDialogTitle>
+                  <AdaptableDialogDescription>
+                    {t(
+                      "pages.provider_orders.actions.reject_dialog.description",
+                    )}
+                  </AdaptableDialogDescription>
+                </AdaptableDialogHeader>
+
+                <div className="grid gap-3 py-2">
+                  <RadioGroup
+                    value={reason}
+                    onValueChange={(val) =>
+                      setReason(val as OrderRejectionReason)
+                    }
+                    className="gap-3"
+                  >
+                    {REJECTION_REASONS.map((r) => (
+                      <FieldLabel key={r} htmlFor={`reason-${r}`}>
+                        <Field orientation="horizontal">
+                          <RadioGroupItem value={r} id={`reason-${r}`} />
+                          <FieldContent>
+                            <FieldTitle>
+                              {t(
+                                `pages.provider_orders.rejection_reasons.${r}`,
+                              )}
+                            </FieldTitle>
+                          </FieldContent>
+                        </Field>
+                      </FieldLabel>
+                    ))}
+                  </RadioGroup>
+
+                  {reason === "other" && (
+                    <Input
+                      id="rejection-details"
+                      value={details}
+                      onChange={(e) => setDetails(e.target.value)}
+                      aria-label={t(
+                        "pages.provider_orders.actions.reject_dialog.details_label",
+                      )}
+                      placeholder={t(
+                        "pages.provider_orders.actions.reject_dialog.details_placeholder",
+                      )}
+                    />
+                  )}
+                </div>
+
+                <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
+                  <AdaptableDialogClose asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="max-md:flex-1"
+                    >
+                      {t("pages.provider_orders.actions.reject_dialog.back")}
+                    </Button>
+                  </AdaptableDialogClose>
+                  <Button
+                    type="button"
+                    disabled={!canReject}
+                    className="max-md:flex-1"
+                    onClick={handleReject}
+                  >
+                    {processing && <Spinner />}
+                    {t("pages.provider_orders.actions.reject_dialog.confirm")}
+                  </Button>
+                </AdaptableDialogFooter>
+              </AdaptableDialogContent>
+            </AdaptableDialog>
+          )}
+
+          {!stackOnMobile && confirmButton}
+        </div>
+      )}
 
       <AdaptableDialog
         open={decided !== null}

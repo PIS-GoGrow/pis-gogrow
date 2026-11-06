@@ -5,11 +5,9 @@ import type { ProviderOrder } from "@/types"
 import {
   filterOrders,
   groupByDate,
-  hasActiveFilters,
   initialDate,
   noFilters,
   summarize,
-  withToday,
 } from "./provider-orders"
 
 function order(overrides: Partial<ProviderOrder>): ProviderOrder {
@@ -111,16 +109,6 @@ describe("filterOrders", () => {
   })
 })
 
-describe("hasActiveFilters", () => {
-  it("es falso sin filtros y verdadero con cualquiera", () => {
-    expect(hasActiveFilters(noFilters)).toBe(false)
-    expect(hasActiveFilters({ ...noFilters, search: "  " })).toBe(false)
-    expect(hasActiveFilters({ ...noFilters, status: "pending" })).toBe(true)
-    expect(hasActiveFilters({ ...noFilters, delivery: "office" })).toBe(true)
-    expect(hasActiveFilters({ ...noFilters, search: "wok" })).toBe(true)
-  })
-})
-
 describe("groupByDate", () => {
   it("agrupa por fecha de entrega conservando el orden", () => {
     const days = groupByDate([
@@ -138,27 +126,6 @@ describe("groupByDate", () => {
   })
 })
 
-describe("withToday", () => {
-  it("agrega hoy al principio si no tiene pedidos", () => {
-    const days = withToday(
-      groupByDate([order({ date: "2026-10-07" })]),
-      "2026-10-06",
-    )
-
-    expect(days.map((day) => day.date)).toEqual(["2026-10-06", "2026-10-07"])
-    expect(days[0].orders).toEqual([])
-  })
-
-  it("no duplica hoy si ya está", () => {
-    const days = withToday(
-      groupByDate([order({ date: "2026-10-06" })]),
-      "2026-10-06",
-    )
-
-    expect(days).toHaveLength(1)
-  })
-})
-
 describe("initialDate", () => {
   const days = groupByDate([
     order({ date: "2026-10-07" }),
@@ -166,9 +133,7 @@ describe("initialDate", () => {
   ])
 
   it("elige hoy si está", () => {
-    expect(initialDate(withToday(days, "2026-10-06"), "2026-10-06")).toBe(
-      "2026-10-06",
-    )
+    expect(initialDate(days, "2026-10-08")).toBe("2026-10-08")
   })
 
   it("elige el primer día si hoy no está", () => {

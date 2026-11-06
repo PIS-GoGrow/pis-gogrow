@@ -1,6 +1,6 @@
 import { ShoppingBasket01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { ChevronDown, Package } from "lucide-react"
+import { ChevronDown } from "lucide-react"
 import { type ReactNode, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -22,12 +22,10 @@ import {
   type OrderFilters,
   filterOrders,
   groupByDate,
-  hasActiveFilters,
   initialDate,
   ordersColumns,
   searchableText,
   summarize,
-  withToday,
 } from "@/lib/provider-orders"
 import { cn } from "@/lib/utils"
 import type { ProviderOrder } from "@/types"
@@ -35,7 +33,6 @@ import type { ProviderOrder } from "@/types"
 interface ProviderOrderDaysProps {
   orders: ProviderOrder[]
   today: string
-  period: "upcoming" | "history"
   filters: OrderFilters
   footer?: ReactNode
 }
@@ -43,7 +40,6 @@ interface ProviderOrderDaysProps {
 export default function ProviderOrderDays({
   orders,
   today,
-  period,
   filters,
   footer,
 }: ProviderOrderDaysProps) {
@@ -55,61 +51,30 @@ export default function ProviderOrderDays({
   const filtered = filterOrders(orders, filters, (order) =>
     searchableText(order, t),
   )
-  const grouped = groupByDate(filtered)
-  // Sin filtros, hoy siempre aparece: es el valor inicial de la pantalla.
-  const days =
-    period === "upcoming" && !hasActiveFilters(filters)
-      ? withToday(grouped, today)
-      : grouped
-
-  const noOrders = (
-    <Empty className="min-h-[50svh]">
-      <EmptyHeader>
-        <EmptyMedia variant="icon" className="size-10">
-          <HugeiconsIcon
-            icon={ShoppingBasket01Icon}
-            size={20}
-            aria-hidden="true"
-          />
-        </EmptyMedia>
-        <EmptyTitle className="text-base">
-          {t("pages.provider_orders.index.no_orders_title")}
-        </EmptyTitle>
-        <EmptyDescription>
-          {t("pages.provider_orders.index.no_orders_description")}
-        </EmptyDescription>
-      </EmptyHeader>
-    </Empty>
-  )
-
-  if (
-    days.length === 0 &&
-    period === "upcoming" &&
-    filters.status === "pending" &&
-    filters.delivery === "all" &&
-    filters.search.trim() === ""
-  ) {
-    return noOrders
-  }
+  const days = groupByDate(filtered)
 
   if (days.length === 0) {
-    const description = hasActiveFilters(filters)
-      ? "empty_filtered_description"
-      : period === "upcoming"
-        ? "empty_description"
-        : "empty_history_description"
-
     return (
-      <Empty className="border">
+      <Empty
+        className={cn(
+          "min-h-[50svh]",
+          orders.length === 0 && "max-lg:min-h-[calc(100svh-15rem)]",
+        )}
+      >
         <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Package aria-hidden="true" />
+          <EmptyMedia variant="icon" className="size-10">
+            <HugeiconsIcon
+              icon={ShoppingBasket01Icon}
+              size={20}
+              className="size-5"
+              aria-hidden="true"
+            />
           </EmptyMedia>
-          <EmptyTitle>
-            {t("pages.provider_orders.index.empty_title")}
+          <EmptyTitle className="text-base">
+            {t("pages.provider_orders.index.no_orders_title")}
           </EmptyTitle>
-          <EmptyDescription>
-            {t(`pages.provider_orders.index.${description}`)}
+          <EmptyDescription className="text-wrap">
+            {t("pages.provider_orders.index.no_orders_description")}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -161,20 +126,11 @@ export default function ProviderOrderDays({
               className="lg:before:bg-border @container grid gap-3 px-3 pb-3 lg:relative lg:col-start-2 lg:self-stretch lg:px-0 lg:pb-0 lg:before:absolute lg:before:inset-y-0 lg:before:-left-6 lg:before:w-px"
               style={{ gridRow: "1 / -1" }}
             >
-              {day.orders.length === 0 ? (
-                <>
-                  <p className="text-muted-foreground text-sm lg:hidden">
-                    {t("pages.provider_orders.index.empty_title")}
-                  </p>
-                  <div className="hidden lg:flex">{noOrders}</div>
-                </>
-              ) : (
-                <div className="grid gap-3 @2xl:grid-cols-2">
-                  {day.orders.map((order) => (
-                    <ProviderOrderCard key={order.id} order={order} />
-                  ))}
-                </div>
-              )}
+              <div className="grid gap-3 @2xl:grid-cols-2">
+                {day.orders.map((order) => (
+                  <ProviderOrderCard key={order.id} order={order} />
+                ))}
+              </div>
             </CollapsibleContent>
           </Collapsible>
         )
