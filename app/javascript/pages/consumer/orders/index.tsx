@@ -43,6 +43,18 @@ export default function Index({
   const { t } = useTranslation()
   const { formatLongDate } = useFormatters()
 
+  const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
+  const selectedProviderId = activeProviders.values().next().value
+  const byProvider = (orders: Order[]) =>
+    selectedProviderId == null
+      ? orders
+      : orders.filter((order) => order.provider_id === selectedProviderId)
+  const filteredUpcomingOrders = byProvider(upcoming_orders)
+  const filteredPastOrders = byProvider(past_orders)
+  const filterLabel =
+    providers.find((provider) => provider.id === selectedProviderId)?.name ??
+    t("pages.orders.index.all_providers")
+
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: t("pages.orders.index.title"),
@@ -55,15 +67,15 @@ export default function Index({
       <EmptyHeader>
         <EmptyTitle>
           {t(
-            section === "history" && activeProviders.size > 0
-              ? "pages.orders.index.history_filtered_empty_title"
+            activeProviders.size > 0
+              ? `pages.orders.index.${section}_filtered_empty_title`
               : `pages.orders.index.${section}_empty_title`,
           )}
         </EmptyTitle>
         <EmptyDescription>
           {t(
-            section === "history" && activeProviders.size > 0
-              ? "pages.orders.index.history_filtered_empty_description"
+            activeProviders.size > 0
+              ? `pages.orders.index.${section}_filtered_empty_description`
               : `pages.orders.index.${section}_empty_description`,
           )}
         </EmptyDescription>
@@ -88,52 +100,6 @@ export default function Index({
         ))}
       </section>
     ))
-    sectionOrders.length === 0 ? (
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>
-            {t(
-              activeProviders.size > 0
-                ? `pages.orders.index.${section}_filtered_empty_title`
-                : `pages.orders.index.${section}_empty_title`,
-            )}
-          </EmptyTitle>
-          <EmptyDescription>
-            {t(
-              activeProviders.size > 0
-                ? `pages.orders.index.${section}_filtered_empty_description`
-                : `pages.orders.index.${section}_empty_description`,
-            )}
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    ) : (
-      groupByDate(sectionOrders).map((group) => (
-        <section key={group.date ?? "undated"} className="grid gap-2">
-          <h2 className="text-muted-foreground text-sm">
-            {group.date
-              ? formatLongDate(group.date)
-              : t("pages.orders.index.no_date")}
-          </h2>
-
-          {group.orders.map((order) => (
-            <OrderCard key={order.id} order={order} section={section} />
-          ))}
-        </section>
-      ))
-    )
-
-  const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
-  const selectedProviderId = activeProviders.values().next().value
-  const byProvider = (orders: Order[]) =>
-    selectedProviderId == null
-      ? orders
-      : orders.filter((order) => order.provider_id === selectedProviderId)
-  const filteredUpcomingOrders = byProvider(upcoming_orders)
-  const filteredPastOrders = byProvider(past_orders)
-  const filterLabel =
-    providers.find((provider) => provider.id === selectedProviderId)?.name ??
-    t("pages.orders.index.all_providers")
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -169,28 +135,12 @@ export default function Index({
           </TabsList>
 
           <TabsContent value="upcoming" className="grid gap-5">
-            {upcoming_orders.length === 0
+            {filteredUpcomingOrders.length === 0
               ? renderEmpty("upcoming")
-              : renderGroups("upcoming", upcoming_orders)}
+              : renderGroups("upcoming", filteredUpcomingOrders)}
           </TabsContent>
 
           <TabsContent value="history" className="grid gap-5">
-            <div className="flex items-center">
-              <span className="text-foreground min-w-0 truncate text-sm font-medium">
-                {t("pages.orders.index.providers_label")}{" "}
-                <span className="text-muted-foreground font-normal">
-                  {filterLabel}
-                </span>
-              </span>
-              <ProviderFilterSheet
-                providers={providers}
-                selectedProviders={activeProviders}
-                onApply={setActiveProviders}
-                selectionMode="single"
-                allProvidersLabel={t("pages.orders.index.all_providers")}
-              />
-            </div>
-
             <InfiniteScroll
               data="past_orders"
               preserveUrl
