@@ -13,7 +13,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
   let(:future_day) { Date.current + 3 }
 
   def day_label(date)
-    "Día: #{DateFormat.short(date)}"
+    "Día: #{date.strftime("%d/%m")}"
   end
 
   def open_day?(date)

@@ -42,9 +42,9 @@ export default function ProviderOrderCard({
   )
 
   return (
-    <ListItemCard className="relative">
+    <ListItemCard className="relative max-lg:gap-2.5 max-lg:shadow-none">
       <CardHeader>
-        <CardDescription>
+        <CardDescription className="mt-1">
           <Link
             href={providerOrders.show(order.id).url}
             className="after:absolute after:inset-0 hover:underline"
@@ -66,7 +66,7 @@ export default function ProviderOrderCard({
             })}
           </span>
         </p>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-sm lg:text-xs">
           {order.address
             ? `${t("pages.provider_orders.index.ship_to")} ${order.address}`
             : t("pages.provider_orders.index.no_address")}{" "}
@@ -74,7 +74,7 @@ export default function ProviderOrderCard({
         </p>
       </CardContent>
 
-      <CardFooter className="empty:hidden">
+      <CardFooter className="empty:hidden max-lg:mt-1.5">
         <ProviderOrderActions
           order={order}
           onDecided={onDecided}

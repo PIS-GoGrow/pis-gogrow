@@ -47,7 +47,7 @@ export default function ProviderOrderDays({
   onDecided,
 }: ProviderOrderDaysProps) {
   const { t } = useTranslation()
-  const { formatMoney, formatShortDate } = useFormatters()
+  const { formatMoney, formatDayMonth } = useFormatters()
   // undefined: el usuario todavía no eligió; null: cerró el día abierto.
   const [selected, setSelected] = useState<string | null | undefined>(undefined)
 
@@ -100,7 +100,7 @@ export default function ProviderOrderDays({
 
   return (
     <div
-      className={cn("grid gap-3 lg:items-start", ordersColumns)}
+      className={cn("grid gap-4 lg:items-start lg:gap-3", ordersColumns)}
       style={{ gridTemplateRows: `repeat(${days.length}, auto) 1fr` }}
     >
       {days.map((day) => {
@@ -113,9 +113,9 @@ export default function ProviderOrderDays({
             onOpenChange={(open) => handleOpenChange(day.date, open)}
             className="flex flex-col rounded-lg border lg:contents"
           >
-            <CollapsibleTrigger className="group lg:data-[state=open]:bg-muted flex w-full items-center justify-between gap-2 p-3 text-left text-sm font-medium lg:col-start-1 lg:rounded-lg lg:border">
+            <CollapsibleTrigger className="group lg:data-[state=open]:bg-muted flex w-full items-center justify-between gap-2 p-3.5 text-left text-sm font-medium lg:col-start-1 lg:rounded-lg lg:border lg:p-3">
               {t("pages.provider_orders.index.day_summary", {
-                date: formatShortDate(day.date),
+                date: formatDayMonth(day.date),
                 meals,
                 amount: formatMoney(total),
               })}
@@ -126,10 +126,10 @@ export default function ProviderOrderDays({
             </CollapsibleTrigger>
 
             <CollapsibleContent
-              className="lg:before:bg-border @container grid gap-3 px-3 pb-3 lg:relative lg:col-start-2 lg:self-stretch lg:px-0 lg:pb-0 lg:before:absolute lg:before:inset-y-0 lg:before:-left-6 lg:before:w-px"
+              className="lg:before:bg-border @container grid gap-3 px-3.5 pb-3.5 lg:relative lg:col-start-2 lg:self-stretch lg:px-0 lg:pb-0 lg:before:absolute lg:before:inset-y-0 lg:before:-left-6 lg:before:w-px"
               style={{ gridRow: "1 / -1" }}
             >
-              <div className="grid gap-3 @2xl:grid-cols-2">
+              <div className="grid gap-4 lg:gap-3 @2xl:grid-cols-2">
                 {day.orders.map((order) => (
                   <ProviderOrderCard
                     key={order.id}

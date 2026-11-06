@@ -36,7 +36,7 @@ RSpec.describe "Gestión de pedidos del proveedor en el celular", type: :system 
     expect(page).to have_current_path(provider_orders_path)
     expect(page).to have_css(
       "button[aria-expanded='true']",
-      text: "Día: #{DateFormat.short(Date.current)}"
+      text: "Día: #{Date.current.strftime("%d/%m")}"
     )
 
     within(provider_order_card(order)) do

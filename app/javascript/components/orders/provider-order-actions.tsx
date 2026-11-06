@@ -137,6 +137,7 @@ export default function ProviderOrderActions({
       type="button"
       size="lg"
       disabled={processing}
+      className={stackOnMobile ? "max-md:h-11.5" : "max-md:h-9.5"}
       onClick={handleConfirm}
     >
       <Check aria-hidden="true" />
@@ -147,7 +148,7 @@ export default function ProviderOrderActions({
   return (
     <div
       className={cn(
-        "grid gap-2",
+        "grid gap-3 md:gap-2",
         bothActions && (stackOnMobile ? "md:grid-cols-2" : "grid-cols-2"),
         className,
       )}
@@ -160,7 +161,7 @@ export default function ProviderOrderActions({
               type="button"
               variant="secondary"
               size="lg"
-              className={cn(stackOnMobile && "md:order-first")}
+              className={cn("max-md:h-9.5", stackOnMobile && "md:order-first")}
             >
               <X aria-hidden="true" />
               {t("pages.provider_orders.actions.reject")}

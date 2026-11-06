@@ -11,7 +11,7 @@ RSpec.describe "Resumen diario del proveedor sin cancelados ni rechazados", type
   let(:provider_user) { users(:provider_user) }
   let(:schedule) { schedules(:future) }
   let(:day) { schedule.date }
-  let(:day_label) { "Día: #{DateFormat.short(day)}" }
+  let(:day_label) { "Día: #{day.strftime("%d/%m")}" }
 
   before do
     Order.destroy_all

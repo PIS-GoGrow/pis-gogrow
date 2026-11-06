@@ -99,17 +99,15 @@ describe("ProviderOrderDays", () => {
   it("abre hoy y resume sus viandas y su monto", () => {
     renderDays()
 
-    const today = dayButton("06/10/26")
+    const today = dayButton("06/10")
 
-    expect(today).toHaveTextContent(
-      "Día: 06/10/26 | Viandas: 3 | Monto: $1.000",
-    )
+    expect(today).toHaveTextContent("Día: 06/10 | Viandas: 3 | Monto: $1.000")
     expect(today).toHaveAttribute("aria-expanded", "true")
     expect(screen.getByText("Bruno Pérez - GoGrow")).toBeInTheDocument()
     expect(
       screen.queryByText("Camila Herrera - GoGrow"),
     ).not.toBeInTheDocument()
-    expect(dayButton("07/10/26")).toHaveAttribute("aria-expanded", "false")
+    expect(dayButton("07/10")).toHaveAttribute("aria-expanded", "false")
   })
 
   it("no agrega hoy si no tiene pedidos y abre el primer día con pedidos", () => {
@@ -118,7 +116,7 @@ describe("ProviderOrderDays", () => {
     expect(
       screen.queryByRole("button", { name: /Día: 06\/10/ }),
     ).not.toBeInTheDocument()
-    expect(dayButton("07/10/26")).toHaveAttribute("aria-expanded", "true")
+    expect(dayButton("07/10")).toHaveAttribute("aria-expanded", "true")
     expect(screen.queryByText("No hay pedidos")).not.toBeInTheDocument()
     expect(screen.queryByText("No tenés pedidos")).not.toBeInTheDocument()
   })
@@ -153,20 +151,20 @@ describe("ProviderOrderDays", () => {
     const user = userEvent.setup()
     renderDays()
 
-    await user.click(dayButton("07/10/26"))
+    await user.click(dayButton("07/10"))
 
     expect(screen.getByText("Camila Herrera - GoGrow")).toBeInTheDocument()
     expect(screen.queryByText("Bruno Pérez - GoGrow")).not.toBeInTheDocument()
-    expect(dayButton("06/10/26")).toHaveAttribute("aria-expanded", "false")
+    expect(dayButton("06/10")).toHaveAttribute("aria-expanded", "false")
   })
 
   it("cierra el día abierto al tocarlo en una pantalla chica", async () => {
     const user = userEvent.setup()
     renderDays()
 
-    await user.click(dayButton("06/10/26"))
+    await user.click(dayButton("06/10"))
 
-    expect(dayButton("06/10/26")).toHaveAttribute("aria-expanded", "false")
+    expect(dayButton("06/10")).toHaveAttribute("aria-expanded", "false")
   })
 
   it("no cierra el día elegido en una pantalla de escritorio", async () => {
@@ -176,9 +174,9 @@ describe("ProviderOrderDays", () => {
     } as MediaQueryList)
     renderDays()
 
-    await user.click(dayButton("06/10/26"))
+    await user.click(dayButton("06/10"))
 
-    expect(dayButton("06/10/26")).toHaveAttribute("aria-expanded", "true")
+    expect(dayButton("06/10")).toHaveAttribute("aria-expanded", "true")
   })
 
   it("muestra en cada tarjeta solo las acciones disponibles", () => {
@@ -204,8 +202,8 @@ describe("ProviderOrderDays", () => {
   it("filtra por estado y recalcula el resumen del día", () => {
     renderDays({ filters: { ...noFilters, status: "confirmed" } })
 
-    expect(dayButton("06/10/26")).toHaveTextContent(
-      "Día: 06/10/26 | Viandas: 1 | Monto: $400",
+    expect(dayButton("06/10")).toHaveTextContent(
+      "Día: 06/10 | Viandas: 1 | Monto: $400",
     )
     expect(screen.queryByText("Bruno Pérez - GoGrow")).not.toBeInTheDocument()
     expect(screen.getByText("Matías Rodríguez - GoGrow")).toBeInTheDocument()
@@ -271,8 +269,8 @@ describe("ProviderOrderDays", () => {
     it("abre el día más reciente y no agrega hoy", () => {
       renderDays({ orders: past })
 
-      expect(dayButton("05/10/26")).toHaveAttribute("aria-expanded", "true")
-      expect(dayButton("03/10/26")).toHaveAttribute("aria-expanded", "false")
+      expect(dayButton("05/10")).toHaveAttribute("aria-expanded", "true")
+      expect(dayButton("03/10")).toHaveAttribute("aria-expanded", "false")
       expect(
         screen.queryByRole("button", { name: /Día: 06\/10/ }),
       ).not.toBeInTheDocument()

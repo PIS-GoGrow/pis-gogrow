@@ -2,6 +2,7 @@ import { usePage } from "@inertiajs/react"
 
 import {
   formatDateWithYear as formatDateWithYearValue,
+  formatDayMonth,
   formatLongDate as formatLongDateValue,
   formatLongDateInline as formatLongDateInlineValue,
   formatShortDate,
@@ -29,6 +30,7 @@ export const useFormatters = () => {
   return {
     formatMoney,
     formatDateWithYear,
+    formatDayMonth,
     formatLongDate,
     formatLongDateInline,
     formatShortDate,

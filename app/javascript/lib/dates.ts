@@ -61,6 +61,11 @@ export function formatShortDate(date: string): string {
   return `${day}/${month}/${year.slice(2)}`
 }
 
+// Sin año, para los días de la lista de pedidos del proveedor: "10/09".
+export function formatDayMonth(date: string): string {
+  return formatShortDate(date).slice(0, 5)
+}
+
 // Para momentos exactos (un timestamp con zona): fecha corta y hora local.
 export function formatShortDateTime(timestamp: string): string {
   const moment = new Date(timestamp)

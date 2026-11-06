@@ -2,11 +2,18 @@ import { describe, expect, it } from "vitest"
 
 import {
   formatDateWithYear,
+  formatDayMonth,
   formatLongDate,
   formatLongDateInline,
   formatShortDate,
   formatShortDateTime,
 } from "./dates"
+
+describe("formatDayMonth", () => {
+  it("escribe el día y el mes sin el año", () => {
+    expect(formatDayMonth("2026-09-10")).toBe("10/09")
+  })
+})
 
 describe("formatDateWithYear", () => {
   it("escribe el día, el mes en minúscula, una coma y el año", () => {
