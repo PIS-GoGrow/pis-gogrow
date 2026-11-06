@@ -109,7 +109,8 @@ async function applyFilter(user: ReturnType<typeof userEvent.setup>) {
   await user.click(
     screen.getByRole("button", { name: "Filtrar por proveedores" }),
   )
-  await user.click(screen.getAllByLabelText("La Cocina")[1])
+  await user.click(screen.getAllByLabelText("La Cocina")[0])
+  await user.click(screen.getByLabelText("Otro proveedor"))
   await user.click(screen.getByRole("button", { name: "Aplicar" }))
 }
 
@@ -399,7 +400,6 @@ describe("Clearing consumer provider filters", () => {
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
     await user.click(screen.getAllByLabelText("La Cocina")[1])
-    await user.click(screen.getByLabelText("Otro proveedor"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
     expect(
       screen.getByText(/No encontramos viandas disponibles entre/),

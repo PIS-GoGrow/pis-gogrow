@@ -119,7 +119,7 @@ describe("WeeklyMenu provider filter", () => {
     window.sessionStorage.clear()
   })
 
-  it("shows only dishes from multiple selected provider IDs and deselects individually", async () => {
+  it("shows only dishes from the selected provider IDs and adds providers one by one", async () => {
     const user = userEvent.setup()
     const thirdProvider = { id: 3, name: "La Cocina", order_deadline: null }
     const thirdSchedule = schedule(3, thirdProvider)
@@ -143,10 +143,10 @@ describe("WeeklyMenu provider filter", () => {
     await user.click(screen.getByLabelText("La Cocina"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
-    expectFilterLabel("Tu Viandita, Endulzate by Noe")
-    expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
-    expect(screen.getByText("Tarta de verduras")).toBeInTheDocument()
-    expect(screen.queryByText("Ensalada de quinoa")).not.toBeInTheDocument()
+    expectFilterLabel("La Cocina")
+    expect(screen.queryByText("Milanesa con papas")).not.toBeInTheDocument()
+    expect(screen.queryByText("Tarta de verduras")).not.toBeInTheDocument()
+    expect(screen.getByText("Ensalada de quinoa")).toBeInTheDocument()
 
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
@@ -154,10 +154,10 @@ describe("WeeklyMenu provider filter", () => {
     await user.click(screen.getByLabelText("Tu Viandita"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
-    expectFilterLabel("Endulzate by Noe")
-    expect(screen.queryByText("Milanesa con papas")).not.toBeInTheDocument()
-    expect(screen.getByText("Tarta de verduras")).toBeInTheDocument()
-    expect(screen.queryByText("Ensalada de quinoa")).not.toBeInTheDocument()
+    expectFilterLabel("Tu Viandita, La Cocina")
+    expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
+    expect(screen.queryByText("Tarta de verduras")).not.toBeInTheDocument()
+    expect(screen.getByText("Ensalada de quinoa")).toBeInTheDocument()
 
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
@@ -178,7 +178,7 @@ describe("WeeklyMenu provider filter", () => {
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
-    await user.click(screen.getByLabelText("Endulzate by Noe"))
+    await user.click(screen.getByLabelText("Tu Viandita"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
     expect(screen.queryByText("Tarta de verduras")).not.toBeInTheDocument()
     await user.click(
@@ -204,9 +204,8 @@ describe("WeeklyMenu provider filter", () => {
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
-    screen
-      .getAllByRole("checkbox")
-      .forEach((checkbox) => expect(checkbox).toBeChecked())
+    expect(screen.getByLabelText("Todos")).toBeChecked()
+    expect(screen.getByLabelText("Nuevo proveedor")).not.toBeChecked()
   })
 
   it("filters providers by ID even when their names match", async () => {
@@ -233,8 +232,8 @@ describe("WeeklyMenu provider filter", () => {
     await user.click(screen.getAllByLabelText("Mismo nombre")[1])
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
-    expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
-    expect(screen.queryByText("Tarta de verduras")).not.toBeInTheDocument()
+    expect(screen.queryByText("Milanesa con papas")).not.toBeInTheDocument()
+    expect(screen.getByText("Tarta de verduras")).toBeInTheDocument()
   })
   it("shows every provider by default and filters by one provider", async () => {
     const user = userEvent.setup()
@@ -250,9 +249,9 @@ describe("WeeklyMenu provider filter", () => {
     await user.click(screen.getByLabelText("Endulzate by Noe"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
-    expectFilterLabel("Tu Viandita")
-    expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
-    expect(screen.queryByText("Tarta de verduras")).not.toBeInTheDocument()
+    expectFilterLabel("Endulzate by Noe")
+    expect(screen.queryByText("Milanesa con papas")).not.toBeInTheDocument()
+    expect(screen.getByText("Tarta de verduras")).toBeInTheDocument()
   })
 
   it("keeps the provider filter when the selected day changes", async () => {
@@ -277,9 +276,9 @@ describe("WeeklyMenu provider filter", () => {
       />,
     )
 
-    expectFilterLabel("Tu Viandita")
-    expect(screen.getByText("Milanesa con papas")).toBeInTheDocument()
-    expect(screen.queryByText("Tarta de verduras")).not.toBeInTheDocument()
+    expectFilterLabel("Endulzate by Noe")
+    expect(screen.queryByText("Milanesa con papas")).not.toBeInTheDocument()
+    expect(screen.getByText("Tarta de verduras")).toBeInTheDocument()
   })
 
   it("removes the filter by applying Todos", async () => {
