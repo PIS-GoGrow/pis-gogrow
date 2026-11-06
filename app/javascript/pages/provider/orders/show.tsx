@@ -1,10 +1,13 @@
 import { Head, Link } from "@inertiajs/react"
 import type { LucideIcon } from "lucide-react"
 import { ArrowLeft, Building2, House, Mail, Phone } from "lucide-react"
-import type { ReactNode } from "react"
+import { type ReactNode, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import ProviderOrderActions from "@/components/orders/provider-order-actions"
+import ProviderOrderDecidedSheet, {
+  type ProviderOrderDecision,
+} from "@/components/orders/provider-order-decided-sheet"
 import PageContainer from "@/components/page-container"
 import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
@@ -64,6 +67,7 @@ function DetailLine({
 export default function Show({ order }: ProviderOrdersShow) {
   const { t } = useTranslation()
   const { formatMoney, formatLongDate, formatShortDate } = useFormatters()
+  const [decision, setDecision] = useState<ProviderOrderDecision | null>(null)
 
   // Solo lo que el empleado eligió: los pedidos anteriores a la personalización
   // no tienen elección.
@@ -129,7 +133,12 @@ export default function Show({ order }: ProviderOrdersShow) {
             </div>
 
             <div className="grid gap-4 md:grid-cols-[3fr_2fr]">
-              <Card className="min-w-0 gap-3 py-4 shadow-none md:gap-4 md:py-6 md:shadow-sm">
+              <Card
+                className={cn(
+                  "min-w-0 gap-3 py-4 shadow-none md:gap-4 md:py-6 md:shadow-sm",
+                  rejectionText && "md:row-span-2",
+                )}
+              >
                 <CardHeader className="px-4 md:px-6">
                   <CardDescription>
                     {order.consumer_company
@@ -173,29 +182,20 @@ export default function Show({ order }: ProviderOrdersShow) {
                         })}
                       </span>
                     </div>
-                    {order.menu_description && (
-                      <p className="text-muted-foreground text-sm">
-                        {order.menu_description}
+                    {chosenOptions.map((option) => (
+                      <p
+                        key={option.group_id}
+                        className="text-muted-foreground text-sm"
+                      >
+                        {`${option.name}: ${option.values.join(" · ")}`}
                       </p>
-                    )}
+                    ))}
                   </div>
-                  {chosenOptions.map((option) => (
-                    <DetailLine key={option.group_id} label={option.name}>
-                      {option.values.join(" · ")}
-                    </DetailLine>
-                  ))}
                   {order.date && (
                     <DetailLine
                       label={t("pages.provider_orders.show.delivery_date")}
                     >
                       {formatLongDate(order.date)}
-                    </DetailLine>
-                  )}
-                  {order.rejection_reason && (
-                    <DetailLine
-                      label={t("pages.provider_orders.show.rejection_reason")}
-                    >
-                      {rejectionText}
                     </DetailLine>
                   )}
                   <Separator />
@@ -230,6 +230,19 @@ export default function Show({ order }: ProviderOrdersShow) {
                   )}
                 </CardContent>
               </Card>
+
+              {rejectionText && (
+                <Card className="min-w-0 gap-3 py-4 shadow-none md:col-start-2 md:gap-4 md:py-6 md:shadow-sm">
+                  <CardHeader className="px-4 md:px-6">
+                    <CardDescription>
+                      {t("pages.provider_orders.show.rejection_reason")}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="px-4 break-words md:px-6">
+                    {rejectionText}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -237,9 +250,15 @@ export default function Show({ order }: ProviderOrdersShow) {
         <ProviderOrderActions
           order={order}
           stackOnMobile
+          onDecided={setDecision}
           className="mx-auto w-full pb-[env(safe-area-inset-bottom)] md:mt-6 md:max-w-md md:pb-0"
         />
       </PageContainer>
+
+      <ProviderOrderDecidedSheet
+        decision={decision}
+        onClose={() => setDecision(null)}
+      />
     </AppLayout>
   )
 }

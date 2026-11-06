@@ -48,7 +48,7 @@ function order(overrides: Partial<ProviderOrder>): ProviderOrder {
 
 describe("ProviderOrderCard", () => {
   it("ofrece rechazar y confirmar un pedido por revisar", () => {
-    render(<ProviderOrderCard order={order({})} />)
+    render(<ProviderOrderCard order={order({})} onDecided={vi.fn()} />)
 
     expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([
       "Rechazar",
@@ -57,7 +57,12 @@ describe("ProviderOrderCard", () => {
   })
 
   it("ofrece solo rechazar un confirmado que todavía se puede rechazar", () => {
-    render(<ProviderOrderCard order={order({ status: "confirmed" })} />)
+    render(
+      <ProviderOrderCard
+        order={order({ status: "confirmed" })}
+        onDecided={vi.fn()}
+      />,
+    )
 
     expect(screen.getAllByRole("button").map((b) => b.textContent)).toEqual([
       "Rechazar",
@@ -70,7 +75,10 @@ describe("ProviderOrderCard", () => {
     ["rechazado", "rejected"],
   ] as const)("termina en la dirección si es un %s", (_, status) => {
     const { container } = render(
-      <ProviderOrderCard order={order({ status, rejectable: false })} />,
+      <ProviderOrderCard
+        order={order({ status, rejectable: false })}
+        onDecided={vi.fn()}
+      />,
     )
 
     expect(screen.queryByRole("button")).not.toBeInTheDocument()

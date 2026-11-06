@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
@@ -7,13 +7,15 @@ import type { ProviderOrder } from "@/types"
 
 import Index from "./index"
 
+const patchMock = vi.hoisted(() => vi.fn())
+
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
     Head: () => null,
     usePage: () => ({ props: { locale: "es" } }),
-    router: { patch: vi.fn() },
+    router: { patch: patchMock },
     Link: ({
       children,
       href,
@@ -199,7 +201,9 @@ describe("Provider orders page", () => {
       "zzz",
     )
 
-    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
+    expect(
+      screen.getByText("No tenés pedidos que coincidan con los filtros."),
+    ).toBeInTheDocument()
     expect(
       screen
         .getByRole("tab", { name: "Por revisar" })
@@ -271,10 +275,88 @@ describe("Provider orders page", () => {
     )
     await user.click(screen.getByRole("tab", { name: "Historial" }))
 
-    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
+    expect(
+      screen.getByText("No tenés pedidos que coincidan con los filtros."),
+    ).toBeInTheDocument()
     expect(
       screen.getByPlaceholderText("Buscar pedido, plato, consumidor..."),
     ).toHaveValue("zzz")
+  })
+
+  describe("al decidir un pedido que sale de la lista filtrada", () => {
+    function finishDecision() {
+      const options = patchMock.mock.lastCall?.[2] as {
+        onSuccess: (page: unknown) => void
+        onFinish: () => void
+      }
+
+      act(() => {
+        options.onSuccess({ props: {} })
+        options.onFinish()
+      })
+    }
+
+    it("mantiene la hoja de confirmado aunque la tarjeta desaparezca de Por revisar", async () => {
+      const user = userEvent.setup()
+      const pending = order({ id: 1 })
+      const { rerender } = render(
+        <Index today={TODAY} upcoming_orders={[pending]} past_orders={past} />,
+      )
+
+      await user.click(screen.getByRole("tab", { name: "Por revisar" }))
+      await user.click(screen.getByRole("button", { name: "Confirmar" }))
+      rerender(
+        <Index
+          today={TODAY}
+          upcoming_orders={[{ ...pending, status: "confirmed" }]}
+          past_orders={past}
+        />,
+      )
+      finishDecision()
+
+      expect(screen.queryByText("Bruno Pérez - GoGrow")).not.toBeInTheDocument()
+      expect(screen.getByText("Pedido confirmado")).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "El pedido PED-1 quedó confirmado y Bruno Pérez recibirá una notificación.",
+        ),
+      ).toBeInTheDocument()
+
+      await user.click(screen.getByRole("button", { name: "Listo" }))
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+      )
+    })
+
+    it("mantiene la hoja de rechazado aunque la tarjeta desaparezca de Confirmados", async () => {
+      const user = userEvent.setup()
+      const confirmed = order({ id: 2, status: "confirmed" })
+      const { rerender } = render(
+        <Index
+          today={TODAY}
+          upcoming_orders={[confirmed]}
+          past_orders={past}
+        />,
+      )
+
+      await user.click(screen.getByRole("tab", { name: "Confirmados" }))
+      await user.click(screen.getByRole("button", { name: "Rechazar" }))
+      await user.click(screen.getByLabelText("Sin stock disponible"))
+      await user.click(screen.getByRole("button", { name: "Rechazar pedido" }))
+      rerender(
+        <Index
+          today={TODAY}
+          upcoming_orders={[
+            { ...confirmed, status: "rejected", rejectable: false },
+          ]}
+          past_orders={past}
+        />,
+      )
+      finishDecision()
+
+      expect(screen.queryByText("Bruno Pérez - GoGrow")).not.toBeInTheDocument()
+      expect(screen.getByText("Pedido rechazado")).toBeInTheDocument()
+    })
   })
 
   it("busca entre los pedidos", async () => {

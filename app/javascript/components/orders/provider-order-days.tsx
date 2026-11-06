@@ -5,6 +5,7 @@ import { type ReactNode, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import ProviderOrderCard from "@/components/orders/provider-order-card"
+import type { ProviderOrderDecision } from "@/components/orders/provider-order-decided-sheet"
 import {
   Collapsible,
   CollapsibleContent,
@@ -35,6 +36,7 @@ interface ProviderOrderDaysProps {
   today: string
   filters: OrderFilters
   footer?: ReactNode
+  onDecided: (decision: ProviderOrderDecision) => void
 }
 
 export default function ProviderOrderDays({
@@ -42,6 +44,7 @@ export default function ProviderOrderDays({
   today,
   filters,
   footer,
+  onDecided,
 }: ProviderOrderDaysProps) {
   const { t } = useTranslation()
   const { formatMoney, formatShortDate } = useFormatters()
@@ -54,11 +57,13 @@ export default function ProviderOrderDays({
   const days = groupByDate(filtered)
 
   if (days.length === 0) {
+    const noOrders = orders.length === 0
+
     return (
       <Empty
         className={cn(
           "min-h-[50svh]",
-          orders.length === 0 && "max-lg:min-h-[calc(100svh-15rem)]",
+          noOrders && "max-lg:min-h-[calc(100svh-15rem)]",
         )}
       >
         <EmptyHeader>
@@ -71,10 +76,14 @@ export default function ProviderOrderDays({
             />
           </EmptyMedia>
           <EmptyTitle className="text-base">
-            {t("pages.provider_orders.index.no_orders_title")}
+            {t(
+              `pages.provider_orders.index.${noOrders ? "no_orders_title" : "empty_title"}`,
+            )}
           </EmptyTitle>
           <EmptyDescription className="text-wrap">
-            {t("pages.provider_orders.index.no_orders_description")}
+            {t(
+              `pages.provider_orders.index.${noOrders ? "no_orders_description" : "empty_filtered_description"}`,
+            )}
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -128,7 +137,11 @@ export default function ProviderOrderDays({
             >
               <div className="grid gap-3 @2xl:grid-cols-2">
                 {day.orders.map((order) => (
-                  <ProviderOrderCard key={order.id} order={order} />
+                  <ProviderOrderCard
+                    key={order.id}
+                    order={order}
+                    onDecided={onDecided}
+                  />
                 ))}
               </div>
             </CollapsibleContent>

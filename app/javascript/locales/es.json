@@ -1792,6 +1792,8 @@
             "open": "Filtrar por tipo de entrega",
             "title": "Filtrar por Tipo de entrega"
           },
+          "empty_filtered_description": "No tenés pedidos que coincidan con los filtros.",
+          "empty_title": "No hay pedidos",
           "export": "Exportar pedidos",
           "no_address": "Sin dirección de entrega",
           "no_orders_description": "Cuando tus clientes hagan pedidos, van a aparecer acá.",

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 
 import ListItemCard from "@/components/list-item-card"
 import ProviderOrderActions from "@/components/orders/provider-order-actions"
+import type { ProviderOrderDecision } from "@/components/orders/provider-order-decided-sheet"
 import StatusBadge from "@/components/status-badge"
 import {
   CardAction,
@@ -24,9 +25,13 @@ const quantityStyles: Record<OrderStatus, string> = {
 
 interface ProviderOrderCardProps {
   order: ProviderOrder
+  onDecided: (decision: ProviderOrderDecision) => void
 }
 
-export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
+export default function ProviderOrderCard({
+  order,
+  onDecided,
+}: ProviderOrderCardProps) {
   const { t } = useTranslation()
 
   const customer = order.consumer_company
@@ -72,10 +77,12 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
         </p>
       </CardContent>
 
-      {/* Sin acciones queda vacío, pero las acciones siguen montadas: de ellas
-          depende el aviso que confirma la decisión recién tomada. */}
       <CardFooter className="empty:hidden">
-        <ProviderOrderActions order={order} className="relative w-full" />
+        <ProviderOrderActions
+          order={order}
+          onDecided={onDecided}
+          className="relative w-full"
+        />
       </CardFooter>
     </ListItemCard>
   )

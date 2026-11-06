@@ -141,8 +141,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
     it "avisa cuando ningún pedido coincide" do
       fill_in "Buscar pedido, plato, consumidor...", with: "zzz"
 
-      expect(page).to have_content("No tenés pedidos")
-      expect(page).to have_content("Cuando tus clientes hagan pedidos, van a aparecer acá.")
+      expect(page).to have_content("No tenés pedidos que coincidan con los filtros.")
     end
   end
 

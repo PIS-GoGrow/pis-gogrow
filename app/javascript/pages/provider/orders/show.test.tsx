@@ -101,12 +101,12 @@ describe("Provider::Orders Show Page", () => {
     expect(screen.getByText("$600")).toBeInTheDocument()
   })
 
-  it("completa el detalle con la descripción, las notas y la fecha de entrega", () => {
+  it("completa el detalle con las notas y la fecha de entrega, sin la descripción del plato", () => {
     render(<Show order={order()} />)
 
-    expect(screen.getByText("Con salsa de soja")).toBeInTheDocument()
     expect(screen.getByText("Sin sal")).toBeInTheDocument()
     expect(screen.getByText("Jueves 15 de octubre")).toBeInTheDocument()
+    expect(screen.queryByText("Con salsa de soja")).not.toBeInTheDocument()
   })
 
   it("muestra lo que el empleado eligió del plato", () => {
@@ -121,9 +121,11 @@ describe("Provider::Orders Show Page", () => {
       />,
     )
 
-    expect(screen.getByText("Salsas")).toBeInTheDocument()
-    expect(screen.getByText("Tuco · Blanca")).toBeInTheDocument()
-    expect(screen.queryByText("Rellenos")).not.toBeInTheDocument()
+    const options = screen.getByText("Salsas: Tuco · Blanca")
+
+    expect(options).toHaveClass("text-muted-foreground")
+    expect(options.parentElement).toHaveTextContent("Wok de verduras + arroz")
+    expect(screen.queryByText(/Rellenos/)).not.toBeInTheDocument()
   })
 
   it("no muestra el cupo", () => {
@@ -133,21 +135,11 @@ describe("Provider::Orders Show Page", () => {
   })
 
   it("muestra solo el total, sin el beneficio ni lo que paga el empleado", () => {
-    render(
-      <Show
-        order={order({
-          price: 600.5,
-          subsidy: 300.25,
-          discounted_price: 300.25,
-        })}
-      />,
-    )
+    render(<Show order={order({ price: 600.5 })} />)
 
     expect(screen.getByText("Total").parentElement).toHaveTextContent("$600,50")
     expect(screen.queryByText("Beneficio aplicado")).not.toBeInTheDocument()
     expect(screen.queryByText("Paga el empleado")).not.toBeInTheDocument()
-    expect(screen.queryByText("-$300,25")).not.toBeInTheDocument()
-    expect(screen.queryByText("$300,25")).not.toBeInTheDocument()
   })
 
   it("muestra los comentarios debajo del total", () => {
@@ -175,8 +167,13 @@ describe("Provider::Orders Show Page", () => {
       />,
     )
 
-    expect(screen.getByText("Motivo de cancelación")).toBeInTheDocument()
-    expect(screen.getByText("Cerrado por reformas")).toBeInTheDocument()
+    const reason = screen.getByText("Motivo de cancelación")
+    const details = screen.getByText("Cerrado por reformas")
+
+    expect(reason.closest("[data-slot=card]")).toContainElement(details)
+    expect(reason.closest("[data-slot=card]")).not.toContainElement(
+      screen.getByText("Total"),
+    )
     // "Otro motivo" no aporta nada al lado del texto que escribió el proveedor.
     expect(screen.queryByText("Otro motivo")).not.toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Confirmar" })).toBeNull()
@@ -206,8 +203,7 @@ describe("Provider::Orders Show Page", () => {
         })}
       />,
     )
-    expect(screen.getByText("Guarnición")).toBeInTheDocument()
-    expect(screen.getByText("Papas")).toBeInTheDocument()
+    expect(screen.getByText("Guarnición: Papas")).toBeInTheDocument()
   })
   it("no inventa elecciones para un pedido antiguo sin personalizaciones", () => {
     render(
@@ -259,7 +255,6 @@ describe("Provider::Orders Show Page", () => {
       expect(screen.queryByText("Comentarios")).not.toBeInTheDocument()
       expect(screen.queryByText("Entrega")).not.toBeInTheDocument()
       expect(screen.queryByText("Sin sal")).not.toBeInTheDocument()
-      expect(screen.queryByText("Con salsa de soja")).not.toBeInTheDocument()
     },
   )
 
@@ -269,8 +264,6 @@ describe("Provider::Orders Show Page", () => {
         order={order({
           amount: 3,
           price: 1234.56,
-          discounted_price: 234.56,
-          subsidy: 1000,
         })}
       />,
     )

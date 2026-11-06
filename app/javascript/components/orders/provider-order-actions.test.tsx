@@ -10,6 +10,7 @@ interface DecisionCallbacks {
 }
 
 const patchMock = vi.fn<(...args: unknown[]) => void>()
+const onDecided = vi.fn()
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -26,11 +27,13 @@ vi.mock("@inertiajs/react", async () => {
 describe("ProviderOrderActions", () => {
   beforeEach(() => {
     patchMock.mockClear()
+    onDecided.mockClear()
   })
 
   it("lets a confirmed order be rejected but not confirmed again", () => {
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 1,
           status: "confirmed",
@@ -49,6 +52,7 @@ describe("ProviderOrderActions", () => {
   it("muestra Rechazar y Confirmar en un pedido por revisar", () => {
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 1,
           status: "pending",
@@ -70,6 +74,7 @@ describe("ProviderOrderActions", () => {
   it("deja Rechazar a todo el ancho cuando es la única acción", () => {
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 1,
           status: "confirmed",
@@ -87,6 +92,7 @@ describe("ProviderOrderActions", () => {
   it("no muestra ningún botón en un confirmado que ya no se puede rechazar", () => {
     const { container } = render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 9,
           status: "confirmed",
@@ -102,6 +108,7 @@ describe("ProviderOrderActions", () => {
   it("renders nothing when the order is cancelled or rejected", () => {
     const { container: cancelledContainer } = render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 2,
           status: "cancelled",
@@ -114,6 +121,7 @@ describe("ProviderOrderActions", () => {
 
     const { container: rejectedContainer } = render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 3,
           status: "rejected",
@@ -125,45 +133,11 @@ describe("ProviderOrderActions", () => {
     expect(rejectedContainer).toBeEmptyDOMElement()
   })
 
-  it("sigue mostrando el aviso cuando el pedido rechazado se queda sin acciones", async () => {
-    const user = userEvent.setup()
-    const order = {
-      id: 42,
-      consumer_name: "Santiago Medina",
-    }
-    const { rerender } = render(
-      <ProviderOrderActions
-        order={{ ...order, status: "pending", rejectable: true }}
-      />,
-    )
-    await user.click(screen.getByRole("button", { name: "Rechazar" }))
-    await user.click(screen.getByLabelText("Otro motivo"))
-    await user.type(
-      screen.getByPlaceholderText("Describir el motivo"),
-      "Cocina cerrada",
-    )
-    await user.click(screen.getByRole("button", { name: "Rechazar pedido" }))
-
-    rerender(
-      <ProviderOrderActions
-        order={{ ...order, status: "rejected", rejectable: false }}
-      />,
-    )
-    const callbacks = patchMock.mock.calls[0][2] as DecisionCallbacks
-    act(() => {
-      callbacks.onSuccess({ flash: {} })
-      callbacks.onFinish()
-    })
-
-    expect(screen.getByText("Pedido rechazado")).toBeInTheDocument()
-    await user.click(screen.getByRole("button", { name: "Listo" }))
-    expect(screen.queryByRole("button")).not.toBeInTheDocument()
-  })
-
   it("pone Confirmar antes de Rechazar en el orden de teclado del detalle móvil", async () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 42,
           status: "pending",
@@ -188,6 +162,7 @@ describe("ProviderOrderActions", () => {
   it("keeps the buttons enabled on a pending order", () => {
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 8,
           status: "pending",
@@ -204,6 +179,7 @@ describe("ProviderOrderActions", () => {
   it("renders confirm and reject buttons for pending orders", () => {
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 42,
           status: "pending",
@@ -225,6 +201,7 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 42,
           status: "pending",
@@ -247,6 +224,7 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 42,
           status: "pending",
@@ -277,6 +255,7 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 42,
           status: "pending",
@@ -310,6 +289,7 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 42,
           status: "pending",
@@ -355,6 +335,7 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 42,
           status: "pending",
@@ -393,6 +374,7 @@ describe("ProviderOrderActions", () => {
     const user = userEvent.setup()
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 42,
           status: "pending",
@@ -415,10 +397,12 @@ describe("ProviderOrderActions", () => {
       callbacks.onFinish()
     })
 
-    // El sheet de confirmación reemplaza al de rechazo.
-    expect(screen.getByText("Pedido rechazado")).toBeInTheDocument()
+    expect(onDecided).toHaveBeenCalledWith({
+      id: 42,
+      consumer_name: "Santiago Medina",
+      status: "rejected",
+    })
     expect(screen.queryByText("¿Rechazar pedido?")).not.toBeInTheDocument()
-    await user.click(screen.getByRole("button", { name: "Listo" }))
 
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "Rechazar" }))
@@ -434,6 +418,7 @@ describe("ProviderOrderActions", () => {
 
     render(
       <ProviderOrderActions
+        onDecided={onDecided}
         order={{
           id: 42,
           status: "pending",

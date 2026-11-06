@@ -83,6 +83,7 @@ function renderDays(
     <ProviderOrderDays
       orders={orders}
       today={TODAY}
+      onDecided={vi.fn()}
       {...props}
       filters={filters}
     />,
@@ -238,14 +239,24 @@ describe("ProviderOrderDays", () => {
     expect(screen.getByText("Matías Rodríguez - GoGrow")).toBeInTheDocument()
   })
 
-  it("usa el mismo estado vacío cuando los filtros no encuentran nada", () => {
+  it("avisa con el mismo layout cuando los filtros no encuentran nada", () => {
     renderDays({ filters: { ...noFilters, search: "zzz" } })
 
-    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
+    expect(screen.getByText("No hay pedidos")).toBeInTheDocument()
     expect(
-      screen.getByText(
-        "Cuando tus clientes hagan pedidos, van a aparecer acá.",
-      ),
+      screen.getByText("No tenés pedidos que coincidan con los filtros."),
+    ).toBeInTheDocument()
+    expect(screen.queryByText("No tenés pedidos")).not.toBeInTheDocument()
+  })
+
+  it("avisa lo mismo si el filtro de estado deja la lista vacía", () => {
+    renderDays({
+      orders: [orders[0]],
+      filters: { ...noFilters, status: "confirmed" },
+    })
+
+    expect(
+      screen.getByText("No tenés pedidos que coincidan con los filtros."),
     ).toBeInTheDocument()
   })
 

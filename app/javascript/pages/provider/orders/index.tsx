@@ -5,6 +5,9 @@ import { useTranslation } from "react-i18next"
 
 import DeliveryFilterSheet from "@/components/orders/delivery-filter-sheet"
 import ProviderOrderDays from "@/components/orders/provider-order-days"
+import ProviderOrderDecidedSheet, {
+  type ProviderOrderDecision,
+} from "@/components/orders/provider-order-decided-sheet"
 import PageContainer from "@/components/page-container"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,6 +39,7 @@ export default function Index({
   const [status, setStatus] = useState<StatusFilter>("all")
   const [delivery, setDelivery] = useState<DeliveryFilter>("all")
   const [search, setSearch] = useState("")
+  const [decision, setDecision] = useState<ProviderOrderDecision | null>(null)
 
   const orders = period === "upcoming" ? upcoming_orders : past_orders
   // Sin pedidos en el período no hay nada que filtrar: el estado vacío mobile
@@ -144,6 +148,7 @@ export default function Index({
           orders={orders}
           today={today}
           filters={filters}
+          onDecided={setDecision}
           footer={
             visible.length > 0 && (
               <Button
@@ -160,6 +165,11 @@ export default function Index({
           }
         />
       </PageContainer>
+
+      <ProviderOrderDecidedSheet
+        decision={decision}
+        onClose={() => setDecision(null)}
+      />
     </AppLayout>
   )
 }
