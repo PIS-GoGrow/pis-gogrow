@@ -2062,6 +2062,7 @@
           "description": "Actualizá tu dirección de correo y verificala",
           "heading": "Actualizar correo electrónico",
           "resend": "Hacé clic aquí para reenviar el correo de verificación.",
+          "submit": "Guardar correo",
           "title": "Configuración de correo",
           "unverified": "Tu dirección de correo no está verificada."
         },

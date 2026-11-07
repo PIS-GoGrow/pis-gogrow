@@ -241,7 +241,9 @@ export default function Profile({ phone }: SettingsProfilesShow) {
                     </FieldGroup>
 
                     <div className="flex items-center gap-4">
-                      <Button disabled={processing}>{t("common.save")}</Button>
+                      <Button disabled={processing}>
+                        {t("pages.settings.email.submit")}
+                      </Button>
 
                       <Transition
                         show={recentlySuccessful}
