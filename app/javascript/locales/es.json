@@ -164,6 +164,16 @@
       "month_select": {
         "this_month": "Este mes"
       },
+      "network_status": {
+        "offline": {
+          "description": "No pudimos cargar la página. Revisá tu conexión y volvé a intentar.",
+          "title": "Sin conexión a internet"
+        },
+        "online": {
+          "description": "Ya podés seguir navegando.",
+          "title": "Volvió la conexión"
+        }
+      },
       "password_fields": {
         "confirm_label": "Confirmar contraseña",
         "create_label": "Crear contraseña",
@@ -223,8 +233,8 @@
     },
     "notification_configurations": {
       "automatic_payment_reminders": {
-        "description": "Avisos sobre la apertura y el vencimiento próximo de pagos.",
-        "title": "Recordatorios automáticos de pago"
+        "description": "Avisos sobre la apertura y el vencimiento próximo de tus pagos.",
+        "title": "Recordatorios de pago"
       },
       "company_payments": {
         "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
@@ -329,8 +339,8 @@
       },
       "employee_debt_overdue": {
         "description": {
-          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio.",
-          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarle un recordatorio.",
+          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarles un recordatorio."
         },
         "title": "Hay empleados con pagos pendientes"
       },
@@ -395,8 +405,10 @@
         "index": {
           "all_providers": "Todos",
           "history": "Historial",
-          "history_empty": "Todavía no hiciste ningún pago.",
-          "history_filtered_empty": "No hay pagos de este proveedor.",
+          "history_empty_description": "Cuando pagues una cuenta, va a aparecer acá.",
+          "history_empty_title": "Todavía no hiciste ningún pago",
+          "history_filtered_empty_description": "Todavía no le pagaste ninguna cuenta a este proveedor.",
+          "history_filtered_empty_title": "No hay pagos de este proveedor",
           "meals_used_one": "%{count} vianda consumida",
           "meals_used_other": "%{count} viandas consumidas",
           "meals_used_with_limit_one": "%{meals} de %{limit} vianda consumida",
@@ -674,7 +686,7 @@
           },
           "coming_soon": "Próximamente",
           "debts": {
-            "empty": "Ningún empleado tiene saldos pendientes en este mes.",
+            "empty": "Ningún empleado tiene saldos pendientes.",
             "title": "Ranking deuda de empleados",
             "view": "Ver empleados con saldos pendientes"
           },
@@ -786,6 +798,7 @@
               "filter_providers": "Filtrar por proveedor",
               "loading_title": "Detalle del consumo",
               "meals_tab": "Viandas",
+              "meals_title": "%{provider}: Consumos %{month}",
               "payment_tab": "Pago",
               "provider": "Proveedor:",
               "quantity": "Cant.",
@@ -870,6 +883,8 @@
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
         "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+        "office_only_one": "%{providers} solo entrega en la Oficina, así que este pedido no puede ir a otra dirección.",
+        "office_only_other": "%{providers} solo entregan en la Oficina, así que este pedido no puede ir a otra dirección.",
         "order_error": {
           "description": "Hubo un problema al procesar tu pedido. Intentá de nuevo.",
           "menu": "Volver al menú",
@@ -899,7 +914,9 @@
           "reached_100": {
             "one": "Se llegó al 100%, no se aplicará el beneficio %{benefits}",
             "other": "Se llegó al 100%, no se aplicarán los beneficios: %{benefits}"
-          }
+          },
+          "stock_limit_one": "Solo queda 1 vianda disponible de este plato.",
+          "stock_limit_other": "Solo quedan %{count} viandas disponibles de este plato."
         },
         "index": {
           "add": "Agregar",
@@ -984,6 +1001,8 @@
       },
       "consumer_profiles": {
         "show": {
+          "account": "Cuenta",
+          "account_description": "Modificá tu teléfono, nombre, correo, contraseña y apariencia",
           "addresses": "Direcciones",
           "addresses_description": "Gestioná tus direcciones de entrega",
           "benefit": "Mi beneficio",
@@ -1002,7 +1021,7 @@
           "notifications_description": "Configurá qué alertas querés recibir",
           "settings": "Configuración",
           "sign_out": "Salir",
-          "title": "Mi cuenta"
+          "title": "Cuenta"
         }
       },
       "dashboard": {
@@ -1122,6 +1141,7 @@
           "history_empty_title": "No tenés pedidos anteriores",
           "history_filtered_empty_description": "No tenés pedidos anteriores realizados a este proveedor.",
           "history_filtered_empty_title": "No hay pedidos de este proveedor",
+          "history_loading": "Cargando pedidos anteriores…",
           "history_tab": "Historial",
           "no_address": "Sin dirección de entrega",
           "no_date": "Sin fecha de entrega",
@@ -1136,6 +1156,8 @@
           "upcoming_address": "Lo recibís en: %{address} (%{delivery_method})",
           "upcoming_empty_description": "No tenés viandas en camino.",
           "upcoming_empty_title": "No tenés pedidos próximos",
+          "upcoming_filtered_empty_description": "No tenés pedidos próximos con este proveedor.",
+          "upcoming_filtered_empty_title": "No hay pedidos de este proveedor",
           "upcoming_tab": "Próximos"
         },
         "show": {
@@ -1178,7 +1200,7 @@
           "payment_details": "Datos de cobro",
           "payment_details_description": "Configurá dónde querés recibir tus cobros",
           "profile": "Perfil",
-          "profile_description": "Editá tu nombre, correo, teléfono y contraseña",
+          "profile_description": "Editá tu nombre, correo, teléfono, contraseña y apariencia",
           "settings": "Configuración",
           "sign_out": "Salir",
           "title": "Cuenta"
@@ -2033,12 +2055,13 @@
           "description": "Actualizá tu dirección de correo y verificala",
           "heading": "Actualizar correo electrónico",
           "resend": "Hacé clic aquí para reenviar el correo de verificación.",
+          "submit": "Guardar correo",
           "title": "Configuración de correo",
           "unverified": "Tu dirección de correo no está verificada."
         },
         "notifications": {
           "back": "Volver a Cuenta",
-          "back_to_account": "Volver a Mi cuenta",
+          "back_to_account": "Volver a Cuenta",
           "description": "Configurá qué alertas querés recibir por WhatsApp",
           "heading": "Notificaciones",
           "preferences_description": "Activá o desactivá las categorías de avisos que querés recibir.",

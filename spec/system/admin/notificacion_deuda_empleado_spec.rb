@@ -79,7 +79,7 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
     # proveedor, período y monto).
     expect(page).to have_content(
       "Test User tiene pendiente su pago a Other Provider User correspondiente a #{period}. " \
-      "La deuda asciende a $200. Podés enviarle un recordatorio."
+      "La deuda vencida asciende a $200. Podés enviarle un recordatorio."
     )
   end
 
@@ -92,7 +92,7 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
     expect(page).to have_no_content(title)
   end
 
-  it "resume la cantidad de empleados y la deuda total cuando son varios" do
+  it "resume la cantidad de empleados y la deuda vencida cuando son varios" do
     Account.create!(owner: consumers(:other), provider:, month:, amount: 100)
     run_reminders(on: overdue)
 
@@ -100,7 +100,7 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
 
     expect(page).to have_content(
       "2 empleados tienen pendiente su pago a Other Provider User correspondiente a #{period}. " \
-      "La deuda total asciende a $300. Podés enviarles un recordatorio."
+      "La deuda vencida asciende a $300. Podés enviarles un recordatorio."
     )
   end
 
@@ -153,7 +153,7 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
     expect(page).to have_content(title)
     expect(page).to have_content(
       "Test User tiene pendiente su pago a Other Provider User correspondiente a #{period}. " \
-      "La deuda asciende a $200. Podés enviarle un recordatorio."
+      "La deuda vencida asciende a $200. Podés enviarle un recordatorio."
     )
   end
 

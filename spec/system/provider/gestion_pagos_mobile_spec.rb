@@ -71,7 +71,8 @@ RSpec.describe "Gestión de pagos del proveedor en mobile", type: :system do
       # Sin rapid: false, Capybara inyecta por script lo que pasa de 30
       # caracteres, React no lo ve y en CI se guardaba solo "aaa".
       fill_in "Describir el motivo", with: details, fill_options: { rapid: false } if details
-      click_on "Continuar"
+      expect(page).to have_button("Continuar")
+      click_button "Continuar"
     end
   end
 

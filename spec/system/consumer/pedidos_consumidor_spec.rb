@@ -18,7 +18,7 @@ RSpec.describe "Pedidos del consumidor" do
     expect(page).to have_selector("[role=dialog]")
   end
 
-  it "permite consultar pedidos próximos e historial de los últimos 3 meses" do
+  it "permite consultar pedidos próximos e historial" do
     visit orders_path
 
     expect(page).to have_content("Mis pedidos")
@@ -32,6 +32,17 @@ RSpec.describe "Pedidos del consumidor" do
     find("[role=tab]", text: "Historial").click
     expect(page).to have_content("Rechazado")
     expect(page).to have_content("Cancelado")
+  end
+
+  it "carga al hacer scroll los pedidos entregados hace más de 3 meses" do
+    old_order = orders(:history_confirmed_past)
+    old_order.update_columns(schedule_id: nil, delivery_date: Date.current - 4.months, menu_name: "Guiso de lentejas")
+
+    visit orders_path
+    find("[role=tab]", text: "Historial").click
+
+    expect(page).to have_content("Rechazado")
+    expect(page).to have_content("Guiso de lentejas")
   end
 
   it "filtra el historial por proveedor sin conservar el filtro al recargar" do
@@ -122,7 +133,7 @@ RSpec.describe "Pedidos del consumidor" do
 
     visit orders_path
     find("[role=tab]", text: "Historial").click
-    history = find("[role=tabpanel]", text: "Proveedores:")
+    history = find("[role=tabpanel]:not([hidden])")
 
     open_provider_filter
     within("[role=dialog]") do
@@ -149,6 +160,61 @@ RSpec.describe "Pedidos del consumidor" do
     expect(history).to have_content("Milanesa con papas fritas")
     positions = [ "Tarta de verduras", "Budín de limón", "Ensalada de quinoa" ].map { |name| history.text.index(name) }
     expect(positions).to eq(positions.sort)
+  end
+
+  it "ubica el filtro arriba de las pestañas y filtra también los pedidos próximos" do
+    office = providers(:office_provider)
+    endulzate = providers(:endulzate)
+
+    orders(:upcoming_pending_future).update_columns(
+      provider_id: endulzate.id,
+      provider_name: endulzate.user.name,
+      menu_name: "Budín de limón"
+    )
+    orders(:history_pending_past).update_columns(
+      provider_id: office.id,
+      provider_name: office.user.name,
+      menu_name: "Ensalada de quinoa"
+    )
+
+    visit orders_path
+
+    expect(page).to have_content("Proveedores: Todos los proveedores")
+    label_top = page.evaluate_script(
+      "Array.from(document.querySelectorAll('span')).find((el) => el.textContent.startsWith('Proveedores:')).getBoundingClientRect().top"
+    )
+    tabs_top = page.evaluate_script(
+      "document.querySelector('[role=tablist]').getBoundingClientRect().top"
+    )
+    expect(label_top).to be < tabs_top
+
+    # El filtro está fuera de las pestañas, así que también recorta Próximos.
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{office.id}").click
+      click_button "Aplicar"
+    end
+
+    expect(page).to have_content("No hay pedidos de este proveedor")
+    expect(page).to have_content("No tenés pedidos próximos con este proveedor.")
+
+    find("[role=tab]", text: "Historial").click
+    expect(page).to have_content("Ensalada de quinoa")
+    expect(page).not_to have_content("Budín de limón")
+
+    open_provider_filter
+    within("[role=dialog]") do
+      find("#dashboard-filter-#{endulzate.id}").click
+      click_button "Aplicar"
+    end
+
+    find("[role=tab]", text: "Próximos").click
+    expect(page).to have_content("Budín de limón")
+    expect(page).to have_no_content("No hay pedidos de este proveedor")
+
+    find("[role=tab]", text: "Historial").click
+    expect(page).to have_content("No hay pedidos de este proveedor")
+    expect(page).to have_content("No tenés pedidos anteriores realizados a este proveedor.")
   end
 
   it "muestra el estado vacío del historial para un proveedor sin pedidos anteriores" do

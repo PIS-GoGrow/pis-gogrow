@@ -176,8 +176,18 @@ admin_user = User.create!(
 )
 admin = Admin.create!(user: admin_user, company:)
 
-benefit_config = BenefitConfiguration.create! subsidy_percentage: 50, name: "Subsidio base", company:, created_by: admin_user
-benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: Date.current, type: MonthlyBenefit.name
+benefit_config = BenefitConfiguration.new_base_subsidy(
+  company:,
+  created_by: admin_user,
+  subsidy_percentage: 50,
+  effective_from: Date.current,
+  max_price: 500,
+  limit: 20
+)
+benefit_config.save!
+benefit_config.apply_to_all_consumers
+
+benefit = consumer.reload.current_monthly_benefit
 
 consumer.saved_addresses.create!(
   name: "Casa",
@@ -193,16 +203,6 @@ consumer.saved_addresses.create!(
   name: "La Bicicleta Café",
   street: "Bv. España 2643",
   apartment: "Local 2"
-)
-
-
-benefit = Benefit.create!(
-  consumer:,
-  amount: 20,
-  description: "Viandas mensuales",
-  percentage: 50,
-  benefit_configuration: benefit_config,
-  due_date: Date.current.end_of_month
 )
 
 # Cubren las dos secciones de "Mis pedidos": pendientes/próximos e historial,

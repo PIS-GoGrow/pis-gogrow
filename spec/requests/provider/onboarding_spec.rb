@@ -97,6 +97,25 @@ RSpec.describe "Provider::Onboarding", type: :request do
       end)
     end
 
+    it "propone todas las notificaciones encendidas mientras no se configuraron" do
+      keys = Notification::Configuration.where(configurable: true).for_role(:provider).pluck(:key)
+
+      get provider_onboarding_path(step: 4)
+
+      expect(keys).not_to be_empty
+      expect(inertia).to have_props { |props| props["subscribed_keys"].sort == keys.sort }
+    end
+
+    it "muestra solo las suscripciones guardadas una vez configuradas" do
+      config = Notification::Configuration.where(configurable: true).for_role(:provider).first
+      config.users << provider.user
+      provider.update!(notifications_configured_at: Time.current)
+
+      get provider_onboarding_path(step: 4)
+
+      expect(inertia).to have_props { |props| props["subscribed_keys"] == [ config.key ] }
+    end
+
     it "hace fallback al intro si se pasa un parámetro de paso inválido" do
       get provider_onboarding_path(step: 99)
       expect(inertia).to have_props { |props| props["step"] == "intro" }
