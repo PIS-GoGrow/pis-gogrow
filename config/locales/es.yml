@@ -270,8 +270,8 @@ es:
     employee_debt_overdue:
       title: "Hay empleados con pagos pendientes"
       description:
-        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio."
-        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarle un recordatorio."
+        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarles un recordatorio."
     order_cancellation:
       title: "Un pedido fue cancelado"
       description: "El pedido de %{consumer} del %{date} de %{dish} fue cancelado."
@@ -547,6 +547,13 @@ es:
       inactive: "Sin beneficio"
       discount: "de descuento en viandas"
       base: "Subsidio Base"
+    network_status:
+      offline:
+        title: "Sin conexión a internet"
+        description: "No pudimos cargar la página. Revisá tu conexión y volvé a intentar."
+      online:
+        title: "Volvió la conexión"
+        description: "Ya podés seguir navegando."
   pages:
     admin:
       account:
@@ -595,7 +602,7 @@ es:
         debts:
           title: "Ranking deuda de empleados"
           view: "Ver empleados con saldos pendientes"
-          empty: "Ningún empleado tiene saldos pendientes en este mes."
+          empty: "Ningún empleado tiene saldos pendientes."
       order_events:
         index:
           title: "Auditoría de pedidos"
@@ -866,6 +873,7 @@ es:
           filter_providers: "Filtrar por proveedor"
           detail:
             title: "%{provider}: Consumo %{month}"
+            meals_title: "%{provider}: Consumos %{month}"
             loading_title: "Detalle del consumo"
             description: "Lo que la empresa le paga al proveedor en el mes y los pedidos confirmados de cada día."
             provider: "Proveedor:"
@@ -915,8 +923,10 @@ es:
         pending: "Pendientes"
         history: "Historial"
         no_debt: "¡Sin deudas pendientes con este proveedor!"
-        history_empty: "Todavía no hiciste ningún pago."
-        history_filtered_empty: "No hay pagos de este proveedor."
+        history_empty_title: "Todavía no hiciste ningún pago"
+        history_empty_description: "Cuando pagues una cuenta, va a aparecer acá."
+        history_filtered_empty_title: "No hay pagos de este proveedor"
+        history_filtered_empty_description: "Todavía no le pagaste ninguna cuenta a este proveedor."
         providers_label: "Proveedores:"
         all_providers: "Todos"
       show:
@@ -971,10 +981,13 @@ es:
         history_tab: "Historial"
         upcoming_empty_title: "No tenés pedidos próximos"
         upcoming_empty_description: "No tenés viandas en camino."
+        upcoming_filtered_empty_title: "No hay pedidos de este proveedor"
+        upcoming_filtered_empty_description: "No tenés pedidos próximos con este proveedor."
         history_empty_title: "No tenés pedidos anteriores"
         history_empty_description: "Tus pedidos completados aparecerán aquí."
         history_filtered_empty_title: "No hay pedidos de este proveedor"
         history_filtered_empty_description: "No tenés pedidos anteriores realizados a este proveedor."
+        history_loading: "Cargando pedidos anteriores…"
         providers_label: "Proveedores:"
         all_providers: "Todos los proveedores"
         quantity: "x%{count}"
@@ -1579,6 +1592,8 @@ es:
       office_delivery_warning_one: "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_delivery_warning_other: "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
+      office_only_one: "%{providers} solo entrega en la Oficina, así que este pedido no puede ir a otra dirección."
+      office_only_other: "%{providers} solo entregan en la Oficina, así que este pedido no puede ir a otra dirección."
       remove: "Quitar %{name}"
       decrease: "Quitar una unidad de %{name}"
       increase: "Agregar una unidad de %{name}"
@@ -1746,7 +1761,7 @@ es:
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
         profile: "Perfil"
-        profile_description: "Editá tu nombre, correo, teléfono y contraseña"
+        profile_description: "Actualizá tu nombre y tu teléfono"
     provider_onboarding:
       progress: "Paso %{current} de %{total}"
       back: "Volver al paso anterior"
@@ -1879,6 +1894,8 @@ es:
           empty: "%{provider} no recibirá pedidos del %{period}."
           dismiss: "Cerrar aviso"
       detail:
+        stock_limit_one: "Solo queda 1 vianda disponible de este plato."
+        stock_limit_other: "Solo quedan %{count} viandas disponibles de este plato."
         add: "Agregar"
         reached_100:
           one: "Se llegó al 100%, no se aplicará el beneficio %{benefits}"

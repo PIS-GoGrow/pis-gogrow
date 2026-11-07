@@ -1,10 +1,8 @@
 import { Transition } from "@headlessui/react"
-import { Form, Head, router, usePage } from "@inertiajs/react"
-import { useState } from "react"
+import { Form, Head, usePage } from "@inertiajs/react"
 import { useTranslation } from "react-i18next"
 
 import DeleteUser from "@/components/delete-user"
-import HeadingSmall from "@/components/heading-small"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -13,15 +11,13 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Switch } from "@/components/ui/switch"
 import AppLayout from "@/layouts/app-layout"
 import SettingsPageLayout from "@/layouts/settings/page-layout"
 import { adminPreferences, settingsProfiles } from "@/routes"
 import type { BreadcrumbItem, SettingsProfilesShow } from "@/types"
 
-export default function Profile({ provider, phone }: SettingsProfilesShow) {
+export default function Profile({ phone }: SettingsProfilesShow) {
   const { t } = useTranslation()
-  const [updatingHomeDelivery, setUpdatingHomeDelivery] = useState(false)
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -127,44 +123,11 @@ export default function Profile({ provider, phone }: SettingsProfilesShow) {
                   </Transition>
                 </div>
               </div>
-
-              {provider && (
-                <div className="space-y-4 border-t pt-8">
-                  <HeadingSmall
-                    title={t("pages.settings.profile.home_delivery.heading")}
-                  />
-
-                  <Field
-                    orientation="horizontal"
-                    className="rounded-lg border p-4"
-                  >
-                    <FieldLabel htmlFor="home_delivery">
-                      {t("pages.settings.profile.home_delivery.label")}
-                    </FieldLabel>
-                    <Switch
-                      id="home_delivery"
-                      checked={provider.home_delivery}
-                      disabled={updatingHomeDelivery}
-                      onCheckedChange={(homeDelivery) => {
-                        setUpdatingHomeDelivery(true)
-                        router.patch(
-                          settingsProfiles.update(),
-                          { home_delivery: homeDelivery },
-                          {
-                            preserveScroll: true,
-                            onFinish: () => setUpdatingHomeDelivery(false),
-                          },
-                        )
-                      }}
-                    />
-                  </Field>
-                </div>
-              )}
             </>
           )}
         </Form>
 
-        {auth.session.role !== "admin" && <DeleteUser />}
+        {auth.session.role === "consumer" && <DeleteUser />}
       </SettingsPageLayout>
     </AppLayout>
   )
