@@ -27,10 +27,6 @@ export const noFilters: OrderFilters = {
   search: "",
 }
 
-export function hasActiveFilters({ status, delivery, search }: OrderFilters) {
-  return status !== "all" || delivery !== "all" || search.trim() !== ""
-}
-
 function normalize(text: string) {
   return text
     .normalize("NFD")
@@ -86,12 +82,6 @@ export function groupByDate(orders: ProviderOrder[]): OrderDay[] {
     date,
     orders: dayOrders,
   }))
-}
-
-export function withToday(days: OrderDay[], today: string): OrderDay[] {
-  if (days.some((day) => day.date === today)) return days
-
-  return [{ date: today, orders: [] }, ...days]
 }
 
 export function initialDate(days: OrderDay[], today: string) {

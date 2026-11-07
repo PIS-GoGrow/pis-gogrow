@@ -15,28 +15,28 @@ RSpec.describe "Rechazo de pedidos pasados por el proveedor", type: :system do
     sign_in provider_user, role: :provider
   end
 
-  it "muestra deshabilitados los botones de acción para un pedido confirmado pasado en el historial" do
+  it "no muestra botones de acción para un pedido confirmado pasado en el historial" do
     visit_hydrated provider_orders_path
     without_animations
 
     click_on "Historial"
 
-    within("[data-slot='card']", text: "PED-#{confirmed_past_order.id}") do
-      expect(page).to have_button("Rechazar", disabled: true)
-      expect(page).to have_button("Confirmar", disabled: true)
+    within(provider_order_card(confirmed_past_order)) do
+      expect(page).to have_no_button("Rechazar")
+      expect(page).to have_no_button("Confirmar")
     end
 
-    within("[data-slot='card']", text: "PED-#{pending_past_order.id}") do
+    within(provider_order_card(pending_past_order)) do
       expect(page).to have_button("Rechazar", disabled: false)
     end
   end
 
-  it "muestra deshabilitado el botón de rechazar en el detalle de un pedido confirmado pasado" do
+  it "no muestra botones en el detalle de un pedido confirmado pasado" do
     visit_hydrated provider_order_path(confirmed_past_order)
     without_animations
 
     expect(page).to have_content("Detalle de pedido")
-    expect(page).to have_button("Rechazar", disabled: true)
+    expect(page).to have_no_button("Rechazar")
     expect(page).to have_no_button("Confirmar")
   end
 

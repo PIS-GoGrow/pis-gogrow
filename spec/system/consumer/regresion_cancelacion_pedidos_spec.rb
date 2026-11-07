@@ -95,10 +95,10 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       sleep 1.5
 
       find("[role='tab']", text: "Por revisar").click
-      expect(page).to have_no_content("PED-#{order_1.id}")
+      expect(page).to have_no_css(provider_order_card(order_1))
 
       find("[role='tab']", text: "Todos").click
-      expect(page).to have_content("PED-#{order_1.id}")
+      expect(page).to have_css(provider_order_card(order_1))
       expect(page).to have_content("Cancelado")
     end
   end
