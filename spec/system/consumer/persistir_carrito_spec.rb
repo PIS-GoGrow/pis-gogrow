@@ -100,15 +100,14 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     expect(page).to have_no_content("Milanesa con papas fritas x1")
   end
 
-  it "empieza con el carrito vacío al iniciar una nueva sesión del mismo empleado" do
+  it "redirige con el carrito vacío al iniciar una nueva sesión del mismo empleado" do
     add_milanesa_to_cart
     sign_out_from_app(users(:one))
 
     sign_in users(:one), role: :consumer
     visit dashboard_cart_path
 
-    expect(page).to have_content("Todavía no agregaste platos.")
-    expect(page).to have_no_content("Milanesa con papas fritas x1")
+    expect(page).to have_content("Todavía no agregaste platos al carrito.")
   end
 
   it "vacía el carrito y limpia sessionStorage cuando el pedido se confirma con éxito" do

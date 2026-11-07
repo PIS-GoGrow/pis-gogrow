@@ -15,7 +15,6 @@ import { OrderError } from "./order-error"
 import type { Pricing } from "./pricing"
 import { cartPricedItem, priceItems } from "./pricing"
 
-
 // Es un formulario que redirige a ConsumerCart o a OrderError según si el formulario
 // tiene o no errores.
 export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
