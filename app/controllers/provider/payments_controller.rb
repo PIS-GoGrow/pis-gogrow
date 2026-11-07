@@ -33,17 +33,17 @@ class Provider::PaymentsController < Provider::InertiaController
       else return head :unprocessable_entity
       end
 
-      if reviewed
-        # Sin notice: el frontend ya confirma el resultado con su propio diálogo
-        # (PaymentReviewSheet), distinto según se aprobó, quedó parcial o se rechazó.
-        redirect_to provider_collections_path, status: :see_other
-      elsif @payment.errors.empty? && !@payment.submitted?
-        redirect_back fallback_location: provider_collections_path,
-                      alert: t("validations.payment_not_reviewable"), status: :see_other
-      else
-        redirect_back fallback_location: provider_collections_path,
-                      inertia: { errors: @payment.errors.to_hash }, status: :see_other
-      end
+    if reviewed
+      # Sin notice: el frontend ya confirma el resultado con su propio diálogo
+      # (PaymentReviewSheet), distinto según se aprobó, quedó parcial o se rechazó.
+      redirect_to provider_collections_path, status: :see_other
+    elsif @payment.errors.empty? && !@payment.submitted?
+      redirect_back fallback_location: provider_collections_path,
+                    alert: t("validations.payment_not_reviewable"), status: :see_other
+    else
+      redirect_back fallback_location: provider_collections_path,
+                    inertia: { errors: @payment.errors.to_hash }, status: :see_other
+    end
   end
 
   # Mismo esquema que Consumer::PaymentsController#receipt, pero para el proveedor.

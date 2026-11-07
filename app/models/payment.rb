@@ -30,7 +30,7 @@ class Payment < ApplicationRecord
 
   def approve
     with_lock do
-      return false unless submitted?
+      return false if approved? || rejected? || partial?
 
       updated = update(status: :approved, rejection_reason: nil)
 
