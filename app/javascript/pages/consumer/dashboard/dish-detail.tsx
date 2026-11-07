@@ -200,7 +200,7 @@ export function DishDetail({
     submitDisabled
 
   return (
-    <MobileCard>
+    <MobileCard className="pb-36">
       <Button
         type="button"
         variant="ghost"
@@ -340,10 +340,16 @@ export function DishDetail({
       <OrderSummary
         loading={line === null} // Solo mostramos la pantalla de carga la primera vez que se accede
         subtotal={line?.subtotal}
-        total={line?.total}
         tiers={line?.tiers}
+        showTotal={false}
       />
       <BottomAction>
+        <OrderSummary
+          loading={line === null}
+          total={line?.total}
+          compact
+          className="pt-0"
+        />
         {!item.sold_out && maxQuantity > 0 && quantity >= maxQuantity && (
           <p role="status" className="text-muted-foreground text-sm">
             {t("pages.consumer_dashboard.detail.stock_limit", {
