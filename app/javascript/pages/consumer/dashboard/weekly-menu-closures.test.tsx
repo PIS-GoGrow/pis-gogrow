@@ -239,7 +239,7 @@ describe("WeeklyMenu closures", () => {
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
-    await user.click(screen.getByLabelText("Endulzate by Noe"))
+    await user.click(screen.getByLabelText("Tu Viandita"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
     expect(
@@ -282,7 +282,8 @@ describe("WeeklyMenu closures", () => {
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
-    await user.click(screen.getByLabelText("Otro proveedor"))
+    await user.click(screen.getByLabelText("Tu Viandita"))
+    await user.click(screen.getByLabelText("Endulzate by Noe"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
     expect(
@@ -342,7 +343,7 @@ describe("WeeklyMenu closures", () => {
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
-    await user.click(screen.getByLabelText("Endulzate by Noe"))
+    await user.click(screen.getByLabelText("Tu Viandita"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
     expect(screen.getByText("Menú no disponible")).toBeInTheDocument()
@@ -369,7 +370,7 @@ describe("WeeklyMenu closures", () => {
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
-    await user.click(screen.getByLabelText("Tu Viandita"))
+    await user.click(screen.getByLabelText("Endulzate by Noe"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
     expect(screen.queryByText(/no recibirá pedidos/)).not.toBeInTheDocument()
