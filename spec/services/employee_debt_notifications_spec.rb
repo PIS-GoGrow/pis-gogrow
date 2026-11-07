@@ -49,18 +49,18 @@ RSpec.describe EmployeeDebtNotifications do
         requires_action: false,
         title: "Hay empleados con pagos pendientes",
         description: "Test User tiene pendiente su pago a Other Provider User correspondiente a abril 2026. " \
-                     "La deuda asciende a $200. Podés enviarle un recordatorio."
+                     "La deuda vencida asciende a $200. Podés enviarle un recordatorio."
       )
     end
 
-    it "avisa la cantidad de empleados y la deuda total cuando son varios" do
+    it "avisa la cantidad de empleados y la deuda vencida cuando son varios" do
       other_account
 
       remind_on(Date.new(2026, 6, 11))
 
       expect(alerts(admin_user).active.sole.description).to eq(
         "2 empleados tienen pendiente su pago a Other Provider User correspondiente a abril 2026. " \
-        "La deuda total asciende a $300. Podés enviarles un recordatorio."
+        "La deuda vencida asciende a $300. Podés enviarles un recordatorio."
       )
     end
 
@@ -159,7 +159,7 @@ RSpec.describe EmployeeDebtNotifications do
       expect(alerts(admin_user).active.sole).to eq(notification)
       expect(notification.reload.description).to eq(
         "Test User tiene pendiente su pago a Other Provider User correspondiente a abril 2026. " \
-        "La deuda asciende a $200. Podés enviarle un recordatorio."
+        "La deuda vencida asciende a $200. Podés enviarle un recordatorio."
       )
     end
 
@@ -199,8 +199,24 @@ RSpec.describe EmployeeDebtNotifications do
 
       expect(alerts(admin_user).active.sole.description).to eq(
         "Test User tiene pendiente su pago a Other Provider User correspondiente a abril 2026. " \
-        "La deuda asciende a $200. Podés enviarle un recordatorio."
+        "La deuda vencida asciende a $200. Podés enviarle un recordatorio."
       )
+    end
+
+    it "baja el importe cuando un comprobante aprobado cubre parte de la deuda" do
+      add_payment(status: :approved, to: other_account, expected_amount: 60)
+
+      expect(alerts(admin_user).active.sole.description).to eq(
+        "2 empleados tienen pendiente su pago a Other Provider User correspondiente a abril 2026. " \
+        "La deuda vencida asciende a $240. Podés enviarles un recordatorio."
+      )
+    end
+
+    # B5: el cliente definió no registrar el importe de los pagos parciales.
+    it "no baja el importe con un pago parcial, porque no se registra cuánto se pagó" do
+      add_payment(status: :submitted, to: other_account).mark_partial
+
+      expect(alerts(admin_user).active.sole.description).to include("La deuda vencida asciende a $300.")
     end
 
     it "cierra el aviso cuando ya no queda ningún deudor" do
@@ -235,7 +251,7 @@ RSpec.describe EmployeeDebtNotifications do
 
       expect(alerts(admin_user).active.sole.description).to eq(
         "Other Consumer User tiene pendiente su pago a Other Provider User correspondiente a abril 2026. " \
-        "La deuda asciende a $100. Podés enviarle un recordatorio."
+        "La deuda vencida asciende a $100. Podés enviarle un recordatorio."
       )
     end
 

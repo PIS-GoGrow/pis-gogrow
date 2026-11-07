@@ -48,18 +48,17 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
   # RR.HH. sube el comprobante del pago de la empresa desde Pagos.
   def hr_uploads_receipt
     sign_in admin_user, role: :admin
-    visit admin_payments_path
+    visit_hydrated admin_payments_path
 
     within(find("[data-slot=card]", text: provider_user.name)) do
+      attach_file("payment-receipt-#{account.id}", receipt_file, make_visible: true)
+      expect(page).to have_button("Subir comprobante de pago", disabled: false)
       click_on "Subir comprobante de pago"
     end
 
-    within(find("[role=dialog]")) do
-      attach_file("Comprobante", receipt_file)
-      click_on "Subir comprobante de pago"
+    using_wait_time(90) do
+      expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     end
-
-    expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     click_on I18n.t("pages.accounts.show.receipt_success_action")
   end
 

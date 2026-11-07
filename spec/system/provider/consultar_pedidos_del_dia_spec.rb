@@ -35,9 +35,14 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
     expect(page).to have_no_content("Enviar a: 18 de Julio 1006 (Oficina)")
   end
 
-  it "resume las viandas y el monto de cada día" do
+  it "resume las viandas y el monto de cada día sin los cancelados ni rechazados" do
     expect(page).to have_css("button", text: "#{day_label(today)} | Viandas: 1 | Monto: $300,50")
-    expect(page).to have_css("button", text: "#{day_label(future_day)} | Viandas: 6 | Monto: $1.803")
+    expect(page).to have_css("button", text: "#{day_label(future_day)} | Viandas: 4 | Monto: $1.202")
+
+    click_button day_label(future_day)
+
+    expect(page).to have_css("[data-status='cancelled']")
+    expect(page).to have_css("[data-status='rejected']")
   end
 
   # CA1: se puede consultar otra fecha.
@@ -65,7 +70,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
       expect(page).to have_content("Milanesa con papas fritas")
       expect(page).to have_content("x1")
       expect(page).to have_content("(Casa)")
-      expect(page).to have_content("Pendiente")
+      expect(page).to have_content("Por revisar")
     end
   end
 
@@ -94,7 +99,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
       expect(page).to have_css("[data-status='confirmed']")
       expect(page).to have_no_css("[data-status='pending'], [data-status='cancelled'], [data-status='rejected']")
 
-      click_on "Pendiente"
+      click_on "Por revisar"
 
       expect(page).to have_css("button", text: day_label(today))
       expect(page).to have_css("[data-status='pending']")
