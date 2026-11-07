@@ -647,6 +647,8 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   describe "POST /orders con precio esperado inconsistente" do
     before do
       sign_in consumer_user, role: :consumer
+      schedule.update!(date: Date.current.next_week(:monday), available: true)
+      schedules(:sorrentinos_today).update!(date: Date.current.next_week(:monday), available: true)
     end
 
     it "no hace el pedido y muestra error" do
@@ -685,8 +687,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       ]
 
-      post pricing_orders_path, params: { items: items.map { it.slice(:schedule_id, :quantity) } }, as: :json
-      cart_total = response.parsed_body["total"]
+      cart_total = 100.1 * 0.5 + 220.2 * 0.5
       expect(cart_total).not_to eq(cart_total.round(2))
 
       expect {

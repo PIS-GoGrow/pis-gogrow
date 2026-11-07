@@ -39,10 +39,7 @@ export default function ProviderOrderDecidedSheet({
   const key = `pages.provider_orders.actions.${shown.status}_sheet`
 
   return (
-    <AdaptableDialog
-      open={decision !== null}
-      onOpenChange={(next) => !next && onClose()}
-    >
+    <AdaptableDialog open={decision !== null}>
       <AdaptableDialogContent showCloseButton={false} className="p-0">
         <AdaptableDialogHeader className="items-start px-6 pt-8 text-left">
           <AdaptableDialogTitle className="text-base">
