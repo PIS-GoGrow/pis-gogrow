@@ -547,6 +547,13 @@ es:
       inactive: "Sin beneficio"
       discount: "de descuento en viandas"
       base: "Subsidio Base"
+    network_status:
+      offline:
+        title: "Sin conexión a internet"
+        description: "No pudimos cargar la página. Revisá tu conexión y volvé a intentar."
+      online:
+        title: "Volvió la conexión"
+        description: "Ya podés seguir navegando."
   pages:
     admin:
       account:
