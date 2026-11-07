@@ -57,9 +57,14 @@ export default function PaymentReviewSheet({
       {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => {
+        onSuccess: (page) => {
           setSheetOpen(false)
-          showResult("approved")
+          const hasAlert =
+            (page?.props as { flash?: { alert?: string } } | undefined)?.flash
+              ?.alert ?? page?.flash?.alert
+          if (!hasAlert) {
+            showResult("approved")
+          }
         },
         onFinish: () => setProcessing(false),
       },
