@@ -13,6 +13,15 @@ RSpec.describe "Login e inicio del proveedor en el celular", type: :system do
   let(:provider_user) { users(:provider_user) }
   let(:new_password) { "Nueva-Clave-2026-ok!" }
 
+  around do |example|
+    original = ENV["DEV_LOGIN_ENABLED"]
+    ENV["DEV_LOGIN_ENABLED"] = "false"
+    Rails.configuration.x.rate_limit_store.clear
+    example.run
+  ensure
+    ENV["DEV_LOGIN_ENABLED"] = original
+  end
+
   def mobile_nav
     find("nav[aria-label='Navegación del proveedor']")
   end

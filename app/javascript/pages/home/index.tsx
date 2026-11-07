@@ -19,12 +19,64 @@ interface Props extends HomeIndex {
 export default function Home({ variant, dev_login_enabled, errors }: Props) {
   const { t } = useTranslation()
 
+  const actions =
+    variant === "provider" ? (
+      <div className="flex flex-col gap-6">
+        <Button
+          asChild
+          size="lg"
+          className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
+        >
+          <Link href={providerSessions.new().url}>
+            <Mail className="mr-2 size-4" aria-hidden="true" />
+            {t("pages.home.provider.sign_in")}
+          </Link>
+        </Button>
+
+        {dev_login_enabled && <DevLoginForm origin="/proveedor" />}
+      </div>
+    ) : (
+      <>
+        {/*
+          Full-page navigation (not an Inertia visit): OmniAuth needs to
+          redirect the whole browser to accounts.google.com, and
+          omniauth-rails_csrf_protection requires the request to be a POST.
+        */}
+        <form action="/auth/google_oauth2" method="post">
+          <input
+            type="hidden"
+            name="authenticity_token"
+            value={readAuthenticityToken()}
+          />
+          <input
+            type="hidden"
+            name="origin"
+            value={variant === "admin" ? "/rrhh" : "/consumidor"}
+          />
+          <Button
+            type="submit"
+            size="lg"
+            className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90"
+          >
+            <GoogleMark />
+            {t(`pages.home.${variant}.sign_in`)}
+          </Button>
+        </form>
+
+        {dev_login_enabled && (
+          <DevLoginForm
+            origin={variant === "admin" ? "/rrhh" : "/consumidor"}
+          />
+        )}
+      </>
+    )
+
   return (
     <AuthLayout
       title={t(`pages.home.${variant}.heading`)}
       description={t(`pages.home.${variant}.description`)}
-      variant={variant === "provider" ? "welcome" : "landing"}
-      fullHeight={variant === "provider"}
+      variant="landing"
+      actions={actions}
     >
       <Head title={t("pages.home.title")} />
 
@@ -35,60 +87,7 @@ export default function Home({ variant, dev_login_enabled, errors }: Props) {
         </Alert>
       )}
 
-      {variant === "provider" ? (
-        <div className="flex flex-1 flex-col justify-between gap-6">
-          <FeatureCarousel />
-
-          <div className="mt-auto flex flex-col gap-6 pt-6">
-            <Button
-              asChild
-              size="lg"
-              className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
-            >
-              <Link href={providerSessions.new().url}>
-                <Mail className="mr-2 size-4" aria-hidden="true" />
-                {t("pages.home.provider.sign_in")}
-              </Link>
-            </Button>
-
-            {dev_login_enabled && <DevLoginForm origin="/proveedor" />}
-          </div>
-        </div>
-      ) : (
-        <>
-          {/*
-            Full-page navigation (not an Inertia visit): OmniAuth needs to
-            redirect the whole browser to accounts.google.com, and
-            omniauth-rails_csrf_protection requires the request to be a POST.
-          */}
-          <form action="/auth/google_oauth2" method="post">
-            <input
-              type="hidden"
-              name="authenticity_token"
-              value={readAuthenticityToken()}
-            />
-            <input
-              type="hidden"
-              name="origin"
-              value={variant === "admin" ? "/rrhh" : "/consumidor"}
-            />
-            <Button
-              type="submit"
-              size="lg"
-              className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90"
-            >
-              <GoogleMark />
-              {t(`pages.home.${variant}.sign_in`)}
-            </Button>
-          </form>
-
-          {dev_login_enabled && (
-            <DevLoginForm
-              origin={variant === "admin" ? "/rrhh" : "/consumidor"}
-            />
-          )}
-        </>
-      )}
+      {variant === "provider" && <FeatureCarousel />}
     </AuthLayout>
   )
 }
