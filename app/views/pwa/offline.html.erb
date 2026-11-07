@@ -4,10 +4,57 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sin conexión</title>
-  <style>/* CSS inline */</style>
 </head>
 <body>
   <h1>Sin conexión</h1>
+  <p>Estos son los próximos pedidos guardados:</p>
+
+  <div id="orders">Cargando pedidos...</div>
+
   <button onclick="location.reload()">Reintentar</button>
+
+  <script>
+    const request = indexedDB.open("provider-offline");
+
+    request.onsuccess = () => {
+      const db = request.result;
+      const transaction = db.transaction("orders", "readonly");
+      const store = transaction.objectStore("orders");
+
+      const query = store.get("current");
+
+      query.onsuccess = () => {
+        const container = document.getElementById("orders");
+        const cached = query.result;
+
+        if (!cached) {
+          container.textContent = "No hay pedidos guardados.";
+          return;
+        }
+
+        container.replaceChildren();
+
+        const heading = document.createElement("p");
+        heading.textContent =
+          `Última actualización: ${new Date(cached.saved_at).toLocaleString("es-UY")}`;
+
+        container.appendChild(heading);
+
+        cached.upcoming_orders.forEach((order) => {
+          const item = document.createElement("p");
+
+          // Adaptar a la estructura real de tus pedidos.
+          item.textContent = JSON.stringify(order);
+
+          container.appendChild(item);
+        });
+      };
+    };
+
+    request.onerror = () => {
+      document.getElementById("orders").textContent =
+        "No se pudieron recuperar los pedidos.";
+    };
+  </script>
 </body>
 </html>

@@ -1,7 +1,8 @@
 import { Head } from "@inertiajs/react"
 import { Download, Search } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useTranslation } from "react-i18next"
+import { db } from "@/lib/offline-db"
 
 import DeliveryFilterSheet from "@/components/orders/delivery-filter-sheet"
 import ProviderOrderDays from "@/components/orders/provider-order-days"
@@ -40,6 +41,14 @@ export default function Index({
   const [delivery, setDelivery] = useState<DeliveryFilter>("all")
   const [search, setSearch] = useState("")
   const [decision, setDecision] = useState<ProviderOrderDecision | null>(null)
+
+  useEffect(() => {
+    db.orders.put({
+      id: "current",
+      upcoming_orders,
+      saved_at: Date.now(),
+    });
+  }, [upcoming_orders]);
 
   const orders = period === "upcoming" ? upcoming_orders : past_orders
   // Sin pedidos en el período no hay nada que filtrar: el estado vacío mobile
