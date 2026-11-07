@@ -14,6 +14,7 @@ interface AuthLayoutProps {
   hideLogo?: boolean
   variant?: "welcome" | "form" | "landing"
   fullHeight?: boolean
+  actions?: ReactNode
 }
 
 export default function AuthSimpleLayout({
@@ -24,6 +25,7 @@ export default function AuthSimpleLayout({
   hideLogo,
   variant = "welcome",
   fullHeight,
+  actions,
 }: PropsWithChildren<AuthLayoutProps>) {
   const isForm = variant === "form"
   const isLanding = variant === "landing"
@@ -42,16 +44,16 @@ export default function AuthSimpleLayout({
       <div
         className={cn(
           "w-full max-w-[354px]",
-          isFullHeight && "flex flex-1 flex-col justify-between",
-          isLanding &&
-            "flex min-h-[calc(100svh-3rem)] flex-col md:block md:min-h-0",
+          (isFullHeight || isLanding) &&
+            "flex flex-1 flex-col justify-between md:min-h-0 md:flex-none",
         )}
       >
         <div
           className={cn(
             "flex flex-col gap-6",
             isFullHeight && "flex flex-1 flex-col justify-between",
-            isLanding && "flex flex-1 flex-col justify-between md:block",
+            isLanding &&
+              "flex flex-1 flex-col justify-between md:flex-none md:justify-center md:gap-6",
           )}
         >
           <div
@@ -123,9 +125,11 @@ export default function AuthSimpleLayout({
                 </div>
               </div>
             </div>
+
+            {actions && children}
           </div>
 
-          {children}
+          {actions ?? children}
         </div>
       </div>
     </div>
