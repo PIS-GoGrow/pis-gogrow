@@ -1,15 +1,17 @@
 # frozen_string_literal: true
 
 class BenefitUsageMonthlyCapture
-  def initialize(company:, month: nil, at: Time.current)
+  def initialize(company:, month: nil, at: Time.current, final: false)
     @company = company
     @at = at
     @month = month
+    @final = final
   end
 
   def call
     month = @month || @at.in_time_zone("America/Montevideo").to_date.beginning_of_month
     raise ArgumentError, "only the current month can be captured" unless month == @at.in_time_zone("America/Montevideo").to_date.beginning_of_month
+    raise ArgumentError, "outside the final capture window" if @final && !final_window?(@at)
 
     @company.with_lock do
       raise ArgumentError, "period changed during capture" unless month == Date.current.beginning_of_month
@@ -55,10 +57,29 @@ class BenefitUsageMonthlyCapture
       reasons["monthly_unused_closed_meals"] = "period_open"
       captured_at = Time.current
       raise ArgumentError, "period changed during capture" unless captured_at.in_time_zone("America/Montevideo").to_date.beginning_of_month == month
+      raise ArgumentError, "outside the final capture window" if @final && !final_window?(captured_at)
+
+      if @final
+        attributes[:status] = :closed
+        attributes[:closed_at] = captured_at
+        attributes[:monthly_unused_closed_meals] = attributes[:monthly_available_meals]
+        if attributes[:monthly_unused_closed_meals].nil?
+          reasons["monthly_unused_closed_meals"] = "source_unavailable"
+        else
+          reasons.delete("monthly_unused_closed_meals")
+        end
+      end
 
       snapshot.assign_attributes(attributes.merge(captured_at:, unavailable_reasons: reasons))
       snapshot.save!
       snapshot
     end
+  end
+
+  private
+
+  def final_window?(time)
+    local = time.in_time_zone("America/Montevideo")
+    local.to_date == local.to_date.end_of_month && local.hour == 23 && local.min >= 55
   end
 end

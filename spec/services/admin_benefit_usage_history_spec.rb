@@ -12,7 +12,7 @@ RSpec.describe AdminBenefitUsageHistory do
     september_data = described_class.new(company:, month: september.month).to_h
     october_data = described_class.new(company:, month: october.month).to_h
 
-    expect(september_data[:period]).to include(source: "historical_snapshot", state: "incomplete", fictional: true,
+    expect(september_data[:period]).to include(source: "historical_snapshot", state: "closed", fictional: true,
                                                captured_at: Time.zone.local(2026, 9, 30, 23, 55).iso8601)
     expect(september_data[:metrics]).to include(employees: 38, eligible_employees: 36,
                                                 eligible_with_confirmed_orders: 12, monthly_quota_meals: 720,
@@ -23,16 +23,15 @@ RSpec.describe AdminBenefitUsageHistory do
                                               confirmed_meals: 44, monthly_subsidized_meals: 40,
                                               confirmed_meals_without_monthly_subsidy: 4,
                                               participation_percent: BigDecimal("42.11"))
-    expect(october_data[:metrics][:monthly_unused_closed_meals]).to be_nil
-    expect(october_data[:unavailable_reasons]).to include("period" => "close_not_verified",
-                                                         "monthly_unused_closed_meals" => "close_not_verified")
+    expect(october_data[:metrics][:monthly_unused_closed_meals]).to eq(716)
+    expect(october_data[:unavailable_reasons]).to be_empty
   end
 
-  it "compares like-for-like 23:55 captures and labels percentage points separately" do
+  it "compares like-for-like operational closes and labels percentage points separately" do
     ibp_041_2026_snapshots(company:)
     comparison = described_class.new(company:, month: Date.new(2026, 10, 1)).to_h[:comparisons].last
 
-    expect(comparison).to include(from: "2026-09", to: "2026-10", quality: "capture_only")
+    expect(comparison).to include(from: "2026-09", to: "2026-10", quality: "verified_close")
     expect(comparison.dig(:changes, :confirmed_meals)).to include(reference: 28, current: 44, difference: 16,
                                                                   percent: BigDecimal("57.14"))
     expect(comparison.dig(:changes, :monthly_quota_meals)).to include(reference: 720, current: 760,
@@ -51,7 +50,7 @@ RSpec.describe AdminBenefitUsageHistory do
 
   it "does not compare an incomplete capture with a verified close" do
     ibp_041_verified_close(company:)
-    ibp_041_2026_snapshots(company:)
+    ibp_041_incomplete_snapshot(company:)
     comparison = described_class.new(company:, month: Date.new(2026, 9, 1)).to_h[:comparisons].last
 
     expect(comparison[:quality]).to eq("not_comparable")
@@ -70,7 +69,7 @@ RSpec.describe AdminBenefitUsageHistory do
   end
 
   it "keeps incomplete metric values unknown and does not derive percentages from missing denominators" do
-    september, = ibp_041_2026_snapshots(company:)
+    september = ibp_041_incomplete_snapshot(company:)
     september.update!(eligible_employees: nil, eligible_with_confirmed_orders: nil,
                       unavailable_reasons: { "eligible_employees" => "eligibility_unknown" })
 
@@ -81,7 +80,7 @@ RSpec.describe AdminBenefitUsageHistory do
   end
 
   it "does not expose arbitrary text stored as an availability reason" do
-    september, = ibp_041_2026_snapshots(company:)
+    september = ibp_041_incomplete_snapshot(company:)
     september.update!(unavailable_reasons: { "employees" => "private@example.test" })
 
     result = described_class.new(company:, month: september.month).to_h

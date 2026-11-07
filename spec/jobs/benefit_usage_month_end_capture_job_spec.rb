@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe BenefitUsageMonthEndCaptureJob do
-  it "captures the ending month at 23:55 without duplicating the provisional snapshot" do
+  it "closes the ending month at 23:55 without duplicating the snapshot" do
     travel_to Time.zone.local(2032, 10, 31, 23, 55) do
       company = companies(:gogrow)
       other = Company.create!(name: "Empresa de prueba")
@@ -13,10 +13,12 @@ RSpec.describe BenefitUsageMonthEndCaptureJob do
       first = BenefitUsageMonthlySnapshot.find_by!(company:, month:)
       described_class.perform_now
 
-      expect(first.reload).to be_provisional
+      expect(first.reload).to be_closed
       expect(first.captured_at).to eq(Time.current)
+      expect(first.closed_at).to eq(first.captured_at)
+      expect(first.monthly_unused_closed_meals).to eq(first.monthly_available_meals)
       expect(BenefitUsageMonthlySnapshot.where(company:, month:).count).to eq(1)
-      expect(BenefitUsageMonthlySnapshot.where(company: other, month:).count).to eq(1)
+      expect(BenefitUsageMonthlySnapshot.find_by!(company: other, month:)).to be_closed
     end
   end
 
@@ -32,6 +34,14 @@ RSpec.describe BenefitUsageMonthEndCaptureJob do
       expect(snapshot.reload).to be_provisional
       expect(snapshot.captured_at).to eq(Time.zone.local(2032, 10, 31, 23, 0))
       expect(BenefitUsageMonthlySnapshot.where(company:, month:).count).to eq(1)
+    end
+  end
+
+  it "does not close a period before the final capture window" do
+    travel_to Time.zone.local(2032, 10, 31, 23, 54) do
+      described_class.perform_now
+
+      expect(BenefitUsageMonthlySnapshot.where(month: Date.new(2032, 10, 1))).to be_empty
     end
   end
 

@@ -31,7 +31,7 @@ RSpec.describe AnthropicMessagesClient do
                                                 "anthropic-version" => "2026-10-21",
                                                 "Content-Type" => "application/json")
     expect(JSON.parse(requests.first[:body])).to eq(
-      "model" => "configured-test-model", "max_tokens" => 1500, "system" => "Instrucciones de prueba",
+      "model" => "configured-test-model", "max_tokens" => 2500, "system" => "Instrucciones de prueba",
       "messages" => [ { "role" => "user", "content" => '{"schema_version":1}' } ]
     )
   end

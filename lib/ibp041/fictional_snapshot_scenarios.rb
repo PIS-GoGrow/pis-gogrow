@@ -9,7 +9,7 @@ module Ibp041
         monthly_quota_meals: 720, confirmed_orders: 20, confirmed_meals: 28,
         monthly_subsidized_meals: 28, confirmed_meals_without_monthly_subsidy: 0,
         pending_orders: 2, pending_meals: 2, monthly_pending_reserved_meals: 2,
-        monthly_available_meals: 690, monthly_unused_closed_meals: nil,
+        monthly_available_meals: 690, monthly_unused_closed_meals: 690,
         company_subsidy_amount: "4200.00"
       },
       "2026-10" => {
@@ -18,7 +18,7 @@ module Ibp041
         monthly_quota_meals: 760, confirmed_orders: 30, confirmed_meals: 44,
         monthly_subsidized_meals: 40, confirmed_meals_without_monthly_subsidy: 4,
         pending_orders: 3, pending_meals: 4, monthly_pending_reserved_meals: 4,
-        monthly_available_meals: 716, monthly_unused_closed_meals: nil,
+        monthly_available_meals: 716, monthly_unused_closed_meals: 716,
         company_subsidy_amount: "6600.00"
       }
     }.freeze
@@ -29,14 +29,12 @@ module Ibp041
 
     def self.attributes(key)
       month = Date.iso8601("#{key}-01")
+      captured_at = Time.zone.local(month.year, month.month, month.end_of_month.day, 23, 55)
       DATA.fetch(key).merge(
-        status: :incomplete,
-        closed_at: nil,
-        captured_at: Time.zone.local(month.year, month.month, month.end_of_month.day, 23, 55),
-        unavailable_reasons: {
-          "period" => "close_not_verified",
-          "monthly_unused_closed_meals" => "close_not_verified"
-        }
+        status: :closed,
+        closed_at: captured_at,
+        captured_at:,
+        unavailable_reasons: {}
       )
     end
   end

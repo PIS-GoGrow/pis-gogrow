@@ -16,7 +16,7 @@ class AnthropicMessagesClient
       request.headers["anthropic-version"] = "2026-10-21"
       request.headers["Content-Type"] = "application/json"
       request.body = JSON.generate(
-        model:, max_tokens: 1500, system:,
+        model:, max_tokens: 2500, system:,
         messages: [ { role: "user", content: payload_json } ]
       )
     end

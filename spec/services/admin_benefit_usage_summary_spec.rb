@@ -50,11 +50,12 @@ RSpec.describe AdminBenefitUsageSummary do
   it "asks for evidence-backed findings without repeating every metric" do
     prompt = described_class::SYSTEM_PROMPT
 
-    expect(prompt).to include("120 a 180 palabras", "dos o tres párrafos", "Si los datos son escasos")
-    expect(prompt).to include("null significa desconocido", "sin IVA", "no dinero pagado")
-    expect(prompt).to include("incomplete", "missing_snapshot", "sin cierre exacto verificado")
+    expect(prompt).to include("120 a 180 palabras", "dos o tres párrafos", "Si la información es insuficiente")
+    expect(prompt).to include("null significa desconocido", "sin IVA", "no dinero efectivamente pagado")
+    expect(prompt).to include("incomplete", "missing_snapshot", "sin cierre operativo confirmado")
     expect(prompt).to include("difference_points", "puntos porcentuales", "No recalcules")
-    expect(prompt).to include("no es necesariamente bueno o malo", "No atribuyas cambios")
+    expect(prompt).to include("No califiques automáticamente un aumento como positivo", "No atribuyas resultados")
+    expect(prompt).to include("sin pedidos confirmados", "no realizaron ningún pedido", "mes actual permanece abierto")
   end
 
   it "returns a controlled error for oversized payloads without sending them" do

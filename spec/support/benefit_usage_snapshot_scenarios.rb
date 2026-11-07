@@ -12,6 +12,17 @@ module BenefitUsageSnapshotScenarios
     end
   end
 
+  def ibp_041_incomplete_snapshot(company:, key: "2026-09")
+    raise "historical scenarios require the test environment" unless Rails.env.test?
+
+    historical_snapshot(company:, month: Date.iso8601("#{key}-01"),
+                        **Ibp041::FictionalSnapshotScenarios.attributes(key).merge(
+                          status: :incomplete, closed_at: nil, monthly_unused_closed_meals: nil,
+                          unavailable_reasons: { "period" => "close_not_verified",
+                                                 "monthly_unused_closed_meals" => "close_not_verified" }
+                        ))
+  end
+
   def ibp_041_verified_close(company:)
     raise "historical scenarios require the test environment" unless Rails.env.test?
 

@@ -15,7 +15,7 @@ RSpec.describe "Admin::BenefitUsage history", type: :request do
     september = response.parsed_body
     expect(response).to have_http_status(:ok)
     expect(response.headers["X-Benefit-Usage-Source"]).to eq("historical_snapshot")
-    expect(response.headers["X-Benefit-Usage-State"]).to eq("incomplete")
+    expect(response.headers["X-Benefit-Usage-State"]).to eq("closed")
     expect(september.dig("history", "metrics")).to include("employees" => 38, "eligible_employees" => 36,
                                                          "confirmed_meals" => 28)
 
@@ -23,14 +23,14 @@ RSpec.describe "Admin::BenefitUsage history", type: :request do
     october = response.parsed_body
     expect(october.dig("history", "metrics")).to include("employees" => 40, "eligible_employees" => 38,
                                                        "confirmed_meals" => 44, "monthly_subsidized_meals" => 40)
-    expect(october.dig("history", "comparisons").last).to include("quality" => "capture_only")
+    expect(october.dig("history", "comparisons").last).to include("quality" => "verified_close")
     expect(october.dig("history", "comparisons").last.dig("changes", "participation_percent", "difference_points"))
       .to eq("8.77")
     expect(october.dig("history", "metrics", "company_subsidy_amount")).to match(/\A6600(?:\.0+)?\z/)
-    expect(october.dig("consumption", "confirmed_meals")).to be_nil
-    expect(october.dig("capacity", "monthly_available_meals")).to be_nil
+    expect(october.dig("consumption", "confirmed_meals")).to eq(44)
+    expect(october.dig("capacity", "monthly_available_meals")).to eq(716)
     expect(october.dig("history", "metrics", "monthly_available_meals")).to eq(716)
-    expect(october.dig("history", "metrics", "monthly_unused_closed_meals")).to be_nil
+    expect(october.dig("history", "metrics", "monthly_unused_closed_meals")).to eq(716)
     expect(response.body).not_to match(/"(?:consumer_id|user_id|email|name|address)"\s*:/)
   end
 
@@ -89,7 +89,7 @@ RSpec.describe "Admin::BenefitUsage history", type: :request do
         expect(response.parsed_body).to include("month" => month, "text" => "Resumen simulado de RRHH.")
       end
 
-      expect(sent_payloads.pluck("period").pluck("state")).to eq(%w[incomplete incomplete])
+      expect(sent_payloads.pluck("period").pluck("state")).to eq(%w[closed closed])
       expect(sent_payloads[0].fetch("metrics")).to include("employees" => 38, "eligible_employees" => 36,
                                                          "eligible_with_confirmed_orders" => 12,
                                                          "monthly_quota_meals" => 720, "confirmed_meals" => 28)
@@ -116,6 +116,7 @@ RSpec.describe "Admin::BenefitUsage history", type: :request do
       _, snapshot = ibp_041_2026_snapshots(company: companies(:gogrow))
       get admin_benefit_usage_path, params: { month: "2026-10" }
       revision = response.parsed_body.fetch("analysis_revision")
+      snapshot.correction_authorized = true
       snapshot.update!(company_subsidy_amount: 6700)
 
       post admin_benefit_usage_summary_path, params: { month: "2026-10", analysis_revision: revision }

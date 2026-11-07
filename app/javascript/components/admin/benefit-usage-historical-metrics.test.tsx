@@ -155,11 +155,16 @@ describe("estadísticas históricas de Uso del beneficio", () => {
     const user = userEvent.setup()
     render(<BenefitUsageHistoricalMetrics history={history()} />)
     expect(
-      screen.getByText("Fotografía sin cierre verificado"),
+      screen.getByText("Última captura: 31/10/2026 · 23:55"),
     ).toBeInTheDocument()
     expect(
-      screen.getByText("Datos registrados el 31/10, 23:55"),
-    ).toBeInTheDocument()
+      screen.queryByText("Fotografía sin cierre verificado"),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText("Fotografía histórica")).not.toBeInTheDocument()
+    expect(
+      screen.queryByText(/Cierre no verificado\. Los valores/),
+    ).not.toBeInTheDocument()
+    expect(screen.getByText("Datos de prueba")).toBeInTheDocument()
     await open(user, "Participación de empleados")
     expect(
       screen.getByText("Empleados del período").parentElement,
@@ -182,8 +187,8 @@ describe("estadísticas históricas de Uso del beneficio", () => {
         .parentElement,
     ).toHaveTextContent("716")
     expect(
-      screen.getByText("Cupo no utilizado al cierre").parentElement,
-    ).toHaveTextContent("Sin datos")
+      screen.queryByText("Cupo disponible al cierre"),
+    ).not.toBeInTheDocument()
     await open(user, "Comparación con el mes anterior")
     const comparison =
       screen
@@ -197,7 +202,19 @@ describe("estadísticas históricas de Uso del beneficio", () => {
     expect(comparison).toHaveTextContent("+57,14 % respecto al mes anterior")
   })
 
-  it("keeps missing historical values unknown and never draws a bar for them", async () => {
+  it("shows September's real capture time and no test badge for a non-fictional snapshot", () => {
+    const data = history()
+    data.period.month = "2026-09"
+    data.period.captured_at = "2026-09-30T23:55:00-03:00"
+    data.period.fictional = false
+    render(<BenefitUsageHistoricalMetrics history={data} />)
+    expect(
+      screen.getByText("Última captura: 30/09/2026 · 23:55"),
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Datos de prueba")).not.toBeInTheDocument()
+  })
+
+  it("explains a missing snapshot and shows only reconstructible consumption and trends", async () => {
     const user = userEvent.setup()
     const data = history()
     data.period.state = "missing_snapshot"
@@ -207,29 +224,121 @@ describe("estadísticas históricas de Uso del beneficio", () => {
     data.metrics.eligible_employees = null
     data.metrics.participation_percent = null
     data.metrics.monthly_quota_meals = null
+    data.metrics.monthly_subsidized_meals = null
+    data.metrics.company_subsidy_amount = null
     data.trends[0].metrics.confirmed_meals = null
     data.comparisons[0].quality = "not_comparable"
     render(<BenefitUsageHistoricalMetrics history={data} />)
     expect(screen.getByText("Sin fotografía histórica")).toBeInTheDocument()
+    expect(screen.queryByText(/Última captura:/)).not.toBeInTheDocument()
     expect(
-      screen.getByText(/No hay fotografía de este mes/),
+      screen.getByText(
+        "No hay estadísticas históricas completas para este mes",
+      ),
     ).toBeInTheDocument()
-    await open(user, "Participación de empleados")
     expect(
-      screen.getByText("Empleados del período").parentElement,
-    ).toHaveTextContent("Sin datos")
+      screen.getByText(
+        "No hay estadísticas históricas completas para este mes",
+      ),
+    ).toHaveClass("line-clamp-none", "min-w-0", "break-words")
+    expect(
+      screen.getByText(
+        "No hay estadísticas históricas completas para este mes",
+      ),
+    ).not.toHaveClass("line-clamp-1")
+    expect(
+      screen.getByText(/Esto no significa que no haya habido actividad/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText("Información parcial recuperada"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText(/provienen de registros conservados/),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText("Viandas confirmadas").parentElement,
+    ).toHaveTextContent("44")
+    expect(
+      screen.queryByText("Viandas con subsidio mensual"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText("Subsidio comprometido sin IVA"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Participación de empleados" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Capacidad del beneficio" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Comparación con el mes anterior" }),
+    ).not.toBeInTheDocument()
     await open(user, "Últimos cuatro meses")
-    const trend = within(
+    const trends = within(
       screen.getByRole("list", { name: "Viandas confirmadas" }),
-    ).getAllByRole("listitem")[0]
-    expect(trend).toHaveTextContent("Sin datos")
-    expect(trend.querySelector('[aria-hidden="true"]')).toBeNull()
-    await open(user, "Comparación con el mes anterior")
-    expect(
-      screen.getByText("No hay una comparación confiable con el mes anterior."),
-    ).toBeInTheDocument()
+    ).getAllByRole("listitem")
+    expect(trends).toHaveLength(1)
+    expect(trends[0]).toHaveTextContent("44 viandas")
     expect(
       screen.queryByText("+8,77 puntos porcentuales"),
+    ).not.toBeInTheDocument()
+  })
+
+  it("preserves known zero values without showing unknown metrics as zero", () => {
+    const data = history()
+    data.period.state = "missing_snapshot"
+    data.period.source = "historical_reconstruction"
+    data.period.captured_at = null
+    data.metrics.confirmed_orders = 0
+    data.metrics.confirmed_meals = 0
+    data.metrics.monthly_subsidized_meals = null
+    data.metrics.confirmed_meals_without_monthly_subsidy = null
+    data.metrics.company_subsidy_amount = null
+    data.trends = []
+    data.comparisons = []
+    render(<BenefitUsageHistoricalMetrics history={data} />)
+    expect(
+      screen.getByText("Pedidos confirmados").parentElement,
+    ).toHaveTextContent("0")
+    expect(
+      screen.getByText("Viandas confirmadas").parentElement,
+    ).toHaveTextContent("0")
+    expect(
+      screen.queryByText("Viandas con subsidio mensual"),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText("Sin datos")).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Últimos cuatro meses" }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("does not render empty consumption or trend cards", () => {
+    const data = history()
+    data.period.state = "missing_snapshot"
+    data.period.source = "historical_reconstruction"
+    data.period.captured_at = null
+    data.metrics.confirmed_orders = null
+    data.metrics.confirmed_meals = null
+    data.metrics.monthly_subsidized_meals = null
+    data.metrics.confirmed_meals_without_monthly_subsidy = null
+    data.metrics.company_subsidy_amount = null
+    data.trends = []
+    data.comparisons = []
+    data.unavailable_reasons = { period: "historical_snapshot_missing" }
+    render(<BenefitUsageHistoricalMetrics history={data} />)
+    expect(
+      screen.getByText(
+        "No hay estadísticas históricas completas para este mes",
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Información parcial recuperada" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Últimos cuatro meses" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Limitaciones de los datos" }),
     ).not.toBeInTheDocument()
   })
 
@@ -237,14 +346,26 @@ describe("estadísticas históricas de Uso del beneficio", () => {
     const user = userEvent.setup()
     const data = history()
     data.period.state = "closed"
-    data.metrics.monthly_unused_closed_meals = 640
+    data.metrics.monthly_unused_closed_meals = 716
     data.unavailable_reasons = {}
+    data.trends.forEach((entry) => {
+      entry.state = "closed"
+    })
+    data.comparisons[0].quality = "verified_close"
     render(<BenefitUsageHistoricalMetrics history={data} />)
-    expect(screen.getByText("Cierre verificado")).toBeInTheDocument()
+    expect(
+      screen.getByText("Última captura: 31/10/2026 · 23:55"),
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Cierre verificado")).not.toBeInTheDocument()
     expect(screen.queryByText(/Cierre no verificado/)).not.toBeInTheDocument()
     await open(user, "Capacidad del beneficio")
     expect(
-      screen.getByText("Cupo no utilizado al cierre").parentElement,
-    ).toHaveTextContent("640")
+      screen.getByText("Cupo disponible al cierre").parentElement,
+    ).toHaveTextContent("716")
+    expect(
+      screen.queryByText("Cupo disponible al momento de la captura"),
+    ).not.toBeInTheDocument()
+    await open(user, "Comparación con el mes anterior")
+    expect(screen.getByText("Cierres verificados")).toBeInTheDocument()
   })
 })

@@ -56,6 +56,24 @@ module Ibp041
       list
     end
 
+    def upgrade!
+      verify_local_database!
+      BenefitUsageMonthlySnapshot.transaction do
+        existing = snapshots.lock.index_by { it.month.strftime("%Y-%m") }
+        raise "Deben existir exactamente las dos fotografías ficticias" unless existing.keys.sort == FictionalSnapshotScenarios.months.sort
+        raise "Existe una fotografía real; no se modificó ningún período" if existing.values.any? { !it.fictional? }
+
+        unless existing.all? { |key, snapshot| scenario_snapshot?(snapshot, key) }
+          raise "Las fotografías no coinciden con el escenario provisional original" unless existing.all? do |key, snapshot|
+            scenario_snapshot?(snapshot, key, old: true)
+          end
+
+          existing.each { |key, snapshot| snapshot.update!(**FictionalSnapshotScenarios.attributes(key)) }
+        end
+      end
+      list
+    end
+
     def remove!
       verify_local_database!
       ids = snapshots.filter_map do |snapshot|
@@ -77,9 +95,14 @@ module Ibp041
                                  .order(:month)
     end
 
-    def scenario_snapshot?(snapshot, key)
+    def scenario_snapshot?(snapshot, key, old: false)
       expected = FictionalSnapshotScenarios.attributes(key)
-      snapshot.fictional? && expected.all? do |field, value|
+      if old
+        expected.merge!(status: :incomplete, closed_at: nil, monthly_unused_closed_meals: nil,
+                        unavailable_reasons: { "period" => "close_not_verified",
+                                               "monthly_unused_closed_meals" => "close_not_verified" })
+      end
+      snapshot.fictional? && snapshot.calculation_version == 1 && expected.all? do |field, value|
         actual = snapshot.public_send(field)
         value = value.to_s if field == :status
         value = value.to_d if field == :company_subsidy_amount

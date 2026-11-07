@@ -24,13 +24,49 @@ RSpec.describe Ibp041::LocalSnapshotQa do
     expect([ october.employees, october.eligible_employees, october.confirmed_meals,
              october.monthly_quota_meals, october.company_subsidy_amount ])
       .to eq([ 40, 38, 44, 760, BigDecimal("6600.00") ])
-    expect([ september, october ].map(&:status)).to eq(%w[incomplete incomplete])
+    expect([ september, october ].map(&:status)).to eq(%w[closed closed])
     expect([ september, october ].map(&:fictional?)).to eq([ true, true ])
     expect(september.captured_at).to eq(Time.zone.local(2026, 9, 30, 23, 55))
     expect(october.captured_at).to eq(Time.zone.local(2026, 10, 31, 23, 55))
-    expect([ september.monthly_unused_closed_meals, october.monthly_unused_closed_meals ]).to eq([ nil, nil ])
-    expect(october.unavailable_reasons).to include("period" => "close_not_verified")
+    expect([ september.monthly_unused_closed_meals, october.monthly_unused_closed_meals ]).to eq([ 690, 716 ])
+    expect([ september.closed_at, october.closed_at ]).to eq([ september.captured_at, october.captured_at ])
+    expect(october.unavailable_reasons).to be_empty
     expect([ Order.count, Benefit.count, Consumer.count, OrderBenefit.count ]).to eq(before_counts)
+  end
+
+  it "upgrades only the two unchanged local fictional captures, atomically and idempotently" do
+    september = ibp_041_incomplete_snapshot(company:)
+    october = ibp_041_incomplete_snapshot(company:, key: "2026-10")
+    before_counts = [ Order.count, Benefit.count, Consumer.count ]
+
+    service.upgrade!
+    service.upgrade!
+
+    expect([ september.reload, october.reload ].map(&:status)).to eq(%w[closed closed])
+    expect([ september, october ].map(&:monthly_unused_closed_meals)).to eq([ 690, 716 ])
+    expect(BenefitUsageMonthlySnapshot.where(company:).count).to eq(2)
+    expect([ Order.count, Benefit.count, Consumer.count ]).to eq(before_counts)
+  end
+
+  it "refuses an altered fictional capture without upgrading either month" do
+    september = ibp_041_incomplete_snapshot(company:)
+    october = ibp_041_incomplete_snapshot(company:, key: "2026-10")
+    october.update!(confirmed_meals: 45)
+
+    expect { service.upgrade! }.to raise_error(/no coinciden/)
+    expect(september.reload).to be_incomplete
+    expect(october.reload).to be_incomplete
+  end
+
+  it "refuses to upgrade a real snapshot or run without the local database guard" do
+    september = ibp_041_incomplete_snapshot(company:)
+    historical_snapshot(company:, month: Date.new(2026, 10, 1), fictional: false)
+
+    expect { service.upgrade! }.to raise_error(/fotografía real/)
+    expect(september.reload).to be_incomplete
+
+    allow(service).to receive(:local_database?).and_return(false)
+    expect { service.upgrade! }.to raise_error(/no es la base local/)
   end
 
   it "uses the existing historical comparison path" do

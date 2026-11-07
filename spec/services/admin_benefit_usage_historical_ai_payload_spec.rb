@@ -12,12 +12,12 @@ RSpec.describe AdminBenefitUsageAiPayload do
     described_class.new(history:).to_h
   end
 
-  it "sends September and October aggregate captures with a compatible comparison only" do
+  it "sends September and October operational closes with a compatible comparison only" do
     ibp_041_2026_snapshots(company:)
     september = payload_for(Date.new(2026, 9, 1))
     october = payload_for(Date.new(2026, 10, 1))
 
-    expect(september[:period]).to include(month: "2026-09", state: "incomplete", source: "historical_snapshot",
+    expect(september[:period]).to include(month: "2026-09", state: "closed", source: "historical_snapshot",
                                           captured_at: Time.zone.local(2026, 9, 30, 23, 55).iso8601)
     expect(september[:metrics]).to include(employees: 38, eligible_employees: 36,
                                            eligible_with_confirmed_orders: 12, monthly_quota_meals: 720,
@@ -27,17 +27,17 @@ RSpec.describe AdminBenefitUsageAiPayload do
     expect(october[:metrics]).to include(employees: 40, eligible_employees: 38,
                                          eligible_with_confirmed_orders: 16, monthly_quota_meals: 760,
                                          confirmed_meals: 44, monthly_subsidized_meals: 40,
-                                         participation_percent: 42.11, monthly_unused_closed_meals: nil)
-    expect(october[:comparison]).to include(from: "2026-09", to: "2026-10", quality: "capture_only")
+                                         participation_percent: 42.11, monthly_unused_closed_meals: 716)
+    expect(october[:comparison]).to include(from: "2026-09", to: "2026-10", quality: "verified_close")
     expect(october.dig(:comparison, :changes, :participation_percent)).to include(
       difference: nil, difference_points: 8.77, percent: 26.32
     )
-    expect(october[:limitations]).to include(indicator: "period", reason: "close_not_verified")
+    expect(october[:limitations]).to be_empty
   end
 
   it "uses verified closed values and excludes incompatible comparisons" do
     ibp_041_verified_close(company:)
-    ibp_041_2026_snapshots(company:)
+    ibp_041_incomplete_snapshot(company:)
     august = payload_for(Date.new(2026, 8, 1))
     september = payload_for(Date.new(2026, 9, 1))
 

@@ -16,6 +16,10 @@ namespace :ibp041 do
       puts JSON.pretty_generate(Ibp041::LocalSnapshotQa.new(company_id: args.fetch(:company_id)).list)
     end
 
+    task :upgrade, [ :company_id ] => :environment do |_task, args|
+      puts JSON.pretty_generate(Ibp041::LocalSnapshotQa.new(company_id: args.fetch(:company_id)).upgrade!)
+    end
+
     task :remove, [ :company_id ] => :environment do |_task, args|
       puts "Fotografías ficticias eliminadas: #{Ibp041::LocalSnapshotQa.new(company_id: args.fetch(:company_id)).remove!}"
     end
