@@ -1,8 +1,15 @@
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import type React from "react"
-import { describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import PaymentDetails from "./show"
+
+let mockIsMobile = false
+
+vi.mock("@/hooks/use-mobile", () => ({
+  useIsMobile: () => mockIsMobile,
+}))
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -12,10 +19,23 @@ vi.mock("@inertiajs/react", async () => {
     Link: ({
       children,
       href,
+      ...props
     }: {
       children: React.ReactNode
-      href: string | { url: string }
-    }) => <a href={typeof href === "string" ? href : href.url}>{children}</a>,
+      href: unknown
+    } & React.AnchorHTMLAttributes<HTMLAnchorElement>) => {
+      const targetUrl =
+        typeof href === "string"
+          ? href
+          : href && typeof href === "object" && "url" in href
+            ? String((href as { url: unknown }).url)
+            : ""
+      return (
+        <a href={targetUrl} {...props}>
+          {children}
+        </a>
+      )
+    },
     Form: ({
       children,
       className,
@@ -49,6 +69,9 @@ const provider = {
 }
 
 describe("Provider payment details", () => {
+  beforeEach(() => {
+    mockIsMobile = false
+  })
   it("muestra los datos completos como texto de consulta", () => {
     render(
       <PaymentDetails
@@ -124,5 +147,61 @@ describe("Provider payment details", () => {
       screen.queryByLabelText("RUT o CI del titular"),
     ).not.toBeInTheDocument()
     expect(screen.getByRole("link", { name: "Cancelar" })).toBeInTheDocument()
+  })
+
+  describe("en mobile", () => {
+    beforeEach(() => {
+      mockIsMobile = true
+    })
+
+    it("abre el modal de edición al hacer clic en Editar", async () => {
+      const user = userEvent.setup()
+
+      render(
+        <PaymentDetails
+          provider={provider}
+          bank_names={["BROU", "Santander"]}
+          editing={false}
+        />,
+      )
+
+      expect(screen.getByText("Nº de cuenta: 1150260")).toBeInTheDocument()
+      expect(
+        screen.queryByRole("heading", { name: "Editar datos de cobro" }),
+      ).not.toBeInTheDocument()
+
+      const editButton = screen.getByRole("link", { name: "Editar" })
+      await user.click(editButton)
+
+      expect(
+        screen.getByRole("heading", { name: "Editar datos de cobro" }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Guardar cambios" }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Cancelar" }),
+      ).toBeInTheDocument()
+    })
+
+    it("muestra el modal de edición directamente si editing es true", () => {
+      render(
+        <PaymentDetails
+          provider={provider}
+          bank_names={["BROU", "Santander"]}
+          editing
+        />,
+      )
+
+      expect(
+        screen.getByRole("heading", { name: "Editar datos de cobro" }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Guardar cambios" }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Cancelar" }),
+      ).toBeInTheDocument()
+    })
   })
 })

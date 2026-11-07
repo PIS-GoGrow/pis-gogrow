@@ -147,11 +147,11 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
     end
 
     it "conserva los datos antiguos que ya no forman parte del formulario" do
-      provider.update_columns(bank_account_type: Provider.bank_account_types[:checking], tax_id: "212345670012")
+      provider.update_columns(tax_id: "212345670012")
 
       patch provider_payment_details_path, params: valid_params
 
-      expect(provider.reload).to have_attributes(bank_account_type: "checking", tax_id: "212345670012")
+      expect(provider.reload).to have_attributes(tax_id: "212345670012")
     end
   end
 

@@ -4,7 +4,7 @@ class Provider::PaymentDetailsController < Provider::InertiaController
   def show
     @provider = Current.user.provider
     @bank_names = Provider::BANK_NAMES | [ @provider.bank_name ].compact
-    @editing = !@provider.payment_details_complete? || ActiveModel::Type::Boolean.new.cast(params[:edit])
+    @editing = !@provider.payment_details_complete? || ActiveModel::Type::Boolean.new.cast(params[:edit]) == true
   end
 
   def update

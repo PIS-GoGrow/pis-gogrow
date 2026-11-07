@@ -134,10 +134,9 @@ RSpec.describe "Consumer Accounts", type: :request do
         }
       end
 
-      it "strictly excludes tax_id (RUT), bank_account_type, and user_id from props[:providers]" do
+      it "strictly excludes tax_id (RUT) and user_id from props[:providers]" do
         provider.update!(
           tax_id: "219999990019",
-          bank_account_type: 1,
           bank_name: "Banco República",
           bank_account_details: "001-987654",
           beneficiary: "Viandas SRL"
@@ -147,7 +146,7 @@ RSpec.describe "Consumer Accounts", type: :request do
 
         expect(response).to have_http_status(:ok)
         all_keys = inertia.props[:providers].flat_map { |p| p.keys.map(&:to_s) }
-        expect(all_keys).not_to include("tax_id", "bank_account_type", "user_id", "order_deadline")
+        expect(all_keys).not_to include("tax_id", "user_id", "order_deadline")
       end
 
       it "sends the delivered orders of the current month as the consumption detail" do

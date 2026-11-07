@@ -25,8 +25,6 @@ class Provider < ApplicationRecord
     notifications: :notifications_configured_at
   }.freeze
 
-  enum :bank_account_type, { savings: 0, checking: 1 }, prefix: :bank_account, validate: { allow_nil: true }
-
   has_many :menus, dependent: :destroy
   has_many :schedules, through: :menus
   has_many :orders, dependent: :nullify
@@ -112,7 +110,6 @@ end
 #
 #  id                            :bigint           not null, primary key
 #  bank_account_details          :text
-#  bank_account_type             :integer
 #  bank_name                     :string
 #  beneficiary                   :string
 #  deliveries_configured_at      :datetime

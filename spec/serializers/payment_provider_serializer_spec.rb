@@ -31,11 +31,10 @@ RSpec.describe PaymentProviderSerializer do
         )
       end
 
-      it "strictly excludes sensitive or unneeded fields such as tax_id, bank_account_type, and user_id" do
+      it "strictly excludes sensitive or unneeded fields such as tax_id and user_id" do
         serialized = described_class.new(provider).to_h
 
         expect(serialized).not_to have_key("tax_id")
-        expect(serialized).not_to have_key("bank_account_type")
         expect(serialized).not_to have_key("user_id")
         expect(serialized).not_to have_key("order_deadline")
         expect(serialized).not_to have_key("onboarding_completed_at")

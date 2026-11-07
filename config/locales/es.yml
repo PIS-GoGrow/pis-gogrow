@@ -1803,8 +1803,10 @@ es:
         beneficiary: "Beneficiario"
         beneficiary_value: "Beneficiario: %{beneficiary}"
         edit: "Editar"
+        edit_title: "Editar datos de cobro"
         cancel: "Cancelar"
         submit: "Guardar"
+        save_changes: "Guardar cambios"
     provider_deliveries:
       show:
         title: "Entregas"

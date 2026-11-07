@@ -113,10 +113,6 @@ export function ProviderFilterSheet<Id extends string | number>({
         data-provider-filter-sheet
         className="flex max-h-[90dvh] flex-col gap-5 overflow-hidden p-5"
       >
-        <div
-          aria-hidden="true"
-          className="bg-border mx-auto -mt-3 h-1 w-12 shrink-0 rounded-full md:hidden"
-        />
         <AdaptableDialogTitle className="shrink-0 text-base leading-6 font-semibold tracking-normal">
           {t("pages.consumer_dashboard.index.provider_filter.title")}
         </AdaptableDialogTitle>

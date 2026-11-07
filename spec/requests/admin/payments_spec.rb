@@ -179,7 +179,7 @@ RSpec.describe "Admin::Payments", type: :request do
 
       it "sends the payment details each provider loaded, without its tax id" do
         providers(:endulzate).update!(
-          bank_name: "Banco Itaú", bank_account_type: :checking, bank_account_details: "1951234",
+          bank_name: "Banco Itaú", bank_account_details: "1951234",
           beneficiary: "Noelia Patricia Pinheiro", tax_id: "211234560019"
         )
 

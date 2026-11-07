@@ -1904,6 +1904,8 @@
           "consultation_description": "Configurá dónde querés recibir tus cobros.",
           "description": "Ingresá los datos de la cuenta donde recibirás los pagos de tus pedidos.",
           "edit": "Editar",
+          "edit_title": "Editar datos de cobro",
+          "save_changes": "Guardar cambios",
           "submit": "Guardar",
           "title": "Datos de cobro"
         }

@@ -111,6 +111,7 @@ RSpec.describe "Configurar los datos de cobro del proveedor" do
     fill_valid_details
     click_on "Guardar"
 
+    expect(page).to have_content("Datos de cobro actualizados")
     log = provider.reload.audit_logs.sole
     expect(log.user).to eq(provider_user)
     expect(log.changeset["bank_name"]).to eq([ nil, "BROU" ])
@@ -125,6 +126,7 @@ RSpec.describe "Configurar los datos de cobro del proveedor" do
     fill_valid_details
     click_on "Guardar"
 
+    expect(page).to have_content("Datos de cobro actualizados")
     expect(provider.reload.bank_name).to eq("BROU")
     expect(other_provider.reload.bank_name).to be_nil
     expect(other_provider.audit_logs).to be_empty
