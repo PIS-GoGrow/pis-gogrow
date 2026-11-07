@@ -60,12 +60,16 @@ describe("Settings Profiles Show Page", () => {
     currentRole = "provider"
   })
 
-  it("shows only personal fields and account navigation to providers", () => {
+  it("shows personal, email, and password fields to providers with account navigation", () => {
     render(<Profile phone="+59899123456" />)
 
     expect(screen.getByLabelText("Nombre")).toHaveValue("Proveedor Test")
     expect(screen.getByLabelText("Teléfono")).toHaveValue("+59899123456")
-    expect(screen.getByRole("button", { name: "Guardar" })).toBeInTheDocument()
+    expect(screen.getByLabelText("Correo electrónico")).toHaveValue(
+      "proveedor@example.com",
+    )
+    expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument()
+    expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
     ).toHaveAttribute("href", "/proveedor/cuenta")
@@ -93,11 +97,40 @@ describe("Settings Profiles Show Page", () => {
     expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
   })
 
-  it("preserves account deletion for consumers", () => {
+  it("hides account deletion for consumers and shows appearance settings", () => {
     currentRole = "consumer"
 
     render(<Profile phone={null} />)
 
-    expect(screen.getByTestId("delete-user")).toBeInTheDocument()
+    expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
+    expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
+  })
+
+  it("renders all setting sections in order for consumers as a standalone scrollable page", () => {
+    currentRole = "consumer"
+
+    render(<Profile phone="+59899123456" />)
+
+    expect(
+      screen.getByRole("link", { name: "Volver a Cuenta" }),
+    ).toHaveAttribute("href", "/cuenta")
+    expect(screen.queryByTestId("settings-layout")).not.toBeInTheDocument()
+
+    // 1. Perfil
+    expect(screen.getByLabelText("Nombre")).toBeInTheDocument()
+    expect(screen.getByLabelText("Teléfono")).toBeInTheDocument()
+
+    // 2. Correo electrónico
+    expect(screen.getByLabelText("Correo electrónico")).toBeInTheDocument()
+
+    // 3. Contraseña
+    expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument()
+    expect(screen.getByLabelText("Confirmar contraseña")).toBeInTheDocument()
+
+    // 4. Apariencia
+    expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
+
+    // 5. Sin eliminar cuenta
+    expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
   })
 })
