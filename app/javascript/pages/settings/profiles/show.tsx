@@ -30,12 +30,16 @@ export default function Profile({ phone }: SettingsProfilesShow) {
   const { t } = useTranslation()
   const { auth } = usePage().props
   const isConsumer = auth.session.role === "consumer"
+  const isProvider = auth.session.role === "provider"
+  const allowsCredentialsEditing = isConsumer || isProvider
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
       title: isConsumer
         ? t("pages.consumer_profiles.show.title")
-        : t("pages.settings.profile.title"),
+        : isProvider
+          ? t("pages.provider_accounts.show.profile")
+          : t("pages.settings.profile.title"),
       href: settingsProfiles.show().url,
     },
   ]
@@ -48,17 +52,21 @@ export default function Profile({ phone }: SettingsProfilesShow) {
         title={
           isConsumer
             ? t("pages.consumer_profiles.show.title")
-            : t("pages.settings.profile.heading")
+            : isProvider
+              ? t("pages.provider_accounts.show.profile")
+              : t("pages.settings.profile.heading")
         }
         description={
           isConsumer
             ? t("pages.consumer_profiles.show.account_description")
-            : t("pages.settings.profile.description")
+            : isProvider
+              ? t("pages.provider_accounts.show.profile_description")
+              : t("pages.settings.profile.description")
         }
         adminBackHref={adminPreferences.show().url}
         adminBackLabel={t("pages.settings.profile.back")}
       >
-        {isConsumer && (
+        {allowsCredentialsEditing && (
           <HeadingSmall
             title={t("pages.settings.profile.heading")}
             description={t("pages.settings.profile.description")}
@@ -154,7 +162,7 @@ export default function Profile({ phone }: SettingsProfilesShow) {
           )}
         </Form>
 
-        {isConsumer && (
+        {allowsCredentialsEditing && (
           <>
             <Separator className="my-8" />
 
@@ -178,12 +186,12 @@ export default function Profile({ phone }: SettingsProfilesShow) {
                   <>
                     <FieldGroup>
                       <Field>
-                        <FieldLabel htmlFor="consumer_email">
+                        <FieldLabel htmlFor="email">
                           {t("common.email_address")}
                         </FieldLabel>
 
                         <Input
-                          id="consumer_email"
+                          id="email"
                           type="email"
                           name="email"
                           defaultValue={auth.user.email}
@@ -359,7 +367,11 @@ export default function Profile({ phone }: SettingsProfilesShow) {
                 )}
               </Form>
             </div>
+          </>
+        )}
 
+        {isConsumer && (
+          <>
             <Separator className="my-8" />
 
             <div className="space-y-4">

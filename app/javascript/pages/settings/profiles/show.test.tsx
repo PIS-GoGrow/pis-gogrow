@@ -60,12 +60,15 @@ describe("Settings Profiles Show Page", () => {
     currentRole = "provider"
   })
 
-  it("shows only personal fields and account navigation to providers", () => {
+  it("shows personal, email, and password fields to providers with account navigation", () => {
     render(<Profile phone="+59899123456" />)
 
     expect(screen.getByLabelText("Nombre")).toHaveValue("Proveedor Test")
     expect(screen.getByLabelText("Teléfono")).toHaveValue("+59899123456")
-    expect(screen.getByRole("button", { name: "Guardar" })).toBeInTheDocument()
+    expect(screen.getByLabelText("Correo electrónico")).toHaveValue(
+      "proveedor@example.com",
+    )
+    expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument()
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
     ).toHaveAttribute("href", "/proveedor/cuenta")

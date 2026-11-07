@@ -99,7 +99,7 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
     expect(page).to have_current_path(settings_profile_path)
     expect(page).to have_field("name", with: employee.name)
     expect(page).to have_field("phone")
-    expect(page).to have_field("consumer_email", with: employee.email)
+    expect(page).to have_field("email", with: employee.email)
     expect(page).to have_field("password")
     expect(page).to have_content("Configuración de apariencia")
     expect(page).to have_link("Volver a Cuenta", href: profile_path)
