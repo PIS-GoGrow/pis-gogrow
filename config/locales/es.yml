@@ -131,6 +131,7 @@ es:
     incorrect_credentials: "El correo electrónico o la contraseña son incorrectos"
     password_changed: "Tu contraseña fue modificada"
     password_reset_expired: "Tu solicitud venció. Solicitá un código nuevo para continuar."
+    password_reset_requested: "Ya se envió un código. Esperá para enviar el siguiente."
     invitation_invalid: "La invitación no es válida o ya fue usada. Solicitá a tu administrador que te la envíe nuevamente."
     too_many_attempts: "Realizó demasiados intentos. Espere unos minutos y vuelva a probar."
     profile_updated: "Tu perfil fue actualizado"
@@ -211,6 +212,9 @@ es:
     menu_publish:
       invalid_date: "Elegí un día de semana entre hoy y la fecha máxima de publicación."
       invalid_menus: "Algún plato elegido no existe."
+    inconsistent_pricing: |-
+        Los precios o los beneficios de tu pedido cambiaron desde que armaste el carrito. Revisá el pedido y confirmá de nuevo.
+        Total en carrito: %{expected_price}. Total real: %{price}.
   notifications:
     order_received:
       title: "Nuevo pedido"
@@ -248,6 +252,9 @@ es:
     payment_due_soon:
       title: "Tu pago vence pronto..."
       description: "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!"
+    payment_approved:
+      title: "Pago aprobado"
+      description: "%{provider} aprobó tu comprobante de pago correspondiente a %{period}."
     company_payment_upcoming:
       title: "Se acerca el vencimiento de un pago"
       description: "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos."
@@ -263,8 +270,8 @@ es:
     employee_debt_overdue:
       title: "Hay empleados con pagos pendientes"
       description:
-        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio."
-        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarle un recordatorio."
+        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarles un recordatorio."
     order_cancellation:
       title: "Un pedido fue cancelado"
       description: "El pedido de %{consumer} del %{date} de %{dish} fue cancelado."
@@ -595,7 +602,7 @@ es:
         debts:
           title: "Ranking deuda de empleados"
           view: "Ver empleados con saldos pendientes"
-          empty: "Ningún empleado tiene saldos pendientes en este mes."
+          empty: "Ningún empleado tiene saldos pendientes."
       order_events:
         index:
           title: "Auditoría de pedidos"
@@ -866,6 +873,7 @@ es:
           filter_providers: "Filtrar por proveedor"
           detail:
             title: "%{provider}: Consumo %{month}"
+            meals_title: "%{provider}: Consumos %{month}"
             loading_title: "Detalle del consumo"
             description: "Lo que la empresa le paga al proveedor en el mes y los pedidos confirmados de cada día."
             provider: "Proveedor:"
@@ -915,8 +923,10 @@ es:
         pending: "Pendientes"
         history: "Historial"
         no_debt: "¡Sin deudas pendientes con este proveedor!"
-        history_empty: "Todavía no hiciste ningún pago."
-        history_filtered_empty: "No hay pagos de este proveedor."
+        history_empty_title: "Todavía no hiciste ningún pago"
+        history_empty_description: "Cuando pagues una cuenta, va a aparecer acá."
+        history_filtered_empty_title: "No hay pagos de este proveedor"
+        history_filtered_empty_description: "Todavía no le pagaste ninguna cuenta a este proveedor."
         providers_label: "Proveedores:"
         all_providers: "Todos"
       show:
@@ -971,10 +981,13 @@ es:
         history_tab: "Historial"
         upcoming_empty_title: "No tenés pedidos próximos"
         upcoming_empty_description: "No tenés viandas en camino."
+        upcoming_filtered_empty_title: "No hay pedidos de este proveedor"
+        upcoming_filtered_empty_description: "No tenés pedidos próximos con este proveedor."
         history_empty_title: "No tenés pedidos anteriores"
         history_empty_description: "Tus pedidos completados aparecerán aquí."
         history_filtered_empty_title: "No hay pedidos de este proveedor"
         history_filtered_empty_description: "No tenés pedidos anteriores realizados a este proveedor."
+        history_loading: "Cargando pedidos anteriores…"
         providers_label: "Proveedores:"
         all_providers: "Todos los proveedores"
         quantity: "x%{count}"
@@ -1128,6 +1141,9 @@ es:
         empty_history_client: "Todavía no hay meses cobrados por completo de este cliente."
       group:
         total: "Total a cobrar"
+        outstanding_amount: "Saldo pendiente"
+        consumed_in_month_one: "%{count} vianda consumida en %{month}"
+        consumed_in_month_other: "%{count} viandas consumidas en %{month}"
         confirmed: "%{amount} en cobros confirmados"
         awaiting_one: "%{count} cobro pendiente de confirmación"
         awaiting_other: "%{count} cobros pendientes de confirmación"
@@ -1247,13 +1263,21 @@ es:
         confirm: "Confirmar"
         reject: "Rechazar"
         reject_dialog:
-          title: "¿Rechazar el pedido %{code}?"
-          description: "Seleccioná el motivo de la cancelación. El empleado va a ver el cambio en sus pedidos."
+          title: "¿Rechazar pedido?"
+          description: "Esta acción no se puede deshacer. El empleado recibirá una notificación con el motivo que elijas."
           reason_label: "Motivo"
           details_label: "Describí el motivo"
-          details_placeholder: "Ingresá el motivo…"
+          details_placeholder: "Describir el motivo"
           back: "Volver"
           confirm: "Rechazar pedido"
+        confirmed_sheet:
+          title: "Pedido confirmado"
+          description: "El pedido %{code} quedó confirmado y %{name} recibirá una notificación."
+          done: "Listo"
+        rejected_sheet:
+          title: "Pedido rechazado"
+          description: "El pedido %{code} fue cancelado y %{name} recibirá una notificación."
+          done: "Listo"
       rejection_reasons:
         out_of_stock: "Sin stock disponible"
         duplicate_order: "Pedido duplicado"
@@ -1264,7 +1288,7 @@ es:
         dish_deleted: "Plato eliminado"
         dish_unpublished: "Plato retirado del menú"
       statuses:
-        pending: "Pendiente"
+        pending: "Por revisar"
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
@@ -1276,7 +1300,7 @@ es:
           history: "Historial"
         status_filter_label: "Filtrar pedidos por estado"
         status_filters:
-          pending: "Pendiente"
+          pending: "Por revisar"
           confirmed: "Confirmados"
           all: "Todos"
         delivery_label: "Entregas:"
@@ -1300,6 +1324,8 @@ es:
         empty_description: "Todavía no recibiste pedidos para los próximos días."
         empty_history_description: "Todavía no tenés pedidos anteriores."
         empty_filtered_description: "No tenés pedidos que coincidan con los filtros."
+        no_orders_title: "No tenés pedidos"
+        no_orders_description: "Cuando tus clientes hagan pedidos, van a aparecer acá."
         code: "PED-%{id}"
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"
@@ -1312,14 +1338,14 @@ es:
         employee_company: "Empleado %{company}"
         phone_unavailable: "No disponible"
         order_detail: "Detalle del pedido"
-        notes: "Notas"
+        notes: "Comentarios"
         delivery_date: "Entrega"
         total: "Total"
         subsidy: "Beneficio aplicado"
         charged: "Paga el empleado"
         no_price: "Importe no disponible"
-        rejection_reason: "Motivo de rechazo"
-        rejection_details: "Detalle del rechazo"
+        not_charged: "Este pedido no será cobrado"
+        rejection_reason: "Motivo de cancelación"
     provider_dashboard:
       index:
         title: "Inicio"
@@ -1556,12 +1582,18 @@ es:
             title: "¡Plato modificado!"
             description: "Tu plato fue modificado correctamente."
     cart:
+      title: "Tu carrito"
+      confirm: "Confirmar pedido"
+      confirming: "Confirmando pedido"
+      empty: "Todavía no agregaste platos."
       delivery_address: "Dirección de entrega"
       add_address: "Agregar"
       my_addresses: "Ver mis direcciones"
       office_delivery_warning_one: "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_delivery_warning_other: "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
+      office_only_one: "%{providers} solo entrega en la Oficina, así que este pedido no puede ir a otra dirección."
+      office_only_other: "%{providers} solo entregan en la Oficina, así que este pedido no puede ir a otra dirección."
       remove: "Quitar %{name}"
       decrease: "Quitar una unidad de %{name}"
       increase: "Agregar una unidad de %{name}"
@@ -1594,6 +1626,11 @@ es:
         description: "Elegí a qué dirección querés recibir el pedido."
         cancel: "Cancelar"
         submit: "Seleccionar"
+      order_error:
+        title: "No se pudo procesar el pedido"
+        description: "Hubo un problema al procesar tu pedido. Intentá de nuevo."
+        retry: "Reintentar"
+        menu: "Volver al menú"
     home:
       title: "Viandas GoGrow"
       consumer:
@@ -1724,7 +1761,7 @@ es:
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
         profile: "Perfil"
-        profile_description: "Editá tu nombre, correo, teléfono y contraseña"
+        profile_description: "Actualizá tu nombre y tu teléfono"
     provider_onboarding:
       progress: "Paso %{current} de %{total}"
       back: "Volver al paso anterior"
@@ -1857,6 +1894,8 @@ es:
           empty: "%{provider} no recibirá pedidos del %{period}."
           dismiss: "Cerrar aviso"
       detail:
+        stock_limit_one: "Solo queda 1 vianda disponible de este plato."
+        stock_limit_other: "Solo quedan %{count} viandas disponibles de este plato."
         add: "Agregar"
         reached_100:
           one: "Se llegó al 100%, no se aplicará el beneficio %{benefits}"

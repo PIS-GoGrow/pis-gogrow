@@ -47,6 +47,8 @@ describe("Provider Dashboard Page", () => {
     provider: {
       order_deadline: "11:30",
     },
+    total_debt: 37000,
+    total_dishes_count: 82,
   }
 
   it("saluda al proveedor por su nombre y muestra la fecha del día", () => {
@@ -238,12 +240,19 @@ describe("Provider Dashboard Page", () => {
     ).toBeInTheDocument()
   })
 
-  it("ofrece enlace directo al resumen de cobros", () => {
+  it("ofrece enlace directo al resumen de cobros y muestra cobros pendientes", () => {
     render(<ProviderDashboard {...defaultProps} />)
 
     const paymentsLink = screen.getByRole("link", {
       name: "Resumen de cobros",
     })
     expect(paymentsLink).toHaveAttribute("href", "/proveedor/cobros")
+
+    const section = screen.getByRole("region", { name: "Resumen de cobros" })
+
+    expect(within(section).getByText("$37.000")).toBeInTheDocument()
+    expect(
+      within(section).getByText("| 82 viandas entregadas"),
+    ).toBeInTheDocument()
   })
 })

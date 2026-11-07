@@ -14,7 +14,9 @@ class Provider::DashboardIndexSerializer < ApplicationSerializer
     :average_rating,
     :top_rated,
     :completed_sections_count,
-    :sections_total
+    :sections_total,
+    :total_dishes_count,
+    :total_debt
 
   typelize today: :string
   typelize today_orders_count: :number
@@ -30,6 +32,8 @@ class Provider::DashboardIndexSerializer < ApplicationSerializer
   typelize top_rated: "Array<{ name: string; rating: number }>"
   typelize completed_sections_count: :number
   typelize sections_total: :number
+  typelize total_dishes_count: :number
+  typelize total_debt: :number
 
   has_one :provider, serializer: Provider::DashboardProviderSerializer
 end

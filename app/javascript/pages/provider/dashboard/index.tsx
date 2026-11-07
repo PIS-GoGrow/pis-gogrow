@@ -8,9 +8,11 @@ import PageContainer from "@/components/page-container"
 import AiInsightCard from "@/components/provider/ai-insight-card"
 import DashboardMetric from "@/components/provider/dashboard-metric"
 import InsightsMetrics from "@/components/provider/insights-metrics"
+import Stat from "@/components/stat"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
 import {
   providerAccount,
@@ -39,9 +41,12 @@ export default function ProviderDashboard({
   top_rated,
   completed_sections_count,
   sections_total,
+  total_dishes_count,
+  total_debt,
 }: Props) {
   const { t } = useTranslation()
   const { auth } = usePage().props
+  const { formatMoney } = useFormatters()
   const completionDegrees =
     sections_total > 0 ? (completed_sections_count / sections_total) * 360 : 0
 
@@ -253,24 +258,21 @@ export default function ProviderDashboard({
                 title={t("pages.provider_dashboard.index.payments.title")}
                 href={providerCollections.index().url}
               />
-              <Card className="dark:border-border dark:bg-muted gap-3 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] p-4 shadow-none">
-                <CardContent className="flex items-center justify-between gap-2 px-0">
-                  <p className="text-muted-foreground text-sm">
-                    {t("pages.provider_dashboard.index.payments.pending")}
-                  </p>
+
+              <Stat
+                className="dark:border-border dark:bg-muted gap-3 rounded-lg border-[#E8E8E8] bg-[#F5F5F5] shadow-none"
+                label={t("pages.provider_collections.index.outstanding")}
+                badge={
                   <Badge
                     variant="secondary"
                     className="bg-card text-muted-foreground"
                   >
                     {t("pages.provider_dashboard.index.payments.total")}
                   </Badge>
-                </CardContent>
-                <CardContent className="px-0">
-                  <p className="text-sm font-semibold">
-                    {t("pages.provider_dashboard.index.payments.description")}
-                  </p>
-                </CardContent>
-              </Card>
+                }
+                value={formatMoney(total_debt)}
+                detail={`| ${t("pages.provider_collections.index.delivered_meals", { count: total_dishes_count })}`}
+              />
             </section>
           </div>
         </div>

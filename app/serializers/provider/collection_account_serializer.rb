@@ -72,6 +72,11 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   end
 
   typelize :string
+  attribute :month_name do |row|
+    I18n.l(row.month, format: "%B").downcase
+  end
+
+  typelize :string
   attribute :due_date do |row|
     DateFormat.short(row.due_date)
   end

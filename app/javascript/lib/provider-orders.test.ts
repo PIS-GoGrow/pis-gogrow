@@ -181,14 +181,41 @@ describe("initialDate", () => {
 })
 
 describe("summarize", () => {
-  it("suma viandas y monto de todos los pedidos", () => {
+  it("suma viandas y monto de los pedidos pendientes y confirmados", () => {
     const summary = summarize([
-      order({ amount: 2, price: 600.1 }),
-      order({ amount: null, price: 0.2, status: "cancelled" }),
-      order({ amount: 3, price: 1200 }),
+      order({ amount: 2, price: 600.1, status: "pending" }),
+      order({ amount: null, price: 0.2, status: "confirmed" }),
+      order({ amount: 3, price: 1200, status: "confirmed" }),
     ])
 
     expect(summary).toEqual({ meals: 5, total: 1800.3 })
+  })
+
+  it("no cuenta los pedidos cancelados", () => {
+    const summary = summarize([
+      order({ amount: 2, price: 600 }),
+      order({ amount: 1, price: 300, status: "cancelled" }),
+    ])
+
+    expect(summary).toEqual({ meals: 2, total: 600 })
+  })
+
+  it("no cuenta los pedidos rechazados", () => {
+    const summary = summarize([
+      order({ amount: 2, price: 600 }),
+      order({ amount: 1, price: 300, status: "rejected" }),
+    ])
+
+    expect(summary).toEqual({ meals: 2, total: 600 })
+  })
+
+  it("devuelve ceros si todos están cancelados o rechazados", () => {
+    const summary = summarize([
+      order({ amount: 1, price: 300, status: "cancelled" }),
+      order({ amount: 1, price: 300, status: "rejected" }),
+    ])
+
+    expect(summary).toEqual({ meals: 0, total: 0 })
   })
 
   it("devuelve ceros sin pedidos", () => {

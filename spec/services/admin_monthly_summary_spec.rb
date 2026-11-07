@@ -119,7 +119,7 @@ RSpec.describe AdminMonthlySummary do
   end
 
   describe "#debtors" do
-    it "ranks the employees that did not settle the month by amount" do
+    it "ranks the employees with debt by amount" do
       expect(current.debtors.map { [ it.name, it.amount, it.status ] }).to eq([
         [ "Test User", 950.75, "pending" ],
         [ "Other Consumer User", 150.25, "submitted" ]
@@ -152,8 +152,53 @@ RSpec.describe AdminMonthlySummary do
       expect(debtor.status).to eq("partial")
     end
 
-    it "is empty for a month without debts" do
-      expect(previous.debtors).to be_empty
+    context "with debt from more than one period" do
+      let(:earlier) { 1.month.ago.to_date.beginning_of_month }
+      let(:consumer) { consumers(:other) }
+      let!(:unpaid) { Account.create!(owner: consumer, provider: providers(:tuviandita), month: earlier, amount: 2_000) }
+
+      def ranked(summary = current) = summary.debtors.find { it.consumer == consumer }
+
+      it "adds up every unpaid period, like the total debt of the employee" do
+        expect(ranked.amount).to eq(2_150.25)
+        expect(ranked.amount).to eq(consumer.total_debt.to_f)
+      end
+
+      it "matches what Empleados shows for the employee" do
+        row = AdminConsumerSummary.debt_rows_for(company).find { it.consumer == consumer }
+
+        expect(ranked.amount).to eq(row.amount)
+        expect(ranked.status).to eq(row.status)
+      end
+
+      it "does not change with the selected month" do
+        expect(ranked(previous).amount).to eq(2_150.25)
+        expect(ranked(described_class.new(company, Date.new(2020, 1, 1))).amount).to eq(2_150.25)
+      end
+
+      it "orders by the total and not by the current month" do
+        expect(current.debtors.map(&:name)).to eq([ "Other Consumer User", "Test User" ])
+      end
+
+      it "leaves out of the total what approved payments already cover" do
+        Payment.new(account: unpaid, status: :approved, expected_amount: 1_500).save!(validate: false)
+
+        expect(ranked.amount).to eq(650.25)
+        expect(ranked.amount).to eq(consumer.total_debt.to_f)
+      end
+
+      it "does not add a current month that is already paid" do
+        payments(:other_submitted).update_columns(status: Payment.statuses[:approved], expected_amount: 150.25)
+
+        expect(ranked.amount).to eq(2_000.0)
+        expect(ranked.status).to eq("pending")
+      end
+    end
+
+    it "is empty when nobody owes anything" do
+      Account.where(owner_type: "Consumer").update_all(amount: 0)
+
+      expect(current.debtors).to be_empty
     end
   end
 

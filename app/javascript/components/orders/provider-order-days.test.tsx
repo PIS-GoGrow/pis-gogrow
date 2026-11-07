@@ -118,6 +118,23 @@ describe("ProviderOrderDays", () => {
       "Día: 06/10/26 | Viandas: 0 | Monto: $0",
     )
     expect(screen.getByText("No hay pedidos")).toBeInTheDocument()
+    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Cuando tus clientes hagan pedidos, van a aparecer acá.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("avisa que no hay pedidos al filtrar pendientes sin ninguno", () => {
+    renderDays({ orders: [], filters: { ...noFilters, status: "pending" } })
+
+    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Cuando tus clientes hagan pedidos, van a aparecer acá.",
+      ),
+    ).toBeInTheDocument()
   })
 
   it("abre otro día al tocarlo y cierra el anterior", async () => {
@@ -168,7 +185,7 @@ describe("ProviderOrderDays", () => {
   it("muestra el estado y la modalidad de cada pedido", () => {
     renderDays()
 
-    expect(screen.getByText("Pendiente")).toBeInTheDocument()
+    expect(screen.getByText("Por revisar")).toBeInTheDocument()
     expect(screen.getByText("Confirmado")).toBeInTheDocument()
     expect(
       screen.getByText("Enviar a: Av. 18 de Julio 1006 (Oficina)"),

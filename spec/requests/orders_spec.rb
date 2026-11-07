@@ -109,12 +109,46 @@ RSpec.describe "Orders", type: :request do
         expect(ids).not_to include(orders(:other_consumer_upcoming).id)
       end
 
-      it "filters out history orders older than three months" do
+      it "keeps a recently delivered order in the history no matter when it was created" do
         orders(:history_confirmed_past).update_columns(created_at: 4.months.ago)
 
         get orders_path
 
-        expect(inertia.props[:past_orders].pluck(:id)).not_to include(orders(:history_confirmed_past).id)
+        expect(inertia.props[:past_orders].pluck(:id)).to include(orders(:history_confirmed_past).id)
+      end
+
+      it "starts the history with the last three months by delivery date and pages the rest" do
+        old_order = orders(:history_confirmed_past)
+        old_order.update_columns(schedule_id: nil, delivery_date: Date.current - 4.months)
+
+        get orders_path
+
+        expect(inertia.props[:past_orders].pluck(:id)).to contain_exactly(
+          orders(:history_cancelled_future).id,
+          orders(:history_rejected_future).id,
+          orders(:history_pending_past).id,
+          orders(:history_without_schedule).id
+        )
+        expect(inertia.props[:providers].pluck(:id)).to contain_exactly(providers(:tuviandita).id)
+
+        get orders_path(page: 2)
+
+        expect(inertia.props[:past_orders].pluck(:id)).to contain_exactly(old_order.id)
+      end
+
+      it "orders older pages by delivery date and stops after the last one" do
+        oldest = orders(:history_confirmed_past)
+        oldest.update_columns(schedule_id: nil, delivery_date: Date.current - 8.months)
+        older = orders(:history_pending_past)
+        older.update_columns(schedule_id: nil, delivery_date: Date.current - 4.months)
+
+        get orders_path(page: 2)
+
+        expect(inertia.props[:past_orders].pluck(:id)).to eq([ older.id, oldest.id ])
+
+        get orders_path(page: 3)
+
+        expect(inertia.props[:past_orders]).to be_empty
       end
 
       it "deduplicates providers in the filter list" do
@@ -138,6 +172,18 @@ RSpec.describe "Orders", type: :request do
       it "renders the detail page" do
         get order_path(orders(:upcoming_confirmed_future))
         expect(inertia).to render_component("consumer/orders/show")
+      end
+
+      it "identifies an upcoming order outside the history" do
+        get order_path(orders(:upcoming_confirmed_future))
+
+        expect(inertia).to have_props(historical: false)
+      end
+
+      it "identifies an order from the history" do
+        get order_path(orders(:history_confirmed_past))
+
+        expect(inertia).to have_props(historical: true)
       end
 
       it "exposes the breakdown the employee needs to check the order" do
