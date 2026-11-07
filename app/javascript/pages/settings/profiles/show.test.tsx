@@ -69,6 +69,7 @@ describe("Settings Profiles Show Page", () => {
       "proveedor@example.com",
     )
     expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument()
+    expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
     ).toHaveAttribute("href", "/proveedor/cuenta")
@@ -96,12 +97,13 @@ describe("Settings Profiles Show Page", () => {
     expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
   })
 
-  it("preserves account deletion for consumers", () => {
+  it("hides account deletion for consumers and shows appearance settings", () => {
     currentRole = "consumer"
 
     render(<Profile phone={null} />)
 
-    expect(screen.getByTestId("delete-user")).toBeInTheDocument()
+    expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
+    expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
   })
 
   it("renders all setting sections in order for consumers as a standalone scrollable page", () => {
@@ -128,7 +130,7 @@ describe("Settings Profiles Show Page", () => {
     // 4. Apariencia
     expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
 
-    // 5. Eliminar cuenta
-    expect(screen.getByTestId("delete-user")).toBeInTheDocument()
+    // 5. Sin eliminar cuenta
+    expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
   })
 })

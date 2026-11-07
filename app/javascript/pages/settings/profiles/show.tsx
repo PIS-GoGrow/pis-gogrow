@@ -3,7 +3,6 @@ import { Form, Head, Link, usePage } from "@inertiajs/react"
 import { useTranslation } from "react-i18next"
 
 import AppearanceTabs from "@/components/appearance-tabs"
-import DeleteUser from "@/components/delete-user"
 import HeadingSmall from "@/components/heading-small"
 import { Button } from "@/components/ui/button"
 import {
@@ -367,11 +366,7 @@ export default function Profile({ phone }: SettingsProfilesShow) {
                 )}
               </Form>
             </div>
-          </>
-        )}
 
-        {isConsumer && (
-          <>
             <Separator className="my-8" />
 
             <div className="space-y-4">
@@ -381,10 +376,6 @@ export default function Profile({ phone }: SettingsProfilesShow) {
               />
               <AppearanceTabs />
             </div>
-
-            <Separator className="my-8" />
-
-            <DeleteUser />
           </>
         )}
       </SettingsPageLayout>
