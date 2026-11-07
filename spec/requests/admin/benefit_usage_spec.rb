@@ -513,7 +513,7 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
         expect(outbound[:headers]).to include("Authorization" => "Bearer test-only-key",
                                               "anthropic-version" => "2026-10-21")
         body = JSON.parse(outbound[:body])
-        expect(body).to include("model" => "configured-test-model", "max_tokens" => 1500)
+        expect(body).to include("model" => "configured-test-model", "max_tokens" => 2500)
         payload = JSON.parse(body.fetch("messages").sole.fetch("content"))
         expect(payload.fetch("capacity").keys).to contain_exactly(
           "monthly_quota_meals", "monthly_pending_reserved_meals", "monthly_available_meals"
