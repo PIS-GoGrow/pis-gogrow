@@ -18,15 +18,16 @@ const toast = vi.hoisted(() => ({
 vi.mock("sonner", () => ({ toast }))
 
 const stopListening = vi.hoisted(() => vi.fn())
-const router = vi.hoisted(() => ({ on: vi.fn(() => stopListening) }))
+const router = vi.hoisted(() => ({
+  on: vi.fn<(event: string, callback: () => boolean | void) => () => void>(
+    () => stopListening,
+  ),
+}))
 vi.mock("@inertiajs/react", () => ({ router }))
 
 // El callback que la app le dejó a Inertia para los errores de red.
 function failRequest() {
-  const [event, callback] = router.on.mock.calls[0] as [
-    string,
-    () => boolean | void,
-  ]
+  const [event, callback] = router.on.mock.calls[0]
   expect(event).toBe("networkError")
   return callback()
 }
