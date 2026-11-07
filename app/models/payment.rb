@@ -29,7 +29,9 @@ class Payment < ApplicationRecord
                     if: :should_close_payment_reminders?
 
   def approve
-    transaction do
+    with_lock do
+      return false if approved? || rejected? || partial?
+
       updated = update(status: :approved, rejection_reason: nil)
 
       if updated && account.company?
@@ -41,13 +43,19 @@ class Payment < ApplicationRecord
   end
 
   def reject_with(reason)
-    update(status: :rejected, rejection_reason: reason)
+    with_lock do
+      return false unless submitted?
+
+      update(status: :rejected, rejection_reason: reason)
+    end
   end
 
   def mark_partial
-    return false unless submitted?
+    with_lock do
+      return false unless submitted?
 
-    update(status: :partial, rejection_reason: nil)
+      update(status: :partial, rejection_reason: nil)
+    end
   end
 
   private
@@ -98,7 +106,7 @@ class Payment < ApplicationRecord
   end
 
   def capture_expected_amount
-    self.expected_amount = account.outstanding_amount
+    self.expected_amount = Account.find(account_id).outstanding_amount
   end
   def notify_company_admins
     CompanyPaymentNotifications.payment_status_changed(self)

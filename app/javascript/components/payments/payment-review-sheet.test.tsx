@@ -96,6 +96,21 @@ describe("PaymentReviewSheet", () => {
     expect(showResult).toHaveBeenCalledWith("approved")
   })
 
+  it("does not show approved result dialog when response contains an alert flash", async () => {
+    const user = await openReview()
+    const confirm = screen.getByRole("button", { name: "Confirmar" })
+    await user.click(confirm)
+    const callbacks = patch.mock.calls[0][2] as {
+      onSuccess: (page: { flash: { alert: string } }) => void
+    }
+    act(() =>
+      callbacks.onSuccess({
+        flash: { alert: "Este comprobante ya fue revisado." },
+      }),
+    )
+    expect(showResult).not.toHaveBeenCalled()
+  })
+
   it.each([
     ["El pago es parcial", "partial_payment", "partial", { status: "partial" }],
     [
