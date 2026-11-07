@@ -12,6 +12,7 @@ const page = vi.hoisted<{
 vi.mock("@inertiajs/react", () => ({ usePage: () => page }))
 vi.mock("@/hooks/use-flash", () => ({ useFlash: vi.fn() }))
 vi.mock("@/hooks/use-locale", () => ({ useLocale: vi.fn() }))
+vi.mock("@/hooks/use-network-status", () => ({ useNetworkStatus: vi.fn() }))
 vi.mock("@/hooks/use-sentry-context", () => ({ useSentryContext: vi.fn() }))
 vi.mock("@/components/ui/sonner", () => ({ Toaster: () => null }))
 
