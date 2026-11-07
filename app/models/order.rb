@@ -94,8 +94,18 @@ class Order < ApplicationRecord
   scope :history, -> {
     where.not(id: upcoming.reorder(nil).select(:id))
       .left_joins(:schedule)
-      .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC NULLS LAST"))
+      .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC NULLS LAST"), id: :desc)
   }
+
+  # Lo que cuenta es la fecha de entrega. Un pedido sin ninguna (sin schedule
+  # ni delivery_date) queda del lado reciente: no hay que recorrer todo el
+  # historial para verlo.
+  scope :delivered_since, ->(date) {
+    left_joins(:schedule)
+      .where("COALESCE(schedules.date, orders.delivery_date) >= ? OR COALESCE(schedules.date, orders.delivery_date) IS NULL", date)
+  }
+  scope :delivered_before, ->(date) { left_joins(:schedule).where("COALESCE(schedules.date, orders.delivery_date) < ?", date) }
+
   after_create :ensure_accounts!
   after_save :record_event
   after_update_commit :sync_accounts,

@@ -6,6 +6,7 @@ import { ConsumerMenuFilterProvider } from "@/hooks/consumer-menu-filter"
 import { useConsumerCartCleanup } from "@/hooks/use-consumer-cart"
 import { useFlash } from "@/hooks/use-flash"
 import { useLocale } from "@/hooks/use-locale"
+import { useNetworkStatus } from "@/hooks/use-network-status"
 import { useSentryContext } from "@/hooks/use-sentry-context"
 
 interface PersistentLayoutProps {
@@ -19,6 +20,7 @@ export default function PersistentLayout({ children }: PersistentLayoutProps) {
     : "guest"
   useFlash()
   useLocale()
+  useNetworkStatus()
   useSentryContext()
   useConsumerCartCleanup()
   return (
