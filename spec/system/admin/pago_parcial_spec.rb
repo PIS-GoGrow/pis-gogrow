@@ -25,8 +25,8 @@ RSpec.describe "Visualización y gestión de pago parcial por RR. HH.", type: :s
   before do
     provider.update!(
       bank_name: "Banco Itaú",
-      bank_account_number: "1951234",
-      bank_account_holder: "Noelia Patricia Pinheiro"
+      bank_account_details: "1951234",
+      beneficiary: "Noelia Patricia Pinheiro"
     )
     account
   end

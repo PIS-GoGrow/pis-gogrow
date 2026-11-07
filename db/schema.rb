@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_161153) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -381,9 +381,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_161153) do
   end
 
   create_table "providers", force: :cascade do |t|
-    t.string "bank_account_holder"
-    t.string "bank_account_number"
-    t.integer "bank_account_type"
+    t.string "beneficiary"
+    t.text "bank_account_details"
     t.string "bank_name"
     t.datetime "created_at", null: false
     t.datetime "deliveries_configured_at"

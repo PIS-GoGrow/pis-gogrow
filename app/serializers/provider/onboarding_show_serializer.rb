@@ -6,8 +6,9 @@ class Provider::OnboardingShowSerializer < ApplicationSerializer
   has_many :closures, serializer: ProviderClosureSerializer
 
   typelize step: :string
+  typelize bank_names: "string[]"
   typelize subscribed_keys: "[string]"
   typelize today: :string
   typelize order_deadline_passed_today: :boolean
-  attributes :step, :subscribed_keys, :today, :order_deadline_passed_today
+  attributes :step, :bank_names, :subscribed_keys, :today, :order_deadline_passed_today
 end

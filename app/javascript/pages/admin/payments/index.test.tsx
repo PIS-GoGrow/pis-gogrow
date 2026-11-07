@@ -141,8 +141,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
             payment_details_complete: false,
           },
         ]}
@@ -167,8 +167,8 @@ describe("Admin Payments Page", () => {
     const bankless = {
       home_delivery: true,
       bank_name: null,
-      bank_account_number: null,
-      bank_account_holder: null,
+      bank_account_details: null,
+      beneficiary: null,
       payment_details_complete: false,
     }
 
@@ -207,8 +207,8 @@ describe("Admin Payments Page", () => {
     const bankless = {
       home_delivery: true,
       bank_name: null,
-      bank_account_number: null,
-      bank_account_holder: null,
+      bank_account_details: null,
+      beneficiary: null,
       payment_details_complete: false,
     }
 
@@ -277,8 +277,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
             payment_details_complete: false,
           },
         ]}
@@ -301,8 +301,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
             payment_details_complete: false,
           },
         ]}
@@ -333,8 +333,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: "Santander",
-            bank_account_number: "1150260",
-            bank_account_holder: "Tu Viandita S.A.",
+            bank_account_details: "1150260",
+            beneficiary: "Tu Viandita S.A.",
             payment_details_complete: true,
           },
         ]}

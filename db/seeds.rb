@@ -40,9 +40,12 @@ tu_viandita = Provider.create!(
   home_delivery: true,
   user: tu_viandita_user,
   bank_name: "Santander",
-  bank_account_type: :checking,
-  bank_account_number: "1150260",
-  bank_account_holder: "Tu Viandita S.A."
+  bank_account_details: <<~DETAILS.strip,
+    Transferencias desde Santander
+    Cuenta: 1150260
+    Moneda: UYU
+  DETAILS
+  beneficiary: "Tu Viandita S.A."
 )
 
 endulzate_user = User.create!(
@@ -56,10 +59,12 @@ endulzate = Provider.create!(
   order_deadline: Time.current + 3.hours,
   home_delivery: false,
   user: endulzate_user,
-  bank_name: "Banco Itaú",
-  bank_account_type: :savings,
-  bank_account_number: "1951234",
-  bank_account_holder: "Noelia Patricia Pinheiro"
+  bank_name: "Itaú",
+  bank_account_details: <<~DETAILS.strip,
+    Cuenta: 1951234
+    Moneda: UYU
+  DETAILS
+  beneficiary: "Noelia Patricia Pinheiro"
 )
 
 menus = [

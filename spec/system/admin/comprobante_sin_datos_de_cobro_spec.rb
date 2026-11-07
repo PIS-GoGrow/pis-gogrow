@@ -22,13 +22,13 @@ RSpec.describe "Bloqueo de comprobante mientras el proveedor no cargue datos de 
   before do
     provider_without_details.update!(
       bank_name: nil,
-      bank_account_number: nil,
-      bank_account_holder: nil
+      bank_account_details: nil,
+      beneficiary: nil
     )
     provider_with_details.update!(
       bank_name: "Banco Itaú",
-      bank_account_number: "1951234",
-      bank_account_holder: "Noelia Patricia Pinheiro"
+      bank_account_details: "1951234",
+      beneficiary: "Noelia Patricia Pinheiro"
     )
     tuviandita_account
     endulzate_account
@@ -62,8 +62,8 @@ RSpec.describe "Bloqueo de comprobante mientras el proveedor no cargue datos de 
     # Cargar datos de cobro del proveedor
     provider_without_details.update!(
       bank_name: "Santander",
-      bank_account_number: "1150260",
-      bank_account_holder: "Tu Viandita S.A."
+      bank_account_details: "1150260",
+      beneficiary: "Tu Viandita S.A."
     )
 
     visit admin_payments_path

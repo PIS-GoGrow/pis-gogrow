@@ -31,7 +31,7 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
   end
 
   before do
-    provider.update!(bank_name: "Banco Itaú", bank_account_number: "1951234", bank_account_holder: "Noelia Patricia Pinheiro")
+    provider.update!(bank_name: "Banco Itaú", bank_account_details: "1951234", beneficiary: "Noelia Patricia Pinheiro")
     Notification::Configuration.find_or_create_by!(key: "company_payments") do |configuration|
       configuration.roles = %w[admin]
     end

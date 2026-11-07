@@ -7,6 +7,7 @@ class Provider::OnboardingController < Provider::InertiaController
 
   def show
     @provider = provider
+    @bank_names = Provider::BANK_NAMES | [ provider.bank_name ].compact
     @step = current_step
     @notification_configurations = provider_notification_configurations
     @subscribed_keys = subscribed_keys
@@ -60,7 +61,7 @@ class Provider::OnboardingController < Provider::InertiaController
 
   def save_payment_details
     provider.assign_attributes(
-      params.expect(provider: [ :bank_name, :bank_account_type, :bank_account_number, :bank_account_holder, :tax_id ])
+      params.expect(provider: [ :bank_name, :bank_account_details, :beneficiary ])
     )
     saved = provider.save(context: :payment_details)
     provider.mark_section_configured!(:payment_details) if saved
