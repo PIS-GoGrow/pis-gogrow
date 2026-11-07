@@ -3,6 +3,7 @@ import { ArrowLeft, ChevronLeft } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
+import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import HeadingSmall from "@/components/heading-small"
 import PageContainer from "@/components/page-container"
 import { Button } from "@/components/ui/button"
@@ -47,24 +48,31 @@ export default function SettingsPageLayout({
         : t("components.settings_layout.back_to_account")
 
     return (
-      <PageContainer
-        title={title}
-        titleVariant="prominent"
-        description={description}
-        back={
-          <Button variant="ghost" size="icon" asChild>
-            <Link href={backHref} aria-label={backLabel}>
-              <ArrowLeft aria-hidden="true" />
-            </Link>
-          </Button>
-        }
-      >
-        <div
-          className={role === "provider" ? "space-y-6" : "max-w-xl space-y-6"}
+      <>
+        <PageContainer
+          title={title}
+          titleVariant="prominent"
+          description={description}
+          back={
+            <Button variant="ghost" size="icon" asChild>
+              <Link href={backHref} aria-label={backLabel}>
+                <ArrowLeft aria-hidden="true" />
+              </Link>
+            </Button>
+          }
         >
-          {children}
-        </div>
-      </PageContainer>
+          <div
+            className={
+              role === "provider"
+                ? "space-y-6"
+                : "max-w-xl space-y-6 pb-28 md:pb-0"
+            }
+          >
+            {children}
+          </div>
+        </PageContainer>
+        {role === "consumer" && <ConsumerMobileNav />}
+      </>
     )
   }
 

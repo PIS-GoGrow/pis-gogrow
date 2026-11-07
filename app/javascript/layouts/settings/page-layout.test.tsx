@@ -20,6 +20,10 @@ vi.mock("@/layouts/settings/layout", () => ({
   ),
 }))
 
+vi.mock("@/components/consumer/consumer-mobile-nav", () => ({
+  ConsumerMobileNav: () => <div data-testid="consumer-mobile-nav" />,
+}))
+
 describe("SettingsPageLayout", () => {
   it("renders RRHH settings as a standalone page with account navigation", () => {
     role = "admin"
@@ -80,5 +84,6 @@ describe("SettingsPageLayout", () => {
     expect(
       screen.getByRole("link", { name: "Volver a Cuenta" }),
     ).toHaveAttribute("href", "/cuenta")
+    expect(screen.getByTestId("consumer-mobile-nav")).toBeInTheDocument()
   })
 })
