@@ -304,8 +304,8 @@ es:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
     automatic_payment_reminders:
-      title: "Recordatorios automáticos de pago"
-      description: "Avisos sobre la apertura y el vencimiento próximo de pagos."
+      title: "Recordatorios de pago"
+      description: "Avisos sobre la apertura y el vencimiento próximo de tus pagos."
     company_payments:
       title: "Pagos a proveedores"
       description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
@@ -1663,7 +1663,7 @@ es:
         provider: "Panel del proveedor"
     consumer_profiles:
       show:
-        title: "Mi cuenta"
+        title: "Cuenta"
         sign_out: "Salir"
         benefit: "Mi beneficio"
         monthly_limit: "Viandas subsidiadas por mes"
@@ -1678,13 +1678,12 @@ es:
         coupon_remaining: "Te quedan"
         coupon_period: "Para entregas del"
         settings: "Configuración"
-        notifications: "Notificaciones"
-        notifications_description: "Configurá qué alertas querés recibir"
-        settings: "Configuración"
-        notifications: "Notificaciones"
-        notifications_description: "Configurá qué alertas querés recibir"
+        account: "Cuenta"
+        account_description: "Modificá tu teléfono, nombre, correo, contraseña y apariencia"
         addresses: "Direcciones"
         addresses_description: "Gestioná tus direcciones de entrega"
+        notifications: "Notificaciones"
+        notifications_description: "Configurá qué alertas querés recibir"
     provider_menu_imports:
       new:
         title: "Importar platos"
@@ -1761,7 +1760,7 @@ es:
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
         profile: "Perfil"
-        profile_description: "Actualizá tu nombre y tu teléfono"
+        profile_description: "Editá tu nombre, correo, teléfono, contraseña y apariencia"
     provider_onboarding:
       progress: "Paso %{current} de %{total}"
       back: "Volver al paso anterior"
@@ -1989,6 +1988,7 @@ es:
         description: "Actualizá tu dirección de correo y verificala"
         unverified: "Tu dirección de correo no está verificada."
         resend: "Hacé clic aquí para reenviar el correo de verificación."
+        submit: "Guardar correo"
       sessions:
         title: "Sesiones"
         description: "Administrá tus sesiones activas en todos los dispositivos"
@@ -2003,7 +2003,7 @@ es:
         preferences_heading: "Preferencias de RR. HH."
         preferences_description: "Activá o desactivá las categorías de avisos que querés recibir."
         back: "Volver a Cuenta"
-        back_to_account: "Volver a Mi cuenta"
+        back_to_account: "Volver a Cuenta"
     consumer_delivery_addresses:
       index:
         title: "Direcciones"

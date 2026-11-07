@@ -23,7 +23,7 @@ configurations:
 
   automatic_payment_reminders:
     roles: [consumer]
-    configurable: false
+    configurable: true
 
   company_payments:
     roles: [admin]
