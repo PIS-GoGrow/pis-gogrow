@@ -62,7 +62,7 @@ RSpec.describe "Cierre programado visto por el empleado", type: :system do
 
     find("button[aria-label='Filtrar por proveedores']").click
     within("[data-provider-filter-sheet]") do
-      all("[role=checkbox]").reject { |checkbox| checkbox[:id] == "dashboard-filter-all" || checkbox[:id] == "dashboard-filter-#{tuviandita.id}" }.each(&:click)
+      find("#dashboard-filter-#{tuviandita.id}").click
       click_button "Aplicar"
     end
 

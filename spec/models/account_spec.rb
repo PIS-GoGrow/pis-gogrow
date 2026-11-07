@@ -223,6 +223,27 @@ RSpec.describe Account, type: :model do
         expect(account.payable_amount).to eq(150.to_d)
       end
     end
+
+    it "no cuenta un pedido confirmado hasta su fecha de entrega" do
+      travel_to Time.zone.local(2026, 11, 3, 12)
+      menu = Menu.create!(provider:, name: "Wok", description: "De verduras", price: 400)
+      schedule = Schedule.create!(menu:, date: Date.new(2026, 11, 5), amount: 10)
+      order = Order.create!(
+        consumer:, schedule:, amount: 1, price: 400, discounted_price: 250,
+        address: company.address, delivery_method: :office, status: :confirmed
+      )
+      employee_account, company_account = order.accounts.partition { it.owner == consumer }.map(&:sole)
+
+      expect([ employee_account.reload.amount, company_account.reload.amount ]).to eq([ 0, 0 ])
+      expect(described_class.amount_and_price_sum([ employee_account.id ])).to be_empty
+
+      travel_to Time.zone.local(2026, 11, 5, 0, 5)
+      employee_account.sync_amount!
+      company_account.sync_amount!
+
+      expect([ employee_account.reload.amount, company_account.reload.amount ]).to eq([ 250, 150 ])
+      expect(described_class.amount_and_price_sum([ employee_account.id ])).to eq(employee_account.id => { amount: 1, price: 250 })
+    end
   end
 
   describe "#collection_status" do
@@ -298,6 +319,52 @@ RSpec.describe Account, type: :model do
 
       expect(account.collection_status).to eq("partial")
       expect(account.payments.partial.count).to eq(2)
+    end
+
+    it "is pending again when debt is generated after the approved receipt was sent" do
+      create_payment(status: :approved)
+      account.update!(amount: account.amount + 450)
+
+      expect(account.reload.collection_status).to eq("pending")
+      expect(account.outstanding_amount).to eq(450.to_d)
+      expect(Account.pending).to include(account)
+      expect(Account.history).not_to include(account)
+    end
+
+    it "clamps outstanding_amount to zero when paid amount exceeds payable amount" do
+      payment = create_payment(status: :approved)
+      payment.update_column(:expected_amount, account.payable_amount + 100)
+
+      expect(account.reload.outstanding_amount).to eq(0)
+      expect(account.settled?).to be(true)
+    end
+
+    it "is not settled when payable amount is zero without any approved payment" do
+      account.update!(amount: 0)
+
+      expect(account.outstanding_amount).to eq(0)
+      expect(account.settled?).to be(false)
+    end
+
+    it "calculates outstanding_amount and scopes correctly with VAT for company accounts" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+
+      company_account = consumer.company.accounts.create!(
+        provider:, month: Date.current.prev_month, amount: 1000.0, vat_rate: 0.22
+      )
+      # 1000 + 220 (22% IVA) = 1220
+      expect(company_account.payable_amount).to eq(1220.to_d)
+
+      payment = company_account.payments.build(provider:, status: :submitted)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename: "comprobante.png", content_type: "image/png")
+      payment.save!
+      expect(payment.expected_amount).to eq(1220.to_d)
+
+      payment.approve
+      expect(company_account.reload.settled?).to be(true)
+      expect(Account.history).to include(company_account)
+      expect(Account.pending).not_to include(company_account)
     end
 
     it "is approved when a payment after a partial settles the account" do

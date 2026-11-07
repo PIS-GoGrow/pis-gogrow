@@ -19,7 +19,7 @@ class Provider::CollectionsController < Provider::InertiaController
 
     ActiveRecord::Associations::Preloader.new(
       records: [ account ], associations: :orders,
-      scope: Order.confirmed.preload(consumer: :user, schedule: :menu).order(:created_at)
+      scope: Order.consumed.preload(consumer: :user, schedule: :menu).order(:created_at)
     ).call
     ActiveRecord::Associations::Preloader.new(
       records: [ account ], associations: :payments,

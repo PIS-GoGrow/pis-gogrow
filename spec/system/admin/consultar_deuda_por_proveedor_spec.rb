@@ -126,10 +126,10 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
       within(:css, "[role='dialog']") do
         click_on "Viandas"
-        # Los tres pedidos confirmados caen en dos días: el más nuevo abre solo.
-        expect(page).to have_css("button", text: %r{\ADía: \d{2}/\d{2}/\d{2} \| Viandas: \d+ \| Monto: \$}, count: 2)
+        # Con la regla de entregas, solo se muestra el día con pedidos ya entregados.
+        expect(page).to have_css("button", text: %r{\ADía: \d{2}/\d{2}/\d{2} \| Viandas: \d+ \| Monto: \$}, count: 1)
         all("button", text: "Día:").reject { it[:"aria-expanded"] == "true" }.each(&:click)
-        expect(page).to have_selector("tbody tr", count: 3)
+        expect(page).to have_selector("tbody tr", count: 1)
       end
     end
 
@@ -140,7 +140,7 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
 
       within(:css, "[role='dialog']") do
         expect(page).to have_content("Subtotal sin IVA")
-        expect(page).to have_content("#{short_money(current_period.amount)} | 4 viandas")
+        expect(page).to have_content("#{short_money(current_period.amount)} | 1 vianda")
         expect(page).to have_content("IVA (0%)")
         expect(page).to have_content("Total a pagar")
       end
@@ -151,7 +151,8 @@ RSpec.describe "Consultar por período la deuda de GoGrow con cada proveedor" do
     it "shows a period nobody paid as pending, with the day it falls due" do
       sign_in_as_hr
 
-      within(:css, "[data-status='pending']") { expect(page).to have_content("Pendiente") }
+      expect(page).to have_css("[role='tab'][aria-selected='true']", text: "Pendientes")
+      expect(page).to have_content(month_label(current_period.month))
       expect(page).to have_content(due_label(current_period))
     end
 

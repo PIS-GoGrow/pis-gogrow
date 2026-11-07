@@ -22,7 +22,7 @@ class Consumer::AccountsController < Consumer::InertiaController
 
     # La suma de la deuda total se calcula en memoria en el controlador, para no hacer
     # una consulta más redundante a la base de datos.
-    total_debt = accounts.sum(&:amount)
+    total_debt = accounts.sum(&:outstanding_amount)
     total_meals = sums.values.sum { it[:amount].to_i }
 
     current_accounts = consumer.accounts.current.pluck(:id)
@@ -30,7 +30,7 @@ class Consumer::AccountsController < Consumer::InertiaController
 
     current_month_debt = current_sums.reduce(0) { |acc, x| acc + x[:price] }
 
-    current_orders = Order.confirmed
+    current_orders = Order.consumed
                           .joins(:order_accounts)
                           .where(order_accounts: { account_id: current_accounts })
                           .order(:created_at)
@@ -56,7 +56,7 @@ class Consumer::AccountsController < Consumer::InertiaController
   # Este endpoint solo maneja JSON (no se accede directamente, sino que se
   # usa para darle datos al frontend)
   def show
-    orders = @account.orders.confirmed.order :created_at
+    orders = @account.orders.consumed.order :created_at
     month = I18n.l(@account.month, format: :month_year)
     amount = @account.amount
 

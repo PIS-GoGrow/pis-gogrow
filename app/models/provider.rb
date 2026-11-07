@@ -4,14 +4,26 @@ class Provider < ApplicationRecord
   include SyncsUserRoles
   include Auditable
 
+  BANK_NAMES = [
+    "BROU",
+    "BHU",
+    "Banco Bandes Uruguay",
+    "Banco de la Nación Argentina",
+    "BBVA",
+    "Citibank",
+    "Heritage",
+    "HSBC",
+    "Itaú",
+    "Santander",
+    "Scotiabank"
+  ].freeze
+
   CONFIGURABLE_SECTIONS = {
     payment_details: :payment_details_configured_at,
     operational_settings: :order_deadline_configured_at,
     deliveries: :deliveries_configured_at,
     notifications: :notifications_configured_at
   }.freeze
-
-  enum :bank_account_type, { savings: 0, checking: 1 }, prefix: :bank_account, validate: { allow_nil: true }
 
   has_many :menus, dependent: :destroy
   has_many :schedules, through: :menus
@@ -22,15 +34,13 @@ class Provider < ApplicationRecord
   has_many :closures, class_name: "ProviderClosure", dependent: :destroy
 
   normalizes :tax_id, with: -> { it.gsub(/\D/, "") }
-  normalizes :bank_name, :bank_account_number, :bank_account_holder, with: -> { it.strip }
+  normalizes :bank_name, :bank_account_details, :beneficiary, with: -> { it.strip }
 
   with_options on: :payment_details do
-    validates :bank_name, :bank_account_type, :bank_account_number, :bank_account_holder, :tax_id, presence: true
-    validates :bank_account_number, format: { with: /\A[\d -]{4,30}\z/ }, allow_blank: true
-    validates :tax_id, format: { with: /\A(\d{7,8}|\d{12})\z/ }, allow_blank: true
+    validates :bank_name, :bank_account_details, :beneficiary, presence: true
   end
 
-  audits :home_delivery, :bank_name, :bank_account_type, :bank_account_number, :bank_account_holder, :tax_id
+  audits :home_delivery, :bank_name, :bank_account_details, :beneficiary
 
   def onboarded?
     onboarding_completed_at.present?
@@ -64,16 +74,17 @@ class Provider < ApplicationRecord
   end
 
   def payment_details_complete?
-    [ bank_name, bank_account_number, bank_account_holder ].all?(&:present?)
+    [ bank_name, bank_account_details, beneficiary ].all?(&:present?)
   end
 
   def order_deadline_passed_today?
-    deadline = order_deadline
-    return false unless deadline
+    deadline_at = order_deadline_today
+    deadline_at.present? && Time.current >= deadline_at
+  end
 
-    today = Date.current
-    deadline_at = Time.zone.local(today.year, today.month, today.day, deadline.hour, deadline.min, deadline.sec)
-    Time.current >= deadline_at
+  def seconds_until_order_deadline
+    deadline_at = order_deadline_today
+    (deadline_at - Time.current).ceil if deadline_at && Time.current < deadline_at
   end
 
   # Mira todos los cierres en memoria: así un includes(:closures) sirve a todas
@@ -87,6 +98,10 @@ class Provider < ApplicationRecord
   def section_completeness
     CONFIGURABLE_SECTIONS.transform_values { |column| self[column].present? }
   end
+
+  def order_deadline_today
+    order_deadline && Time.current.change(hour: order_deadline.hour, min: order_deadline.min, sec: order_deadline.sec)
+  end
 end
 
 # == Schema Information
@@ -94,10 +109,9 @@ end
 # Table name: providers
 #
 #  id                            :bigint           not null, primary key
-#  bank_account_holder           :string
-#  bank_account_number           :string
-#  bank_account_type             :integer
+#  bank_account_details          :text
 #  bank_name                     :string
+#  beneficiary                   :string
 #  deliveries_configured_at      :datetime
 #  home_delivery                 :boolean          default(TRUE), not null
 #  notifications_configured_at   :datetime

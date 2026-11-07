@@ -12,8 +12,8 @@ const provider = {
   name: "Endulzate by Noe",
   home_delivery: false,
   bank_name: "Banco Itaú",
-  bank_account_number: "1951234",
-  bank_account_holder: "Noelia Patricia Pinheiro",
+  bank_account_details: "Cuenta: 1951234\nMoneda: UYU",
+  beneficiary: "Noelia Patricia Pinheiro",
   payment_details_complete: true,
 }
 
@@ -22,22 +22,24 @@ describe("BankDetails", () => {
     render(<BankDetails provider={provider} />)
 
     expect(screen.getByText("Banco Itaú")).toBeInTheDocument()
-    expect(screen.getByText("Nº de cuenta: 1951234")).toBeInTheDocument()
+    expect(screen.getByText(/Nº de cuenta: 1951234/)).toBeInTheDocument()
     expect(
       screen.getByText("Beneficiario: Noelia Patricia Pinheiro"),
     ).toBeInTheDocument()
   })
 
-  it("copia el número de cuenta y avisa", async () => {
+  it("copia los datos de la cuenta y avisa", async () => {
     const user = userEvent.setup()
     render(<BankDetails provider={provider} />)
 
     await user.click(
-      screen.getByRole("button", { name: "Copiar número de cuenta" }),
+      screen.getByRole("button", { name: "Copiar datos de la cuenta" }),
     )
 
-    expect(await navigator.clipboard.readText()).toBe("1951234")
-    expect(toast.success).toHaveBeenCalledWith("Número de cuenta copiado")
+    expect(await navigator.clipboard.readText()).toBe(
+      "Cuenta: 1951234\nMoneda: UYU",
+    )
+    expect(toast.success).toHaveBeenCalledWith("Datos de la cuenta copiados")
   })
 
   it("avisa si el proveedor todavía no cargó sus datos", () => {
@@ -46,8 +48,8 @@ describe("BankDetails", () => {
         provider={{
           ...provider,
           bank_name: null,
-          bank_account_number: null,
-          bank_account_holder: null,
+          bank_account_details: null,
+          beneficiary: null,
           payment_details_complete: false,
         }}
       />,

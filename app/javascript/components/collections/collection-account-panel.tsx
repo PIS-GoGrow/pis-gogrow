@@ -4,13 +4,16 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import { AdaptableDialogTrigger } from "@/components/adaptable-dialog"
+import { WhatsappMark } from "@/components/branding/whatsapp-mark"
 import CollectionAccountDetailDialog from "@/components/collections/collection-account-detail-dialog"
 import CollectionPaymentHistory from "@/components/collections/collection-payment-history"
 import DebtReminderDialog from "@/components/collections/debt-reminder-dialog"
 import PaymentReviewSheet from "@/components/payments/payment-review-sheet"
+import RejectionNotice from "@/components/payments/rejection-notice"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { useFormatters } from "@/hooks/use-formatters"
+import { pendingRejectionReason } from "@/lib/payment-rejection-reasons"
 import { cn } from "@/lib/utils"
 import { providerCollections, providerDebtReminders } from "@/routes"
 import type { ProviderCollectionAccount } from "@/types"
@@ -42,9 +45,10 @@ export default function CollectionAccountPanel({
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
   const reminder = account.debt_reminder
+  const rejectionReason = pendingRejectionReason(account.payments)
 
   return (
-    <div className="bg-muted/60 grid gap-3 rounded-lg p-3">
+    <div className="bg-muted/60 grid min-w-0 grid-cols-1 gap-3 rounded-lg p-3">
       {heading === "paid_on" && (
         <>
           <span className="text-muted-foreground text-sm">
@@ -82,13 +86,30 @@ export default function CollectionAccountPanel({
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-foreground text-base font-semibold">
-          {formatMoney(account.payable_amount)}
-          <span className="text-muted-foreground font-normal">
-            {" | "}
-            {t("pages.provider_collections.meals", { count: account.meals })}
-          </span>
-        </p>
+        {settled ? (
+          <p className="text-foreground text-base font-semibold">
+            {formatMoney(account.payable_amount)}
+            <span className="text-muted-foreground font-normal">
+              {" | "}
+              {t("pages.provider_collections.meals", { count: account.meals })}
+            </span>
+          </p>
+        ) : (
+          <div className="min-w-0">
+            <p className="text-muted-foreground text-xs">
+              {t("pages.provider_collections.group.outstanding_amount")}
+            </p>
+            <p className="text-foreground text-base font-semibold">
+              {formatMoney(account.outstanding_amount)}
+            </p>
+            <p className="text-muted-foreground text-xs">
+              {t("pages.provider_collections.group.consumed_in_month", {
+                count: account.meals,
+                month: account.month_name,
+              })}
+            </p>
+          </div>
+        )}
 
         {detailMode === "dialog" ? (
           <CollectionAccountDetailDialog account={account} settled={settled} />
@@ -106,17 +127,35 @@ export default function CollectionAccountPanel({
         )}
       </div>
 
+      {rejectionReason && (
+        <RejectionNotice
+          reason={rejectionReason}
+          partialPaymentWarning={t(
+            "pages.provider_collections.partial_payment_warning",
+          )}
+          rejectedLabel={t("pages.provider_collections.statuses.rejected")}
+        />
+      )}
+      {account.status === "partial" && !rejectionReason && (
+        <p className="flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400">
+          <TriangleAlert className="size-4 shrink-0" aria-hidden="true" />
+          {t("pages.provider_collections.group.partial_missing")}
+        </p>
+      )}
       {account.status === "submitted" && account.payment_id && (
         <PaymentReviewSheet
           paymentId={account.payment_id}
           receiptUrl={account.receipt_url ?? ""}
           contentType={account.receipt_content_type}
           filename={account.owner_name}
-          expectedAmount={account.payable_amount}
+          expectedAmount={account.expected_amount ?? account.payable_amount}
           canApprove={account.can_approve_payment}
         >
           <AdaptableDialogTrigger asChild>
-            <Button className="h-10 w-full rounded-[10px]">Revisar pago</Button>
+            <Button className="h-10 w-full rounded-[10px]">
+              <Eye aria-hidden="true" />
+              {t("pages.provider_collections.group.review_payment")}
+            </Button>
           </AdaptableDialogTrigger>
         </PaymentReviewSheet>
       )}
@@ -128,12 +167,14 @@ export default function CollectionAccountPanel({
           eligible={reminder.eligible}
           employeeName={account.owner_name}
           month={account.month}
-          amount={account.payable_amount}
+          amount={account.outstanding_amount ?? account.payable_amount}
+          showWhenBlocked
+          icon={<WhatsappMark className="size-4" />}
         />
       )}
       {reminder.blocked_reason === "cooldown" && (
-        <p className="text-muted-foreground flex items-center gap-2 text-sm">
-          <CircleCheck className="size-4" aria-hidden="true" />
+        <p className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
+          <CircleCheck className="size-4 shrink-0" aria-hidden="true" />
           {t("pages.provider_collections.reminder.next_available", {
             date: reminder.next_available_at,
           })}
@@ -146,7 +187,8 @@ export default function CollectionAccountPanel({
       )}
       {(showPaymentHistory ||
         account.status === "partial" ||
-        account.status === "rejected") && (
+        account.status === "rejected" ||
+        account.payments.some((p) => p.status === "approved")) && (
         <CollectionPaymentHistory
           payments={account.payments}
           showDownloadAll={showDownloadAll}

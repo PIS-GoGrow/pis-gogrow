@@ -1,10 +1,8 @@
 import { router } from "@inertiajs/react"
-import { Check, X } from "lucide-react"
 import type { ReactNode } from "react"
 import { useId, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { AdaptableDialogTrigger } from "@/components/adaptable-dialog"
 import { usePaymentReviewResult } from "@/components/payments/payment-review-result-context"
 import ReceiptSheet from "@/components/payments/receipt-sheet"
 import RejectPaymentDialog from "@/components/payments/reject-payment-dialog"
@@ -36,6 +34,18 @@ export default function PaymentReviewSheet({
   const showResult = usePaymentReviewResult()
   const [processing, setProcessing] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
+
+  function openReport() {
+    setSheetOpen(false)
+    setReportOpen(true)
+  }
+
+  // Cerrar el reporte sin enviarlo lleva de vuelta al comprobante.
+  function handleReportOpenChange(open: boolean) {
+    setReportOpen(open)
+    if (!open) setSheetOpen(true)
+  }
 
   function handleConfirm() {
     if (!canApprove || processing) return
@@ -47,9 +57,14 @@ export default function PaymentReviewSheet({
       {
         preserveScroll: true,
         preserveState: true,
-        onSuccess: () => {
+        onSuccess: (page) => {
           setSheetOpen(false)
-          showResult("approved")
+          const hasAlert =
+            (page?.props as { flash?: { alert?: string } } | undefined)?.flash
+              ?.alert ?? page?.flash?.alert
+          if (!hasAlert) {
+            showResult("approved")
+          }
         },
         onFinish: () => setProcessing(false),
       },
@@ -57,67 +72,67 @@ export default function PaymentReviewSheet({
   }
 
   function handleReviewed(result: "partial" | "rejected") {
-    setSheetOpen(false)
+    setReportOpen(false)
     showResult(result)
   }
 
   return (
-    <ReceiptSheet
-      receiptUrl={receiptUrl}
-      contentType={contentType}
-      filename={filename}
-      expectedAmount={expectedAmount}
-      notice={
-        !canApprove && (
-          <p id={restrictionId} className="text-muted-foreground text-sm">
-            {t("pages.provider_collections.review.current_month_restriction")}
-          </p>
-        )
-      }
-      open={sheetOpen}
-      onOpenChange={setSheetOpen}
-      footer={
-        <>
-          <RejectPaymentDialog
-            paymentId={paymentId}
-            onReviewed={handleReviewed}
-          >
-            <AdaptableDialogTrigger asChild>
-              <Button
-                variant="secondary"
-                className="h-12 flex-1"
-                size="sm"
-                disabled={processing}
-              >
-                <X className="mr-2 size-4" />
-                {t("pages.provider_collections.review.report")}
-              </Button>
-            </AdaptableDialogTrigger>
-          </RejectPaymentDialog>
+    <>
+      <ReceiptSheet
+        receiptUrl={receiptUrl}
+        contentType={contentType}
+        filename={filename}
+        expectedAmount={expectedAmount}
+        notice={
+          !canApprove && (
+            <p id={restrictionId} className="text-muted-foreground text-sm">
+              {t("pages.provider_collections.review.current_month_restriction")}
+            </p>
+          )
+        }
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              className="h-12 flex-1"
+              size="sm"
+              disabled={processing}
+              onClick={openReport}
+            >
+              {t("pages.provider_collections.review.report")}
+            </Button>
 
-          <Button
-            className="h-12 flex-1"
-            size="sm"
-            disabled={processing || !canApprove}
-            aria-describedby={!canApprove ? restrictionId : undefined}
-            aria-busy={processing}
-            onClick={handleConfirm}
-          >
-            {processing ? (
-              <Spinner
-                aria-label={t("pages.provider_collections.review.confirming")}
-              />
-            ) : (
-              <Check aria-hidden="true" />
-            )}
-            {t(
-              `pages.provider_collections.review.${processing ? "confirming" : "confirm"}`,
-            )}
-          </Button>
-        </>
-      }
-    >
-      {children}
-    </ReceiptSheet>
+            <Button
+              className="h-12 flex-1"
+              size="sm"
+              disabled={processing || !canApprove}
+              aria-describedby={!canApprove ? restrictionId : undefined}
+              aria-busy={processing}
+              onClick={handleConfirm}
+            >
+              {processing && (
+                <Spinner
+                  aria-label={t("pages.provider_collections.review.confirming")}
+                />
+              )}
+              {t(
+                `pages.provider_collections.review.${processing ? "confirming" : "confirm"}`,
+              )}
+            </Button>
+          </>
+        }
+      >
+        {children}
+      </ReceiptSheet>
+
+      <RejectPaymentDialog
+        paymentId={paymentId}
+        open={reportOpen}
+        onOpenChange={handleReportOpenChange}
+        onReviewed={handleReviewed}
+      />
+    </>
   )
 }

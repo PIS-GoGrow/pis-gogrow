@@ -24,6 +24,49 @@ RSpec.describe Payment, type: :model do
     payment
   end
 
+  describe "#expected_amount" do
+    it "keeps the debt the account had when the receipt was sent" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      account.update!(amount: 950)
+      payment.approve
+
+      expect(payment.reload.expected_amount).to eq(500.to_d)
+    end
+
+    it "takes the debt again when a rejected receipt is resent" do
+      payment = payment_with_receipt.tap(&:save!)
+      payment.reject_with("Ilegible")
+      account.update!(amount: 950)
+
+      payment.update!(status: :submitted)
+
+      expect(payment.expected_amount).to eq(950.to_d)
+    end
+
+    it "leaves out what earlier approved receipts already covered" do
+      payment_with_receipt.tap(&:save!).approve
+      account.update!(amount: 950)
+
+      expect(payment_with_receipt.tap(&:save!).expected_amount).to eq(450.to_d)
+    end
+
+    it "overrides a client-supplied expected_amount with the actual account outstanding amount" do
+      payment = account.payments.build(provider:, status: :submitted, expected_amount: 10.0)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename: "comprobante.png", content_type: "image/png")
+      payment.save!
+
+      expect(payment.expected_amount).to eq(500.to_d)
+    end
+
+    it "preserves exact decimal cents from the account outstanding amount" do
+      account.update!(amount: 290.25)
+      payment = payment_with_receipt.tap(&:save!)
+
+      expect(payment.expected_amount).to eq(290.25.to_d)
+    end
+  end
+
   it "starts as pending" do
     expect(described_class.new.status).to eq("pending")
   end
@@ -204,6 +247,59 @@ RSpec.describe Payment, type: :model do
     end
   end
 
+  describe "the consumer approval notification" do
+    let(:notifications) do
+      Notification.where(event: "payment_approved", user: consumer.user)
+    end
+
+    it "notifies the consumer when the provider approves the payment" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      expect { payment.approve }
+        .to change { notifications.count }
+        .from(0).to(1)
+
+      expect(notifications.sole).to have_attributes(
+        role: "consumer",
+        title: "Pago aprobado",
+        description: include("Rotisería Central")
+      )
+    end
+
+    it "does not notify just because a historical approved payment is created" do
+      payment_with_receipt(status: :approved).save!
+
+      expect(notifications).to be_empty
+    end
+
+    it "does not notify the consumer twice when an approved payment is approved again" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      payment.approve
+      payment.approve
+
+      expect(notifications.count).to eq(1)
+    end
+
+    it "does not notify the consumer when a company payment is approved" do
+      company = Company.create!(name: "GoGrow Test", address: "18 de Julio 1006")
+      company_account = Account.create!(owner: company, provider:, month: Date.current.prev_month, amount: 500)
+      payment = company_account.payments.build(provider:, status: :submitted)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename: "receipt.png", content_type: "image/png")
+      payment.save!
+
+      expect { payment.approve }.not_to change { Notification.where(event: "payment_approved").count }
+    end
+
+    it "does not notify when payment transitions to rejected or partial" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      expect {
+        payment.update!(status: :rejected, rejection_reason: "Comprobante ilegible")
+      }.not_to change { notifications.count }
+    end
+  end
+
   describe "the receipt" do
     it "is required to send a payment" do
       payment = account.payments.build(provider:, status: :submitted)
@@ -268,31 +364,56 @@ RSpec.describe Payment, type: :model do
       expect(payment.rejection_reason).to eq("La imagen está borrosa")
     end
 
-    it "is cleared when the employee sends the payment again" do
-      payment = payment_with_receipt(status: :rejected, rejection_reason: "La imagen está borrosa")
-      payment.save!
+    it "stays on the rejected payment when the employee sends a new receipt" do
+      rejected = payment_with_receipt
+      rejected.save!
+      rejected.reject_with("El pago es parcial")
 
-      # Es el reenvío de Consumer::PaymentsController#update: comprobante nuevo y
-      # el pago vuelve a "enviado".
-      payment.receipt.attach(
-        io: StringIO.new("comprobante nuevo"), filename: "nuevo.png", content_type: "image/png"
-      )
-      payment.update!(status: :submitted)
+      resent = payment_with_receipt(filename: "comprobante_2.png")
+      resent.save!
 
-      expect(payment.reload).to be_submitted
-      expect(payment.rejection_reason).to be_nil
+      expect(rejected.reload).to have_attributes(status: "rejected", rejection_reason: "El pago es parcial")
+      expect(resent.reload).to have_attributes(status: "submitted", rejection_reason: nil)
+    end
+
+    it "preserves distinct rejection reasons across multiple rejections and resubmissions" do
+      first_rejected = payment_with_receipt(filename: "c1.png").tap(&:save!)
+      first_rejected.reject_with("Primer rechazo: borroso")
+
+      second_rejected = payment_with_receipt(filename: "c2.png").tap(&:save!)
+      second_rejected.reject_with("Segundo rechazo: monto incorrecto")
+
+      active_submitted = payment_with_receipt(filename: "c3.png").tap(&:save!)
+
+      expect(first_rejected.reload).to have_attributes(status: "rejected", rejection_reason: "Primer rechazo: borroso")
+      expect(second_rejected.reload).to have_attributes(status: "rejected", rejection_reason: "Segundo rechazo: monto incorrecto")
+      expect(active_submitted.reload).to have_attributes(status: "submitted", rejection_reason: nil)
+      expect(account.payments.pluck(:id)).to contain_exactly(first_rejected.id, second_rejected.id, active_submitted.id)
     end
   end
 
   describe "#approve" do
-    it "approves the payment and takes the rejection reason away" do
-      payment = payment_with_receipt(status: :rejected, rejection_reason: "La imagen está borrosa")
+    it "approves a submitted payment" do
+      payment = payment_with_receipt
       payment.save!
 
-      payment.approve
+      expect(payment.approve).to be(true)
 
       expect(payment.reload).to be_approved
       expect(payment.rejection_reason).to be_nil
+    end
+
+    it "does not approve a payment that was already rejected" do
+      payment = payment_with_receipt(
+        status: :rejected,
+        rejection_reason: "La imagen está borrosa"
+      )
+      payment.save!
+
+      expect(payment.approve).to be(false)
+
+      expect(payment.reload).to be_rejected
+      expect(payment.rejection_reason).to eq("La imagen está borrosa")
     end
   end
 
@@ -305,6 +426,62 @@ RSpec.describe Payment, type: :model do
 
       expect(payment.reload).to be_rejected
       expect(payment.rejection_reason).to eq("Los montos no coinciden")
+    end
+  end
+
+  describe "concurrent reviews" do
+    it "does not let a stale review overwrite a decision that was already made" do
+      payment = payment_with_receipt
+      payment.save!
+
+      approving_review = Payment.find(payment.id)
+      rejecting_review = Payment.find(payment.id)
+
+      expect(approving_review.approve).to be(true)
+      expect(rejecting_review.reject_with("Los montos no coinciden")).to be(false)
+
+      expect(payment.reload).to be_approved
+      expect(payment.rejection_reason).to be_nil
+    end
+
+    it "keeps the company invoice consistent when a stale review tries to overwrite an approval" do
+      company_account = Account.create!(
+        owner: company,
+        provider:,
+        month: Date.current.prev_month,
+        amount: 500
+      )
+
+      invoice = company_account.invoices.build(
+        status: :pending,
+        issued_on: Date.current,
+        total_amount: 500
+      )
+      invoice.file.attach(
+        io: StringIO.new("factura"),
+        filename: "factura.pdf",
+        content_type: "application/pdf"
+      )
+      invoice.save!
+
+      payment = company_account.payments.build(provider:, status: :submitted)
+      payment.receipt.attach(
+        io: StringIO.new("comprobante"),
+        filename: "comprobante.png",
+        content_type: "image/png"
+      )
+      payment.save!
+
+      approving_review = Payment.find(payment.id)
+      rejecting_review = Payment.find(payment.id)
+
+      expect(approving_review.approve).to be(true)
+      expect(rejecting_review.reject_with("Los montos no coinciden")).to be(false)
+
+      expect(payment.reload).to be_approved
+      expect(payment.rejection_reason).to be_nil
+      expect(invoice.reload).to be_approved
+      expect(company_account.reload.collection_status).to eq("approved")
     end
   end
 
@@ -549,6 +726,7 @@ end
 # Table name: payments
 #
 #  id               :bigint           not null, primary key
+#  expected_amount  :decimal(10, 2)
 #  rejection_reason :text
 #  status           :integer          default(0), not null
 #  created_at       :datetime         not null

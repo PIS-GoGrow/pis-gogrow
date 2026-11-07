@@ -109,12 +109,46 @@ RSpec.describe "Orders", type: :request do
         expect(ids).not_to include(orders(:other_consumer_upcoming).id)
       end
 
-      it "filters out history orders older than three months" do
+      it "keeps a recently delivered order in the history no matter when it was created" do
         orders(:history_confirmed_past).update_columns(created_at: 4.months.ago)
 
         get orders_path
 
-        expect(inertia.props[:past_orders].pluck(:id)).not_to include(orders(:history_confirmed_past).id)
+        expect(inertia.props[:past_orders].pluck(:id)).to include(orders(:history_confirmed_past).id)
+      end
+
+      it "starts the history with the last three months by delivery date and pages the rest" do
+        old_order = orders(:history_confirmed_past)
+        old_order.update_columns(schedule_id: nil, delivery_date: Date.current - 4.months)
+
+        get orders_path
+
+        expect(inertia.props[:past_orders].pluck(:id)).to contain_exactly(
+          orders(:history_cancelled_future).id,
+          orders(:history_rejected_future).id,
+          orders(:history_pending_past).id,
+          orders(:history_without_schedule).id
+        )
+        expect(inertia.props[:providers].pluck(:id)).to contain_exactly(providers(:tuviandita).id)
+
+        get orders_path(page: 2)
+
+        expect(inertia.props[:past_orders].pluck(:id)).to contain_exactly(old_order.id)
+      end
+
+      it "orders older pages by delivery date and stops after the last one" do
+        oldest = orders(:history_confirmed_past)
+        oldest.update_columns(schedule_id: nil, delivery_date: Date.current - 8.months)
+        older = orders(:history_pending_past)
+        older.update_columns(schedule_id: nil, delivery_date: Date.current - 4.months)
+
+        get orders_path(page: 2)
+
+        expect(inertia.props[:past_orders].pluck(:id)).to eq([ older.id, oldest.id ])
+
+        get orders_path(page: 3)
+
+        expect(inertia.props[:past_orders]).to be_empty
       end
 
       it "deduplicates providers in the filter list" do
@@ -138,6 +172,18 @@ RSpec.describe "Orders", type: :request do
       it "renders the detail page" do
         get order_path(orders(:upcoming_confirmed_future))
         expect(inertia).to render_component("consumer/orders/show")
+      end
+
+      it "identifies an upcoming order outside the history" do
+        get order_path(orders(:upcoming_confirmed_future))
+
+        expect(inertia).to have_props(historical: false)
+      end
+
+      it "identifies an order from the history" do
+        get order_path(orders(:history_confirmed_past))
+
+        expect(inertia).to have_props(historical: true)
       end
 
       it "exposes the breakdown the employee needs to check the order" do
@@ -200,6 +246,15 @@ RSpec.describe "Orders", type: :request do
         sign_in users(:provider_user)
         get order_path(orders(:upcoming_confirmed_future))
         expect(response).to redirect_to(root_path)
+
+        sign_in users(:admin), role: :admin
+        get order_path(orders(:upcoming_confirmed_future))
+        expect(response).to redirect_to(root_path)
+      end
+
+      it "returns not found for a non-existent order id" do
+        get order_path(id: 999_999)
+        expect(response).to have_http_status(:not_found)
       end
 
       it "serializes rejection reason and rejection details on a rejected order" do
@@ -1096,6 +1151,9 @@ RSpec.describe "Orders", type: :request do
       before do
         travel_back
         travel_to Time.zone.local(2026, 10, 31, 14, 0)
+        # Las fixtures usan la fecha real: schedules(:past) puede colisionar según Date.current.
+        Schedule.where(date: [ Date.new(2026, 10, 31), Date.new(2026, 11, 2), Date.new(2026, 11, 4), Date.new(2026, 11, 16) ])
+                .where.not(id: [ schedules(:today).id, schedules(:future).id ]).destroy_all
         schedules(:today).update_columns(date: Date.new(2026, 10, 31))
         schedules(:future).update_columns(date: Date.new(2026, 11, 4))
       end
@@ -1399,6 +1457,15 @@ RSpec.describe "Orders", type: :request do
       patch order_path(order), params: update_params
 
       expect(response).to redirect_to(root_path)
+      expect(order.reload.amount).to eq(1)
+    end
+
+    it "rejects another consumer trying to modify someone else's order" do
+      sign_in users(:other_consumer_user), role: :consumer
+
+      patch order_path(order), params: update_params(quantity: 3)
+
+      expect(response).to have_http_status(:not_found)
       expect(order.reload.amount).to eq(1)
     end
 
@@ -1941,6 +2008,90 @@ RSpec.describe "Orders", type: :request do
         expect(log.changeset).to include("notes" => [ "Nota previa", nil ])
         follow_redirect!
         expect(inertia).to have_flash(order_updated: true)
+      end
+
+      context "when managing provider notifications on order modifications" do
+        let!(:notification_config) do
+          Notification::Configuration.find_or_create_by!(key: "provider_orders") do |c|
+            c.roles = %w[provider]
+          end
+        end
+
+        it "updates active provider notification description and exposes it in Inertia props" do
+          order.notify_received
+          notification = Notification.find_by!(event: "order_received", notifiable: order)
+
+          expect {
+            patch order_path(order), params: update_params(quantity: 3)
+          }.not_to change { Notification.where(event: "order_received", notifiable: order).count }
+
+          expect(order.reload.amount).to eq(3)
+          expect(notification.reload.description).to include("pidió 3 de")
+
+          sign_in order.provider.user, role: :provider
+          get provider_dashboard_path
+          expect(response).to have_http_status(:ok)
+
+          received_notification = inertia.props[:notifications].find do |n|
+            (n["title"] || n[:title]) == I18n.t("notifications.order_received.title")
+          end
+
+          expect(received_notification).to be_present
+          expect(received_notification["description"] || received_notification[:description]).to include("pidió 3 de")
+        end
+
+        it "creates a new active provider notification when previous one was already closed" do
+          order.notify_received
+          original_notification = Notification.find_by!(event: "order_received", notifiable: order)
+          original_notification.close!
+
+          expect {
+            patch order_path(order), params: update_params(quantity: 4)
+          }.to change { Notification.where(event: "order_received", notifiable: order).count }.by(1)
+
+          new_notification = Notification.find_by!(event: "order_received", notifiable: order, closed_at: nil)
+          expect(new_notification.description).to include("pidió 4 de")
+          expect(original_notification.reload.closed_at).to be_present
+        end
+
+        it "does not update or duplicate provider notification when modifying non-quantity attributes" do
+          order.notify_received
+          notification = Notification.find_by!(event: "order_received", notifiable: order)
+          original_desc = notification.description
+          original_updated_at = notification.updated_at
+
+          patch order_path(order), params: update_params(quantity: order.amount, notes: "Sin pimienta", address: "18 de Julio 1006")
+
+          expect(notification.reload.description).to eq(original_desc)
+          expect(notification.updated_at).to eq(original_updated_at)
+          expect(Notification.where(event: "order_received", notifiable: order).count).to eq(1)
+        end
+
+        it "preserves notification untouched when parameter validation fails on interface bypass" do
+          order.notify_received
+          notification = Notification.find_by!(event: "order_received", notifiable: order)
+          original_desc = notification.description
+
+          [ "invalid", "-3", "0" ].each do |invalid_qty|
+            patch order_path(order), params: update_params(quantity: invalid_qty)
+            expect(order.reload.amount).to eq(1)
+            expect(notification.reload.description).to eq(original_desc)
+          end
+        end
+
+        it "preserves provider notification and DB integrity when schedule availability is exceeded" do
+          order.notify_received
+          notification = Notification.find_by!(event: "order_received", notifiable: order)
+          original_desc = notification.description
+
+          order.schedule.update!(amount: 1)
+
+          patch order_path(order), params: update_params(quantity: 10)
+
+          expect(order.reload.amount).to eq(1)
+          expect(notification.reload.description).to eq(original_desc)
+          expect(Notification.where(event: "order_received", notifiable: order, closed_at: nil).count).to eq(1)
+        end
       end
     end
   end

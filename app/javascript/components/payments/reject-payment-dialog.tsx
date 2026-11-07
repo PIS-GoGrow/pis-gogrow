@@ -1,5 +1,4 @@
 import { router } from "@inertiajs/react"
-import type { ReactNode } from "react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -20,23 +19,23 @@ import {
   PAYMENT_REVIEW_ISSUE_KEYS,
   type PaymentReviewIssueKey,
 } from "@/lib/payment-rejection-reasons"
-import { cn } from "@/lib/utils"
 import { providerPayments as paymentsRoutes } from "@/routes"
 
 interface RejectPaymentDialogProps {
-  children: ReactNode
   paymentId: number
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onReviewed?: (result: "partial" | "rejected") => void
 }
 
 export default function RejectPaymentDialog({
-  children,
   paymentId,
+  open,
+  onOpenChange,
   onReviewed,
 }: RejectPaymentDialogProps) {
   const { t } = useTranslation()
   const page = "pages.provider_collections.review"
-  const [open, setOpen] = useState(false)
   const [selectedReason, setSelectedReason] =
     useState<PaymentReviewIssueKey | null>(null)
   const [rejectionDetails, setRejectionDetails] = useState("")
@@ -46,8 +45,7 @@ export default function RejectPaymentDialog({
   const isPartialPayment =
     selectedReason === PARTIAL_PAYMENT_REJECTION_REASON_KEY
   const normalizedDetails = rejectionDetails.trim()
-  const canSubmit =
-    selectedReason !== null && (!isOtherReason || normalizedDetails.length > 0)
+  const canSubmit = selectedReason !== null
 
   function resetForm() {
     setSelectedReason(null)
@@ -64,15 +62,19 @@ export default function RejectPaymentDialog({
       : {
           status: "rejected",
           rejection_reason: selectedReason,
-          rejection_details: isOtherReason ? normalizedDetails : null,
+          rejection_details: isOtherReason ? normalizedDetails || null : null,
         }
 
     router.patch(paymentsRoutes.update(paymentId).url, payload, {
       preserveState: true,
-      onSuccess: () => {
-        setOpen(false)
+      onSuccess: (page) => {
         resetForm()
-        onReviewed?.(isPartialPayment ? "partial" : "rejected")
+        const hasAlert =
+          (page?.props as { flash?: { alert?: string } } | undefined)?.flash
+            ?.alert ?? page?.flash?.alert
+        if (!hasAlert) {
+          onReviewed?.(isPartialPayment ? "partial" : "rejected")
+        }
       },
       onFinish: () => setProcessing(false),
     })
@@ -82,12 +84,10 @@ export default function RejectPaymentDialog({
     <AdaptableDialog
       open={open}
       onOpenChange={(nextOpen) => {
-        setOpen(nextOpen)
+        onOpenChange(nextOpen)
         if (!nextOpen) resetForm()
       }}
     >
-      {children}
-
       <AdaptableDialogContent>
         <AdaptableDialogHeader>
           <AdaptableDialogTitle>
@@ -103,21 +103,21 @@ export default function RejectPaymentDialog({
           onValueChange={(reason) =>
             setSelectedReason(reason as PaymentReviewIssueKey)
           }
+          required
           className="gap-2 px-4 sm:px-0"
         >
           {PAYMENT_REVIEW_ISSUE_KEYS.map((reason) => {
             const id = `payment-rejection-${reason}`
 
             return (
-              <FieldLabel key={reason} htmlFor={id}>
+              <FieldLabel
+                key={reason}
+                htmlFor={id}
+                className="hover:border-primary/50 has-data-[state=checked]:border-border has-data-[state=checked]:bg-transparent dark:has-data-[state=checked]:bg-transparent"
+              >
                 <Field
                   orientation="horizontal"
-                  className={cn(
-                    "cursor-pointer rounded-lg border p-3 transition-colors",
-                    selectedReason === reason
-                      ? "border-primary bg-primary/5"
-                      : "hover:border-primary/50",
-                  )}
+                  className="cursor-pointer transition-colors"
                 >
                   <RadioGroupItem
                     id={id}
@@ -155,7 +155,7 @@ export default function RejectPaymentDialog({
             className="h-12 min-w-0 flex-1 whitespace-normal"
             disabled={processing}
             onClick={() => {
-              setOpen(false)
+              onOpenChange(false)
               resetForm()
             }}
           >

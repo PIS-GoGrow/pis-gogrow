@@ -26,6 +26,11 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
     row.payable_amount.to_f
   end
 
+  typelize :number
+  attribute :outstanding_amount do |row|
+    row.account.outstanding_amount.to_f
+  end
+
   typelize "'consumer' | 'company'"
   attribute :source do |row|
     row.company? ? "company" : "consumer"
@@ -67,6 +72,11 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   end
 
   typelize :string
+  attribute :month_name do |row|
+    I18n.l(row.month, format: "%B").downcase
+  end
+
+  typelize :string
   attribute :due_date do |row|
     DateFormat.short(row.due_date)
   end
@@ -82,6 +92,11 @@ class Provider::CollectionAccountSerializer < ApplicationSerializer
   typelize :number, nullable: true
   attribute :payment_id do |row|
     row.account.payment_pending_review&.id || row.account.last_payment&.id
+  end
+
+  typelize :number, nullable: true
+  attribute :expected_amount do |row|
+    row.account.payment_pending_review&.expected_amount&.to_f
   end
 
   typelize :string, nullable: true
