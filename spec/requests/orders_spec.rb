@@ -1151,8 +1151,8 @@ RSpec.describe "Orders", type: :request do
       before do
         travel_back
         travel_to Time.zone.local(2026, 10, 31, 14, 0)
-        # Las fixtures usan la fecha real y pueden ocupar fechas fijas de este escenario.
-        Schedule.where(date: [ Date.new(2026, 10, 31), Date.new(2026, 11, 2), Date.new(2026, 11, 4) ])
+        # Las fixtures usan la fecha real: schedules(:past) puede colisionar según Date.current.
+        Schedule.where(date: [ Date.new(2026, 10, 31), Date.new(2026, 11, 2), Date.new(2026, 11, 4), Date.new(2026, 11, 16) ])
                 .where.not(id: [ schedules(:today).id, schedules(:future).id ]).destroy_all
         schedules(:today).update_columns(date: Date.new(2026, 10, 31))
         schedules(:future).update_columns(date: Date.new(2026, 11, 4))

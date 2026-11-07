@@ -647,8 +647,12 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   describe "POST /orders con precio esperado inconsistente" do
     before do
       sign_in consumer_user, role: :consumer
-      schedule.update!(date: Date.current.next_week(:monday), available: true)
-      schedules(:sorrentinos_today).update!(date: Date.current.next_week(:monday), available: true)
+      order_date = Calendar.new.allowed_order_dates.first
+      Schedule.where(menu: [ schedule.menu, schedules(:sorrentinos_today).menu ], date: order_date)
+              .where.not(id: [ schedule.id, schedules(:sorrentinos_today).id ]).destroy_all
+      schedule.update_columns(date: order_date, available: true)
+      schedules(:sorrentinos_today).update_columns(date: order_date, available: true)
+      benefits(:monthly).update_columns(due_date: order_date)
     end
 
     it "no hace el pedido y muestra error" do
