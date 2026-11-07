@@ -164,6 +164,16 @@
       "month_select": {
         "this_month": "Este mes"
       },
+      "network_status": {
+        "offline": {
+          "description": "No pudimos cargar la página. Revisá tu conexión y volvé a intentar.",
+          "title": "Sin conexión a internet"
+        },
+        "online": {
+          "description": "Ya podés seguir navegando.",
+          "title": "Volvió la conexión"
+        }
+      },
       "password_fields": {
         "confirm_label": "Confirmar contraseña",
         "create_label": "Crear contraseña",
@@ -223,8 +233,8 @@
     },
     "notification_configurations": {
       "automatic_payment_reminders": {
-        "description": "Avisos sobre la apertura y el vencimiento próximo de pagos.",
-        "title": "Recordatorios automáticos de pago"
+        "description": "Avisos sobre la apertura y el vencimiento próximo de tus pagos.",
+        "title": "Recordatorios de pago"
       },
       "company_payments": {
         "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
@@ -329,8 +339,8 @@
       },
       "employee_debt_overdue": {
         "description": {
-          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio.",
-          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarle un recordatorio.",
+          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarles un recordatorio."
         },
         "title": "Hay empleados con pagos pendientes"
       },
@@ -676,7 +686,7 @@
           },
           "coming_soon": "Próximamente",
           "debts": {
-            "empty": "Ningún empleado tiene saldos pendientes en este mes.",
+            "empty": "Ningún empleado tiene saldos pendientes.",
             "title": "Ranking deuda de empleados",
             "view": "Ver empleados con saldos pendientes"
           },
@@ -991,6 +1001,8 @@
       },
       "consumer_profiles": {
         "show": {
+          "account": "Cuenta",
+          "account_description": "Modificá tu teléfono, nombre, correo, contraseña y apariencia",
           "addresses": "Direcciones",
           "addresses_description": "Gestioná tus direcciones de entrega",
           "benefit": "Mi beneficio",
@@ -1009,7 +1021,7 @@
           "notifications_description": "Configurá qué alertas querés recibir",
           "settings": "Configuración",
           "sign_out": "Salir",
-          "title": "Mi cuenta"
+          "title": "Cuenta"
         }
       },
       "dashboard": {
@@ -1129,6 +1141,7 @@
           "history_empty_title": "No tenés pedidos anteriores",
           "history_filtered_empty_description": "No tenés pedidos anteriores realizados a este proveedor.",
           "history_filtered_empty_title": "No hay pedidos de este proveedor",
+          "history_loading": "Cargando pedidos anteriores…",
           "history_tab": "Historial",
           "no_address": "Sin dirección de entrega",
           "no_date": "Sin fecha de entrega",
@@ -1187,7 +1200,7 @@
           "payment_details": "Datos de cobro",
           "payment_details_description": "Configurá dónde querés recibir tus cobros",
           "profile": "Perfil",
-          "profile_description": "Actualizá tu nombre y tu teléfono",
+          "profile_description": "Editá tu nombre, correo, teléfono, contraseña y apariencia",
           "settings": "Configuración",
           "sign_out": "Salir",
           "title": "Cuenta"
@@ -2045,12 +2058,13 @@
           "description": "Actualizá tu dirección de correo y verificala",
           "heading": "Actualizar correo electrónico",
           "resend": "Hacé clic aquí para reenviar el correo de verificación.",
+          "submit": "Guardar correo",
           "title": "Configuración de correo",
           "unverified": "Tu dirección de correo no está verificada."
         },
         "notifications": {
           "back": "Volver a Cuenta",
-          "back_to_account": "Volver a Mi cuenta",
+          "back_to_account": "Volver a Cuenta",
           "description": "Configurá qué alertas querés recibir por WhatsApp",
           "heading": "Notificaciones",
           "preferences_description": "Activá o desactivá las categorías de avisos que querés recibir.",

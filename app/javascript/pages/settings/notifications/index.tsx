@@ -44,6 +44,7 @@ export default function Notifications({
       <SettingsPageLayout
         title={t("pages.settings.notifications.heading")}
         description={t("pages.settings.notifications.description")}
+        titleVariant="prominent"
         adminBackLabel={t("pages.settings.notifications.back")}
         consumerMobileBackHref={
           auth.session.role === "consumer"
