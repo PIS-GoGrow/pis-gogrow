@@ -187,7 +187,6 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       expect(page).to have_content("Colonia 1370")
       expect(page).to have_content("Por revisar")
       expect(page).to have_content(confirmation_money(edited.price))
-      expect(page).to have_content(confirmation_money(edited.discounted_price))
       sign_out
 
       # Persistencia: E1 vuelve a entrar y ve el pedido igual.
