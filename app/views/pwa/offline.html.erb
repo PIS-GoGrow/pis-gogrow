@@ -1,60 +1,160 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sin conexión</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #ffffff;
+      --fg: #000000;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000;
+        --fg: #ffffff;
+      }
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      box-sizing: border-box;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      background-color: var(--bg);
+      color: var(--fg);
+    }
+
+    button {
+      font: inherit;
+      color: var(--fg);
+      background-color: var(--bg);
+      border: 1px solid var(--fg);
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+
+    #orders-section {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #orders-section.visible {
+      display: flex;
+    }
+
+    #orders p {
+      margin: 0.5rem 0;
+    }
+  </style>
 </head>
 <body>
   <h1>Sin conexión</h1>
-  <p>Estos son los próximos pedidos guardados:</p>
 
-  <div id="orders">Cargando pedidos...</div>
+  <section id="orders-section">
+    <p>Estos son los próximos pedidos guardados:</p>
+    <div id="orders"></div>
+  </section>
 
-  <button onclick="location.reload()">Reintentar</button>
+  <button type="button" onclick="location.reload()">Reintentar</button>
 
   <script>
-    const request = indexedDB.open("provider-offline");
+    (function () {
+      const section = document.getElementById("orders-section");
+      const container = document.getElementById("orders");
 
-    request.onsuccess = () => {
-      const db = request.result;
-      const transaction = db.transaction("orders", "readonly");
-      const store = transaction.objectStore("orders");
-
-      const query = store.get("current");
-
-      query.onsuccess = () => {
-        const container = document.getElementById("orders");
-        const cached = query.result;
-
-        if (!cached) {
-          container.textContent = "No hay pedidos guardados.";
-          return;
-        }
+      function render(cached) {
+        const savedAt = new Date(cached.saved_at);
 
         container.replaceChildren();
 
-        const heading = document.createElement("p");
-        heading.textContent =
-          `Última actualización: ${new Date(cached.saved_at).toLocaleString("es-UY")}`;
-
-        container.appendChild(heading);
+        if (!isNaN(savedAt)) {
+          const heading = document.createElement("p");
+          heading.textContent = `Última actualización: ${savedAt.toLocaleString("es-UY")}`;
+          container.appendChild(heading);
+        }
 
         cached.upcoming_orders.forEach((order) => {
           const item = document.createElement("p");
-
           // Adaptar a la estructura real de tus pedidos.
           item.textContent = JSON.stringify(order);
-
           container.appendChild(item);
         });
-      };
-    };
 
-    request.onerror = () => {
-      document.getElementById("orders").textContent =
-        "No se pudieron recuperar los pedidos.";
-    };
+        section.classList.add("visible");
+      }
+
+      function loadOrders() {
+        let request;
+
+        try {
+          request = indexedDB.open("provider-offline");
+        } catch (e) {
+          return;
+        }
+
+        request.onupgradeneeded = () => {
+          // La base no existía: cancelar para no crear una base vacía.
+          request.transaction.abort();
+        };
+
+        request.onerror = () => {
+          // Fallo silencioso: no se muestra nada.
+        };
+
+        request.onsuccess = () => {
+          const db = request.result;
+
+          try {
+            if (!db.objectStoreNames.contains("orders")) {
+              db.close();
+              return;
+            }
+
+            const tx = db.transaction("orders", "readonly");
+            const get = tx.objectStore("orders").get("current");
+
+            get.onsuccess = () => {
+              const cached = get.result;
+
+              if (
+                cached &&
+                Array.isArray(cached.upcoming_orders) &&
+                cached.upcoming_orders.length > 0
+              ) {
+                render(cached);
+              }
+
+              db.close();
+            };
+
+            get.onerror = () => db.close();
+            tx.onabort = () => db.close();
+          } catch (e) {
+            db.close();
+          }
+        };
+      }
+
+      loadOrders();
+    })();
   </script>
 </body>
 </html>
