@@ -157,6 +157,10 @@ Rails.application.routes.draw do
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   get "up" => "rails/health#show", as: :rails_health_check
 
+  get "offline", to: "pwa#index"
+  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
+  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
+
   match "500", to: "errors#internal_server_error", via: :all, format: false
   get "*unmatched_path", to: "errors#not_found", format: false,
       constraints: ->(request) { !request.path.start_with?("/rails/active_storage") }

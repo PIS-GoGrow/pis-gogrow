@@ -358,11 +358,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
   create_table "payments", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
+    t.decimal "expected_amount", precision: 10, scale: 2
     t.bigint "provider_id"
     t.text "rejection_reason"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.decimal "expected_amount", precision: 10, scale: 2
     t.index ["account_id"], name: "index_payments_on_account_id"
     t.index ["account_id"], name: "index_payments_on_account_id_submitted", unique: true, where: "(status = 1)"
     t.index ["provider_id"], name: "index_payments_on_provider_id"
