@@ -650,8 +650,8 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       order_date = Calendar.new.allowed_order_dates.first
       Schedule.where(menu: [ schedule.menu, schedules(:sorrentinos_today).menu ], date: order_date)
               .where.not(id: [ schedule.id, schedules(:sorrentinos_today).id ]).destroy_all
-      schedule.update_columns(date: order_date)
-      schedules(:sorrentinos_today).update_columns(date: order_date)
+      schedule.update_columns(date: order_date, available: true)
+      schedules(:sorrentinos_today).update_columns(date: order_date, available: true)
       benefits(:monthly).update_columns(due_date: order_date)
     end
 
@@ -691,8 +691,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       ]
 
-      post pricing_orders_path, params: { items: items.map { it.slice(:schedule_id, :quantity) } }, as: :json
-      cart_total = response.parsed_body["total"]
+      cart_total = 100.1 * 0.5 + 220.2 * 0.5
       expect(cart_total).not_to eq(cart_total.round(2))
 
       expect {

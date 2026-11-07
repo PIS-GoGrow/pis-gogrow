@@ -14,7 +14,6 @@ RSpec.describe "Gestión de pedidos del proveedor en el celular", type: :system 
   let(:provider_user) { users(:provider_user) }
   let(:consumer_user) { users(:one) }
   let(:order) { orders(:upcoming_pending_today) }
-  let(:order_code) { "PED-#{order.id}" }
 
   # El contenedor de test tarda decenas de segundos en procesar la respuesta
   # de una acción Inertia; con los 30s por defecto la aserción gana antes.
@@ -37,10 +36,10 @@ RSpec.describe "Gestión de pedidos del proveedor en el celular", type: :system 
     expect(page).to have_current_path(provider_orders_path)
     expect(page).to have_css(
       "button[aria-expanded='true']",
-      text: "Día: #{DateFormat.short(Date.current)}"
+      text: "Día: #{Date.current.strftime("%d/%m")}"
     )
 
-    within("[data-slot='card']", text: order_code) do
+    within(provider_order_card(order)) do
       expect(page).to have_content("Test User - GoGrow")
       expect(page).to have_content("Milanesa con papas fritas")
       expect(page).to have_content("x1")
@@ -57,13 +56,13 @@ RSpec.describe "Gestión de pedidos del proveedor en el celular", type: :system 
     visit_hydrated provider_orders_path
     without_animations
 
-    within("[data-slot='card']", text: order_code) { click_button "Confirmar" }
+    within(provider_order_card(order)) { click_button "Confirmar" }
 
     expect(page).to have_content("Pedido confirmado")
     expect(page).to have_content("quedó confirmado y Test User recibirá una notificación")
     click_button "Listo"
 
-    within("[data-slot='card']", text: order_code) do
+    within(provider_order_card(order)) do
       expect(page).to have_content("Confirmado")
     end
     expect(order.reload).to be_confirmed
@@ -81,7 +80,7 @@ RSpec.describe "Gestión de pedidos del proveedor en el celular", type: :system 
     visit_hydrated provider_orders_path
     without_animations
 
-    within("[data-slot='card']", text: order_code) { click_button "Rechazar" }
+    within(provider_order_card(order)) { click_button "Rechazar" }
 
     expect(page).to have_content("¿Rechazar pedido?")
     find("label", text: "Otro motivo").click
@@ -92,7 +91,7 @@ RSpec.describe "Gestión de pedidos del proveedor en el celular", type: :system 
     expect(page).to have_content("Test User recibirá una notificación")
     click_button "Listo"
 
-    within("[data-slot='card']", text: order_code) do
+    within(provider_order_card(order)) do
       expect(page).to have_content("Rechazado")
     end
 
@@ -101,7 +100,7 @@ RSpec.describe "Gestión de pedidos del proveedor en el celular", type: :system 
     expect(order.rejection_reason).to eq("other")
     expect(order.rejection_details).to eq("Sin ingredientes para la salsa")
 
-    within("[data-slot='card']", text: order_code) { click_link "Test User - GoGrow" }
+    within(provider_order_card(order)) { click_link "Test User - GoGrow" }
 
     expect(page).to have_content("Detalle de pedido")
     expect(page).to have_content("Rechazado")
@@ -123,7 +122,7 @@ RSpec.describe "Gestión de pedidos del proveedor en el celular", type: :system 
     visit_hydrated provider_orders_path
     without_animations
 
-    within("[data-slot='card']", text: order_code) { click_button "Rechazar" }
+    within(provider_order_card(order)) { click_button "Rechazar" }
 
     expect(page).to have_button("Rechazar pedido", disabled: true)
 

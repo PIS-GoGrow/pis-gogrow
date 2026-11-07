@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 
 import ListItemCard from "@/components/list-item-card"
 import ProviderOrderActions from "@/components/orders/provider-order-actions"
+import type { ProviderOrderDecision } from "@/components/orders/provider-order-decided-sheet"
 import StatusBadge from "@/components/status-badge"
 import {
   CardAction,
@@ -24,9 +25,13 @@ const quantityStyles: Record<OrderStatus, string> = {
 
 interface ProviderOrderCardProps {
   order: ProviderOrder
+  onDecided: (decision: ProviderOrderDecision) => void
 }
 
-export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
+export default function ProviderOrderCard({
+  order,
+  onDecided,
+}: ProviderOrderCardProps) {
   const { t } = useTranslation()
 
   const customer = order.consumer_company
@@ -37,18 +42,15 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
   )
 
   return (
-    <ListItemCard className="relative">
+    <ListItemCard className="relative max-lg:gap-2.5 max-lg:shadow-none">
       <CardHeader>
-        <CardDescription>
+        <CardDescription className="mt-1">
           <Link
             href={providerOrders.show(order.id).url}
             className="after:absolute after:inset-0 hover:underline"
           >
             {customer}
           </Link>
-          <span className="block text-xs">
-            {t("pages.provider_orders.index.code", { id: order.id })}
-          </span>
         </CardDescription>
         <CardAction>
           <StatusBadge status={order.status} kind="provider_order" />
@@ -64,7 +66,7 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
             })}
           </span>
         </p>
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground text-sm lg:text-xs">
           {order.address
             ? `${t("pages.provider_orders.index.ship_to")} ${order.address}`
             : t("pages.provider_orders.index.no_address")}{" "}
@@ -72,10 +74,10 @@ export default function ProviderOrderCard({ order }: ProviderOrderCardProps) {
         </p>
       </CardContent>
 
-      <CardFooter>
+      <CardFooter className="empty:hidden max-lg:mt-1.5">
         <ProviderOrderActions
           order={order}
-          keepVisible
+          onDecided={onDecided}
           className="relative w-full"
         />
       </CardFooter>
