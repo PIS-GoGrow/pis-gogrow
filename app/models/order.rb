@@ -83,14 +83,29 @@ class Order < ApplicationRecord
       .order(Schedule.arel_table[:date].asc)
   }
 
+  # Lo que ya generó deuda: un pedido confirmado se cobra recién desde el día de
+  # su entrega. Como ese corte depende de la fecha, DeliveredOrdersSyncJob
+  # recalcula cada día las cuentas de los pedidos que se entregan ese día.
+  scope :consumed, -> { confirmed.where(delivery_date: nil).or(confirmed.where(delivery_date: ..Date.current)) }
+
   # Definido como el complemento de upcoming para que las dos secciones
   # particionen las órdenes: sin esto, una orden sin schedule (schedule_id es
   # nullable por el dependent: :nullify) se caería de ambas listas.
   scope :history, -> {
     where.not(id: upcoming.reorder(nil).select(:id))
       .left_joins(:schedule)
-      .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC NULLS LAST"))
+      .order(Arel.sql("COALESCE(schedules.date, orders.delivery_date) DESC NULLS LAST"), id: :desc)
   }
+
+  # Lo que cuenta es la fecha de entrega. Un pedido sin ninguna (sin schedule
+  # ni delivery_date) queda del lado reciente: no hay que recorrer todo el
+  # historial para verlo.
+  scope :delivered_since, ->(date) {
+    left_joins(:schedule)
+      .where("COALESCE(schedules.date, orders.delivery_date) >= ? OR COALESCE(schedules.date, orders.delivery_date) IS NULL", date)
+  }
+  scope :delivered_before, ->(date) { left_joins(:schedule).where("COALESCE(schedules.date, orders.delivery_date) < ?", date) }
+
   after_create :ensure_accounts!
   after_save :record_event
   after_update_commit :sync_accounts,
@@ -102,6 +117,8 @@ class Order < ApplicationRecord
 
   after_update_commit :notify_confirmed, if: -> { saved_change_to_status? && confirmed? }
   after_update_commit :notify_rejected, if: -> { saved_change_to_status? && rejected? }
+  after_update_commit :refresh_received_notification,
+    if: -> { saved_change_to_amount? && pending? }
   after_create_commit :notify_received
 
   # Inicializa una orden con el precio que calculó OrderPricing. benefits es un arreglo
@@ -367,6 +384,8 @@ class Order < ApplicationRecord
   def provider_name = super || provider&.user&.name
   def delivery_date = super || schedule&.date
 
+  def consumed? = confirmed? && (delivery_date.nil? || delivery_date <= Date.current)
+
   # Asigna la orden a las dos cuentas que le corresponden y las hace recalcular
   # su monto: la del empleado, que paga su parte, y la de su empresa, que paga el
   # subsidio. Es idempotente, así que sirve también para completar las cuentas de
@@ -423,13 +442,37 @@ class Order < ApplicationRecord
       event_key: :order_received,
       user: provider.user,
       notifiable: self,
-      description_data: {
-        consumer: consumer.user.name,
-        amount:,
-        dish: menu_name,
-        date: DateFormat.long(schedule.date, inline: true)
-      }
+      description_data: order_received_description_data
     )
+  end
+
+  def refresh_received_notification
+    target_provider = provider
+    return unless target_provider&.user
+
+    notification = target_provider.user.notifications
+      .active
+      .find_by(event: "order_received", notifiable: self)
+
+    if notification
+      notification.update!(
+        description: I18n.t!(
+          "notifications.order_received.description",
+          **order_received_description_data
+        )
+      )
+    else
+      notify_received
+    end
+  end
+
+  def order_received_description_data
+    {
+      consumer: consumer.user.name,
+      amount:,
+      dish: menu_name,
+      date: DateFormat.long(schedule.date, inline: true)
+    }
   end
 
   def notify_rejected

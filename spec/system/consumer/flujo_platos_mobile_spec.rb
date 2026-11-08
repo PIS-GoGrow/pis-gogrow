@@ -125,4 +125,24 @@ RSpec.describe "Flujo mobile de selección de platos del empleado", type: :syste
     expect(page).to have_current_path(orders_path)
     expect(page).to have_content("Mis pedidos")
   end
+
+  it "mantiene el monto a pagar en la barra fija al scrollear el detalle del plato" do
+    visit_hydrated dashboard_path
+    calm_animations
+    find_button("Agregar #{sorrentinos.name}").click
+    calm_animations
+
+    total = find("span", text: "Monto a pagar")
+    bar = total.find(:xpath, "ancestor::div[contains(@class, 'fixed')]")
+    expect(bar).to have_button("Agregar")
+    expect(page).to have_no_css("div.fixed", text: "Precio vianda")
+
+    page.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+    viewport_height = page.evaluate_script("window.innerHeight")
+    top = page.evaluate_script("arguments[0].getBoundingClientRect().top", total.native)
+    bottom = page.evaluate_script("arguments[0].getBoundingClientRect().bottom", total.native)
+
+    expect(top).to be >= 0
+    expect(bottom).to be <= viewport_height
+  end
 end

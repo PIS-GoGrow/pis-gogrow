@@ -3,22 +3,29 @@
 class Consumer::OrdersController < Consumer::InertiaController
   before_action :set_consumer
 
+  class InconsistentPricing < StandardError
+    attr_reader :price, :expected_price
+
+    def initialize(price: nil, expected_price: nil)
+      @price = price
+      @expected_price = expected_price
+    end
+  end
+
   def index
     orders = @consumer.orders.preload(:review, provider: :user, schedule: { menu: { provider: :user } })
 
     @upcoming_orders = orders.upcoming
-    @past_orders = orders.history.where(created_at: (Date.current - 3.months)..)
-
-    @providers = (@upcoming_orders + @past_orders)
-      .map(&:provider)
-      .compact_blank
-      .uniq
+    @past_orders, @past_orders_page = paginate_history(orders.history)
+    @providers = Provider.where(id: @consumer.orders.select(:provider_id)).joins(:user).preload(:user).order("users.name")
   end
 
   def show
     # El find va sobre las órdenes del empleado y no sobre Order: pedir la de otro
     # tiene que ser un 404, no una página ajena.
     @order = @consumer.orders.preload(:review).find(params[:id])
+    # El detalle usa la misma clasificación que la pestaña Historial.
+    @historical = @consumer.orders.history.exists?(@order.id)
   end
 
   def edit
@@ -76,6 +83,13 @@ class Consumer::OrdersController < Consumer::InertiaController
         end
       )
 
+      total = pricings.sum { it[1].discounted_price }
+      expected_price = order_params[:expected_price]&.to_f&.round 2
+
+      if !order_params[:expected_price].nil? && total != expected_price
+        raise InconsistentPricing.new(price: total, expected_price: expected_price)
+      end
+
       requested_items.zip(pricings).each do |item, pricing|
         quantity = item[:quantity].to_i
         schedule = schedules.fetch(item[:schedule_id].to_i)
@@ -116,6 +130,10 @@ class Consumer::OrdersController < Consumer::InertiaController
     reject_order(order_error_reason(error.record))
   rescue ActiveRecord::RecordNotFound, KeyError
     reject_order(:cart_unavailable)
+  rescue InconsistentPricing => error
+    reject_order(:inconsistent_pricing, data: {
+      price: Account.format_amount(error.price), expected_price: Account.format_amount(error.expected_price)
+    })
   end
 
   def update
@@ -171,6 +189,23 @@ class Consumer::OrdersController < Consumer::InertiaController
 
   private
 
+  # La primera carga del historial son los últimos tres meses por fecha de
+  # entrega; el scroll trae los anteriores de a 20, hasta el primero.
+  def paginate_history(history)
+    page = [ params[:page].to_i, 1 ].max
+    older = history.delivered_before(Date.current - 3.months)
+
+    if page == 1
+      orders = history.delivered_since(Date.current - 3.months)
+      next_page = 2 if older.exists?
+    else
+      orders = older.offset((page - 2) * 20).limit(20)
+      next_page = page + 1 if older.offset((page - 1) * 20).exists?
+    end
+
+    [ orders, { page_name: "page", current_page: page, previous_page: (page - 1 if page > 1), next_page: } ]
+  end
+
   # Convierte las id de schedule
   def build_requested_items
     requested_items = pricing_params
@@ -195,9 +230,9 @@ class Consumer::OrdersController < Consumer::InertiaController
     redirect_to edit_order_path(order), alert: t("validations.#{reason}"), status: :see_other
   end
 
-  def reject_order(reason)
+  def reject_order(reason, data: {})
     redirect_to dashboard_cart_path, inertia: {
-      errors: { order_error: t("validations.#{reason}") }
+      errors: { order_error: t("validations.#{reason}", **data) }
     }, status: :see_other
   end
 
@@ -266,7 +301,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def order_params
-    params.expect(order: [ :address, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] }, benefits: [] ] ] ])
+    params.expect(order: [ :address, :expected_price, items: [ [ :schedule_id, :quantity, :notes, { options: [ [ :group_id, { values: [] } ] ] }, benefits: [] ] ] ])
   end
 
   def pricing_params

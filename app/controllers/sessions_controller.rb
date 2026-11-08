@@ -60,6 +60,7 @@ class SessionsController < InertiaController
     else
       root_path
     end
+
     @session.destroy!
     cookies.delete(:session_token)
     Current.session = nil

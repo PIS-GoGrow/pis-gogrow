@@ -11,6 +11,15 @@ RSpec.describe AdminConsumerSummary do
   let(:provider2) { providers(:endulzate) }
   let(:summary) { described_class.new(consumer) }
 
+  it "summarizes an account with only partial payments as partial instead of nil" do
+    account = Account.create!(owner: consumer, provider: provider2, month: Date.current.next_month, amount: 300)
+    payment = account.payments.build(provider: provider2, status: :partial)
+    payment.receipt.attach(io: Rails.root.join("public/icon.png").open, filename: "parcial.png", content_type: "image/png")
+    payment.save!
+
+    expect(described_class.status_of([ account ])).to eq("partial")
+  end
+
   describe "#current_month" do
     before do
       Order.destroy_all

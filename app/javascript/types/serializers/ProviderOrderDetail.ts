@@ -6,20 +6,19 @@ import type {OrderStatus, OrderDeliveryMethod, OrderRejectionReason} from '@/typ
 type ProviderOrderDetail = {
   id: number;
   status: OrderStatus;
-  amount: number | null;
-  notes: string | null;
+  amount: number;
   delivery_method: OrderDeliveryMethod;
+  notes: string | null;
   price: number;
-  date: string | null;
   rejectable: boolean;
+  date: string;
   time: string;
   consumer_name: string;
-  consumer_company: string | null;
+  consumer_company: string;
   menu_name: string;
   address: string | null;
   consumer_email: string;
   created_on: string;
-  menu_description: string | null;
   menu_option_groups: Array<{ id: number; name: string; options: string[]; limit: number }>;
   selected_options: Array<{ group_id: number; name: string; values: string[] }>;
   discounted_price: number | null;
@@ -28,4 +27,4 @@ type ProviderOrderDetail = {
   rejection_details: string | null;
 }
 
-export type { ProviderOrderDetail };
+export default ProviderOrderDetail;

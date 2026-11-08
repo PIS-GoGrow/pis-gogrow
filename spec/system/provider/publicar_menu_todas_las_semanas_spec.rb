@@ -73,6 +73,7 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
     fill_in "description", with: "Salteado con salsa de soja"
     fill_in "price", with: "320"
 
+    clear_weekdays
     find("label", text: "Repetir todas las semanas").click
     expect(page).to have_selector("#agenda-mode-weekly[data-state='checked']")
 

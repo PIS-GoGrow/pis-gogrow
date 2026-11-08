@@ -115,4 +115,16 @@ describe("ProviderMobileNav", () => {
       "page",
     )
   })
+
+  it("marca Cuenta como la página actual en Datos de cobro", () => {
+    page.url = "/proveedor/datos-de-cobro"
+    page.component = "provider/payment_details/show"
+
+    const menu = nav()
+
+    expect(menu.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+  })
 })

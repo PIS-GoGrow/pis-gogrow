@@ -53,6 +53,21 @@ RSpec.describe "Cierre de recepción de pedidos visto por el proveedor" do
     expect(page).to have_no_content(closed)
   end
 
+  # Criterio 3 (IBP-067 CA3): el estado se actualiza automáticamente al llegar la hora
+  # límite sin necesidad de recargar la página manualmente.
+  it "automatically switches reception status to closed when reaching the deadline without reloading" do
+    provider.update!(order_deadline: Time.zone.parse("12:01"))
+    travel_to(Time.zone.local(monday.year, monday.month, monday.day, 12, 0, 55))
+
+    visit_dashboard_as_provider
+    expect(page).to have_link(open_until("12:01"))
+
+    travel_to(Time.zone.local(monday.year, monday.month, monday.day, 12, 1, 5))
+
+    expect(page).to have_link(closed, wait: 15)
+    expect(page).to have_no_content(open_until("12:01"))
+  end
+
   # Criterio 4: el borde. Un minuto antes sigue abierta; justo en la hora y después
   # se muestra cerrada, sin ninguna hora vencida.
   it "keeps receiving orders a minute before the deadline" do

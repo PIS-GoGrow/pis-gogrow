@@ -104,10 +104,11 @@ class Provider::OrdersExport
   end
 
   def total_row
+    counted = orders.reject { it.cancelled? || it.rejected? }
     cells = Array.new(COLUMNS.size)
     cells[0] = I18n.t("exports.provider_orders.total")
-    cells[COLUMNS.index(:amount)] = orders.sum { it.amount.to_i }
-    cells[COLUMNS.index(:price)] = orders.sum { it.price.to_d }
+    cells[COLUMNS.index(:amount)] = counted.sum { it.amount.to_i }
+    cells[COLUMNS.index(:price)] = counted.sum { it.price.to_d }
     cells
   end
 

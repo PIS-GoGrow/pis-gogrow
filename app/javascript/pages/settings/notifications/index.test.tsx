@@ -89,7 +89,7 @@ describe("Notification preferences", () => {
     render(<Notifications {...props()} />)
 
     expect(
-      screen.getByRole("link", { name: "Volver a Mi cuenta" }),
+      screen.getByRole("link", { name: "Volver a Cuenta" }),
     ).toHaveAttribute("href", consumerProfiles.show().url)
   })
 })

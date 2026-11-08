@@ -85,7 +85,7 @@ RSpec.describe "Consultar el menú disponible por fecha" do
 
     open_provider_filter
     within("[data-provider-filter-sheet]") do
-      all("[role=checkbox]").reject { |checkbox| checkbox[:id] == "dashboard-filter-all" || checkbox[:id] == "dashboard-filter-#{menus(:milanesa).provider_id}" }.each(&:click)
+      find("#dashboard-filter-#{menus(:milanesa).provider_id}").click
       click_button "Aplicar"
     end
     expect(page).to have_no_content("Sorrentinos artesanales")

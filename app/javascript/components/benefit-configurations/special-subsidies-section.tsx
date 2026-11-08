@@ -12,6 +12,7 @@ import DeleteSpecialSubsidyDialog from "@/components/benefit-configurations/dele
 import SpecialSubsidyCard from "@/components/benefit-configurations/special-subsidy-card"
 import SpecialSubsidyForm from "@/components/benefit-configurations/special-subsidy-form"
 import { Button } from "@/components/ui/button"
+import { useIsMobile } from "@/hooks/use-mobile"
 import type { Employee, SpecialSubsidy } from "@/types/serializers"
 
 interface SpecialSubsidiesSectionProps {
@@ -24,6 +25,7 @@ export default function SpecialSubsidiesSection({
   employees,
 }: SpecialSubsidiesSectionProps) {
   const { t } = useTranslation()
+  const isMobile = useIsMobile()
   const [sheetOpen, setAdaptableDialogOpen] = useState(false)
   const [editing, setEditing] = useState<SpecialSubsidy | undefined>()
   const [formKey, setFormKey] = useState(0)
@@ -52,7 +54,7 @@ export default function SpecialSubsidiesSection({
             {t("pages.admin.benefit_configurations.index.special.add")}
           </Button>
         </div>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-base text-[#737373] dark:text-neutral-400">
           {t("pages.admin.benefit_configurations.index.special.description")}
         </p>
       </div>
@@ -89,8 +91,12 @@ export default function SpecialSubsidiesSection({
       )}
 
       <AdaptableDialog open={sheetOpen} onOpenChange={setAdaptableDialogOpen}>
-        <AdaptableDialogContent showCloseButton={false} className="p-5">
-          <div className="bg-muted mx-auto mb-2 h-1.5 w-12 rounded-full sm:hidden" />
+        <AdaptableDialogContent
+          showCloseButton={false}
+          className="p-5"
+          // En el celular, enfocar el primer campo abre el teclado sobre el sheet.
+          onOpenAutoFocus={(event) => isMobile && event.preventDefault()}
+        >
           <div className="flex flex-col gap-1">
             <AdaptableDialogTitle className="text-foreground text-base leading-6 font-semibold tracking-normal">
               {editing

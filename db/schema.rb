@@ -362,6 +362,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_162000) do
     t.text "rejection_reason"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.decimal "expected_amount", precision: 10, scale: 2
     t.index ["account_id"], name: "index_payments_on_account_id"
     t.index ["account_id"], name: "index_payments_on_account_id_submitted", unique: true, where: "(status = 1)"
     t.index ["provider_id"], name: "index_payments_on_provider_id"
@@ -380,9 +381,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_162000) do
   end
 
   create_table "providers", force: :cascade do |t|
-    t.string "bank_account_holder"
-    t.string "bank_account_number"
-    t.integer "bank_account_type"
+    t.string "beneficiary"
+    t.text "bank_account_details"
     t.string "bank_name"
     t.datetime "created_at", null: false
     t.datetime "deliveries_configured_at"

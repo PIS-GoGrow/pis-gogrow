@@ -17,7 +17,7 @@ RSpec.describe "Validación de comprobante de pago en español", type: :system d
 
     travel_to(Time.zone.local(closed_month.year, closed_month.month, 5, 12)) do
       menu = Menu.create!(provider:, name: "Torta de fiambre", description: "Porción", price: 500)
-      schedule = Schedule.create!(menu:, date: closed_month + 7)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer:, schedule:,

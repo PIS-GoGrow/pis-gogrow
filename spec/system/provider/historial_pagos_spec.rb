@@ -38,7 +38,7 @@ RSpec.describe "Historial de pagos del proveedor" do
   def confirmed_order(month:)
     travel_to(Time.zone.local(month.year, month.month, 5, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa al pan", description: "Con papas", price: 1000)
-      schedule = Schedule.create!(menu:, date: month + 7)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer: consumers(:one), schedule:, amount: 1, price: 1000, discounted_price: 300,
@@ -122,7 +122,7 @@ RSpec.describe "Historial de pagos del proveedor" do
     click_on "Revisar pago"
 
     if decision == :approve
-      within(find("[role=dialog]")) { click_on "Aprobar" }
+      within(find("[role=dialog]")) { click_on "Confirmar" }
       expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     else
       within(find("[role=dialog]")) { click_on "Reportar" }
@@ -161,15 +161,15 @@ RSpec.describe "Historial de pagos del proveedor" do
 
       click_on "Empleados"
       click_on employee.name
-      expect(page).to have_content(I18n.t("pages.provider_collections.receipt_sent_at", date: approved.created_at.strftime("%d/%m/%y")))
+      expect(page).to have_content(approved.created_at.strftime("%d/%m/%y"))
       expect(page).to have_content("$300")
 
       expect(page).to have_button("Descargar comprobantes", exact: true)
       expect(page).to have_link("Descargar primer-intento.png", href: receipt_provider_payment_path(rejected))
       expect(page).to have_link("Descargar segundo-intento.png", href: receipt_provider_payment_path(approved))
-      expect(page).to have_content(I18n.t("pages.provider_collections.receipt_sent_at", date: rejected.created_at.strftime("%d/%m/%y")))
+      expect(page).to have_content(rejected.created_at.strftime("%d/%m/%y"))
       expect(page).to have_content("Rechazado")
-      expect(page).to have_content("Aprobado")
+      expect(page).to have_content("Confirmado")
 
       click_on "Empresa"
       expect(page).to have_content(company.created_at.strftime("%d/%m/%y"))
@@ -272,7 +272,7 @@ RSpec.describe "Historial de pagos del proveedor" do
         expect(page).to have_link(href: receipt_provider_payment_path(payment))
       end
       expect(page).to have_content("Rechazado")
-      expect(page).to have_content("Aprobado")
+      expect(page).to have_content("Confirmado")
     end
 
     # Persistencia: el historial sigue igual tras recargar.

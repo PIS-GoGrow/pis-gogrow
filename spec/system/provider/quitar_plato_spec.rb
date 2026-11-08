@@ -122,7 +122,20 @@ RSpec.describe "Quitar un plato del menú publicado", type: :system do
       visit schedules_path(week_start: target_date.beginning_of_week(:monday).to_s)
       find("button", text: /\b#{target_date.day}\b/).click
 
-      expect(page).to have_content("No hay platos publicados para el")
+      expect(page).to have_content("No tenés platos publicados para el #{DateFormat.long(target_date, inline: true)}")
+    end
+
+    # El día de hoy tiene su propio texto, y la semana arranca parada en él.
+    it "dice «hoy» en el aviso de día vacío cuando el día elegido es hoy" do
+      travel_to(Date.current.next_occurring(:wednesday).noon) do
+        provider.closures.destroy_all
+        Schedule.where(date: Date.current).destroy_all
+
+        visit schedules_path
+
+        expect(page).to have_content("Hoy no tenés platos publicados")
+        expect(page).to have_content("Agregá platos a tu menú de hoy y empezá a recibir pedidos.")
+      end
     end
 
     it "filtra los platos del día con el buscador y avisa si no hay resultados" do

@@ -27,7 +27,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   def confirmed_order(consumer:, provider:, month:, quantity:, discounted_price:)
     travel_to(Time.zone.local(month.year, month.month, month.day, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa al pan", description: "Con papas", price: 1000)
-      schedule = Schedule.create!(menu:, date: month + 7)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer:, schedule:,
@@ -183,7 +183,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     # abrirlo primero (PaymentReviewSheet), al que se entra por "Revisar pago"
     # desde la fila del empleado.
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Aprobar" }
+    within(find("[role=dialog]")) { click_on "Confirmar" }
     expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     click_on I18n.t("pages.provider_collections.review.done")
 

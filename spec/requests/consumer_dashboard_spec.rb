@@ -883,7 +883,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     it "exposes the special subsidies in force with their uses left" do
       orders(:upcoming_pending_future).schedule.update_columns(date: Date.new(2026, 9, 16))
       gift = consumer.benefits.create!(
-        benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2, due_date: Date.new(2026, 9, 19)
+        benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2, starts_on: Date.new(2026, 9, 15), due_date: Date.new(2026, 9, 19)
       )
       seniority = consumer.benefits.create!(
         benefit_configuration: benefit_configurations(:seniority), description: "Antigüedad", percentage: 10
@@ -895,8 +895,8 @@ RSpec.describe "Consumer dashboard", type: :request do
       expect(inertia.props[:benefit]).to include(
         percentage: 50,
         specials: [
-          { id: gift.id, name: "Premio", percentage: 30, remaining: 1, due_date: "2026-09-19" },
-          { id: seniority.id, name: "Antigüedad", percentage: 10, remaining: nil, due_date: nil }
+          { id: gift.id, name: "Premio", percentage: 30, remaining: 1, starts_on: "2026-09-15", due_date: "2026-09-19" },
+          { id: seniority.id, name: "Antigüedad", percentage: 10, remaining: nil, starts_on: nil, due_date: nil }
         ]
       )
     end

@@ -14,6 +14,7 @@ gogrow_previous_approved:
   account: gogrow_tuviandita_previous
   provider: tuviandita
   status: 2
+  expected_amount: 900.00
 
 # == Schema Information
 #
