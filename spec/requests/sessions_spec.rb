@@ -152,5 +152,12 @@ RSpec.describe "Sessions", type: :request do
 
       expect(response).to redirect_to(provider_sign_in_path)
     end
+
+    it "sends an admin back to the admin welcome (/rrhh)" do
+      sign_in users(:admin), role: :admin
+      delete session_path(users(:admin).sessions.last)
+
+      expect(response).to redirect_to(admin_welcome_path)
+    end
   end
 end
