@@ -22,13 +22,13 @@ RSpec.describe "Bloqueo de comprobante mientras el proveedor no cargue datos de 
   before do
     provider_without_details.update!(
       bank_name: nil,
-      bank_account_number: nil,
-      bank_account_holder: nil
+      bank_account_details: nil,
+      beneficiary: nil
     )
     provider_with_details.update!(
       bank_name: "Banco Itaú",
-      bank_account_number: "1951234",
-      bank_account_holder: "Noelia Patricia Pinheiro"
+      bank_account_details: "1951234",
+      beneficiary: "Noelia Patricia Pinheiro"
     )
     tuviandita_account
     endulzate_account
@@ -38,14 +38,15 @@ RSpec.describe "Bloqueo de comprobante mientras el proveedor no cargue datos de 
     find("[data-slot=card-title]", exact_text: provider.user.name).ancestor("[data-slot=card]")
   end
 
-  it "deshabilita el botón con advertencia y leyenda explicativa, y se habilita tras cargar datos" do
+  it "bloquea la carga con advertencia y leyenda explicativa, y la habilita tras cargar datos" do
     sign_in admin_user, role: :admin
     visit admin_payments_path
 
     # Proveedor sin datos de cobro
     within(card_for(provider_without_details)) do
       expect(page).to have_content(I18n.t("pages.admin.payments.index.bank.missing"))
-      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: true)
+      expect(page).to have_no_field(I18n.t("pages.accounts.show.receipt_file"))
+      expect(page).to have_no_button(I18n.t("pages.accounts.show.receipt"))
       expect(page).to have_content(I18n.t("pages.admin.payments.index.bank.missing_upload_hint"))
     end
 
@@ -53,15 +54,16 @@ RSpec.describe "Bloqueo de comprobante mientras el proveedor no cargue datos de 
     within(card_for(provider_with_details)) do
       expect(page).to have_content("Banco Itaú")
       expect(page).to have_content("1951234")
-      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: false)
+      expect(page).to have_field(I18n.t("pages.accounts.show.receipt_file"), disabled: false)
+      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: true)
       expect(page).to have_no_content(I18n.t("pages.admin.payments.index.bank.missing_upload_hint"))
     end
 
     # Cargar datos de cobro del proveedor
     provider_without_details.update!(
       bank_name: "Santander",
-      bank_account_number: "1150260",
-      bank_account_holder: "Tu Viandita S.A."
+      bank_account_details: "1150260",
+      beneficiary: "Tu Viandita S.A."
     )
 
     visit admin_payments_path
@@ -70,7 +72,8 @@ RSpec.describe "Bloqueo de comprobante mientras el proveedor no cargue datos de 
       expect(page).to have_no_content(I18n.t("pages.admin.payments.index.bank.missing"))
       expect(page).to have_content("Santander")
       expect(page).to have_content("1150260")
-      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: false)
+      expect(page).to have_field(I18n.t("pages.accounts.show.receipt_file"), disabled: false)
+      expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: true)
       expect(page).to have_no_content(I18n.t("pages.admin.payments.index.bank.missing_upload_hint"))
     end
   end

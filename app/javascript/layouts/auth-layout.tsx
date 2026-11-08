@@ -15,6 +15,7 @@ export default function AuthLayout({
   hideLogo?: boolean
   variant?: "welcome" | "form" | "landing"
   fullHeight?: boolean
+  actions?: ReactNode
 }) {
   return (
     <AuthLayoutTemplate title={title} description={description} {...props}>

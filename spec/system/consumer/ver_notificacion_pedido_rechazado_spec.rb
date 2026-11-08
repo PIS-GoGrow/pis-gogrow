@@ -21,12 +21,12 @@ RSpec.describe "Ver la notificación de pedido rechazado", type: :system do
     without_animations
 
     click_button "Rechazar"
-    expect(page).to have_content("¿Rechazar el pedido PED-#{order.id}?")
+    expect(page).to have_content("¿Rechazar pedido?")
     find("#reason-out_of_stock").click
     expect(page).to have_button("Rechazar pedido", disabled: false)
     click_button "Rechazar pedido"
 
-    expect(page).to have_content("Pedido rechazado.")
+    expect(page).to have_content("Pedido rechazado")
     expect(order.reload).to be_rejected
     sign_out
   end

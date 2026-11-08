@@ -28,6 +28,7 @@ RSpec.describe "Consultar la cuenta del proveedor" do
     expect(page).to have_content("Provider User")
     expect(page).to have_content("provider@example.com")
     expect(page).to have_link("Perfil", href: settings_profile_path)
+    expect(page).to have_content("Editá tu nombre, correo, teléfono, contraseña y apariencia")
     expect(page).to have_link("Datos de cobro", href: provider_payment_details_path)
     expect(page).to have_link("Configuración operativa", href: provider_operational_settings_path)
     expect(page).to have_link("Entregas", href: provider_deliveries_path)
@@ -41,7 +42,7 @@ RSpec.describe "Consultar la cuenta del proveedor" do
     click_link "Datos de cobro"
 
     expect(page).to have_current_path(provider_payment_details_path)
-    expect(page).to have_content("Indicá la cuenta donde querés recibir los pagos")
+    expect(page).to have_content("Ingresá los datos de la cuenta donde recibirás los pagos de tus pedidos.")
   end
 
   it "no deja entrar a un consumidor ni a RRHH" do

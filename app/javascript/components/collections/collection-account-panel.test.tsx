@@ -32,6 +32,7 @@ const account = {
   can_approve_payment: false,
   overdue: false,
   month: "Octubre 2026",
+  month_name: "octubre",
   due_date: "10/11/26",
   paid_on: null,
   payment_id: null,
@@ -49,6 +50,66 @@ const account = {
 } satisfies ProviderCollectionAccount
 
 describe("CollectionAccountPanel", () => {
+  it.each(["pending", "submitted", "rejected", "partial"] as const)(
+    "separa el saldo pendiente del consumo para una cuenta %s",
+    (status) => {
+      render(
+        <CollectionAccountPanel
+          account={{
+            ...account,
+            status,
+            amount: 290,
+            payable_amount: 290,
+            outstanding_amount: 150,
+          }}
+        />,
+      )
+
+      expect(screen.getByText("Saldo pendiente")).toBeInTheDocument()
+      expect(screen.getByText("$150")).toBeInTheDocument()
+      expect(
+        screen.getByText("2 viandas consumidas en octubre"),
+      ).toBeInTheDocument()
+      expect(screen.queryByText("$290")).not.toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: "Ver detalle" }),
+      ).toBeInTheDocument()
+    },
+  )
+
+  it("usa el singular y el mes de la cuenta", () => {
+    render(
+      <CollectionAccountPanel
+        account={{
+          ...account,
+          meals: 1,
+          month: "Septiembre 2026",
+          month_name: "septiembre",
+        }}
+      />,
+    )
+
+    expect(
+      screen.getByText("1 vianda consumida en septiembre"),
+    ).toBeInTheDocument()
+  })
+
+  it("conserva el importe total y las viandas en el historial", () => {
+    render(
+      <CollectionAccountPanel
+        account={{ ...account, status: "approved", outstanding_amount: 0 }}
+        settled
+      />,
+    )
+
+    expect(screen.getByText("$800")).toBeInTheDocument()
+    expect(screen.getByText(/2 viandas/)).toBeInTheDocument()
+    expect(screen.queryByText("Saldo pendiente")).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Ver detalle" }),
+    ).toBeInTheDocument()
+  })
+
   it("sugiere el total con IVA para una factura sin duplicar el impuesto", async () => {
     const user = userEvent.setup()
     const company = {

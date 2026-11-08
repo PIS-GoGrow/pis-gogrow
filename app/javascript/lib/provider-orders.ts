@@ -27,10 +27,6 @@ export const noFilters: OrderFilters = {
   search: "",
 }
 
-export function hasActiveFilters({ status, delivery, search }: OrderFilters) {
-  return status !== "all" || delivery !== "all" || search.trim() !== ""
-}
-
 function normalize(text: string) {
   return text
     .normalize("NFD")
@@ -88,21 +84,18 @@ export function groupByDate(orders: ProviderOrder[]): OrderDay[] {
   }))
 }
 
-export function withToday(days: OrderDay[], today: string): OrderDay[] {
-  if (days.some((day) => day.date === today)) return days
-
-  return [{ date: today, orders: [] }, ...days]
-}
-
 export function initialDate(days: OrderDay[], today: string) {
   return days.find((day) => day.date === today)?.date ?? days[0]?.date ?? null
 }
 
 export function summarize(orders: ProviderOrder[]) {
-  const total = orders.reduce((sum, order) => sum + order.price, 0)
+  const counted = orders.filter(
+    (order) => order.status !== "cancelled" && order.status !== "rejected",
+  )
+  const total = counted.reduce((sum, order) => sum + order.price, 0)
 
   return {
-    meals: orders.reduce((sum, order) => sum + (order.amount ?? 0), 0),
+    meals: counted.reduce((sum, order) => sum + (order.amount ?? 0), 0),
     total: Math.round(total * 100) / 100,
   }
 }

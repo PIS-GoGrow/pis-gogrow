@@ -45,8 +45,8 @@ RSpec.describe "Auditoría de pedidos", type: :system do
 
     sign_out
     sign_in users(:provider_user), role: :provider
-    visit provider_orders_path
-    within("[data-slot='card']", text: "PED-#{confirmed.id}") do
+    visit_hydrated provider_orders_path
+    within(provider_order_card(confirmed)) do
       click_button "Confirmar"
       expect(page).to have_content("Confirmado")
     end

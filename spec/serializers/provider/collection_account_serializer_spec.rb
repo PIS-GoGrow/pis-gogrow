@@ -8,6 +8,14 @@ RSpec.describe Provider::CollectionAccountSerializer do
   let(:account) { accounts(:one_tuviandita_current) }
   let(:provider) { providers(:tuviandita) }
 
+  it "expone el nombre del mes de la cuenta para el texto de consumo" do
+    historical = Account.create!(owner: consumers(:one), provider: providers(:office_provider), month: Date.new(2026, 10, 1), amount: 150)
+
+    expect(described_class.new(ProviderCollectionSummary.row_for(historical)).to_h).to include(
+      "month" => I18n.l(historical.month, format: :month_name_year), "month_name" => "octubre"
+    )
+  end
+
   def create_payment(account, status:, created_at: Time.current, rejection_reason: nil)
     payment = account.payments.build(provider: account.provider, status:, created_at:, rejection_reason:)
     payment.receipt.attach(

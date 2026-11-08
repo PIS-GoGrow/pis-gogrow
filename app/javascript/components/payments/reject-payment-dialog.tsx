@@ -67,9 +67,14 @@ export default function RejectPaymentDialog({
 
     router.patch(paymentsRoutes.update(paymentId).url, payload, {
       preserveState: true,
-      onSuccess: () => {
+      onSuccess: (page) => {
         resetForm()
-        onReviewed?.(isPartialPayment ? "partial" : "rejected")
+        const hasAlert =
+          (page?.props as { flash?: { alert?: string } } | undefined)?.flash
+            ?.alert ?? page?.flash?.alert
+        if (!hasAlert) {
+          onReviewed?.(isPartialPayment ? "partial" : "rejected")
+        }
       },
       onFinish: () => setProcessing(false),
     })

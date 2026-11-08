@@ -116,8 +116,6 @@ es:
   flash:
     cart_confirmed: "Pedido realizado. Tus platos quedaron reservados."
     order_created: "Tu vianda ha sido reservada."
-    order_confirmed: "Pedido confirmado. Queda en tu lista para preparar."
-    order_rejected: "Pedido rechazado. El empleado va a ver el cambio en sus pedidos."
     review_unavailable: "Este pedido ya no se puede calificar."
     already_signed_in: "Ya iniciaste sesión"
     benefit_configuration_created: "Subsidio programado para el próximo período"
@@ -131,6 +129,7 @@ es:
     incorrect_credentials: "El correo electrónico o la contraseña son incorrectos"
     password_changed: "Tu contraseña fue modificada"
     password_reset_expired: "Tu solicitud venció. Solicitá un código nuevo para continuar."
+    password_reset_requested: "Ya se envió un código. Esperá para enviar el siguiente."
     invitation_invalid: "La invitación no es válida o ya fue usada. Solicitá a tu administrador que te la envíe nuevamente."
     too_many_attempts: "Realizó demasiados intentos. Espere unos minutos y vuelva a probar."
     profile_updated: "Tu perfil fue actualizado"
@@ -211,6 +210,9 @@ es:
     menu_publish:
       invalid_date: "Elegí un día de semana entre hoy y la fecha máxima de publicación."
       invalid_menus: "Algún plato elegido no existe."
+    inconsistent_pricing: |-
+        Los precios o los beneficios de tu pedido cambiaron desde que armaste el carrito. Revisá el pedido y confirmá de nuevo.
+        Total en carrito: %{expected_price}. Total real: %{price}.
   notifications:
     # Cualquier cambio en las notificaciones tiene que ser avisado a Juan Andrés Olmedo o
     # a Sebastián Rama para que se envíen correctamente por WhatsApp
@@ -250,6 +252,9 @@ es:
     payment_due_soon:
       title: "Tu pago vence pronto..."
       description: "Te quedan %{days} días para pagar %{amount} a %{provider}. Vence el %{due_date}. ¡Revisá el detalle de tu pago!"
+    payment_approved:
+      title: "Pago aprobado"
+      description: "%{provider} aprobó tu comprobante de pago correspondiente a %{period}."
     company_payment_upcoming:
       title: "Se acerca el vencimiento de un pago"
       description: "El pago de %{company} a %{provider} por %{period} (%{amount}) vence el %{due_date}. Revisá el detalle en Pagos."
@@ -265,8 +270,8 @@ es:
     employee_debt_overdue:
       title: "Hay empleados con pagos pendientes"
       description:
-        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio."
-        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+        one: "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarle un recordatorio."
+        other: "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarles un recordatorio."
     order_cancellation:
       title: "Un pedido fue cancelado"
       description: "El pedido de %{consumer} del %{date} de %{dish} fue cancelado."
@@ -299,8 +304,8 @@ es:
       title: "Recordatorios de pago del proveedor"
       description: "Recordatorios de pagos vencidos enviados por el proveedor."
     automatic_payment_reminders:
-      title: "Recordatorios automáticos de pago"
-      description: "Avisos sobre la apertura y el vencimiento próximo de pagos."
+      title: "Recordatorios de pago"
+      description: "Avisos sobre la apertura y el vencimiento próximo de tus pagos."
     company_payments:
       title: "Pagos a proveedores"
       description: "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor."
@@ -544,6 +549,13 @@ es:
       inactive: "Sin beneficio"
       discount: "de descuento en viandas"
       base: "Subsidio Base"
+    network_status:
+      offline:
+        title: "Sin conexión a internet"
+        description: "No pudimos cargar la página. Revisá tu conexión y volvé a intentar."
+      online:
+        title: "Volvió la conexión"
+        description: "Ya podés seguir navegando."
   pages:
     admin:
       account:
@@ -592,7 +604,7 @@ es:
         debts:
           title: "Ranking deuda de empleados"
           view: "Ver empleados con saldos pendientes"
-          empty: "Ningún empleado tiene saldos pendientes en este mes."
+          empty: "Ningún empleado tiene saldos pendientes."
       order_events:
         index:
           title: "Auditoría de pedidos"
@@ -844,10 +856,10 @@ es:
           no_debt: "¡Sin deudas pendientes con este proveedor!"
           bank:
             account_number: "Nº de cuenta: %{number}"
-            holder: "Beneficiario: %{holder}"
-            copy: "Copiar número de cuenta"
-            copied: "Número de cuenta copiado"
-            copy_failed: "No pudimos copiar el número de cuenta"
+            beneficiary: "Beneficiario: %{beneficiary}"
+            copy: "Copiar datos de la cuenta"
+            copied: "Datos de la cuenta copiados"
+            copy_failed: "No pudimos copiar los datos de la cuenta"
             missing: "Este proveedor todavía no cargó sus datos de cobro."
             missing_upload_hint: "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro."
           meals_one: "%{count} vianda"
@@ -863,6 +875,7 @@ es:
           filter_providers: "Filtrar por proveedor"
           detail:
             title: "%{provider}: Consumo %{month}"
+            meals_title: "%{provider}: Consumos %{month}"
             loading_title: "Detalle del consumo"
             description: "Lo que la empresa le paga al proveedor en el mes y los pedidos confirmados de cada día."
             provider: "Proveedor:"
@@ -912,8 +925,10 @@ es:
         pending: "Pendientes"
         history: "Historial"
         no_debt: "¡Sin deudas pendientes con este proveedor!"
-        history_empty: "Todavía no hiciste ningún pago."
-        history_filtered_empty: "No hay pagos de este proveedor."
+        history_empty_title: "Todavía no hiciste ningún pago"
+        history_empty_description: "Cuando pagues una cuenta, va a aparecer acá."
+        history_filtered_empty_title: "No hay pagos de este proveedor"
+        history_filtered_empty_description: "Todavía no le pagaste ninguna cuenta a este proveedor."
         providers_label: "Proveedores:"
         all_providers: "Todos"
       show:
@@ -968,10 +983,13 @@ es:
         history_tab: "Historial"
         upcoming_empty_title: "No tenés pedidos próximos"
         upcoming_empty_description: "No tenés viandas en camino."
+        upcoming_filtered_empty_title: "No hay pedidos de este proveedor"
+        upcoming_filtered_empty_description: "No tenés pedidos próximos con este proveedor."
         history_empty_title: "No tenés pedidos anteriores"
         history_empty_description: "Tus pedidos completados aparecerán aquí."
         history_filtered_empty_title: "No hay pedidos de este proveedor"
         history_filtered_empty_description: "No tenés pedidos anteriores realizados a este proveedor."
+        history_loading: "Cargando pedidos anteriores…"
         providers_label: "Proveedores:"
         all_providers: "Todos los proveedores"
         quantity: "x%{count}"
@@ -1125,6 +1143,9 @@ es:
         empty_history_client: "Todavía no hay meses cobrados por completo de este cliente."
       group:
         total: "Total a cobrar"
+        outstanding_amount: "Saldo pendiente"
+        consumed_in_month_one: "%{count} vianda consumida en %{month}"
+        consumed_in_month_other: "%{count} viandas consumidas en %{month}"
         confirmed: "%{amount} en cobros confirmados"
         awaiting_one: "%{count} cobro pendiente de confirmación"
         awaiting_other: "%{count} cobros pendientes de confirmación"
@@ -1244,13 +1265,21 @@ es:
         confirm: "Confirmar"
         reject: "Rechazar"
         reject_dialog:
-          title: "¿Rechazar el pedido %{code}?"
-          description: "Seleccioná el motivo de la cancelación. El empleado va a ver el cambio en sus pedidos."
+          title: "¿Rechazar pedido?"
+          description: "Esta acción no se puede deshacer. El empleado recibirá una notificación con el motivo que elijas."
           reason_label: "Motivo"
           details_label: "Describí el motivo"
-          details_placeholder: "Ingresá el motivo…"
+          details_placeholder: "Describir el motivo"
           back: "Volver"
           confirm: "Rechazar pedido"
+        confirmed_sheet:
+          title: "Pedido confirmado"
+          description: "El pedido %{code} quedó confirmado y %{name} recibirá una notificación."
+          done: "Listo"
+        rejected_sheet:
+          title: "Pedido rechazado"
+          description: "El pedido %{code} fue cancelado y %{name} recibirá una notificación."
+          done: "Listo"
       rejection_reasons:
         out_of_stock: "Sin stock disponible"
         duplicate_order: "Pedido duplicado"
@@ -1261,7 +1290,7 @@ es:
         dish_deleted: "Plato eliminado"
         dish_unpublished: "Plato retirado del menú"
       statuses:
-        pending: "Pendiente"
+        pending: "Por revisar"
         confirmed: "Confirmado"
         cancelled: "Cancelado"
         rejected: "Rechazado"
@@ -1273,7 +1302,7 @@ es:
           history: "Historial"
         status_filter_label: "Filtrar pedidos por estado"
         status_filters:
-          pending: "Pendiente"
+          pending: "Por revisar"
           confirmed: "Confirmados"
           all: "Todos"
         delivery_label: "Entregas:"
@@ -1293,13 +1322,10 @@ es:
         delivery_methods:
           office: "Oficina"
           home: "Casa"
-        empty_title: "No hay pedidos"
-        empty_description: "Todavía no recibiste pedidos para los próximos días."
-        empty_history_description: "Todavía no tenés pedidos anteriores."
-        empty_filtered_description: "No tenés pedidos que coincidan con los filtros."
         no_orders_title: "No tenés pedidos"
         no_orders_description: "Cuando tus clientes hagan pedidos, van a aparecer acá."
         code: "PED-%{id}"
+        number: "#%{id}"
         quantity: "x%{count}"
         no_address: "Sin dirección de entrega"
         export: "Exportar pedidos"
@@ -1311,14 +1337,10 @@ es:
         employee_company: "Empleado %{company}"
         phone_unavailable: "No disponible"
         order_detail: "Detalle del pedido"
-        notes: "Notas"
-        delivery_date: "Entrega"
+        notes: "Comentarios"
         total: "Total"
-        subsidy: "Beneficio aplicado"
-        charged: "Paga el empleado"
-        no_price: "Importe no disponible"
-        rejection_reason: "Motivo de rechazo"
-        rejection_details: "Detalle del rechazo"
+        not_charged: "Este pedido no será cobrado"
+        rejection_reason: "Motivo de cancelación"
     provider_dashboard:
       index:
         title: "Inicio"
@@ -1555,12 +1577,18 @@ es:
             title: "¡Plato modificado!"
             description: "Tu plato fue modificado correctamente."
     cart:
+      title: "Tu carrito"
+      confirm: "Confirmar pedido"
+      confirming: "Confirmando pedido"
+      empty: "Todavía no agregaste platos."
       delivery_address: "Dirección de entrega"
       add_address: "Agregar"
       my_addresses: "Ver mis direcciones"
       office_delivery_warning_one: "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_delivery_warning_other: "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada."
       office_address_missing: "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar."
+      office_only_one: "%{providers} solo entrega en la Oficina, así que este pedido no puede ir a otra dirección."
+      office_only_other: "%{providers} solo entregan en la Oficina, así que este pedido no puede ir a otra dirección."
       remove: "Quitar %{name}"
       decrease: "Quitar una unidad de %{name}"
       increase: "Agregar una unidad de %{name}"
@@ -1593,6 +1621,11 @@ es:
         description: "Elegí a qué dirección querés recibir el pedido."
         cancel: "Cancelar"
         submit: "Seleccionar"
+      order_error:
+        title: "No se pudo procesar el pedido"
+        description: "Hubo un problema al procesar tu pedido. Intentá de nuevo."
+        retry: "Reintentar"
+        menu: "Volver al menú"
     home:
       title: "Viandas GoGrow"
       consumer:
@@ -1625,7 +1658,7 @@ es:
         provider: "Panel del proveedor"
     consumer_profiles:
       show:
-        title: "Mi cuenta"
+        title: "Cuenta"
         sign_out: "Salir"
         benefit: "Mi beneficio"
         monthly_limit: "Viandas subsidiadas por mes"
@@ -1640,13 +1673,12 @@ es:
         coupon_remaining: "Te quedan"
         coupon_period: "Para entregas del"
         settings: "Configuración"
-        notifications: "Notificaciones"
-        notifications_description: "Configurá qué alertas querés recibir"
-        settings: "Configuración"
-        notifications: "Notificaciones"
-        notifications_description: "Configurá qué alertas querés recibir"
+        account: "Cuenta"
+        account_description: "Modificá tu teléfono, nombre, correo, contraseña y apariencia"
         addresses: "Direcciones"
         addresses_description: "Gestioná tus direcciones de entrega"
+        notifications: "Notificaciones"
+        notifications_description: "Configurá qué alertas querés recibir"
     provider_menu_imports:
       new:
         title: "Importar platos"
@@ -1723,7 +1755,7 @@ es:
         notifications: "Notificaciones"
         notifications_description: "Configurá qué alertas querés recibir"
         profile: "Perfil"
-        profile_description: "Editá tu nombre, correo, teléfono y contraseña"
+        profile_description: "Editá tu nombre, correo, teléfono, contraseña y apariencia"
     provider_onboarding:
       progress: "Paso %{current} de %{total}"
       back: "Volver al paso anterior"
@@ -1756,21 +1788,20 @@ es:
     provider_payment_details:
       show:
         title: "Datos de cobro"
-        description: "Indicá la cuenta donde querés recibir los pagos de los empleados."
+        description: "Ingresá los datos de la cuenta donde recibirás los pagos de tus pedidos."
+        consultation_description: "Configurá dónde querés recibir tus cobros."
         back: "Volver a Cuenta"
         bank_name: "Banco"
-        bank_name_placeholder: "Ej. BROU"
-        bank_account_type: "Tipo de cuenta"
-        bank_account_type_placeholder: "Elegí el tipo de cuenta"
-        bank_account_types:
-          savings: "Caja de ahorro"
-          checking: "Cuenta corriente"
-        bank_account_number: "Número de cuenta"
-        bank_account_holder: "Titular de la cuenta"
-        tax_id: "RUT o CI del titular"
-        tax_id_description: "Solo números: 12 dígitos para RUT, 7 u 8 para CI."
-        sensitive_notice: "Los cambios en estos datos quedan registrados."
+        bank_name_placeholder: "Elegí el banco"
+        bank_account_details: "Datos de la cuenta"
+        bank_account_details_placeholder: "Pegá los datos de la cuenta acá..."
+        beneficiary: "Beneficiario"
+        beneficiary_value: "Beneficiario: %{beneficiary}"
+        edit: "Editar"
+        edit_title: "Editar datos de cobro"
+        cancel: "Cancelar"
         submit: "Guardar"
+        save_changes: "Guardar cambios"
     provider_deliveries:
       show:
         title: "Entregas"
@@ -1856,6 +1887,8 @@ es:
           empty: "%{provider} no recibirá pedidos del %{period}."
           dismiss: "Cerrar aviso"
       detail:
+        stock_limit_one: "Solo queda 1 vianda disponible de este plato."
+        stock_limit_other: "Solo quedan %{count} viandas disponibles de este plato."
         add: "Agregar"
         reached_100:
           one: "Se llegó al 100%, no se aplicará el beneficio %{benefits}"
@@ -1949,6 +1982,7 @@ es:
         description: "Actualizá tu dirección de correo y verificala"
         unverified: "Tu dirección de correo no está verificada."
         resend: "Hacé clic aquí para reenviar el correo de verificación."
+        submit: "Guardar correo"
       sessions:
         title: "Sesiones"
         description: "Administrá tus sesiones activas en todos los dispositivos"
@@ -1963,7 +1997,7 @@ es:
         preferences_heading: "Preferencias de RR. HH."
         preferences_description: "Activá o desactivá las categorías de avisos que querés recibir."
         back: "Volver a Cuenta"
-        back_to_account: "Volver a Mi cuenta"
+        back_to_account: "Volver a Cuenta"
     consumer_delivery_addresses:
       index:
         title: "Direcciones"

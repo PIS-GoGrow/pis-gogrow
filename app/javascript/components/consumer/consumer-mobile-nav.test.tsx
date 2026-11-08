@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
-import { settingsNotifications } from "@/routes"
+import { settingsNotifications, settingsProfiles } from "@/routes"
 
 import { ConsumerMobileNav } from "./consumer-mobile-nav"
 
@@ -32,6 +32,17 @@ vi.mock("@inertiajs/react", () => ({
 describe("ConsumerMobileNav", () => {
   it("keeps Cuenta active while the consumer is in notification settings", () => {
     mocks.url = settingsNotifications.index().url
+
+    render(<ConsumerMobileNav />)
+
+    expect(screen.getByRole("link", { name: "Cuenta" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+  })
+
+  it("keeps Cuenta active while the consumer is in profile settings", () => {
+    mocks.url = settingsProfiles.show().url
 
     render(<ConsumerMobileNav />)
 

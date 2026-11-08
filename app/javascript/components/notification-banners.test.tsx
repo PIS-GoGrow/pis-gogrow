@@ -63,6 +63,28 @@ describe("NotificationBanners", () => {
     ).toBeInTheDocument()
   })
 
+  it("renders a payment approved notification for consumer and can be dismissed", () => {
+    mocks.notifications.push({
+      id: 88,
+      title: "Pago aprobado",
+      description:
+        "Rotisería Central aprobó tu comprobante de pago correspondiente a octubre 2026.",
+      requires_action: false,
+    })
+
+    render(<NotificationBanners />)
+
+    expect(screen.getByText("Pago aprobado")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Rotisería Central aprobó tu comprobante de pago correspondiente a octubre 2026.",
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Cerrar notificación" }),
+    ).toBeInTheDocument()
+  })
+
   it("renders an order rejection notification with rejected title and reason and can be dismissed", () => {
     mocks.notifications.push({
       id: 99,
