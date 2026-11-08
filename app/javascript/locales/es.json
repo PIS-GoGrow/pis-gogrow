@@ -307,7 +307,7 @@
     },
     "notifications": {
       "company_payment_approved": {
-        "description": "%{provider} aprobó el pago de %{company} por %{period} (%{amount}).",
+        "description": "%{provider} aprobó el pago de %{company} por %{period} (%{amount}). Podés ver el detalle en Pagos.",
         "title": "Pago aprobado"
       },
       "company_payment_overdue": {
@@ -324,13 +324,13 @@
       },
       "coupon_assigned": {
         "description": {
-          "one": "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} vianda para entregas del %{period}.",
-          "other": "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} viandas para entregas del %{period}."
+          "one": "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} vianda para entregas del %{period}. ¡Aprovechalo!",
+          "other": "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} viandas para entregas del %{period}. ¡Aprovechalo!"
         },
         "title": "Recibiste un cupón"
       },
       "debt_payment_reminder": {
-        "description": "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}.",
+        "description": "Tenés un pago pendiente de %{amount} con %{provider} correspondiente a %{period}. Revisá el detalle en tus pagos.",
         "title": "Recordatorio de pago pendiente"
       },
       "debt_threshold_exceeded": {
@@ -354,7 +354,7 @@
         "title": "Un pedido fue cancelado"
       },
       "order_confirmation": {
-        "description": "Tu pedido del %{date} fue confirmado por %{provider}.",
+        "description": "Tu pedido del %{date} fue confirmado por %{provider}. Te va a llegar en el correr de ese día.",
         "title": "Tu pedido fue confirmado"
       },
       "order_deadline_reminder": {
@@ -362,11 +362,11 @@
         "title": "Recordatorio de pedido"
       },
       "order_received": {
-        "description": "%{consumer} pidió %{amount} de %{dish} para el %{date}.",
+        "description": "%{consumer} pidió %{amount} de %{dish} para el %{date}. Revisá el detalle en la app para confirmarlo o rechazarlo.",
         "title": "Nuevo pedido"
       },
       "order_rejection": {
-        "description": "Tu pedido del %{date} de %{dish} fue rechazado por %{provider} %{reason}.",
+        "description": "Tu pedido del %{date} de %{dish} a %{provider} fue rechazado %{reason}. Podés volver a hacer otro pedido cuando quieras.",
         "reasons": {
           "customer_request": "por solicitud del cliente",
           "dish_deleted": "porque el plato fue eliminado",
@@ -380,7 +380,7 @@
         "title": "Tu pedido fue rechazado"
       },
       "payment_approved": {
-        "description": "%{provider} aprobó tu comprobante de pago correspondiente a %{period}.",
+        "description": "Tu comprobante de pago para %{provider} correspondiente a %{period} fue aprobado.",
         "title": "Pago aprobado"
       },
       "payment_available": {
@@ -392,11 +392,11 @@
         "title": "Tu pago vence pronto..."
       },
       "payment_receipt_submitted": {
-        "description": "%{payer} envió un comprobante de pago de %{month}.",
+        "description": "%{payer} envió un comprobante de pago de %{month}. Revisalo en Pagos.",
         "title": "Nuevo comprobante de pago"
       },
       "provider_menu_unpublished": {
-        "description": "Todavía no publicaste un menú para el %{date}.",
+        "description": "No publicaste un menú para el %{date} todavía.",
         "title": "Publicá el menú del día"
       }
     },

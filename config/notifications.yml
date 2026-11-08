@@ -97,13 +97,13 @@ events:
     configuration: order_updates
     role: consumer
     requires_action: false
-    content_sid: HXa9afb0595862512cdcb61ead36bc9d6a
+    content_sid: HX4675c3ff6fb769c01ebfa0b3396b97b5
 
   order_rejection:
     configuration: order_updates
     role: consumer
     requires_action: false
-    content_sid: HX732ee2e06cdb22417e5a986181f7e21c
+    content_sid: HXef13f3d37729abd1a73f113c73f659c1
 
   debt_threshold_exceeded:
     configuration: debt_alerts
@@ -115,97 +115,98 @@ events:
     configuration: provider_payment_reminders
     role: consumer
     requires_action: true
-    content_sid: HXfd58ebfc4ded86250c260a5905fb0dbe
+    content_sid: HXc49b1f39599e98c801435c90400e7b18
 
   payment_available:
     configuration: automatic_payment_reminders
     role: consumer
     requires_action: false
-    content_sid: HX4cae87f48c1b43294482bfc36ac2160e
+    content_sid: HX5db5038af7d2b5eb49cd75534234b373
 
   payment_approved:
     configuration: automatic_payment_reminders
     role: consumer
     requires_action: false
+    content_sid: HXcf9864f7bf32c1acb4d3c7f9079effd4
 
   payment_due_soon:
     configuration: automatic_payment_reminders
     role: consumer
     requires_action: false
-    content_sid: HX1b4e41424c51b6adf7e355b09d54a24b
+    content_sid: HX5a4e2f534503a00bab886b85da09f75f
 
   employee_debt_overdue:
     configuration: employee_debts
     role: admin
     requires_action: false
     content_sid:
-      one: HX1a0c3e497bd3cbe83502d77e85a9d9dc
-      other: HX331ac66fb467554f7557ff2b5d8649b1
+      one: HXaa449566dd910ff2a6c6e3ed6ebbcc29
+      other: HXde192af3adb950422107a4db8d5ebbad
 
   company_payment_upcoming:
     configuration: company_payments
     role: admin
     requires_action: true
-    content_sid: HX0eaedab938c797c421dc7b87b730ccae
+    content_sid: HXea3164fc68c141487cf70e9f56d0f880
 
   company_payment_overdue:
     configuration: company_payments
     role: admin
     requires_action: true
-    content_sid: HXfdf833599d4cc5ce9b78653ae5520e73
+    content_sid: HX176bfd2397aa50419c0aad4fb626fa06
 
   company_payment_rejected:
     configuration: company_payments
     role: admin
     requires_action: true
-    content_sid: HXb44ebfba81344bbc1e0f40488ca1ca64
+    content_sid: HXc1cc949fd124a98d80eb1054ca8f9190
 
   company_payment_approved:
     configuration: company_payments
     role: admin
     requires_action: false
-    content_sid: HXa542c1a57409785d7bf8453c5a6a295d
+    content_sid: HXb891ebbd72692e2b9ab5de13a727e677
 
   order_cancellation:
     configuration: order_cancellations
     role: provider
     requires_action: false
-    content_sid: HX2d2f40141d9e3d2212c20696e5083b9d
+    content_sid: HXa571bc81307e53fd160b48b9c8e8baf6
 
   provider_menu_unpublished:
     configuration: menu_publication_reminders
     role: provider
     requires_action: true
-    content_sid: HX9c1eb97ae7fc5e93d87c8aea4e1c21a2
+    content_sid: HX7562fb91368ec1107eeb99124ba3ab60
 
   hr_debt_payment_reminder:
     configuration: hr_payment_reminders
     role: consumer
     requires_action: false
-    content_sid: HXc358f9f429fb28a8ecf868a719d8ad06
+    content_sid: HXe80ee4e89fe833d7718a9a8d9b3046f7
 
   order_received:
     configuration: provider_orders
     role: provider
     requires_action: false
-    content_sid: HX36a5150511ca860a37b2b6c894189926
+    content_sid: HXedc7b7baedb52360282339035cb83b8c
 
   payment_receipt_submitted:
     configuration: provider_payments
     role: provider
     requires_action: false
-    content_sid: HXf05da66ac03bfaaf6796456f5216d65c
+    content_sid: HXece815ea5ca967afa00d9d3e33b80403
 
   order_deadline_reminder:
     configuration: order_reminders
     role: consumer
     requires_action: false
-    content_sid: HX3b9a8a531c43e822e692bfdb3df25078
+    content_sid: HX2bca9a2782fe140b04a6eb8fe729fee0
 
   coupon_assigned:
     configuration: coupons
     role: consumer
     requires_action: false
     content_sid:
-      one: HXc77b0e6dd5fbdc92dafb769a1c7620db
-      other: HXfd351b5175ff4aa726e9f852a62e618c
+      one: HXc541aca91f3627b2ed052e649564606f
+      other: HXaf87b6ad70514ab9d4bc9772bb62c510
