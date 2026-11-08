@@ -131,6 +131,7 @@ end
 # Table name: payments
 #
 #  id               :bigint           not null, primary key
+#  expected_amount  :decimal(10, 2)
 #  rejection_reason :text
 #  status           :integer          default(0), not null
 #  created_at       :datetime         not null
@@ -148,3 +149,4 @@ end
 #
 #  fk_rails_...  (account_id => accounts.id)
 #  fk_rails_...  (provider_id => providers.id)
+#

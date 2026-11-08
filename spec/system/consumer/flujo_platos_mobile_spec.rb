@@ -23,8 +23,8 @@ RSpec.describe "Flujo mobile de selección de platos del empleado", type: :syste
     Order.delete_all
     Schedule.delete_all
 
-    Schedule.create!(menu: sorrentinos, date: monday, amount: 10)
-    Schedule.create!(menu: milanesa, date: tuesday, amount: 10)
+    Schedule.create!(menu: sorrentinos, date: monday)
+    Schedule.create!(menu: milanesa, date: tuesday)
 
     sign_in users(:one), role: :consumer
   end

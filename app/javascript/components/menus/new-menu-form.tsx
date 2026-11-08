@@ -134,7 +134,6 @@ export default function MenuForm({
                     date: create.default_date,
                     starts_on: null,
                     ends_on: null,
-                    amount: null,
                   }
                 : {
                     mode: "none",
@@ -142,7 +141,6 @@ export default function MenuForm({
                     date: null,
                     starts_on: null,
                     ends_on: null,
-                    amount: null,
                   },
             )
           : null,

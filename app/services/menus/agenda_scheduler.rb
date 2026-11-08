@@ -49,7 +49,7 @@ class Menus::AgendaScheduler
       next if target.nil?
 
       begin
-        target.schedules.create!(date:, amount: agenda.amount)
+        target.schedules.create!(date:)
         taken << date
       rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
         taken << date

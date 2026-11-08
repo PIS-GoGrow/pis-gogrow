@@ -209,7 +209,6 @@ class Consumer::OrdersController < Consumer::InertiaController
     schedule = order.schedule
 
     return :schedule_unavailable if schedule && !schedule.available
-    return :insufficient_stock if schedule && schedule.remaining_amount < order.amount.to_i
 
     :cart_unavailable
   end
@@ -259,9 +258,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def max_quantity(order)
-    return order.amount.to_i if order.schedule.nil?
-
-    order.schedule.remaining_amount + order.amount.to_i
+    order.max_quantity
   end
 
   def update_params

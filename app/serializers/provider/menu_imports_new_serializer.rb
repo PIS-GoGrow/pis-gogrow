@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Provider::MenuImportsNewSerializer < ApplicationSerializer
-  AGENDA = "{ mode: 'none' | 'single' | 'weekly' | 'range'; weekdays: number[]; date: string | null; starts_on: string | null; ends_on: string | null; amount: number | null }"
+  AGENDA = "{ mode: 'none' | 'single' | 'weekly' | 'range'; weekdays: number[]; date: string | null; starts_on: string | null; ends_on: string | null }"
   OPTION_GROUP = "{ name: string; options: string[]; limit: number; required: boolean }"
   ENTRY = "{ number: number; name: string; description: string; price: number | null; option_groups: #{OPTION_GROUP}[]; errors: string[] }"
   SAVED_MENU = "{ id: number; name: string; confirmed_orders: number; agenda: #{AGENDA} }"

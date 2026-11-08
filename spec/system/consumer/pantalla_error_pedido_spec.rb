@@ -18,7 +18,7 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
     Order.delete_all
     Schedule.delete_all
 
-    Schedule.create!(menu: menus(:milanesa), date: monday, amount: 10)
+    Schedule.create!(menu: menus(:milanesa), date: monday)
 
     sign_in users(:one), role: :consumer
     visit_hydrated dashboard_path
@@ -126,12 +126,12 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
       open_cart
 
       # En el backend el stock se agota concurrentemente
-      Schedule.update_all(amount: 0)
+      Schedule.update_all(available: false)
 
       click_button "Confirmar pedido"
 
       expect(page).to have_content("No se pudo procesar el pedido")
-      expect(page).to have_content(I18n.t("validations.insufficient_stock"))
+      expect(page).to have_content(I18n.t("validations.schedule_unavailable"))
 
       expect_buttons_within_container_and_balanced
 

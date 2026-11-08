@@ -41,7 +41,7 @@ RSpec.describe "Seleccionar un rango personalizado de disponibilidad" do
   # Publica el plato de lunes a viernes, como si el proveedor ya lo tuviera con
   # una agenda semanal.
   def publish_week
-    milanesa.agendas.create!(weekdays: [ 1, 2, 3, 4, 5 ], starts_on: monday, amount: 10)
+    milanesa.agendas.create!(weekdays: [ 1, 2, 3, 4, 5 ], starts_on: monday)
     Menus::AgendaScheduler.call(milanesa)
   end
 

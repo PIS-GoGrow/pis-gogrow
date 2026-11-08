@@ -45,8 +45,8 @@ RSpec.describe "Consultar el menú disponible por fecha" do
     Schedule.delete_all
   end
 
-  def publish(menu, date, amount: 5)
-    Schedule.create!(menu:, date:, amount:)
+  def publish(menu, date, available: true)
+    Schedule.create!(menu:, date:, available:)
   end
 
   def order_away(schedule, quantity)
@@ -167,9 +167,8 @@ RSpec.describe "Consultar el menú disponible por fecha" do
 
   # Criterio 3
   it "marks the sold out dish and leaves only the available one orderable" do
-    sold_out = publish(menus(:milanesa), monday, amount: 2)
-    publish(menus(:sorrentinos), monday, amount: 2)
-    order_away(sold_out, 2)
+    sold_out = publish(menus(:milanesa), monday, available: false)
+    publish(menus(:sorrentinos), monday)
     sign_in users(:one)
 
     visit dashboard_path
@@ -188,7 +187,7 @@ RSpec.describe "Consultar el menú disponible por fecha" do
   # IBP-053, criterio 2 y 4: un plato que el proveedor marcó agotado se ve como
   # tal en el menú de empleados aunque su schedule todavía tenga cupo.
   it "marks a dish the provider turned off as sold out even with quota left" do
-    schedule = publish(menus(:milanesa), monday, amount: 5)
+    schedule = publish(menus(:milanesa), monday)
     schedule.update!(available: false)
     sign_in users(:one)
 

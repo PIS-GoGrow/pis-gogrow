@@ -29,7 +29,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       description: "Viandas mensuales",
       amount: 20,
       percentage: 50,
-      due_date: Date.current + 3.days,
+      due_date: 1.month.from_now,
       benefit_configuration: benefit_configurations(:monthly)
     )
 
@@ -45,7 +45,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     provider_user = User.create!(email: "provider-menu@gmail.com", name: "Endulzate by Noe", password: "password123456")
     provider = Provider.create!(user: provider_user)
     menu = Menu.create!(provider:, name: "Sorrentinos", description: "Jamón y queso", price: 300)
-    Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 5)
+    Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday))
   end
 
   it "uses the weekly menu as the landing page for a remembered consumer session" do
@@ -103,7 +103,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     schedule = create_schedule
     Order.create!(consumer: user.consumer, schedule:, amount: 2, price: 600, discounted_price: 300, address: user.consumer.address, delivery_method: :home)
          .apply_benefit! user.consumer.benefits.first, 2
-    next_week_schedule = Schedule.create!(menu: schedule.menu, date: schedule.date + 1.week, amount: 5)
+    next_week_schedule = Schedule.create!(menu: schedule.menu, date: schedule.date + 1.week)
     Order.create!(consumer: user.consumer, schedule: next_week_schedule, amount: 3, price: 900, discounted_price: 450, address: user.consumer.address, delivery_method: :home)
          .apply_benefit! user.consumer.benefits.first, 3
     sign_in_as_consumer(user)
@@ -236,8 +236,8 @@ RSpec.describe "Consumer dashboard", type: :request do
       Schedule.delete_all
     end
 
-    def publish(menu, date, amount: 5)
-      Schedule.create!(menu:, date:, amount:)
+    def publish(menu, date, available: true)
+      Schedule.create!(menu:, date:, available:)
     end
 
     def order_for(schedule, quantity, consumer: consumers(:one), benefit: nil)
@@ -294,28 +294,27 @@ RSpec.describe "Consumer dashboard", type: :request do
     # Criterio 3, primera mitad: el agotado se identifica. El prop sold_out es
     # lo único de lo que dispone la pantalla para marcarlo, y sale de descontar
     # los pedidos vivos del cupo — no del cupo bruto.
-    it "does not mark a dish as sold out while quota remains" do
-      schedule = publish(menus(:milanesa), monday, amount: 2)
+    it "does not mark a dish as sold out when available" do
+      schedule = publish(menus(:milanesa), monday)
       order_for(schedule, 1)
       sign_in users(:one)
 
       get dashboard_path
 
       dish = inertia.props[:schedules].first
-      expect(dish).to include(sold_out: false, remaining: 1)
+      expect(dish).to include(sold_out: false, remaining: 99)
     end
 
-    it "marks a dish sold out once its whole quota is ordered" do
-      sold_out_dish = publish(menus(:milanesa), monday, amount: 2)
-      available_dish = publish(menus(:sorrentinos), monday, amount: 2)
-      order_for(sold_out_dish, 2)
+    it "marks a dish sold out when marked unavailable by provider" do
+      sold_out_dish = publish(menus(:milanesa), monday, available: false)
+      available_dish = publish(menus(:sorrentinos), monday, available: true)
       sign_in users(:one)
 
       get dashboard_path
 
       by_id = inertia.props[:schedules].index_by { |s| s[:id] }
       expect(by_id.fetch(sold_out_dish.id)).to include(sold_out: true, remaining: 0)
-      expect(by_id.fetch(available_dish.id)).to include(sold_out: false, remaining: 2)
+      expect(by_id.fetch(available_dish.id)).to include(sold_out: false, remaining: 99)
     end
 
     # IBP-087: el empleado no ve los platos del proveedor que cerró ese día, y
@@ -411,26 +410,6 @@ RSpec.describe "Consumer dashboard", type: :request do
       end
     end
 
-    it "does not count cancelled orders against the quota" do
-      schedule = publish(menus(:milanesa), monday, amount: 1)
-      order_for(schedule, 1).update!(status: :cancelled)
-      sign_in users(:one)
-
-      get dashboard_path
-
-      expect(inertia.props[:schedules].first).to include(sold_out: false, remaining: 1)
-    end
-
-    it "does not count rejected orders against the quota" do
-      schedule = publish(menus(:milanesa), monday, amount: 1)
-      order_for(schedule, 1).update!(status: :rejected, rejection_reason: :out_of_stock)
-      sign_in users(:one)
-
-      get dashboard_path
-
-      expect(inertia.props[:schedules].first).to include(sold_out: false, remaining: 1)
-    end
-
     it "filters out home address when the consumer does not have one registered" do
       consumers(:one).update!(address: nil)
       publish(menus(:milanesa), monday)
@@ -466,7 +445,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     # Transversal — privacidad entre pares: el menú es común a todos los
     # empleados, pero los contadores del beneficio son personales.
     it "does not count another employee orders in the own benefit" do
-      schedule = publish(menus(:milanesa), monday, amount: 10)
+      schedule = publish(menus(:milanesa), monday)
       benefit = Benefit.create!(consumer: consumers(:other), amount: 5, percentage: 50, due_date: 1.month.from_now, benefit_configuration: benefit_configurations(:monthly))
       order_for(schedule, 3, consumer: consumers(:other), benefit:)
       sign_in users(:one)
@@ -497,19 +476,19 @@ RSpec.describe "Consumer dashboard", type: :request do
       Schedule.delete_all
     end
 
-    def publish(menu, date, amount: 5)
-      Schedule.create!(menu:, date:, amount:)
+    def publish(menu, date, available: true)
+      Schedule.create!(menu:, date:, available:)
     end
 
     # Criterio 1: los cinco datos que la historia enumera, en una sola respuesta.
     it "exposes the name, provider, price, description and availability of a dish" do
-      publish(menus(:sorrentinos), monday, amount: 4)
+      publish(menus(:sorrentinos), monday)
       sign_in users(:one)
 
       get dashboard_path
 
       dish = inertia.props[:schedules].first
-      expect(dish).to include(sold_out: false, remaining: 4)
+      expect(dish).to include(sold_out: false, remaining: 99)
       expect(dish[:menu]).to include(
         name: "Sorrentinos artesanales",
         provider_name: users(:other_provider_user).name,
@@ -612,8 +591,8 @@ RSpec.describe "Consumer dashboard", type: :request do
     # que ya caen en el mes siguiente es un defecto, y está anotado como
     # TODO(integración) en el system spec de la historia.
     it "counts the monthly quota by delivery date inside the current month" do
-      this_month = publish(menus(:milanesa), monday, amount: 30)
-      next_month = publish(menus(:sorrentinos), Date.new(2026, 10, 1), amount: 30)
+      this_month = publish(menus(:milanesa), monday)
+      next_month = publish(menus(:sorrentinos), Date.new(2026, 10, 1))
       benefit = benefits(:monthly)
       benefit.update!(due_date: 1.month.from_now, amount: 20, percentage: 50)
       [ [ this_month, 3 ], [ next_month, 7 ] ].each do |schedule, quantity|
@@ -685,9 +664,9 @@ RSpec.describe "Consumer dashboard", type: :request do
         menu = Menu.create!(provider:, name: "Wok de vegetales", description: "Plato de prueba", price: 300)
 
         # Schedule for this past Friday (should not be included)
-        Schedule.create!(menu:, date: Date.new(2026, 10, 2), amount: 10)
+        Schedule.create!(menu:, date: Date.new(2026, 10, 2))
         # Schedule for next Monday (should be included)
-        next_week_schedule = Schedule.create!(menu:, date: next_monday, amount: 10)
+        next_week_schedule = Schedule.create!(menu:, date: next_monday)
 
         sign_in_as_consumer(consumer_user_record)
         get dashboard_path
@@ -742,7 +721,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       provider_user = User.create!(email: "prov-conf-2@gmail.com", name: "La Cocina", password: "password123456")
       provider = Provider.create!(user: provider_user)
       menu = Menu.create!(provider:, name: "Tarta Pascualina", description: "Plato de prueba", price: 250)
-      schedule = Schedule.create!(menu:, date: Date.current, amount: 10)
+      schedule = Schedule.create!(menu:, date: Date.current)
       order = Order.create!(
         consumer:,
         schedule:,
@@ -782,7 +761,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       provider_user = User.create!(email: "prov-conf-3@gmail.com", name: "La Cocina", password: "password123456")
       provider = Provider.create!(user: provider_user)
       menu = Menu.create!(provider:, name: "Guiso de lentejas", description: "Plato de prueba", price: 250)
-      schedule = Schedule.create!(menu:, date: Date.current, amount: 10)
+      schedule = Schedule.create!(menu:, date: Date.current)
       other_order = Order.create!(
         consumer: other_consumer,
         schedule:,
@@ -833,7 +812,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       provider_user = User.create!(email: "prov-mix@gmail.com", name: "La Cocina", password: "password123456")
       provider = Provider.create!(user: provider_user)
       menu = Menu.create!(provider:, name: "Tarta Mixta", description: "Plato de prueba", price: 250)
-      schedule = Schedule.create!(menu:, date: Date.current, amount: 10)
+      schedule = Schedule.create!(menu:, date: Date.current)
       own_order = Order.create!(
         consumer:,
         schedule:,
@@ -902,6 +881,7 @@ RSpec.describe "Consumer dashboard", type: :request do
     end
 
     it "exposes the special subsidies in force with their uses left" do
+      orders(:upcoming_pending_future).schedule.update_columns(date: Date.new(2026, 9, 16))
       gift = consumer.benefits.create!(
         benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2, due_date: Date.new(2026, 9, 19)
       )

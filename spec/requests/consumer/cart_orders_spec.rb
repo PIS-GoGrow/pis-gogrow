@@ -183,7 +183,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
     it "no persiste órdenes parciales si uno de los platos del carrito falla por falta de stock" do
       sold_out_schedule = schedules(:office)
-      sold_out_schedule.update!(date: schedule.date, amount: 0)
+      sold_out_schedule.update!(date: schedule.date, available: false)
 
       expect {
         post orders_path, params: {
@@ -199,7 +199,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
       expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
-      expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.insufficient_stock"))
+      expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.schedule_unavailable"))
     end
 
     it "crea las órdenes atómicamente cuando el carrito es válido y redirige a la confirmación" do
@@ -232,8 +232,8 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
     let(:consumer) { consumers(:one) }
     let(:menu) { Menu.create!(provider: providers(:tuviandita), name: "Milanesa", description: "Con puré", price: 300) }
-    let(:wednesday) { Schedule.create!(menu:, date: Date.new(2026, 9, 16), amount: 10) }
-    let(:thursday) { Schedule.create!(menu:, date: Date.new(2026, 9, 17), amount: 10) }
+    let(:wednesday) { Schedule.create!(menu:, date: Date.new(2026, 9, 16)) }
+    let(:thursday) { Schedule.create!(menu:, date: Date.new(2026, 9, 17)) }
     let!(:base) do
       consumer.benefits.destroy_all
       consumer.benefits.create!(

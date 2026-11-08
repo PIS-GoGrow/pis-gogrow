@@ -108,7 +108,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
     it "lists the past orders of the signed-in provider, most recent delivery first" do
       other_provider_order
-      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10, amount: 5)
+      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10)
       older = Order.create!(
         consumer: consumers(:one),
         schedule: older_schedule,
@@ -151,8 +151,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
       tomorrow_schedule = Schedule.create!(
         menu: menus(:milanesa),
-        date: Date.current + 1.day,
-        amount: 5
+        date: Date.current + 1.day
       )
       order_tomorrow = Order.create!(
         consumer: consumers(:one),
@@ -299,9 +298,7 @@ RSpec.describe "Provider::Orders", type: :request do
           order[:menu_name] == "Milanesa con papas fritas" &&
           order[:menu_description] == "Opción de carne o pollo" &&
           order[:discounted_price] == 150.25 &&
-          order[:subsidy] == 150.25 &&
-          order[:schedule_amount] == 5 &&
-          order[:remaining_amount] == 4
+          order[:subsidy] == 150.25
       }
     end
 

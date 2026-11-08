@@ -509,13 +509,6 @@ RSpec.describe Order, type: :model do
       expect(order.status_before_cancellation).to eq("confirmed")
     end
 
-    it "gives the reserved units back to the schedule" do
-      order = orders(:upcoming_confirmed_future)
-
-      expect { order.cancel(by: employee) }
-        .to change { order.schedule.reload.remaining_amount }.by(order.amount)
-    end
-
     it "ignores a second cancellation instead of overwriting the first one" do
       order = orders(:upcoming_confirmed_future)
       order.cancel(by: employee)
@@ -644,13 +637,6 @@ RSpec.describe Order, type: :model do
       expect(order.decide(:rejected, reason: :other)).to be(false)
       expect(order.reload).to be_pending
       expect(order.errors[:rejection_details]).to be_present
-    end
-
-    it "gives reserved units back to the schedule when rejected" do
-      order = orders(:upcoming_pending_today)
-
-      expect { order.decide(:rejected, reason: :out_of_stock) }
-        .to change { order.schedule.reload.remaining_amount }.by(order.amount)
     end
 
     it "rejects a confirmed order with a valid reason and returns true" do
@@ -889,9 +875,16 @@ RSpec.describe Order, type: :model do
       expect(order.max_quantity).to eq(order.amount)
     end
 
-    it "returns the sum of remaining amount and current order amount when schedule is present" do
+    it "returns the order amount when schedule is not available" do
       order = orders(:upcoming_pending_future)
-      expect(order.max_quantity).to eq(order.schedule.remaining_amount + order.amount)
+      order.schedule.update!(available: false)
+      expect(order.max_quantity).to eq(order.amount)
+    end
+
+    it "allows up to 99 units when schedule is available" do
+      order = orders(:upcoming_pending_future)
+      order.schedule.update!(available: true)
+      expect(order.max_quantity).to eq(99)
     end
   end
 
@@ -1259,7 +1252,7 @@ RSpec.describe Order, type: :model do
 
     let(:consumer) { consumers(:one) }
     let(:menu) { Menu.create!(provider: providers(:tuviandita), name: "Milanesa", description: "Con puré", price: 300) }
-    let(:schedule) { Schedule.create!(menu:, date: Date.new(2026, 9, 16), amount: 20) }
+    let(:schedule) { Schedule.create!(menu:, date: Date.new(2026, 9, 16)) }
     let(:delivery) { { delivery_method: "office", address: companies(:gogrow).address } }
     let!(:base) do
       consumer.benefits.destroy_all
@@ -1347,7 +1340,7 @@ RSpec.describe Order, type: :model do
     end
 
     let(:consumer) { consumers(:one) }
-    let(:schedule) { Schedule.create!(menu: menus(:milanesa), date: Date.new(2026, 9, 16), amount: 20) }
+    let(:schedule) { Schedule.create!(menu: menus(:milanesa), date: Date.new(2026, 9, 16)) }
     let(:special) do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 1)
     end
@@ -1387,7 +1380,7 @@ RSpec.describe Order, type: :model do
   describe "database integrity and associations for order benefits" do
     let(:consumer) { consumers(:one) }
     let(:menu) { Menu.create!(provider: providers(:tuviandita), name: "Plato de prueba", description: "Con papas", price: 300) }
-    let(:schedule) { Schedule.create!(menu:, date: Date.current, amount: 20) }
+    let(:schedule) { Schedule.create!(menu:, date: Date.current) }
     let(:special) do
       consumer.benefits.create!(benefit_configuration: benefit_configurations(:gift), description: "Premio", percentage: 30, amount: 2)
     end

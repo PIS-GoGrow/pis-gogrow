@@ -21,8 +21,8 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
 
   before do
     schedules(:past).update!(date: Date.current - 5.days)
-    sched_today.update!(amount: 10, available: true, date: Date.current)
-    sched_future.update!(amount: 10, available: true, date: Date.tomorrow)
+    sched_today.update!(available: true, date: Date.current)
+    sched_future.update!(available: true, date: Date.tomorrow)
     benefit.update!(due_date: Date.current.end_of_month)
     provider.update!(order_deadline: 2.hours.from_now.strftime("%H:%M"))
   end
@@ -42,14 +42,12 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
 
   describe "Paso 1: Cancelación permitida dentro del plazo límite (CAG-04, CAG-06, CAG-07)" do
     it "cancela Orden 1 en plazo, registra trazabilidad, restituye el subsidio y actualiza el panel del proveedor" do
-      initial_stock = sched_today.remaining_amount
       order_1 = reserve_subsidized_order(schedule: sched_today)
 
       expect(order_1).to be_persisted
       expect(order_1).to be_pending
       expect(consumer.monthly_benefit_used_this_month).to eq(1)
       expect(consumer.remaining_monthly_benefit).to eq(19)
-      expect(sched_today.reload.remaining_amount).to eq(initial_stock - 1)
 
       # 1.1: Autenticarse como E1 y verificar consumo inicial en dashboard y navegar a Mis Órdenes
       sign_in consumer_user, role: :consumer
@@ -79,10 +77,9 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       find("button", text: "Historial").click
       expect(page).to have_content("Cancelado")
 
-      # 1.4: Comprobar restitución automática del cupo de subsidio y stock en vista de E1
+      # 1.4: Comprobar restitución automática del cupo de subsidio en vista de E1
       expect(consumer.reload.monthly_benefit_used_this_month).to eq(0)
       expect(consumer.remaining_monthly_benefit).to eq(20)
-      expect(sched_today.reload.remaining_amount).to eq(initial_stock)
 
       visit dashboard_path
       expect(page).to have_content("0 de 20")
@@ -165,7 +162,6 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
     end
 
     it "3.2 y 3.3 rechaza peticiones duplicadas de cancelación sobre Orden 1 sin sobrescribir trazabilidad ni duplicar devolución" do
-      initial_stock = sched_future.remaining_amount
       order_1 = reserve_subsidized_order(schedule: sched_future)
 
       expect(consumer.reload.remaining_monthly_benefit).to eq(19)
@@ -173,7 +169,6 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
 
       first_cancelled_at = order_1.reload.cancelled_at
       expect(consumer.reload.remaining_monthly_benefit).to eq(20)
-      expect(sched_future.reload.remaining_amount).to eq(initial_stock)
 
       # Segunda solicitud de cancelación (duplicada)
       expect(order_1.cancel(by: consumer_user)).to be(false)
@@ -182,7 +177,6 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       expect(order_1.cancelled_at).to eq(first_cancelled_at)
       expect(order_1.cancelled_by).to eq(consumer_user)
       expect(consumer.reload.remaining_monthly_benefit).to eq(20)
-      expect(sched_future.reload.remaining_amount).to eq(initial_stock)
     end
   end
 

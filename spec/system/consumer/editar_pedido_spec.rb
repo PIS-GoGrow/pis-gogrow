@@ -22,8 +22,7 @@ RSpec.describe "Modificar un pedido desde la pantalla del plato", type: :system 
   let!(:schedule) do
     Schedule.create!(
       menu: sorrentinos,
-      date: Date.current + 2.days,
-      amount: 10
+      date: Date.current + 2.days
     )
   end
 

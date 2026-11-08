@@ -38,7 +38,7 @@ RSpec.describe Consumer, type: :model do
 
     def home_order(address, created_at:)
       menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa", description: "Plato de prueba", price: 300)
-      schedule = Schedule.create!(menu:, date: Date.current + 1, amount: 5)
+      schedule = Schedule.create!(menu:, date: Date.current + 1)
       Order.create!(consumer:, schedule:, amount: 1, price: 300, address:, delivery_method: :home, created_at:)
     end
 
@@ -96,7 +96,7 @@ RSpec.describe Consumer, type: :model do
     end
 
     let(:menu) { menus(:milanesa) }
-    let(:today_schedule) { Schedule.create!(menu:, date: Date.current, amount: 30) }
+    let(:today_schedule) { Schedule.create!(menu:, date: Date.current) }
 
     it "counts orders delivered within the current month" do
       Order.create!(
@@ -124,8 +124,8 @@ RSpec.describe Consumer, type: :model do
     end
 
     it "does not count orders delivered in previous or future months" do
-      past_schedule = Schedule.create!(menu:, date: 1.month.ago.beginning_of_month, amount: 30)
-      future_schedule = Schedule.create!(menu:, date: 1.month.from_now.beginning_of_month, amount: 30)
+      past_schedule = Schedule.create!(menu:, date: 1.month.ago.beginning_of_month)
+      future_schedule = Schedule.create!(menu:, date: 1.month.from_now.beginning_of_month)
 
       Order.create!(
         consumer:, schedule: past_schedule, amount: 5,
@@ -284,7 +284,7 @@ RSpec.describe Consumer, type: :model do
     end
 
     let(:menu) { menus(:milanesa) }
-    let(:today_schedule) { Schedule.create!(menu:, date: Date.current, amount: 30) }
+    let(:today_schedule) { Schedule.create!(menu:, date: Date.current) }
 
     it "sums active orders delivered in the current month" do
       Order.create!(
@@ -311,7 +311,7 @@ RSpec.describe Consumer, type: :model do
     end
 
     let(:menu) { menus(:milanesa) }
-    let(:today_schedule) { Schedule.create!(menu:, date: Date.current, amount: 30) }
+    let(:today_schedule) { Schedule.create!(menu:, date: Date.current) }
 
     it "returns an ActiveRecord relation that can be queried and aggregated" do
       relation = consumer.monthly_benefit_usages
@@ -377,10 +377,10 @@ RSpec.describe Consumer, type: :model do
     end
 
     it "strictly bounds dates to the current month" do
-      first_day_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month, amount: 10)
-      last_day_schedule = Schedule.create!(menu:, date: Date.current.end_of_month, amount: 10)
-      prev_month_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month - 1.day, amount: 10)
-      next_month_schedule = Schedule.create!(menu:, date: Date.current.end_of_month + 1.day, amount: 10)
+      first_day_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month)
+      last_day_schedule = Schedule.create!(menu:, date: Date.current.end_of_month)
+      prev_month_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month - 1.day)
+      next_month_schedule = Schedule.create!(menu:, date: Date.current.end_of_month + 1.day)
 
       Order.create!(
         consumer:, schedule: first_day_schedule, amount: 1,

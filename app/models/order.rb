@@ -286,8 +286,7 @@ class Order < ApplicationRecord
         schedule.with_lock do
           # Bajar o mantener cantidad no cuenta como pedir "de más": solo se
           # bloquea si la publicación está agotada y encima se pide aumentar.
-          if schedule.remaining_amount + amount.to_i < quantity ||
-             (!schedule.available && quantity > amount.to_i)
+          if !schedule.available && quantity > amount.to_i
             errors.add(:base, I18n.t("validations.schedule_unavailable"))
             return false
           end
@@ -458,12 +457,10 @@ class Order < ApplicationRecord
     }
   end
 
-  # El cupo del schedule ya descuenta esta orden, así que el máximo que el
-  # empleado puede elegir es lo que queda más lo que ya tiene reservado.
   def max_quantity
-    return amount.to_i if schedule.nil?
+    return amount.to_i if schedule.nil? || !schedule.available
 
-    schedule.remaining_amount + amount.to_i
+    99
   end
 
   # La dirección actual del pedido se mantiene como opción aunque no esté

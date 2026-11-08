@@ -30,8 +30,8 @@ RSpec.describe "Editar un plato que ya está publicado" do
     sign_in users(:provider_user), role: :provider
   end
 
-  def publish(menu, date, amount: 10)
-    Schedule.create!(menu:, date:, amount:)
+  def publish(menu, date)
+    Schedule.create!(menu:, date:)
   end
 
   def confirmed_order(schedule)

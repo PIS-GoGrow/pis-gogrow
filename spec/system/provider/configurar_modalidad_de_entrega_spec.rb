@@ -69,8 +69,8 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
     Schedule.delete_all
   end
 
-  def publish(menu, date, amount: 5)
-    Schedule.create!(menu:, date:, amount:)
+  def publish(menu, date)
+    Schedule.create!(menu:, date:)
   end
 
   # Criterio 1 — la mitad que el modelo sí soporta: pasar de "ambas" a "solo

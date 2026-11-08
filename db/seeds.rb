@@ -246,9 +246,7 @@ end
   schedule = Schedule.find_or_create_by!(
     menu:,
     date: Date.current.beginning_of_month + 3.days
-  ) do |new_schedule|
-    new_schedule.amount = 5
-  end
+  )
 
   order = Order.create!(
     consumer:,

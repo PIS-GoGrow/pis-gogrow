@@ -18,7 +18,7 @@ RSpec.describe "Flujo de comprobantes múltiples y rechazo por pago parcial", ty
   def create_closed_month_order
     travel_to(Time.zone.local(closed_month.year, closed_month.month, 10, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa con puré", description: "Clásica", price: 500)
-      schedule = Schedule.create!(menu:, date: closed_month + 12, amount: 20)
+      schedule = Schedule.create!(menu:, date: closed_month + 12)
 
       Order.create!(
         consumer:, schedule:,

@@ -157,7 +157,7 @@ RSpec.describe Account, type: :model do
   describe "#sync_amount!" do
     it "updates the account amount with the sum of final discounted prices of confirmed orders" do
       menu = Menu.create!(provider:, name: "Tarta", description: "Pascualina", price: 300)
-      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday))
 
       account = consumer.accounts.create!(provider:, month: Date.current, amount: 0)
 
@@ -201,7 +201,7 @@ RSpec.describe Account, type: :model do
 
     it "sums the subsidy of confirmed orders for a company account" do
       menu = Menu.create!(provider:, name: "Wok", description: "De verduras", price: 400)
-      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday))
 
       Order.create!(
         consumer:,
@@ -291,7 +291,7 @@ RSpec.describe Account, type: :model do
     # menos el descuento.
     it "sets the amount of a company account to the subsidy its employees got" do
       menu = Menu.create!(provider:, name: "Tarta", description: "Pascualina", price: 300)
-      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday))
       company_account = consumer.company.accounts.create!(provider:, month: Date.current, amount: 0)
 
       order = Order.create!(
@@ -379,7 +379,7 @@ RSpec.describe Account, type: :model do
   describe ".amount_and_price_sum" do
     it "aggregates total amounts and final discounted prices for confirmed orders of the given accounts" do
       menu = Menu.create!(provider:, name: "Milanesa", description: "Con puré", price: 350)
-      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 15)
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday))
 
       account = consumer.accounts.create!(provider:, month: Date.current, amount: 0)
 

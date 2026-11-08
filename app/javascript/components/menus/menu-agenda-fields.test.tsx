@@ -29,7 +29,6 @@ describe("MenuAgendaFields helpers", () => {
       date: null,
       starts_on: null,
       ends_on: null,
-      amount: null,
     })
 
     expect(draftFromNone.mode).toBe("single")
@@ -41,12 +40,10 @@ describe("MenuAgendaFields helpers", () => {
       date: null,
       starts_on: "2030-01-09",
       ends_on: null,
-      amount: 10,
     })
 
     expect(draftFromWeekly.mode).toBe("weekly")
     expect(draftFromWeekly.weekdays).toEqual([1, 5])
-    expect(draftFromWeekly).not.toHaveProperty("amount")
   })
 
   describe("agendaProblem", () => {
