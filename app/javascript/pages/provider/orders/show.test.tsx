@@ -52,8 +52,6 @@ function order(overrides: Partial<ProviderOrderDetail> = {}) {
     created_on: "2026-09-11",
     menu_option_groups: [],
     selected_options: [],
-    discounted_price: 300,
-    subsidy: 300,
     rejection_reason: null,
     rejection_details: null,
     rejectable: true,

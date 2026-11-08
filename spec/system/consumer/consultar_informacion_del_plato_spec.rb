@@ -93,10 +93,10 @@ RSpec.describe "Consultar la información de un plato" do
 
     click_on "Volver"
     pick_day(wednesday)
-    open_dish(menus(:sorrentinos))
 
+    expect(page).to have_content("Sorrentinos artesanales")
     expect(page).to have_content("Agotado")
-    expect(page).to have_button("Agregar uno", disabled: true)
+    expect(page).to have_button("Agregar Sorrentinos artesanales", disabled: true)
   end
 
   it "shows the discount of the employee benefit on the dish price" do

@@ -31,15 +31,6 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
     order.selected_options
   end
 
-  typelize :number, nullable: true
-  attribute :discounted_price do |order|
-    order.discounted_price&.to_f
-  end
-
-  typelize :number, nullable: true
-  attribute :subsidy do |order|
-    order.subsidy&.to_f
-  end
 
   typelize :string, nullable: true
   attribute :rejection_reason do |order|

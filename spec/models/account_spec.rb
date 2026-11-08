@@ -227,7 +227,7 @@ RSpec.describe Account, type: :model do
     it "no cuenta un pedido confirmado hasta su fecha de entrega" do
       travel_to Time.zone.local(2026, 11, 3, 12)
       menu = Menu.create!(provider:, name: "Wok", description: "De verduras", price: 400)
-      schedule = Schedule.create!(menu:, date: Date.new(2026, 11, 5), amount: 10)
+      schedule = Schedule.create!(menu:, date: Date.new(2026, 11, 5))
       order = Order.create!(
         consumer:, schedule:, amount: 1, price: 400, discounted_price: 250,
         address: company.address, delivery_method: :office, status: :confirmed

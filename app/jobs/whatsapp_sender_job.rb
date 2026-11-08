@@ -27,8 +27,6 @@ class WhatsappSenderJob < ApplicationJob
     ACCESS_TOKEN.present? && ACCESS_TOKEN != "." && PHONE_ID.present? && PHONE_ID != "."
   end
 
-  private
-
   def request_body(event_key, title_data, description_data, phone)
     {
       messaging_product: :whatsapp,

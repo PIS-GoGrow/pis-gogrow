@@ -2001,7 +2001,7 @@ RSpec.describe "Orders", type: :request do
           notification = Notification.find_by!(event: "order_received", notifiable: order)
           original_desc = notification.description
 
-          order.schedule.update!(amount: 1)
+          order.schedule.update!(available: false)
 
           patch order_path(order), params: update_params(quantity: 10)
 
