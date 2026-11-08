@@ -2,7 +2,7 @@
 
 class AdminConsumerSummary
   # Estado que resume varias cuentas del mismo mes: el que más atención pide.
-  STATUS_PRIORITY = %w[pending rejected submitted approved].freeze
+  STATUS_PRIORITY = %w[partial pending rejected submitted approved].freeze
 
   ConsumerRow = Data.define(:consumer, :amount, :status) do
     delegate :id, to: :consumer
@@ -26,7 +26,7 @@ class AdminConsumerSummary
     def status = AdminConsumerSummary.status_of(accounts)
 
     def orders
-      accounts.flat_map { it.orders.select(&:confirmed?) }.sort_by { [ it.delivery_date&.jd || 0, it.created_at ] }.reverse
+      accounts.flat_map { it.orders.select(&:consumed?) }.sort_by { [ it.delivery_date&.jd || 0, it.created_at ] }.reverse
     end
 
     def subsidy = orders.sum { it.subsidy || 0 }.to_f

@@ -67,5 +67,43 @@ RSpec.describe "Provider welcomes", type: :request do
 
       expect(response).to redirect_to(root_path)
     end
+
+    it "redirects an authenticated admin to root" do
+      sign_in users(:admin), role: :admin
+
+      get provider_welcome_path, params: { token: token, company: company_token }
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "redirects an authenticated provider to root" do
+      sign_in users(:provider_user), role: :provider
+
+      get provider_welcome_path, params: { token: token, company: company_token }
+
+      expect(response).to redirect_to(root_path)
+    end
+
+    it "rejects when company parameter is a raw database ID instead of signed token" do
+      get provider_welcome_path, params: { token: token, company: company.id }
+
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    it "rejects when token contains non-numeric user id" do
+      get provider_welcome_path, params: { token: "abc.123456", company: company_token }
+
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    it "rejects when token references a user that is not a provider" do
+      consumer_user = users(:one)
+      consumer_code = OtpCode.issue(consumer_user, :invitation)
+      invalid_role_token = "#{consumer_user.id}.#{consumer_code.code}"
+
+      get provider_welcome_path, params: { token: invalid_role_token, company: company_token }
+
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
   end
 end

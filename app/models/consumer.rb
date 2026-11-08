@@ -29,7 +29,7 @@ class Consumer < ApplicationRecord
   end
 
   def total_debt
-    accounts.pending.sum :amount
+    accounts.pending.includes(:payments).sum(&:outstanding_amount)
   end
 
   # La alerta requiere acción, así que solo se cierra acá, cuando la deuda vuelve

@@ -24,8 +24,99 @@ RSpec.describe Payment, type: :model do
     payment
   end
 
+  describe "#expected_amount" do
+    it "keeps the debt the account had when the receipt was sent" do
+      payment = payment_with_receipt.tap(&:save!)
+
+      account.update!(amount: 950)
+      payment.approve
+
+      expect(payment.reload.expected_amount).to eq(500.to_d)
+    end
+
+    it "takes the debt again when a rejected receipt is resent" do
+      payment = payment_with_receipt.tap(&:save!)
+      payment.reject_with("Ilegible")
+      account.update!(amount: 950)
+
+      payment.update!(status: :submitted)
+
+      expect(payment.expected_amount).to eq(950.to_d)
+    end
+
+    it "leaves out what earlier approved receipts already covered" do
+      payment_with_receipt.tap(&:save!).approve
+      account.update!(amount: 950)
+
+      expect(payment_with_receipt.tap(&:save!).expected_amount).to eq(450.to_d)
+    end
+
+    it "overrides a client-supplied expected_amount with the actual account outstanding amount" do
+      payment = account.payments.build(provider:, status: :submitted, expected_amount: 10.0)
+      payment.receipt.attach(io: StringIO.new("receipt"), filename: "comprobante.png", content_type: "image/png")
+      payment.save!
+
+      expect(payment.expected_amount).to eq(500.to_d)
+    end
+
+    it "preserves exact decimal cents from the account outstanding amount" do
+      account.update!(amount: 290.25)
+      payment = payment_with_receipt.tap(&:save!)
+
+      expect(payment.expected_amount).to eq(290.25.to_d)
+    end
+  end
+
   it "starts as pending" do
     expect(described_class.new.status).to eq("pending")
+  end
+
+  it "defines partial as a payment status distinct from rejected" do
+    expect(described_class.statuses).to include("partial" => 4)
+  end
+
+  it "transitions a submitted payment to partial without losing its receipt" do
+    payment = payment_with_receipt.tap(&:save!)
+    original_blob_id = payment.receipt.blob_id
+    original_amount = account.amount
+    payment.update_column(:rejection_reason, "Motivo anterior")
+
+    expect(payment.mark_partial).to be(true)
+
+    expect(payment.reload).to be_partial
+    expect(payment.rejection_reason).to be_nil
+    expect(payment.receipt).to be_attached
+    expect(payment.receipt.blob_id).to eq(original_blob_id)
+    expect(account.reload.amount).to eq(original_amount)
+  end
+
+  it "does not mark payments partial from incompatible statuses" do
+    payments = [
+      payment_with_receipt(status: :pending),
+      payment_with_receipt(status: :approved),
+      payment_with_receipt(status: :rejected, rejection_reason: "Monto incorrecto"),
+      payment_with_receipt(status: :partial)
+    ]
+    payments.each(&:save!)
+
+    expect(payments.map(&:mark_partial)).to all(be(false))
+    expect(payments.map { it.reload.status }).to eq(%w[pending approved rejected partial])
+  end
+
+  it "does not reopen or modify a historical partial payment" do
+    payment = payment_with_receipt.tap(&:save!)
+    payment.mark_partial
+
+    expect(payment.update(status: :submitted)).to be(false)
+    expect(payment.errors[:status]).to be_present
+
+    expect(payment.update(status: :approved)).to be(false)
+    expect(payment.errors[:status]).to be_present
+
+    expect(payment.update(status: :rejected, rejection_reason: "Rechazo")).to be(false)
+    expect(payment.errors[:status]).to be_present
+
+    expect(payment.reload).to be_partial
   end
 
   # El recordatorio manual del proveedor quedaba activo para siempre después de
@@ -60,6 +151,15 @@ RSpec.describe Payment, type: :model do
       payment.save!
 
       payment.reject_with("El comprobante no corresponde")
+
+      expect(reminder.reload.closed_at).to be_nil
+    end
+
+    it "stays open when the payment is partial" do
+      reminder = manual_reminder
+      payment = payment_with_receipt(status: :submitted).tap(&:save!)
+
+      payment.mark_partial
 
       expect(reminder.reload.closed_at).to be_nil
     end
@@ -211,19 +311,31 @@ RSpec.describe Payment, type: :model do
       expect(payment.rejection_reason).to eq("La imagen está borrosa")
     end
 
-    it "is cleared when the employee sends the payment again" do
-      payment = payment_with_receipt(status: :rejected, rejection_reason: "La imagen está borrosa")
-      payment.save!
+    it "stays on the rejected payment when the employee sends a new receipt" do
+      rejected = payment_with_receipt
+      rejected.save!
+      rejected.reject_with("El pago es parcial")
 
-      # Es el reenvío de Consumer::PaymentsController#update: comprobante nuevo y
-      # el pago vuelve a "enviado".
-      payment.receipt.attach(
-        io: StringIO.new("comprobante nuevo"), filename: "nuevo.png", content_type: "image/png"
-      )
-      payment.update!(status: :submitted)
+      resent = payment_with_receipt(filename: "comprobante_2.png")
+      resent.save!
 
-      expect(payment.reload).to be_submitted
-      expect(payment.rejection_reason).to be_nil
+      expect(rejected.reload).to have_attributes(status: "rejected", rejection_reason: "El pago es parcial")
+      expect(resent.reload).to have_attributes(status: "submitted", rejection_reason: nil)
+    end
+
+    it "preserves distinct rejection reasons across multiple rejections and resubmissions" do
+      first_rejected = payment_with_receipt(filename: "c1.png").tap(&:save!)
+      first_rejected.reject_with("Primer rechazo: borroso")
+
+      second_rejected = payment_with_receipt(filename: "c2.png").tap(&:save!)
+      second_rejected.reject_with("Segundo rechazo: monto incorrecto")
+
+      active_submitted = payment_with_receipt(filename: "c3.png").tap(&:save!)
+
+      expect(first_rejected.reload).to have_attributes(status: "rejected", rejection_reason: "Primer rechazo: borroso")
+      expect(second_rejected.reload).to have_attributes(status: "rejected", rejection_reason: "Segundo rechazo: monto incorrecto")
+      expect(active_submitted.reload).to have_attributes(status: "submitted", rejection_reason: nil)
+      expect(account.payments.pluck(:id)).to contain_exactly(first_rejected.id, second_rejected.id, active_submitted.id)
     end
   end
 
@@ -317,6 +429,24 @@ RSpec.describe Payment, type: :model do
       expect(rejected1).to be_persisted
       expect(rejected2).to be_persisted
       expect(account.payments.rejected.count).to eq(2)
+    end
+
+    it "allows several consecutive partial payments for the same account" do
+      first = payment_with_receipt(status: :partial, filename: "parcial_1.png").tap(&:save!)
+      second = payment_with_receipt(status: :partial, filename: "parcial_2.png").tap(&:save!)
+
+      expect(account.payments.partial).to contain_exactly(first, second)
+      expect(first.receipt.filename.to_s).to eq("parcial_1.png")
+      expect(second.receipt.filename.to_s).to eq("parcial_2.png")
+    end
+
+    it "allows one submitted payment after previous partial payments" do
+      payment_with_receipt(status: :partial, filename: "parcial_1.png").save!
+      payment_with_receipt(status: :partial, filename: "parcial_2.png").save!
+
+      submitted = payment_with_receipt(filename: "final.png")
+
+      expect(submitted).to be_valid
     end
   end
 
@@ -474,6 +604,7 @@ end
 # Table name: payments
 #
 #  id               :bigint           not null, primary key
+#  expected_amount  :decimal(10, 2)
 #  rejection_reason :text
 #  status           :integer          default(0), not null
 #  created_at       :datetime         not null

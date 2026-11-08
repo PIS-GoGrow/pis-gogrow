@@ -155,6 +155,39 @@ RSpec.describe Provider, type: :model do
     end
   end
 
+  describe "#payment_details_complete?" do
+    let(:provider) { providers(:tuviandita) }
+
+    it "is true with the bank, the account number and the holder" do
+      provider.assign_attributes(bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: "Tu Viandita S.A.")
+
+      expect(provider.payment_details_complete?).to be true
+    end
+
+    it "is false while any of them is missing" do
+      provider.assign_attributes(bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: nil)
+
+      expect(provider.payment_details_complete?).to be false
+    end
+
+    it "is false when attributes are blank strings or whitespace" do
+      provider.assign_attributes(bank_name: "   ", bank_account_number: "1150260", bank_account_holder: "Tu Viandita S.A.")
+      expect(provider.payment_details_complete?).to be false
+
+      provider.assign_attributes(bank_name: "Santander", bank_account_number: "", bank_account_holder: "Tu Viandita S.A.")
+      expect(provider.payment_details_complete?).to be false
+
+      provider.assign_attributes(bank_name: "Santander", bank_account_number: "1150260", bank_account_holder: "\t\n")
+      expect(provider.payment_details_complete?).to be false
+    end
+
+    it "is false when all payment detail attributes are nil" do
+      provider.assign_attributes(bank_name: nil, bank_account_number: nil, bank_account_holder: nil)
+
+      expect(provider.payment_details_complete?).to be false
+    end
+  end
+
   describe "#order_deadline_passed_today?" do
     let(:provider) { providers(:tuviandita) }
 
@@ -184,6 +217,79 @@ RSpec.describe Provider, type: :model do
       provider.order_deadline = Time.zone.parse("11:29")
 
       expect(provider.order_deadline_passed_today?).to be true
+    end
+  end
+
+  describe "#seconds_until_order_deadline" do
+    let(:provider) { providers(:tuviandita) }
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 10, 2, 11, 30)) { example.run }
+    end
+
+    it "is nil without a deadline" do
+      provider.order_deadline = nil
+
+      expect(provider.seconds_until_order_deadline).to be_nil
+    end
+
+    it "counts the seconds left before the deadline" do
+      provider.order_deadline = Time.zone.parse("11:31")
+
+      expect(provider.seconds_until_order_deadline).to eq 60
+    end
+
+    it "is nil once the deadline has been reached" do
+      provider.order_deadline = Time.zone.parse("11:30")
+
+      expect(provider.seconds_until_order_deadline).to be_nil
+    end
+
+    it "is nil after the deadline has passed" do
+      provider.order_deadline = Time.zone.parse("11:29")
+
+      expect(provider.seconds_until_order_deadline).to be_nil
+    end
+
+    it "rounds up fractions of a second to ensure remaining time is not underestimated" do
+      provider.order_deadline = Time.zone.parse("11:31")
+      # El around hook ya fijó el tiempo en 11:30:00 (quedan 60s).
+      # Si el deadline fuera en 11:30:01 (1 segundo después) y estamos en 11:30:00.2 (quedan 0.8s):
+      provider.order_deadline = Time.zone.local(2026, 10, 2, 11, 30, 1)
+
+      expect(provider.seconds_until_order_deadline).to eq 1
+    end
+
+    it "maintains consistency with order_deadline_passed_today? across the exact transition" do
+      # Exactamente a la hora límite (11:30)
+      provider.order_deadline = Time.zone.parse("11:30")
+      expect(provider.order_deadline_passed_today?).to be true
+      expect(provider.seconds_until_order_deadline).to be_nil
+
+      # Un segundo después de la hora límite (11:30:01)
+      provider.order_deadline = Time.zone.local(2026, 10, 2, 11, 30, 1)
+      expect(provider.order_deadline_passed_today?).to be false
+      expect(provider.seconds_until_order_deadline).to eq 1
+    end
+  end
+
+  describe "#order_deadline_today" do
+    let(:provider) { providers(:tuviandita) }
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 10, 2, 8, 0)) { example.run }
+    end
+
+    it "is nil without a deadline" do
+      provider.order_deadline = nil
+
+      expect(provider.send(:order_deadline_today)).to be_nil
+    end
+
+    it "combines today's date with the configured deadline hour and minute" do
+      provider.order_deadline = Time.zone.parse("14:45")
+
+      expect(provider.send(:order_deadline_today)).to eq Time.zone.local(2026, 10, 2, 14, 45, 0)
     end
   end
 

@@ -13,7 +13,8 @@ export default function AuthLayout({
   description?: ReactNode
   backHref?: string
   hideLogo?: boolean
-  variant?: "welcome" | "form"
+  variant?: "welcome" | "form" | "landing"
+  fullHeight?: boolean
 }) {
   return (
     <AuthLayoutTemplate title={title} description={description} {...props}>

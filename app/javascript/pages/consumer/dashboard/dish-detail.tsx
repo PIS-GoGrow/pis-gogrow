@@ -87,7 +87,11 @@ export function DishDetail({
   // No dejamos seleccionar beneficios sin límite (se aplican siempre)
   // No mostramos beneficios para los que ya no quedan unidades disponibles
   const selectableBenefits = benefit.specials.filter(
-    (b) => b.remaining !== null && b.remaining - benefitHeld[b.id] > 0,
+    (b) =>
+      b.remaining !== null &&
+      b.remaining - benefitHeld[b.id] > 0 &&
+      (b.starts_on === null || b.starts_on <= item.date) &&
+      (b.due_date === null || b.due_date >= item.date),
   )
   const specialBenefitIds = selectableBenefits.map((b) => b.id)
 
