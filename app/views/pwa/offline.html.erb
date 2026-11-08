@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -34,7 +33,8 @@
       align-items: center;
       justify-content: center;
       text-align: center;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, "Helvetica Neue", Arial, sans-serif;
       background-color: var(--bg);
       color: var(--fg);
     }
@@ -54,14 +54,37 @@
       display: none;
       flex-direction: column;
       align-items: center;
+      width: 100%;
+      max-width: 600px;
     }
 
     #orders-section.visible {
       display: flex;
     }
 
-    #orders p {
+    #orders {
+      width: 100%;
+    }
+
+    .order {
+      border: 1px solid var(--fg);
+      border-radius: 6px;
+      padding: 0.75rem;
       margin: 0.5rem 0;
+      text-align: left;
+      overflow-wrap: anywhere;
+    }
+
+    .order pre {
+      white-space: pre-wrap;
+      font: inherit;
+      font-size: 0.875rem;
+      margin: 0;
+    }
+
+    #last-updated {
+      font-size: 0.875rem;
+      opacity: 0.7;
     }
   </style>
 </head>
@@ -69,7 +92,8 @@
   <h1>Sin conexión</h1>
 
   <section id="orders-section">
-    <p>Estos son los próximos pedidos guardados:</p>
+    <p id="orders-title"></p>
+    <p id="last-updated"></p>
     <div id="orders"></div>
   </section>
 
@@ -78,23 +102,38 @@
   <script>
     (function () {
       const section = document.getElementById("orders-section");
+      const title = document.getElementById("orders-title");
+      const lastUpdated = document.getElementById("last-updated");
       const container = document.getElementById("orders");
 
-      function render(cached) {
-        const savedAt = new Date(cached.saved_at);
+      function render(cached, role) {
+        const orders = role === "provider"
+          ? cached.upcoming_orders
+          : cached.orders;
 
-        container.replaceChildren();
-
-        if (!isNaN(savedAt)) {
-          const heading = document.createElement("p");
-          heading.textContent = `Última actualización: ${savedAt.toLocaleString("es-UY")}`;
-          container.appendChild(heading);
+        if (!Array.isArray(orders) || orders.length === 0) {
+          return;
         }
 
-        cached.upcoming_orders.forEach((order) => {
-          const item = document.createElement("p");
-          // Adaptar a la estructura real de tus pedidos.
-          item.textContent = JSON.stringify(order);
+        title.textContent = role === "provider"
+          ? "Pedidos pendientes recibidos:"
+          : "Pedidos realizados:";
+
+        const savedAt = new Date(cached.saved_at);
+
+        if (!isNaN(savedAt.getTime())) {
+          lastUpdated.textContent =
+            `Última actualización: ${savedAt.toLocaleString("es-UY")}`;
+        }
+
+        orders.forEach((order) => {
+          const item = document.createElement("div");
+          item.className = "order";
+
+          const content = document.createElement("pre");
+          content.textContent = JSON.stringify(order, null, 2);
+
+          item.appendChild(content);
           container.appendChild(item);
         });
 
@@ -102,52 +141,54 @@
       }
 
       function loadOrders() {
-        let request;
+        let currentUser = {role: "provider", id: 1};
 
-        try {
-          request = indexedDB.open("provider-offline");
-        } catch (e) {
+        if (
+          !currentUser ||
+          !["consumer", "provider"].includes(currentUser.role) ||
+          !Number.isFinite(Number(currentUser.id))
+        ) {
           return;
         }
 
+        const table = currentUser.role === "provider"
+          ? "provider_orders"
+          : "consumer_orders";
+
+        const request = indexedDB.open("app-offline");
+
         request.onupgradeneeded = () => {
-          // La base no existía: cancelar para no crear una base vacía.
+          // No crear una base vacía si todavía no existe.
           request.transaction.abort();
         };
 
-        request.onerror = () => {
-          // Fallo silencioso: no se muestra nada.
-        };
+        request.onerror = () => {};
 
         request.onsuccess = () => {
           const db = request.result;
 
+          if (!db.objectStoreNames.contains(table)) {
+            db.close();
+            return;
+          }
+
           try {
-            if (!db.objectStoreNames.contains("orders")) {
-              db.close();
-              return;
-            }
+            const tx = db.transaction(table, "readonly");
+            const query = tx.objectStore(table).get(
+              Number(currentUser.id)
+            );
 
-            const tx = db.transaction("orders", "readonly");
-            const get = tx.objectStore("orders").get("current");
-
-            get.onsuccess = () => {
-              const cached = get.result;
-
-              if (
-                cached &&
-                Array.isArray(cached.upcoming_orders) &&
-                cached.upcoming_orders.length > 0
-              ) {
-                render(cached);
+            query.onsuccess = () => {
+              if (query.result) {
+                render(query.result, currentUser.role);
               }
 
               db.close();
             };
 
-            get.onerror = () => db.close();
+            query.onerror = () => db.close();
             tx.onabort = () => db.close();
-          } catch (e) {
+          } catch {
             db.close();
           }
         };

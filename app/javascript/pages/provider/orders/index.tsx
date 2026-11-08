@@ -43,8 +43,8 @@ export default function Index({
   const [decision, setDecision] = useState<ProviderOrderDecision | null>(null)
 
   useEffect(() => {
-    db.orders.put({
-      id: "current",
+    db.provider_orders.put({
+      id: 1,
       upcoming_orders,
       saved_at: Date.now(),
     });
