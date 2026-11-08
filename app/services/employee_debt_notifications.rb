@@ -91,7 +91,7 @@ class EmployeeDebtNotifications
         employee: first.owner.user.name,
         provider: first.provider.user.name,
         period: I18n.l(first.month, format: :month_name_year).downcase,
-        amount: Account.format_amount(debts.sum { it.amount.to_d })
+        amount: Account.format_amount(debts.sum(&:outstanding_amount))
       }
     end
 

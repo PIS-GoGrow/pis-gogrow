@@ -13,7 +13,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
   let(:future_day) { Date.current + 3 }
 
   def day_label(date)
-    "Día: #{DateFormat.short(date)}"
+    "Día: #{date.strftime("%d/%m")}"
   end
 
   def open_day?(date)
@@ -35,9 +35,14 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
     expect(page).to have_no_content("Enviar a: 18 de Julio 1006 (Oficina)")
   end
 
-  it "resume las viandas y el monto de cada día" do
+  it "resume las viandas y el monto de cada día sin los cancelados ni rechazados" do
     expect(page).to have_css("button", text: "#{day_label(today)} | Viandas: 1 | Monto: $300,50")
-    expect(page).to have_css("button", text: "#{day_label(future_day)} | Viandas: 6 | Monto: $1.803")
+    expect(page).to have_css("button", text: "#{day_label(future_day)} | Viandas: 4 | Monto: $1.202")
+
+    click_button day_label(future_day)
+
+    expect(page).to have_css("[data-status='cancelled']")
+    expect(page).to have_css("[data-status='rejected']")
   end
 
   # CA1: se puede consultar otra fecha.
@@ -60,28 +65,28 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
   it "muestra de cada pedido su identificación, plato, cantidad, modalidad y estado" do
     order = orders(:upcoming_pending_today)
 
-    within("[data-slot='card']", text: "PED-#{order.id}") do
+    within(provider_order_card(order)) do
       expect(page).to have_content("Test User - GoGrow")
       expect(page).to have_content("Milanesa con papas fritas")
       expect(page).to have_content("x1")
       expect(page).to have_content("(Casa)")
-      expect(page).to have_content("Pendiente")
+      expect(page).to have_content("Por revisar")
     end
   end
 
-  it "deja los botones visibles: confirmar solo si está por revisar y rechazar también si está confirmado" do
+  it "muestra solo las acciones disponibles: confirmar si está por revisar y rechazar también si está confirmado" do
     expect(page).to have_button("Confirmar", disabled: false, count: 1)
     expect(page).to have_button("Rechazar", disabled: false, count: 1)
 
     click_button day_label(future_day)
 
-    expect(page).to have_button("Confirmar", disabled: true, minimum: 1)
     expect(page).to have_button("Confirmar", disabled: false, count: 1)
     confirmed_card = find("[data-slot='card']", text: "Confirmado", match: :first)
     expect(confirmed_card).to have_button("Rechazar", disabled: false)
-    expect(confirmed_card).to have_button("Confirmar", disabled: true)
+    expect(confirmed_card).to have_no_button("Confirmar")
     cancelled_card = find("[data-slot='card']", text: "Cancelado")
-    expect(cancelled_card).to have_button("Rechazar", disabled: true)
+    expect(cancelled_card).to have_no_button("Rechazar")
+    expect(cancelled_card).to have_no_button("Confirmar")
   end
 
   # CA3: filtros por estado y otros criterios operativos.
@@ -94,7 +99,7 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
       expect(page).to have_css("[data-status='confirmed']")
       expect(page).to have_no_css("[data-status='pending'], [data-status='cancelled'], [data-status='rejected']")
 
-      click_on "Pendiente"
+      click_on "Por revisar"
 
       expect(page).to have_css("button", text: day_label(today))
       expect(page).to have_css("[data-status='pending']")
@@ -136,7 +141,8 @@ RSpec.describe "Consultar los pedidos del día", type: :system do
     it "avisa cuando ningún pedido coincide" do
       fill_in "Buscar pedido, plato, consumidor...", with: "zzz"
 
-      expect(page).to have_content("No tenés pedidos que coincidan con los filtros.")
+      expect(page).to have_content("No tenés pedidos")
+      expect(page).to have_content("Cuando tus clientes hagan pedidos, van a aparecer acá.")
     end
   end
 

@@ -6,22 +6,15 @@ RSpec.describe "Settings::Profiles", type: :request do
   fixtures :admins, :companies, :providers, :users
 
   describe "GET /configuracion/perfil" do
-    it "shows delivery settings only for the authenticated provider" do
-      sign_in providers(:tuviandita).user, role: :provider
+    it "shows only the authenticated provider's personal profile data" do
+      user = providers(:tuviandita).user
+      sign_in user, role: :provider
 
       get settings_profile_path
 
       expect(inertia).to render_component("settings/profiles/show")
-      expect(inertia).to have_props { |props| props["provider"]["home_delivery"] == true }
-    end
-
-    it "exposes false home_delivery when provider has disabled home delivery" do
-      sign_in providers(:office_provider).user, role: :provider
-
-      get settings_profile_path
-
-      expect(inertia).to render_component("settings/profiles/show")
-      expect(inertia).to have_props { |props| props["provider"]["home_delivery"] == false }
+      expect(inertia).to have_props(phone: user.phone)
+      expect(inertia).to have_no_prop(:provider)
     end
 
     it "does not expose delivery settings to consumers" do
@@ -29,7 +22,7 @@ RSpec.describe "Settings::Profiles", type: :request do
 
       get settings_profile_path
 
-      expect(inertia).to have_props { |props| props["provider"].nil? }
+      expect(inertia).to have_no_prop(:provider)
     end
 
     it "does not expose delivery settings to admins" do
@@ -37,7 +30,7 @@ RSpec.describe "Settings::Profiles", type: :request do
 
       get settings_profile_path
 
-      expect(inertia).to have_props { |props| props["provider"].nil? }
+      expect(inertia).to have_no_prop(:provider)
     end
 
     it "redirects unauthenticated visitors to sign in" do
@@ -52,70 +45,44 @@ RSpec.describe "Settings::Profiles", type: :request do
       get settings_profile_path, params: { locale: :provider }
 
       expect(response).to have_http_status(:ok)
-      expect(inertia).to have_props { |props| props["provider"]["home_delivery"] == true }
+      expect(inertia).to render_component("settings/profiles/show")
     end
   end
 
   describe "PATCH /configuracion/perfil" do
-    it "updates only the authenticated provider's home delivery setting" do
+    it "updates the provider's name without changing delivery settings" do
       provider = providers(:tuviandita)
-      other_provider = providers(:endulzate)
       sign_in provider.user, role: :provider
 
-      patch settings_profile_path, params: { name: provider.user.name, home_delivery: "0" }
+      patch settings_profile_path, params: { name: "Nuevo nombre", home_delivery: false }
 
       expect(response).to redirect_to(settings_profile_path)
-      expect(provider.reload.home_delivery).to be(false)
-      expect(other_provider.reload.home_delivery).to be(true)
+      expect(provider.user.reload.name).to eq("Nuevo nombre")
+      expect(provider.reload.home_delivery).to be(true)
     end
 
-    it "accepts boolean literal in home_delivery payload" do
+    it "does not accept delivery settings even when they are the only parameter" do
       provider = providers(:tuviandita)
       sign_in provider.user, role: :provider
 
       patch settings_profile_path, params: { home_delivery: false }
 
       expect(response).to redirect_to(settings_profile_path)
-      expect(provider.reload.home_delivery).to be(false)
-
-      patch settings_profile_path, params: { home_delivery: true }
-
-      expect(response).to redirect_to(settings_profile_path)
       expect(provider.reload.home_delivery).to be(true)
     end
 
-    it "keeps home delivery unchanged when updating the provider's name" do
-      provider = providers(:tuviandita)
-      sign_in provider.user, role: :provider
-
-      patch settings_profile_path, params: { name: "Nuevo nombre" }
-
-      expect(response).to redirect_to(settings_profile_path)
-      expect(provider.reload.home_delivery).to be(true)
-    end
-
-    it "ignores home delivery updates outside a provider session (consumer)" do
+    it "ignores home delivery updates outside a provider session" do
       provider = providers(:tuviandita)
       sign_in users(:one), role: :consumer
 
-      patch settings_profile_path, params: { name: users(:one).name, home_delivery: "0" }
-
-      expect(response).to redirect_to(settings_profile_path)
-      expect(provider.reload.home_delivery).to be(true)
-    end
-
-    it "ignores home delivery updates outside a provider session (admin)" do
-      provider = providers(:tuviandita)
-      sign_in users(:admin), role: :admin
-
-      patch settings_profile_path, params: { name: users(:admin).name, home_delivery: "0" }
+      patch settings_profile_path, params: { name: users(:one).name, home_delivery: false }
 
       expect(response).to redirect_to(settings_profile_path)
       expect(provider.reload.home_delivery).to be(true)
     end
 
     it "redirects unauthenticated visitors attempting to update profile" do
-      patch settings_profile_path, params: { home_delivery: "0" }
+      patch settings_profile_path, params: { home_delivery: false }
 
       expect(response).to redirect_to(consumer_welcome_path)
       expect(providers(:tuviandita).reload.home_delivery).to be(true)
@@ -125,7 +92,7 @@ RSpec.describe "Settings::Profiles", type: :request do
       provider = providers(:tuviandita)
       sign_in provider.user, role: :provider
 
-      patch settings_profile_path, params: { name: "", home_delivery: "0" }
+      patch settings_profile_path, params: { name: "", home_delivery: false }
 
       expect(response).to redirect_to(settings_profile_path)
       expect(provider.reload.home_delivery).to be(true)
@@ -140,14 +107,14 @@ RSpec.describe "Settings::Profiles", type: :request do
 
       patch settings_profile_path, params: {
         name: "Nombre Valido",
-        home_delivery: "0",
+        home_delivery: false,
         admin: true,
         role: "admin",
         provider_id: 999
       }
 
       expect(response).to redirect_to(settings_profile_path)
-      expect(provider.reload.home_delivery).to be(false)
+      expect(provider.reload.home_delivery).to be(true)
       expect(provider.user.reload.roles).not_to include("admin")
     end
   end
@@ -182,7 +149,7 @@ RSpec.describe "Settings::Profiles", type: :request do
 
       expect(user.reload.phone).to be_nil
       follow_redirect!
-      expect(inertia.props[:errors]).to include("phone")
+      expect(inertia).to have_props { |props| props[:errors].key?("phone") }
     end
 
     it "guarda un celular uruguayo escrito sin código de país en formato internacional" do
@@ -209,12 +176,6 @@ RSpec.describe "Settings::Profiles", type: :request do
       patch settings_profile_path, params: { name: user.name, phone: "+59899123456" }
 
       expect(user.audit_logs.sole.changeset).to eq("phone" => [ nil, "+59899123456" ])
-    end
-
-    it "registra el cambio de entregas a domicilio" do
-      patch settings_profile_path, params: { home_delivery: false }
-
-      expect(providers(:tuviandita).audit_logs.sole).to have_attributes(user:, changeset: { "home_delivery" => [ true, false ] })
     end
   end
 

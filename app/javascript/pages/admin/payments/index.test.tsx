@@ -108,9 +108,9 @@ describe("Admin Payments Page", () => {
       screen.getByRole("button", { name: "Ver detalle del consumo" }),
     )
 
-    expect(screen.getByRole("dialog")).toHaveTextContent(
-      "Endulzate by Noe: Consumo Agosto 2026",
-    )
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveTextContent("Endulzate by Noe: Consumos Agosto 2026")
+    expect(screen.queryByRole("tab", { name: "Pago" })).not.toBeInTheDocument()
   })
 
   it("starts closed on the pending tab without a period", () => {
@@ -141,8 +141,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
             payment_details_complete: false,
           },
         ]}
@@ -167,8 +167,8 @@ describe("Admin Payments Page", () => {
     const bankless = {
       home_delivery: true,
       bank_name: null,
-      bank_account_number: null,
-      bank_account_holder: null,
+      bank_account_details: null,
+      beneficiary: null,
       payment_details_complete: false,
     }
 
@@ -207,8 +207,8 @@ describe("Admin Payments Page", () => {
     const bankless = {
       home_delivery: true,
       bank_name: null,
-      bank_account_number: null,
-      bank_account_holder: null,
+      bank_account_details: null,
+      beneficiary: null,
       payment_details_complete: false,
     }
 
@@ -277,8 +277,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
             payment_details_complete: false,
           },
         ]}
@@ -301,8 +301,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
             payment_details_complete: false,
           },
         ]}
@@ -313,8 +313,8 @@ describe("Admin Payments Page", () => {
       screen.getByText("Este proveedor todavía no cargó sus datos de cobro."),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeDisabled()
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
     expect(
       screen.getByText(
         "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro.",
@@ -333,8 +333,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: "Santander",
-            bank_account_number: "1150260",
-            bank_account_holder: "Tu Viandita S.A.",
+            bank_account_details: "1150260",
+            beneficiary: "Tu Viandita S.A.",
             payment_details_complete: true,
           },
         ]}
@@ -343,9 +343,7 @@ describe("Admin Payments Page", () => {
 
     expect(screen.getByText("Santander")).toBeInTheDocument()
     expect(screen.getByText(/1150260/)).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeEnabled()
+    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
     expect(
       screen.queryByText(
         "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro.",

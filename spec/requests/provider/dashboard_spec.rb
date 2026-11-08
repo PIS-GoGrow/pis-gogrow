@@ -350,4 +350,48 @@ RSpec.describe "Provider::Dashboard", type: :request do
       expect(inertia.props[:notifications].pluck(:title)).to eq([ "Un pedido fue cancelado" ])
     end
   end
+
+  describe "cobros" do
+    it "muestra cobros pendientes del proveedor, consistentes con los valores de la pantalla de cobros" do
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      total = inertia.props[:outstanding]["total"]
+      dishes = inertia.props[:outstanding]["meals"]
+
+      get provider_dashboard_path
+
+      expect(inertia.props[:total_debt]).to eq(total)
+      expect(inertia.props[:total_dishes_count]).to eq(dishes)
+    end
+
+    it "es consistente incluso en casos borde" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
+      company = Account.create!(owner: companies(:gogrow), provider: providers(:tuviandita), month: Date.current.next_month, amount: "800")
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+
+      total = inertia.props[:outstanding]["total"]
+      dishes = inertia.props[:outstanding]["meals"]
+
+      get provider_dashboard_path
+
+      expect(inertia.props[:total_debt]).to eq(total)
+      expect(inertia.props[:total_dishes_count]).to eq(dishes)
+
+      company.payments.create!(provider: company.provider, status: :approved)
+      get provider_collections_path
+
+      total = inertia.props[:outstanding]["total"]
+      dishes = inertia.props[:outstanding]["meals"]
+
+      get provider_dashboard_path
+
+      expect(inertia.props[:total_debt]).to eq(total)
+      expect(inertia.props[:total_dishes_count]).to eq(dishes)
+    end
+  end
 end

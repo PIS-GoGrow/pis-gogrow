@@ -85,16 +85,11 @@ export default function AddressFormSheet({
 
       <AdaptableDialogContent
         showCloseButton={false}
-        className="min-h-[455px] gap-0 rounded-t-[26px] border-[#E5E5E5] px-6 pt-2.5 pb-8 md:min-h-0 md:gap-4 md:rounded-lg md:p-6"
+        className="min-h-[455px] gap-0 rounded-t-[26px] border-[#E5E5E5] px-6 pb-8 md:min-h-0 md:gap-4 md:rounded-lg md:p-6"
       >
-        <div
-          aria-hidden="true"
-          className="mx-auto h-[5px] w-20 rounded-full bg-[#E5E5E5] md:hidden"
-        />
-
         <form
           onSubmit={handleSubmit}
-          className="flex flex-col gap-5 pt-6 md:pt-0"
+          className="flex flex-col gap-5 pt-5 md:pt-0"
           noValidate
         >
           <div className="flex items-center justify-between gap-5">

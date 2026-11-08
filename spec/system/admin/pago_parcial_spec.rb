@@ -25,8 +25,8 @@ RSpec.describe "Visualización y gestión de pago parcial por RR. HH.", type: :s
   before do
     provider.update!(
       bank_name: "Banco Itaú",
-      bank_account_number: "1951234",
-      bank_account_holder: "Noelia Patricia Pinheiro"
+      bank_account_details: "1951234",
+      beneficiary: "Noelia Patricia Pinheiro"
     )
     account
   end
@@ -39,9 +39,11 @@ RSpec.describe "Visualización y gestión de pago parcial por RR. HH.", type: :s
     payment.mark_partial
 
     sign_in admin_user, role: :admin
-    visit admin_payments_path
+    visit_hydrated admin_payments_path
 
     within(find("[data-slot=card]", text: provider_user.name)) do
+      expect(page).to have_field(I18n.t("pages.accounts.show.receipt_file"), disabled: false)
+      attach_file(I18n.t("pages.accounts.show.receipt_file"), receipt_file)
       expect(page).to have_button(I18n.t("pages.accounts.show.receipt"), disabled: false)
       expect(page).to have_no_content(I18n.t("pages.accounts.show.receipt_under_review_hint"))
     end

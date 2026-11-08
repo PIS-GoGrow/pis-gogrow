@@ -144,6 +144,15 @@ RSpec.describe "Provider::Deliveries", type: :request do
         expect(provider.reload.home_delivery).to be(true)
       end
 
+      it "records the home delivery change" do
+        patch provider_deliveries_path, params: { home_delivery: false }
+
+        expect(provider.audit_logs.sole).to have_attributes(
+          user: provider.user,
+          changeset: { "home_delivery" => [ true, false ] }
+        )
+      end
+
       it "only changes the signed-in provider's setting" do
         patch provider_deliveries_path, params: { home_delivery: false }
 

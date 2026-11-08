@@ -94,17 +94,17 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       visit provider_orders_path
       sleep 1.5
 
-      find("[role='tab']", text: "Pendiente").click
-      expect(page).to have_no_content("PED-#{order_1.id}")
+      find("[role='tab']", text: "Por revisar").click
+      expect(page).to have_no_css(provider_order_card(order_1))
 
       find("[role='tab']", text: "Todos").click
-      expect(page).to have_content("PED-#{order_1.id}")
+      expect(page).to have_css(provider_order_card(order_1))
       expect(page).to have_content("Cancelado")
     end
   end
 
   describe "Paso 2: Intento de cancelación fuera de plazo (CAG-05)" do
-    it "2.1 y 2.2 deshabilita el botón de cancelar y muestra mensaje explicativo en pedidos fuera de ventana" do
+    it "2.1 y 2.2 deshabilita cancelar en próximos y oculta la acción en históricos fuera de ventana" do
       order_confirmed_today = reserve_subsidized_order(schedule: sched_today)
       order_confirmed_today.update!(status: :confirmed)
       order_past_pending = orders(:history_pending_past)
@@ -117,8 +117,9 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       end
 
       visit order_path(order_past_pending)
-      expect(page).to have_button("Cancelar", disabled: true)
-      expect(page).to have_content("Este pedido ya está cerrado.")
+      # En el detalle histórico las acciones no disponibles no se renderizan.
+      expect(page).to have_no_button("Cancelar")
+      expect(page).to have_no_content("Este pedido ya está cerrado.")
     end
 
     it "2.3 bloquea la cancelación forzada fuera de plazo manteniendo estado y subsidio inalterados" do
@@ -151,8 +152,9 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       visit order_path(order_3)
 
       expect(page).to have_content("Rechazado")
-      expect(page).to have_button("Cancelar", disabled: true)
-      expect(page).to have_content("Este pedido ya está cerrado.")
+      # El rechazo mueve la orden al historial, donde no se muestran acciones bloqueadas.
+      expect(page).to have_no_button("Cancelar")
+      expect(page).to have_no_content("Este pedido ya está cerrado.")
 
       # Intento forzado de cancelación sobre pedido rechazado
       expect(order_3.cancel(by: consumer_user)).to be(false)
