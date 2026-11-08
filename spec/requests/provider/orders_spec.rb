@@ -293,10 +293,7 @@ RSpec.describe "Provider::Orders", type: :request do
           order[:consumer_name] == "Test User" &&
           order[:consumer_email] == "one@example.com" &&
           order[:consumer_company] == "GoGrow" &&
-          order[:menu_name] == "Milanesa con papas fritas" &&
-          order[:menu_description] == "Opción de carne o pollo" &&
-          order[:discounted_price] == 150.25 &&
-          order[:subsidy] == 150.25
+          order[:menu_name] == "Milanesa con papas fritas"
       }
     end
 

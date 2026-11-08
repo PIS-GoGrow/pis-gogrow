@@ -32,14 +32,11 @@ export function OrderError({ retry, error }: Props) {
 
       <BottomAction className="flex">
         <Button
-          asChild
           type="button"
           onClick={retry}
           className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground h-12 flex-1"
         >
-          <Link href={consumerDashboard.cart().url} preserveState={false}>
-            {t("pages.cart.order_error.retry")}
-          </Link>
+          {t("pages.cart.order_error.retry")}
         </Button>
 
         <Button
