@@ -3,6 +3,8 @@
 class OrderAccount < ApplicationRecord
   belongs_to :account
   belongs_to :order
+
+  validates :order_id, uniqueness: { scope: :account_id }
 end
 
 # == Schema Information

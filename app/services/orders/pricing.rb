@@ -3,7 +3,7 @@
 # Calcula cuánto paga el empleado por cada ítem de un pedido y qué beneficios
 # cubren cada vianda.
 #
-# Se intenta aplicar beneficios con prioridad a las viandas más caras, con un máximo
+# Se aplican beneficios a las primeras viandas pedidas, con un máximo
 # de 100% de beneficio en cada vianda. Además, si el usuario tiene muchos beneficios,
 # se consumen beneficios solo hasta llegar al 100% por vianda. Se aplican primero
 # beneficios de porcentaje más alto.

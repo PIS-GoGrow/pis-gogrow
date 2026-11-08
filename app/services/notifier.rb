@@ -26,12 +26,12 @@ class Notifier
       description: I18n.t!("notifications.#{event.key}.description", **description_data)
     )
 
-    if configuration.users.pluck(:id).include? user.id
+    if configuration.users.where(id: user.id).exists?
       WhatsappSenderJob.perform_later(event_key, title_data, description_data, user.phone)
     end
 
     notification
-  rescue ActiveRecord::RecordInvalid => e
+  rescue ActiveRecord::RecordInvalid, I18n::MissingTranslationData, KeyError => e
     # El único error que permitimos es si no se pudo crear la notificación.
     # En ese caso, no queremos que el usuario no pueda completar su acción porque
     # no se pueden enviar las notificaciones.

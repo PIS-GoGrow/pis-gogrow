@@ -338,6 +338,10 @@ es:
   activerecord:
     errors:
       models:
+        order_benefit:
+          attributes:
+            benefit:
+              expired: "está vencido para la fecha del pedido"
         user:
           attributes:
             password:

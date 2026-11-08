@@ -109,6 +109,13 @@ RSpec.describe Menus::AgendaScheduler do
     expect { described_class.call(menu) }.not_to change(Schedule, :count)
   end
 
+  it "rescues RecordNotUnique or RecordInvalid when another process creates the schedule" do
+    menu.agendas.create!(weekdays: [ 3 ], starts_on: Date.current, amount: 8)
+    allow(menu.schedules).to receive(:create!).and_raise(ActiveRecord::RecordNotUnique.new("duplicate"))
+
+    expect { described_class.call(menu) }.not_to raise_error
+  end
+
   describe ".call_all" do
     it "programs schedules for all saved dishes with active agendas" do
       menu.agendas.create!(weekdays: [ 1 ], starts_on: Date.current, amount: 5)

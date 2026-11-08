@@ -50,6 +50,13 @@ RSpec.describe Notification, type: :model do
       expect(notification.errors[:role]).to include("no es válido")
     end
 
+    it "invalida limpiamente sin lanzar excepción si el usuario es nil" do
+      notification.user = nil
+      expect { notification.valid? }.not_to raise_error
+      expect(notification).not_to be_valid
+      expect(notification.errors[:user]).to be_present
+    end
+
     it "invalida si el evento no está registrado en Notification::Registry" do
       notification.event = "evento_inexistente"
       expect(notification).not_to be_valid

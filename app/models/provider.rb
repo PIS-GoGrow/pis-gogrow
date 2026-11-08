@@ -11,6 +11,7 @@ class Provider < ApplicationRecord
     notifications: :notifications_configured_at
   }.freeze
 
+  attribute :bank_account_type, :integer
   enum :bank_account_type, { savings: 0, checking: 1 }, prefix: :bank_account, validate: { allow_nil: true }
 
   has_many :menus, dependent: :destroy

@@ -330,15 +330,6 @@ class Order < ApplicationRecord
     end
   end
 
-  # Devuelve la cantidad de beneficio mensual usado para esta orden
-  # El tope mensual solo mira las entregas del mes en curso, así que una orden
-  # para el mes que viene no tiene unidades que devolver.
-  def subsidized_benefit_used
-    order_benefits
-      .where(benefit_id: Benefit.monthly.select(:id))
-      .sum(:benefit_used).to_i
-  end
-
   # El lock no es por dinero: evita que un doble envío cancele dos veces y pise
   # el registro de quién y cuándo lo hizo.
   def cancel(by:)
