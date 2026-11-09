@@ -40,6 +40,7 @@ Rails.application.configure do
   config.action_mailer.perform_caching = false
 
   config.hosts << "web"
+  config.hosts << /.*\.trycloudflare\.com/
   if ENV["TWILIO_STATUS_CALLBACK_URL"].present?
     config.hosts << URI.parse(ENV["TWILIO_STATUS_CALLBACK_URL"]).host
 

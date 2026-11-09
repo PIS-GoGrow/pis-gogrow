@@ -30,9 +30,6 @@ class WhatsappSenderJob < ApplicationJob
 
     from = ENV.fetch("TWILIO_PHONE")
     content_sid = Notification::Registry.content_sid(notification.event, count: notification.description_data&.dig("count").to_i)
-    status_callback = ENV["TWILIO_STATUS_CALLBACK_URL"].presence || (
-      Rails.application.routes.url_helpers.twilio_callback_url rescue nil
-    )
 
     # Cancelamos el job si la notificación ya llegó, ya se envió o ni se tenía que enviar
     return unless notification.with_lock do
@@ -51,13 +48,15 @@ class WhatsappSenderJob < ApplicationJob
 
     Rails.logger.info("Enviando notificación (notification #{notification.id})")
 
-    message = client.messages.create(
+    params = {
       from:,
       content_sid:,
       to: "whatsapp:#{notification.user.phone}",
-      content_variables: content_variables(notification.title_data, notification.description_data),
-      status_callback:
-    )
+      content_variables: content_variables(notification.title_data, notification.description_data)
+    }
+    params[:status_callback] = status_callback if status_callback.present?
+
+    message = client.messages.create(**params)
 
     # NOTA: En este punto exacto de ejecución, podría llegar a ocurrir que llegué el callback
     # de Twilio. Esto solo podría pasar si el callback demora muy pocos milisegundos. Si eso
@@ -112,5 +111,14 @@ class WhatsappSenderJob < ApplicationJob
       ENV.fetch("TWILIO_ACCOUNT_SID"),
       ENV.fetch("TWILIO_AUTH_TOKEN")
     )
+  end
+
+  def status_callback
+    url = ENV["TWILIO_STATUS_CALLBACK_URL"].presence || (
+      Rails.application.routes.url_helpers.twilio_callback_url rescue nil
+    )
+    return if url.blank? || url.match?(%r{\Ahttps?://(localhost|127\.0\.0\.1)(:\d+)?/})
+
+    url
   end
 end

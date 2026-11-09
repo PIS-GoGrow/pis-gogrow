@@ -293,6 +293,16 @@ RSpec.describe WhatsappSenderJob, type: :job do
 
       expect(messages.calls.first[:status_callback]).to eq("https://callback.example.com/twilio")
     end
+
+    it "no pasa status_callback si es localhost" do
+      messages = stub_twilio(:ok)
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("TWILIO_STATUS_CALLBACK_URL").and_return("http://localhost:3001/twilio-callback")
+
+      perform_now_job
+
+      expect(messages.calls.first).not_to have_key(:status_callback)
+    end
   end
 
   describe "entorno de desarrollo" do

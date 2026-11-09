@@ -144,9 +144,9 @@ export default function Show({ order }: ProviderOrdersShow) {
                     <CardContent className="grid gap-3 px-4 md:gap-4 md:px-6">
                       <Separator />
                       <InfoRow icon={Mail}>{order.consumer_email}</InfoRow>
-                      {/* El teléfono todavía no se guarda: la fila queda hasta que llegue el dato. */}
-                      <InfoRow icon={Phone} muted>
-                        {t("pages.provider_orders.show.phone_unavailable")}
+                      <InfoRow icon={Phone} muted={!order.consumer_phone}>
+                        {order.consumer_phone ??
+                          t("pages.provider_orders.show.phone_unavailable")}
                       </InfoRow>
                       <InfoRow icon={DeliveryIcon}>
                         {`${t(`pages.provider_orders.index.delivery_methods.${order.delivery_method}`)} · ${order.address ?? t("pages.provider_orders.index.no_address")}`}
