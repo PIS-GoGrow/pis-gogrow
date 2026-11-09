@@ -320,6 +320,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
     end
   end
 
+  # Por qué estos tests? Aparecieron en otra rama
   describe "#perform" do
     it "no realiza envíos si el servicio no está configurado" do
       expect {

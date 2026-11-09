@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_08_162000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_135803) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -254,7 +254,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_162000) do
   create_table "notifications", force: :cascade do |t|
     t.datetime "closed_at"
     t.datetime "created_at", null: false
-    t.datetime "delivered_at"
+    t.datetime "whatsapp_delivered_at"
     t.json "description_data"
     t.string "event", null: false
     t.bigint "notifiable_id", null: false
