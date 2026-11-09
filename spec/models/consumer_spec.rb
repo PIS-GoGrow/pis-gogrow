@@ -126,6 +126,11 @@ RSpec.describe Consumer, type: :model do
     it "does not count orders delivered in previous or future months" do
       past_schedule = Schedule.create!(menu:, date: 1.month.ago.beginning_of_month)
       future_schedule = Schedule.create!(menu:, date: 1.month.from_now.beginning_of_month)
+      future_benefit = consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly),
+        amount: 20, percentage: 50,
+        due_date: 1.month.from_now.end_of_month, status: :future
+      )
 
       Order.create!(
         consumer:, schedule: past_schedule, amount: 5,
@@ -134,7 +139,7 @@ RSpec.describe Consumer, type: :model do
       Order.create!(
         consumer:, schedule: future_schedule, amount: 4,
         price: 1200, address: consumer.company.address, delivery_method: :office, status: :confirmed
-      ).apply_benefit! benefits(:monthly), 4
+      ).apply_benefit! future_benefit, 4
 
       expect(consumer.monthly_benefit_used_this_month).to eq(0)
       expect(consumer.remaining_monthly_benefit).to eq(20)
@@ -381,6 +386,11 @@ RSpec.describe Consumer, type: :model do
       last_day_schedule = Schedule.create!(menu:, date: Date.current.end_of_month)
       prev_month_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month - 1.day)
       next_month_schedule = Schedule.create!(menu:, date: Date.current.end_of_month + 1.day)
+      next_month_benefit = consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly),
+        amount: 20, percentage: 50,
+        due_date: (Date.current.end_of_month + 1.day).end_of_month, status: :future
+      )
 
       Order.create!(
         consumer:, schedule: first_day_schedule, amount: 1,
@@ -400,7 +410,7 @@ RSpec.describe Consumer, type: :model do
       Order.create!(
         consumer:, schedule: next_month_schedule, amount: 4,
         price: 1200, address: consumer.company.address, delivery_method: :office, status: :confirmed
-      ).apply_benefit! benefits(:monthly), 4
+      ).apply_benefit! next_month_benefit, 4
 
       expect(consumer.monthly_benefit_usages.sum(:benefit_used)).to eq(3)
     end

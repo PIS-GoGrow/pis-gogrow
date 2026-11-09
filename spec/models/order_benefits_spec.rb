@@ -43,6 +43,7 @@ RSpec.describe OrderBenefit, type: :model do
     end
 
     it "is invalid when delivery date is after due_date" do
+      benefits(:monthly).update_column(:due_date, orders(:upcoming_pending_future).schedule.date - 1.day)
       record = OrderBenefit.new(order: orders(:upcoming_pending_future), benefit: benefits(:monthly), benefit_used: 1)
       expect(record).not_to be_valid
       expect(record.errors[:benefit]).to include("está vencido para la fecha del pedido")
