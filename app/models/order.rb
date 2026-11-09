@@ -501,7 +501,7 @@ class Order < ApplicationRecord
   end
 
   def max_quantity
-    return amount.to_i if schedule.nil?
+    return amount.to_i if schedule.nil? || !schedule.available
 
     99
   end

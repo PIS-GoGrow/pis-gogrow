@@ -251,10 +251,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
       sign_in e2_user, role: :consumer
 
       edit_order(e2_order)
-      click_button "Agregar uno"
-      click_button "Modificar"
-
-      expect(page).to have_content("Este plato ya no está disponible para la fecha seleccionada.")
+      expect(page).to have_button("Agregar uno", disabled: true)
       expect(e2_order.reload.amount).to eq(1)
     end
   end
