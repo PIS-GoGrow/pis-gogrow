@@ -1,5 +1,5 @@
 import { Head, Link, router } from "@inertiajs/react"
-import { ChevronLeft, Users } from "lucide-react"
+import { ArrowLeft, Users } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import BenefitMetric from "@/components/admin/benefit-metric"
@@ -71,12 +71,11 @@ export default function AdminReports({
       <Head title={t(`${page}.title`)} />
 
       <PageContainer
-        centered
         title={t(`${page}.title`)}
         back={
-          <Button asChild variant="ghost" size="icon" className="-ml-2.5">
+          <Button variant="ghost" size="icon" asChild>
             <Link href={adminDashboard.index()} aria-label={t(`${page}.back`)}>
-              <ChevronLeft className="size-5" aria-hidden="true" />
+              <ArrowLeft aria-hidden="true" />
             </Link>
           </Button>
         }
