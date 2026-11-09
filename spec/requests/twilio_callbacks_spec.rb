@@ -5,9 +5,7 @@ require "rails_helper"
 RSpec.describe "TwilioCallbacks", type: :request do
   fixtures :users, :orders
 
-  EVENT_KEY = :order_confirmation
-
-  # Ajustá la ruta y el factory a los de tu app
+  let(:event_key) { :order_confirmation }
   let(:path) { "/twilio-callback" }
   let(:sid) { "SM1234567890" }
 
@@ -18,7 +16,7 @@ RSpec.describe "TwilioCallbacks", type: :request do
     create(
       :notification,
       user: users(:one),
-      event: EVENT_KEY.to_s,
+      event: event_key.to_s,
       title_data:,
       description_data:,
       role: users(:one).roles[0],
@@ -190,7 +188,7 @@ RSpec.describe "TwilioCallbacks", type: :request do
       end
     end
 
-    context "cuando la notificación no estaba en accepted" do
+    context "cuando la notificación ya estaba en delivered" do
       before { notification.update!(whatsapp_send_status: :delivered) }
 
       it "ignora el callback" do
@@ -200,6 +198,17 @@ RSpec.describe "TwilioCallbacks", type: :request do
 
         expect(response).to have_http_status(:ok)
         expect(notification.reload.whatsapp_send_status).to eq("delivered")
+      end
+    end
+
+    context "cuando la notificación todavía estaba en sending" do
+      before { notification.update!(whatsapp_send_status: :sending) }
+
+      it "marca la entrega como fallida" do
+        post_callback(MessageStatus: "failed", ErrorCode: "63001")
+
+        expect(response).to have_http_status(:ok)
+        expect(notification.reload.whatsapp_send_status).to eq("delivery_failed")
       end
     end
   end

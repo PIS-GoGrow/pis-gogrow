@@ -20,7 +20,7 @@ class TwilioCallbacksController < ApplicationController
           whatsapp_delivered_at: Time.current,
           whatsapp_send_status: :delivered
         )
-      elsif FAIL_STATUSES.include?(callback_params[:MessageStatus]) && @notification.accepted?
+      elsif FAIL_STATUSES.include?(callback_params[:MessageStatus]) && !@notification.delivered?
         @notification.delivery_failed!
 
         if NO_RETRY_CODES.exclude?(callback_params[:ErrorCode])
@@ -45,24 +45,12 @@ class TwilioCallbacksController < ApplicationController
   end
 
   def set_notification
-    @notification = find_notification_with_retry
+    @notification = Notification.find_by(twilio_sid: callback_params[:MessageSid])
     return if @notification
 
     Rails.logger.warn("[TwilioCallbacksController] SID de mensaje inválido: #{callback_params[:MessageSid]} " \
                       "con estado #{callback_params[:MessageStatus]}")
     head :ok
-  end
-
-  # Reintenta solo si no la encuentra: cubre el callback que llega antes de que
-  # WhatsappSenderJob guarde el twilio_sid.
-  def find_notification_with_retry(attempts: 3, delay: 0.25)
-    attempts.times do |i|
-      notification = Notification.find_by(twilio_sid: callback_params[:MessageSid])
-      return notification if notification
-
-      sleep delay unless i == attempts - 1
-    end
-    nil
   end
 
   def validate_twilio_signature

@@ -203,11 +203,8 @@ RSpec.describe Notifier do
     describe "unicidad por evento, usuario y notifiable" do
       before { described_class.call(**params) }
 
-      # SUPUESTO: no se crea un duplicado en silencio. Si Notifier deja subir el
-      # error del índice único, cambiar por raise_error(ActiveRecord::RecordNotUnique).
-      it "no crea una segunda notificación activa para el mismo evento, usuario y notifiable" do
-        expect { described_class.call(**params) }
-          .to raise_error(ActiveRecord::RecordNotUnique)
+      it "no crea una segunda notificación activa para el mismo evento, usuario y notifiable y devuelve nil" do
+        expect(described_class.call(**params)).to be_nil
       end
 
       it "permite notificar al mismo usuario por el mismo evento sobre otro notifiable" do

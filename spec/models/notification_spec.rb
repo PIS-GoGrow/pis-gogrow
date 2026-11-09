@@ -3,7 +3,7 @@
 require "rails_helper"
 
 RSpec.describe Notification, type: :model do
-  fixtures :users, :companies, :consumers, :orders
+  fixtures :users, :companies, :consumers, :orders, :providers
 
   let(:configuration) do
     Notification::Configuration.find_or_create_by!(key: "order_updates") do |c|
@@ -167,8 +167,15 @@ RSpec.describe Notification, type: :model do
     end
 
     it "previene enviar notificaciones a un proveedor cerrado" do
-      notification.user = users(:provider_user)
-      users(:provider_user).provider.closures.create!(
+      provider_user = users(:provider_user)
+      provider_user.phone = "+59899111222"
+      notification.user = provider_user
+      notification.role = "provider"
+      configuration.users << provider_user
+
+      expect(notification.send_to_user?).to be(true)
+
+      provider_user.provider.closures.create!(
         starts_on: Date.current,
         ends_on: Date.current,
         reason: "Motivo"

@@ -170,6 +170,18 @@ RSpec.describe WhatsappSenderJob, type: :job do
       end
     end
 
+    context "con title_data o description_data nulos" do
+      let(:title_data) { nil }
+      let(:description_data) { nil }
+
+      it "manda un hash vacío sin fallar" do
+        messages = stub_twilio(:ok)
+
+        expect { perform_now_job }.not_to raise_error
+        expect(JSON.parse(messages.calls.first.fetch(:content_variables))).to eq({})
+      end
+    end
+
     context "con un evento con plantillas en singular y plural" do
       before do
         Notification::Registry.set_data([
@@ -233,6 +245,67 @@ RSpec.describe WhatsappSenderJob, type: :job do
       perform_now_job
 
       expect(notification.reload.whatsapp_send_status).to eq("accepted")
+    end
+  end
+
+  describe "cancelación y condiciones de carrera" do
+    it "marca como skipped si send_to_user? es false y no llama a Twilio" do
+      messages = stub_twilio(:ok)
+      users(:one).update!(phone: nil)
+
+      perform_now_job
+
+      expect(messages.calls).to be_empty
+      expect(notification.reload.whatsapp_send_status).to eq("skipped")
+    end
+
+    it "no envía si la notificación ya fue entregada" do
+      messages = stub_twilio(:ok)
+      notification.update!(whatsapp_send_status: :delivered)
+
+      perform_now_job
+
+      expect(messages.calls).to be_empty
+    end
+
+    it "no sobreescribe con accepted si un callback marca delivered durante la llamada a Twilio" do
+      messages = fake_messages_class.new([ fake_message_class.new(sid: "sid_123") ])
+      allow(messages).to receive(:create) do
+        notification.update!(whatsapp_send_status: :delivered)
+        fake_message_class.new(sid: "sid_123")
+      end
+      client = Struct.new(:messages).new(messages)
+      allow(Twilio::REST::Client).to receive(:new).and_return(client)
+
+      perform_now_job
+
+      notification.reload
+      expect(notification.whatsapp_send_status).to eq("delivered")
+      expect(notification.twilio_sid).to eq("sid_123")
+    end
+
+    it "pasa el status_callback configurado a Twilio" do
+      messages = stub_twilio(:ok)
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("TWILIO_STATUS_CALLBACK_URL").and_return("https://callback.example.com/twilio")
+
+      perform_now_job
+
+      expect(messages.calls.first[:status_callback]).to eq("https://callback.example.com/twilio")
+    end
+  end
+
+  describe "entorno de desarrollo" do
+    it "no envía si Rails.env es development y TWILIO_DELIVERY_ENABLED no es true" do
+      allow(Rails.env).to receive(:development?).and_return(true)
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("TWILIO_DELIVERY_ENABLED").and_return("false")
+      messages = stub_twilio(:ok)
+
+      perform_now_job
+
+      expect(messages.calls).to be_empty
+      expect(notification.reload.whatsapp_send_status).to eq("pending")
     end
   end
 

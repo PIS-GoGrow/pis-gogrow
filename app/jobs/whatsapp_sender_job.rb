@@ -29,7 +29,7 @@ class WhatsappSenderJob < ApplicationJob
     return if Rails.env.development? && ENV["TWILIO_DELIVERY_ENABLED"] != "true"
 
     from = ENV.fetch("TWILIO_PHONE")
-    content_sid = Notification::Registry.content_sid(notification.event, count: notification.description_data["count"].to_i)
+    content_sid = Notification::Registry.content_sid(notification.event, count: notification.description_data&.dig("count").to_i)
     status_callback = ENV["TWILIO_STATUS_CALLBACK_URL"].presence || (
       Rails.application.routes.url_helpers.twilio_callback_url rescue nil
     )
@@ -92,10 +92,10 @@ class WhatsappSenderJob < ApplicationJob
   # de title_data se le agrega "title_" al principio, y las de description_data
   # "description_"
   def content_variables(title_data, description_data)
-    title_data
+    (title_data || {})
       .transform_keys { |key| "title_#{key}" }
       .merge(
-        description_data.transform_keys { |key| "description_#{key}" }
+        (description_data || {}).transform_keys { |key| "description_#{key}" }
       )
       .transform_values(&:to_s)
       .to_json
