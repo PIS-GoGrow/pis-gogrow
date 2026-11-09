@@ -83,6 +83,15 @@ describe("Admin Dashboard Page", () => {
     ).toBeInTheDocument()
   })
 
+  it("links the reports", () => {
+    render(<AdminDashboard {...props} />)
+
+    expect(screen.getByRole("link", { name: "Ver reportes" })).toHaveAttribute(
+      "href",
+      "/rrhh/reportes",
+    )
+  })
+
   it("greets HR by first name with today's date", () => {
     render(<AdminDashboard {...props} />)
 
