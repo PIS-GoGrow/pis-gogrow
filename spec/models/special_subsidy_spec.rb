@@ -212,7 +212,7 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       configuration = save_coupon(effective_from: "2026-05-14")
       benefit = configuration.benefits.sole
       menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
-      schedules = [ Date.new(2026, 5, 13), Date.new(2026, 5, 14), Date.new(2026, 5, 20), Date.new(2026, 5, 21) ].map { Schedule.create!(menu:, date: it, amount: 10) }
+      schedules = [ Date.new(2026, 5, 13), Date.new(2026, 5, 14), Date.new(2026, 5, 20), Date.new(2026, 5, 21) ].map { Schedule.create!(menu:, date: it) }
 
       pricing = Orders::Pricing.new(one).call(schedules.map { { schedule: it, quantity: 1, benefits: [ benefit.id ] } })
 
@@ -236,7 +236,7 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       configuration = save_coupon(consumer_ids: [ one.id, other.id ])
       benefit = one.benefits.find_by!(benefit_configuration: configuration)
       menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
-      today, tomorrow = [ Date.current, Date.tomorrow ].map { Schedule.create!(menu:, date: it, amount: 10) }
+      today, tomorrow = [ Date.current, Date.tomorrow ].map { Schedule.create!(menu:, date: it) }
       orders = [ today, tomorrow ].map do |schedule|
         Order.reserve(consumer: one, schedule:, delivery_method: :office, address: nil, discounted_price: 210, benefits: { benefit => Orders::Pricing::BenefitUsed[1, 90] })
       end
@@ -256,7 +256,7 @@ RSpec.describe "Subsidios especiales (BenefitConfiguration sin MonthlyBenefit)",
       configuration = save_coupon
       benefit = one.benefits.find_by!(benefit_configuration: configuration)
       menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Con papas", price: 300)
-      schedule = Schedule.create!(menu:, date: Date.tomorrow, amount: 10)
+      schedule = Schedule.create!(menu:, date: Date.tomorrow)
       order = Order.reserve(consumer: one, schedule:, delivery_method: :office, address: nil, discounted_price: 210, benefits: { benefit => Orders::Pricing::BenefitUsed[1, 90] })
 
       configuration.deactivate!(by: admin_user)

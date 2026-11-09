@@ -13,11 +13,6 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
     order.created_at.to_date.iso8601
   end
 
-  typelize :string, nullable: true
-  attribute :menu_description do |order|
-    order.menu_description
-  end
-
   # El snapshot conserva el id de cada grupo para poder cruzarlo con la elección
   # del empleado en selected_options. Los pedidos hechos antes de que existiera
   # el snapshot no lo tienen, y ahí se recurre al grupo real del plato.
@@ -36,26 +31,6 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
     order.selected_options
   end
 
-  typelize :number, nullable: true
-  attribute :discounted_price do |order|
-    order.discounted_price&.to_f
-  end
-
-  typelize :number, nullable: true
-  attribute :subsidy do |order|
-    order.subsidy&.to_f
-  end
-
-  # Cupo del día del plato: cuánto se publicó y cuánto queda sin comprometer.
-  typelize :number, nullable: true
-  attribute :schedule_amount do |order|
-    order.schedule&.amount
-  end
-
-  typelize :number, nullable: true
-  attribute :remaining_amount do |order|
-    order.schedule&.remaining_amount
-  end
 
   typelize :string, nullable: true
   attribute :rejection_reason do |order|

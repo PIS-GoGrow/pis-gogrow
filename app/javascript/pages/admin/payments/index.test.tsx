@@ -46,6 +46,7 @@ const provider = (id: number, name: string) => ({
   vat_rate: 22,
   vat_amount: 3564,
   payable_amount: 19764,
+  outstanding_amount: 19764,
   paid: false,
   days: [],
 })
@@ -61,6 +62,7 @@ const account: AdminAccount = {
   amount: 15000,
   vat_amount: 0,
   payable_amount: 15000,
+  outstanding_amount: 15000,
   current: false,
   month: "agosto de 2026",
   due_date: "10/09/26",
@@ -106,9 +108,9 @@ describe("Admin Payments Page", () => {
       screen.getByRole("button", { name: "Ver detalle del consumo" }),
     )
 
-    expect(screen.getByRole("dialog")).toHaveTextContent(
-      "Endulzate by Noe: Consumo Agosto 2026",
-    )
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveTextContent("Endulzate by Noe: Consumos Agosto 2026")
+    expect(screen.queryByRole("tab", { name: "Pago" })).not.toBeInTheDocument()
   })
 
   it("starts closed on the pending tab without a period", () => {
@@ -139,8 +141,9 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
+            payment_details_complete: false,
           },
         ]}
       />,
@@ -164,8 +167,9 @@ describe("Admin Payments Page", () => {
     const bankless = {
       home_delivery: true,
       bank_name: null,
-      bank_account_number: null,
-      bank_account_holder: null,
+      bank_account_details: null,
+      beneficiary: null,
+      payment_details_complete: false,
     }
 
     render(
@@ -203,8 +207,9 @@ describe("Admin Payments Page", () => {
     const bankless = {
       home_delivery: true,
       bank_name: null,
-      bank_account_number: null,
-      bank_account_holder: null,
+      bank_account_details: null,
+      beneficiary: null,
+      payment_details_complete: false,
     }
 
     render(
@@ -239,6 +244,7 @@ describe("Admin Payments Page", () => {
   it("shows the status the server resolved for each period", () => {
     const payment = {
       rejection_reason: null,
+      expected_amount: null,
       receipt_uploaded_at: "01/09/2026",
     }
 
@@ -271,8 +277,9 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
+            payment_details_complete: false,
           },
         ]}
       />,
@@ -281,5 +288,66 @@ describe("Admin Payments Page", () => {
     expect(
       document.querySelector("[data-slot='card-header'] [data-status]"),
     ).toHaveAttribute("data-status", "submitted")
+  })
+
+  it("disables upload and displays the bank missing notice when provider payment details are incomplete", () => {
+    render(
+      <Index
+        {...props}
+        accounts={[account]}
+        providers={[
+          {
+            id: 2,
+            name: "Tu Viandita",
+            home_delivery: true,
+            bank_name: null,
+            bank_account_details: null,
+            beneficiary: null,
+            payment_details_complete: false,
+          },
+        ]}
+      />,
+    )
+
+    expect(
+      screen.getByText("Este proveedor todavía no cargó sus datos de cobro."),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("enables upload and displays bank details when provider payment details are complete", () => {
+    render(
+      <Index
+        {...props}
+        accounts={[account]}
+        providers={[
+          {
+            id: 2,
+            name: "Tu Viandita",
+            home_delivery: true,
+            bank_name: "Santander",
+            bank_account_details: "1150260",
+            beneficiary: "Tu Viandita S.A.",
+            payment_details_complete: true,
+          },
+        ]}
+      />,
+    )
+
+    expect(screen.getByText("Santander")).toBeInTheDocument()
+    expect(screen.getByText(/1150260/)).toBeInTheDocument()
+    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
+    expect(
+      screen.queryByText(
+        "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro.",
+      ),
+    ).not.toBeInTheDocument()
   })
 })

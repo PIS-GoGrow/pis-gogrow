@@ -146,11 +146,25 @@ RSpec.describe "Sessions", type: :request do
       expect(Session.exists?(session_record.id)).to be(false)
     end
 
+    it "sends an admin back to the admin welcome path" do
+      sign_in users(:admin), role: :admin
+      delete session_path(users(:admin).sessions.last)
+
+      expect(response).to redirect_to(admin_welcome_path)
+    end
+
     it "sends a provider back to the provider sign in" do
       sign_in users(:provider_user), role: :provider
       delete session_path(users(:provider_user).sessions.last)
 
       expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    it "sends an admin back to the admin welcome (/rrhh)" do
+      sign_in users(:admin), role: :admin
+      delete session_path(users(:admin).sessions.last)
+
+      expect(response).to redirect_to(admin_welcome_path)
     end
   end
 end

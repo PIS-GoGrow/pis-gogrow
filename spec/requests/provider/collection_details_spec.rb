@@ -11,7 +11,7 @@ RSpec.describe "Provider collection details", type: :request do
 
   def create_order(index, status: :confirmed)
     menu = provider.menus.create!(name: "Plato #{index}", description: "Con guarnición", price: 100)
-    schedule = menu.schedules.create!(date: month + (index * 7 % 28), amount: 20)
+    schedule = menu.schedules.create!(date: month + (index * 7 % 28))
     Order.create!(
       consumer:, schedule:, status:, amount: 2, price: 200 + index, discounted_price: 100 + index,
       delivery_method: :office, created_at: month.in_time_zone + index.seconds
@@ -45,7 +45,7 @@ RSpec.describe "Provider collection details", type: :request do
         create_order(2, status: :pending)
         account = orders.first.accounts.find { it.company? == (source == :company) }
         if status == :approved
-          account.payments.create!(
+          account.reload.payments.create!(
             provider:, status: :approved,
             receipt: Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png")
           )

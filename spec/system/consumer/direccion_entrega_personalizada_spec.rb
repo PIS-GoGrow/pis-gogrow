@@ -23,8 +23,8 @@ RSpec.describe "Dirección de entrega personalizada" do
     Order.delete_all
     Schedule.delete_all
     Provider.update_all(order_deadline: nil)
-    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Plato de prueba", price: 300))
-    Schedule.create!(date: monday, amount: 5, menu: Menu.create!(provider: providers(:office_provider), name: "Ensalada de quinoa", description: "Plato de prueba", price: 250))
+    Schedule.create!(date: monday, menu: Menu.create!(provider: providers(:tuviandita), name: "Milanesa al pan", description: "Plato de prueba", price: 300))
+    Schedule.create!(date: monday, menu: Menu.create!(provider: providers(:office_provider), name: "Ensalada de quinoa", description: "Plato de prueba", price: 250))
   end
 
   def open_cart_with(*dishes, as: users(:one))
@@ -141,7 +141,8 @@ RSpec.describe "Dirección de entrega personalizada" do
       click_button "Agregar"
       within("[role=dialog]", text: "Agregar una dirección") do
         { "Nombre" => 40, "Dirección" => 120, "Piso / Apartamento (opcional)" => 40 }.each do |field, max|
-          fill_in field, with: "Calle 1#{"a" * max}"
+          # rapid escribe el tramo del medio por JS y saltea el maxLength real.
+          fill_in field, with: "Calle 1#{"a" * max}", fill_options: { rapid: false }
           expect(find_field(field).value.length).to eq(max)
         end
       end

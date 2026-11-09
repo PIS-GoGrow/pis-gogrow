@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_29_180750) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_135803) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -193,7 +193,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_180750) do
   end
 
   create_table "menu_agendas", force: :cascade do |t|
-    t.integer "amount"
     t.datetime "created_at", null: false
     t.date "ends_on"
     t.bigint "menu_id", null: false
@@ -255,7 +254,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_180750) do
   create_table "notifications", force: :cascade do |t|
     t.datetime "closed_at"
     t.datetime "created_at", null: false
-    t.datetime "delivered_at"
+    t.datetime "whatsapp_delivered_at"
     t.json "description_data"
     t.string "event", null: false
     t.bigint "notifiable_id", null: false
@@ -282,6 +281,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_180750) do
     t.datetime "created_at", null: false
     t.bigint "order_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["account_id", "order_id"], name: "index_order_accounts_on_account_id_and_order_id", unique: true
     t.index ["account_id"], name: "index_order_accounts_on_account_id"
     t.index ["order_id"], name: "index_order_accounts_on_order_id"
   end
@@ -366,6 +366,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_180750) do
     t.text "rejection_reason"
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.decimal "expected_amount", precision: 10, scale: 2
     t.index ["account_id"], name: "index_payments_on_account_id"
     t.index ["account_id"], name: "index_payments_on_account_id_submitted", unique: true, where: "(status = 1)"
     t.index ["provider_id"], name: "index_payments_on_provider_id"
@@ -384,9 +385,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_180750) do
   end
 
   create_table "providers", force: :cascade do |t|
-    t.string "bank_account_holder"
-    t.string "bank_account_number"
-    t.integer "bank_account_type"
+    t.string "beneficiary"
+    t.text "bank_account_details"
     t.string "bank_name"
     t.datetime "created_at", null: false
     t.datetime "deliveries_configured_at"
@@ -416,7 +416,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_180750) do
   end
 
   create_table "schedules", force: :cascade do |t|
-    t.integer "amount"
     t.datetime "availability_changed_at"
     t.bigint "availability_changed_by_id"
     t.boolean "available", default: true, null: false
@@ -427,7 +426,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_29_180750) do
     t.index ["availability_changed_by_id"], name: "index_schedules_on_availability_changed_by_id"
     t.index ["menu_id", "date"], name: "index_schedules_on_menu_id_and_date", unique: true
     t.index ["menu_id"], name: "index_schedules_on_menu_id"
-    t.check_constraint "amount >= 0", name: "schedules_amount_non_negative"
   end
 
   create_table "sessions", force: :cascade do |t|

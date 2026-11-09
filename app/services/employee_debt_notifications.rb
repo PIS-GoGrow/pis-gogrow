@@ -51,8 +51,8 @@ class EmployeeDebtNotifications
     # Deudas de empleados: sin pago aprobado ni comprobante en revisión.
     def unpaid(scope)
       scope.pending
-           .preload(:payments, provider: :user, owner: :user)
-           .select { it.collection_status.in?(%w[pending rejected]) }
+           .preload(:payments, provider: :user, owner: [ :user, :company ])
+           .select { it.collection_status.in?(%w[pending rejected partial]) }
     end
 
     def anchors_for(accounts)
@@ -91,7 +91,7 @@ class EmployeeDebtNotifications
         employee: first.owner.user.name,
         provider: first.provider.user.name,
         period: I18n.l(first.month, format: :month_name_year).downcase,
-        amount: Account.format_amount(debts.sum { it.amount.to_d })
+        amount: Account.format_amount(debts.sum(&:outstanding_amount))
       }
     end
 

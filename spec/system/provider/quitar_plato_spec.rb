@@ -17,7 +17,7 @@ RSpec.describe "Quitar un plato del menú publicado", type: :system do
     it "quita un plato futuro tras confirmar y lo borra del menú" do
       target_date = Date.current.next_week(:monday) + 2.days
       Schedule.where(date: target_date).destroy_all
-      schedule = milanesa.schedules.create!(date: target_date, amount: 10)
+      schedule = milanesa.schedules.create!(date: target_date)
 
       visit schedules_path(week_start: target_date.beginning_of_week(:monday).to_s)
       find("button", text: /\b#{target_date.day}\b/).click
@@ -32,7 +32,7 @@ RSpec.describe "Quitar un plato del menú publicado", type: :system do
     it "no vuelve a aparecer al recargar si el plato sigue una agenda semanal" do
       target_date = Date.current.next_week(:monday) + 2.days
       Schedule.where(date: target_date).destroy_all
-      milanesa.agendas.create!(weekdays: [ target_date.cwday ], starts_on: Date.current, amount: 10)
+      milanesa.agendas.create!(weekdays: [ target_date.cwday ], starts_on: Date.current)
       Menus::AgendaScheduler.call(milanesa)
 
       visit schedules_path(week_start: target_date.beginning_of_week(:monday).to_s)
@@ -51,7 +51,7 @@ RSpec.describe "Quitar un plato del menú publicado", type: :system do
     it "no quita nada si se cancela la confirmación" do
       target_date = Date.current.next_week(:monday) + 2.days
       Schedule.where(date: target_date).destroy_all
-      schedule = milanesa.schedules.create!(date: target_date, amount: 10)
+      schedule = milanesa.schedules.create!(date: target_date)
 
       visit schedules_path(week_start: target_date.beginning_of_week(:monday).to_s)
       find("button", text: /\b#{target_date.day}\b/).click
@@ -66,7 +66,7 @@ RSpec.describe "Quitar un plato del menú publicado", type: :system do
     it "rechaza los pedidos del plato quitado" do
       target_date = Date.current.next_week(:monday) + 2.days
       Schedule.where(date: target_date).destroy_all
-      schedule = milanesa.schedules.create!(date: target_date, amount: 10)
+      schedule = milanesa.schedules.create!(date: target_date)
 
       order = Order.create!(
         consumer: consumers(:one),
@@ -93,7 +93,7 @@ RSpec.describe "Quitar un plato del menú publicado", type: :system do
 
     it "no ofrece quitar platos de fechas pasadas" do
       past_date = Date.current.beginning_of_week(:monday) - 1.week + 1.day
-      milanesa.schedules.create!(date: past_date, amount: 10)
+      milanesa.schedules.create!(date: past_date)
 
       visit schedules_path(week_start: (Date.current.beginning_of_week(:monday) - 1.week).to_s)
       find("button", text: /\b#{past_date.day}\b/).click
@@ -122,13 +122,26 @@ RSpec.describe "Quitar un plato del menú publicado", type: :system do
       visit schedules_path(week_start: target_date.beginning_of_week(:monday).to_s)
       find("button", text: /\b#{target_date.day}\b/).click
 
-      expect(page).to have_content("No hay platos publicados para el")
+      expect(page).to have_content("No tenés platos publicados para el #{DateFormat.long(target_date, inline: true)}")
+    end
+
+    # El día de hoy tiene su propio texto, y la semana arranca parada en él.
+    it "dice «hoy» en el aviso de día vacío cuando el día elegido es hoy" do
+      travel_to(Date.current.next_occurring(:wednesday).noon) do
+        provider.closures.destroy_all
+        Schedule.where(date: Date.current).destroy_all
+
+        visit schedules_path
+
+        expect(page).to have_content("Hoy no tenés platos publicados")
+        expect(page).to have_content("Agregá platos a tu menú de hoy y empezá a recibir pedidos.")
+      end
     end
 
     it "filtra los platos del día con el buscador y avisa si no hay resultados" do
       target_date = Date.current.next_week(:monday) + 2.days
       Schedule.where(date: target_date).destroy_all
-      milanesa.schedules.create!(date: target_date, amount: 10)
+      milanesa.schedules.create!(date: target_date)
 
       visit schedules_path(week_start: target_date.beginning_of_week(:monday).to_s)
       find("button", text: /\b#{target_date.day}\b/).click

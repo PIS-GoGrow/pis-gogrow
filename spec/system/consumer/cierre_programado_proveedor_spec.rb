@@ -22,10 +22,10 @@ RSpec.describe "Cierre programado visto por el empleado", type: :system do
     endulzate.closures.destroy_all
 
     milanesa = Menu.create!(provider: tuviandita, name: "Milanesa de carne", description: "Con papas", price: 320)
-    Schedule.create!(date: monday, amount: 10, menu: milanesa)
+    Schedule.create!(date: monday, menu: milanesa)
 
     sorrentinos = Menu.create!(provider: endulzate, name: "Sorrentinos de jamón y queso", description: "Con salsa", price: 300)
-    Schedule.create!(date: monday, amount: 10, menu: sorrentinos)
+    Schedule.create!(date: monday, menu: sorrentinos)
   end
 
   it "muestra el aviso de cierre, oculta los platos del proveedor cerrado y mantiene disponibles los del otro proveedor" do
@@ -62,7 +62,7 @@ RSpec.describe "Cierre programado visto por el empleado", type: :system do
 
     find("button[aria-label='Filtrar por proveedores']").click
     within("[data-provider-filter-sheet]") do
-      all("[role=checkbox]").reject { |checkbox| checkbox[:id] == "dashboard-filter-all" || checkbox[:id] == "dashboard-filter-#{tuviandita.id}" }.each(&:click)
+      find("#dashboard-filter-#{tuviandita.id}").click
       click_button "Aplicar"
     end
 

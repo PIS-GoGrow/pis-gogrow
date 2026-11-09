@@ -15,16 +15,19 @@ production:
     schedule: every hour at minute 12
   benefit_expiration:
     class: BenefitUpdateJob
-    schedule: every day at midnight
+    schedule: every day at midnight America/Montevideo
   generate_menu_schedules:
     class: MenusGenerateSchedulesJob
-    schedule: every day at 3am
+    schedule: every day at 3am America/Montevideo
   payment_reminders:
     class: PaymentRemindersJob
-    schedule: every day at 1am
+    schedule: every day at 1am America/Montevideo
   company_payment_reminders:
     class: CompanyPaymentRemindersJob
     schedule: every day at 6am America/Montevideo
+  delivered_orders_sync:
+    class: DeliveredOrdersSyncJob
+    schedule: every day at 00:01 America/Montevideo
   employee_debt_alerts:
     class: EmployeeDebtAlertsJob
     schedule: every day at 6am America/Montevideo

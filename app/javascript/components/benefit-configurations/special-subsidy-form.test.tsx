@@ -227,4 +227,40 @@ describe("SpecialSubsidyForm", () => {
     expect(screen.getByText("vianda(s)")).toBeInTheDocument()
     expect(screen.getByLabelText("Validez")).toHaveValue(1)
   })
+
+  it("blocks a birthday validity longer than 100 days in the chosen unit", async () => {
+    const user = userEvent.setup()
+    renderForm({
+      ...birthdaySubsidy,
+      condition: { ...birthdaySubsidy.condition!, validity_unit: "weeks" },
+    })
+
+    const validity = screen.getByLabelText("Validez")
+    await user.clear(validity)
+    await user.type(validity, "15")
+
+    expect(
+      screen.getByText("La validez no puede superar los 100 días."),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Modificar" })).toBeDisabled()
+
+    await user.clear(validity)
+    await user.type(validity, "14")
+
+    expect(
+      screen.queryByText("La validez no puede superar los 100 días."),
+    ).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Modificar" })).toBeEnabled()
+  })
+
+  it("does not cap the validity of a gift", async () => {
+    const user = userEvent.setup()
+    renderForm(gift)
+
+    const validity = screen.getByLabelText("Validez")
+    await user.clear(validity)
+    await user.type(validity, "30")
+
+    expect(screen.getByRole("button", { name: "Modificar" })).toBeEnabled()
+  })
 })

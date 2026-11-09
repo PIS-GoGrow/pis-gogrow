@@ -17,7 +17,7 @@ RSpec.describe "Asignar un cupón a empleados", type: :system do
     # Los fixtures gift y seniority son subsidios especiales sin nombre.
     benefit_configurations(:gift, :seniority).each(&:destroy)
     benefits(:monthly).update!(percentage: 50, amount: 20, due_date: Date.current.end_of_month, status: :current)
-    Schedule.create!(menu:, date: Date.current, amount: 10)
+    Schedule.create!(menu:, date: Date.current)
   end
 
   def choose_option(label, option)

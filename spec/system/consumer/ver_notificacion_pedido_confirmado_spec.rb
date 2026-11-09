@@ -21,8 +21,8 @@ RSpec.describe "Ver la notificación de pedido confirmado", type: :system do
 
   def confirm_order_as_provider
     sign_in users(:provider_user), role: :provider
-    visit provider_orders_path
-    within("[data-slot='card']", text: "PED-#{order.id}") do
+    visit_hydrated provider_orders_path
+    within(provider_order_card(order)) do
       click_button "Confirmar"
       expect(page).to have_content("Confirmado")
     end

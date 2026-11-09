@@ -108,7 +108,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
     it "lists the past orders of the signed-in provider, most recent delivery first" do
       other_provider_order
-      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10, amount: 5)
+      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10)
       older = Order.create!(
         consumer: consumers(:one),
         schedule: older_schedule,
@@ -151,8 +151,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
       tomorrow_schedule = Schedule.create!(
         menu: menus(:milanesa),
-        date: Date.current + 1.day,
-        amount: 5
+        date: Date.current + 1.day
       )
       order_tomorrow = Order.create!(
         consumer: consumers(:one),
@@ -266,16 +265,14 @@ RSpec.describe "Provider::Orders", type: :request do
         delivery_method: :office, price: 601, discounted_price: 300.50
       )
       original_name = order.menu_name
-      original_description = order.menu_description
       order.menu.update!(name: "Plato nuevo", description: "Descripción nueva", price: 999)
       sign_in users(:provider_user), role: :provider
 
       get provider_order_path(order)
 
       expect(inertia).to have_props { |props|
-        props["order"].slice("menu_name", "menu_description", "amount", "price", "discounted_price", "subsidy") == {
-          "menu_name" => original_name, "menu_description" => original_description,
-          "amount" => 2, "price" => 601.0, "discounted_price" => 300.50, "subsidy" => 300.50
+        props["order"].slice("menu_name", "amount", "price") == {
+          "menu_name" => original_name, "amount" => 2, "price" => 601.0
         }
       }
     end
@@ -296,12 +293,7 @@ RSpec.describe "Provider::Orders", type: :request do
           order[:consumer_name] == "Test User" &&
           order[:consumer_email] == "one@example.com" &&
           order[:consumer_company] == "GoGrow" &&
-          order[:menu_name] == "Milanesa con papas fritas" &&
-          order[:menu_description] == "Opción de carne o pollo" &&
-          order[:discounted_price] == 150.25 &&
-          order[:subsidy] == 150.25 &&
-          order[:schedule_amount] == 5 &&
-          order[:remaining_amount] == 4
+          order[:menu_name] == "Milanesa con papas fritas"
       }
     end
 
@@ -444,8 +436,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.reload).to be_confirmed
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "redirects back to the order detail when deciding from the detail page" do
@@ -503,8 +494,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
       expect(order.reload).to be_confirmed
       expect(response).to redirect_to(provider_orders_path)
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+      expect(flash[:notice]).to be_nil
     end
   end
 
@@ -549,8 +539,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.rejected_at).to be_present
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "rejects a pending order with 'other' reason and details" do
@@ -564,8 +553,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.rejection_details).to eq("Cerrado por reformas")
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "refuses to reject without a reason and returns an error flash" do
@@ -721,6 +709,129 @@ RSpec.describe "Provider::Orders", type: :request do
 
       expect(response).to have_http_status(:not_found)
       expect(other_provider_order.reload).to be_pending
+    end
+  end
+
+  describe "GET /provider/pedidos/exportar" do
+    def exported
+      xlsx_rows(response.body)
+    end
+
+    def exported_ids
+      exported[1..-2].map { it.first.delete_prefix("PED-").to_i }
+    end
+
+    def ids(*names)
+      names.map { orders(it).id }
+    end
+
+    it "redirects to sign in without a session" do
+      get export_provider_orders_path
+
+      expect(response).to redirect_to(provider_sign_in_path)
+    end
+
+    %i[consumer admin].each do |role|
+      it "redirects an active #{role} session to the home page" do
+        sign_in(users(role == :consumer ? :one : :admin), role:)
+
+        get export_provider_orders_path
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to eq(I18n.t("flash.no_permission"))
+      end
+    end
+
+    it "exports the upcoming orders of every status by default, in the screen's order" do
+      other_provider_order
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path
+
+      expect(exported_ids).to match_array(
+        ids(:upcoming_pending_today, :upcoming_pending_future, :upcoming_confirmed_future,
+          :history_cancelled_future, :history_rejected_future, :other_consumer_upcoming)
+      )
+      expect(exported_ids.first).to eq(orders(:upcoming_pending_today).id)
+    end
+
+    it "exports the past orders with periodo=historial" do
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(periodo: "historial")
+
+      expect(exported_ids).to match_array(ids(:history_confirmed_past, :history_pending_past))
+      expect(response.headers["Content-Disposition"]).to include("_historial_")
+    end
+
+    it "keeps only the orders matching the status, delivery and search filters" do
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(estado: "confirmed")
+      expect(exported_ids).to match_array(ids(:upcoming_confirmed_future, :other_consumer_upcoming))
+
+      get export_provider_orders_path(estado: "pending", entrega: "home")
+      expect(exported_ids).to match_array(ids(:upcoming_pending_today, :upcoming_pending_future))
+
+      get export_provider_orders_path(entrega: "office")
+      expect(exported_ids).to eq(ids(:upcoming_confirmed_future))
+
+      get export_provider_orders_path(busqueda: "BULEVÁR artigas")
+      expect(exported_ids).to eq(ids(:other_consumer_upcoming))
+
+      get export_provider_orders_path(busqueda: "herrera rechazado")
+      expect(exported_ids).to eq(ids(:history_rejected_future))
+    end
+
+    it "falls back to the defaults with invalid values" do
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(periodo: "todo", estado: "cancelled", entrega: "drone")
+
+      expect(exported_ids.size).to eq(6)
+      expect(response.headers["Content-Disposition"]).to include("_proximos_")
+    end
+
+    it "never exports orders of another provider" do
+      other_provider_order
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(busqueda: "sorrentinos")
+      expect(exported_ids).to be_empty
+
+      sign_in users(:other_provider_user), role: :provider
+
+      get export_provider_orders_path
+      expect(exported_ids).to eq([ other_provider_order.id ])
+    end
+
+    it "sends a named XLSX with the operational columns, no contact data and matching totals" do
+      users(:one).update!(phone: "099123456")
+      sign_in users(:provider_user), role: :provider
+
+      get export_provider_orders_path(estado: "pending")
+
+      today = Date.current
+      expect(response.media_type).to eq("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+      expect(response.headers["Content-Disposition"]).to include(
+        "attachment",
+        "pedidos_provider-user_proximos_#{today.iso8601}_al_#{(today + 3).iso8601}_generado_#{today.iso8601}_1200.xlsx"
+      )
+      expect(response.body.b).to start_with("PK".b)
+      expect(exported.first).to eq([
+        "Código", "Fecha de entrega", "Hora del pedido", "Estado", "Empleado", "Empresa", "Plato",
+        "Opciones", "Cantidad", "Entrega", "Dirección", "Notas", "Monto"
+      ])
+      expect(exported.flatten.join).not_to include("one@example.com", "099123456")
+
+      rows = exported[1..-2]
+      expect(rows.map(&:second)).to all(be_a(Date))
+      expect(exported.last).to eq([
+        "Total", nil, nil, nil, nil, nil, nil, nil,
+        rows.sum { it[8] }, nil, nil, nil,
+        rows.sum { it[12] }
+      ])
+      expect(exported.last[12]).to eq(601)
     end
   end
 end
