@@ -117,7 +117,7 @@ class WhatsappSenderJob < ApplicationJob
     url = ENV["TWILIO_STATUS_CALLBACK_URL"].presence || (
       Rails.application.routes.url_helpers.twilio_callback_url rescue nil
     )
-    return if url.blank? || url.match?(%r{\Ahttps?://(localhost|127\.0\.0\.1)(:\d+)?/})
+    return if url.blank? || url.match?(%r{\Ahttps?://(localhost|127\.0\.0\.1)(:\d+)?(/|\z)})
 
     url
   end

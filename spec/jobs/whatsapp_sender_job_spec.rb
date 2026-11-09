@@ -297,7 +297,7 @@ RSpec.describe WhatsappSenderJob, type: :job do
     it "no pasa status_callback si es localhost" do
       messages = stub_twilio(:ok)
       allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("TWILIO_STATUS_CALLBACK_URL").and_return("http://localhost:3001/twilio-callback")
+      allow(ENV).to receive(:[]).with("TWILIO_STATUS_CALLBACK_URL").and_return("http://localhost:3001")
 
       perform_now_job
 
