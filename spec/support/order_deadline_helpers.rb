@@ -25,7 +25,7 @@ module OrderDeadlineHelpers
     option = find("[role=option]", exact_text: time)
     page.execute_script("arguments[0].scrollIntoView({ block: 'center', behavior: 'instant' });", option)
     sleep 0.1
-    option.click
+    page.execute_script("arguments[0].click();", option)
   end
 end
 

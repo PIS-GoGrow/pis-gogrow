@@ -16,7 +16,7 @@ RSpec.describe "Carrito responsive del consumidor", type: :system do
     OrderAccount.delete_all
     Order.delete_all
     Schedule.delete_all
-    Schedule.create!(menu: menus(:milanesa), date: monday, amount: 10)
+    Schedule.create!(menu: menus(:milanesa), date: monday)
     sign_in users(:one), role: :consumer
     visit dashboard_path
     page.execute_script("window.localStorage.setItem('sidebar', 'false')")

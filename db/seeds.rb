@@ -245,22 +245,24 @@ end
 # Una orden confirmada por proveedor genera las cuentas que aparecen en Pagos
 # pendientes. El Payment se crea recién cuando el empleado sube el comprobante.
 [ tu_viandita, endulzate ].each do |provider|
-  schedule = Schedule.joins(:menu)
-                     .where(menus: { provider_id: provider.id })
-                     .order(date: :desc)
-                     .first
-  next unless schedule
+  menu = provider.menus.first
+  next unless menu
+
+  schedule = Schedule.find_or_create_by!(
+    menu:,
+    date: Date.current.beginning_of_month + 3.days
+  )
 
   order = Order.create!(
     consumer:,
     schedule:,
     status: :confirmed,
-    price: schedule.menu.price,
-    discounted_price: schedule.menu.price / 2,
+    price: menu.price,
+    discounted_price: menu.price / 2,
     amount: 1,
     address: company.address,
     delivery_method: :office,
-    selected_options: default_selection_for(schedule.menu)
+    selected_options: default_selection_for(menu)
   )
   order.apply_benefit! benefit, 1
 end

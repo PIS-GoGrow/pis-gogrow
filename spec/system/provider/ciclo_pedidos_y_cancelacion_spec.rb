@@ -163,9 +163,7 @@ RSpec.describe "SYS-04: Ciclo de decisión del proveedor y cancelación de pedid
 
     it "bloquea nuevos pedidos sin alterar los pedidos y cobros ya confirmados" do
       visible_date = Date.current.on_weekend? ? Date.current.next_week(:monday) : Date.current
-      visible_schedule = Schedule.find_or_create_by!(menu: milanesa, date: visible_date) do |s|
-        s.amount = 5
-      end
+      visible_schedule = Schedule.find_or_create_by!(menu: milanesa, date: visible_date)
       visible_schedule.update!(available: false)
 
       sign_in consumer_user, role: :consumer

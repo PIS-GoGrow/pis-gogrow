@@ -39,7 +39,7 @@ RSpec.describe "Precio máximo en beneficios al ordenar viandas", type: :system 
       description: "Con verduras al vapor",
       price: 350
     )
-    @expensive_schedule = Schedule.create!(menu: @expensive_menu, date: Date.current, amount: 10)
+    @expensive_schedule = Schedule.create!(menu: @expensive_menu, date: Date.current)
 
     # Plato accesible ($200) dentro del precio máximo
     @affordable_menu = Menu.create!(
@@ -48,7 +48,7 @@ RSpec.describe "Precio máximo en beneficios al ordenar viandas", type: :system 
       description: "Porción individual",
       price: 200
     )
-    @affordable_schedule = Schedule.create!(menu: @affordable_menu, date: Date.current, amount: 10)
+    @affordable_schedule = Schedule.create!(menu: @affordable_menu, date: Date.current)
 
     sign_in consumer_user, role: :consumer
   end

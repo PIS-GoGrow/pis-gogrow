@@ -16,7 +16,7 @@ RSpec.describe "Edición de plato programado en el menú (flujo complejo)", type
   end
 
   it "modifica solo para un día y rechaza los pedidos confirmados afectados" do
-    schedule = milanesa.schedules.create!(date: target_date, amount: 10)
+    schedule = milanesa.schedules.create!(date: target_date)
     order = Order.create!(
       consumer: consumers(:one),
       schedule:,
@@ -61,7 +61,7 @@ RSpec.describe "Edición de plato programado en el menú (flujo complejo)", type
   end
 
   it "modifica solo para un día y mantiene los pedidos confirmados" do
-    schedule = milanesa.schedules.create!(date: target_date, amount: 10)
+    schedule = milanesa.schedules.create!(date: target_date)
     order = Order.create!(
       consumer: consumers(:one),
       schedule:,
