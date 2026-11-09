@@ -29,6 +29,7 @@ import {
   adminDashboard,
   adminPayments,
 } from "@/routes"
+import type { BreadcrumbItem } from "@/types"
 import type { AdminDashboardIndex } from "@/types/serializers"
 
 const page = "pages.admin.dashboard"
@@ -49,6 +50,12 @@ export default function AdminDashboard({
   const getInitials = useInitials()
   const { auth } = usePage().props
   const firstName = auth.user.name.split(" ")[0]
+  const breadcrumbs: BreadcrumbItem[] = [
+    {
+      title: t(`${page}.title`),
+      href: adminDashboard.index().url,
+    },
+  ]
   // El panel del consumo se abre sobre el Inicio, con el mes del selector.
   const [detailOpen, setDetailOpen] = useState(false)
   const [providerId, setProviderId] = useState<number | null>(null)
@@ -68,7 +75,7 @@ export default function AdminDashboard({
   }
 
   return (
-    <AppLayout>
+    <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t(`${page}.title`)} />
 
       <PageContainer
@@ -126,26 +133,6 @@ export default function AdminDashboard({
                 />
               </div>
 
-              <p className="text-muted-foreground flex flex-wrap gap-x-3 gap-y-1 text-sm">
-                <span>
-                  {t(`${page}.benefit.paid`, {
-                    amount: formatMoney(summary.paid),
-                  })}
-                </span>
-                <span>
-                  {t(`${page}.benefit.pending`, {
-                    amount: formatMoney(summary.pending),
-                  })}
-                </span>
-                {summary.projected > 0 && (
-                  <span>
-                    {t(`${page}.benefit.projected`, {
-                      amount: formatMoney(summary.projected),
-                    })}
-                  </span>
-                )}
-              </p>
-
               <Button
                 disabled={consumption === null}
                 onClick={() => {
@@ -156,7 +143,7 @@ export default function AdminDashboard({
               >
                 {t(`${page}.benefit.view_detail`)}
               </Button>
-              <Button asChild variant="link" className="w-full">
+              <Button asChild variant="link" className="w-full md:hidden">
                 <Link
                   href={adminBenefitUsage.analysis({ query: { month } }).url}
                 >
