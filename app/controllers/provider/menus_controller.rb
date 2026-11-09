@@ -112,8 +112,7 @@ class Provider::MenusController < Provider::InertiaController
         weekdays: variant_agenda.weekdays,
         starts_on: [ variant_agenda.starts_on, today ].max.iso8601,
         ends_on: variant_agenda.ends_on.iso8601,
-        date: nil,
-        amount: variant_agenda.amount
+        date: nil
       }
     elsif upcoming_schedule && menu.variant?
       # Variante de día o congelada: se edita ese día, no el plato guardado
@@ -122,8 +121,7 @@ class Provider::MenusController < Provider::InertiaController
         weekdays: [ upcoming_schedule.date.cwday ],
         starts_on: nil,
         ends_on: nil,
-        date: upcoming_schedule.date.iso8601,
-        amount: upcoming_schedule.amount
+        date: upcoming_schedule.date.iso8601
       }
     elsif (current = saved_menu.agenda_on([ upcoming_schedule&.date, today ].compact.max))
       # Plato guardado con agenda que cubre esa fecha
@@ -132,8 +130,7 @@ class Provider::MenusController < Provider::InertiaController
         weekdays: current.weekdays,
         starts_on: [ current.starts_on, today ].max.iso8601,
         ends_on: nil,
-        date: nil,
-        amount: current.amount
+        date: nil
       }
     elsif upcoming_schedule
       # Schedule manual, que ninguna agenda cubre
@@ -142,16 +139,15 @@ class Provider::MenusController < Provider::InertiaController
         weekdays: [ upcoming_schedule.date.cwday ],
         starts_on: nil,
         ends_on: nil,
-        date: upcoming_schedule.date.iso8601,
-        amount: upcoming_schedule.amount
+        date: upcoming_schedule.date.iso8601
       }
     else
-      { mode: "none", weekdays: [], starts_on: nil, ends_on: nil, date: nil, amount: nil }
+      { mode: "none", weekdays: [], starts_on: nil, ends_on: nil, date: nil }
     end
   end
 
   def agenda_params
-    params.fetch(:agenda, {}).permit(:mode, :date, :starts_on, :ends_on, :amount, weekdays: [])
+    params.fetch(:agenda, {}).permit(:mode, :date, :starts_on, :ends_on, weekdays: [])
   end
 
   def menu_params

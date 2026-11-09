@@ -18,7 +18,7 @@ RSpec.describe "Importe esperado del comprobante y saldo pendiente (B4)", type: 
   def create_closed_month_order(amount: 290.25)
     travel_to(Time.zone.local(closed_month.year, closed_month.month, 10, 12)) do
       menu = Menu.create!(provider:, name: "Menú B4", description: "Plato", price: amount)
-      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer:, schedule:,

@@ -121,8 +121,10 @@ class Notification < ApplicationRecord
   private
 
   def role_belongs_to_user
-    user&.sync_roles!
-    errors.add(:role, :invalid) unless user&.roles&.include?(role.to_s)
+    return if user.blank? || role.blank?
+
+    has_role = user.roles.include?(role.to_s) || (user.respond_to?("#{role}?") && user.public_send("#{role}?"))
+    errors.add(:role, :invalid) unless has_role
   end
 
   def event_exists

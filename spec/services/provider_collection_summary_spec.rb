@@ -114,7 +114,7 @@ RSpec.describe ProviderCollectionSummary do
   end
 
   def create_order(menu:, date:, status: :confirmed)
-    schedule = menu.schedules.create!(date:, amount: 20)
+    schedule = menu.schedules.create!(date:)
     Order.create!(
       consumer:, schedule:, status:, amount: 2, price: 200, discounted_price: 100, delivery_method: :office,
       rejection_reason: status == :rejected ? :out_of_stock : nil

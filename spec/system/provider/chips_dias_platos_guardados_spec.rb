@@ -31,7 +31,7 @@ RSpec.describe "Chips de días en Platos guardados", type: :system do
       description: "Con verduras",
       price: 300
     )
-    @recurring.agendas.create!(starts_on: monday, weekdays: [ 1, 3 ], amount: 10)
+    @recurring.agendas.create!(starts_on: monday, weekdays: [ 1, 3 ])
 
     @single = Menu.create!(
       provider:,
@@ -39,7 +39,7 @@ RSpec.describe "Chips de días en Platos guardados", type: :system do
       description: "Con masa integral",
       price: 280
     )
-    @single.schedules.create!(date: tuesday, amount: 10)
+    @single.schedules.create!(date: tuesday)
   end
 
   def open_saved_tab(date)

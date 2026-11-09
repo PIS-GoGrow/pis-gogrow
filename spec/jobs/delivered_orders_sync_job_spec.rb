@@ -10,7 +10,7 @@ RSpec.describe DeliveredOrdersSyncJob, type: :job do
 
   def order_for(date)
     Order.create!(
-      consumer:, schedule: menu.schedules.create!(date:, amount: 10), amount: 1, price: 400, discounted_price: 250,
+      consumer:, schedule: menu.schedules.create!(date:), amount: 1, price: 400, discounted_price: 250,
       delivery_method: :office, status: :confirmed
     )
   end

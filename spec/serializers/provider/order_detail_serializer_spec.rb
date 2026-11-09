@@ -27,7 +27,7 @@ RSpec.describe Provider::OrderDetailSerializer do
     serialized = described_class.new(order).to_h
 
     expect(serialized).to include(
-      "date" => nil, "schedule_amount" => nil, "remaining_amount" => nil,
+      "date" => nil,
       "menu_option_groups" => [], "selected_options" => []
     )
   end
