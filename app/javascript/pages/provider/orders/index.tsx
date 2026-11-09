@@ -47,8 +47,8 @@ export default function Index({
       id: 1,
       upcoming_orders,
       saved_at: Date.now(),
-    });
-  }, [upcoming_orders]);
+    })
+  }, [upcoming_orders])
 
   const orders = period === "upcoming" ? upcoming_orders : past_orders
   // Sin pedidos en el período no hay nada que filtrar: el estado vacío mobile
