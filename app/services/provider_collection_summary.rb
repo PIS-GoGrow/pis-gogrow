@@ -67,7 +67,7 @@ class ProviderCollectionSummary
 
     def confirmed_total = rows.sum { it.account.paid_amount }
 
-    def awaiting_count = rows.count { it.collection_status.in?(%w[pending submitted]) }
+    def awaiting_count = rows.count { it.collection_status == "submitted" }
 
     def rejected_count = rows.count { it.collection_status == "rejected" }
 
