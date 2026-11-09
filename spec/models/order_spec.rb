@@ -850,6 +850,11 @@ RSpec.describe Order, type: :model do
       end
     end
 
+    # Las fixtures escriben a mano el saldo del mes con pedidos futuros, pero
+    # sync_amount! solo suma los consumidos. Se parte del saldo que la app
+    # recalcularía para medir el delta del pedido que crea cada ejemplo.
+    before { Account.find_each(&:sync_amount!) }
+
     let(:consumer) { consumers(:one) }
     let(:provider) { providers(:tuviandita) }
     let(:month) { Date.current.beginning_of_month }
