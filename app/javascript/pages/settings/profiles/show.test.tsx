@@ -139,7 +139,7 @@ describe("Settings Profiles Show Page", () => {
   it("renders phone validation error message when present", () => {
     formErrors = { phone: ["El formato del celular es inválido."] }
 
-    render(<Profile provider={null} phone="2900 1234" />)
+    render(<Profile phone="2900 1234" />)
 
     expect(
       screen.getByText("El formato del celular es inválido."),
@@ -147,7 +147,7 @@ describe("Settings Profiles Show Page", () => {
   })
 
   it("renders phone helper description", () => {
-    render(<Profile provider={null} phone="+59899123456" />)
+    render(<Profile phone="+59899123456" />)
 
     expect(
       screen.getByText(

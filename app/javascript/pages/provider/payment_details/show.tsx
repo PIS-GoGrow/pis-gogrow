@@ -114,7 +114,7 @@ export default function PaymentDetails({
         back={
           <Button variant="ghost" size="icon" asChild>
             <Link href={providerAccount().url} aria-label={t(`${page}.back`)}>
-              <ArrowLeft aria-hidden="true" />
+              <ChevronLeft aria-hidden="true" />
             </Link>
           </Button>
         }

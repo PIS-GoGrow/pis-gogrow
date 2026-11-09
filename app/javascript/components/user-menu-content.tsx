@@ -82,7 +82,7 @@ export function UserMenuContent({ auth }: UserMenuContentProps) {
                 ? providerAccount().url
                 : session.role === "admin"
                   ? adminAccount().url
-                  : settingsProfiles.show().url
+                  : consumerProfiles.show().url
             }
             prefetch
             onClick={cleanup}
