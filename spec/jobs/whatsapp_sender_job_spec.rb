@@ -317,6 +317,9 @@ RSpec.describe WhatsappSenderJob, type: :job do
       stub_twilio(rest_error(21211))
 
       expect { perform_now_job }.not_to raise_error
+    end
+  end
+
   describe "#perform" do
     it "no realiza envíos si el servicio no está configurado" do
       expect {
