@@ -74,7 +74,7 @@ class CompanyPaymentNotifications
         company: account.owner.name,
         provider: account.provider.user.name,
         period: I18n.l(account.month, format: :month_name_year).downcase,
-        amount: account.formatted_amount,
+        amount: Account.format_amount(account.payable_amount),
         due_date: DateFormat.long(account.due_date, inline: true)
       }
     end

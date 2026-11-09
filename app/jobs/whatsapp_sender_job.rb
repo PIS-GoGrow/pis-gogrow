@@ -7,7 +7,9 @@ class WhatsappSenderJob < ApplicationJob
   queue_as :default
 
   # En progreso
-  def perform(event_key, title_data, description_data, phone, *args)
+  def perform(event_key, title_data, description_data, phone = nil, *args)
+    nil unless configured? && phone.present?
+
     # conn = Faraday.new(
     #  url: 'https://graph.facebook.com/',
     #  headers: {
@@ -20,6 +22,10 @@ class WhatsappSenderJob < ApplicationJob
   end
 
   private
+
+  def configured?
+    ACCESS_TOKEN.present? && ACCESS_TOKEN != "." && PHONE_ID.present? && PHONE_ID != "."
+  end
 
   def request_body(event_key, title_data, description_data, phone)
     {

@@ -418,10 +418,12 @@ describe("confirm", () => {
     expect(transform({})).toEqual({
       order: {
         address: "Calle 1",
+        expected_price: 100,
         items: [
           {
             schedule_id: 7,
             quantity: 2,
+            benefits: undefined,
             notes: "sin sal",
             options: [
               { group_id: 3, values: ["a", "b"] },

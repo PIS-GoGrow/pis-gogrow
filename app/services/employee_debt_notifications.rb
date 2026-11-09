@@ -51,7 +51,7 @@ class EmployeeDebtNotifications
     # Deudas de empleados: sin pago aprobado ni comprobante en revisión.
     def unpaid(scope)
       scope.pending
-           .preload(:payments, provider: :user, owner: :user)
+           .preload(:payments, provider: :user, owner: [ :user, :company ])
            .select { it.collection_status.in?(%w[pending rejected partial]) }
     end
 

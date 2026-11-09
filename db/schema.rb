@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_162000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -193,7 +193,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
   end
 
   create_table "menu_agendas", force: :cascade do |t|
-    t.integer "amount"
     t.datetime "created_at", null: false
     t.date "ends_on"
     t.bigint "menu_id", null: false
@@ -278,6 +277,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
     t.datetime "created_at", null: false
     t.bigint "order_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["account_id", "order_id"], name: "index_order_accounts_on_account_id_and_order_id", unique: true
     t.index ["account_id"], name: "index_order_accounts_on_account_id"
     t.index ["order_id"], name: "index_order_accounts_on_order_id"
   end
@@ -412,7 +412,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
   end
 
   create_table "schedules", force: :cascade do |t|
-    t.integer "amount"
     t.datetime "availability_changed_at"
     t.bigint "availability_changed_by_id"
     t.boolean "available", default: true, null: false
@@ -423,7 +422,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
     t.index ["availability_changed_by_id"], name: "index_schedules_on_availability_changed_by_id"
     t.index ["menu_id", "date"], name: "index_schedules_on_menu_id_and_date", unique: true
     t.index ["menu_id"], name: "index_schedules_on_menu_id"
-    t.check_constraint "amount >= 0", name: "schedules_amount_non_negative"
   end
 
   create_table "sessions", force: :cascade do |t|

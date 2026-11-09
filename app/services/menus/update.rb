@@ -95,7 +95,6 @@ class Menus::Update
     end
 
     if mode != "none"
-      add_agenda_error(:invalid_amount) unless new_agenda(ends_on: nil).tap(&:validate).errors[:amount].empty?
       add_agenda_error(:invalid_weekdays) if mode != "single" && (weekdays.empty? || !weekdays.all? { (1..5).cover?(it) })
     end
 
@@ -111,7 +110,7 @@ class Menus::Update
   end
 
   def new_agenda(ends_on:)
-    MenuAgenda.new(weekdays:, starts_on: starts_on || date, ends_on:, amount: @agenda[:amount])
+    MenuAgenda.new(weekdays:, starts_on: starts_on || date, ends_on:)
   end
 
   # Desde `from` los cambios van al plato guardado. Lo programado entre hoy y
@@ -136,7 +135,7 @@ class Menus::Update
     carve(starts_on, ends_on)
     @saved.update!(skipped_dates: @saved.skipped_dates.reject { (starts_on..ends_on).cover?(it) })
     variant = build_edited_variant(starts_on, ends_on)
-    variant.agendas.build(weekdays:, starts_on:, ends_on:, amount: @agenda[:amount])
+    variant.agendas.build(weekdays:, starts_on:, ends_on:)
     variant.save!
     Schedule.where(menu_id: @saved.id, date: starts_on..ends_on).update_all(menu_id: variant.id)
   end
@@ -153,7 +152,7 @@ class Menus::Update
     return if Schedule.exists?(menu_id: @saved.family_ids, date:)
 
     target = Menu.where(base_menu_id: @saved.id).find { it.valid_on?(date) } || @saved
-    target.schedules.create!(date:, amount: @agenda[:amount])
+    target.schedules.create!(date:)
   end
 
   def build_edited_variant(from, to)
@@ -205,7 +204,7 @@ class Menus::Update
 
       if !starts_inside && !ends_inside
         tail = variant.build_variant(valid_from: to + 1, valid_until: variant.valid_until)
-        variant.agendas.each { tail.agendas.build(weekdays: it.weekdays, starts_on: to + 1, ends_on: variant.valid_until, amount: it.amount) }
+        variant.agendas.each { tail.agendas.build(weekdays: it.weekdays, starts_on: to + 1, ends_on: variant.valid_until) }
         tail.save!
         variant.schedules.where(date: (to + 1)..).update_all(menu_id: tail.id)
       end

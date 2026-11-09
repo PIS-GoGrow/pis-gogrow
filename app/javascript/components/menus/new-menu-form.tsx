@@ -90,7 +90,6 @@ function defaultCreateAgenda(create: ProviderMenusNew) {
         date,
         starts_on: null,
         ends_on: null,
-        amount: null,
       }
     : {
         mode: "none" as const,
@@ -98,7 +97,6 @@ function defaultCreateAgenda(create: ProviderMenusNew) {
         date: null,
         starts_on: null,
         ends_on: null,
-        amount: null,
       }
 }
 
