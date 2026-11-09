@@ -845,7 +845,10 @@ RSpec.describe Order, type: :model do
   describe "#ensure_accounts!" do
     around do |example|
       travel_to(Date.current.beginning_of_month + 10.days) do
+        schedules(:today).update!(date: Date.current)
         schedules(:future).update!(date: Date.current + 3)
+        orders(:upcoming_confirmed_future).update!(delivery_date: Date.current)
+        orders(:other_consumer_upcoming).update!(delivery_date: Date.current)
         example.run
       end
     end
@@ -1491,7 +1494,7 @@ RSpec.describe Order, type: :model do
     # criterio 4 pide además que el fallo quede registrado para reintento.
     it "keeps the order confirmed when the notification cannot be saved" do
       order = orders(:upcoming_pending_today)
-      allow(Notification).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
+      allow(Notification).to receive(:new).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
 
       expect(order.decide(:confirmed)).to be(true)
       expect(order.reload).to be_confirmed
