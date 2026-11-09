@@ -1493,7 +1493,7 @@ RSpec.describe Order, type: :model do
     # criterio 4 pide además que el fallo quede registrado para reintento.
     it "keeps the order confirmed when the notification cannot be saved" do
       order = orders(:upcoming_pending_today)
-      allow(Notification).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
+      allow(Notification).to receive(:new).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
 
       expect(order.decide(:confirmed)).to be(true)
       expect(order.reload).to be_confirmed

@@ -170,8 +170,12 @@ RSpec.describe "Notifications", type: :request do
         event: "order_rejection",
         requires_action: false,
         notifiable: user,
-        title: "Tu pedido fue rechazado",
-        description: "Tu pedido del 10 de octubre de Milanesa fue rechazado por Tu Viandita porque no había stock disponible."
+        description_data: {
+          date: "10 de octubre",
+          dish: "Milanesa",
+          provider: "Tu Viandita",
+          reason: "porque no había stock disponible"
+        }
       )
       sign_in(user)
 
@@ -196,9 +200,7 @@ RSpec.describe "Notifications", type: :request do
         role: "consumer",
         event: "order_rejection",
         requires_action: false,
-        notifiable: user,
-        title: "Tu pedido fue rechazado",
-        description: "Tu pedido del 10 de octubre fue rechazado."
+        notifiable: user
       )
       Provider.create!(user:, onboarding_completed_at: Time.current)
       session = user.sessions.create!(role: :provider)
