@@ -15,7 +15,6 @@ import {
   adminBenefitUsage,
   adminConsumers,
   adminDashboard,
-  adminInvoices,
   adminOrderEvents,
   adminPayments,
   adminPreferences,
@@ -83,7 +82,6 @@ export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
         adminPreferences.show().url,
         "/configuracion",
         adminBenefitConfigurations.index().url,
-        adminInvoices.index().url,
         adminOrderEvents.index().url,
       ],
       mobileIcon: (

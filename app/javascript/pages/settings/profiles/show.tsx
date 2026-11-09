@@ -1,77 +1,47 @@
 import { Transition } from "@headlessui/react"
-import { Form, Head, Link, usePage } from "@inertiajs/react"
+import { Form, Head, router, usePage } from "@inertiajs/react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import AppearanceTabs from "@/components/appearance-tabs"
+import DeleteUser from "@/components/delete-user"
 import HeadingSmall from "@/components/heading-small"
 import { Button } from "@/components/ui/button"
 import {
   Field,
   FieldDescription,
   FieldError,
-  FieldGroup,
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
 import AppLayout from "@/layouts/app-layout"
 import SettingsPageLayout from "@/layouts/settings/page-layout"
-import {
-  adminPreferences,
-  identityEmailVerifications,
-  settingsEmails,
-  settingsPasswords,
-  settingsProfiles,
-} from "@/routes"
+import { adminPreferences, settingsProfiles } from "@/routes"
 import type { BreadcrumbItem, SettingsProfilesShow } from "@/types"
 
-export default function Profile({ phone }: SettingsProfilesShow) {
+export default function Profile({ provider, phone }: SettingsProfilesShow) {
   const { t } = useTranslation()
-  const { auth } = usePage().props
-  const isConsumer = auth.session.role === "consumer"
-  const isProvider = auth.session.role === "provider"
-  const allowsCredentialsEditing = isConsumer || isProvider
+  const [updatingHomeDelivery, setUpdatingHomeDelivery] = useState(false)
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
-      title: isConsumer
-        ? t("pages.consumer_profiles.show.title")
-        : isProvider
-          ? t("pages.provider_accounts.show.profile")
-          : t("pages.settings.profile.title"),
+      title: t("pages.settings.profile.title"),
       href: settingsProfiles.show().url,
     },
   ]
+
+  const { auth } = usePage().props
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={breadcrumbs[breadcrumbs.length - 1].title} />
 
       <SettingsPageLayout
-        title={
-          isConsumer
-            ? t("pages.consumer_profiles.show.title")
-            : isProvider
-              ? t("pages.provider_accounts.show.profile")
-              : t("pages.settings.profile.heading")
-        }
-        description={
-          isConsumer
-            ? t("pages.consumer_profiles.show.account_description")
-            : isProvider
-              ? t("pages.provider_accounts.show.profile_description")
-              : t("pages.settings.profile.description")
-        }
+        title={t("pages.settings.profile.heading")}
+        description={t("pages.settings.profile.description")}
         adminBackHref={adminPreferences.show().url}
         adminBackLabel={t("pages.settings.profile.back")}
       >
-        {allowsCredentialsEditing && (
-          <HeadingSmall
-            title={t("pages.settings.profile.heading")}
-            description={t("pages.settings.profile.description")}
-          />
-        )}
-
         <Form
           action={settingsProfiles.update()}
           options={{
@@ -157,229 +127,44 @@ export default function Profile({ phone }: SettingsProfilesShow) {
                   </Transition>
                 </div>
               </div>
+
+              {provider && (
+                <div className="space-y-4 border-t pt-8">
+                  <HeadingSmall
+                    title={t("pages.settings.profile.home_delivery.heading")}
+                  />
+
+                  <Field
+                    orientation="horizontal"
+                    className="rounded-lg border p-4"
+                  >
+                    <FieldLabel htmlFor="home_delivery">
+                      {t("pages.settings.profile.home_delivery.label")}
+                    </FieldLabel>
+                    <Switch
+                      id="home_delivery"
+                      checked={provider.home_delivery}
+                      disabled={updatingHomeDelivery}
+                      onCheckedChange={(homeDelivery) => {
+                        setUpdatingHomeDelivery(true)
+                        router.patch(
+                          settingsProfiles.update(),
+                          { home_delivery: homeDelivery },
+                          {
+                            preserveScroll: true,
+                            onFinish: () => setUpdatingHomeDelivery(false),
+                          },
+                        )
+                      }}
+                    />
+                  </Field>
+                </div>
+              )}
             </>
           )}
         </Form>
 
-        {allowsCredentialsEditing && (
-          <>
-            <Separator className="my-8" />
-
-            <div className="space-y-4">
-              <HeadingSmall
-                title={t("pages.settings.email.heading")}
-                description={t("pages.settings.email.description")}
-              />
-
-              <Form
-                action={settingsEmails.update()}
-                options={{
-                  preserveScroll: true,
-                }}
-                resetOnError={["password_challenge"]}
-                resetOnSuccess={["password_challenge"]}
-                noValidate
-                className="space-y-6"
-              >
-                {({ errors, processing, recentlySuccessful }) => (
-                  <>
-                    <FieldGroup>
-                      <Field>
-                        <FieldLabel htmlFor="email">
-                          {t("common.email_address")}
-                        </FieldLabel>
-
-                        <Input
-                          id="email"
-                          type="email"
-                          name="email"
-                          defaultValue={auth.user.email}
-                          required
-                          autoComplete="username"
-                          placeholder={t("common.email_address")}
-                        />
-
-                        <FieldError
-                          errors={errors.email?.map((message) => ({ message }))}
-                        />
-                      </Field>
-
-                      {!auth.user.verified && (
-                        <div>
-                          <p className="text-muted-foreground -mt-4 text-sm">
-                            {t("pages.settings.email.unverified")}{" "}
-                            <Link
-                              href={identityEmailVerifications.create()}
-                              as="button"
-                              className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                            >
-                              {t("pages.settings.email.resend")}
-                            </Link>
-                          </p>
-                        </div>
-                      )}
-
-                      <Field>
-                        <FieldLabel htmlFor="email_password_challenge">
-                          {t("common.current_password")}
-                        </FieldLabel>
-
-                        <Input
-                          id="email_password_challenge"
-                          name="password_challenge"
-                          type="password"
-                          autoComplete="current-password"
-                          placeholder={t("common.current_password")}
-                        />
-
-                        <FieldError
-                          errors={errors.password_challenge?.map((message) => ({
-                            message,
-                          }))}
-                        />
-                      </Field>
-                    </FieldGroup>
-
-                    <div className="flex items-center gap-4">
-                      <Button disabled={processing}>
-                        {t("pages.settings.email.submit")}
-                      </Button>
-
-                      <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                      >
-                        <p className="text-sm text-neutral-600">
-                          {t("common.saved")}
-                        </p>
-                      </Transition>
-                    </div>
-                  </>
-                )}
-              </Form>
-            </div>
-
-            <Separator className="my-8" />
-
-            <div className="space-y-4">
-              <HeadingSmall
-                title={t("pages.settings.password.heading")}
-                description={t("pages.settings.password.description")}
-              />
-
-              <Form
-                action={settingsPasswords.update()}
-                options={{
-                  preserveScroll: true,
-                }}
-                resetOnError
-                resetOnSuccess
-                className="space-y-6"
-              >
-                {({ errors, processing, recentlySuccessful }) => (
-                  <>
-                    <FieldGroup>
-                      <Field>
-                        <FieldLabel htmlFor="password_password_challenge">
-                          {t("common.current_password")}
-                        </FieldLabel>
-
-                        <Input
-                          id="password_password_challenge"
-                          name="password_challenge"
-                          type="password"
-                          autoComplete="current-password"
-                          placeholder={t("common.current_password")}
-                        />
-
-                        <FieldError
-                          errors={errors.password_challenge?.map((message) => ({
-                            message,
-                          }))}
-                        />
-                      </Field>
-
-                      <Field>
-                        <FieldLabel htmlFor="password">
-                          {t("pages.settings.password.new_password")}
-                        </FieldLabel>
-
-                        <Input
-                          id="password"
-                          name="password"
-                          type="password"
-                          autoComplete="new-password"
-                          placeholder={t(
-                            "pages.settings.password.new_password",
-                          )}
-                        />
-
-                        <FieldError
-                          errors={errors.password?.map((message) => ({
-                            message,
-                          }))}
-                        />
-                      </Field>
-
-                      <Field>
-                        <FieldLabel htmlFor="password_confirmation">
-                          {t("common.confirm_password")}
-                        </FieldLabel>
-
-                        <Input
-                          id="password_confirmation"
-                          name="password_confirmation"
-                          type="password"
-                          autoComplete="new-password"
-                          placeholder={t("common.confirm_password")}
-                        />
-
-                        <FieldError
-                          errors={errors.password_confirmation?.map(
-                            (message) => ({
-                              message,
-                            }),
-                          )}
-                        />
-                      </Field>
-                    </FieldGroup>
-
-                    <div className="flex items-center gap-4">
-                      <Button disabled={processing}>
-                        {t("pages.settings.password.submit")}
-                      </Button>
-
-                      <Transition
-                        show={recentlySuccessful}
-                        enter="transition ease-in-out"
-                        enterFrom="opacity-0"
-                        leave="transition ease-in-out"
-                        leaveTo="opacity-0"
-                      >
-                        <p className="text-sm text-neutral-600">
-                          {t("common.saved")}
-                        </p>
-                      </Transition>
-                    </div>
-                  </>
-                )}
-              </Form>
-            </div>
-
-            <Separator className="my-8" />
-
-            <div className="space-y-4">
-              <HeadingSmall
-                title={t("pages.settings.appearance.title")}
-                description={t("pages.settings.appearance.description")}
-              />
-              <AppearanceTabs />
-            </div>
-          </>
-        )}
+        {auth.session.role !== "admin" && <DeleteUser />}
       </SettingsPageLayout>
     </AppLayout>
   )

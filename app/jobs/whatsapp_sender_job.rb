@@ -59,12 +59,7 @@ class WhatsappSenderJob < ApplicationJob
       status_callback:
     )
 
-    # NOTA: En este punto exacto de ejecución, podría llegar a ocurrir que llegué el callback
-    # de Twilio. Esto solo podría pasar si el callback demora muy pocos milisegundos. Si eso
-    # pasara, la notificación quedaría como accepted aunque se entregue (o falle). Este caso
-    # borde no se maneja por la complejidad que implica hacerlo, así como por la baja
-    # probabilidad del evento. Sí se mitiga haciendo reintentos en TwilioCallbacksController
-    # de hasta 0.5s.
+    Rails.logger.info("Enviado mensaje (SID #{message.sid})")
 
     notification.with_lock do
       attrs = {
@@ -77,8 +72,6 @@ class WhatsappSenderJob < ApplicationJob
       attrs[:whatsapp_send_status] = :accepted if notification.sending?
       notification.update! attrs
     end
-
-    Rails.logger.info("Enviado mensaje (SID #{message.sid})")
   rescue Twilio::REST::RestError => e
     klass = transient?(e) ? TransientTwilioError : PermanentTwilioError
     raise klass, "#{e.status_code}/#{e.code}: #{e.error_message}"

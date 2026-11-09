@@ -100,7 +100,7 @@ export default function ClosingTimeSection({
               >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent inFlow>
+              <SelectContent className="max-h-48">
                 {options.map((time) => (
                   <SelectItem key={time} value={time}>
                     {time}
@@ -166,7 +166,7 @@ export default function ClosingTimeSection({
                             placeholder={t(`${page}.closing_time_placeholder`)}
                           />
                         </SelectTrigger>
-                        <SelectContent inFlow>
+                        <SelectContent className="max-h-48">
                           {quarterHourOptions.map((time) => (
                             <SelectItem key={time} value={time}>
                               {time}

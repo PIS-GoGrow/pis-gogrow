@@ -50,16 +50,6 @@ RSpec.describe DebtReminders::Request do
       end
     end
 
-    it "informa únicamente el saldo pendiente si la cuenta tiene un comprobante aprobado previo" do
-      consumer_account.update!(amount: 700)
-      consumer_account.payments.create!(status: :approved, expected_amount: 300)
-
-      travel_to consumer_account.due_date + 1.day do
-        notification = described_class.call(account: consumer_account, requested_by: provider_user)
-        expect(notification.description).to include("$400")
-      end
-    end
-
     it "lanza ActiveRecord::RecordNotFound si el usuario no es el proveedor dueño de la cuenta" do
       travel_to consumer_account.due_date + 1.day do
         expect {

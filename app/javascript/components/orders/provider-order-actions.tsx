@@ -13,17 +13,11 @@ import {
   AdaptableDialogTitle,
   AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
-import type { ProviderOrderDecision } from "@/components/orders/provider-order-decided-sheet"
 import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldContent,
-  FieldLabel,
-  FieldTitle,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Spinner } from "@/components/ui/spinner"
+import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { providerOrders } from "@/routes"
 import type { OrderRejectionReason, ProviderOrder } from "@/types"
@@ -36,27 +30,21 @@ const REJECTION_REASONS: OrderRejectionReason[] = [
   "other",
 ]
 
-// Inertia considera exitosa la visita aunque el servidor haya rechazado la
-// decisión: el flash de error es lo que distingue los dos casos.
-function alertFrom(page: { props: unknown; flash?: { alert?: string } }) {
-  return (
-    (page.props as { flash?: { alert?: string } })?.flash?.alert ??
-    page.flash?.alert
-  )
-}
+const disabledStyle =
+  "disabled:border-transparent disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 disabled:shadow-none"
 
 interface ProviderOrderActionsProps {
-  order: Pick<ProviderOrder, "id" | "status" | "rejectable" | "consumer_name">
+  order: Pick<ProviderOrder, "id" | "status" | "rejectable">
   className?: string
+  keepVisible?: boolean
   stackOnMobile?: boolean
-  onDecided: (decision: ProviderOrderDecision) => void
 }
 
 export default function ProviderOrderActions({
   order,
   className,
+  keepVisible = false,
   stackOnMobile = false,
-  onDecided,
 }: ProviderOrderActionsProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -66,13 +54,10 @@ export default function ProviderOrderActions({
 
   const canConfirm = order.status === "pending"
   const canDecideReject = order.rejectable
-  const bothActions = canConfirm && canDecideReject
 
-  if (!canConfirm && !canDecideReject) return null
+  if (!canDecideReject && !keepVisible) return null
 
-  function notifyDecided(status: ProviderOrderDecision["status"]) {
-    onDecided({ id: order.id, consumer_name: order.consumer_name, status })
-  }
+  const code = t("pages.provider_orders.index.code", { id: order.id })
 
   function handleConfirm() {
     setProcessing(true)
@@ -82,11 +67,6 @@ export default function ProviderOrderActions({
       {},
       {
         preserveScroll: true,
-        // Sin preserveState Inertia remonta la página y se pierde el aviso.
-        preserveState: true,
-        onSuccess: (page) => {
-          if (!alertFrom(page)) notifyDecided("confirmed")
-        },
         onFinish: () => setProcessing(false),
       },
     )
@@ -110,13 +90,16 @@ export default function ProviderOrderActions({
       },
       {
         preserveScroll: true,
-        preserveState: true,
+        // Inertia considera exitosa la visita aunque el servidor haya rechazado
+        // la decisión: el flash de error es lo que distingue los dos casos.
         onSuccess: (page) => {
-          if (!alertFrom(page)) {
+          const hasAlert =
+            (page.props as { flash?: { alert?: string } })?.flash?.alert ??
+            page.flash?.alert
+          if (!hasAlert) {
             setOpen(false)
             setReason("")
             setDetails("")
-            notifyDecided("rejected")
           }
         },
         onFinish: () => setProcessing(false),
@@ -132,12 +115,12 @@ export default function ProviderOrderActions({
     }
   }
 
-  const confirmButton = canConfirm && (
+  const confirmButton = (
     <Button
       type="button"
       size="lg"
-      disabled={processing}
-      className={stackOnMobile ? "max-md:h-11.5" : "max-md:h-9.5"}
+      disabled={processing || !canConfirm}
+      className={disabledStyle}
       onClick={handleConfirm}
     >
       <Check aria-hidden="true" />
@@ -148,97 +131,89 @@ export default function ProviderOrderActions({
   return (
     <div
       className={cn(
-        "grid gap-3 md:gap-2",
-        bothActions && (stackOnMobile ? "md:grid-cols-2" : "grid-cols-2"),
+        "grid gap-2",
+        stackOnMobile ? "grid-cols-1 md:grid-cols-2" : "grid-cols-2",
         className,
       )}
     >
       {stackOnMobile && confirmButton}
-      {canDecideReject && (
-        <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
-          <AdaptableDialogTrigger asChild>
-            <Button
-              type="button"
-              variant="secondary"
-              size="lg"
-              className={cn("max-md:h-9.5", stackOnMobile && "md:order-first")}
-            >
-              <X aria-hidden="true" />
-              {t("pages.provider_orders.actions.reject")}
-            </Button>
-          </AdaptableDialogTrigger>
-
-          <AdaptableDialogContent
-            showCloseButton={false}
-            className="p-5 md:p-6"
+      <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
+        <AdaptableDialogTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={!canDecideReject}
+            className={cn(disabledStyle, stackOnMobile && "md:order-first")}
           >
-            <AdaptableDialogHeader className="p-0">
-              <AdaptableDialogTitle>
-                {t("pages.provider_orders.actions.reject_dialog.title")}
-              </AdaptableDialogTitle>
-              <AdaptableDialogDescription>
-                {t("pages.provider_orders.actions.reject_dialog.description")}
-              </AdaptableDialogDescription>
-            </AdaptableDialogHeader>
+            <X aria-hidden="true" />
+            {t("pages.provider_orders.actions.reject")}
+          </Button>
+        </AdaptableDialogTrigger>
 
-            <div className="grid gap-3 py-2">
-              <RadioGroup
-                value={reason}
-                onValueChange={(val) => setReason(val as OrderRejectionReason)}
-                className="gap-3"
-              >
-                {REJECTION_REASONS.map((r) => (
-                  <FieldLabel key={r} htmlFor={`reason-${r}`}>
-                    <Field orientation="horizontal">
-                      <RadioGroupItem value={r} id={`reason-${r}`} />
-                      <FieldContent>
-                        <FieldTitle>
-                          {t(`pages.provider_orders.rejection_reasons.${r}`)}
-                        </FieldTitle>
-                      </FieldContent>
-                    </Field>
-                  </FieldLabel>
-                ))}
-              </RadioGroup>
+        <AdaptableDialogContent showCloseButton={false} className="p-5 md:p-6">
+          <AdaptableDialogHeader className="p-0">
+            <AdaptableDialogTitle>
+              {t("pages.provider_orders.actions.reject_dialog.title", { code })}
+            </AdaptableDialogTitle>
+            <AdaptableDialogDescription>
+              {t("pages.provider_orders.actions.reject_dialog.description")}
+            </AdaptableDialogDescription>
+          </AdaptableDialogHeader>
 
-              {reason === "other" && (
-                <Input
+          <div className="grid gap-4 py-2">
+            <RadioGroup
+              value={reason}
+              onValueChange={(val) => setReason(val as OrderRejectionReason)}
+            >
+              {REJECTION_REASONS.map((r) => (
+                <div key={r} className="flex items-center space-x-2">
+                  <RadioGroupItem value={r} id={`reason-${r}`} />
+                  <Label htmlFor={`reason-${r}`} className="cursor-pointer">
+                    {t(`pages.provider_orders.rejection_reasons.${r}`)}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+
+            {reason === "other" && (
+              <div className="grid gap-1.5 pt-1">
+                <Label htmlFor="rejection-details">
+                  {t(
+                    "pages.provider_orders.actions.reject_dialog.details_label",
+                  )}
+                </Label>
+                <Textarea
                   id="rejection-details"
                   value={details}
                   onChange={(e) => setDetails(e.target.value)}
-                  aria-label={t(
-                    "pages.provider_orders.actions.reject_dialog.details_label",
-                  )}
                   placeholder={t(
                     "pages.provider_orders.actions.reject_dialog.details_placeholder",
                   )}
+                  rows={3}
                 />
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
-            <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
-              <AdaptableDialogClose asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="max-md:flex-1"
-                >
-                  {t("pages.provider_orders.actions.reject_dialog.back")}
-                </Button>
-              </AdaptableDialogClose>
-              <Button
-                type="button"
-                disabled={!canReject}
-                className="max-md:flex-1"
-                onClick={handleReject}
-              >
-                {processing && <Spinner />}
-                {t("pages.provider_orders.actions.reject_dialog.confirm")}
+          <AdaptableDialogFooter className="p-0 max-md:flex-row max-md:gap-3">
+            <AdaptableDialogClose asChild>
+              <Button type="button" variant="outline" className="max-md:flex-1">
+                {t("pages.provider_orders.actions.reject_dialog.back")}
               </Button>
-            </AdaptableDialogFooter>
-          </AdaptableDialogContent>
-        </AdaptableDialog>
-      )}
+            </AdaptableDialogClose>
+            <Button
+              type="button"
+              disabled={!canReject}
+              className="max-md:flex-1"
+              onClick={handleReject}
+            >
+              {processing && <Spinner />}
+              {t("pages.provider_orders.actions.reject_dialog.confirm")}
+            </Button>
+          </AdaptableDialogFooter>
+        </AdaptableDialogContent>
+      </AdaptableDialog>
 
       {!stackOnMobile && confirmButton}
     </div>

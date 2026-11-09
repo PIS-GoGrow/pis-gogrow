@@ -13,7 +13,6 @@ class AnthropicMessagesClient
 
     response = connection.post("/v1/messages") do |request|
       request.headers["Authorization"] = "Bearer #{api_key}"
-      request.headers["x-api-key"] = api_key
       request.headers["anthropic-version"] = "2026-10-21"
       request.headers["Content-Type"] = "application/json"
       request.body = JSON.generate(

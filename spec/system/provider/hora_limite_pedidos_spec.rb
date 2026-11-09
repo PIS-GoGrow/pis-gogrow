@@ -49,7 +49,7 @@ RSpec.describe "Hora límite de pedidos del proveedor" do
   end
 
   it "cancels adding a deadline without saving it" do
-    visit_hydrated provider_operational_settings_path
+    visit provider_operational_settings_path
     click_on "Agregar hora de cierre"
     click_on "Cancelar"
 

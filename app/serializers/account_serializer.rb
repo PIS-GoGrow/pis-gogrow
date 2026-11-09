@@ -22,11 +22,6 @@ class AccountSerializer < ApplicationSerializer
     account.payable_amount.to_f
   end
 
-  typelize :number
-  attribute :outstanding_amount do |account|
-    account.outstanding_amount.to_f
-  end
-
   typelize :boolean
   attribute :current do |account|
     account.current?
@@ -49,7 +44,7 @@ class AccountSerializer < ApplicationSerializer
 
   # Sigue el enum de Payment; escrito a mano porque collection_status es un
   # método y no una columna de la que inferirlo.
-  typelize "'pending' | 'submitted' | 'approved' | 'rejected' | 'partial'"
+  typelize "'pending' | 'submitted' | 'approved' | 'rejected'"
   attribute :collection_status, &:collection_status
 
   typelize :number

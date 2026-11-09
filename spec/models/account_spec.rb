@@ -157,7 +157,7 @@ RSpec.describe Account, type: :model do
   describe "#sync_amount!" do
     it "updates the account amount with the sum of final discounted prices of confirmed orders" do
       menu = Menu.create!(provider:, name: "Tarta", description: "Pascualina", price: 300)
-      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday))
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
 
       account = consumer.accounts.create!(provider:, month: Date.current, amount: 0)
 
@@ -201,7 +201,7 @@ RSpec.describe Account, type: :model do
 
     it "sums the subsidy of confirmed orders for a company account" do
       menu = Menu.create!(provider:, name: "Wok", description: "De verduras", price: 400)
-      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday))
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
 
       Order.create!(
         consumer:,
@@ -222,27 +222,6 @@ RSpec.describe Account, type: :model do
         expect(account.reload.amount).to eq(150.to_d)
         expect(account.payable_amount).to eq(150.to_d)
       end
-    end
-
-    it "no cuenta un pedido confirmado hasta su fecha de entrega" do
-      travel_to Time.zone.local(2026, 11, 3, 12)
-      menu = Menu.create!(provider:, name: "Wok", description: "De verduras", price: 400)
-      schedule = Schedule.create!(menu:, date: Date.new(2026, 11, 5))
-      order = Order.create!(
-        consumer:, schedule:, amount: 1, price: 400, discounted_price: 250,
-        address: company.address, delivery_method: :office, status: :confirmed
-      )
-      employee_account, company_account = order.accounts.partition { it.owner == consumer }.map(&:sole)
-
-      expect([ employee_account.reload.amount, company_account.reload.amount ]).to eq([ 0, 0 ])
-      expect(described_class.amount_and_price_sum([ employee_account.id ])).to be_empty
-
-      travel_to Time.zone.local(2026, 11, 5, 0, 5)
-      employee_account.sync_amount!
-      company_account.sync_amount!
-
-      expect([ employee_account.reload.amount, company_account.reload.amount ]).to eq([ 250, 150 ])
-      expect(described_class.amount_and_price_sum([ employee_account.id ])).to eq(employee_account.id => { amount: 1, price: 250 })
     end
   end
 
@@ -278,12 +257,6 @@ RSpec.describe Account, type: :model do
       expect(account.collection_status).to eq("submitted")
     end
 
-    it "is partial when the latest payment is partial" do
-      create_payment(status: :partial)
-
-      expect(account.collection_status).to eq("partial")
-    end
-
     it "takes the most recent payment when there are several" do
       create_payment(status: :rejected, created_at: 2.days.ago)
       create_payment(status: :approved, created_at: 1.day.ago)
@@ -306,72 +279,11 @@ RSpec.describe Account, type: :model do
       expect(account.collection_status).to eq("submitted")
     end
 
-    it "remains submitted when an older payment is partial but a newer one is submitted" do
-      create_payment(status: :partial, created_at: 2.days.ago)
+    it "remains submitted when older payment was rejected as partial payment but a newer one is submitted" do
+      create_payment(status: :rejected, rejection_reason: "El pago es parcial", created_at: 2.days.ago)
       create_payment(status: :submitted, created_at: 1.day.ago)
 
       expect(account.collection_status).to eq("submitted")
-    end
-
-    it "uses the latest partial when there are several consecutive partial payments" do
-      create_payment(status: :partial, created_at: 2.days.ago)
-      create_payment(status: :partial, created_at: 1.day.ago)
-
-      expect(account.collection_status).to eq("partial")
-      expect(account.payments.partial.count).to eq(2)
-    end
-
-    it "is pending again when debt is generated after the approved receipt was sent" do
-      create_payment(status: :approved)
-      account.update!(amount: account.amount + 450)
-
-      expect(account.reload.collection_status).to eq("pending")
-      expect(account.outstanding_amount).to eq(450.to_d)
-      expect(Account.pending).to include(account)
-      expect(Account.history).not_to include(account)
-    end
-
-    it "clamps outstanding_amount to zero when paid amount exceeds payable amount" do
-      payment = create_payment(status: :approved)
-      payment.update_column(:expected_amount, account.payable_amount + 100)
-
-      expect(account.reload.outstanding_amount).to eq(0)
-      expect(account.settled?).to be(true)
-    end
-
-    it "is not settled when payable amount is zero without any approved payment" do
-      account.update!(amount: 0)
-
-      expect(account.outstanding_amount).to eq(0)
-      expect(account.settled?).to be(false)
-    end
-
-    it "calculates outstanding_amount and scopes correctly with VAT for company accounts" do
-      allow(ENV).to receive(:[]).and_call_original
-      allow(ENV).to receive(:[]).with("COMPANY_ACCOUNT_VAT_ENABLED").and_return("true")
-
-      company_account = consumer.company.accounts.create!(
-        provider:, month: Date.current.prev_month, amount: 1000.0, vat_rate: 0.22
-      )
-      # 1000 + 220 (22% IVA) = 1220
-      expect(company_account.payable_amount).to eq(1220.to_d)
-
-      payment = company_account.payments.build(provider:, status: :submitted)
-      payment.receipt.attach(io: StringIO.new("receipt"), filename: "comprobante.png", content_type: "image/png")
-      payment.save!
-      expect(payment.expected_amount).to eq(1220.to_d)
-
-      payment.approve
-      expect(company_account.reload.settled?).to be(true)
-      expect(Account.history).to include(company_account)
-      expect(Account.pending).not_to include(company_account)
-    end
-
-    it "is approved when a payment after a partial settles the account" do
-      create_payment(status: :partial, created_at: 2.days.ago)
-      create_payment(status: :approved, created_at: 1.day.ago)
-
-      expect(account.collection_status).to eq("approved")
     end
 
     # Una cuenta de empresa no debe la deuda final sino el subsidio: lo que la
@@ -379,7 +291,7 @@ RSpec.describe Account, type: :model do
     # menos el descuento.
     it "sets the amount of a company account to the subsidy its employees got" do
       menu = Menu.create!(provider:, name: "Tarta", description: "Pascualina", price: 300)
-      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday))
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 10)
       company_account = consumer.company.accounts.create!(provider:, month: Date.current, amount: 0)
 
       order = Order.create!(
@@ -430,7 +342,7 @@ RSpec.describe Account, type: :model do
     it "is nil again once the submitted payment is resolved" do
       submitted = create_payment(status: :submitted)
 
-      submitted.update!(status: :partial)
+      submitted.update!(status: :rejected, rejection_reason: "El pago es parcial")
 
       expect(account.reload.payment_pending_review).to be_nil
     end
@@ -467,7 +379,7 @@ RSpec.describe Account, type: :model do
   describe ".amount_and_price_sum" do
     it "aggregates total amounts and final discounted prices for confirmed orders of the given accounts" do
       menu = Menu.create!(provider:, name: "Milanesa", description: "Con puré", price: 350)
-      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday))
+      schedule = Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount: 15)
 
       account = consumer.accounts.create!(provider:, month: Date.current, amount: 0)
 
@@ -530,25 +442,6 @@ RSpec.describe Account, type: :model do
       expect(Account.pending).not_to include(paid_account)
       expect(Account.pending).not_to include(zero_account)
       expect(Account.history).to include(paid_account)
-    end
-
-    it "keeps a partial account pending and out of history" do
-      partial_account = Account.create!(
-        owner: consumer,
-        provider:,
-        month: Date.current.prev_month,
-        amount: 300
-      )
-      payment = partial_account.payments.build(provider:, status: :partial)
-      payment.receipt.attach(
-        io: Rails.root.join("public/icon.png").open,
-        filename: "parcial.png",
-        content_type: "image/png"
-      )
-      payment.save!
-
-      expect(Account.pending).to include(partial_account)
-      expect(Account.history).not_to include(partial_account)
     end
 
     it "orders pending accounts by month descending regardless of creation sequence" do

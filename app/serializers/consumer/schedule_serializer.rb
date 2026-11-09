@@ -3,7 +3,7 @@
 class Consumer::ScheduleSerializer < ApplicationSerializer
   typelize_from Schedule
 
-  attributes :id, :date, :available
+  attributes :id, :date, :amount, :available
 
   has_one :menu, serializer: Consumer::MenuWithProviderSerializer
 end

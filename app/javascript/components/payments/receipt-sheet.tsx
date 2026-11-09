@@ -1,4 +1,4 @@
-import { Download, Maximize2 } from "lucide-react"
+import { Download, Expand } from "lucide-react"
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -47,13 +47,11 @@ export default function ReceiptSheet({
       {children}
 
       <AdaptableDialogContent className="gap-4 sm:max-w-lg">
-        <AdaptableDialogHeader className="pb-0">
+        <AdaptableDialogHeader>
           <AdaptableDialogTitle>
             {t(`${page}.receipt_title`)}
           </AdaptableDialogTitle>
-          <AdaptableDialogDescription className="sr-only">
-            {filename}
-          </AdaptableDialogDescription>
+          <AdaptableDialogDescription>{filename}</AdaptableDialogDescription>
         </AdaptableDialogHeader>
 
         <div className="min-h-0 overflow-y-auto px-4">
@@ -61,35 +59,22 @@ export default function ReceiptSheet({
             <dt>{t(`${page}.expected_amount`)}</dt>
             <dd className="font-semibold">{formatMoney(expectedAmount)}</dd>
           </dl>
-          <div className="bg-background relative overflow-hidden rounded-xl border">
-            <div className="absolute top-2 right-2 z-10 flex gap-2">
-              <Button
-                asChild
-                variant="outline"
-                size="icon-sm"
-                className="rounded-full"
-              >
-                <a
-                  href={receiptUrl}
-                  download
-                  aria-label={t(`${page}.download`)}
-                >
+          <div className="bg-background overflow-hidden rounded-xl border">
+            <div className="flex flex-wrap justify-end gap-2 p-2">
+              <Button asChild variant="outline" size="sm">
+                <a href={receiptUrl} download>
                   <Download aria-hidden="true" />
+                  {t(`${page}.download`)}
                 </a>
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="icon-sm"
-                className="rounded-full"
-              >
+              <Button asChild variant="outline" size="icon-sm">
                 <a
                   href={receiptUrl}
                   target="_blank"
                   rel="noreferrer"
                   aria-label={t(`${page}.open_receipt`)}
                 >
-                  <Maximize2 aria-hidden="true" />
+                  <Expand aria-hidden="true" />
                 </a>
               </Button>
             </div>
@@ -97,13 +82,13 @@ export default function ReceiptSheet({
               <img
                 src={receiptUrl}
                 alt={t(`${page}.receipt_title`)}
-                className="max-h-[55dvh] w-full object-contain"
+                className="max-h-[40dvh] w-full object-contain"
               />
             ) : (
               <iframe
                 src={receiptUrl}
                 title={t(`${page}.receipt_title`)}
-                className="h-[55dvh] w-full"
+                className="h-[40dvh] w-full"
               />
             )}
           </div>

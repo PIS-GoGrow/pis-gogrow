@@ -7,21 +7,19 @@ class Provider::OnboardingController < Provider::InertiaController
 
   def show
     @provider = provider
-    @bank_names = Provider::BANK_NAMES | [ provider.bank_name ].compact
     @step = current_step
     @notification_configurations = provider_notification_configurations
-    @subscribed_keys = subscribed_keys
+    @subscribed_keys =
+      @notification_configurations
+        .joins(:notification_configuration_users)
+        .where(notification_configuration_users: { user_id: Current.user.id })
+        .pluck(:key)
     @closures = provider.closures.upcoming
     @today = Date.current.iso8601
     @order_deadline_passed_today = provider.order_deadline_passed_today?
   end
 
   def update
-    if params[:step] == "intro"
-      provider.update(onboarding_completed_at: Time.current) unless provider.onboarded?
-      return redirect_to provider_dashboard_path
-    end
-
     step = params[:step].to_i
     advance(step) if skipping? || save_step(step)
   end
@@ -33,7 +31,7 @@ class Provider::OnboardingController < Provider::InertiaController
   end
 
   def current_step
-    params[:step].presence_in(%w[intro 1 2 3 4 done]) || (provider.onboarded? ? "done" : "intro")
+    params[:step].presence_in(%w[1 2 3 4 done]) || (provider.onboarded? ? "done" : "1")
   end
 
   def skipping?
@@ -61,7 +59,7 @@ class Provider::OnboardingController < Provider::InertiaController
 
   def save_payment_details
     provider.assign_attributes(
-      params.expect(provider: [ :bank_name, :bank_account_details, :beneficiary ])
+      params.expect(provider: [ :bank_name, :bank_account_type, :bank_account_number, :bank_account_holder, :tax_id ])
     )
     saved = provider.save(context: :payment_details)
     provider.mark_section_configured!(:payment_details) if saved
@@ -113,14 +111,5 @@ class Provider::OnboardingController < Provider::InertiaController
 
   def provider_notification_configurations
     Notification::Configuration.where(configurable: true).for_role(:provider)
-  end
-
-  def subscribed_keys
-    return @notification_configurations.pluck(:key) unless provider.notifications_configured_at?
-
-    @notification_configurations
-      .joins(:notification_configuration_users)
-      .where(notification_configuration_users: { user_id: Current.user.id })
-      .pluck(:key)
   end
 end

@@ -41,58 +41,10 @@ describe("ProviderFilterSheet", () => {
     expect(screen.getByLabelText("Proveedor 40")).toBeChecked()
     await user.click(screen.getByLabelText("Todos"))
     expect(screen.getByLabelText("Todos")).toBeChecked()
-    expect(screen.getByLabelText("Proveedor 1")).not.toBeChecked()
-    expect(screen.getByLabelText("Proveedor 40")).not.toBeChecked()
+    expect(screen.getByLabelText("Proveedor 1")).toBeChecked()
+    expect(screen.getByLabelText("Proveedor 40")).toBeChecked()
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
     expect(onApply).toHaveBeenLastCalledWith(new Set())
-  })
-
-  it("selects only the tapped provider when starting from Todos", async () => {
-    const user = userEvent.setup()
-    const onApply = vi.fn()
-    render(
-      <ProviderFilterSheet
-        providers={providers}
-        selectedProviders={new Set<number>()}
-        onApply={onApply}
-      />,
-    )
-    await user.click(
-      screen.getByRole("button", { name: "Filtrar por proveedores" }),
-    )
-    expect(screen.getByLabelText("Todos")).toBeChecked()
-    await user.click(screen.getByLabelText("TuViandita"))
-    expect(screen.getByLabelText("Todos")).not.toBeChecked()
-    expect(screen.getByLabelText("TuViandita")).toBeChecked()
-    expect(screen.getByLabelText("Chef Express")).not.toBeChecked()
-    expect(screen.getByLabelText("La Cocina")).not.toBeChecked()
-    await user.click(screen.getByRole("button", { name: "Aplicar" }))
-    expect(onApply).toHaveBeenCalledWith(new Set([1]))
-  })
-
-  it("makes the whole row the control, so tapping the name selects it", async () => {
-    const user = userEvent.setup()
-    const onApply = vi.fn()
-    render(
-      <ProviderFilterSheet
-        providers={providers}
-        selectedProviders={new Set<number>()}
-        onApply={onApply}
-        favoriteIds={new Set<number>()}
-        onToggleFavorite={vi.fn()}
-      />,
-    )
-    await user.click(
-      screen.getByRole("button", { name: "Filtrar por proveedores" }),
-    )
-    const row = screen.getByRole("checkbox", { name: "Chef Express" })
-    expect(row).toHaveTextContent("Chef Express")
-    await user.click(screen.getByText("Chef Express"))
-    expect(row).toBeChecked()
-    await user.click(
-      screen.getByRole("button", { name: "Marcar Chef Express como favorito" }),
-    )
-    expect(row).toBeChecked()
   })
 
   const providers = [
@@ -116,15 +68,14 @@ describe("ProviderFilterSheet", () => {
       await user.click(
         screen.getByRole("button", { name: "Filtrar por proveedores" }),
       )
-      expect(screen.getByLabelText("Todos")).toBeChecked()
       screen
         .getAllByRole("checkbox")
-        .slice(1)
-        .forEach((checkbox) => expect(checkbox).not.toBeChecked())
+        .forEach((checkbox) => expect(checkbox).toBeChecked())
       if (count === 1) {
         await user.click(screen.getByLabelText("TuViandita"))
-        expect(screen.getByLabelText("Todos")).toBeChecked()
-        expect(screen.getByLabelText("TuViandita")).not.toBeChecked()
+        screen
+          .getAllByRole("checkbox")
+          .forEach((checkbox) => expect(checkbox).toBeChecked())
       }
       await user.click(screen.getByRole("button", { name: "Aplicar" }))
       expect(onApply).toHaveBeenCalledWith(new Set())
@@ -160,12 +111,13 @@ describe("ProviderFilterSheet", () => {
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
-    expect(screen.getByLabelText("Todos")).toBeChecked()
-    expect(screen.getByLabelText("Nuevo proveedor")).not.toBeChecked()
+    screen
+      .getAllByRole("checkbox")
+      .forEach((checkbox) => expect(checkbox).toBeChecked())
     await user.click(screen.getByLabelText("Chef Express"))
     expect(screen.getByLabelText("Todos")).not.toBeChecked()
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
-    expect(onApply).toHaveBeenLastCalledWith(new Set([2]))
+    expect(onApply).toHaveBeenLastCalledWith(new Set([1, 3, 4]))
   })
 
   it("restores unrestricted selection after removing the last individual provider", async () => {
@@ -184,8 +136,9 @@ describe("ProviderFilterSheet", () => {
     await user.click(screen.getByLabelText("TuViandita"))
     expect(screen.getByLabelText("Todos")).not.toBeChecked()
     await user.click(screen.getByLabelText("Chef Express"))
-    expect(screen.getByLabelText("Todos")).toBeChecked()
-    expect(screen.getByLabelText("Chef Express")).not.toBeChecked()
+    screen
+      .getAllByRole("checkbox")
+      .forEach((checkbox) => expect(checkbox).toBeChecked())
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
     expect(onApply).toHaveBeenLastCalledWith(new Set())
   })
@@ -204,8 +157,9 @@ describe("ProviderFilterSheet", () => {
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
     )
     await user.click(screen.getByLabelText("Todos"))
-    expect(screen.getByLabelText("Todos")).toBeChecked()
-    expect(screen.getByLabelText("TuViandita")).not.toBeChecked()
+    screen
+      .getAllByRole("checkbox")
+      .forEach((checkbox) => expect(checkbox).toBeChecked())
     await user.click(screen.getByRole("button", { name: "Cancelar" }))
     await user.click(
       screen.getByRole("button", { name: "Filtrar por proveedores" }),
@@ -275,7 +229,7 @@ describe("ProviderFilterSheet", () => {
     await user.click(screen.getByLabelText("La Cocina"))
     await user.click(screen.getByRole("button", { name: "Aplicar" }))
 
-    expect(onApply).toHaveBeenCalledWith(new Set([2, 3]))
+    expect(onApply).toHaveBeenCalledWith(new Set([1]))
     expect(
       screen.queryByText("Filtrar por proveedores"),
     ).not.toBeInTheDocument()

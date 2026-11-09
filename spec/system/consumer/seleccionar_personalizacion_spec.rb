@@ -37,8 +37,8 @@ RSpec.describe "Seleccionar la personalización del plato", type: :system do
   # Las publicaciones se guardan en un let y no se buscan por plato: schedules.yml
   # ya trae una publicación de sorrentinos para hoy, así que un find_by(menu:)
   # puede devolver la del fixture en vez de la de acá.
-  let(:sorrentinos_schedule) { Schedule.create!(menu: sorrentinos, date: monday) }
-  let(:milanesa_schedule) { Schedule.create!(menu: milanesa, date: monday) }
+  let(:sorrentinos_schedule) { Schedule.create!(menu: sorrentinos, date: monday, amount: 10) }
+  let(:milanesa_schedule) { Schedule.create!(menu: milanesa, date: monday, amount: 10) }
 
   before do
     # Los dos platos se publican el mismo día: el de sorrentinos trae los grupos

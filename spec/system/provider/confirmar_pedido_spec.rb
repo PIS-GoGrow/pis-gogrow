@@ -22,9 +22,9 @@ RSpec.describe "Confirmar un pedido", type: :system do
   # CA1: el estado cambia a "Confirmado", y lo ven igual el proveedor y el empleado.
   it "deja el pedido confirmado para el proveedor y para el empleado" do
     sign_in users(:provider_user), role: :provider
-    visit_hydrated provider_orders_path
+    visit provider_orders_path
 
-    within(provider_order_card(order)) do
+    within("[data-slot='card']", text: "PED-#{order.id}") do
       click_button "Confirmar"
       expect(page).to have_content("Confirmado")
     end

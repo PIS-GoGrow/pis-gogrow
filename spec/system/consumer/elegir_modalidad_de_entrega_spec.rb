@@ -47,8 +47,8 @@ RSpec.describe "Elegir la modalidad de entrega como empleado" do
     Schedule.delete_all
   end
 
-  def publish(menu, date = monday)
-    Schedule.create!(menu:, date:)
+  def publish(menu, date = monday, amount: 5)
+    Schedule.create!(menu:, date:, amount:)
   end
 
   # El dashboard se sirve por SSR y React hidrata después. Un click que cae antes

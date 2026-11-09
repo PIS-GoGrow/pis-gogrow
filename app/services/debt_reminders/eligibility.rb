@@ -26,7 +26,7 @@ module DebtReminders
       return :no_debt unless account.amount.to_d > MIN_AMOUNT
       return :not_overdue unless account.due_date < Date.current
       return :payment_under_review if account.collection_status == "submitted"
-      return :paid unless account.collection_status.in?(%w[pending rejected partial])
+      return :paid unless account.collection_status.in?(%w[pending rejected])
 
       nil
     end
@@ -36,21 +36,10 @@ module DebtReminders
     def remaining = [ MAX_REMINDERS - sent_count, 0 ].max
 
     def next_available_at
-      last_notified_at&.+(COOLDOWN)
+      history.max_by(&:created_at)&.created_at&.+(COOLDOWN)
     end
 
     private
-
-    # Rechazar un comprobante, o aceptarlo solo en parte, ya le avisa al
-    # empleado: cuenta como un recordatorio recién enviado.
-    def last_notified_at
-      [ history.max_by(&:created_at)&.created_at, last_issue_at ].compact.max
-    end
-
-    def last_issue_at
-      last = account.last_payment
-      last.updated_at if last&.rejected? || last&.partial?
-    end
 
     def history_reason
       return :limit_reached if sent_count >= MAX_REMINDERS

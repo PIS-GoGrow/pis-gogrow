@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next"
 
 import PasswordSetupForm from "@/components/password-setup-form"
 import AuthLayout from "@/layouts/auth-layout"
-import { providerPasswordResets, providerSessions } from "@/routes"
+import { providerPasswordResets } from "@/routes"
 
 export default function ProviderNewPassword() {
   const { t } = useTranslation()
@@ -12,9 +12,6 @@ export default function ProviderNewPassword() {
     <AuthLayout
       title={t("pages.provider_password_resets.edit.heading")}
       description={t("pages.provider_password_resets.edit.description")}
-      backHref={providerSessions.new().url}
-      hideLogo
-      variant="form"
     >
       <Head title={t("pages.provider_password_resets.edit.title")} />
 

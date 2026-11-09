@@ -1,9 +1,5 @@
-import {
-  CreditCardIcon,
-  FilterHorizontalIcon,
-} from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { Head } from "@inertiajs/react"
+import { SlidersHorizontal, Wallet } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -84,12 +80,7 @@ export default function Index({
         <Empty className="border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <HugeiconsIcon
-                icon={CreditCardIcon}
-                size={16}
-                strokeWidth={1.5}
-                aria-hidden="true"
-              />
+              <Wallet aria-hidden="true" />
             </EmptyMedia>
             <EmptyTitle>
               {t(`pages.provider_collections.index.empty_${tab}_title`)}
@@ -166,17 +157,12 @@ export default function Index({
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-border bg-card hover:bg-accent size-9 shrink-0 rounded-full shadow-none"
+                  className="rounded-full"
                   aria-label={t(
                     "pages.provider_collections.index.filter_clients",
                   )}
                 >
-                  <HugeiconsIcon
-                    icon={FilterHorizontalIcon}
-                    size={20}
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  />
+                  <SlidersHorizontal aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

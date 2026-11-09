@@ -21,6 +21,7 @@ RSpec.describe "Cierre de recepción de pedidos visto por el empleado" do
     providers(:endulzate).update!(order_deadline: nil)
     Schedule.create!(
       date: monday,
+      amount: 5,
       menu: Menu.create!(
         provider: providers(:tuviandita),
         name: "Milanesa al pan",
@@ -31,6 +32,7 @@ RSpec.describe "Cierre de recepción de pedidos visto por el empleado" do
 
     Schedule.create!(
       date: monday,
+      amount: 5,
       menu: Menu.create!(
         provider: providers(:endulzate),
         name: "Ñoquis caseros",

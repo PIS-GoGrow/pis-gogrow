@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
 class Payment < ApplicationRecord
-  enum :status, { pending: 0, submitted: 1, approved: 2, rejected: 3, partial: 4 }, default: :pending
+  enum :status, { pending: 0, submitted: 1, approved: 2, rejected: 3 }, default: :pending
 
   belongs_to :account
   belongs_to :provider, optional: true
 
   has_one_attached :receipt
 
-  before_save :capture_expected_amount, if: -> { (submitted? && will_save_change_to_status?) || expected_amount.nil? }
+  before_validation :clear_rejection_reason, if: :submitted?
   after_commit :notify_receipt_submitted, if: -> { saved_change_to_status? && submitted? }
   after_commit :check_debt_alert, if: -> { account.owner.is_a?(Consumer) && (destroyed? || saved_change_to_status?) }
   after_commit :notify_company_admins, on: [ :create, :update ], if: -> { saved_change_to_status? && account.company? }
@@ -20,18 +20,13 @@ class Payment < ApplicationRecord
   validate :receipt_has_allowed_type
   validate :receipt_is_within_size_limit
   validate :only_one_submitted_per_account, if: :submitted?
-  validate :partial_status_is_final
 
   after_update_commit :close_debt_reminder, if: -> { saved_change_to_status? && approved? }
-  after_update_commit :notify_payment_approved,
-                    if: -> { saved_change_to_status? && approved? && account.owner.is_a?(Consumer) }
   after_save_commit :close_payment_reminders,
                     if: :should_close_payment_reminders?
 
   def approve
-    with_lock do
-      return false if approved? || rejected? || partial?
-
+    transaction do
       updated = update(status: :approved, rejection_reason: nil)
 
       if updated && account.company?
@@ -43,19 +38,7 @@ class Payment < ApplicationRecord
   end
 
   def reject_with(reason)
-    with_lock do
-      return false unless submitted?
-
-      update(status: :rejected, rejection_reason: reason)
-    end
-  end
-
-  def mark_partial
-    with_lock do
-      return false unless submitted?
-
-      update(status: :partial, rejection_reason: nil)
-    end
+    update(status: :rejected, rejection_reason: reason)
   end
 
   private
@@ -81,18 +64,6 @@ class Payment < ApplicationRecord
     )
   end
 
-  def notify_payment_approved
-    Notifier.call(
-      event_key: :payment_approved,
-      user: account.owner.user,
-      notifiable: self,
-      description_data: {
-        provider: account.provider.user.name,
-        period: I18n.l(account.month, format: "%B %Y")
-      }
-    )
-  end
-
   def check_debt_alert
     account.owner.check_debt_alert!
   end
@@ -105,9 +76,10 @@ class Payment < ApplicationRecord
     DebtReminders::EmployeeRequest.close_if_settled(owner) if owner.is_a?(Consumer)
   end
 
-  def capture_expected_amount
-    self.expected_amount = Account.find(account_id).outstanding_amount
+  def clear_rejection_reason
+    self.rejection_reason = nil
   end
+
   def notify_company_admins
     CompanyPaymentNotifications.payment_status_changed(self)
   end
@@ -145,12 +117,6 @@ class Payment < ApplicationRecord
     errors.add(:receipt, :already_under_review) if others.exists?
   end
 
-  def partial_status_is_final
-    return unless status_in_database == "partial" && will_save_change_to_status?
-
-    errors.add(:status, :invalid)
-  end
-
   def should_close_payment_reminders?
     saved_change_to_status? && (submitted? || approved?)
   end
@@ -165,7 +131,6 @@ end
 # Table name: payments
 #
 #  id               :bigint           not null, primary key
-#  expected_amount  :decimal(10, 2)
 #  rejection_reason :text
 #  status           :integer          default(0), not null
 #  created_at       :datetime         not null
@@ -183,4 +148,3 @@ end
 #
 #  fk_rails_...  (account_id => accounts.id)
 #  fk_rails_...  (provider_id => providers.id)
-#

@@ -43,7 +43,7 @@ RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system
 
       expect(page).to have_content("Pedidos")
       expect(page).to have_content("Todos")
-      expect(page).to have_content("Por revisar")
+      expect(page).to have_content("Pendiente")
     end
   end
 

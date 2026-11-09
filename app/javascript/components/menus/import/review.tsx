@@ -48,6 +48,7 @@ function toAgenda(payload: AgendaPayload): Agenda {
     date: payload.date || null,
     starts_on: payload.starts_on || null,
     ends_on: payload.ends_on || null,
+    amount: null,
   }
 }
 

@@ -61,7 +61,8 @@ RSpec.describe "Delivery addresses", type: :request do
 
       schedule = Schedule.create!(
         menu:,
-        date: Date.current + 1.day
+        date: Date.current + 1.day,
+        amount: 5
       )
 
       Order.create!(

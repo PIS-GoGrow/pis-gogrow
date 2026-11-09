@@ -96,24 +96,6 @@ describe("OrderSummary", () => {
     )
   })
 
-  it("keeps the breakdown and leaves the amount to pay out when showTotal is false", () => {
-    render(
-      <OrderSummary
-        loading={false}
-        subtotal={640}
-        total={320}
-        tiers={[tier(50, 320)]}
-        showTotal={false}
-      />,
-    )
-
-    expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
-      "$640",
-    )
-    expect(screen.getByText("Subsidio Base (50%)")).toBeInTheDocument()
-    expect(screen.queryByText("Monto a pagar")).not.toBeInTheDocument()
-  })
-
   it("shows the cents only when the amount has them", () => {
     render(
       <OrderSummary

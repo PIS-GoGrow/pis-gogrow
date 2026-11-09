@@ -16,9 +16,10 @@ RSpec.describe Schedule, type: :model do
     )
   end
 
-  it "is valid with a date and menu" do
+  it "is valid with a date, non-negative amount and menu" do
     schedule = described_class.new(
       date: Date.current,
+      amount: 10,
       menu: menu
     )
 
@@ -28,20 +29,90 @@ RSpec.describe Schedule, type: :model do
   it "requires a date" do
     schedule = described_class.new(
       date: nil,
+      amount: 10,
       menu: menu
     )
 
     expect(schedule).not_to be_valid
   end
 
+  it "does not allow a negative amount" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: -1,
+      menu: menu
+    )
+
+    expect(schedule).not_to be_valid
+  end
+
+  it "allows zero amount" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: 0,
+      menu: menu
+    )
+
+    expect(schedule).to be_valid
+  end
+
+  it "allows no amount and never runs out of quota" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: nil,
+      menu: menu
+    )
+
+    expect(schedule).to be_valid
+    expect(schedule.remaining_amount).to eq(described_class::MAX_AMOUNT)
+  end
+
+  it "allows an amount equal to the maximum limit" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: described_class::MAX_AMOUNT,
+      menu: menu
+    )
+
+    expect(schedule).to be_valid
+  end
+
+  it "does not allow an amount greater than the maximum limit" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: described_class::MAX_AMOUNT + 1,
+      menu: menu
+    )
+
+    expect(schedule).not_to be_valid
+    expect(schedule.errors[:amount]).to include(
+      I18n.t("errors.messages.less_than_or_equal_to", count: described_class::MAX_AMOUNT)
+    )
+  end
+
+  it "does not allow a non-integer amount" do
+    schedule = described_class.new(
+      date: Date.current,
+      amount: 10.5,
+      menu: menu
+    )
+
+    expect(schedule).not_to be_valid
+    expect(schedule.errors[:amount]).to include(
+      I18n.t("errors.messages.not_an_integer")
+    )
+  end
+
   it "does not allow the same menu twice on the same date" do
     described_class.create!(
       date: Date.current,
+      amount: 10,
       menu: menu
     )
 
     duplicate = described_class.new(
       date: Date.current,
+      amount: 5,
       menu: menu
     )
 
@@ -51,11 +122,13 @@ RSpec.describe Schedule, type: :model do
   it "allows the same menu on different dates" do
     described_class.create!(
       date: Date.current,
+      amount: 10,
       menu: menu
     )
 
     another_day = described_class.new(
       date: Date.current + 1.day,
+      amount: 5,
       menu: menu
     )
 
@@ -72,15 +145,15 @@ RSpec.describe Schedule, type: :model do
     before { provider.closures.create!(starts_on: monday + 1, ends_on: monday + 3, reason: "Vacaciones") }
 
     it "is provider_closed? and not available on a closed day" do
-      schedule = described_class.new(date: monday + 2, menu: menu)
+      schedule = described_class.new(date: monday + 2, amount: 10, menu: menu)
 
       expect(schedule.provider_closed?).to be true
       expect(schedule).not_to be_available
     end
 
     it "keeps the days around the closure open" do
-      before_closure = described_class.new(date: monday, menu: menu)
-      after_closure = described_class.new(date: monday + 4, menu: menu)
+      before_closure = described_class.new(date: monday, amount: 10, menu: menu)
+      after_closure = described_class.new(date: monday + 4, amount: 10, menu: menu)
 
       expect([ before_closure, after_closure ].map(&:provider_closed?)).to all(be false)
       expect(before_closure).to be_available
@@ -88,20 +161,20 @@ RSpec.describe Schedule, type: :model do
     end
 
     it "cannot be created on a closed day" do
-      schedule = described_class.new(date: monday + 1, menu: menu)
+      schedule = described_class.new(date: monday + 1, amount: 10, menu: menu)
 
       expect(schedule).not_to be_valid
       expect(schedule.errors[:date]).to eq([ I18n.t("validations.publish_date_closed") ])
     end
 
     it "can be created on an open day" do
-      expect(described_class.new(date: monday + 4, menu: menu)).to be_valid
+      expect(described_class.new(date: monday + 4, amount: 10, menu: menu)).to be_valid
     end
 
     it "can still be edited when it was published before the closure" do
-      published = described_class.new(date: monday + 2, menu: menu).tap { it.save!(validate: false) }
+      published = described_class.new(date: monday + 2, amount: 10, menu: menu).tap { it.save!(validate: false) }
 
-      expect(published.update(available: false)).to be true
+      expect(published.update(amount: 5)).to be true
     end
 
     it "ignores the closures of other providers" do
@@ -110,13 +183,13 @@ RSpec.describe Schedule, type: :model do
         provider: Provider.create!(user: users(:two))
       )
 
-      expect(described_class.new(date: monday + 2, menu: other_menu)).to be_valid
+      expect(described_class.new(date: monday + 2, amount: 10, menu: other_menu)).to be_valid
     end
   end
 
   describe "#order_deadline_passed?" do
     let(:today) { Date.new(2026, 9, 14) }
-    let(:schedule) { described_class.create!(date: today, menu: menu) }
+    let(:schedule) { described_class.create!(date: today, amount: 10, menu: menu) }
 
     def at(hour, min, sec = 0, &)
       travel_to(Time.zone.local(today.year, today.month, today.day, hour, min, sec), &)
@@ -143,7 +216,7 @@ RSpec.describe Schedule, type: :model do
     end
 
     it "does not close a schedule for another day" do
-      tomorrow = described_class.create!(date: today + 1, menu: menu)
+      tomorrow = described_class.create!(date: today + 1, amount: 10, menu: menu)
 
       at(18, 0) do
         expect(tomorrow.order_deadline_passed?).to be false
@@ -179,15 +252,15 @@ RSpec.describe Schedule, type: :model do
   end
 
   describe "#available?" do
-    it "is false when the provider manually turned the publication off, even with a valid date" do
-      schedule = described_class.create!(date: Date.current, menu: menu, available: false)
+    it "is false when the provider manually turned the publication off, even with quota and a valid date" do
+      schedule = described_class.create!(date: Date.current, amount: 10, menu: menu, available: false)
 
       expect(schedule).not_to be_available
     end
   end
 
   describe "#set_availability" do
-    let(:schedule) { described_class.create!(date: Date.current, menu: menu) }
+    let(:schedule) { described_class.create!(date: Date.current, amount: 10, menu: menu) }
     let(:by) { users(:one) }
 
     it "updates the available flag" do
@@ -204,6 +277,27 @@ RSpec.describe Schedule, type: :model do
       expect(schedule.availability_changed_at).to eq(Time.zone.local(2026, 1, 1, 12, 0, 0))
     end
   end
+
+  describe "#remaining_amount" do
+    fixtures :consumers
+    let(:schedule) { described_class.create!(date: Date.current, amount: 10, menu:) }
+    let(:consumer) { consumers(:one) }
+
+    it "subtracts pending and confirmed orders from the total amount" do
+      Order.create!(consumer:, schedule:, amount: 3, price: 300, address: "Dir", delivery_method: :office, status: :pending)
+      Order.create!(consumer:, schedule:, amount: 2, price: 200, address: "Dir", delivery_method: :office, status: :confirmed)
+      Order.create!(consumer:, schedule:, amount: 4, price: 400, address: "Dir", delivery_method: :office, status: :cancelled)
+      Order.create!(consumer:, schedule:, amount: 1, price: 100, address: "Dir", delivery_method: :office, status: :rejected, rejection_reason: :out_of_stock)
+
+      expect(schedule.remaining_amount).to eq(5)
+    end
+
+    it "returns 0 when reserved amount exceeds the schedule amount" do
+      Order.create!(consumer:, schedule:, amount: 15, price: 1500, address: "Dir", delivery_method: :office, status: :confirmed)
+
+      expect(schedule.remaining_amount).to eq(0)
+    end
+  end
 end
 
 
@@ -213,6 +307,7 @@ end
 # Table name: schedules
 #
 #  id                         :bigint           not null, primary key
+#  amount                     :integer
 #  availability_changed_at    :datetime
 #  available                  :boolean          default(TRUE), not null
 #  date                       :date             not null

@@ -3,7 +3,7 @@
 # Calcula cuánto paga el empleado por cada ítem de un pedido y qué beneficios
 # cubren cada vianda.
 #
-# Se aplican beneficios a las primeras viandas pedidas, con un máximo
+# Se intenta aplicar beneficios con prioridad a las viandas más caras, con un máximo
 # de 100% de beneficio en cada vianda. Además, si el usuario tiene muchos beneficios,
 # se consumen beneficios solo hasta llegar al 100% por vianda. Se aplican primero
 # beneficios de porcentaje más alto.
@@ -12,7 +12,7 @@
 # esa orden ya tenía reservado, para no rechazarla contra su propio consumo.
 class Orders::Pricing
   BenefitUsed = Data.define(:units_used, :discount)
-  OrderItemPricing = Data.define(:price, :discounted_price, :benefits, :subsidized_quantity)
+  OrderItemPricing = Data.define(:price, :discounted_price, :benefits)
   # total contiene el porcentaje total de subsidios aplicable, base el porcentaje de
   # subsidio mensual, y specials es un arreglo de hashes de la forma
   #   { name:, percentage: }
@@ -135,8 +135,7 @@ class Orders::Pricing
     OrderItemPricing.new(
       price: unit_price * quantity,
       discounted_price: discounted_price.round(2),
-      benefits: benefit_used,
-      subsidized_quantity: pct_sum.count(&:positive?)
+      benefits: benefit_used
     )
   end
 

@@ -53,18 +53,11 @@ class SessionsController < InertiaController
   end
 
   def destroy
-    redirect_target = if @session.provider?
-      provider_sign_in_path
-    elsif @session.admin?
-      admin_welcome_path
-    else
-      root_path
-    end
-
+    provider = @session.provider?
     @session.destroy!
     cookies.delete(:session_token)
     Current.session = nil
-    redirect_to redirect_target, notice: t("flash.session_logged_out"), inertia: { clear_history: true }
+    redirect_to provider ? provider_sign_in_path : root_path, notice: t("flash.session_logged_out"), inertia: { clear_history: true }
   end
 
   private

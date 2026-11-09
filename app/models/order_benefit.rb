@@ -9,9 +9,11 @@ class OrderBenefit < ApplicationRecord
   private
 
   def benefit_corresponds_to_delivery_date
-    return unless benefit&.due_date && order&.schedule&.date
+    return false unless benefit && order && order.schedule
 
-    errors.add(:benefit, :expired) if order.schedule.date > benefit.due_date
+    return true unless benefit.due_date
+
+    order.schedule.date <= benefit.due_date
   end
 end
 

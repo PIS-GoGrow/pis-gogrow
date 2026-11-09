@@ -1,9 +1,11 @@
 import { render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import Profile from "./show"
 
+const patchMock = vi.fn()
 let currentRole = "provider"
 let formErrors: Record<string, string[]> = {}
 
@@ -20,6 +22,11 @@ vi.mock("@inertiajs/react", async () => {
         },
       },
     }),
+    router: {
+      patch: (...args: unknown[]) => {
+        patchMock(...args)
+      },
+    },
     Form: ({
       children,
     }: {
@@ -57,38 +64,18 @@ vi.mock("@/components/delete-user", () => ({
 }))
 
 describe("Settings Profiles Show Page", () => {
+  const user = userEvent.setup()
+
   beforeEach(() => {
+    patchMock.mockClear()
     currentRole = "provider"
     formErrors = {}
-  })
-
-  it("shows personal, email, and password fields to providers with account navigation", () => {
-    render(<Profile phone="+59899123456" />)
-
-    expect(screen.getByLabelText("Nombre")).toHaveValue("Proveedor Test")
-    expect(screen.getByLabelText("Teléfono")).toHaveValue("+59899123456")
-    expect(screen.getByLabelText("Correo electrónico")).toHaveValue(
-      "proveedor@example.com",
-    )
-    expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument()
-    expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
-    expect(
-      screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/proveedor/cuenta")
-    expect(screen.queryByTestId("settings-layout")).not.toBeInTheDocument()
-    expect(
-      screen.queryByText("Editar información de pedidos"),
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByLabelText("También realizo entregas a domicilio"),
-    ).not.toBeInTheDocument()
-    expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
   })
 
   it("shows RRHH email as read-only and hides account deletion", () => {
     currentRole = "admin"
 
-    render(<Profile phone="+59899123456" />)
+    render(<Profile provider={null} phone="+59899123456" />)
 
     expect(screen.getByLabelText("Correo electrónico")).toHaveValue(
       "proveedor@example.com",
@@ -99,47 +86,122 @@ describe("Settings Profiles Show Page", () => {
     expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
   })
 
-  it("hides account deletion for consumers and shows appearance settings", () => {
-    currentRole = "consumer"
+  it("renders the saved phone so it can be edited", () => {
+    render(<Profile provider={null} phone="+59899123456" />)
 
-    render(<Profile phone={null} />)
-
-    expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
-    expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
+    expect(screen.getByLabelText("Teléfono")).toHaveValue("+59899123456")
   })
 
-  it("renders all setting sections in order for consumers as a standalone scrollable page", () => {
-    currentRole = "consumer"
-
-    render(<Profile phone="+59899123456" />)
+  it("does not render home delivery settings when provider is null (consumer/admin)", () => {
+    render(<Profile provider={null} phone={null} />)
 
     expect(
-      screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/cuenta")
-    expect(screen.queryByTestId("settings-layout")).not.toBeInTheDocument()
+      screen.queryByText("Editar información de pedidos"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByLabelText("También realizo entregas a domicilio"),
+    ).not.toBeInTheDocument()
+  })
 
-    // 1. Perfil
-    expect(screen.getByLabelText("Nombre")).toBeInTheDocument()
-    expect(screen.getByLabelText("Teléfono")).toBeInTheDocument()
+  it("renders home delivery switch checked when provider.home_delivery is true", () => {
+    render(
+      <Profile
+        phone={null}
+        provider={{
+          id: 1,
+          name: "Proveedor Test",
+          home_delivery: true,
+        }}
+      />,
+    )
 
-    // 2. Correo electrónico
-    expect(screen.getByLabelText("Correo electrónico")).toBeInTheDocument()
+    expect(
+      screen.getByText("Editar información de pedidos"),
+    ).toBeInTheDocument()
+    const switchControl = screen.getByRole("switch", {
+      name: "También realizo entregas a domicilio",
+    })
+    expect(switchControl).toBeInTheDocument()
+    expect(switchControl).toHaveAttribute("aria-checked", "true")
+  })
 
-    // 3. Contraseña
-    expect(screen.getByLabelText("Nueva contraseña")).toBeInTheDocument()
-    expect(screen.getByLabelText("Confirmar contraseña")).toBeInTheDocument()
+  it("renders home delivery switch unchecked when provider.home_delivery is false", () => {
+    render(
+      <Profile
+        phone={null}
+        provider={{
+          id: 1,
+          name: "Proveedor Test",
+          home_delivery: false,
+        }}
+      />,
+    )
 
-    // 4. Apariencia
-    expect(screen.getByText("Configuración de apariencia")).toBeInTheDocument()
+    const switchControl = screen.getByRole("switch", {
+      name: "También realizo entregas a domicilio",
+    })
+    expect(switchControl).toBeInTheDocument()
+    expect(switchControl).toHaveAttribute("aria-checked", "false")
+  })
 
-    // 5. Sin eliminar cuenta
-    expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
+  it("calls router.patch with home_delivery: false when clicked while checked", async () => {
+    render(
+      <Profile
+        phone={null}
+        provider={{
+          id: 1,
+          name: "Proveedor Test",
+          home_delivery: true,
+        }}
+      />,
+    )
+
+    const switchControl = screen.getByRole("switch", {
+      name: "También realizo entregas a domicilio",
+    })
+    await user.click(switchControl)
+
+    expect(patchMock).toHaveBeenCalledTimes(1)
+    expect(patchMock).toHaveBeenCalledWith(
+      expect.anything(),
+      { home_delivery: false },
+      expect.objectContaining({
+        preserveScroll: true,
+      }),
+    )
+  })
+
+  it("calls router.patch with home_delivery: true when clicked while unchecked", async () => {
+    render(
+      <Profile
+        phone={null}
+        provider={{
+          id: 1,
+          name: "Proveedor Test",
+          home_delivery: false,
+        }}
+      />,
+    )
+
+    const switchControl = screen.getByRole("switch", {
+      name: "También realizo entregas a domicilio",
+    })
+    await user.click(switchControl)
+
+    expect(patchMock).toHaveBeenCalledTimes(1)
+    expect(patchMock).toHaveBeenCalledWith(
+      expect.anything(),
+      { home_delivery: true },
+      expect.objectContaining({
+        preserveScroll: true,
+      }),
+    )
   })
 
   it("renders phone validation error message when present", () => {
     formErrors = { phone: ["El formato del celular es inválido."] }
 
-    render(<Profile phone="2900 1234" />)
+    render(<Profile provider={null} phone="2900 1234" />)
 
     expect(
       screen.getByText("El formato del celular es inválido."),
@@ -147,7 +209,7 @@ describe("Settings Profiles Show Page", () => {
   })
 
   it("renders phone helper description", () => {
-    render(<Profile phone="+59899123456" />)
+    render(<Profile provider={null} phone="+59899123456" />)
 
     expect(
       screen.getByText(

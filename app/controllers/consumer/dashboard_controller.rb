@@ -36,7 +36,6 @@ class Consumer::DashboardController < Consumer::InertiaController
 
   def week_data
     {
-      today: Date.current.iso8601,
       start_date: week_range.first.iso8601,
       end_date: week_range.last.iso8601,
       days: week_range.map do |date|
@@ -95,7 +94,6 @@ class Consumer::DashboardController < Consumer::InertiaController
           name: benefit.description.to_s,
           percentage: benefit.percentage,
           remaining: pricing.remaining_uses(benefit),
-          starts_on: benefit.starts_on&.iso8601,
           due_date: benefit.due_date&.iso8601
         }
       end

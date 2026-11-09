@@ -6,9 +6,19 @@ class Schedule < ApplicationRecord
   belongs_to :menu
   belongs_to :availability_changed_by, class_name: "User", optional: true
 
+  MAX_AMOUNT = 2_147_483_647
+
   has_many :orders, dependent: :nullify
 
   validates :date, presence: true
+  validates :amount,
+            numericality: {
+              only_integer: true,
+              greater_than_or_equal_to: 0,
+              less_than_or_equal_to: MAX_AMOUNT
+            },
+            allow_nil: true
+
   validates :menu_id, uniqueness: { scope: :date }
   validate :provider_open_on_date, on: :create
 
@@ -17,8 +27,21 @@ class Schedule < ApplicationRecord
   # Las programaciones de platos eliminados (archivados) no se muestran.
   scope :on_active_menus, -> { joins(:menu).where(menus: { archived_at: nil }) }
 
+  def remaining_amount
+    # Sin stock cargado el plato no tiene límite: queda siempre el cupo máximo.
+    return MAX_AMOUNT if amount.nil?
+
+    # amount representa el cupo TOTAL de esta oferta; no lo descontamos al reservar.
+    # Restamos las unidades de pedidos pendientes, confirmados y antiguos sin estado
+    # (nil). Los cancelados y rechazados no ocupan cupo. El máximo con 0 evita devolver negativos.
+    reserved = orders.select { |o| [ nil, "pending", "confirmed" ].include?(o.status) }
+                     .sum { |o| o.amount.to_i }
+
+    [ amount.to_i - reserved, 0 ].max
+  end
+
   def available?(quantity: 1)
-    date.present? && date >= Date.current && !provider_closed? && !order_deadline_passed? && available && !menu.archived?
+    date.present? && date >= Date.current && !provider_closed? && !order_deadline_passed? && remaining_amount >= quantity && available && !menu.archived?
   end
 
   def order_deadline_passed?
@@ -59,6 +82,7 @@ end
 # Table name: schedules
 #
 #  id                         :bigint           not null, primary key
+#  amount                     :integer
 #  availability_changed_at    :datetime
 #  available                  :boolean          default(TRUE), not null
 #  date                       :date             not null

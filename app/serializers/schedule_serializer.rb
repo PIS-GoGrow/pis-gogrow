@@ -3,7 +3,7 @@
 class ScheduleSerializer < ApplicationSerializer
   typelize_from Schedule
 
-  attributes :id, :menu_id, :available
+  attributes :id, :menu_id, :amount, :available
 
   typelize :number
   attribute :saved_menu_id do |schedule|
@@ -17,6 +17,7 @@ end
 # Table name: schedules
 #
 #  id                         :bigint           not null, primary key
+#  amount                     :integer
 #  availability_changed_at    :datetime
 #  available                  :boolean          default(TRUE), not null
 #  date                       :date             not null

@@ -89,13 +89,6 @@ export default function Index({
       : undefined,
   ).url
 
-  // El vacío del día de hoy se escribe en primera persona ("Hoy no tenés…");
-  // los demás días llevan el nombre del día.
-  const emptyKey =
-    selectedDay?.date === today
-      ? "pages.schedules.index.empty_today"
-      : "pages.schedules.index.empty"
-
   const query = normalize(search.trim())
   const visibleSchedules =
     selectedDay?.schedules.filter((schedule) =>
@@ -151,12 +144,12 @@ export default function Index({
                   {selectedDay.publishable ? (
                     <>
                       <EmptyTitle>
-                        {t(`${emptyKey}.title`, {
+                        {t("pages.schedules.index.empty.title", {
                           day: formatLongDateInline(selectedDay.date),
                         })}
                       </EmptyTitle>
                       <EmptyDescription>
-                        {t(`${emptyKey}.description`, {
+                        {t("pages.schedules.index.empty.description", {
                           day: formatLongDateInline(selectedDay.date),
                         })}
                       </EmptyDescription>

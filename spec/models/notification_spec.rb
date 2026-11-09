@@ -38,13 +38,6 @@ RSpec.describe Notification, type: :model do
       expect(notification.errors[:role]).to include("no es válido")
     end
 
-    it "invalida limpiamente sin lanzar excepción si el usuario es nil" do
-      notification.user = nil
-      expect { notification.valid? }.not_to raise_error
-      expect(notification).not_to be_valid
-      expect(notification.errors[:user]).to be_present
-    end
-
     it "invalida si el evento no está registrado en Notification::Registry" do
       notification.event = "evento_inexistente"
       expect(notification).not_to be_valid
@@ -199,6 +192,7 @@ end
 #
 #  id                            :bigint           not null, primary key
 #  closed_at                     :datetime
+#  delivered_at                  :datetime
 #  description_data              :json
 #  event                         :string           not null
 #  notifiable_type               :string           not null
@@ -206,7 +200,6 @@ end
 #  role                          :string           not null
 #  title_data                    :json
 #  twilio_sid                    :string
-#  whatsapp_delivered_at         :datetime
 #  whatsapp_last_sent_at         :datetime
 #  whatsapp_send_attempts        :integer          default(0)
 #  whatsapp_send_status          :integer

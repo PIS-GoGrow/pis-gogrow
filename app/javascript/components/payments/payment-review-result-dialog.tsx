@@ -49,10 +49,12 @@ export default function PaymentReviewResultDialog({
         if (!nextOpen) onClose()
       }}
     >
-      <AdaptableDialogContent
-        showCloseButton={false}
-        className="px-5 pt-0 pb-5 max-md:gap-7 md:p-5"
-      >
+      <AdaptableDialogContent showCloseButton={false} className="p-5">
+        <div
+          data-slot="sheet-handle"
+          aria-hidden="true"
+          className="bg-muted mx-auto -mt-2 h-1 w-16 rounded-full sm:hidden"
+        />
         <div className="flex flex-col gap-5">
           <AdaptableDialogTitle className="text-base leading-6 font-semibold tracking-normal">
             {copy?.title}

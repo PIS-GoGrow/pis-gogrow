@@ -54,7 +54,7 @@ class AdminConsumptionDetail
 
   def orders_by_account
     @orders_by_account ||=
-      Order.consumed.joins(:order_accounts)
+      Order.confirmed.joins(:order_accounts)
            .where(order_accounts: { account_id: accounts.map(&:id) })
            .select("orders.*", "order_accounts.account_id AS detail_account_id")
            .preload(:schedule, consumer: :user)

@@ -19,7 +19,7 @@ RSpec.describe "Aplicar un subsidio especial al pedir", type: :system do
     # la pantalla de RRHH mostraría vacíos.
     benefit_configurations(:gift, :gift2, :seniority).each(&:destroy)
     benefits(:monthly).update!(percentage: 50, amount: 20, due_date: Date.current.end_of_month, status: :current)
-    Schedule.create!(menu:, date: Date.current)
+    Schedule.create!(menu:, date: Date.current, amount: 10)
   end
 
   def choose_option(label, option)

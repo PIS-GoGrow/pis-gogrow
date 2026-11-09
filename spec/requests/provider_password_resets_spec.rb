@@ -56,24 +56,6 @@ RSpec.describe "Provider password reset", type: :request do
       expect { request_code }.not_to have_enqueued_mail(UserMailer, :password_reset_code)
     end
 
-    [ "a provider", "an unknown email" ].each do |who|
-      it "warns and keeps the resend countdown when #{who} asks again during the cooldown" do
-        email = who == "a provider" ? provider.email : "nadie@example.com"
-        freeze_time
-        request_code(email)
-
-        travel 299.seconds
-        expect { request_code(email) }.not_to have_enqueued_mail(UserMailer, :password_reset_code)
-        expect(response).to redirect_to(provider_password_reset_code_path)
-        follow_redirect!
-        expect(inertia).to have_flash(alert: I18n.t("flash.password_reset_requested"))
-
-        travel 1.second
-        get provider_password_reset_code_path
-        expect(inertia).to have_props(resend_in: 0)
-      end
-    end
-
     it "limits the requests per email" do
       5.times { |i| travel(i * 6.minutes) { request_code } }
 

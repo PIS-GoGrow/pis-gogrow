@@ -66,7 +66,7 @@ function OwnerGroup({
 
         <span className="grid min-w-0 flex-1 justify-items-start gap-1">
           <span className="text-sm font-semibold">{title}</span>
-          <StatusBadge status={status} kind="provider_payment" />
+          <StatusBadge status={status} kind="payment" />
         </span>
 
         <span className="col-start-2 row-start-2 min-w-0 font-semibold wrap-anywhere">
@@ -77,7 +77,7 @@ function OwnerGroup({
         </span>
       </CollapsibleTrigger>
 
-      <CollapsibleContent className="grid min-w-0 grid-cols-1 gap-2 pt-2">
+      <CollapsibleContent className="grid gap-2 pt-2">
         {children}
       </CollapsibleContent>
     </Collapsible>
@@ -119,7 +119,7 @@ export default function CollectionGroupCard({
         </div>
       </CardHeader>
 
-      <CardContent className="grid min-w-0 grid-cols-1 gap-4 px-4">
+      <CardContent className="grid gap-4 px-4">
         <div className="grid gap-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-muted-foreground text-sm">
@@ -173,7 +173,7 @@ export default function CollectionGroupCard({
           )}
         </ul>
 
-        <div className="grid min-w-0 grid-cols-1">
+        <div className="grid">
           {group.employees.length > 0 && (
             <>
               <Separator />
@@ -185,10 +185,7 @@ export default function CollectionGroupCard({
                 amount={group.employees_total}
               >
                 {group.employees.map((employee) => (
-                  <Collapsible
-                    key={employee.id}
-                    className="min-w-0 rounded-lg border"
-                  >
+                  <Collapsible key={employee.id} className="rounded-lg border">
                     <CollapsibleTrigger className="group flex w-full items-center gap-3 px-3 py-2.5 text-left">
                       <span className="min-w-0 flex-1 text-sm wrap-anywhere">
                         {employee.owner_name}
@@ -199,10 +196,7 @@ export default function CollectionGroupCard({
                           {employee.paid_on}
                         </span>
                       ) : (
-                        <StatusBadge
-                          status={employee.status}
-                          kind="provider_payment"
-                        />
+                        <StatusBadge status={employee.status} kind="payment" />
                       )}
 
                       <Chevron />
@@ -215,9 +209,7 @@ export default function CollectionGroupCard({
                         detailMode="dialog"
                         settled={settled}
                         showPaymentHistory={
-                          settled ||
-                          employee.payments.length > 1 ||
-                          employee.payments.some((p) => p.status === "approved")
+                          settled || employee.payments.length > 1
                         }
                         showDownloadAll={settled}
                       />
@@ -230,18 +222,13 @@ export default function CollectionGroupCard({
 
           {group.company && (
             <>
-              {group.employees.length === 0 && <Separator />}
+              <Separator />
 
               <OwnerGroup
                 icon={Building2}
                 title={t("pages.provider_collections.group.company")}
                 status={group.company.status}
-                amount={
-                  settled
-                    ? group.company.payable_amount
-                    : (group.company.outstanding_amount ??
-                      group.company.payable_amount)
-                }
+                amount={group.company.payable_amount}
               >
                 <CollectionAccountPanel
                   account={group.company}
@@ -249,9 +236,7 @@ export default function CollectionGroupCard({
                   detailMode="dialog"
                   settled={settled}
                   showPaymentHistory={
-                    settled ||
-                    group.company.payments.length > 1 ||
-                    group.company.payments.some((p) => p.status === "approved")
+                    settled || group.company.payments.length > 1
                   }
                   showDownloadAll={settled}
                   aside={

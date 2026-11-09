@@ -48,12 +48,10 @@ export default function SpecialSubsidyCard({
   ]
 
   return (
-    <ListItemCard className="gap-3">
-      <CardHeader className="gap-x-2 gap-y-0">
-        <CardTitle className="row-span-2 self-center leading-6 font-medium">
-          {subsidy.name}
-        </CardTitle>
-        <CardAction className="flex gap-1 self-center">
+    <ListItemCard>
+      <CardHeader>
+        <CardTitle>{subsidy.name}</CardTitle>
+        <CardAction className="flex gap-1">
           <Button
             variant="ghost"
             size="icon-sm"
@@ -79,10 +77,13 @@ export default function SpecialSubsidyCard({
         </CardAction>
       </CardHeader>
       <CardContent>
-        <dl className="flex flex-col gap-2 border-t pt-3">
+        <dl className="divide-border bg-muted divide-y rounded-lg px-4">
           {rows.map((row) => (
-            <div key={row.label} className="flex items-center justify-between">
-              <dt className="text-muted-foreground text-[13px]">{row.label}</dt>
+            <div
+              key={row.label}
+              className="flex items-center justify-between py-2"
+            >
+              <dt className="text-muted-foreground text-sm">{row.label}</dt>
               <dd className="font-semibold">{row.value}</dd>
             </div>
           ))}

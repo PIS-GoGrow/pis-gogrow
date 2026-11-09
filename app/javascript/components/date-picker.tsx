@@ -1,8 +1,8 @@
-import { addYears, format, isSameDay, parseISO } from "date-fns"
+import { format, isSameDay, parseISO } from "date-fns"
 import { ChevronDown } from "lucide-react"
 import { useState } from "react"
 import type { Matcher } from "react-day-picker"
-import { es } from "react-day-picker/locale"
+import { enUS, es } from "react-day-picker/locale"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -19,15 +19,8 @@ const toDate = (iso: string) => (iso ? parseISO(iso) : undefined)
 const toIso = (date: Date) => format(date, "yyyy-MM-dd")
 
 const calendarFormatters = {
-  formatMonthDropdown: (date: Date) => format(date, "MMM", { locale: es }),
-  formatWeekdayName: (date: Date) => format(date, "EEEEEE", { locale: es }),
-}
-
-// Con el desplegable de mes y año, la librería corta el calendario en diciembre
-// del año actual. Se navega hasta `max` o, sin tope, hasta dos años adelante.
-// Hacia atrás no se limita: los días pasados se ven, deshabilitados.
-function endMonth(max?: string) {
-  return max ? parseISO(max) : addYears(new Date(), 2)
+  formatMonthDropdown: (date: Date) => format(date, "MMM", { locale: enUS }),
+  formatWeekdayName: (date: Date) => format(date, "EEEEEE", { locale: enUS }),
 }
 
 function disabledDays(min?: string, max?: string, weekdaysOnly?: boolean) {
@@ -45,7 +38,6 @@ interface DatePickerProps {
   min?: string
   max?: string
   weekdaysOnly?: boolean
-  className?: string
 }
 
 export function DatePicker({
@@ -55,14 +47,13 @@ export function DatePicker({
   min,
   max,
   weekdaysOnly,
-  className,
 }: DatePickerProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const selected = toDate(value)
 
   return (
-    <div className={className}>
+    <div>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -87,7 +78,6 @@ export function DatePicker({
             selected={selected}
             defaultMonth={selected ?? toDate(min ?? "")}
             disabled={disabledDays(min, max, weekdaysOnly)}
-            endMonth={endMonth(max)}
             onSelect={(date) => {
               onChange(date ? toIso(date) : "")
               setOpen(false)
@@ -116,7 +106,6 @@ interface DateRangePickerProps {
   commitOnComplete?: boolean
   label?: string
   className?: string
-  weekdaysOnly?: boolean
 }
 
 // "09/06/27 – 27/06/27": un rango se muestra con fechas cortas.
@@ -138,7 +127,6 @@ export function DateRangePicker({
   commitOnComplete,
   label,
   className,
-  weekdaysOnly,
 }: DateRangePickerProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -201,8 +189,7 @@ export function DateRangePicker({
               pendingStart ? { from: pendingStart } : { from: start, to: end }
             }
             defaultMonth={start ?? toDate(min ?? "")}
-            disabled={disabledDays(min, max, weekdaysOnly)}
-            endMonth={endMonth(max)}
+            disabled={disabledDays(min, max)}
             onSelect={(range, day) =>
               commitOnComplete
                 ? selectDay(day)

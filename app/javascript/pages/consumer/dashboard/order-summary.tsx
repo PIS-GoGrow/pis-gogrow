@@ -12,8 +12,6 @@ interface Props {
   total?: number
   tiers?: DiscountTier[]
   compact?: boolean
-  showTotal?: boolean
-  className?: string
 }
 
 export function OrderSummary({
@@ -22,14 +20,12 @@ export function OrderSummary({
   total,
   tiers = [],
   compact = false,
-  showTotal = true,
-  className,
 }: Props) {
   const { t } = useTranslation()
 
   if (!loading) {
     return (
-      <div className={cn("pt-4 text-sm", !compact && "space-y-3", className)}>
+      <div className={cn("pt-4 text-sm", !compact && "space-y-3")}>
         {!compact && (
           <>
             <div className="flex justify-between">
@@ -47,17 +43,15 @@ export function OrderSummary({
             ))}
           </>
         )}
-        {showTotal && (
-          <div
-            className={cn(
-              "flex justify-between text-xl font-bold",
-              !compact && "border-border border-t pt-3",
-            )}
-          >
-            <span>{t("pages.cart.total")}</span>
-            <span>{formatMoney(total ?? 0)}</span>
-          </div>
-        )}
+        <div
+          className={cn(
+            "flex justify-between text-xl font-bold",
+            !compact && "border-border border-t pt-3",
+          )}
+        >
+          <span>{t("pages.cart.total")}</span>
+          <span>{formatMoney(total ?? 0)}</span>
+        </div>
       </div>
     )
   } else {

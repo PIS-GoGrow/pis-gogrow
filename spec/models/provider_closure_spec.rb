@@ -203,27 +203,6 @@ RSpec.describe ProviderClosure, type: :model do
       expect(new_year_closure.covers?(Date.new(2027, 1, 1))).to be true
       expect(new_year_closure.covers?(Date.new(2027, 1, 4))).to be false
     end
-
-    it "covers weekend days that fall within a valid weekday range" do
-      friday = Date.new(2026, 10, 16)
-      saturday = Date.new(2026, 10, 17)
-      sunday = Date.new(2026, 10, 18)
-      monday = Date.new(2026, 10, 19)
-
-      record = closure(starts_on: friday, ends_on: monday)
-
-      expect(record).to be_valid
-      expect(record.covers?(friday)).to be true
-      expect(record.covers?(saturday)).to be true
-      expect(record.covers?(sunday)).to be true
-      expect(record.covers?(monday)).to be true
-    end
-
-    it "accepts closures planned for 2027" do
-      future = closure(starts_on: Date.new(2027, 3, 1), ends_on: Date.new(2027, 3, 5))
-      expect(future).to be_valid
-      expect(future.covers?(Date.new(2027, 3, 3))).to be true
-    end
   end
 end
 

@@ -1,5 +1,3 @@
-import { WhatsappIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
 import { Head, Link } from "@inertiajs/react"
 import { ArrowLeft, CircleCheck, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
@@ -66,7 +64,6 @@ export default function Show({
 
       <PageContainer
         title={t(`${page}.title`)}
-        mobileCentered
         back={
           <Button variant="ghost" size="icon" asChild>
             <Link href={adminConsumers.index()} aria-label={t(`${page}.back`)}>
@@ -86,7 +83,7 @@ export default function Show({
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold">{consumer.name}</p>
-                  <p className="text-muted-foreground hidden truncate text-sm md:block">
+                  <p className="text-muted-foreground truncate text-sm">
                     {consumer.email}
                   </p>
                 </div>
@@ -101,14 +98,6 @@ export default function Show({
                     employeeName={consumer.name}
                     amount={debt_reminder.amount}
                     translationKey={`${page}.reminder`}
-                    icon={
-                      <HugeiconsIcon
-                        icon={WhatsappIcon}
-                        size={16}
-                        strokeWidth={1.8}
-                        aria-hidden="true"
-                      />
-                    }
                   />
 
                   {debt_reminder.blocked_reason === "cooldown" && (

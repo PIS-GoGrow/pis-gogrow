@@ -1,5 +1,5 @@
 import { Head } from "@inertiajs/react"
-import { CircleCheck, Receipt } from "lucide-react"
+import { CircleCheck } from "lucide-react"
 import { useState } from "react"
 import type { JSX } from "react"
 import { useTranslation } from "react-i18next"
@@ -9,26 +9,21 @@ import {
   AdaptableDialogClose,
   AdaptableDialogContent,
   AdaptableDialogFooter,
-  AdaptableDialogTrigger,
 } from "@/components/adaptable-dialog"
 import AccountCard from "@/components/consumer/accounts/account-card"
 import OrdersTable from "@/components/consumer/accounts/orders-table"
 import PaymentHistoryCard from "@/components/consumer/accounts/payment-history-card"
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
-import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
 import BankDetails from "@/components/payments/bank-details"
-import Stat from "@/components/stat"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty"
-import { Progress } from "@/components/ui/progress"
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
@@ -47,9 +42,7 @@ interface AccountProps {
   providers: PaymentProvider[]
   history: boolean
   current_month_debt: number
-  current_month_detail: AccountDetail
   total_debt: number
-  total_meals: number
   benefit_used: number
   benefit_available: number
 }
@@ -66,9 +59,7 @@ export default function Index({
   providers,
   history,
   current_month_debt,
-  current_month_detail,
   total_debt,
-  total_meals,
   benefit_used,
   benefit_available,
 }: AccountProps) {
@@ -76,18 +67,6 @@ export default function Index({
 
   const [loading, setLoading] = useState(false)
   const [detail, setDetail] = useState<AccountDetail | null>(null)
-  const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
-
-  const selectedProviderId = activeProviders.values().next().value
-  const filteredHistory =
-    selectedProviderId == null
-      ? history_accounts
-      : history_accounts.filter(
-          (account) => account.provider_id === selectedProviderId,
-        )
-  const filterLabel =
-    providers.find(({ id }) => id === selectedProviderId)?.name ??
-    t("pages.accounts.index.all_providers")
 
   const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -95,20 +74,6 @@ export default function Index({
       href: consumerAccounts.index().url,
     },
   ]
-
-  const historyEmpty = (key: "history_empty" | "history_filtered_empty") => (
-    <Empty>
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <Receipt aria-hidden="true" />
-        </EmptyMedia>
-        <EmptyTitle>{t(`pages.accounts.index.${key}_title`)}</EmptyTitle>
-        <EmptyDescription>
-          {t(`pages.accounts.index.${key}_description`)}
-        </EmptyDescription>
-      </EmptyHeader>
-    </Empty>
-  )
 
   const accountsJSX: Record<string | number, JSX.Element[]> = {}
 
@@ -130,12 +95,12 @@ export default function Index({
   })
 
   const providersJSX = providers.map((p) => (
-    <Card key={p.id} className="w-full py-4 shadow-none">
-      <CardHeader className="px-4">
-        <CardTitle className="text-lg font-bold">{p.name}</CardTitle>
+    <Card key={p.id} className="w-full">
+      <CardHeader>
+        <CardTitle>{p.name}</CardTitle>
       </CardHeader>
 
-      <CardContent className="grid gap-4 px-4">
+      <CardContent className="grid gap-4">
         <BankDetails provider={p} />
 
         {accountsJSX[p.id] ? (
@@ -150,71 +115,44 @@ export default function Index({
     </Card>
   ))
 
-  const mealsUsed =
-    benefit_available > 0
-      ? t("pages.accounts.index.meals_used_with_limit", {
-          count: benefit_available,
-          meals: benefit_used,
-          limit: benefit_available,
-        })
-      : t("pages.accounts.index.meals_used", { count: benefit_used })
-
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.accounts.index.payments")} />
 
       <div className="mx-auto grid w-full max-w-128 gap-6 p-5 pb-24 md:pb-5">
-        <AdaptableDialog desktopVariant="sheet">
-          <h1 className="text-2xl font-bold">
-            {" "}
-            {t("pages.accounts.index.payments")}{" "}
-          </h1>
-          <Stat
-            label={t("pages.accounts.index.spending")}
-            badge={
-              <Badge variant="secondary" className="bg-background">
+        <h1 className="text-2xl font-bold">
+          {" "}
+          {t("pages.accounts.index.payments")}{" "}
+        </h1>
+        <Card className="bg-zinc-50 dark:bg-zinc-900">
+          <CardHeader>
+            <CardDescription className="flex">
+              {t("pages.accounts.index.spending")}
+              <Badge variant="outline" className="ml-auto">
                 {t("pages.accounts.index.this_month")}
               </Badge>
-            }
-            value={formatMoney(current_month_debt)}
-            detail={
-              <span className="text-foreground font-semibold">
-                {`| ${mealsUsed}`}
+            </CardDescription>
+            <CardTitle>
+              {formatMoney(current_month_debt)}
+              <span className="text-zinc-500 dark:text-zinc-400">
+                {" | "}
+                {benefit_used}
+                {" de "}
+                {benefit_available}{" "}
+                {benefit_available == 1
+                  ? t("pages.accounts.show.lunch")
+                  : t("pages.accounts.show.lunches")}
               </span>
-            }
-            className="bg-muted shadow-none"
-            action={
-              <div className="grid w-full gap-4">
-                {benefit_available > 0 && (
-                  <Progress
-                    value={Math.min(
-                      100,
-                      (benefit_used / benefit_available) * 100,
-                    )}
-                    aria-label={t("pages.accounts.index.spending")}
-                  />
-                )}
-                <AdaptableDialogTrigger asChild>
-                  <Button
-                    className="w-full"
-                    disabled={current_month_detail.orders.length === 0}
-                    onClick={() => {
-                      setLoading(false)
-                      setDetail(current_month_detail)
-                    }}
-                  >
-                    {t("pages.accounts.index.view_detail")}
-                  </Button>
-                </AdaptableDialogTrigger>
-              </div>
-            }
-          />
+            </CardTitle>
+          </CardHeader>
+        </Card>
 
-          <h1 className="text-xl font-bold">
-            {" "}
-            {t("pages.accounts.index.payments")}{" "}
-          </h1>
+        <h1 className="text-xl font-bold">
+          {" "}
+          {t("pages.accounts.index.payments")}{" "}
+        </h1>
 
+        <AdaptableDialog desktopVariant="sheet">
           <Tabs
             defaultValue={history ? "history" : "pending"}
             className="w-full"
@@ -228,70 +166,34 @@ export default function Index({
               </TabsTrigger>
             </TabsList>
             <TabsContent className="grid w-full gap-2" value="pending">
-              <Stat
-                label={t("pages.accounts.index.pending_payments")}
-                badge={
-                  <Badge
-                    variant="secondary"
-                    className="bg-background text-muted-foreground font-normal"
-                  >
-                    {t("pages.accounts.index.total_debt")}
-                  </Badge>
-                }
-                value={
-                  <>
-                    {formatMoney(total_debt)}{" "}
-                    <span className="text-base">
-                      {t("pages.accounts.index.pending_meals", {
-                        count: total_meals,
-                      })}
-                    </span>
-                  </>
-                }
-                className="bg-muted shadow-none"
-              />
+              <Card className="bg-zinc-50 dark:bg-zinc-900">
+                <CardHeader>
+                  <CardDescription className="flex">
+                    {t("pages.accounts.index.pending_payments")}
+                    <Badge variant="outline" className="ml-auto">
+                      {t("pages.accounts.index.total_debt")}
+                    </Badge>
+                  </CardDescription>
+                  <CardTitle>{formatMoney(total_debt)}</CardTitle>
+                </CardHeader>
+              </Card>
 
               {providersJSX}
             </TabsContent>
             <TabsContent className="grid w-full gap-2" value="history">
               {history_accounts.length === 0 ? (
-                historyEmpty("history_empty")
+                <p className="text-muted-foreground text-sm">
+                  {t("pages.accounts.index.history_empty")}
+                </p>
               ) : (
-                <>
-                  <div className="flex items-center">
-                    <span className="text-foreground min-w-0 truncate text-sm font-medium">
-                      {t("pages.accounts.index.providers_label")}{" "}
-                      <span className="text-muted-foreground font-normal">
-                        {filterLabel}
-                      </span>
-                    </span>
-                    <ProviderFilterSheet
-                      providers={providers}
-                      selectedProviders={activeProviders}
-                      onApply={setActiveProviders}
-                      selectionMode="single"
-                      allProvidersLabel={t(
-                        "pages.accounts.index.all_providers",
-                      )}
-                    />
-                  </div>
-
-                  {filteredHistory.length === 0
-                    ? historyEmpty("history_filtered_empty")
-                    : filteredHistory.map((account) => (
-                        <PaymentHistoryCard
-                          key={account.id}
-                          account={account}
-                          providerName={
-                            providers.find(
-                              ({ id }) => id === account.provider_id,
-                            )?.name
-                          }
-                          setDetail={setDetail}
-                          setLoading={setLoading}
-                        />
-                      ))}
-                </>
+                history_accounts.map((account) => (
+                  <PaymentHistoryCard
+                    key={account.id}
+                    account={account}
+                    setDetail={setDetail}
+                    setLoading={setLoading}
+                  />
+                ))
               )}
             </TabsContent>
           </Tabs>
@@ -303,6 +205,7 @@ export default function Index({
               <OrdersTable
                 orders={detail ? detail.orders : []}
                 month={String(detail?.month)}
+                amount={Number(detail?.amount)}
               />
             )}
 

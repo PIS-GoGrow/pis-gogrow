@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react"
+import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
 import type { Order } from "@/types"
@@ -10,22 +10,16 @@ vi.mock("@inertiajs/react", async () => {
   return {
     ...actual,
     Head: () => null,
-    usePage: () => ({ props: { locale: "es" }, url: "/pedidos/1" }),
+    usePage: () => ({ props: { locale: "es" } }),
     Link: ({
       children,
       href,
-      prefetch,
       ...props
     }: {
       children: React.ReactNode
       href: string | { url: string }
-      prefetch?: boolean
     }) => (
-      <a
-        href={typeof href === "string" ? href : href.url}
-        data-prefetch={prefetch ? "true" : undefined}
-        {...props}
-      >
+      <a href={typeof href === "string" ? href : href.url} {...props}>
         {children}
       </a>
     ),
@@ -61,7 +55,7 @@ describe("Consumer::Orders Show Page", () => {
   }
 
   it("renders order information correctly", () => {
-    render(<Show order={baseOrder} historical={false} />)
+    render(<Show order={baseOrder} />)
 
     expect(screen.getByText("TuViandita")).toBeInTheDocument()
     expect(screen.getByText("Milanesa Napolitana")).toBeInTheDocument()
@@ -81,90 +75,10 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_closed",
     }
 
-    render(<Show order={rejectedOrder} historical />)
+    render(<Show order={rejectedOrder} />)
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
     expect(screen.getByText("Sin stock disponible")).toBeInTheDocument()
-  })
-
-  it("displays the unit price instead of the total base price", () => {
-    const multipleOrder: Order = {
-      ...baseOrder,
-      amount: 2,
-      price: 600,
-      subsidy: 100,
-      discounted_price: 500,
-    }
-
-    render(<Show order={multipleOrder} historical={false} />)
-
-    const priceRow = screen.getByText("Precio base").closest("div")
-
-    expect(priceRow).not.toBeNull()
-    expect(within(priceRow!).getByText("$300")).toBeInTheDocument()
-  })
-
-  it("displays the single unit price when order has amount 1", () => {
-    const singleOrder: Order = {
-      ...baseOrder,
-      amount: 1,
-      price: 300,
-    }
-
-    render(<Show order={singleOrder} historical={false} />)
-
-    const priceRow = screen.getByText("Precio base").closest("div")
-    expect(priceRow).not.toBeNull()
-    expect(within(priceRow!).getByText("$300")).toBeInTheDocument()
-  })
-
-  it("formats decimal unit prices with cents properly", () => {
-    const decimalOrder: Order = {
-      ...baseOrder,
-      amount: 2,
-      price: 601,
-      subsidy: 300.5,
-      discounted_price: 300.5,
-    }
-
-    render(<Show order={decimalOrder} historical={false} />)
-
-    const priceRow = screen.getByText("Precio base").closest("div")
-    expect(priceRow).not.toBeNull()
-    expect(within(priceRow!).getByText("$300,50")).toBeInTheDocument()
-  })
-
-  it("displays fallback text when price is missing or amount is zero", () => {
-    const noPriceOrder: Order = {
-      ...baseOrder,
-      price: undefined,
-      amount: 2,
-    }
-
-    const { rerender } = render(
-      <Show order={noPriceOrder} historical={false} />,
-    )
-
-    let priceRow = screen.getByText("Precio base").closest("div")
-    expect(priceRow).not.toBeNull()
-    expect(
-      within(priceRow!).getByText("Importe no disponible"),
-    ).toBeInTheDocument()
-
-    const zeroAmountOrder: Order = {
-      ...baseOrder,
-      price: 500,
-      amount: 0,
-    }
-
-    rerender(<Show order={zeroAmountOrder} historical={false} />)
-    priceRow = screen.getByText("Precio base").closest("div")
-    expect(priceRow).not.toBeNull()
-    expect(
-      within(priceRow!).getByText("Importe no disponible"),
-    ).toBeInTheDocument()
-    expect(within(priceRow!).queryByText("NaN")).not.toBeInTheDocument()
-    expect(within(priceRow!).queryByText("Infinity")).not.toBeInTheDocument()
   })
 
   it("displays custom rejection details when reason is 'other'", () => {
@@ -179,7 +93,7 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "already_closed",
     }
 
-    render(<Show order={rejectedOrder} historical />)
+    render(<Show order={rejectedOrder} />)
 
     expect(screen.getByText("Motivo de rechazo")).toBeInTheDocument()
     expect(
@@ -187,17 +101,16 @@ describe("Consumer::Orders Show Page", () => {
     ).toBeInTheDocument()
   })
 
-  it("renders both actions when the order is cancellable and modifiable", () => {
-    render(<Show order={baseOrder} historical={false} />)
+  it("links to the edit page when the order is modifiable", () => {
+    render(<Show order={baseOrder} />)
 
-    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeEnabled()
     expect(screen.getByRole("link", { name: /Editar/i })).toHaveAttribute(
       "href",
       "/pedidos/1/editar",
     )
   })
 
-  it("does not render unavailable actions for a historical order", () => {
+  it("does not show block reason texts when order is confirmed and shows disabled buttons", () => {
     const confirmedOrder: Order = {
       ...baseOrder,
       status: "confirmed",
@@ -207,76 +120,40 @@ describe("Consumer::Orders Show Page", () => {
       modification_block_reason: "confirmed_for_today",
     }
 
-    render(<Show order={confirmedOrder} historical />)
+    render(<Show order={confirmedOrder} />)
 
     expect(
-      screen.queryByRole("button", { name: /Cancelar/i }),
+      screen.queryByText(
+        "Ya está confirmado para hoy, así que no se puede cancelar.",
+      ),
     ).not.toBeInTheDocument()
     expect(
-      screen.queryByRole("link", { name: /Editar/i }),
+      screen.queryByText(
+        "Ya está confirmado para hoy, así que no se puede modificar.",
+      ),
     ).not.toBeInTheDocument()
-  })
-
-  it("keeps unavailable actions disabled for an upcoming order", () => {
-    const confirmedOrder: Order = {
-      ...baseOrder,
-      status: "confirmed",
-      cancellable: false,
-      cancellation_block_reason: "confirmed_for_today",
-      modifiable: false,
-      modification_block_reason: "confirmed_for_today",
-    }
-
-    render(<Show order={confirmedOrder} historical={false} />)
-
     expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()
     expect(screen.getByRole("button", { name: /Editar/i })).toBeDisabled()
   })
 
-  it("renders only the available cancel action for a historical order", () => {
-    const cancellableOrder: Order = {
+  it("displays block reason when pending order is past order deadline", () => {
+    const closedPendingOrder: Order = {
       ...baseOrder,
-      cancellable: true,
+      status: "pending",
+      cancellable: false,
+      cancellation_block_reason: "order_deadline_passed",
       modifiable: false,
       modification_block_reason: "already_closed",
     }
 
-    render(<Show order={cancellableOrder} historical />)
-
-    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeEnabled()
-    expect(
-      screen.queryByRole("link", { name: /Editar/i }),
-    ).not.toBeInTheDocument()
-  })
-
-  it("renders only the available edit action for a historical order", () => {
-    const modifiableOrder: Order = {
-      ...baseOrder,
-      cancellable: false,
-      cancellation_block_reason: "already_closed",
-      modifiable: true,
-    }
-
-    render(<Show order={modifiableOrder} historical />)
+    render(<Show order={closedPendingOrder} />)
 
     expect(
-      screen.queryByRole("button", { name: /Cancelar/i }),
-    ).not.toBeInTheDocument()
-    expect(screen.getByRole("link", { name: /Editar/i })).toHaveAttribute(
-      "href",
-      "/pedidos/1/editar",
-    )
-  })
-
-  it("keeps the consumer mobile navigation and reserves space for it", () => {
-    const { container } = render(<Show order={baseOrder} historical={false} />)
-
-    expect(screen.getByRole("navigation")).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "Pedidos" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    )
-    expect(container.querySelector(".pb-24")).toHaveClass("md:pb-5")
+      screen.getByText(
+        "El proveedor ya cerró la recepción de pedidos de hoy, así que no se puede cancelar.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: /Cancelar/i })).toBeDisabled()
   })
 
   it("renders long notes without spaces with text wrapping styling to prevent overflow", () => {
@@ -286,7 +163,7 @@ describe("Consumer::Orders Show Page", () => {
       notes: longNote,
     }
 
-    render(<Show order={orderWithLongNote} historical={false} />)
+    render(<Show order={orderWithLongNote} />)
 
     const notesElement = screen.getByText(longNote)
     expect(notesElement).toBeInTheDocument()

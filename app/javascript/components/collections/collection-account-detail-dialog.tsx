@@ -43,9 +43,11 @@ function shortDate(date: string | null) {
 function ConsumptionTable({
   account,
   footer = false,
+  settled = false,
 }: {
   account: ProviderCollectionAccount
   footer?: boolean
+  settled?: boolean
 }) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -63,7 +65,7 @@ function ConsumptionTable({
 
   return (
     <div className="overflow-hidden rounded-xl border">
-      <Table className="table-fixed text-xs sm:text-sm">
+      <Table className={settled ? "table-fixed" : "min-w-[33rem] table-fixed"}>
         <TableHeader className="bg-muted/70">
           <TableRow>
             <TableHead className="w-[17%]">{t(`${page}.date`)}</TableHead>
@@ -80,7 +82,13 @@ function ConsumptionTable({
           {account.orders.map((order) => (
             <TableRow key={order.id}>
               <TableCell>{shortDate(order.delivery_date)}</TableCell>
-              <TableCell className="truncate">{order.menu_name}</TableCell>
+              <TableCell
+                className={
+                  settled ? "truncate" : "wrap-anywhere whitespace-normal"
+                }
+              >
+                {order.menu_name}
+              </TableCell>
               <TableCell className="text-center">{order.amount}</TableCell>
               <TableCell className="text-right">
                 {formatMoney(amountOf(order))}
@@ -95,7 +103,7 @@ function ConsumptionTable({
           <span className="font-medium">
             {t(`${page}.total`, { amount: formatMoney(account.amount) })}
           </span>
-          <StatusBadge status={account.status} kind="provider_payment" />
+          <StatusBadge status={account.status} kind="payment" />
         </div>
       )}
     </div>
@@ -138,7 +146,7 @@ function CompanyCollection({
               {formatMoney(account.payable_amount)}
             </dd>
           </div>
-          <StatusBadge status={account.status} kind="provider_payment" />
+          <StatusBadge status={account.status} kind="payment" />
         </div>
       </dl>
     </div>
@@ -192,11 +200,11 @@ export default function CollectionAccountDetailDialog({
                 <CompanyCollection account={account} />
               </TabsContent>
               <TabsContent value="meals">
-                <ConsumptionTable account={account} />
+                <ConsumptionTable account={account} settled={settled} />
               </TabsContent>
             </Tabs>
           ) : (
-            <ConsumptionTable account={account} footer />
+            <ConsumptionTable account={account} footer settled={settled} />
           )}
         </div>
 

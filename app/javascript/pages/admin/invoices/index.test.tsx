@@ -11,17 +11,6 @@ vi.mock("@inertiajs/react", async () => {
   return {
     ...actual,
     Head: () => null,
-    Link: ({
-      children,
-      href,
-      ...props
-    }: Omit<React.ComponentProps<"a">, "href"> & {
-      href?: string | { url: string }
-    }) => (
-      <a href={typeof href === "string" ? href : href?.url} {...props}>
-        {children}
-      </a>
-    ),
     // useFormatters saca el idioma de las props compartidas.
     usePage: () => ({ props: { locale: "es" } }),
   }
@@ -136,13 +125,5 @@ describe("Admin::Invoices Index Page", () => {
 
     expect(screen.getByText("Todavía no hay facturas")).toBeInTheDocument()
     expect(screen.queryByRole("table")).not.toBeInTheDocument()
-  })
-
-  it("goes back to the account like the other account screens", () => {
-    render(<Index invoices={[invoice]} />)
-
-    expect(
-      screen.getByRole("link", { name: "Volver a Cuenta" }),
-    ).toHaveAttribute("href", "/rrhh/cuenta")
   })
 })

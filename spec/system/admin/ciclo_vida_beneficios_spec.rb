@@ -47,7 +47,7 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
       amount: 20
     )
 
-    Schedule.create!(menu: sorrentinos, date: Date.current)
+    Schedule.create!(menu: sorrentinos, date: Date.current, amount: 10)
 
     # -------------------------------------------------------------
     # Paso 1 (Empleado): Inicia sesión, consulta el plato y ve 50%
@@ -96,8 +96,8 @@ RSpec.describe "Ciclo de vida de beneficios multi-rol", type: :system do
     expect(new_benefit.percentage).to eq(70)
     expect(new_benefit.amount).to eq(15)
 
-    Schedule.create!(menu: sorrentinos, date: Date.current)
-    Schedule.create!(menu: office_menu, date: Date.current)
+    Schedule.create!(menu: sorrentinos, date: Date.current, amount: 10)
+    Schedule.create!(menu: office_menu, date: Date.current, amount: 10)
 
     # -------------------------------------------------------------
     # Paso 4 (Empleado): Vuelve a consultar y valida nuevo precio

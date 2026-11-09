@@ -89,18 +89,6 @@ describe("DishDetail", () => {
     expect(screen.getByText("$320")).toBeInTheDocument()
   })
 
-  it("keeps the amount to pay in the bottom bar, next to the add button", () => {
-    renderDetail()
-
-    const bar = screen.getByText("Monto a pagar").closest(".fixed")
-
-    expect(bar).not.toBeNull()
-    expect(bar).toContainElement(
-      screen.getByRole("button", { name: "Agregar" }),
-    )
-    expect(screen.getByText("Precio vianda").closest(".fixed")).toBeNull()
-  })
-
   // Criterio 3: sin descripción no se inventa texto, y sobre todo no se filtra
   // el "null" del prop a la pantalla, que es la forma más común de que esto
   // salga mal.
@@ -124,17 +112,6 @@ describe("DishDetail", () => {
     renderDetail({ item: { ...schedule(), remaining: 2 }, quantity: 2 })
 
     expect(screen.getByRole("button", { name: "Agregar uno" })).toBeDisabled()
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "Solo quedan 2 viandas disponibles de este plato.",
-    )
-  })
-
-  it("does not warn about the quota before reaching it", () => {
-    renderDetail({ item: { ...schedule(), remaining: 2 }, quantity: 1 })
-
-    expect(
-      screen.queryByText(/disponibles? de este plato/),
-    ).not.toBeInTheDocument()
   })
 
   it("marks the dish as added when it is already in the cart", () => {
@@ -448,42 +425,8 @@ describe("benefit specials", () => {
     name: "Descuento día del padre",
     percentage: 30,
     remaining: 5,
-    starts_on: null,
     due_date: null,
     ...overrides,
-  })
-
-  it("does not offer a special that starts after the dish date", () => {
-    renderDetail({
-      benefit: { ...benefit, specials: [special({ starts_on: "2026-09-17" })] },
-    })
-
-    expect(
-      screen.queryByText(/Descuento día del padre/),
-    ).not.toBeInTheDocument()
-  })
-
-  it("does not offer a special that expires before the dish date", () => {
-    renderDetail({
-      benefit: { ...benefit, specials: [special({ due_date: "2026-09-15" })] },
-    })
-
-    expect(
-      screen.queryByText(/Descuento día del padre/),
-    ).not.toBeInTheDocument()
-  })
-
-  it("offers a special in force on the dish date", () => {
-    renderDetail({
-      benefit: {
-        ...benefit,
-        specials: [
-          special({ starts_on: "2026-09-16", due_date: "2026-09-16" }),
-        ],
-      },
-    })
-
-    expect(screen.getByText(/Descuento día del padre/)).toBeInTheDocument()
   })
 
   it("shows the special and its checkbox when it has remaining units", () => {
@@ -531,7 +474,6 @@ describe("benefits message and lines", () => {
       name: "Descuento día del padre",
       percentage: 30,
       remaining: 5,
-      starts_on: null,
       due_date: null,
     }
 
@@ -564,7 +506,6 @@ describe("benefits message and lines", () => {
       name: "Descuento día del padre",
       percentage: 30,
       remaining: 5,
-      starts_on: null,
       due_date: null,
     }
 

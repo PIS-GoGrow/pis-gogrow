@@ -15,7 +15,6 @@ import {
   consumerOrders,
   consumerProfiles,
   settingsNotifications,
-  settingsProfiles,
 } from "@/routes"
 
 const links = [
@@ -45,7 +44,6 @@ const links = [
       consumerProfiles.show().url,
       consumerDeliveryAddresses.index().url,
       settingsNotifications.index().url,
-      settingsProfiles.show().url,
     ],
   },
 ]

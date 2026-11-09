@@ -2,11 +2,7 @@ import { render, screen } from "@testing-library/react"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
-import {
-  consumerDeliveryAddresses,
-  settingsNotifications,
-  settingsProfiles,
-} from "@/routes"
+import { settingsNotifications } from "@/routes"
 
 import Show from "./show"
 
@@ -155,36 +151,5 @@ describe("Consumer account page", () => {
     expect(
       screen.getByRole("link", { name: /Notificaciones/ }),
     ).toHaveAttribute("href", settingsNotifications.index().url)
-  })
-
-  it("links to delivery addresses", () => {
-    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
-
-    expect(screen.getByRole("link", { name: /Direcciones/ })).toHaveAttribute(
-      "href",
-      consumerDeliveryAddresses.index().url,
-    )
-  })
-
-  it("links to account settings", () => {
-    render(<Show benefit={benefit} benefit_summary={summary} coupons={[]} />)
-
-    expect(
-      screen.getByRole("link", {
-        name: /Modificá tu teléfono, nombre, correo, contraseña y apariencia/,
-      }),
-    ).toHaveAttribute("href", settingsProfiles.show().url)
-  })
-
-  it("applies bottom padding on mobile to clear the fixed navigation bar", () => {
-    const { container } = render(
-      <Show benefit={benefit} benefit_summary={summary} coupons={[]} />,
-    )
-
-    const section = container.querySelector(
-      "section[aria-labelledby='consumer-settings-title']",
-    )
-    expect(section).toHaveClass("pb-32")
-    expect(section).toHaveClass("md:pb-0")
   })
 })

@@ -121,11 +121,8 @@ class Notification < ApplicationRecord
   private
 
   def role_belongs_to_user
-    return if user.blank? || role.blank?
-
-    user.sync_roles!
-    has_role = user.roles.include?(role.to_s) || (user.respond_to?("#{role}?") && user.public_send("#{role}?"))
-    errors.add(:role, :invalid) unless has_role
+    user&.sync_roles!
+    errors.add(:role, :invalid) unless user&.roles&.include?(role.to_s)
   end
 
   def event_exists
@@ -139,6 +136,7 @@ end
 #
 #  id                            :bigint           not null, primary key
 #  closed_at                     :datetime
+#  delivered_at                  :datetime
 #  description_data              :json
 #  event                         :string           not null
 #  notifiable_type               :string           not null
@@ -146,7 +144,6 @@ end
 #  role                          :string           not null
 #  title_data                    :json
 #  twilio_sid                    :string
-#  whatsapp_delivered_at         :datetime
 #  whatsapp_last_sent_at         :datetime
 #  whatsapp_send_attempts        :integer          default(0)
 #  whatsapp_send_status          :integer

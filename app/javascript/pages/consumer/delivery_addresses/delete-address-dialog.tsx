@@ -63,11 +63,16 @@ export default function DeleteAddressDialog({
     <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
       <AdaptableDialogContent
         showCloseButton={false}
-        className="gap-0 rounded-t-[26px] px-6 pb-8 md:max-w-md md:gap-4 md:rounded-lg md:p-6"
+        className="gap-0 rounded-t-[26px] px-6 pt-2.5 pb-8 md:max-w-md md:gap-4 md:rounded-lg md:p-6"
       >
+        <div
+          aria-hidden="true"
+          className="mx-auto h-[5px] w-20 rounded-full bg-[#E5E5E5] md:hidden"
+        />
+
         {state === "success" ? (
           <>
-            <AdaptableDialogHeader className="items-start pt-5 text-left md:pt-0">
+            <AdaptableDialogHeader className="items-start pt-6 text-left md:pt-0">
               <AdaptableDialogTitle className="text-base leading-6 font-semibold">
                 {t(`${key}.success_title`)}
               </AdaptableDialogTitle>

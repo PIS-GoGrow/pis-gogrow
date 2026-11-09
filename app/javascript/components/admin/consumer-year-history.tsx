@@ -74,7 +74,7 @@ export default function ConsumerYearHistory({
       </div>
 
       {neverOrdered ? (
-        <Empty className="min-h-[35svh] border-0 md:min-h-0 md:border">
+        <Empty className="border">
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <Users aria-hidden="true" />

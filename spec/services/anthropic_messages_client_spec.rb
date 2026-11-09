@@ -27,7 +27,7 @@ RSpec.describe AnthropicMessagesClient do
     expect(result).to eq(ok: true, text: "Resumen claro.")
     expect(requests.size).to eq(1)
     expect(requests.first[:url]).to eq("https://api.anthropic.com/v1/messages")
-    expect(requests.first[:headers]).to include("x-api-key" => "test-only-key",
+    expect(requests.first[:headers]).to include("Authorization" => "Bearer test-only-key",
                                                 "anthropic-version" => "2026-10-21",
                                                 "Content-Type" => "application/json")
     expect(JSON.parse(requests.first[:body])).to eq(

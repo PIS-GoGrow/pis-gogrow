@@ -1,7 +1,6 @@
-import { Eye, TriangleAlert } from "lucide-react"
+import { CircleX, Eye, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import RejectionNotice from "@/components/payments/rejection-notice"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,7 +12,7 @@ import {
 import { Separator } from "@/components/ui/separator"
 import { SheetTrigger } from "@/components/ui/sheet"
 import { formatMoney } from "@/lib/money"
-import { pendingRejectionReason } from "@/lib/payment-rejection-reasons"
+import { PARTIAL_PAYMENT_REJECTION_REASON } from "@/lib/payment-rejection-reasons"
 import { consumerAccounts } from "@/routes"
 import type { Account, SimplifiedOrder } from "@/types"
 
@@ -37,14 +36,33 @@ export default function AccountCard({
   setLoading,
 }: AccountCardProps) {
   const { t } = useTranslation()
-  const payments = [...account.payments].sort(
-    (first, second) =>
-      new Date(second.created_at).getTime() -
-      new Date(first.created_at).getTime(),
-  )
-  const rejectionReason = pendingRejectionReason(payments)
+  const payment =
+    [...account.payments]
+      .sort(
+        (first, second) =>
+          new Date(second.created_at).getTime() -
+          new Date(first.created_at).getTime(),
+      )
+      .find(({ status }) => status !== "approved") ??
+    account.payments.find(({ status }) => status === "approved")
   const showReceiptSection =
     !account.current || account.payments.some(({ receipt_url }) => receipt_url)
+
+  // Sin comprobante todavía = pendiente; el mismo estado "submitted" cubre
+  // tanto el primer envío como un reenvío luego de un rechazo.
+  const statusLabel =
+    payment?.status === "rejected"
+      ? t("pages.accounts.show.status_rejected")
+      : payment?.status === "submitted"
+        ? t("pages.accounts.show.status_submitted")
+        : t("pages.accounts.show.status_pending")
+
+  const statusBadgeClassName =
+    payment?.status === "rejected"
+      ? "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
+      : payment?.status === "submitted"
+        ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400"
+        : "bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
 
   async function handleClick() {
     setLoading(true)
@@ -67,17 +85,19 @@ export default function AccountCard({
   }
 
   return (
-    <Card className="bg-muted py-4 shadow-none">
-      <CardHeader className="grid grid-cols-1 gap-3 px-4">
-        <CardDescription className="flex flex-wrap items-center gap-2">
-          <span className="shrink-0 whitespace-nowrap">{account.month}</span>
+    <Card className="bg-zinc-50 dark:bg-zinc-900">
+      <CardHeader className="grid gap-4">
+        <CardDescription className="flex items-center gap-2">
+          {account.month}
+
+          <Badge className={statusBadgeClassName}>{statusLabel}</Badge>
 
           <Badge
             variant="ghost"
             className={
               account.due_date_passed
-                ? "ml-auto shrink-0 text-red-600 dark:text-red-400"
-                : "ml-auto shrink-0 text-amber-600 dark:text-amber-400"
+                ? "ml-auto text-red-600 dark:text-red-400"
+                : "ml-auto text-amber-600 dark:text-amber-400"
             }
           >
             <TriangleAlert />
@@ -87,9 +107,9 @@ export default function AccountCard({
 
         <Separator />
 
-        <CardTitle className="flex flex-wrap items-center gap-2">
-          <span className="shrink-0 whitespace-nowrap">
-            {formatMoney(account.outstanding_amount)}
+        <CardTitle className="flex items-center">
+          <span>
+            {formatMoney(account.amount ?? 0)}
             <span className="text-zinc-500 dark:text-zinc-400">
               {" | "}
               {account.orders_amount_sum}{" "}
@@ -103,7 +123,7 @@ export default function AccountCard({
               onClick={() => {
                 void handleClick()
               }}
-              className="ml-auto h-auto shrink-0 p-0 font-semibold hover:bg-transparent has-[>svg]:px-0 dark:hover:bg-transparent"
+              className="ml-auto"
               variant="ghost"
             >
               {" "}
@@ -112,29 +132,40 @@ export default function AccountCard({
           </SheetTrigger>
         </CardTitle>
 
-        {(rejectionReason !== null || showReceiptSection) && <Separator />}
-
-        {rejectionReason && (
-          <RejectionNotice
-            reason={rejectionReason}
-            partialPaymentWarning={t(
-              "pages.accounts.show.partial_payment_warning",
-            )}
-            rejectedLabel={t("pages.accounts.show.status_rejected")}
-          />
+        {(payment?.status === "rejected" || showReceiptSection) && (
+          <Separator />
         )}
+
+        {payment?.status === "rejected" &&
+          (payment.rejection_reason === PARTIAL_PAYMENT_REJECTION_REASON ? (
+            <div className="flex items-start gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+              <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+              <p>{t("pages.accounts.show.partial_payment_warning")}</p>
+            </div>
+          ) : (
+            <div className="flex items-start gap-2 rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950 dark:text-red-400">
+              <CircleX className="mt-0.5 size-4 shrink-0" />
+              <p>
+                <span className="font-medium">
+                  {t("pages.accounts.show.status_rejected")}:
+                </span>{" "}
+                {payment.rejection_reason}
+              </p>
+            </div>
+          ))}
 
         {showReceiptSection && (
           <PaymentReceiptDialog
             accountId={account.id}
-            inlineUpload
-            canUpload={
-              !account.current && account.collection_status !== "approved"
-            }
+            canUpload={!account.current}
             uploadDisabled={account.payments.some(
               ({ status }) => status === "submitted",
             )}
-            payments={payments}
+            payments={[...account.payments].sort(
+              (first, second) =>
+                new Date(second.created_at).getTime() -
+                new Date(first.created_at).getTime(),
+            )}
           />
         )}
       </CardHeader>

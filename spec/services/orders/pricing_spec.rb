@@ -9,9 +9,9 @@ RSpec.describe Orders::Pricing do
 
   let(:consumer) { consumers(:one) }
   let(:menu) { Menu.create!(provider: providers(:tuviandita), name: "Milanesa", description: "Con puré", price: 300) }
-  let(:schedule) { Schedule.create!(menu:, date: Date.new(2026, 9, 16)) }
+  let(:schedule) { Schedule.create!(menu:, date: Date.new(2026, 9, 16), amount: 20) }
   let(:cheap_menu) { Menu.create!(provider: providers(:tuviandita), name: "Ensalada", description: "Con huevo", price: 100) }
-  let(:cheap_schedule) { Schedule.create!(menu: cheap_menu, date: Date.new(2026, 9, 16)) }
+  let(:cheap_schedule) { Schedule.create!(menu: cheap_menu, date: Date.new(2026, 9, 16), amount: 20) }
 
   before { consumer.benefits.destroy_all }
 
@@ -353,7 +353,7 @@ RSpec.describe Orders::Pricing do
 
       it "uses the delivery date, not today, to decide if the special still applies" do
         special!(due_date: Date.new(2026, 9, 16))
-        later = Schedule.create!(menu:, date: Date.new(2026, 9, 17))
+        later = Schedule.create!(menu:, date: Date.new(2026, 9, 17), amount: 20)
 
         result = price_cart([ schedule, 1, [] ], [ later, 1, [] ])
 

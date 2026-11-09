@@ -109,46 +109,12 @@ RSpec.describe "Orders", type: :request do
         expect(ids).not_to include(orders(:other_consumer_upcoming).id)
       end
 
-      it "keeps a recently delivered order in the history no matter when it was created" do
+      it "filters out history orders older than three months" do
         orders(:history_confirmed_past).update_columns(created_at: 4.months.ago)
 
         get orders_path
 
-        expect(inertia.props[:past_orders].pluck(:id)).to include(orders(:history_confirmed_past).id)
-      end
-
-      it "starts the history with the last three months by delivery date and pages the rest" do
-        old_order = orders(:history_confirmed_past)
-        old_order.update_columns(schedule_id: nil, delivery_date: Date.current - 4.months)
-
-        get orders_path
-
-        expect(inertia.props[:past_orders].pluck(:id)).to contain_exactly(
-          orders(:history_cancelled_future).id,
-          orders(:history_rejected_future).id,
-          orders(:history_pending_past).id,
-          orders(:history_without_schedule).id
-        )
-        expect(inertia.props[:providers].pluck(:id)).to contain_exactly(providers(:tuviandita).id)
-
-        get orders_path(page: 2)
-
-        expect(inertia.props[:past_orders].pluck(:id)).to contain_exactly(old_order.id)
-      end
-
-      it "orders older pages by delivery date and stops after the last one" do
-        oldest = orders(:history_confirmed_past)
-        oldest.update_columns(schedule_id: nil, delivery_date: Date.current - 8.months)
-        older = orders(:history_pending_past)
-        older.update_columns(schedule_id: nil, delivery_date: Date.current - 4.months)
-
-        get orders_path(page: 2)
-
-        expect(inertia.props[:past_orders].pluck(:id)).to eq([ older.id, oldest.id ])
-
-        get orders_path(page: 3)
-
-        expect(inertia.props[:past_orders]).to be_empty
+        expect(inertia.props[:past_orders].pluck(:id)).not_to include(orders(:history_confirmed_past).id)
       end
 
       it "deduplicates providers in the filter list" do
@@ -172,18 +138,6 @@ RSpec.describe "Orders", type: :request do
       it "renders the detail page" do
         get order_path(orders(:upcoming_confirmed_future))
         expect(inertia).to render_component("consumer/orders/show")
-      end
-
-      it "identifies an upcoming order outside the history" do
-        get order_path(orders(:upcoming_confirmed_future))
-
-        expect(inertia).to have_props(historical: false)
-      end
-
-      it "identifies an order from the history" do
-        get order_path(orders(:history_confirmed_past))
-
-        expect(inertia).to have_props(historical: true)
       end
 
       it "exposes the breakdown the employee needs to check the order" do
@@ -246,15 +200,6 @@ RSpec.describe "Orders", type: :request do
         sign_in users(:provider_user)
         get order_path(orders(:upcoming_confirmed_future))
         expect(response).to redirect_to(root_path)
-
-        sign_in users(:admin), role: :admin
-        get order_path(orders(:upcoming_confirmed_future))
-        expect(response).to redirect_to(root_path)
-      end
-
-      it "returns not found for a non-existent order id" do
-        get order_path(id: 999_999)
-        expect(response).to have_http_status(:not_found)
       end
 
       it "serializes rejection reason and rejection details on a rejected order" do
@@ -302,7 +247,7 @@ RSpec.describe "Orders", type: :request do
 
         expect(inertia).to render_component("consumer/orders/edit")
         # El cupo libre de la fecha más la unidad que este pedido ya ocupa.
-        expect(inertia.props[:schedule]).to include(remaining: 99, sold_out: false, orders_closed: false)
+        expect(inertia.props[:schedule]).to include(remaining: 7, sold_out: false, orders_closed: false)
         expect(inertia.props[:delivery_addresses].map { it[:address] }).to eq([ "18 de Julio 1006", "Julio Herrera y Reissig 565" ])
       end
 
@@ -407,10 +352,10 @@ RSpec.describe "Orders", type: :request do
       [ consumer, company ]
     end
 
-    def create_schedule(price: 300, available: true)
+    def create_schedule(price: 300, amount: 5, available: true)
       provider = Provider.find_or_create_by!(user: users(:two))
       menu = Menu.create!(provider:, name: "Milanesa", description: "Con puré", price:)
-      Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), available:)
+      Schedule.create!(menu:, date: Date.current.beginning_of_week(:monday), amount:, available:)
     end
 
     def create_schedule_with_options(limit: 1, required: true)
@@ -577,6 +522,7 @@ RSpec.describe "Orders", type: :request do
         notes: "Sin salsa"
       )
       expect(order).to be_pending
+      expect(schedule.reload.remaining_amount).to eq(3)
       follow_redirect!
       expect(inertia).to render_component("consumer/dashboard/confirmation")
       expect(inertia).to have_flash(notice: I18n.t("flash.cart_confirmed"))
@@ -611,7 +557,15 @@ RSpec.describe "Orders", type: :request do
     it "does not create a partial cart when one item is unavailable" do
       consumer, = setup_consumer
       available = create_schedule
-      unavailable = create_schedule(available: false)
+      unavailable = create_schedule(amount: 1)
+      Order.create!(
+        consumer:,
+        schedule: unavailable,
+        amount: 1,
+        price: unavailable.menu.price,
+        address: consumer.address,
+        delivery_method: :home
+      )
 
       expect do
         post orders_path, params: {
@@ -626,18 +580,29 @@ RSpec.describe "Orders", type: :request do
       end.not_to change(Order, :count)
 
       expect(response).to redirect_to(dashboard_cart_path)
+      expect(available.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(
         errors: {
-          order_error: I18n.t("validations.schedule_unavailable")
+          order_error: I18n.t("validations.insufficient_stock")
         }
       )
     end
 
-    # IBP-053, criterio 2: un plato marcado agotado no admite pedidos nuevos.
-    it "rejects a dish the provider marked as sold out" do
+    # IBP-003, criterio 3: "los platos agotados o no disponibles ... no pueden
+    # pedirse". Que la pantalla deshabilite el botón no es la regla: la guarda
+    # real es Order.reserve, y es la que se prueba acá con el pedido directo.
+    it "rejects a dish whose whole quota is already ordered" do
       consumer, = setup_consumer
-      schedule = create_schedule(available: false)
+      schedule = create_schedule(amount: 1)
+      Order.create!(
+        consumer:,
+        schedule:,
+        amount: 1,
+        price: schedule.menu.price,
+        address: consumer.address,
+        delivery_method: :home
+      )
 
       expect do
         post orders_path, params: {
@@ -650,12 +615,55 @@ RSpec.describe "Orders", type: :request do
         }
       end.not_to change(Order, :count)
 
+      expect(schedule.reload.remaining_amount).to eq(0)
+      follow_redirect!
+      expect(inertia).to have_props(
+        errors: {
+          order_error: I18n.t("validations.insufficient_stock")
+        }
+      )
+    end
+
+    # IBP-053, criterio 2: un plato marcado agotado no admite pedidos nuevos,
+    # aunque su schedule todavía tenga cupo disponible.
+    it "rejects a dish the provider marked as sold out, even with quota left" do
+      consumer, = setup_consumer
+      schedule = create_schedule(amount: 5, available: false)
+
+      expect do
+        post orders_path, params: {
+          order: {
+            address: consumer.address,
+            items: [
+              { schedule_id: schedule.id, quantity: 1 }
+            ]
+          }
+        }
+      end.not_to change(Order, :count)
+
+      expect(schedule.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(
         errors: {
           order_error: I18n.t("validations.schedule_unavailable")
         }
       )
+    end
+
+    # Borde del cupo: N entra, N+1 no.
+    it "accepts exactly the remaining quota and rejects one unit more" do
+      consumer, = setup_consumer
+      schedule = create_schedule(amount: 2)
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 3 } ] } }
+      end.not_to change(Order, :count)
+
+      expect do
+        post orders_path, params: { order: { address: consumer.address, items: [ { schedule_id: schedule.id, quantity: 2 } ] } }
+      end.to change(Order, :count).by(1)
+
+      expect(schedule.reload.remaining_amount).to eq(0)
     end
 
     it "rejects an empty cart" do
@@ -692,7 +700,7 @@ RSpec.describe "Orders", type: :request do
         consumer, company = setup_consumer
         provider = Provider.find_or_create_by!(user: users(:two))
         menu = Menu.create!(provider:, name: "Ravioles", description: "Plato de prueba", price: 300)
-        next_monday_schedule = Schedule.create!(menu:, date: Date.new(2026, 9, 21))
+        next_monday_schedule = Schedule.create!(menu:, date: Date.new(2026, 9, 21), amount: 10)
 
         expect do
           post orders_path, params: {
@@ -712,7 +720,7 @@ RSpec.describe "Orders", type: :request do
         consumer, company = setup_consumer
         provider = Provider.find_or_create_by!(user: users(:two))
         menu = Menu.create!(provider:, name: "Torta", description: "Plato de prueba", price: 200)
-        far_future_schedule = Schedule.create!(menu:, date: Date.current.next_week(:friday) + 3.days)
+        far_future_schedule = Schedule.create!(menu:, date: Date.current.next_week(:friday) + 3.days, amount: 10)
 
         expect do
           post orders_path, params: {
@@ -785,7 +793,7 @@ RSpec.describe "Orders", type: :request do
         consumer.update_columns(address: "Mi Casa 123")
         office_provider = providers(:office_provider)
         menu = Menu.create!(provider: office_provider, name: "Chivito", description: "Plato de prueba", price: 400)
-        schedule = Schedule.create!(menu:, date: Date.current)
+        schedule = Schedule.create!(menu:, date: Date.current, amount: 5)
 
         expect do
           post orders_path, params: {
@@ -804,7 +812,7 @@ RSpec.describe "Orders", type: :request do
 
     it "creates separate orders for different toppings of the same dish" do
       consumer, = setup_consumer
-      schedule = create_schedule
+      schedule = create_schedule(amount: 3)
 
       expect do
         post orders_path, params: { order: { address: consumer.address, items: [
@@ -813,6 +821,7 @@ RSpec.describe "Orders", type: :request do
         ] } }
       end.to change(Order, :count).by(2)
 
+      expect(schedule.reload.remaining_amount).to eq(1)
       expect(consumer.orders.order(:id).last(2).pluck(:notes)).to contain_exactly(
         "Ricota y nuez · Filetto",
         "Ricota y espinaca · Bolognesa"
@@ -869,6 +878,7 @@ RSpec.describe "Orders", type: :request do
       end.not_to change(Order, :count)
 
       expect(response).to redirect_to(dashboard_cart_path)
+      expect(schedule.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.order_deadline_passed") })
     end
@@ -894,6 +904,7 @@ RSpec.describe "Orders", type: :request do
       get orders_path
 
       expect(order.reload).to have_attributes(status: "pending", amount: 1)
+      expect(schedule.reload.remaining_amount).to eq(4)
     end
 
     it "does not create a partial cart when one provider already closed" do
@@ -901,7 +912,7 @@ RSpec.describe "Orders", type: :request do
       open_schedule = create_schedule
       closed_provider = Provider.create!(user: users(:consumer_user), order_deadline: Time.current)
       closed_menu = Menu.create!(provider: closed_provider, name: "Tarta", description: "De verdura", price: 200)
-      closed_schedule = Schedule.create!(menu: closed_menu, date: Date.current)
+      closed_schedule = Schedule.create!(menu: closed_menu, date: Date.current, amount: 5)
 
       expect do
         post orders_path, params: {
@@ -926,6 +937,7 @@ RSpec.describe "Orders", type: :request do
       end.not_to change(Order, :count)
 
       expect(response).to redirect_to(dashboard_cart_path)
+      expect(schedule.reload.remaining_amount).to eq(5)
       follow_redirect!
       expect(inertia).to have_props(errors: { order_error: I18n.t("validations.provider_closed") })
     end
@@ -950,6 +962,7 @@ RSpec.describe "Orders", type: :request do
       get orders_path
 
       expect(order.reload).to have_attributes(status: "pending", amount: 2)
+      expect(schedule.reload.remaining_amount).to eq(3)
     end
 
     it "does not create a partial cart when one provider is closed" do
@@ -957,7 +970,7 @@ RSpec.describe "Orders", type: :request do
       open_schedule = create_schedule
       closed_provider = Provider.create!(user: users(:consumer_user))
       closed_menu = Menu.create!(provider: closed_provider, name: "Tarta", description: "De verdura", price: 200)
-      closed_schedule = Schedule.create!(menu: closed_menu, date: Date.current)
+      closed_schedule = Schedule.create!(menu: closed_menu, date: Date.current, amount: 5)
       closed_provider.closures.create!(starts_on: Date.current, ends_on: Date.current, reason: "Feriado")
 
       expect do
@@ -994,7 +1007,7 @@ RSpec.describe "Orders", type: :request do
         description: "Ensalada",
         price: 250
       )
-      home_schedule = Schedule.create!(menu: home_menu, date: Date.current)
+      home_schedule = Schedule.create!(menu: home_menu, date: Date.current, amount: 5)
 
       expect do
         post orders_path, params: { order: { address: consumer.address, items: [
@@ -1083,10 +1096,6 @@ RSpec.describe "Orders", type: :request do
       before do
         travel_back
         travel_to Time.zone.local(2026, 10, 31, 14, 0)
-        # Las fixtures usan la fecha real: schedules(:past) puede colisionar según Date.current.
-        Schedule.where(date: [ Date.new(2026, 10, 31), Date.new(2026, 11, 2), Date.new(2026, 11, 4), Date.new(2026, 11, 16) ])
-                .where.not(id: [ schedules(:today).id, schedules(:future).id ]).destroy_all
-        schedules(:today).update_columns(date: Date.new(2026, 10, 31))
         schedules(:future).update_columns(date: Date.new(2026, 11, 4))
       end
 
@@ -1116,6 +1125,7 @@ RSpec.describe "Orders", type: :request do
         schedule_next_month = Schedule.create!(
           menu: menus(:milanesa),
           date: Date.new(2026, 11, 2),
+          amount: 10,
           available: true
         )
 
@@ -1137,6 +1147,7 @@ RSpec.describe "Orders", type: :request do
         schedule_outside = Schedule.create!(
           menu: menus(:milanesa),
           date: Date.new(2026, 11, 16),
+          amount: 10,
           available: true
         )
 
@@ -1158,6 +1169,7 @@ RSpec.describe "Orders", type: :request do
         schedule = Schedule.create!(
           menu: menus(:milanesa),
           date: Date.new(2026, 11, 2),
+          amount: 10,
           available: true
         )
 
@@ -1181,6 +1193,7 @@ RSpec.describe "Orders", type: :request do
         schedule = Schedule.create!(
           menu: menus(:milanesa),
           date: Date.new(2026, 11, 2),
+          amount: 10,
           available: true
         )
 
@@ -1385,15 +1398,6 @@ RSpec.describe "Orders", type: :request do
       patch order_path(order), params: update_params
 
       expect(response).to redirect_to(root_path)
-      expect(order.reload.amount).to eq(1)
-    end
-
-    it "rejects another consumer trying to modify someone else's order" do
-      sign_in users(:other_consumer_user), role: :consumer
-
-      patch order_path(order), params: update_params(quantity: 3)
-
-      expect(response).to have_http_status(:not_found)
       expect(order.reload.amount).to eq(1)
     end
 
@@ -1631,6 +1635,7 @@ RSpec.describe "Orders", type: :request do
         patch order_path(order), params: update_params(quantity: 7)
 
         expect(order.reload.amount).to eq(7)
+        expect(order.schedule.reload.remaining_amount).to eq(0)
       end
 
       # IBP-053, criterio 3: los pedidos existentes no se tocan cuando el
@@ -1653,6 +1658,15 @@ RSpec.describe "Orders", type: :request do
         expect(order.reload.amount).to eq(1)
         follow_redirect!
         expect(inertia).to have_flash(order_updated: true)
+      end
+
+      it "refuses a quantity the schedule cannot cover" do
+        patch order_path(order), params: update_params(quantity: 8)
+
+        expect(order.reload.amount).to eq(1)
+
+        follow_redirect!
+        expect(inertia).to have_flash(alert: I18n.t("validations.schedule_unavailable"))
       end
 
       it "accepts a new address typed in without saving it, when the provider delivers to homes" do
@@ -1746,7 +1760,7 @@ RSpec.describe "Orders", type: :request do
         end
 
         it "keeps the confirmed order when the new one cannot be placed" do
-          confirmed.schedule.update!(available: false)
+          confirmed.schedule.update_columns(amount: 2)
 
           expect {
             patch order_path(confirmed), params: update_params(quantity: 3, notes: "Sin sal")
@@ -1766,6 +1780,7 @@ RSpec.describe "Orders", type: :request do
           end
 
           before do
+            confirmed.schedule.update_columns(amount: 20)
             confirmed.update_columns(selected_options: [ { group_id: group.id, name: "Salsa", values: [ "Filetto" ] } ])
           end
 
@@ -1925,90 +1940,6 @@ RSpec.describe "Orders", type: :request do
         expect(log.changeset).to include("notes" => [ "Nota previa", nil ])
         follow_redirect!
         expect(inertia).to have_flash(order_updated: true)
-      end
-
-      context "when managing provider notifications on order modifications" do
-        let!(:notification_config) do
-          Notification::Configuration.find_or_create_by!(key: "provider_orders") do |c|
-            c.roles = %w[provider]
-          end
-        end
-
-        it "updates active provider notification description and exposes it in Inertia props" do
-          order.notify_received
-          notification = Notification.find_by!(event: "order_received", notifiable: order)
-
-          expect {
-            patch order_path(order), params: update_params(quantity: 3)
-          }.not_to change { Notification.where(event: "order_received", notifiable: order).count }
-
-          expect(order.reload.amount).to eq(3)
-          expect(notification.reload.description).to include("pidió 3 de")
-
-          sign_in order.provider.user, role: :provider
-          get provider_dashboard_path
-          expect(response).to have_http_status(:ok)
-
-          received_notification = inertia.props[:notifications].find do |n|
-            (n["title"] || n[:title]) == I18n.t("notifications.order_received.title")
-          end
-
-          expect(received_notification).to be_present
-          expect(received_notification["description"] || received_notification[:description]).to include("pidió 3 de")
-        end
-
-        it "creates a new active provider notification when previous one was already closed" do
-          order.notify_received
-          original_notification = Notification.find_by!(event: "order_received", notifiable: order)
-          original_notification.close!
-
-          expect {
-            patch order_path(order), params: update_params(quantity: 4)
-          }.to change { Notification.where(event: "order_received", notifiable: order).count }.by(1)
-
-          new_notification = Notification.find_by!(event: "order_received", notifiable: order, closed_at: nil)
-          expect(new_notification.description).to include("pidió 4 de")
-          expect(original_notification.reload.closed_at).to be_present
-        end
-
-        it "does not update or duplicate provider notification when modifying non-quantity attributes" do
-          order.notify_received
-          notification = Notification.find_by!(event: "order_received", notifiable: order)
-          original_desc = notification.description
-          original_updated_at = notification.updated_at
-
-          patch order_path(order), params: update_params(quantity: order.amount, notes: "Sin pimienta", address: "18 de Julio 1006")
-
-          expect(notification.reload.description).to eq(original_desc)
-          expect(notification.updated_at).to eq(original_updated_at)
-          expect(Notification.where(event: "order_received", notifiable: order).count).to eq(1)
-        end
-
-        it "preserves notification untouched when parameter validation fails on interface bypass" do
-          order.notify_received
-          notification = Notification.find_by!(event: "order_received", notifiable: order)
-          original_desc = notification.description
-
-          [ "invalid", "-3", "0" ].each do |invalid_qty|
-            patch order_path(order), params: update_params(quantity: invalid_qty)
-            expect(order.reload.amount).to eq(1)
-            expect(notification.reload.description).to eq(original_desc)
-          end
-        end
-
-        it "preserves provider notification and DB integrity when schedule availability is exceeded" do
-          order.notify_received
-          notification = Notification.find_by!(event: "order_received", notifiable: order)
-          original_desc = notification.description
-
-          order.schedule.update!(available: false)
-
-          patch order_path(order), params: update_params(quantity: 10)
-
-          expect(order.reload.amount).to eq(1)
-          expect(notification.reload.description).to eq(original_desc)
-          expect(Notification.where(event: "order_received", notifiable: order, closed_at: nil).count).to eq(1)
-        end
       end
     end
   end

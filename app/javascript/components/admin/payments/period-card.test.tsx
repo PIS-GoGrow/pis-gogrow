@@ -19,7 +19,6 @@ function makePayment(overrides: Partial<Payment> = {}): Payment {
     id: 1,
     status: "submitted",
     rejection_reason: null,
-    expected_amount: null,
     created_at: "2026-10-01T12:00:00Z",
     receipt_url: "/admin/pagos/1/archivo",
     receipt_filename: "receipt.png",
@@ -39,7 +38,6 @@ function makeAccount(overrides: Partial<AdminAccount> = {}): AdminAccount {
     amount: 500,
     vat_amount: 0,
     payable_amount: 500,
-    outstanding_amount: 500,
     orders_amount_sum: 2,
     orders_price_sum: 500,
     collection_status: "pending",
@@ -61,15 +59,6 @@ function renderCard(account: AdminAccount, providerName?: string) {
 }
 
 describe("PeriodCard", () => {
-  it("highlights the provider name in history", () => {
-    renderCard(makeAccount(), "TuViandita")
-
-    expect(screen.getByText("TuViandita: Septiembre 2026")).toHaveClass(
-      "font-semibold",
-      "text-foreground",
-    )
-  })
-
   it("disables uploading another receipt while one is under review", () => {
     const account = makeAccount({
       collection_status: "submitted",
@@ -79,77 +68,40 @@ describe("PeriodCard", () => {
     renderCard(account)
 
     expect(
-      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
-    ).not.toBeInTheDocument()
+      screen.getByRole("button", { name: "Subir comprobante de pago" }),
+    ).toBeDisabled()
     expect(
       screen.getByText(/Ya hay un comprobante en revisión/),
     ).toBeInTheDocument()
   })
 
-  it("disables uploading a receipt while the provider has no payment details", () => {
-    render(
-      <Sheet>
-        <PeriodCard
-          account={makeAccount()}
-          paymentDetailsMissing
-          onOpenDetail={vi.fn()}
-        />
-      </Sheet>,
-    )
-
-    expect(
-      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
-    ).not.toBeInTheDocument()
-    expect(
-      screen.getByText(/cuando el proveedor cargue sus datos de cobro/),
-    ).toBeInTheDocument()
-  })
-
-  it("offers the receipt upload inline when there is no submitted receipt", () => {
+  it("enables the upload button when there is no submitted receipt", () => {
     const account = makeAccount({
       collection_status: "rejected",
       payments: [
         makePayment({
           status: "rejected",
           rejection_reason: "Comprobante ilegible",
-          expected_amount: null,
         }),
       ],
     })
 
     renderCard(account)
 
-    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
     expect(
       screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeDisabled()
+    ).toBeEnabled()
     expect(
       screen.queryByText(/Ya hay un comprobante en revisión/),
     ).not.toBeInTheDocument()
   })
 
-  it("shows the due date in the header without a pending badge", () => {
+  it("shows the due date in the header next to the status", () => {
     renderCard(makeAccount())
 
     const header = document.querySelector("[data-slot='card-header']")
     expect(header).toHaveTextContent("Vence: 10/10/26")
-    expect(
-      header?.querySelector("[data-status='pending']"),
-    ).not.toBeInTheDocument()
-  })
-
-  it("shows the status next to the due date once a receipt was sent", () => {
-    renderCard(
-      makeAccount({
-        collection_status: "submitted",
-        payments: [makePayment({ status: "submitted" })],
-      }),
-    )
-
-    const header = document.querySelector("[data-slot='card-header']")
-    expect(
-      header?.querySelector("[data-status='submitted']"),
-    ).toBeInTheDocument()
+    expect(header?.querySelector("[data-status='pending']")).toBeInTheDocument()
   })
 
   it("highlights overdue date when due_date_passed is true", () => {

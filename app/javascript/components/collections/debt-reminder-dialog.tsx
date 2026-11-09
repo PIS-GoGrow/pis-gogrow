@@ -1,5 +1,4 @@
 import { router } from "@inertiajs/react"
-import type { ReactNode } from "react"
 import { useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -28,10 +27,6 @@ interface DebtReminderDialogProps {
   // Solo el recordatorio del proveedor habla de un mes puntual.
   month?: string
   translationKey?: string
-  // Con el recordatorio bloqueado (en espera o sin envíos) el botón se ve
-  // deshabilitado en lugar de desaparecer.
-  showWhenBlocked?: boolean
-  icon?: ReactNode
 }
 
 export default function DebtReminderDialog({
@@ -41,8 +36,6 @@ export default function DebtReminderDialog({
   amount,
   month,
   translationKey = "pages.provider_collections.reminder",
-  showWhenBlocked = false,
-  icon,
 }: DebtReminderDialogProps) {
   const { t } = useTranslation()
   const { formatMoney } = useFormatters()
@@ -87,10 +80,9 @@ export default function DebtReminderDialog({
 
   return (
     <AdaptableDialog open={open} onOpenChange={handleOpenChange}>
-      {(eligible || showWhenBlocked) && (
+      {eligible && (
         <AdaptableDialogTrigger asChild>
-          <Button className="h-10 w-full rounded-[10px]" disabled={!eligible}>
-            {icon}
+          <Button className="h-10 w-full rounded-[10px]">
             {t(`${key}.trigger`)}
           </Button>
         </AdaptableDialogTrigger>
@@ -100,6 +92,11 @@ export default function DebtReminderDialog({
         showCloseButton={false}
         className="gap-0 rounded-t-3xl pb-[env(safe-area-inset-bottom)] md:gap-4 md:rounded-lg md:pb-6"
       >
+        <div
+          className="bg-muted-foreground/30 mx-auto mt-3 h-1 w-10 rounded-full md:hidden"
+          aria-hidden="true"
+        />
+
         <AdaptableDialogHeader className="items-start px-6 pt-8 text-left md:px-0 md:pt-0">
           <AdaptableDialogTitle className="text-base">
             {t(

@@ -17,7 +17,6 @@ import {
   providerDeliveries,
   providerOperationalSettings,
   providerOrders,
-  providerPaymentDetails,
   schedules,
 } from "@/routes"
 
@@ -59,8 +58,7 @@ export function ProviderMobileNav() {
       active:
         url.startsWith(providerAccount().url) ||
         url.startsWith(providerOperationalSettings.show().url) ||
-        url.startsWith(providerDeliveries.show().url) ||
-        url.startsWith(providerPaymentDetails.show().url),
+        url.startsWith(providerDeliveries.show().url),
     },
   ]
 

@@ -15,6 +15,7 @@ export const NO_AGENDA: Agenda = {
   date: null,
   starts_on: null,
   ends_on: null,
+  amount: null,
 }
 
 // Qué va a pasar con una fila cuando se importe:

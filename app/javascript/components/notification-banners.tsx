@@ -148,12 +148,10 @@ export default function NotificationBanners({
             >
               {typeof notification.description === "string"
                 ? notification.description
-                : typeof notification.description === "object" &&
-                    notification.description !== null
-                  ? (notification.description as Record<string, string>)
-                      .other ||
+                : typeof notification.description === "object" && notification.description !== null
+                  ? ((notification.description as Record<string, string>).other ||
                     (notification.description as Record<string, string>).one ||
-                    ""
+                    "")
                   : ""}
             </AlertDescription>
 

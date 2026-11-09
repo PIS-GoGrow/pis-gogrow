@@ -44,7 +44,6 @@ interface ConsumptionDetailDialogProps {
   providerId: number | null
   onProviderChange: (providerId: number) => void
   loading: boolean
-  mealsOnly?: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
 }
@@ -56,7 +55,6 @@ export default function ConsumptionDetailDialog({
   providerId,
   onProviderChange,
   loading,
-  mealsOnly = false,
   open,
   onOpenChange,
 }: ConsumptionDetailDialogProps) {
@@ -68,60 +66,6 @@ export default function ConsumptionDetailDialog({
   const provider =
     providers.find((option) => option.id === providerId) ?? providers[0]
 
-  const mealsList = provider && (
-    <ConsumptionDayList
-      days={provider.days}
-      mealsOf={(order: DetailOrder) => order.meals}
-      amountOf={(order: DetailOrder) => order.company_amount}
-      formatAmount={formatMoney}
-      emptyLabel={t(`${page}.empty`)}
-      openFirstDay={false}
-    >
-      {(orders) => (
-        <Table>
-          <TableHeader className="bg-muted/70">
-            <TableRow>
-              <TableHead>{t(`${page}.user`)}</TableHead>
-              <TableHead className="text-center">
-                {t(`${page}.quantity`)}
-              </TableHead>
-              <TableHead className="text-right">
-                {t(`${page}.employee`)}
-              </TableHead>
-              <TableHead className="text-right">
-                {t(`${page}.company`)}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {orders.map((order) => (
-              <TableRow key={order.id}>
-                <TableCell>
-                  <Avatar title={order.consumer_name}>
-                    {order.avatar_url && (
-                      <AvatarImage src={order.avatar_url} alt="" />
-                    )}
-                    <AvatarFallback className="text-xs font-semibold">
-                      {getInitials(order.consumer_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="sr-only">{order.consumer_name}</span>
-                </TableCell>
-                <TableCell className="text-center">{order.meals}</TableCell>
-                <TableCell className="text-right">
-                  {formatMoney(order.employee_amount)}
-                </TableCell>
-                <TableCell className="text-right">
-                  {formatMoney(order.company_amount)}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      )}
-    </ConsumptionDayList>
-  )
-
   return (
     <AdaptableDialog open={open} onOpenChange={onOpenChange}>
       <AdaptableDialogContent
@@ -131,7 +75,7 @@ export default function ConsumptionDetailDialog({
         <AdaptableDialogHeader className="p-0 text-left">
           <AdaptableDialogTitle>
             {provider && detail
-              ? t(mealsOnly ? `${page}.meals_title` : `${page}.title`, {
+              ? t(`${page}.title`, {
                   provider: provider.name,
                   month: detail.month,
                 })
@@ -182,64 +126,113 @@ export default function ConsumptionDetailDialog({
               </div>
             )}
 
-            {mealsOnly ? (
-              <div className="max-h-[60dvh] overflow-y-auto">{mealsList}</div>
-            ) : (
-              <Tabs defaultValue="payment" className="min-h-0 gap-4">
-                <TabsList className="w-full">
-                  <TabsTrigger value="payment">
-                    {t(`${page}.payment_tab`)}
-                  </TabsTrigger>
-                  <TabsTrigger value="meals">
-                    {t(`${page}.meals_tab`)}
-                  </TabsTrigger>
-                </TabsList>
+            <Tabs defaultValue="payment" className="min-h-0 gap-4">
+              <TabsList className="w-full">
+                <TabsTrigger value="payment">
+                  {t(`${page}.payment_tab`)}
+                </TabsTrigger>
+                <TabsTrigger value="meals">
+                  {t(`${page}.meals_tab`)}
+                </TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="payment">
-                  <dl className="grid gap-4 rounded-xl border p-4">
-                    <div className="grid gap-1">
-                      <dt className="text-muted-foreground text-sm">
-                        {t(`${page}.subtotal`)}
-                      </dt>
-                      <dd>
-                        {formatMoney(provider.subtotal)}{" "}
-                        <span className="text-muted-foreground">
-                          |{" "}
-                          {t("pages.admin.payments.index.meals", {
-                            count: provider.meals,
-                          })}
-                        </span>
-                      </dd>
-                    </div>
-                    <Separator />
-                    <div className="grid gap-1">
-                      <dt className="text-muted-foreground text-sm">
-                        {t(`${page}.vat`, { rate: provider.vat_rate })}
-                      </dt>
-                      <dd>{formatMoney(provider.vat_amount)}</dd>
-                    </div>
-                    <Separator />
-                    <div className="grid gap-1">
-                      <dt className="text-muted-foreground text-sm">
-                        {t(
-                          provider.paid
-                            ? `${page}.total_paid`
-                            : `${page}.total_due`,
-                        )}
-                      </dt>
-                      <dd>{formatMoney(provider.payable_amount)}</dd>
-                    </div>
-                  </dl>
-                </TabsContent>
+              <TabsContent value="payment">
+                <dl className="grid gap-4 rounded-xl border p-4">
+                  <div className="grid gap-1">
+                    <dt className="text-muted-foreground text-sm">
+                      {t(`${page}.subtotal`)}
+                    </dt>
+                    <dd>
+                      {formatMoney(provider.subtotal)}{" "}
+                      <span className="text-muted-foreground">
+                        |{" "}
+                        {t("pages.admin.payments.index.meals", {
+                          count: provider.meals,
+                        })}
+                      </span>
+                    </dd>
+                  </div>
+                  <Separator />
+                  <div className="grid gap-1">
+                    <dt className="text-muted-foreground text-sm">
+                      {t(`${page}.vat`, { rate: provider.vat_rate })}
+                    </dt>
+                    <dd>{formatMoney(provider.vat_amount)}</dd>
+                  </div>
+                  <Separator />
+                  <div className="grid gap-1">
+                    <dt className="text-muted-foreground text-sm">
+                      {t(
+                        provider.paid
+                          ? `${page}.total_paid`
+                          : `${page}.total_due`,
+                      )}
+                    </dt>
+                    <dd>{formatMoney(provider.payable_amount)}</dd>
+                  </div>
+                </dl>
+              </TabsContent>
 
-                <TabsContent
-                  value="meals"
-                  className="max-h-[50dvh] overflow-y-auto"
+              <TabsContent
+                value="meals"
+                className="max-h-[50dvh] overflow-y-auto"
+              >
+                <ConsumptionDayList
+                  days={provider.days}
+                  mealsOf={(order: DetailOrder) => order.meals}
+                  amountOf={(order: DetailOrder) => order.company_amount}
+                  formatAmount={formatMoney}
+                  emptyLabel={t(`${page}.empty`)}
                 >
-                  {mealsList}
-                </TabsContent>
-              </Tabs>
-            )}
+                  {(orders) => (
+                    <Table>
+                      <TableHeader className="bg-muted/70">
+                        <TableRow>
+                          <TableHead>{t(`${page}.user`)}</TableHead>
+                          <TableHead className="text-center">
+                            {t(`${page}.quantity`)}
+                          </TableHead>
+                          <TableHead className="text-right">
+                            {t(`${page}.employee`)}
+                          </TableHead>
+                          <TableHead className="text-right">
+                            {t(`${page}.company`)}
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.id}>
+                            <TableCell>
+                              <Avatar title={order.consumer_name}>
+                                {order.avatar_url && (
+                                  <AvatarImage src={order.avatar_url} alt="" />
+                                )}
+                                <AvatarFallback className="text-xs font-semibold">
+                                  {getInitials(order.consumer_name)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="sr-only">
+                                {order.consumer_name}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {order.meals}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatMoney(order.employee_amount)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatMoney(order.company_amount)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </ConsumptionDayList>
+              </TabsContent>
+            </Tabs>
           </>
         )}
 

@@ -170,7 +170,7 @@ RSpec.describe OrderReminders::Generate do
         described_class.call(date: empty_date, now: at(11, 0, empty_date))
       }.not_to change { reminders_for(consumer).count }
 
-      menus(:milanesa).schedules.create!(date: empty_date)
+      menus(:milanesa).schedules.create!(date: empty_date, amount: 5)
 
       expect {
         described_class.call(date: empty_date, now: at(11, 30, empty_date))

@@ -42,7 +42,7 @@ RSpec.describe "Ver el pedido cancelado en la lista operativa", type: :system do
     visit_hydrated provider_orders_path
     click_button day_label(future_day)
 
-    within(provider_order_card(order)) do
+    within("[data-slot='card']", text: "PED-#{order.id}") do
       expect(page).to have_content("Milanesa con papas fritas")
       expect(page).to have_content("Cancelado")
     end
@@ -59,7 +59,7 @@ RSpec.describe "Ver el pedido cancelado en la lista operativa", type: :system do
     visit_hydrated provider_orders_path
     click_button day_label(future_day)
 
-    within(provider_order_card(order)) do
+    within("[data-slot='card']", text: "PED-#{order.id}") do
       expect(page).to have_content("Cancelado")
       expect(page).to have_no_content("Confirmado")
     end

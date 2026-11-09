@@ -10,43 +10,23 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
     {
       provider: {
         bank_name: "BROU",
-        bank_account_details: "Cuenta: 001234567-00001\nMoneda: UYU",
-        beneficiary: "Tu Vianda SRL"
+        bank_account_type: "savings",
+        bank_account_number: "001234567-00001",
+        bank_account_holder: "Tu Vianda SRL",
+        tax_id: "21 234567 0012"
       }
     }
   end
 
   describe "GET /provider/datos-de-cobro" do
     it "muestra los datos de cobro del proveedor" do
-      provider.update!(
-        bank_name: "Itaú",
-        bank_account_details: "Cuenta: 123456\nMoneda: UYU",
-        beneficiary: "Tu Vianda SRL"
-      )
+      provider.update!(bank_name: "Itaú", bank_account_type: :checking)
       sign_in provider.user, role: :provider
 
       get provider_payment_details_path
 
       expect(inertia).to render_component("provider/payment_details/show")
-      expect(inertia).to(have_props do |props|
-        props.dig("provider", "bank_name") == "Itaú" &&
-          props.dig("provider", "bank_account_details") == "Cuenta: 123456\nMoneda: UYU" &&
-          props.dig("provider", "beneficiary") == "Tu Vianda SRL" &&
-          props["bank_names"].include?("Santander") &&
-          props["bank_names"].include?("Itaú") &&
-          props["editing"] == false
-      end)
-    end
-
-    it "muestra el formulario si no hay datos y permite abrirlo para editar" do
-      sign_in provider.user, role: :provider
-
-      get provider_payment_details_path
-      expect(inertia).to have_props(editing: true)
-
-      provider.update!(bank_name: "BROU", bank_account_details: "Cuenta 123", beneficiary: "Tu Vianda SRL")
-      get provider_payment_details_path(edit: true)
-      expect(inertia).to have_props(editing: true)
+      expect(inertia).to have_props { |props| props["provider"]["bank_name"] == "Itaú" && props["provider"]["bank_account_type"] == "checking" }
     end
 
     it "no deja entrar a un empleado" do
@@ -81,12 +61,8 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
       expect(response).to redirect_to(provider_payment_details_path)
       follow_redirect!
       expect(inertia).to have_flash(notice: "Datos de cobro actualizados")
-      expect(inertia).to have_props(editing: false)
-      expect(provider.reload).to have_attributes(
-        bank_name: "BROU",
-        bank_account_details: "Cuenta: 001234567-00001\nMoneda: UYU",
-        beneficiary: "Tu Vianda SRL"
-      )
+      expect(inertia).to have_props { |props| props["provider"]["tax_id"] == "212345670012" }
+      expect(provider.reload).to have_attributes(bank_name: "BROU", bank_account_type: "savings", bank_account_holder: "Tu Vianda SRL")
     end
 
     it "marca payment_details_configured_at al guardar los datos correctamente" do
@@ -112,7 +88,7 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
       log = provider.audit_logs.sole
       expect(log.user).to eq(provider.user)
       expect(log.changeset["bank_name"]).to eq([ nil, "BROU" ])
-      expect(log.changeset["bank_account_details"]).to eq([ nil, "Cuenta: 001234567-00001\nMoneda: UYU" ])
+      expect(log.changeset["tax_id"]).to eq([ nil, "212345670012" ])
     end
 
     it "no modifica otro proveedor" do
@@ -121,37 +97,43 @@ RSpec.describe "Provider::PaymentDetails", type: :request do
       expect(providers(:endulzate).reload.bank_name).to be_nil
     end
 
-    it "exige los tres datos y mantiene el modo edición si faltan campos obligatorios" do
+    it "exige todos los datos y no marca el timestamp si faltan campos obligatorios" do
       provider.update_column(:payment_details_configured_at, nil)
 
       patch provider_payment_details_path, params: { provider: { bank_name: "BROU" } }
 
-      expect(response).to redirect_to(provider_payment_details_path(edit: true))
+      expect(response).to redirect_to(provider_payment_details_path)
       expect(provider.reload.payment_details_configured_at).to be_nil
       follow_redirect!
-      expect(inertia).to(have_props do |props|
-        props["editing"] == true &&
-          props["errors"].keys.include?("bank_account_details") &&
-          props["errors"].keys.include?("beneficiary")
-      end)
+      expect(inertia.props[:errors].keys).to include("bank_account_type", "bank_account_number", "bank_account_holder", "tax_id")
       expect(provider.reload.bank_name).to be_nil
       expect(provider.audit_logs).to be_empty
     end
 
-    it "admite texto libre y múltiples líneas en los datos de la cuenta" do
-      details = "Transferencias desde otros bancos\nCuenta: UY00 0000 1150 260\nSucursal: 70 - Golf"
+    it "rechaza un RUT o CI con una cantidad de dígitos inválida sin marcar timestamp" do
+      provider.update_column(:payment_details_configured_at, nil)
 
-      patch provider_payment_details_path, params: valid_params.deep_merge(provider: { bank_account_details: details })
+      patch provider_payment_details_path, params: valid_params.deep_merge(provider: { tax_id: "12345" })
 
-      expect(provider.reload.bank_account_details).to eq(details)
+      expect(response).to redirect_to(provider_payment_details_path)
+      expect(provider.reload.payment_details_configured_at).to be_nil
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("tax_id" => [ "no es válido" ])
     end
 
-    it "conserva los datos antiguos que ya no forman parte del formulario" do
-      provider.update_columns(tax_id: "212345670012")
+    it "rechaza un tipo de cuenta que no existe sin dar error de servidor" do
+      patch provider_payment_details_path, params: valid_params.deep_merge(provider: { bank_account_type: "crypto" })
 
-      patch provider_payment_details_path, params: valid_params
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("bank_account_type")
+      expect(provider.reload.bank_account_type).to be_nil
+    end
 
-      expect(provider.reload).to have_attributes(tax_id: "212345670012")
+    it "rechaza un número de cuenta con letras" do
+      patch provider_payment_details_path, params: valid_params.deep_merge(provider: { bank_account_number: "ABC123" })
+
+      follow_redirect!
+      expect(inertia.props[:errors]).to include("bank_account_number")
     end
   end
 

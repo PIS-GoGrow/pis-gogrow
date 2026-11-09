@@ -36,7 +36,7 @@ RSpec.describe "Aplicar y desaplicar un cupón al pedir", type: :system do
     benefit_configurations(:gift2, :seniority).each(&:destroy)
     benefits(:monthly).update!(percentage: 50, amount: 20,
                                due_date: Date.current.end_of_month, status: :current)
-    Schedule.create!(menu:, date: Date.current)
+    Schedule.create!(menu:, date: Date.current, amount: 10)
   end
 
   def assign_coupon(amount: 2)

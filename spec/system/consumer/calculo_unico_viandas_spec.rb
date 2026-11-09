@@ -22,8 +22,8 @@ RSpec.describe "Cálculo único de viandas del cupo mensual", type: :system do
   end
 
   it "unifies monthly benefit counts across Inicio, Pagos, Cuenta and RRHH detail" do
-    schedule1 = Schedule.create!(menu: menu1, date: Date.current)
-    schedule2 = Schedule.create!(menu: menu2, date: Date.current)
+    schedule1 = Schedule.create!(menu: menu1, date: Date.current, amount: 20)
+    schedule2 = Schedule.create!(menu: menu2, date: Date.current, amount: 20)
 
     # Pedido 1 con Proveedor 1: 2 viandas confirmadas con beneficio mensual
     Order.create!(

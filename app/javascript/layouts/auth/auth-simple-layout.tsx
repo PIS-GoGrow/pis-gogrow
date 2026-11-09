@@ -12,9 +12,7 @@ interface AuthLayoutProps {
   description?: ReactNode
   backHref?: string
   hideLogo?: boolean
-  variant?: "welcome" | "form" | "landing"
-  fullHeight?: boolean
-  actions?: ReactNode
+  variant?: "welcome" | "form"
 }
 
 export default function AuthSimpleLayout({
@@ -24,45 +22,30 @@ export default function AuthSimpleLayout({
   backHref,
   hideLogo,
   variant = "welcome",
-  fullHeight,
-  actions,
 }: PropsWithChildren<AuthLayoutProps>) {
   const isForm = variant === "form"
-  const isLanding = variant === "landing"
-  const isFullHeight = fullHeight ?? isForm
   const shouldHideLogo = hideLogo ?? isForm
 
   return (
     <div
       className={cn(
-        "bg-background flex min-h-svh flex-col items-center p-6 md:p-10",
-        !isLanding && "justify-center",
-        isLanding && "md:justify-center",
-        isFullHeight && "justify-start py-8 md:py-10",
+        "bg-background flex min-h-svh flex-col items-center justify-center p-6 md:p-10",
+        isForm && "justify-start py-8 md:py-10",
       )}
     >
       <div
         className={cn(
           "w-full max-w-[354px]",
-          (isFullHeight || isLanding) &&
-            "flex flex-1 flex-col justify-between md:min-h-0 md:flex-none",
+          isForm && "flex flex-1 flex-col justify-between",
         )}
       >
         <div
           className={cn(
             "flex flex-col gap-6",
-            isFullHeight && "flex flex-1 flex-col justify-between",
-            isLanding &&
-              "flex flex-1 flex-col justify-between md:flex-none md:justify-center md:gap-6",
+            isForm && "flex flex-1 flex-col justify-between",
           )}
         >
-          <div
-            className={cn(
-              "flex flex-col gap-6",
-              isLanding &&
-                "flex-1 justify-center md:flex-none md:justify-start",
-            )}
-          >
+          <div className="flex flex-col gap-6">
             {backHref && (
               <div>
                 <Link
@@ -125,11 +108,9 @@ export default function AuthSimpleLayout({
                 </div>
               </div>
             </div>
-
-            {actions && children}
           </div>
 
-          {actions ?? children}
+          {children}
         </div>
       </div>
     </div>

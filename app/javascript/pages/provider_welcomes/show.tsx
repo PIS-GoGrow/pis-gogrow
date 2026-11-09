@@ -20,20 +20,14 @@ export default function ProviderWelcome({
         username,
         company_name,
       })}
-      variant="landing"
-      actions={
-        <Button
-          asChild
-          size="lg"
-          className="h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 dark:bg-white dark:text-black dark:hover:bg-white/90"
-        >
-          <a href={invitation_path}>{t("pages.provider_welcomes.show.join")}</a>
-        </Button>
-      }
     >
       <Head title={t("pages.provider_welcomes.show.title")} />
 
       <FeatureCarousel />
+
+      <Button asChild size="lg" className="w-full">
+        <a href={invitation_path}>{t("pages.provider_welcomes.show.join")}</a>
+      </Button>
     </AuthLayout>
   )
 }

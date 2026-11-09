@@ -43,6 +43,10 @@ class MonthlyBenefit < BenefitRule
     max_price
   end
 
+  def benefit_max_price
+    max_price
+  end
+
   private
 
   def unique_effective_from_per_company

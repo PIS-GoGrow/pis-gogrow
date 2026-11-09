@@ -28,7 +28,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import {
-  adminAccounts,
   adminBenefitConfigurations,
   adminBenefitUsage,
   adminInvoices,
@@ -81,9 +80,7 @@ export function AppSidebar() {
         href: adminBenefitUsage.analysis().url,
         icon: ChartNoAxesCombined,
       },
-      ...adminPrimaryNavItems
-        .slice(1)
-        .filter((item) => item.href !== adminAccounts.show().url),
+      ...adminPrimaryNavItems.slice(1),
       {
         title: t("nav.benefit_configurations"),
         href: adminBenefitConfigurations.index().url,

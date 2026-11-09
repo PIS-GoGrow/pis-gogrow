@@ -40,12 +40,9 @@ tu_viandita = Provider.create!(
   home_delivery: true,
   user: tu_viandita_user,
   bank_name: "Santander",
-  bank_account_details: <<~DETAILS.strip,
-    Transferencias desde Santander
-    Cuenta: 1150260
-    Moneda: UYU
-  DETAILS
-  beneficiary: "Tu Viandita S.A."
+  bank_account_type: :checking,
+  bank_account_number: "1150260",
+  bank_account_holder: "Tu Viandita S.A."
 )
 
 endulzate_user = User.create!(
@@ -59,12 +56,10 @@ endulzate = Provider.create!(
   order_deadline: Time.current + 3.hours,
   home_delivery: false,
   user: endulzate_user,
-  bank_name: "Itaú",
-  bank_account_details: <<~DETAILS.strip,
-    Cuenta: 1951234
-    Moneda: UYU
-  DETAILS
-  beneficiary: "Noelia Patricia Pinheiro"
+  bank_name: "Banco Itaú",
+  bank_account_type: :savings,
+  bank_account_number: "1951234",
+  bank_account_holder: "Noelia Patricia Pinheiro"
 )
 
 menus = [
@@ -181,18 +176,8 @@ admin_user = User.create!(
 )
 admin = Admin.create!(user: admin_user, company:)
 
-benefit_config = BenefitConfiguration.new_base_subsidy(
-  company:,
-  created_by: admin_user,
-  subsidy_percentage: 50,
-  effective_from: Date.current,
-  max_price: 500,
-  limit: 20
-)
-benefit_config.save!
-benefit_config.apply_to_all_consumers
-
-benefit = consumer.reload.current_monthly_benefit
+benefit_config = BenefitConfiguration.create! subsidy_percentage: 50, name: "Subsidio base", company:, created_by: admin_user
+benefit_config.benefit_rules.create! max_price: 500, limit: 20, effective_from: Date.current, type: MonthlyBenefit.name
 
 consumer.saved_addresses.create!(
   name: "Casa",
@@ -208,6 +193,16 @@ consumer.saved_addresses.create!(
   name: "La Bicicleta Café",
   street: "Bv. España 2643",
   apartment: "Local 2"
+)
+
+
+benefit = Benefit.create!(
+  consumer:,
+  amount: 20,
+  description: "Viandas mensuales",
+  percentage: 50,
+  benefit_configuration: benefit_config,
+  due_date: Date.current.end_of_month
 )
 
 # Cubren las dos secciones de "Mis pedidos": pendientes/próximos e historial,
@@ -245,24 +240,22 @@ end
 # Una orden confirmada por proveedor genera las cuentas que aparecen en Pagos
 # pendientes. El Payment se crea recién cuando el empleado sube el comprobante.
 [ tu_viandita, endulzate ].each do |provider|
-  menu = provider.menus.first
-  next unless menu
-
-  schedule = Schedule.find_or_create_by!(
-    menu:,
-    date: Date.current.beginning_of_month + 3.days
-  )
+  schedule = Schedule.joins(:menu)
+                     .where(menus: { provider_id: provider.id })
+                     .order(date: :desc)
+                     .first
+  next unless schedule
 
   order = Order.create!(
     consumer:,
     schedule:,
     status: :confirmed,
-    price: menu.price,
-    discounted_price: menu.price / 2,
+    price: schedule.menu.price,
+    discounted_price: schedule.menu.price / 2,
     amount: 1,
     address: company.address,
     delivery_method: :office,
-    selected_options: default_selection_for(menu)
+    selected_options: default_selection_for(schedule.menu)
   )
   order.apply_benefit! benefit, 1
 end

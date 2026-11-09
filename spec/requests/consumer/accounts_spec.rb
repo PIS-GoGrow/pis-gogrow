@@ -103,8 +103,8 @@ RSpec.describe "Consumer Accounts", type: :request do
       it "includes provider bank details in props[:providers] when configured" do
         provider.update!(
           bank_name: "Banco Itaú",
-          bank_account_details: "1951234",
-          beneficiary: "Tu Vianda SRL"
+          bank_account_number: "1951234",
+          bank_account_holder: "Tu Vianda SRL"
         )
 
         get accounts_path
@@ -114,8 +114,8 @@ RSpec.describe "Consumer Accounts", type: :request do
           p = props.deep_symbolize_keys
           serialized = p[:providers].find { |pr| pr[:id] == provider.id }
           serialized[:bank_name] == "Banco Itaú" &&
-            serialized[:bank_account_details] == "1951234" &&
-            serialized[:beneficiary] == "Tu Vianda SRL" &&
+            serialized[:bank_account_number] == "1951234" &&
+            serialized[:bank_account_holder] == "Tu Vianda SRL" &&
             serialized[:name] == provider.user.name &&
             serialized[:home_delivery] == true
         }
@@ -129,94 +129,25 @@ RSpec.describe "Consumer Accounts", type: :request do
           p = props.deep_symbolize_keys
           serialized = p[:providers].find { |pr| pr[:id] == other_provider.id }
           serialized[:bank_name].nil? &&
-            serialized[:bank_account_details].nil? &&
-            serialized[:beneficiary].nil?
+            serialized[:bank_account_number].nil? &&
+            serialized[:bank_account_holder].nil?
         }
       end
 
-      it "strictly excludes tax_id (RUT) and user_id from props[:providers]" do
+      it "strictly excludes tax_id (RUT), bank_account_type, and user_id from props[:providers]" do
         provider.update!(
           tax_id: "219999990019",
+          bank_account_type: 1,
           bank_name: "Banco República",
-          bank_account_details: "001-987654",
-          beneficiary: "Viandas SRL"
+          bank_account_number: "001-987654",
+          bank_account_holder: "Viandas SRL"
         )
 
         get accounts_path
 
         expect(response).to have_http_status(:ok)
         all_keys = inertia.props[:providers].flat_map { |p| p.keys.map(&:to_s) }
-        expect(all_keys).not_to include("tax_id", "user_id", "order_deadline")
-      end
-
-      it "sends the delivered orders of the current month as the consumption detail" do
-        get accounts_path
-
-        expect(inertia).to have_props { |props|
-          detail = props.deep_symbolize_keys[:current_month_detail]
-          detail[:month] == I18n.l(Date.current, format: :month_year) &&
-            detail[:amount].to_d == BigDecimal("150.25") &&
-            detail[:orders].map { |order| order[:id] } == [ orders(:history_confirmed_past).id ]
-        }
-      end
-
-      it "sends the number of meals behind the pending accounts" do
-        get accounts_path
-
-        # La vianda del pedido confirmado y ya entregado de TuViandita; el de 2
-        # se entrega en tres días, y la cuenta de Endulzate no tiene pedidos.
-        expect(inertia).to have_props(total_meals: 1)
-      end
-
-      it "leaves out the orders of other employees and the ones that are not confirmed" do
-        get accounts_path
-
-        expect(inertia).to have_props { |props|
-          ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |order| order[:id] }
-          ids.exclude?(orders(:other_consumer_upcoming).id) && ids.exclude?(orders(:upcoming_pending_future).id)
-        }
-      end
-
-      it "does not include future confirmed orders in debt and meals until their delivery date" do
-        future_order = orders(:upcoming_confirmed_future)
-        past_order = orders(:history_confirmed_past)
-
-        get accounts_path
-
-        expect(inertia).to have_props(total_meals: 1, current_month_debt: "150.25")
-        expect(inertia).to have_props { |props|
-          order_ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |o| o[:id] }
-          expect(order_ids).to include(past_order.id)
-          expect(order_ids).not_to include(future_order.id)
-          true
-        }
-
-        travel_to future_order.delivery_date
-        DeliveredOrdersSyncJob.perform_now(date: future_order.delivery_date)
-
-        get accounts_path
-
-        expect(inertia).to have_props(total_meals: 3, current_month_debt: "450.75")
-        expect(inertia).to have_props { |props|
-          order_ids = props.deep_symbolize_keys[:current_month_detail][:orders].map { |o| o[:id] }
-          expect(order_ids).to contain_exactly(past_order.id, future_order.id)
-          true
-        }
-      end
-
-      it "serializes outstanding_amount for pending accounts and matches total_debt" do
-        account = accounts(:one_tuviandita_current)
-        account.update!(amount: 290.25)
-
-        get accounts_path
-
-        expect(response).to have_http_status(:ok)
-        expect(inertia).to have_props { |props|
-          p = props.deep_symbolize_keys
-          target = p[:accounts].find { |a| a[:id] == account.id }
-          target[:outstanding_amount] == 290.25 &&
-            p[:total_debt].to_d >= 290.25.to_d
-        }
+        expect(all_keys).not_to include("tax_id", "bank_account_type", "user_id", "order_deadline")
       end
     end
 
@@ -262,8 +193,8 @@ RSpec.describe "Consumer Accounts", type: :request do
       it "safely serializes bank fields containing special characters and symbols" do
         provider.update!(
           bank_name: "Banco Santander - Sucursal 01 / Cta Cte",
-          bank_account_details: "0012-345678/90 (CA$)",
-          beneficiary: "María & José S.A. — Gastronomía"
+          bank_account_number: "0012-345678/90 (CA$)",
+          bank_account_holder: "María & José S.A. — Gastronomía"
         )
 
         get accounts_path
@@ -273,16 +204,16 @@ RSpec.describe "Consumer Accounts", type: :request do
           p = props.deep_symbolize_keys
           serialized = p[:providers].find { |pr| pr[:id] == provider.id }
           serialized[:bank_name] == "Banco Santander - Sucursal 01 / Cta Cte" &&
-            serialized[:bank_account_details] == "0012-345678/90 (CA$)" &&
-            serialized[:beneficiary] == "María & José S.A. — Gastronomía"
+            serialized[:bank_account_number] == "0012-345678/90 (CA$)" &&
+            serialized[:bank_account_holder] == "María & José S.A. — Gastronomía"
         }
       end
 
       it "safely serializes partial bank details where only bank_name is provided" do
         provider.update!(
           bank_name: "BROU",
-          bank_account_details: nil,
-          beneficiary: nil
+          bank_account_number: nil,
+          bank_account_holder: nil
         )
 
         get accounts_path
@@ -292,8 +223,8 @@ RSpec.describe "Consumer Accounts", type: :request do
           p = props.deep_symbolize_keys
           serialized = p[:providers].find { |pr| pr[:id] == provider.id }
           serialized[:bank_name] == "BROU" &&
-            serialized[:bank_account_details].nil? &&
-            serialized[:beneficiary].nil?
+            serialized[:bank_account_number].nil? &&
+            serialized[:bank_account_holder].nil?
         }
       end
     end
@@ -357,7 +288,6 @@ RSpec.describe "Consumer Accounts", type: :request do
         expect(inertia).to have_props { |props|
           p = props.deep_symbolize_keys
           p[:total_debt].to_d.zero? &&
-            p[:total_meals] == 0 &&
             p[:current_month_debt].to_d.zero? &&
             p[:benefit_used] == 0 &&
             p[:accounts].empty?

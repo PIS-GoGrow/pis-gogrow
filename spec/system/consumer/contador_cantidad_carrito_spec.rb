@@ -19,7 +19,8 @@ RSpec.describe "Contador de cantidad y botón quitar en el carrito del consumido
     Order.delete_all
     Schedule.delete_all
 
-    Schedule.create!(menu: milanesa, date: monday)
+    # Stock limitado a 3 unidades para probar tope de stock
+    Schedule.create!(menu: milanesa, date: monday, amount: 3)
 
     page.current_window.resize_to(1400, 1400)
     sign_in users(:one), role: :consumer
@@ -38,7 +39,7 @@ RSpec.describe "Contador de cantidad y botón quitar en el carrito del consumido
     expect(page).to have_content("Tu carrito")
   end
 
-  it "permite aumentar la cantidad y genera el pedido con la cantidad editada" do
+  it "permite aumentar la cantidad, respeta el stock máximo y genera el pedido con la cantidad editada" do
     add_milanesa_to_cart
 
     # Cantidad inicial 1: el botón '-' se muestra como tacho con label 'Quitar <nombre>'
@@ -51,13 +52,15 @@ RSpec.describe "Contador de cantidad y botón quitar en el carrito del consumido
     expect(page).to have_button("Quitar una unidad de Milanesa con papas fritas")
     expect(page).to have_no_button("Quitar Milanesa con papas fritas")
 
-    # Aumentar a 3
+    # Aumentar a 3 (máximo de stock disponible): el botón '+' queda deshabilitado
     click_button "Agregar una unidad de Milanesa con papas fritas"
     expect(page).to have_content("Milanesa con papas fritas x3")
+    expect(page).to have_button("Agregar una unidad de Milanesa con papas fritas", disabled: true)
 
     # Reducir a 2 y confirmar el pedido
     click_button "Quitar una unidad de Milanesa con papas fritas"
     expect(page).to have_content("Milanesa con papas fritas x2")
+    expect(page).to have_button("Agregar una unidad de Milanesa con papas fritas", disabled: false)
 
     click_button "Confirmar pedido"
     expect(page).to have_content("¡Pedido recibido!")

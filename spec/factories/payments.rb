@@ -12,7 +12,6 @@ end
 # Table name: payments
 #
 #  id               :bigint           not null, primary key
-#  expected_amount  :decimal(10, 2)
 #  rejection_reason :text
 #  status           :integer          default(0), not null
 #  created_at       :datetime         not null

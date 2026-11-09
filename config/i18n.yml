@@ -8,7 +8,6 @@ translations:
       - "!*.flash.*"
       - "!*.validations.*"
       - "!*.user_mailer.*"
-      - "!*.exports.*"
       - "!*.helpers.*"
       - "!*.errors.*"
       - "!*.number.*"

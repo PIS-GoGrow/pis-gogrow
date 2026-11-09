@@ -230,11 +230,11 @@ export default function Index({
           <SheetContent
             side="bottom"
             showCloseButton={false}
-            className="max-h-[90dvh] overflow-y-auto rounded-t-2xl p-5"
-            onOpenAutoFocus={(event) => event.preventDefault()}
+            className="max-h-[90dvh] overflow-y-auto rounded-t-2xl p-6"
           >
+            <div className="bg-muted mx-auto mb-4 h-1.5 w-12 rounded-full" />
             <SheetHeader className="p-0 text-left">
-              <SheetTitle className="text-foreground text-base leading-6 font-semibold">
+              <SheetTitle className="text-foreground text-xl font-bold">
                 {t("pages.admin.benefit_configurations.index.current.title")}
               </SheetTitle>
             </SheetHeader>

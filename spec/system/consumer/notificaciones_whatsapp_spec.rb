@@ -30,7 +30,7 @@ RSpec.describe "Activar y desactivar notificaciones por WhatsApp", type: :system
 
   it "muestra la sección con un interruptor por grupo configurable, apagado al principio" do
     sign_in employee, role: :consumer
-    visit profile_path
+    visit settings_profile_path
     click_link "Notificaciones"
 
     expect(page).to have_content("Configurá qué alertas querés recibir por WhatsApp")

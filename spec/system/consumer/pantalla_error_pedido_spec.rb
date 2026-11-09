@@ -18,7 +18,7 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
     Order.delete_all
     Schedule.delete_all
 
-    Schedule.create!(menu: menus(:milanesa), date: monday)
+    Schedule.create!(menu: menus(:milanesa), date: monday, amount: 10)
 
     sign_in users(:one), role: :consumer
     visit_hydrated dashboard_path
@@ -41,16 +41,11 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
     expect(page).to have_content("Tu carrito")
   end
 
-  def cart_storage_key
-    session = users(:one).sessions.order(:id).last
-    "consumer-cart:#{session.role}:#{session.id}"
-  end
-
   def expect_buttons_within_container_and_balanced
     bounds = page.evaluate_script(<<~JS)
       (() => {
-        const retryBtn = Array.from(document.querySelectorAll("a, button")).find(b => b.textContent.trim() === "Reintentar");
-        const menuBtn = Array.from(document.querySelectorAll("a, button")).find(b => b.textContent.trim() === "Volver al menú");
+        const retryBtn = Array.from(document.querySelectorAll("button")).find(b => b.textContent.trim() === "Reintentar");
+        const menuBtn = Array.from(document.querySelectorAll("a, button")).find(b => b.textContent.trim() === "Volver a Menú");
         if (!retryBtn || !menuBtn) return null;
 
         const container = retryBtn.parentElement;
@@ -99,11 +94,10 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
 
       # Reproducción exacta del PR: cambiar id en sessionStorage a uno inexistente
       page.execute_script(<<~JS)
-        const key = #{cart_storage_key.inspect};
-        const cart = JSON.parse(sessionStorage.getItem(key) || "[]");
+        const cart = JSON.parse(sessionStorage.getItem("cart") || "[]");
         if (cart.length > 0) {
           cart[0].id = 999999;
-          sessionStorage.setItem(key, JSON.stringify(cart));
+          sessionStorage.setItem("cart", JSON.stringify(cart));
         }
       JS
       page.refresh
@@ -121,7 +115,7 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
       expect_buttons_within_container_and_balanced
 
       # Acción Reintentar: vuelve a la vista del carrito
-      click_link "Reintentar"
+      click_button "Reintentar"
       expect(page).to have_content("Tu carrito")
     end
 
@@ -132,17 +126,17 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
       open_cart
 
       # En el backend el stock se agota concurrentemente
-      Schedule.update_all(available: false)
+      Schedule.update_all(amount: 0)
 
       click_button "Confirmar pedido"
 
       expect(page).to have_content("No se pudo procesar el pedido")
-      expect(page).to have_content(I18n.t("validations.schedule_unavailable"))
+      expect(page).to have_content(I18n.t("validations.insufficient_stock"))
 
       expect_buttons_within_container_and_balanced
 
       # Acción Volver a Menú: navega al dashboard de consumidor
-      click_link "Volver al menú"
+      click_link "Volver a Menú"
       expect(page).to have_current_path(dashboard_path)
       expect(page).to have_content("Menú semanal")
     end

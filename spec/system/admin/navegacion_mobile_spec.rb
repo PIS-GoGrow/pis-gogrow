@@ -84,24 +84,6 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
         expect(page).to have_no_css("[aria-current='page']", text: "Pagos")
       end
     end
-
-    it "permite acceder a Facturas desde Cuenta y mantiene Cuenta activa en la barra inferior" do
-      within(mobile_nav) { click_on "Cuenta" }
-
-      expect(page).to have_current_path(admin_account_path)
-      expect(page).to have_content("Facturas")
-      expect(page).to have_content("Consultá las facturas de los proveedores")
-
-      click_link "Facturas"
-
-      expect(page).to have_current_path(admin_invoices_path)
-      within(mobile_nav) do
-        expect(page).to have_css("a[aria-current='page']", text: "Cuenta")
-        expect(page).to have_no_css("a[aria-current='page']", text: "Inicio")
-        expect(page).to have_no_css("a[aria-current='page']", text: "Empleados")
-        expect(page).to have_no_css("a[aria-current='page']", text: "Pagos")
-      end
-    end
   end
 
   describe "vista de escritorio (1400x1400)" do
@@ -119,16 +101,7 @@ RSpec.describe "Navegación móvil del administrador", type: :system do
         expect(page).to have_link("Inicio")
         expect(page).to have_link("Empleados")
         expect(page).to have_link("Subsidios")
-        expect(page).to have_link("Facturas", href: admin_invoices_path)
-        expect(page).to have_no_link("Cuenta")
       end
-    end
-
-    it "permite acceder a Cuenta desde el menú de usuario en escritorio" do
-      find("[data-sidebar='menu-button']", text: admin_user.name).click
-      find("[role='menuitem']", text: "Configuración").click
-
-      expect(page).to have_current_path(admin_account_path)
     end
   end
 

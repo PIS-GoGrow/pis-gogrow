@@ -10,7 +10,7 @@ class Settings::EmailsController < InertiaController
     if @user.update(user_params)
       redirect_to_success
     else
-      redirect_back fallback_location: settings_email_path, inertia: { errors: @user.errors }
+      redirect_to settings_email_path, inertia: { errors: @user.errors }
     end
   end
 
@@ -27,9 +27,9 @@ class Settings::EmailsController < InertiaController
   def redirect_to_success
     if @user.email_previously_changed?
       resend_email_verification
-      redirect_back fallback_location: settings_email_path, notice: t("flash.email_changed")
+      redirect_to settings_email_path, notice: t("flash.email_changed")
     else
-      redirect_back fallback_location: settings_email_path
+      redirect_to settings_email_path
     end
   end
 

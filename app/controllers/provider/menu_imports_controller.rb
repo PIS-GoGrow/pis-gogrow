@@ -55,7 +55,7 @@ class Provider::MenuImportsController < Provider::InertiaController
     params
       .permit(entries: [
         :key, :action, :menu_id, :name, :description, :price, :confirmed_orders,
-        { agenda: [ :mode, :date, :starts_on, :ends_on, { weekdays: [] } ] },
+        { agenda: [ :mode, :date, :starts_on, :ends_on, :amount, { weekdays: [] } ] },
         { option_groups: [ :name, :limit, :required, { options: [] } ] }
       ])
       .fetch(:entries, [])

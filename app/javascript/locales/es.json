@@ -107,7 +107,6 @@
       "confirm_password": "Confirmar contraseña",
       "consumer": "Consumidor",
       "current_password": "Contraseña actual",
-      "email": "Email",
       "email_address": "Correo electrónico",
       "email_placeholder": "correo@ejemplo.com",
       "full_name": "Nombre completo",
@@ -163,16 +162,6 @@
       },
       "month_select": {
         "this_month": "Este mes"
-      },
-      "network_status": {
-        "offline": {
-          "description": "No pudimos cargar la página. Revisá tu conexión y volvé a intentar.",
-          "title": "Sin conexión a internet"
-        },
-        "online": {
-          "description": "Ya podés seguir navegando.",
-          "title": "Volvió la conexión"
-        }
       },
       "password_fields": {
         "confirm_label": "Confirmar contraseña",
@@ -233,8 +222,8 @@
     },
     "notification_configurations": {
       "automatic_payment_reminders": {
-        "description": "Avisos sobre la apertura y el vencimiento próximo de tus pagos.",
-        "title": "Recordatorios de pago"
+        "description": "Avisos sobre la apertura y el vencimiento próximo de pagos.",
+        "title": "Recordatorios automáticos de pago"
       },
       "company_payments": {
         "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
@@ -293,8 +282,8 @@
         "title": "Actualizaciones de pedidos"
       },
       "provider_orders": {
-        "description": "Recibí una notificación cada vez que un cliente haga un pedido nuevo.",
-        "title": "Nuevos pedidos"
+        "description": "Recibí una notificación cuando un empleado te haga un pedido.",
+        "title": "Pedidos nuevos"
       },
       "provider_payment_reminders": {
         "description": "Recordatorios de pagos vencidos enviados por el proveedor.",
@@ -339,8 +328,8 @@
       },
       "employee_debt_overdue": {
         "description": {
-          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarle un recordatorio.",
-          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarles un recordatorio."
+          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio.",
+          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
         },
         "title": "Hay empleados con pagos pendientes"
       },
@@ -366,7 +355,7 @@
         "title": "Nuevo pedido"
       },
       "order_rejection": {
-        "description": "Tu pedido del %{date} de %{dish} fue rechazado por %{provider} %{reason}.",
+        "description": "Tu pedido del %{date} de %{dish} fue cancelado por %{provider} %{reason}.",
         "reasons": {
           "customer_request": "por solicitud del cliente",
           "dish_deleted": "porque el plato fue eliminado",
@@ -377,11 +366,7 @@
           "other": "por el siguiente motivo: %{details}",
           "out_of_stock": "porque no había stock disponible"
         },
-        "title": "Tu pedido fue rechazado"
-      },
-      "payment_approved": {
-        "description": "%{provider} aprobó tu comprobante de pago correspondiente a %{period}.",
-        "title": "Pago aprobado"
+        "title": "Tu pedido fue cancelado"
       },
       "payment_available": {
         "description": "Ya podés pagar %{amount} a %{provider}. El vencimiento es el %{due_date}. ¡Revisá el detalle de tu pago!",
@@ -403,27 +388,15 @@
     "pages": {
       "accounts": {
         "index": {
-          "all_providers": "Todos",
           "history": "Historial",
-          "history_empty_description": "Cuando pagues una cuenta, va a aparecer acá.",
-          "history_empty_title": "Todavía no hiciste ningún pago",
-          "history_filtered_empty_description": "Todavía no le pagaste ninguna cuenta a este proveedor.",
-          "history_filtered_empty_title": "No hay pagos de este proveedor",
-          "meals_used_one": "%{count} vianda consumida",
-          "meals_used_other": "%{count} viandas consumidas",
-          "meals_used_with_limit_one": "%{meals} de %{limit} vianda consumida",
-          "meals_used_with_limit_other": "%{meals} de %{limit} viandas consumidas",
+          "history_empty": "Todavía no hiciste ningún pago.",
           "no_debt": "¡Sin deudas pendientes con este proveedor!",
           "payments": "Pagos",
           "pending": "Pendientes",
-          "pending_meals_one": "(%{count} vianda)",
-          "pending_meals_other": "(%{count} viandas)",
           "pending_payments": "Pagos pendientes",
-          "providers_label": "Proveedores:",
           "spending": "Tu consumo",
           "this_month": "Este mes",
-          "total_debt": "Deuda total",
-          "view_detail": "Ver detalle del consumo"
+          "total_debt": "Deuda total"
         },
         "show": {
           "amount": "Cant.",
@@ -433,16 +406,14 @@
           "lunch": "vianda",
           "lunches": "viandas",
           "menu": "Plato",
-          "partial_payment_warning": "Falta una parte del pago. Transferí la diferencia y subí el comprobante.",
+          "partial_payment_warning": "Falta una parte del pago.",
           "price": "Monto",
           "receipt": "Subir comprobante de pago",
           "receipt_approved": "Pago aprobado",
-          "receipt_clear": "Quitar archivo",
           "receipt_description": "Adjuntá el comprobante correspondiente a este pago.",
           "receipt_error_action": "Entendido",
           "receipt_error_description": "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
           "receipt_error_title": "No se pudo subir el comprobante",
-          "receipt_expected_amount": "Importe: %{amount}",
           "receipt_file": "Comprobante",
           "receipt_formats": "PDF, JPG o PNG. Tamaño máximo: 10 MB.",
           "receipt_preview": "Vista previa del comprobante",
@@ -460,22 +431,20 @@
           "receipt_unavailable": "Comprobante no disponible",
           "receipt_under_review_hint": "Ya hay un comprobante en revisión. Podrás enviar otro cuando se resuelva.",
           "receipt_update": "Actualizar comprobante",
-          "receipt_uploading": "Subiendo comprobante de pago",
+          "receipt_uploading": "Subiendo comprobante...",
           "receipt_view_edit": "Ver o editar comprobante",
           "see_detail": "Ver detalle",
           "see_receipts": "Ver comprobantes",
           "spending": "Consumo",
-          "status_accepted": "Confirmado",
-          "status_partial": "Pago parcial",
+          "status_accepted": "Aprobado",
           "status_pending": "Pendiente",
           "status_rejected": "Rechazado",
-          "status_submitted": "En revisión"
+          "status_submitted": "En revisión",
+          "total": "Total"
         }
       },
       "admin": {
         "account": {
-          "invoices": "Facturas",
-          "invoices_description": "Consultá las facturas de los proveedores",
           "more_options": "Más opciones",
           "notifications": "Notificaciones",
           "notifications_description": "Configurá qué alertas querés recibir",
@@ -577,10 +546,8 @@
                 "select_employees": "Seleccionar empleados",
                 "selected_employees": "Empleados seleccionados",
                 "subsidy_percentage": "% de descuento",
-                "subsidy_percentage_placeholder": "25",
                 "update": "Modificar",
                 "validity": "Validez",
-                "validity_max": "La validez no puede superar los %{count} días.",
                 "validity_unit": "Unidad de validez",
                 "validity_units": {
                   "days": "días",
@@ -686,7 +653,7 @@
           },
           "coming_soon": "Próximamente",
           "debts": {
-            "empty": "Ningún empleado tiene saldos pendientes.",
+            "empty": "Ningún empleado tiene saldos pendientes en este mes.",
             "title": "Ranking deuda de empleados",
             "view": "Ver empleados con saldos pendientes"
           },
@@ -701,7 +668,6 @@
         },
         "invoices": {
           "index": {
-            "back": "Volver a Cuenta",
             "description": "Las facturas que los proveedores le emiten a GoGrow, con su historial.",
             "download": "Descargar %{name}",
             "empty_description": "Cuando un proveedor cargue la factura de un período, va a aparecer acá.",
@@ -782,12 +748,11 @@
             "all_providers": "Todos",
             "bank": {
               "account_number": "Nº de cuenta: %{number}",
-              "beneficiary": "Beneficiario: %{beneficiary}",
-              "copied": "Datos de la cuenta copiados",
-              "copy": "Copiar datos de la cuenta",
-              "copy_failed": "No pudimos copiar los datos de la cuenta",
-              "missing": "Este proveedor todavía no cargó sus datos de cobro.",
-              "missing_upload_hint": "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro."
+              "copied": "Número de cuenta copiado",
+              "copy": "Copiar número de cuenta",
+              "copy_failed": "No pudimos copiar el número de cuenta",
+              "holder": "Beneficiario: %{holder}",
+              "missing": "Este proveedor todavía no cargó sus datos de cobro."
             },
             "confirmed": "Confirmado",
             "detail": {
@@ -798,7 +763,6 @@
               "filter_providers": "Filtrar por proveedor",
               "loading_title": "Detalle del consumo",
               "meals_tab": "Viandas",
-              "meals_title": "%{provider}: Consumos %{month}",
               "payment_tab": "Pago",
               "provider": "Proveedor:",
               "quantity": "Cant.",
@@ -850,12 +814,9 @@
       "cart": {
         "add_address": "Agregar",
         "benefit": "Subsidio Base (%{percentage}%)",
-        "confirm": "Confirmar pedido",
-        "confirming": "Confirmando pedido",
         "decrease": "Quitar una unidad de %{name}",
         "delivery": "Entrega: %{date}",
         "delivery_address": "Dirección de entrega",
-        "empty": "Todavía no agregaste platos.",
         "increase": "Agregar una unidad de %{name}",
         "monthly": {
           "full_price_one": "La vianda de este pedido se cobra a precio completo.",
@@ -883,14 +844,6 @@
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
         "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
-        "office_only_one": "%{providers} solo entrega en la Oficina, así que este pedido no puede ir a otra dirección.",
-        "office_only_other": "%{providers} solo entregan en la Oficina, así que este pedido no puede ir a otra dirección.",
-        "order_error": {
-          "description": "Hubo un problema al procesar tu pedido. Intentá de nuevo.",
-          "menu": "Volver al menú",
-          "retry": "Reintentar",
-          "title": "No se pudo procesar el pedido"
-        },
         "remove": "Quitar %{name}",
         "saved_addresses": {
           "cancel": "Cancelar",
@@ -899,7 +852,6 @@
           "title": "Mis direcciones"
         },
         "subtotal": "Precio vianda",
-        "title": "Tu carrito",
         "total": "Monto a pagar"
       },
       "consumer_dashboard": {
@@ -914,9 +866,7 @@
           "reached_100": {
             "one": "Se llegó al 100%, no se aplicará el beneficio %{benefits}",
             "other": "Se llegó al 100%, no se aplicarán los beneficios: %{benefits}"
-          },
-          "stock_limit_one": "Solo queda 1 vianda disponible de este plato.",
-          "stock_limit_other": "Solo quedan %{count} viandas disponibles de este plato."
+          }
         },
         "index": {
           "add": "Agregar",
@@ -1001,8 +951,6 @@
       },
       "consumer_profiles": {
         "show": {
-          "account": "Cuenta",
-          "account_description": "Modificá tu teléfono, nombre, correo, contraseña y apariencia",
           "addresses": "Direcciones",
           "addresses_description": "Gestioná tus direcciones de entrega",
           "benefit": "Mi beneficio",
@@ -1021,7 +969,7 @@
           "notifications_description": "Configurá qué alertas querés recibir",
           "settings": "Configuración",
           "sign_out": "Salir",
-          "title": "Cuenta"
+          "title": "Mi cuenta"
         }
       },
       "dashboard": {
@@ -1141,7 +1089,6 @@
           "history_empty_title": "No tenés pedidos anteriores",
           "history_filtered_empty_description": "No tenés pedidos anteriores realizados a este proveedor.",
           "history_filtered_empty_title": "No hay pedidos de este proveedor",
-          "history_loading": "Cargando pedidos anteriores…",
           "history_tab": "Historial",
           "no_address": "Sin dirección de entrega",
           "no_date": "Sin fecha de entrega",
@@ -1156,8 +1103,6 @@
           "upcoming_address": "Lo recibís en: %{address} (%{delivery_method})",
           "upcoming_empty_description": "No tenés viandas en camino.",
           "upcoming_empty_title": "No tenés pedidos próximos",
-          "upcoming_filtered_empty_description": "No tenés pedidos próximos con este proveedor.",
-          "upcoming_filtered_empty_title": "No hay pedidos de este proveedor",
           "upcoming_tab": "Próximos"
         },
         "show": {
@@ -1200,7 +1145,7 @@
           "payment_details": "Datos de cobro",
           "payment_details_description": "Configurá dónde querés recibir tus cobros",
           "profile": "Perfil",
-          "profile_description": "Editá tu nombre, correo, teléfono, contraseña y apariencia",
+          "profile_description": "Editá tu nombre, correo, teléfono y contraseña",
           "settings": "Configuración",
           "sign_out": "Salir",
           "title": "Cuenta"
@@ -1208,12 +1153,10 @@
       },
       "provider_collections": {
         "group": {
-          "awaiting_one": "%{count} cobro pendiente de confirmación",
-          "awaiting_other": "%{count} cobros pendientes de confirmación",
+          "awaiting_one": "%{count} en revisión",
+          "awaiting_other": "%{count} cobros en revisión",
           "company": "Empresa",
-          "confirmed": "%{amount} en cobros confirmados",
-          "consumed_in_month_one": "%{count} vianda consumida en %{month}",
-          "consumed_in_month_other": "%{count} viandas consumidas en %{month}",
+          "confirmed": "%{amount} en cobros aprobados",
           "detail": "Ver detalle",
           "detail_dialog": {
             "amount": "Monto",
@@ -1235,11 +1178,8 @@
           "download_receipts": "Descargar comprobantes",
           "due": "Vence: %{date}",
           "employees": "Empleados",
-          "outstanding_amount": "Saldo pendiente",
-          "partial_missing": "Falta una parte del pago.",
           "rejected_one": "%{count} cobro rechazado",
           "rejected_other": "%{count} cobros rechazados",
-          "review_payment": "Revisar pago",
           "total": "Total a cobrar"
         },
         "index": {
@@ -1262,7 +1202,7 @@
           "delivered_meals_other": "%{count} viandas entregadas",
           "empty_history_all": "Todavía no hay meses cobrados por completo.",
           "empty_history_client": "Todavía no hay meses cobrados por completo de este cliente.",
-          "empty_history_title": "Sin cobros confirmados",
+          "empty_history_title": "Sin cobros aprobados",
           "empty_pending_all": "Por ahora no hay deudas pendientes de ningún cliente seleccionado. Volvé a consultar el mes que viene.",
           "empty_pending_client": "Por ahora no hay deudas pendientes de este cliente. Volvé a consultar el mes que viene.",
           "empty_pending_title": "Sin deudas pendientes",
@@ -1310,14 +1250,6 @@
         "meals_one": "%{count} vianda",
         "meals_other": "%{count} viandas",
         "partial_payment_badge": "Pago parcial",
-        "partial_payment_warning": "Falta una parte del pago.",
-        "provider_statuses": {
-          "approved": "Confirmado",
-          "partial": "Pago parcial",
-          "pending": "Pendiente",
-          "rejected": "Rechazado",
-          "submitted": "Por revisar"
-        },
         "receipt_sent_at": "Comprobante enviado el %{date}",
         "reminder": {
           "back": "Volver",
@@ -1331,7 +1263,7 @@
             "title": "No pudimos enviar el recordatorio"
           },
           "limit_reached": "Alcanzaste el límite de recordatorios para este pago.",
-          "next_available": "Recordatorio enviado con éxito. Próximo envío disponible el %{date}.",
+          "next_available": "Podés enviar otro recordatorio el %{date}.",
           "retry": "Reintentar",
           "send": "Enviar recordatorio",
           "sending": "Enviando...",
@@ -1346,12 +1278,12 @@
           "approved_description": "El cobro fue aprobado correctamente. Se notificará al usuario.",
           "approved_title": "Cobro aprobado",
           "back": "Volver",
-          "check_receipt": "Chequeá que el total, la cuenta y el concepto del pago sean correctos antes de confirmar.",
-          "confirm": "Confirmar",
-          "confirming": "Confirmando…",
+          "check_receipt": "Comprobá el importe, la cuenta y el concepto del comprobante antes de aprobar. El importe esperado corresponde a la cuenta; el importe transferido debe verificarse en el archivo.",
+          "confirm": "Aprobar",
+          "confirming": "Aprobando…",
           "continue": "Continuar",
           "continuing": "Continuando…",
-          "current_month_restriction": "Todavía no podés confirmar este comprobante porque la cuenta corresponde al mes en curso. Podrás confirmarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo.",
+          "current_month_restriction": "Todavía no podés aprobar este comprobante porque la cuenta corresponde al mes en curso. Podrás aprobarlo cuando termine el mes. Si el comprobante es incorrecto, podés reportarlo.",
           "details_label": "Describir el motivo",
           "details_placeholder": "Describir el motivo",
           "done": "Listo",
@@ -1390,7 +1322,6 @@
         },
         "statuses": {
           "approved": "Aprobado",
-          "partial": "Pago parcial",
           "pending": "Pendiente",
           "rejected": "Rechazado",
           "submitted": "En revisión"
@@ -1432,8 +1363,8 @@
             "total": "Deuda total"
           },
           "profile": {
-            "description": "Dejá todo listo para empezar a recibir pedidos.",
-            "title": "Completá tu cuenta"
+            "description": "Deje todo listo para empezar a recibir pedidos.",
+            "title": "Complete su cuenta"
           },
           "title": "Inicio",
           "top_rated": {
@@ -1704,34 +1635,27 @@
         "continue": "Continuar",
         "done": {
           "cta": "Ir al Inicio",
-          "description": "Tu cuenta ya está configurada y podés empezar a recibir pedidos.",
+          "description": "Su cuenta ya está configurada y puede empezar a recibir pedidos.",
           "title": "¡Todo listo!"
         },
         "finish": "Finalizar",
-        "intro": {
-          "description": "Completá los datos necesarios y dejá todo listo para recibir pedidos y gestionar tu negocio.",
-          "skip_later": "Configurar más tarde",
-          "start": "Comenzar",
-          "title": "¿Configuramos tu cuenta?"
-        },
         "progress": "Paso %{current} de %{total}",
         "skip": "Omitir por ahora",
         "steps": {
           "1": {
-            "description": "Ingresá los datos de la cuenta donde recibirás los pagos de tus pedidos.",
+            "description": "Ingrese los datos de la cuenta donde recibirá los pagos de sus pedidos.",
             "title": "Datos de cobro"
           },
           "2": {
-            "closures_title": "Cierres programados (opcional)",
-            "description": "Definí hasta qué hora recibís pedidos y qué días no estarás disponible.",
-            "title": "Configurá tus pedidos"
+            "description": "Defina hasta qué hora recibe pedidos y qué días no estará disponible.",
+            "title": "Configure sus pedidos"
           },
           "3": {
-            "description": "Elegí dónde realizás tus entregas y si aceptás direcciones personalizadas.",
-            "title": "Configurá tus entregas"
+            "description": "Elija dónde realiza sus entregas y si acepta direcciones personalizadas.",
+            "title": "Configure sus entregas"
           },
           "4": {
-            "description": "Configurá qué alertas querés recibir.",
+            "description": "Elija qué alertas desea recibir sobre sus pedidos y pagos.",
             "title": "Notificaciones"
           }
         }
@@ -1774,25 +1698,15 @@
       "provider_orders": {
         "actions": {
           "confirm": "Confirmar",
-          "confirmed_sheet": {
-            "description": "El pedido %{code} quedó confirmado y %{name} recibirá una notificación.",
-            "done": "Listo",
-            "title": "Pedido confirmado"
-          },
           "reject": "Rechazar",
           "reject_dialog": {
             "back": "Volver",
             "confirm": "Rechazar pedido",
-            "description": "Esta acción no se puede deshacer. El empleado recibirá una notificación con el motivo que elijas.",
+            "description": "Seleccioná el motivo de la cancelación. El empleado va a ver el cambio en sus pedidos.",
             "details_label": "Describí el motivo",
-            "details_placeholder": "Describir el motivo",
+            "details_placeholder": "Ingresá el motivo…",
             "reason_label": "Motivo",
-            "title": "¿Rechazar pedido?"
-          },
-          "rejected_sheet": {
-            "description": "El pedido %{code} fue cancelado y %{name} recibirá una notificación.",
-            "done": "Listo",
-            "title": "Pedido rechazado"
+            "title": "¿Rechazar el pedido %{code}?"
           }
         },
         "index": {
@@ -1814,11 +1728,11 @@
             "open": "Filtrar por tipo de entrega",
             "title": "Filtrar por Tipo de entrega"
           },
-          "export": "Exportar pedidos",
+          "empty_description": "Todavía no recibiste pedidos para los próximos días.",
+          "empty_filtered_description": "No tenés pedidos que coincidan con los filtros.",
+          "empty_history_description": "Todavía no tenés pedidos anteriores.",
+          "empty_title": "No hay pedidos",
           "no_address": "Sin dirección de entrega",
-          "no_orders_description": "Cuando tus clientes hagan pedidos, van a aparecer acá.",
-          "no_orders_title": "No tenés pedidos",
-          "number": "#%{id}",
           "quantity": "x%{count}",
           "search_label": "Buscar pedidos",
           "search_placeholder": "Buscar pedido, plato, consumidor...",
@@ -1827,7 +1741,7 @@
           "status_filters": {
             "all": "Todos",
             "confirmed": "Confirmados",
-            "pending": "Por revisar"
+            "pending": "Pendiente"
           },
           "tabs": {
             "history": "Historial",
@@ -1847,14 +1761,18 @@
         },
         "show": {
           "back": "Volver a pedidos",
+          "charged": "Paga el empleado",
+          "delivery_date": "Entrega",
           "employee": "Empleado",
           "employee_company": "Empleado %{company}",
           "heading": "Detalle de pedido",
-          "not_charged": "Este pedido no será cobrado",
-          "notes": "Comentarios",
+          "no_price": "Importe no disponible",
+          "notes": "Notas",
           "order_detail": "Detalle del pedido",
           "phone_unavailable": "No disponible",
-          "rejection_reason": "Motivo de cancelación",
+          "rejection_details": "Detalle del rechazo",
+          "rejection_reason": "Motivo de rechazo",
+          "subsidy": "Beneficio aplicado",
           "title": "Pedido %{code}",
           "total": "Total"
         },
@@ -1862,7 +1780,7 @@
           "cancelled": "Cancelado",
           "confirmed": "Confirmado",
           "delivered": "Entregado",
-          "pending": "Por revisar",
+          "pending": "Pendiente",
           "rejected": "Rechazado"
         }
       },
@@ -1878,7 +1796,7 @@
       },
       "provider_password_resets": {
         "edit": {
-          "description": "Creá una nueva contraseña para tu cuenta.",
+          "description": "Creá una nueva contraseña para su cuenta.",
           "heading": "Nueva Contraseña",
           "submit": "Confirmar nueva contraseña",
           "title": "Nueva contraseña"
@@ -1887,19 +1805,21 @@
       "provider_payment_details": {
         "show": {
           "back": "Volver a Cuenta",
-          "bank_account_details": "Datos de la cuenta",
-          "bank_account_details_placeholder": "Pegá los datos de la cuenta acá...",
+          "bank_account_holder": "Titular de la cuenta",
+          "bank_account_number": "Número de cuenta",
+          "bank_account_type": "Tipo de cuenta",
+          "bank_account_type_placeholder": "Elegí el tipo de cuenta",
+          "bank_account_types": {
+            "checking": "Cuenta corriente",
+            "savings": "Caja de ahorro"
+          },
           "bank_name": "Banco",
-          "bank_name_placeholder": "Elegí el banco",
-          "beneficiary": "Beneficiario",
-          "beneficiary_value": "Beneficiario: %{beneficiary}",
-          "cancel": "Cancelar",
-          "consultation_description": "Configurá dónde querés recibir tus cobros.",
-          "description": "Ingresá los datos de la cuenta donde recibirás los pagos de tus pedidos.",
-          "edit": "Editar",
-          "edit_title": "Editar datos de cobro",
-          "save_changes": "Guardar cambios",
+          "bank_name_placeholder": "Ej. BROU",
+          "description": "Indicá la cuenta donde querés recibir los pagos de los empleados.",
+          "sensitive_notice": "Los cambios en estos datos quedan registrados.",
           "submit": "Guardar",
+          "tax_id": "RUT o CI del titular",
+          "tax_id_description": "Solo números: 12 dígitos para RUT, 7 u 8 para CI.",
           "title": "Datos de cobro"
         }
       },
@@ -1910,7 +1830,6 @@
           "email_placeholder": "ejemplo@empresa.com",
           "forgot": {
             "description": "Ingresá tu email y te enviaremos un código para restablecer tu contraseña.",
-            "email_label": "Email",
             "submit": "Enviar código",
             "title": "¿Olvidaste tu contraseña?"
           },
@@ -1960,11 +1879,7 @@
           "edit_dish": "Editar %{name}",
           "empty": {
             "description": "Agregá platos a tu menú del %{day} y empezá a recibir pedidos.",
-            "title": "No tenés platos publicados para el %{day}"
-          },
-          "empty_today": {
-            "description": "Agregá platos a tu menú de hoy y empezá a recibir pedidos.",
-            "title": "Hoy no tenés platos publicados"
+            "title": "No hay platos publicados para el %{day} todavía"
           },
           "empty_unpublishable": {
             "title": "No se publicó menú para este día."
@@ -2005,14 +1920,9 @@
               "pending": "Los pedidos pendientes se cancelarán.",
               "title": "¿Eliminar plato guardado?"
             },
-            "deleted_sheet": {
-              "description": "El plato se eliminó de tus platos guardados. Podés volver a crearlo cuando quieras.",
-              "done": "Listo",
-              "title": "Plato eliminado"
-            },
             "empty": {
-              "description": "Importá o agregá platos para incluirlos al menú cuando quieras.",
-              "title": "No tenés platos guardados"
+              "description": "Cuando crees un plato lo vas a ver acá para editarlo o publicarlo.",
+              "title": "Todavía no tenés platos guardados"
             }
           },
           "search_label": "Buscar plato",
@@ -2053,13 +1963,12 @@
           "description": "Actualizá tu dirección de correo y verificala",
           "heading": "Actualizar correo electrónico",
           "resend": "Hacé clic aquí para reenviar el correo de verificación.",
-          "submit": "Guardar correo",
           "title": "Configuración de correo",
           "unverified": "Tu dirección de correo no está verificada."
         },
         "notifications": {
           "back": "Volver a Cuenta",
-          "back_to_account": "Volver a Cuenta",
+          "back_to_account": "Volver a Mi cuenta",
           "description": "Configurá qué alertas querés recibir por WhatsApp",
           "heading": "Notificaciones",
           "preferences_description": "Activá o desactivá las categorías de avisos que querés recibir.",

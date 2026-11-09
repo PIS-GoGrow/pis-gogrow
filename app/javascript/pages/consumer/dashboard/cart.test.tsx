@@ -5,7 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { consumerOrders } from "@/routes"
 
+// AJUSTAR: ruta real del componente
 import Cart from "./cart"
+
+// ---------------------------------------------------------------------------
+// Mocks compartidos (vi.hoisted para poder usarlos dentro de vi.mock)
+// ---------------------------------------------------------------------------
 
 const mocks = vi.hoisted(() => ({
   priceItems: vi.fn(),
@@ -22,6 +27,10 @@ const mocks = vi.hoisted(() => ({
   },
 }))
 
+// AJUSTAR: todas las rutas de vi.mock tienen que coincidir con los imports
+// reales del componente (y si el import es nombrado en vez de default, también
+// la forma del objeto devuelto).
+
 vi.mock("@inertiajs/react", () => ({ useForm: () => mocks.form }))
 
 vi.mock("@/layouts/app-layout", () => ({
@@ -34,9 +43,10 @@ vi.mock("@/pages/consumer/dashboard/pricing", () => ({
     cart.map((item) => ({ id: item.id, quantity: item.quantity })),
 }))
 
-vi.mock("@/hooks/use-consumer-cart", async () => {
+vi.mock("@/hooks/use-session-storage", async () => {
   const { useState } = await import("react")
-  return { useConsumerCart: () => useState(mocks.state.initialCart) }
+  const useSessionStorage = () => useState(mocks.state.initialCart)
+  return { default: useSessionStorage, useSessionStorage }
 })
 
 vi.mock("@/pages/consumer/dashboard/consumer-cart", () => {
@@ -54,6 +64,10 @@ vi.mock("@/pages/consumer/dashboard/order-error", () => {
   }
   return { default: OrderError, OrderError }
 })
+
+// ---------------------------------------------------------------------------
+// Helpers y fixtures
+// ---------------------------------------------------------------------------
 
 interface Addr {
   address: string
@@ -418,12 +432,10 @@ describe("confirm", () => {
     expect(transform({})).toEqual({
       order: {
         address: "Calle 1",
-        expected_price: 100,
         items: [
           {
             schedule_id: 7,
             quantity: 2,
-            benefits: undefined,
             notes: "sin sal",
             options: [
               { group_id: 3, values: ["a", "b"] },
@@ -442,19 +454,6 @@ describe("confirm", () => {
     act(() => options.onSuccess())
 
     expect(cartProps().cart).toEqual([])
-  })
-
-  it("conserva el carrito cuando la confirmación falla", async () => {
-    const utils = await renderCart({ cart: [makeItem("a")] })
-    act(() => cartProps().confirm())
-
-    mocks.form.errors = { order_error: "Sin saldo" }
-    mocks.form.hasErrors = true
-    await actAsync(() => {
-      utils.rerender(element([CALLE_1, CALLE_2]))
-    })
-
-    expect(cartProps().cart).toEqual([makeItem("a")])
   })
 
   it("muestra OrderError cuando el form tiene errores", async () => {

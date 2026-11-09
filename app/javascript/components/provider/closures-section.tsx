@@ -22,7 +22,6 @@ interface ClosuresSectionProps {
   closures: ProviderClosure[]
   today: string
   onboarding?: boolean
-  title?: string
 }
 
 interface Range {
@@ -36,7 +35,6 @@ export default function ClosuresSection({
   closures,
   today,
   onboarding = false,
-  title,
 }: ClosuresSectionProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -75,12 +73,7 @@ export default function ClosuresSection({
         <div className="mb-4 flex items-start gap-3">
           <CalendarCog className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
           <div>
-            <h3 className="text-base font-semibold">
-              {title ??
-                (onboarding
-                  ? `${t(`${page}.title`)} (opcional)`
-                  : t(`${page}.title`))}
-            </h3>
+            <h3 className="text-base font-semibold">{t(`${page}.title`)}</h3>
             <p className="text-muted-foreground text-sm">
               {t(`${page}.description`)}
             </p>
@@ -186,7 +179,6 @@ export default function ClosuresSection({
                           from={range.from}
                           to={range.to}
                           min={today}
-                          weekdaysOnly
                           className="w-full"
                           onChange={(from, to) => setRange({ from, to })}
                         />

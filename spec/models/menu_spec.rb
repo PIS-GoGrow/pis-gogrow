@@ -94,12 +94,12 @@ RSpec.describe Menu, type: :model do
     end
 
     it "returns an ongoing open-ended agenda covering the date" do
-      agenda = menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current)
+      agenda = menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 5)
       expect(menu.agenda_on(Date.current + 2.days)).to eq(agenda)
     end
 
     it "returns nil when an open-ended agenda starts after the given date" do
-      menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current + 3.days)
+      menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current + 3.days, amount: 5)
       expect(menu.agenda_on(Date.current)).to be_nil
     end
 
@@ -107,7 +107,8 @@ RSpec.describe Menu, type: :model do
       agenda = menu.agendas.create!(
         weekdays: [ 2, 4 ],
         starts_on: Date.current,
-        ends_on: Date.current + 7.days
+        ends_on: Date.current + 7.days,
+        amount: 8
       )
       expect(menu.agenda_on(Date.current + 3.days)).to eq(agenda)
     end
@@ -116,14 +117,15 @@ RSpec.describe Menu, type: :model do
       menu.agendas.create!(
         weekdays: [ 2, 4 ],
         starts_on: Date.current - 10.days,
-        ends_on: Date.current - 2.days
+        ends_on: Date.current - 2.days,
+        amount: 8
       )
       expect(menu.agenda_on(Date.current)).to be_nil
     end
 
     it "returns the latest matching agenda by starts_on when multiple agendas exist" do
-      menu.agendas.create!(weekdays: [ 1 ], starts_on: Date.current - 5.days)
-      newer_agenda = menu.agendas.create!(weekdays: [ 2 ], starts_on: Date.current - 1.day)
+      menu.agendas.create!(weekdays: [ 1 ], starts_on: Date.current - 5.days, amount: 5)
+      newer_agenda = menu.agendas.create!(weekdays: [ 2 ], starts_on: Date.current - 1.day, amount: 10)
 
       expect(menu.agenda_on(Date.current)).to eq(newer_agenda)
     end

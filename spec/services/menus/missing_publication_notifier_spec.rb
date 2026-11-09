@@ -33,7 +33,7 @@ RSpec.describe Menus::MissingPublicationNotifier do
   end
 
   it "does not notify a provider with a published menu" do
-    menu.schedules.create!(date:)
+    menu.schedules.create!(date:, amount: 10)
 
     expect { call_notifier }.not_to change(Notification, :count)
   end
@@ -75,7 +75,7 @@ RSpec.describe Menus::MissingPublicationNotifier do
     call_notifier
     notification = provider_notifications.active.sole
 
-    menu.schedules.create!(date:, available: false)
+    menu.schedules.create!(date:, amount: 0, available: false)
 
     expect(notification.reload.closed_at).to eq(Time.current)
   end
@@ -85,7 +85,7 @@ RSpec.describe Menus::MissingPublicationNotifier do
     notification = provider_notifications.active.sole
     menu.update!(archived_at: Time.current)
 
-    menu.schedules.create!(date:)
+    menu.schedules.create!(date:, amount: 10)
 
     expect(notification.reload.closed_at).to be_nil
   end

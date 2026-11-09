@@ -54,7 +54,8 @@ module Menus
           weekdays: agenda.weekdays,
           date: nil,
           starts_on: [ agenda.starts_on, Date.current ].max.iso8601,
-          ends_on: agenda.ends_on&.iso8601
+          ends_on: agenda.ends_on&.iso8601,
+          amount: agenda.amount
         }
       end
     end

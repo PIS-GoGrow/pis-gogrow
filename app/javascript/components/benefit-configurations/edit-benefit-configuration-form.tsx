@@ -117,7 +117,6 @@ export default function EditBenefitConfigurationForm({
       <FieldGroup>
         <Field
           orientation="horizontal"
-          className="max-md:has-[>[data-slot=field-content]]:items-center max-md:[&>[data-slot=field-label]]:flex-none"
           data-invalid={!!errors.benefit_configuration?.subsidy_percentage}
         >
           <FieldLabel htmlFor="subsidy_percentage" className="font-normal">
@@ -133,7 +132,7 @@ export default function EditBenefitConfigurationForm({
                 type="number"
                 min="0"
                 max="100"
-                className="w-24 text-base max-md:w-14 max-md:text-center"
+                className="w-24 text-base"
                 value={data.subsidy_percentage}
                 aria-invalid={
                   !!errors.benefit_configuration?.subsidy_percentage
@@ -160,7 +159,6 @@ export default function EditBenefitConfigurationForm({
 
         <Field
           orientation="horizontal"
-          className="max-md:has-[>[data-slot=field-content]]:items-center max-md:[&>[data-slot=field-label]]:flex-none"
           data-invalid={!!errors.benefit_rules?.at(0)?.max_price}
         >
           <FieldLabel htmlFor="max_voucher_price" className="font-normal">
@@ -178,7 +176,7 @@ export default function EditBenefitConfigurationForm({
                 min="1"
                 step="1"
                 inputMode="numeric"
-                className="w-24 text-base max-md:w-14 max-md:text-center"
+                className="w-24 text-base"
                 value={data.max_voucher_price}
                 aria-invalid={!!errors.benefit_rules?.at(0)?.max_price}
                 onKeyDown={(event) => {
@@ -211,7 +209,6 @@ export default function EditBenefitConfigurationForm({
 
         <Field
           orientation="horizontal"
-          className="max-md:has-[>[data-slot=field-content]]:items-center max-md:[&>[data-slot=field-label]]:flex-none"
           data-invalid={!!errors.benefit_rules?.at(0)?.limit}
         >
           <FieldLabel htmlFor="monthly_voucher_limit" className="font-normal">
@@ -226,7 +223,7 @@ export default function EditBenefitConfigurationForm({
                 name="monthly_voucher_limit"
                 type="number"
                 min="0"
-                className="w-24 text-base max-md:w-14 max-md:text-center"
+                className="w-24 text-base"
                 value={data.monthly_voucher_limit}
                 aria-invalid={!!errors.benefit_rules?.at(0)?.limit}
                 onChange={(e) => {

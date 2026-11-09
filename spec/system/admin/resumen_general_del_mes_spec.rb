@@ -23,10 +23,10 @@ RSpec.describe "Resumen general del mes de RRHH", type: :system do
 
     expect(page).to have_content("Hola, #{admin_user.name.split.first}")
     expect(page).to have_content("Tu beneficio")
-    expect(page).to have_content("1 de 40")
+    expect(page).to have_content("4 de 40")
     expect(page).to have_content("viandas pedidas")
     expect(page).to have_content("Participación")
-    expect(page).to have_content("50%")
+    expect(page).to have_content("100%")
     expect(page).to have_content("Gasto")
     expect(page).to have_content("$601")
     expect(page).to have_content("Pagado $0")
@@ -44,7 +44,7 @@ RSpec.describe "Resumen general del mes de RRHH", type: :system do
     expect(page).to have_content("Pagado $900")
     expect(page).to have_content("Pendiente $0")
     expect(page).to have_content("0%")
-    expect(page).to have_no_content("1 de 40")
+    expect(page).to have_no_content("4 de 40")
   end
 
   it "opens the consumption detail of the month it is showing over the home" do
@@ -58,9 +58,7 @@ RSpec.describe "Resumen general del mes de RRHH", type: :system do
     expect(page).to have_current_path(admin_dashboard_path)
 
     click_on "Cerrar"
-    expect(page).to have_no_selector("[role='dialog']")
     pick_month(previous_month)
-    expect(page).to have_current_path(admin_dashboard_path(month: previous_key))
     click_on "Ver detalle del consumo"
 
     within(:css, "[role='dialog']") do
@@ -83,15 +81,15 @@ RSpec.describe "Resumen general del mes de RRHH", type: :system do
 
   it "keeps showing the month summary after a reload and after signing in again" do
     visit admin_dashboard_path
-    expect(page).to have_content("1 de 40")
+    expect(page).to have_content("4 de 40")
 
     refresh
-    expect(page).to have_content("1 de 40")
+    expect(page).to have_content("4 de 40")
 
     sign_out
     sign_in admin_user, role: :admin
     visit admin_dashboard_path
-    expect(page).to have_content("1 de 40")
+    expect(page).to have_content("4 de 40")
   end
 
   def pick_month(date)

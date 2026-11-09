@@ -37,7 +37,7 @@ RSpec.describe Provider::OrderSerializer do
         "address" => "Julio Herrera y Reissig 565",
         "delivery_method" => "home",
         "date" => Date.current.iso8601,
-        "time" => order.created_at.strftime("%-I:%M %p")
+        "time" => order.created_at.strftime("%H:%M")
       )
     end
   end

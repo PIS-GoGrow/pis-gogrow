@@ -39,11 +39,11 @@ RSpec.describe "Provider::Onboarding", type: :request do
   describe "GET /provider/primeros-pasos" do
     before { sign_in provider.user, role: :provider }
 
-    it "arranca en la pantalla de bienvenida/intro" do
+    it "arranca en el primer paso" do
       get provider_onboarding_path
 
       expect(inertia).to render_component("provider/onboarding/show")
-      expect(inertia).to have_props { |props| props["step"] == "intro" }
+      expect(inertia).to have_props { |props| props["step"] == "1" }
     end
 
     it "muestra el paso pedido en la URL" do
@@ -76,11 +76,12 @@ RSpec.describe "Provider::Onboarding", type: :request do
       expect(inertia).to(have_props do |props|
         p = props["provider"]
         p.key?("bank_name") &&
-          p.key?("bank_account_details") &&
-          p.key?("beneficiary") &&
+          p.key?("bank_account_type") &&
+          p.key?("bank_account_number") &&
+          p.key?("bank_account_holder") &&
+          p.key?("tax_id") &&
           p.key?("home_delivery") &&
           p.key?("order_deadline") &&
-          props["bank_names"].include?("Santander") &&
           props["notification_configurations"].is_a?(Array) &&
           props["subscribed_keys"].is_a?(Array)
       end)
@@ -96,31 +97,12 @@ RSpec.describe "Provider::Onboarding", type: :request do
       end)
     end
 
-    it "propone todas las notificaciones encendidas mientras no se configuraron" do
-      keys = Notification::Configuration.where(configurable: true).for_role(:provider).pluck(:key)
-
-      get provider_onboarding_path(step: 4)
-
-      expect(keys).not_to be_empty
-      expect(inertia).to have_props { |props| props["subscribed_keys"].sort == keys.sort }
-    end
-
-    it "muestra solo las suscripciones guardadas una vez configuradas" do
-      config = Notification::Configuration.where(configurable: true).for_role(:provider).first
-      config.users << provider.user
-      provider.update!(notifications_configured_at: Time.current)
-
-      get provider_onboarding_path(step: 4)
-
-      expect(inertia).to have_props { |props| props["subscribed_keys"] == [ config.key ] }
-    end
-
-    it "hace fallback al intro si se pasa un parámetro de paso inválido" do
+    it "hace fallback al paso 1 si se pasa un parámetro de paso inválido" do
       get provider_onboarding_path(step: 99)
-      expect(inertia).to have_props { |props| props["step"] == "intro" }
+      expect(inertia).to have_props { |props| props["step"] == "1" }
 
       get provider_onboarding_path(step: "invalido")
-      expect(inertia).to have_props { |props| props["step"] == "intro" }
+      expect(inertia).to have_props { |props| props["step"] == "1" }
     end
   end
 
@@ -130,16 +112,11 @@ RSpec.describe "Provider::Onboarding", type: :request do
     let(:payment_params) do
       {
         bank_name: "BROU",
-        bank_account_details: "Cuenta: 001234567-00001\nMoneda: UYU",
-        beneficiary: "Tu Vianda SRL"
+        bank_account_type: "savings",
+        bank_account_number: "001234567-00001",
+        bank_account_holder: "Tu Vianda SRL",
+        tax_id: "212345670012"
       }
-    end
-
-    it "permite configurar más tarde desde el intro completando el onboarding y yendo a inicio" do
-      patch provider_onboarding_path, params: { step: "intro", commit: "skip" }
-
-      expect(response).to redirect_to(provider_dashboard_path)
-      expect(provider.reload.onboarded?).to be(true)
     end
 
     it "guarda los datos de cobro y avanza al paso 2" do
@@ -195,16 +172,27 @@ RSpec.describe "Provider::Onboarding", type: :request do
       expect(provider.reload.notifications_configured_at).to be_present
     end
 
-    it "acepta texto libre y conserva los saltos de línea en el paso 1" do
-      details = "Transferencias desde otros bancos\nCuenta: UY00 1234 ABCD\nSucursal: 70 - Golf"
-      patch provider_onboarding_path, params: {
-        step: 1,
-        commit: "continue",
-        provider: payment_params.merge(bank_account_details: details)
-      }
+    it "rechaza un RUT o CI con longitud inválida en el paso 1" do
+      patch provider_onboarding_path, params: { step: 1, commit: "continue", provider: payment_params.merge(tax_id: "12345") }
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 1))
+      follow_redirect!
+      expect(inertia.props[:errors]).to have_key(:tax_id)
+    end
+
+    it "rechaza un número de cuenta bancaria con formato inválido en el paso 1" do
+      patch provider_onboarding_path, params: { step: 1, commit: "continue", provider: payment_params.merge(bank_account_number: "ABC") }
+
+      expect(response).to redirect_to(provider_onboarding_path(step: 1))
+      follow_redirect!
+      expect(inertia.props[:errors]).to have_key(:bank_account_number)
+    end
+
+    it "normaliza el tax_id removiendo caracteres no numéricos al persistir" do
+      patch provider_onboarding_path, params: { step: 1, commit: "continue", provider: payment_params.merge(tax_id: "21.234.567/0012") }
 
       expect(response).to redirect_to(provider_onboarding_path(step: 2))
-      expect(provider.reload.bank_account_details).to eq(details)
+      expect(provider.reload.tax_id).to eq("212345670012")
     end
 
     it "rechaza horas de cierre con formato inválido en el paso 2" do
@@ -290,8 +278,10 @@ RSpec.describe "Provider::Onboarding", type: :request do
         commit: "continue",
         provider: {
           bank_name: "Santander",
-          bank_account_details: "Cuenta: 987654321\nMoneda: UYU",
-          beneficiary: "Tu Vianda Gastronomía"
+          bank_account_type: "checking",
+          bank_account_number: "987654321",
+          bank_account_holder: "Tu Vianda Gastronomía",
+          tax_id: "21 987654 0019"
         }
       }
       expect(response).to redirect_to(provider_onboarding_path(step: 2))
@@ -327,8 +317,10 @@ RSpec.describe "Provider::Onboarding", type: :request do
       expect(inertia).to render_component("provider/payment_details/show")
       expect(inertia).to(have_props do |props|
         expect(props.dig("provider", "bank_name")).to eq("Santander")
-        expect(props.dig("provider", "bank_account_details")).to eq("Cuenta: 987654321\nMoneda: UYU")
-        expect(props.dig("provider", "beneficiary")).to eq("Tu Vianda Gastronomía")
+        expect(props.dig("provider", "bank_account_type")).to eq("checking")
+        expect(props.dig("provider", "bank_account_number")).to eq("987654321")
+        expect(props.dig("provider", "bank_account_holder")).to eq("Tu Vianda Gastronomía")
+        expect(props.dig("provider", "tax_id")).to eq("219876540019")
       end)
 
       # B. Pantalla de configuración operativa (/provider/configuracion-operativa)
@@ -359,13 +351,7 @@ RSpec.describe "Provider::Onboarding", type: :request do
     end
 
     it "mantiene el estado por defecto o vacío en la configuración cuando los pasos se omiten" do
-      provider.update!(
-        bank_name: nil,
-        bank_account_details: nil,
-        beneficiary: nil,
-        order_deadline: nil,
-        home_delivery: true
-      )
+      provider.update!(bank_name: nil, tax_id: nil, order_deadline: nil, home_delivery: true)
 
       patch provider_onboarding_path, params: { step: 1, commit: "skip" }
       patch provider_onboarding_path, params: { step: 2, commit: "skip" }
@@ -379,9 +365,7 @@ RSpec.describe "Provider::Onboarding", type: :request do
       get provider_payment_details_path
       expect(inertia).to(have_props do |props|
         expect(props.dig("provider", "bank_name")).to be_nil
-        expect(props.dig("provider", "bank_account_details")).to be_nil
-        expect(props.dig("provider", "beneficiary")).to be_nil
-        expect(props["editing"]).to be(true)
+        expect(props.dig("provider", "tax_id")).to be_nil
       end)
 
       # Hora de cierre queda sin configurar

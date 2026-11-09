@@ -14,14 +14,12 @@ gogrow_previous_approved:
   account: gogrow_tuviandita_previous
   provider: tuviandita
   status: 2
-  expected_amount: 900.00
 
 # == Schema Information
 #
 # Table name: payments
 #
 #  id               :bigint           not null, primary key
-#  expected_amount  :decimal(10, 2)
 #  rejection_reason :text
 #  status           :integer          default(0), not null
 #  created_at       :datetime         not null

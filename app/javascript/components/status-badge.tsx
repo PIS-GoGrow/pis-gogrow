@@ -30,8 +30,6 @@ const paymentStyles: Record<PaymentStatus, string> = {
     "bg-sky-50 text-sky-700 dark:bg-sky-950 dark:text-sky-300 [&>span]:bg-sky-500",
   approved:
     "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 [&>span]:bg-green-500",
-  partial:
-    "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 [&>span]:bg-amber-500",
   rejected:
     "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 [&>span]:bg-red-500",
 }
@@ -49,7 +47,7 @@ interface StatusBadgeProps {
   status?: OrderStatus | PaymentStatus | InvoiceStatus | null
   // pending y rejected existen en los dos enums, así que el valor solo no
   // alcanza para saber qué color y qué texto corresponden.
-  kind?: "order" | "payment" | "provider_payment" | "invoice" | "provider_order"
+  kind?: "order" | "payment" | "invoice" | "provider_order"
   label?: string
 }
 
@@ -74,12 +72,6 @@ export default function StatusBadge({
     payment: {
       className: paymentStyles[status as PaymentStatus],
       label: customLabel ?? t(`pages.provider_collections.statuses.${status}`),
-    },
-    provider_payment: {
-      className: paymentStyles[status as PaymentStatus],
-      label:
-        customLabel ??
-        t(`pages.provider_collections.provider_statuses.${status}`),
     },
     invoice: {
       className: invoiceStyles[status as InvoiceStatus],

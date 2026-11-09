@@ -108,7 +108,6 @@ describe("PaymentReceiptDialog", () => {
     receipt_url: "/consumer/payments/101/receipt",
     receipt_content_type: "image/png",
     rejection_reason: null,
-    expected_amount: null,
   }
 
   const rejectedPayment: Payment = {
@@ -120,7 +119,6 @@ describe("PaymentReceiptDialog", () => {
     receipt_url: "/consumer/payments/102/receipt",
     receipt_content_type: "application/pdf",
     rejection_reason: "Comprobante ilegible",
-    expected_amount: null,
   }
 
   const approvedPayment: Payment = {
@@ -132,19 +130,6 @@ describe("PaymentReceiptDialog", () => {
     receipt_url: "/consumer/payments/103/receipt",
     receipt_content_type: "image/jpeg",
     rejection_reason: null,
-    expected_amount: null,
-  }
-
-  const partialPayment: Payment = {
-    id: 104,
-    status: "partial",
-    created_at: "2026-10-03T10:00:00Z",
-    receipt_uploaded_at: "03/10/2026",
-    receipt_filename: "comprobante_parcial.png",
-    receipt_url: "/consumer/payments/104/receipt",
-    receipt_content_type: "image/png",
-    rejection_reason: null,
-    expected_amount: null,
   }
 
   it("renders upload button and no receipt cards when payments list is empty", () => {
@@ -174,30 +159,6 @@ describe("PaymentReceiptDialog", () => {
     )
   })
 
-  it("shows custom uploadDisabledHint instead of the default review hint when provided", () => {
-    render(
-      <PaymentReceiptDialog
-        accountId={42}
-        payments={[]}
-        uploadDisabled
-        uploadDisabledHint="Podrás subir el comprobante cuando el proveedor cargue sus datos de cobro."
-      />,
-    )
-
-    const button = screen.getByRole("button", {
-      name: "Subir comprobante de pago",
-    })
-    expect(button).toBeDisabled()
-    expect(button).toHaveAccessibleDescription(
-      "Podrás subir el comprobante cuando el proveedor cargue sus datos de cobro.",
-    )
-    expect(
-      screen.getByText(
-        "Podrás subir el comprobante cuando el proveedor cargue sus datos de cobro.",
-      ),
-    ).toBeInTheDocument()
-  })
-
   it("does not open the upload dialog when clicking the button if uploadDisabled is set", async () => {
     const user = userEvent.setup()
     render(
@@ -222,39 +183,27 @@ describe("PaymentReceiptDialog", () => {
     render(
       <PaymentReceiptDialog
         accountId={42}
-        payments={[
-          submittedPayment,
-          rejectedPayment,
-          partialPayment,
-          approvedPayment,
-        ]}
+        payments={[submittedPayment, rejectedPayment, approvedPayment]}
       />,
     )
 
     expect(screen.getByText("comprobante_banco_1.png")).toBeInTheDocument()
     expect(screen.getByText("comprobante_banco_2.pdf")).toBeInTheDocument()
     expect(screen.getByText("comprobante_banco_3.jpg")).toBeInTheDocument()
-    expect(screen.getByText("comprobante_parcial.png")).toBeInTheDocument()
 
     const link1 = screen.getByText("comprobante_banco_1.png")
     expect(link1).toHaveAttribute("href", "/consumer/payments/101/receipt")
 
     expect(screen.getByText("En revisión")).toBeInTheDocument()
     expect(screen.getByText("Rechazado")).toBeInTheDocument()
-    expect(screen.getByText("Pago parcial")).toBeInTheDocument()
     expect(screen.getByText("Aprobado")).toBeInTheDocument()
   })
 
-  it("shows delete for submitted and rejected receipts, but not for partial or approved", () => {
+  it("shows delete button for submitted and rejected receipts, but NOT for approved", () => {
     render(
       <PaymentReceiptDialog
         accountId={42}
-        payments={[
-          submittedPayment,
-          rejectedPayment,
-          partialPayment,
-          approvedPayment,
-        ]}
+        payments={[submittedPayment, rejectedPayment, approvedPayment]}
       />,
     )
 
@@ -262,27 +211,6 @@ describe("PaymentReceiptDialog", () => {
       name: "Eliminar comprobante",
     })
     expect(deleteButtons).toHaveLength(2)
-  })
-
-  it("presents a historical partial rejection without changing its real actions", () => {
-    render(
-      <PaymentReceiptDialog
-        accountId={42}
-        payments={[
-          {
-            ...rejectedPayment,
-            rejection_reason: "El pago es parcial",
-            expected_amount: null,
-          },
-        ]}
-      />,
-    )
-
-    expect(screen.getByText("Pago parcial")).toBeInTheDocument()
-    expect(screen.queryByText("Rechazado")).not.toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Eliminar comprobante" }),
-    ).toBeInTheDocument()
   })
 
   it("asks for confirmation before deleting a receipt", async () => {
@@ -447,9 +375,6 @@ describe("PaymentReceiptDialog", () => {
     await user.click(okButton)
 
     expect(screen.queryByText("Comprobante enviado")).not.toBeInTheDocument()
-    expect(
-      screen.queryByText("No se pudo subir el comprobante"),
-    ).not.toBeInTheDocument()
   })
 
   it("shows error sheet when upload fails", async () => {
@@ -478,41 +403,6 @@ describe("PaymentReceiptDialog", () => {
     expect(retryButton).toBeInTheDocument()
     await user.click(retryButton)
 
-    expect(
-      screen.queryByText("No se pudo subir el comprobante"),
-    ).not.toBeInTheDocument()
-    expect(screen.queryByText("Comprobante enviado")).not.toBeInTheDocument()
-  })
-
-  it("uses the result from each upload without reusing the previous one", async () => {
-    const user = userEvent.setup()
-    render(<PaymentReceiptDialog accountId={42} payments={[]} />)
-
-    await user.click(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    )
-
-    act(() => {
-      triggerError?.({ receipt: ["El archivo debe ser PDF, JPG o PNG."] })
-    })
-
-    expect(
-      await screen.findByText("El archivo debe ser PDF, JPG o PNG."),
-    ).toBeInTheDocument()
-
-    await user.click(screen.getByRole("button", { name: "Entendido" }))
-    await user.click(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    )
-
-    act(() => {
-      triggerSuccess?.()
-    })
-
-    expect(await screen.findByText("Comprobante enviado")).toBeInTheDocument()
-    expect(
-      screen.queryByText("El archivo debe ser PDF, JPG o PNG."),
-    ).not.toBeInTheDocument()
     expect(
       screen.queryByText("No se pudo subir el comprobante"),
     ).not.toBeInTheDocument()
@@ -622,205 +512,5 @@ describe("PaymentReceiptDialog", () => {
     expect(
       screen.queryByText("El archivo debe ser PDF, JPG o PNG."),
     ).not.toBeInTheDocument()
-  })
-})
-
-describe("PaymentReceiptDialog with inline upload", () => {
-  const createObjectURLMock = vi.fn(() => "blob:http://localhost/mock-preview")
-
-  beforeEach(() => {
-    vi.clearAllMocks()
-    triggerSuccess = undefined
-    triggerError = undefined
-    triggerBefore = undefined
-    URL.createObjectURL = createObjectURLMock
-    URL.revokeObjectURL = vi.fn(() => undefined)
-  })
-
-  const submittedPayment: Payment = {
-    id: 101,
-    status: "submitted",
-    created_at: "2026-10-01T12:00:00Z",
-    receipt_uploaded_at: "01/10/2026",
-    receipt_filename: "comprobante_banco_1.png",
-    receipt_url: "/consumer/payments/101/receipt",
-    receipt_content_type: "image/png",
-    receipt_byte_size: 1258291,
-    rejection_reason: null,
-    expected_amount: null,
-  }
-
-  const chosenFile = () =>
-    new File([new Uint8Array(2048)], "mi_comprobante.png", {
-      type: "image/png",
-    })
-
-  it("shows the file selector and a disabled upload button without opening a dialog", () => {
-    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
-
-    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
-    expect(screen.getByText("Sin archivos seleccionados")).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeDisabled()
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-  })
-
-  it("shows the chosen file with its size and enables the upload button", async () => {
-    const user = userEvent.setup()
-    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
-
-    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
-
-    expect(screen.getByText("mi_comprobante.png")).toBeInTheDocument()
-    expect(screen.getByText("2 KB")).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeEnabled()
-    expect(createObjectURLMock).not.toHaveBeenCalled()
-  })
-
-  it("shows the error sheet when the upload fails", async () => {
-    const user = userEvent.setup()
-    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
-
-    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
-
-    expect(triggerError).toBeDefined()
-    act(() => {
-      triggerError?.({})
-    })
-
-    expect(
-      await screen.findByText("No se pudo subir el comprobante"),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText(
-        "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
-      ),
-    ).toBeInTheDocument()
-
-    await user.click(screen.getByRole("button", { name: "Entendido" }))
-
-    expect(
-      screen.queryByText("No se pudo subir el comprobante"),
-    ).not.toBeInTheDocument()
-  })
-
-  it("shows the reason the server gave in the error sheet", async () => {
-    const user = userEvent.setup()
-    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
-
-    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
-    act(() => {
-      triggerError?.({ receipt: ["El archivo no puede superar los 10 MB."] })
-    })
-
-    expect(
-      await screen.findByText("No se pudo subir el comprobante"),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText("El archivo no puede superar los 10 MB."),
-    ).toBeInTheDocument()
-    expect(
-      screen.queryByText(
-        "Ocurrió un problema al subir el archivo. Intentá nuevamente.",
-      ),
-    ).not.toBeInTheDocument()
-  })
-
-  it("clears the chosen file after a failed upload so a new one can be picked", async () => {
-    const user = userEvent.setup()
-    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
-
-    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
-    act(() => {
-      triggerError?.({})
-    })
-    await user.click(await screen.findByRole("button", { name: "Entendido" }))
-
-    expect(screen.queryByText("mi_comprobante.png")).not.toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeDisabled()
-
-    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
-
-    expect(screen.getByText("mi_comprobante.png")).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeEnabled()
-  })
-
-  it("shows the success sheet when the upload succeeds", async () => {
-    const user = userEvent.setup()
-    render(<PaymentReceiptDialog accountId={42} payments={[]} inlineUpload />)
-
-    await user.upload(screen.getByLabelText("Comprobante"), chosenFile())
-
-    expect(triggerSuccess).toBeDefined()
-    act(() => {
-      triggerSuccess?.()
-    })
-
-    expect(await screen.findByText("Comprobante enviado")).toBeInTheDocument()
-
-    await user.click(screen.getByRole("button", { name: "Listo" }))
-
-    expect(screen.queryByText("Comprobante enviado")).not.toBeInTheDocument()
-    expect(screen.queryByText("mi_comprobante.png")).not.toBeInTheDocument()
-  })
-
-  it("hides the form and the hint while a receipt is under review", () => {
-    render(
-      <PaymentReceiptDialog
-        accountId={42}
-        payments={[submittedPayment]}
-        uploadDisabled
-        inlineUpload
-      />,
-    )
-
-    expect(screen.getByText("comprobante_banco_1.png")).toBeInTheDocument()
-    expect(screen.getByText("1.2 MB")).toBeInTheDocument()
-    expect(screen.getByText("En revisión")).toBeInTheDocument()
-    expect(screen.queryByLabelText("Comprobante")).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByText(/Ya hay un comprobante en revisión/),
-    ).not.toBeInTheDocument()
-  })
-
-  it("does not render the form when uploading is not allowed", () => {
-    render(
-      <PaymentReceiptDialog
-        accountId={42}
-        payments={[]}
-        canUpload={false}
-        inlineUpload
-      />,
-    )
-
-    expect(screen.queryByLabelText("Comprobante")).not.toBeInTheDocument()
-  })
-
-  it("renders the expected amount of the receipt in review", () => {
-    const payment: Payment = {
-      ...submittedPayment,
-      expected_amount: 290.25,
-    }
-
-    render(
-      <PaymentReceiptDialog
-        accountId={42}
-        payments={[payment]}
-        canUpload={false}
-        inlineUpload
-      />,
-    )
-
-    expect(screen.getByText(/Importe:.*290,25/)).toBeInTheDocument()
   })
 })

@@ -15,7 +15,7 @@ RSpec.describe "Pedir durante el fin de semana", type: :system do
   end
 
   it "muestra el menú de la semana que viene un sábado y permite completar el pedido" do
-    Schedule.create!(menu: menus(:milanesa), date: next_monday)
+    Schedule.create!(menu: menus(:milanesa), date: next_monday, amount: 10)
 
     travel_to(saturday) do
       sign_in users(:one), role: :consumer
@@ -47,7 +47,7 @@ RSpec.describe "Pedir durante el fin de semana", type: :system do
   it "asigna el pedido al beneficio del mes siguiente y a la cuenta del mes de entrega al pedir en el último sábado del mes" do
     last_saturday = Time.zone.local(2026, 10, 31, 14, 0)
     delivery_date = Date.new(2026, 11, 2)
-    Schedule.create!(menu: menus(:milanesa), date: delivery_date)
+    Schedule.create!(menu: menus(:milanesa), date: delivery_date, amount: 10)
 
     consumer = consumers(:one)
     config = benefit_configurations(:monthly)

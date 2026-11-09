@@ -1,5 +1,4 @@
-import { FilterHorizontalIcon } from "@hugeicons/core-free-icons"
-import { HugeiconsIcon } from "@hugeicons/react"
+import { SlidersHorizontal } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -56,7 +55,6 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
       detail.days
         .map((day) => ({
           ...day,
-          date: day.date.split("/").slice(0, 2).join("/"),
           orders: selectedClient
             ? day.orders.filter(
                 (order) => order.client_id === selectedClient.id,
@@ -79,7 +77,7 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
         showCloseButton={false}
         className="gap-0 p-0 sm:max-w-2xl"
       >
-        <AdaptableDialogHeader className="p-4 pb-0 text-left">
+        <AdaptableDialogHeader className="border-b p-4 text-left">
           <AdaptableDialogTitle>
             {t(`${page}.consumption_detail_title`, { month: detail.month })}
           </AdaptableDialogTitle>
@@ -100,15 +98,10 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
               <Button
                 variant="outline"
                 size="icon"
-                className="border-border bg-card hover:bg-accent size-9 shrink-0 rounded-full shadow-none"
+                className="rounded-full"
                 aria-label={t(`${page}.filter_clients`)}
               >
-                <HugeiconsIcon
-                  icon={FilterHorizontalIcon}
-                  size={20}
-                  strokeWidth={1.5}
-                  aria-hidden="true"
-                />
+                <SlidersHorizontal aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -138,7 +131,7 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
             emptyLabel={t(`${page}.consumption_empty`)}
           >
             {(orders) => (
-              <Table className="table-fixed text-xs sm:text-sm">
+              <Table className="min-w-[35rem] table-fixed">
                 <TableHeader className="bg-muted/70">
                   <TableRow>
                     <TableHead className="w-[34%]">
@@ -158,10 +151,10 @@ export default function SalesDetailDialog({ detail }: SalesDetailDialogProps) {
                 <TableBody>
                   {orders.map((order) => (
                     <TableRow key={order.id}>
-                      <TableCell className="truncate">
+                      <TableCell className="wrap-anywhere whitespace-normal">
                         {order.consumer_name}
                       </TableCell>
-                      <TableCell className="truncate">
+                      <TableCell className="wrap-anywhere whitespace-normal">
                         {order.client_name}
                       </TableCell>
                       <TableCell className="text-center">

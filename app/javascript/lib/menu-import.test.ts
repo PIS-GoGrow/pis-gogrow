@@ -176,6 +176,7 @@ describe("entriesPayload", () => {
       date: null,
       starts_on: "2026-11-02",
       ends_on: null,
+      amount: null,
     }
 
     const payload = entriesPayload(

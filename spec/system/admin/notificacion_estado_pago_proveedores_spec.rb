@@ -31,7 +31,6 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
   end
 
   before do
-    provider.update!(bank_name: "Banco Itaú", bank_account_details: "1951234", beneficiary: "Noelia Patricia Pinheiro")
     Notification::Configuration.find_or_create_by!(key: "company_payments") do |configuration|
       configuration.roles = %w[admin]
     end
@@ -48,17 +47,18 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
   # RR.HH. sube el comprobante del pago de la empresa desde Pagos.
   def hr_uploads_receipt
     sign_in admin_user, role: :admin
-    visit_hydrated admin_payments_path
+    visit admin_payments_path
 
     within(find("[data-slot=card]", text: provider_user.name)) do
-      attach_file("payment-receipt-#{account.id}", receipt_file, make_visible: true)
-      expect(page).to have_button("Subir comprobante de pago", disabled: false)
       click_on "Subir comprobante de pago"
     end
 
-    using_wait_time(90) do
-      expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
+    within(find("[role=dialog]")) do
+      attach_file("Comprobante", receipt_file)
+      click_on "Subir comprobante de pago"
     end
+
+    expect(page).to have_content(I18n.t("pages.accounts.show.receipt_success_description"))
     click_on I18n.t("pages.accounts.show.receipt_success_action")
   end
 
@@ -71,7 +71,7 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
     click_on "Revisar pago"
 
     if decision == :approve
-      within(find("[role=dialog]")) { click_on "Confirmar" }
+      within(find("[role=dialog]")) { click_on "Aprobar" }
       expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     else
       within(find("[role=dialog]")) { click_on "Reportar" }

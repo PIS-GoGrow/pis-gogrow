@@ -21,15 +21,6 @@ RSpec.describe DebtReminders::EmployeeEligibility do
       end
     end
 
-    it "descuenta pagos aprobados del saldo vencido" do
-      accounts(:one_tuviandita_current).payments.create!(status: :approved, expected_amount: 200)
-
-      travel_to overdue_day do
-        eligibility = described_class.new(consumer:)
-        expect(eligibility.amount).to eq(750.75)
-      end
-    end
-
     it "deja afuera las que todavía no vencieron" do
       travel_to accounts(:one_tuviandita_current).due_date - 1.day do
         expect(described_class.new(consumer:).overdue_accounts).to be_empty

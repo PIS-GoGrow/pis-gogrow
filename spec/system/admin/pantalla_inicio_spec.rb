@@ -68,53 +68,6 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
     expect(page).to have_content("Martín Bonnet")
   end
 
-  it "muestra en el ranking la deuda total de todos los períodos y no cambia con el mes" do
-    consumer = Consumer.create!(
-      user: User.create!(
-        name: "Martín Bonnet",
-        email: "martin@example.com",
-        password: "secret-password-123"
-      ),
-      company: companies(:gogrow)
-    )
-    previous = 1.month.ago.to_date.beginning_of_month
-    Account.create!(owner: consumer, provider: providers(:tuviandita), month: previous, amount: 2_000)
-    Account.create!(owner: consumer, provider: providers(:tuviandita), month: Date.current, amount: 150.25)
-
-    sign_in admin_user, role: :admin
-    visit admin_dashboard_path
-
-    within("section[aria-labelledby='admin-debts-title']") do
-      expect(page).to have_content("Martín Bonnet")
-      expect(page).to have_content("$2.150,25")
-      expect(page).to have_css("[data-status='pending']", text: "Pendiente")
-    end
-
-    visit admin_dashboard_path(month: previous.strftime("%Y-%m"))
-
-    within("section[aria-labelledby='admin-debts-title']") do
-      expect(page).to have_content("Martín Bonnet")
-      expect(page).to have_content("$2.150,25")
-    end
-
-    click_on "Ver empleados con saldos pendientes"
-
-    expect(page).to have_current_path(
-      admin_consumers_path(filter: "pending", month: previous.strftime("%Y-%m"))
-    )
-    row = find("a", text: "Martín Bonnet")
-      .find(:xpath, "ancestor::div[contains(@class, 'items-center')]")
-    within(row) do
-      expect(page).to have_content("$2.150,25")
-      expect(page).to have_content("Pendiente")
-    end
-
-    click_on "Martín Bonnet"
-
-    expect(page).to have_current_path(admin_consumer_path(consumer))
-    expect(page).to have_css("[data-status='pending']", text: "Pendiente")
-  end
-
   it "shows in the navigation what HR can use now and what is still to come" do
     sign_in admin_user, role: :admin
     visit admin_dashboard_path
@@ -123,7 +76,7 @@ RSpec.describe "Pantalla de inicio de RRHH", type: :system do
       expect(page).to have_css("[data-active='true']", text: "Inicio")
       expect(page).to have_link("Subsidios")
       expect(page).to have_link("Empleados")
-      expect(page).to have_no_link("Cuenta")
+      expect(page).to have_link("Cuenta")
       expect(page).to have_link("Pagos", href: admin_payments_path)
     end
   end

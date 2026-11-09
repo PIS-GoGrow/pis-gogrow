@@ -325,11 +325,10 @@ class BenefitConfiguration < ApplicationRecord
       .min
   end
 
-  # Igual a la anterior, para un beneficio futuro
+  # Devuelve el menor deadline futuro impuesto por las reglas. Si no hay deadlines, devuelve nil
   def future_benefit_deadline(consumer, date)
     benefit_rules
-      .map { |rule| rule.future_benefit_deadline consumer, date: }
-      .filter { |deadline| !deadline.nil? }
+      .filter_map { |rule| rule.future_benefit_deadline(consumer, date:) if rule.respond_to?(:future_benefit_deadline) }
       .min
   end
 

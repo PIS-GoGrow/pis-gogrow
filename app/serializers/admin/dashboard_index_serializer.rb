@@ -19,7 +19,7 @@ class Admin::DashboardIndexSerializer < ApplicationSerializer
   typelize payment_month: :string
   attributes :payment_month
 
-  typelize payments: "Array<{ name: string; amount: number; status: 'pending' | 'submitted' | 'approved' | 'rejected' | 'partial' }>"
+  typelize payments: "Array<{ name: string; amount: number; status: 'pending' | 'submitted' | 'approved' | 'rejected' }>"
   attributes :payments
 
   has_many :debtors, resource: Admin::ConsumerRowSerializer

@@ -127,7 +127,7 @@ export default function ProviderSignIn() {
               <>
                 <Field data-invalid={!!errors.email}>
                   <FieldLabel htmlFor="forgot_email">
-                    {t("pages.provider_sessions.new.forgot.email_label")}
+                    {t("common.email_address")}
                   </FieldLabel>
                   <Input
                     id="forgot_email"

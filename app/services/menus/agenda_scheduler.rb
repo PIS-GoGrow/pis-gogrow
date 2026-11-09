@@ -48,12 +48,8 @@ class Menus::AgendaScheduler
       target = block_given? ? yield(date) : menu
       next if target.nil?
 
-      begin
-        target.schedules.create!(date:)
-        taken << date
-      rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
-        taken << date
-      end
+      target.schedules.create!(date:, amount: agenda.amount)
+      taken << date
     end
   end
 end

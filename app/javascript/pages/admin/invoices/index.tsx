@@ -1,5 +1,5 @@
-import { Head, Link } from "@inertiajs/react"
-import { ArrowLeft, Download, FileText } from "lucide-react"
+import { Head } from "@inertiajs/react"
+import { Download, FileText } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import PageContainer from "@/components/page-container"
@@ -22,12 +22,11 @@ import {
 } from "@/components/ui/table"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
-import { adminAccount, adminInvoices } from "@/routes"
+import { adminInvoices } from "@/routes"
 import type { AdminInvoicesIndex, BreadcrumbItem } from "@/types"
 
 export default function Index({ invoices }: AdminInvoicesIndex) {
   const { t } = useTranslation()
-  const page = "pages.admin.invoices.index"
   const { formatMoney } = useFormatters()
 
   const breadcrumbs: BreadcrumbItem[] = [
@@ -36,18 +35,11 @@ export default function Index({ invoices }: AdminInvoicesIndex) {
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
-      <Head title={t(`${page}.title`)} />
+      <Head title={t("pages.admin.invoices.index.title")} />
 
       <PageContainer
-        title={t(`${page}.title`)}
-        description={t(`${page}.description`)}
-        back={
-          <Button variant="ghost" size="icon" asChild>
-            <Link href={adminAccount()} aria-label={t(`${page}.back`)}>
-              <ArrowLeft aria-hidden="true" />
-            </Link>
-          </Button>
-        }
+        title={t("pages.admin.invoices.index.title")}
+        description={t("pages.admin.invoices.index.description")}
       >
         {invoices.length === 0 ? (
           <Empty className="border">

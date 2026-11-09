@@ -19,7 +19,6 @@ interface ConsumptionDayListProps<Order> {
   amountOf: (order: Order) => number
   formatAmount: (amount: number) => string
   emptyLabel: string
-  openFirstDay?: boolean
   children: (orders: Order[]) => ReactNode
 }
 
@@ -31,7 +30,6 @@ export default function ConsumptionDayList<Order>({
   amountOf,
   formatAmount,
   emptyLabel,
-  openFirstDay = true,
   children,
 }: ConsumptionDayListProps<Order>) {
   const { t } = useTranslation()
@@ -50,7 +48,7 @@ export default function ConsumptionDayList<Order>({
   return (
     <div className="divide-y rounded-xl border px-4">
       {days.map((day, index) => (
-        <Collapsible key={day.date} defaultOpen={openFirstDay && index === 0}>
+        <Collapsible key={day.date} defaultOpen={index === 0}>
           <CollapsibleTrigger asChild>
             <button
               type="button"

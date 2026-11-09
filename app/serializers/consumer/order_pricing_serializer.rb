@@ -24,7 +24,7 @@ class Consumer::OrderPricingSerializer
   end
 
   def subsidized_quantities
-    @subsidized_quantities ||= @pricings.map { |pricing| pricing[1].subsidized_quantity }
+    @subsidized_quantities ||= @pricings.map { |pricing| pricing[1].benefits.sum { |_, used| used.units_used } }
   end
 
   def line_for(item, result)

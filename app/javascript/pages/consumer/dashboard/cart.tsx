@@ -1,13 +1,13 @@
 import { useForm } from "@inertiajs/react"
 import { useEffect, useMemo, useState } from "react"
 
-import { useConsumerCart } from "@/hooks/use-consumer-cart"
+import useSessionStorage from "@/hooks/use-session-storage"
 import AppLayout from "@/layouts/app-layout"
 import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardCart } from "@/types"
 
 import { ConsumerCart } from "./consumer-cart"
-import type { DeliveryAddressOption } from "./consumer-types"
+import type { CartItem, DeliveryAddressOption } from "./consumer-types"
 import { OrderError } from "./order-error"
 import type { Pricing } from "./pricing"
 import { cartPricedItem, priceItems } from "./pricing"
@@ -42,7 +42,7 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
       options: { group_id: number; values: string[] }[]
     }[],
   })
-  const [cart, setCart] = useConsumerCart()
+  const [cart, setCart] = useSessionStorage<CartItem[]>("cart", [])
 
   function addAddress(option: DeliveryAddressOption, saved: boolean) {
     if (!saved) {
@@ -71,6 +71,29 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
       ),
     )
     form.clearErrors()
+  }
+
+  function confirm() {
+    if (!cart.length || form.processing || !address) return
+
+    const items = cart.map((item) => ({
+      schedule_id: item.id,
+      quantity: item.quantity,
+      benefits: item.benefits,
+      notes: item.notes,
+      options: Object.entries(item.selections).map(([groupId, values]) => ({
+        group_id: Number(groupId),
+        values,
+      })),
+    }))
+
+    form.transform(() => ({ order: { address, items } }))
+
+    form.post(consumerOrders.create().url, {
+      preserveState: true,
+      preserveScroll: false,
+      onSuccess: () => setCart([]),
+    })
   }
 
   const items = useMemo(() => cartPricedItem(cart), [cart])
@@ -105,31 +128,6 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
   const isEmpty = items.length === 0
   const loading = !isEmpty && priced?.key !== requestKey
   const pricing = isEmpty ? null : (priced?.pricing ?? null)
-
-  function confirm() {
-    if (!cart.length || form.processing || !address) return
-
-    const items = cart.map((item) => ({
-      schedule_id: item.id,
-      quantity: item.quantity,
-      benefits: item.benefits,
-      notes: item.notes,
-      options: Object.entries(item.selections).map(([groupId, values]) => ({
-        group_id: Number(groupId),
-        values,
-      })),
-    }))
-
-    form.transform(() => ({
-      order: { address, items, expected_price: pricing?.total },
-    }))
-
-    form.post(consumerOrders.create().url, {
-      preserveState: true,
-      preserveScroll: false,
-      onSuccess: () => setCart([]),
-    })
-  }
 
   return (
     <AppLayout

@@ -72,34 +72,6 @@ export interface OptionGroupValues {
   required: boolean
 }
 
-// Con qué agenda abre el formulario de alta. Si se entró desde un día, es ese
-// día; si no, el de hoy, que es lo que espera el diseño. Cuando hoy no se puede
-// publicar (fin de semana o fuera del horizonte) arranca sin días elegidos, que
-// igual es un estado válido: el plato se guarda sin publicar.
-function defaultCreateAgenda(create: ProviderMenusNew) {
-  const date =
-    create.default_date ??
-    (cwday(create.today) <= 5 && create.today <= create.maximum_publish_date
-      ? create.today
-      : null)
-
-  return date
-    ? {
-        mode: "single" as const,
-        weekdays: [cwday(date)],
-        date,
-        starts_on: null,
-        ends_on: null,
-      }
-    : {
-        mode: "none" as const,
-        weekdays: [],
-        date: null,
-        starts_on: null,
-        ends_on: null,
-      }
-}
-
 interface MenuFormProps {
   menu?: Menu
   edit?: ProviderMenusEdit
@@ -154,7 +126,25 @@ export default function MenuForm({
       : edit
         ? initialAgenda(edit.agenda)
         : create
-          ? initialAgenda(defaultCreateAgenda(create))
+          ? initialAgenda(
+              create.default_date
+                ? {
+                    mode: "single",
+                    weekdays: [cwday(create.default_date)],
+                    date: create.default_date,
+                    starts_on: null,
+                    ends_on: null,
+                    amount: null,
+                  }
+                : {
+                    mode: "none",
+                    weekdays: [],
+                    date: null,
+                    starts_on: null,
+                    ends_on: null,
+                    amount: null,
+                  },
+            )
           : null,
   )
   const [agendaError, setAgendaError] = useState<string | null>(null)

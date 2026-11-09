@@ -15,15 +15,13 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
   let(:sched_future) { schedules(:future) }
 
   around do |example|
-    mid_month = Date.current.beginning_of_month.advance(days: 14)
-    travel_to(mid_month.next_occurring(:wednesday).noon) { example.run }
+    travel_to(Time.current.change(hour: 12, min: 0, sec: 0)) { example.run }
   end
 
   before do
-    schedules(:past).update!(date: Date.current - 5.days)
-    sched_today.update!(available: true, date: Date.current)
-    sched_future.update!(available: true, date: Date.tomorrow)
-    benefit.update!(due_date: Date.current.end_of_month)
+    sched_today.update!(amount: 10, available: true)
+    future_date = Date.tomorrow.month == Date.current.month ? Date.tomorrow : Date.current
+    sched_future.update!(amount: 10, available: true, date: future_date)
     provider.update!(order_deadline: 2.hours.from_now.strftime("%H:%M"))
   end
 
@@ -42,12 +40,14 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
 
   describe "Paso 1: Cancelación permitida dentro del plazo límite (CAG-04, CAG-06, CAG-07)" do
     it "cancela Orden 1 en plazo, registra trazabilidad, restituye el subsidio y actualiza el panel del proveedor" do
+      initial_stock = sched_today.remaining_amount
       order_1 = reserve_subsidized_order(schedule: sched_today)
 
       expect(order_1).to be_persisted
       expect(order_1).to be_pending
       expect(consumer.monthly_benefit_used_this_month).to eq(1)
       expect(consumer.remaining_monthly_benefit).to eq(19)
+      expect(sched_today.reload.remaining_amount).to eq(initial_stock - 1)
 
       # 1.1: Autenticarse como E1 y verificar consumo inicial en dashboard y navegar a Mis Órdenes
       sign_in consumer_user, role: :consumer
@@ -77,9 +77,10 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       find("button", text: "Historial").click
       expect(page).to have_content("Cancelado")
 
-      # 1.4: Comprobar restitución automática del cupo de subsidio en vista de E1
+      # 1.4: Comprobar restitución automática del cupo de subsidio y stock en vista de E1
       expect(consumer.reload.monthly_benefit_used_this_month).to eq(0)
       expect(consumer.remaining_monthly_benefit).to eq(20)
+      expect(sched_today.reload.remaining_amount).to eq(initial_stock)
 
       visit dashboard_path
       expect(page).to have_content("0 de 20")
@@ -91,17 +92,17 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       visit provider_orders_path
       sleep 1.5
 
-      find("[role='tab']", text: "Por revisar").click
-      expect(page).to have_no_css(provider_order_card(order_1))
+      find("[role='tab']", text: "Pendiente").click
+      expect(page).to have_no_content("PED-#{order_1.id}")
 
       find("[role='tab']", text: "Todos").click
-      expect(page).to have_css(provider_order_card(order_1))
+      expect(page).to have_content("PED-#{order_1.id}")
       expect(page).to have_content("Cancelado")
     end
   end
 
   describe "Paso 2: Intento de cancelación fuera de plazo (CAG-05)" do
-    it "2.1 y 2.2 deshabilita cancelar en próximos y oculta la acción en históricos fuera de ventana" do
+    it "2.1 y 2.2 deshabilita el botón de cancelar y muestra mensaje explicativo en pedidos fuera de ventana" do
       order_confirmed_today = reserve_subsidized_order(schedule: sched_today)
       order_confirmed_today.update!(status: :confirmed)
       order_past_pending = orders(:history_pending_past)
@@ -114,9 +115,8 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       end
 
       visit order_path(order_past_pending)
-      # En el detalle histórico las acciones no disponibles no se renderizan.
-      expect(page).to have_no_button("Cancelar")
-      expect(page).to have_no_content("Este pedido ya está cerrado.")
+      expect(page).to have_button("Cancelar", disabled: true)
+      expect(page).to have_content("Este pedido ya está cerrado.")
     end
 
     it "2.3 bloquea la cancelación forzada fuera de plazo manteniendo estado y subsidio inalterados" do
@@ -149,9 +149,8 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       visit order_path(order_3)
 
       expect(page).to have_content("Rechazado")
-      # El rechazo mueve la orden al historial, donde no se muestran acciones bloqueadas.
-      expect(page).to have_no_button("Cancelar")
-      expect(page).to have_no_content("Este pedido ya está cerrado.")
+      expect(page).to have_button("Cancelar", disabled: true)
+      expect(page).to have_content("Este pedido ya está cerrado.")
 
       # Intento forzado de cancelación sobre pedido rechazado
       expect(order_3.cancel(by: consumer_user)).to be(false)
@@ -164,6 +163,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
     end
 
     it "3.2 y 3.3 rechaza peticiones duplicadas de cancelación sobre Orden 1 sin sobrescribir trazabilidad ni duplicar devolución" do
+      initial_stock = sched_future.remaining_amount
       order_1 = reserve_subsidized_order(schedule: sched_future)
 
       expect(consumer.reload.remaining_monthly_benefit).to eq(19)
@@ -171,6 +171,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
 
       first_cancelled_at = order_1.reload.cancelled_at
       expect(consumer.reload.remaining_monthly_benefit).to eq(20)
+      expect(sched_future.reload.remaining_amount).to eq(initial_stock)
 
       # Segunda solicitud de cancelación (duplicada)
       expect(order_1.cancel(by: consumer_user)).to be(false)
@@ -179,6 +180,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       expect(order_1.cancelled_at).to eq(first_cancelled_at)
       expect(order_1.cancelled_by).to eq(consumer_user)
       expect(consumer.reload.remaining_monthly_benefit).to eq(20)
+      expect(sched_future.reload.remaining_amount).to eq(initial_stock)
     end
   end
 

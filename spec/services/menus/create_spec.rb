@@ -55,7 +55,7 @@ RSpec.describe Menus::Create do
         service = described_class.new(
           provider:,
           attributes:,
-          agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [ 1, 3 ] }
+          agenda: { mode: "weekly", starts_on: "2030-01-09", weekdays: [ 1, 3 ], amount: 5 }
         )
 
         expect do
@@ -68,7 +68,8 @@ RSpec.describe Menus::Create do
         expect(menu.agendas.sole).to have_attributes(
           weekdays: [ 1, 3 ],
           starts_on: Date.new(2030, 1, 9),
-          ends_on: nil
+          ends_on: nil,
+          amount: 5
         )
       end
     end
@@ -119,7 +120,8 @@ RSpec.describe Menus::Create do
             mode: "range",
             starts_on: "2030-01-10",
             ends_on: "2030-01-15",
-            weekdays: [ 2, 4 ]
+            weekdays: [ 2, 4 ],
+            amount: 4
           }
         )
 
@@ -128,7 +130,8 @@ RSpec.describe Menus::Create do
         expect(menu.agendas.sole).to have_attributes(
           starts_on: Date.new(2030, 1, 10),
           ends_on: Date.new(2030, 1, 15),
-          weekdays: [ 2, 4 ]
+          weekdays: [ 2, 4 ],
+          amount: 4
         )
       end
     end

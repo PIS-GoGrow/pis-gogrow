@@ -83,9 +83,6 @@ describe("MenuForm", () => {
     await user.type(screen.getByLabelText(/Descripción/), "Con papas")
     await user.type(screen.getByLabelText(/Precio/), "350")
 
-    // El alta arranca con el día de hoy elegido: hay que soltarlo para
-    // llegar al caso sin días.
-    await user.click(screen.getByLabelText("Miércoles"))
     await user.click(screen.getByLabelText("Repetir todas las semanas"))
 
     const [, submit] = screen.getAllByRole("button", { name: "Agregar" })
@@ -104,7 +101,6 @@ describe("MenuForm", () => {
     await user.type(screen.getByLabelText(/Descripción/), "Con papas")
     await user.type(screen.getByLabelText(/Precio/), "350")
 
-    await user.click(screen.getByLabelText("Miércoles"))
     await user.click(screen.getByLabelText("Repetir en un rango personalizado"))
 
     const [, submit] = screen.getAllByRole("button", { name: "Agregar" })
@@ -113,46 +109,6 @@ describe("MenuForm", () => {
     expect(
       screen.getByText("Elegí al menos un día de lunes a viernes."),
     ).toBeInTheDocument()
-  })
-
-  it("starts the agenda on today when there is no day of origin", () => {
-    // 2030-01-09 es miércoles.
-    render(<MenuForm create={createProps} />)
-
-    expect(screen.getByLabelText("Miércoles")).toHaveAttribute(
-      "data-state",
-      "on",
-    )
-    expect(screen.getByLabelText("Lunes")).toHaveAttribute("data-state", "off")
-    expect(screen.getByText("Día específico")).toBeInTheDocument()
-  })
-
-  it("keeps the day of origin when it comes from a specific day", () => {
-    // 2030-01-11 es viernes.
-    render(<MenuForm create={{ ...createProps, default_date: "2030-01-11" }} />)
-
-    expect(screen.getByLabelText("Viernes")).toHaveAttribute("data-state", "on")
-    expect(screen.getByLabelText("Miércoles")).toHaveAttribute(
-      "data-state",
-      "off",
-    )
-  })
-
-  it("starts with no day when today cannot be published", () => {
-    // 2030-01-12 es sábado: no es día hábil.
-    render(
-      <MenuForm
-        create={{
-          ...createProps,
-          today: "2030-01-12",
-          maximum_publish_date: "2030-01-25",
-        }}
-      />,
-    )
-
-    for (const day of ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]) {
-      expect(screen.getByLabelText(day)).toHaveAttribute("data-state", "off")
-    }
   })
 
   it("renders form with noValidate to bypass native browser tooltips", () => {

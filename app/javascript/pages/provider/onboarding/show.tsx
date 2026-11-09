@@ -26,32 +26,32 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
 import { providerDashboard, providerOnboarding } from "@/routes"
 import type { ProviderOnboardingShow } from "@/types/serializers/ProviderOnboardingShow"
 
 const TOTAL_STEPS = 4
 const PAGE = "pages.provider_onboarding"
-const PRIMARY_BUTTON = "h-12 w-full rounded-[10px] text-base font-medium"
-const SECONDARY_BUTTON = "h-12 w-full text-base font-medium"
 
 const REQUIRED_STEP_1_FIELDS = [
   "provider[bank_name]",
-  "provider[bank_account_details]",
-  "provider[beneficiary]",
+  "provider[bank_account_type]",
+  "provider[bank_account_number]",
+  "provider[bank_account_holder]",
+  "provider[tax_id]",
 ] as const
 
 function step1Complete(provider: ProviderOnboardingShow["provider"]) {
   return [
     provider.bank_name,
-    provider.bank_account_details,
-    provider.beneficiary,
+    provider.bank_account_type,
+    provider.bank_account_number,
+    provider.bank_account_holder,
+    provider.tax_id,
   ].every((value) => (value ?? "").toString().trim() !== "")
 }
 
 export default function Onboarding({
   provider,
-  bank_names,
   step,
   notification_configurations,
   subscribed_keys,
@@ -63,68 +63,18 @@ export default function Onboarding({
   const [canContinue, setCanContinue] = useState(() =>
     step === "1" ? step1Complete(provider) : true,
   )
-  const [skippingIntro, setSkippingIntro] = useState(false)
-
-  if (step === "intro") {
-    function skipIntro() {
-      setSkippingIntro(true)
-      router.patch(
-        providerOnboarding.update().url,
-        { step: "intro", commit: "skip" },
-        {
-          preserveScroll: true,
-          onFinish: () => setSkippingIntro(false),
-        },
-      )
-    }
-
-    return (
-      <Shell>
-        <Head title={t(`${PAGE}.intro.title`)} />
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <ProviderAvatar name={provider.name} />
-          <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-100">
-            {t(`${PAGE}.intro.title`)}
-          </h1>
-          <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-relaxed">
-            {t(`${PAGE}.intro.description`)}
-          </p>
-        </div>
-        <div className="flex flex-col gap-2">
-          <Button asChild size="lg" className={PRIMARY_BUTTON}>
-            <Link href={`${providerOnboarding.show().url}?step=1`}>
-              {t(`${PAGE}.intro.start`)}
-            </Link>
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="lg"
-            disabled={skippingIntro}
-            onClick={skipIntro}
-            className={SECONDARY_BUTTON}
-          >
-            {t(`${PAGE}.intro.skip_later`)}
-          </Button>
-        </div>
-      </Shell>
-    )
-  }
 
   if (step === "done") {
     return (
       <Shell>
         <Head title={t(`${PAGE}.done.title`)} />
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <ProviderAvatar name={provider.name} />
-          <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-100">
-            {t(`${PAGE}.done.title`)}
-          </h1>
-          <p className="text-muted-foreground mt-3 max-w-xs text-sm leading-relaxed">
+          <h1 className="text-2xl font-semibold">{t(`${PAGE}.done.title`)}</h1>
+          <p className="text-muted-foreground mt-3 max-w-xs">
             {t(`${PAGE}.done.description`)}
           </p>
         </div>
-        <Button asChild size="lg" className={PRIMARY_BUTTON}>
+        <Button asChild className="w-full">
           <Link href={providerDashboard.index()}>{t(`${PAGE}.done.cta`)}</Link>
         </Button>
       </Shell>
@@ -194,17 +144,12 @@ export default function Onboarding({
           action={providerOnboarding.update()}
           options={{ preserveScroll: true }}
           className="flex flex-1 flex-col"
-          noValidate
         >
           {({ errors, processing }) => (
             <>
               <input type="hidden" name="step" value={current} />
               <div className="flex-1" onChange={handleStep1Change}>
-                <PaymentDetailsFields
-                  provider={provider}
-                  bankNames={bank_names}
-                  errors={errors}
-                />
+                <PaymentDetailsFields provider={provider} errors={errors} />
               </div>
               <Footer
                 processing={processing}
@@ -217,16 +162,6 @@ export default function Onboarding({
         </Form>
       )}
     </Shell>
-  )
-}
-
-function ProviderAvatar({ name }: { name: string }) {
-  const { t } = useTranslation()
-
-  return (
-    <div className="mb-6 flex size-24 items-center justify-center rounded-full bg-[#0A0A0A] p-3 text-center text-base font-semibold text-[#FAFAFA]">
-      {name || t("roles.provider")}
-    </div>
   )
 }
 
@@ -269,18 +204,16 @@ function StepHeader({
         {t(`${PAGE}.progress`, { current, total: TOTAL_STEPS })}
       </span>
       <div className="flex flex-1 justify-end">
-        {current < TOTAL_STEPS && (
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="rounded-full"
-            aria-label={t(`${PAGE}.skip`)}
-            onClick={onSkip}
-          >
-            <ChevronRight aria-hidden="true" />
-          </Button>
-        )}
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="rounded-full"
+          aria-label={t(`${PAGE}.skip`)}
+          onClick={onSkip}
+        >
+          <ChevronRight aria-hidden="true" />
+        </Button>
       </div>
     </div>
   )
@@ -291,7 +224,7 @@ function StepIntro({ step }: { step: number }) {
 
   return (
     <div className="mb-6">
-      <h1 className="text-2xl font-bold tracking-tight">
+      <h1 className="text-2xl font-semibold">
         {t(`${PAGE}.steps.${step}.title`)}
       </h1>
       <p className="text-muted-foreground mt-2">
@@ -320,24 +253,19 @@ function Footer({
         type="submit"
         name="commit"
         value="continue"
-        size="lg"
         disabled={processing || !canContinue}
-        className={PRIMARY_BUTTON}
+        className="w-full"
       >
         {isLast ? t(`${PAGE}.finish`) : t(`${PAGE}.continue`)}
       </Button>
-      {!isLast && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="lg"
-          disabled={processing}
-          onClick={onSkip}
-          className={SECONDARY_BUTTON}
-        >
-          {t(`${PAGE}.skip`)}
-        </Button>
-      )}
+      <Button
+        type="button"
+        variant="ghost"
+        disabled={processing}
+        onClick={onSkip}
+      >
+        {t(`${PAGE}.skip`)}
+      </Button>
     </div>
   )
 }
@@ -352,7 +280,7 @@ function ControlledFooter({
   processing: boolean
   isLast: boolean
   onContinue: () => void
-  onSkip?: () => void
+  onSkip: () => void
   canContinue?: boolean
 }) {
   const { t } = useTranslation()
@@ -363,33 +291,27 @@ function ControlledFooter({
         type="button"
         disabled={processing || !canContinue}
         onClick={onContinue}
-        className={PRIMARY_BUTTON}
+        className="w-full"
       >
         {isLast ? t(`${PAGE}.finish`) : t(`${PAGE}.continue`)}
       </Button>
-      {!isLast && onSkip && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="lg"
-          disabled={processing}
-          onClick={onSkip}
-          className={SECONDARY_BUTTON}
-        >
-          {t(`${PAGE}.skip`)}
-        </Button>
-      )}
+      <Button
+        type="button"
+        variant="ghost"
+        disabled={processing}
+        onClick={onSkip}
+      >
+        {t(`${PAGE}.skip`)}
+      </Button>
     </div>
   )
 }
 
 function PaymentDetailsFields({
   provider,
-  bankNames,
   errors,
 }: {
   provider: ProviderOnboardingShow["provider"]
-  bankNames: ProviderOnboardingShow["bank_names"]
   errors: Record<string, ErrorValue>
 }) {
   const { t } = useTranslation()
@@ -403,54 +325,84 @@ function PaymentDetailsFields({
           <FieldLabel htmlFor="bank_name">
             {t(`${fields}.bank_name`)}
           </FieldLabel>
-          <Select
+          <Input
+            id="bank_name"
             name="provider[bank_name]"
-            defaultValue={provider.bank_name ?? undefined}
+            defaultValue={provider.bank_name ?? ""}
+            placeholder={t(`${fields}.bank_name_placeholder`)}
+            aria-invalid={!!errors.bank_name}
+          />
+          <FieldError>{errors.bank_name}</FieldError>
+        </Field>
+
+        <Field data-invalid={!!errors.bank_account_type}>
+          <FieldLabel htmlFor="bank_account_type">
+            {t(`${fields}.bank_account_type`)}
+          </FieldLabel>
+          <Select
+            name="provider[bank_account_type]"
+            defaultValue={provider.bank_account_type ?? undefined}
           >
             <SelectTrigger
-              id="bank_name"
+              id="bank_account_type"
               className="w-full"
-              aria-invalid={!!errors.bank_name}
+              aria-invalid={!!errors.bank_account_type}
             >
-              <SelectValue placeholder={t(`${fields}.bank_name_placeholder`)} />
+              <SelectValue
+                placeholder={t(`${fields}.bank_account_type_placeholder`)}
+              />
             </SelectTrigger>
             <SelectContent>
-              {bankNames.map((bankName) => (
-                <SelectItem key={bankName} value={bankName}>
-                  {bankName}
+              {(["savings", "checking"] as const).map((type) => (
+                <SelectItem key={type} value={type}>
+                  {t(`${fields}.bank_account_types.${type}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          <FieldError>{errors.bank_name}</FieldError>
+          <FieldError>{errors.bank_account_type}</FieldError>
         </Field>
 
-        <Field data-invalid={!!errors.bank_account_details}>
-          <FieldLabel htmlFor="bank_account_details">
-            {t(`${fields}.bank_account_details`)}
-          </FieldLabel>
-          <Textarea
-            id="bank_account_details"
-            name="provider[bank_account_details]"
-            defaultValue={provider.bank_account_details ?? ""}
-            placeholder={t(`${fields}.bank_account_details_placeholder`)}
-            className="min-h-36"
-            aria-invalid={!!errors.bank_account_details}
-          />
-          <FieldError>{errors.bank_account_details}</FieldError>
-        </Field>
-
-        <Field data-invalid={!!errors.beneficiary}>
-          <FieldLabel htmlFor="beneficiary">
-            {t(`${fields}.beneficiary`)}
+        <Field data-invalid={!!errors.bank_account_number}>
+          <FieldLabel htmlFor="bank_account_number">
+            {t(`${fields}.bank_account_number`)}
           </FieldLabel>
           <Input
-            id="beneficiary"
-            name="provider[beneficiary]"
-            defaultValue={provider.beneficiary ?? ""}
-            aria-invalid={!!errors.beneficiary}
+            id="bank_account_number"
+            name="provider[bank_account_number]"
+            inputMode="numeric"
+            defaultValue={provider.bank_account_number ?? ""}
+            aria-invalid={!!errors.bank_account_number}
           />
-          <FieldError>{errors.beneficiary}</FieldError>
+          <FieldError>{errors.bank_account_number}</FieldError>
+        </Field>
+
+        <Field data-invalid={!!errors.bank_account_holder}>
+          <FieldLabel htmlFor="bank_account_holder">
+            {t(`${fields}.bank_account_holder`)}
+          </FieldLabel>
+          <Input
+            id="bank_account_holder"
+            name="provider[bank_account_holder]"
+            defaultValue={provider.bank_account_holder ?? ""}
+            aria-invalid={!!errors.bank_account_holder}
+          />
+          <FieldError>{errors.bank_account_holder}</FieldError>
+        </Field>
+
+        <Field data-invalid={!!errors.tax_id}>
+          <FieldLabel htmlFor="tax_id">{t(`${fields}.tax_id`)}</FieldLabel>
+          <Input
+            id="tax_id"
+            name="provider[tax_id]"
+            inputMode="numeric"
+            defaultValue={provider.tax_id ?? ""}
+            aria-invalid={!!errors.tax_id}
+          />
+          <FieldDescription>
+            {t(`${fields}.tax_id_description`)}
+          </FieldDescription>
+          <FieldError>{errors.tax_id}</FieldError>
         </Field>
       </FieldGroup>
     </>

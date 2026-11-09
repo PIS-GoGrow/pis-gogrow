@@ -265,7 +265,7 @@ describe("Admin Dashboard Page", () => {
       screen.getByText("No hay pagos a proveedores de septiembre."),
     ).toBeInTheDocument()
     expect(
-      screen.getByText("Ningún empleado tiene saldos pendientes."),
+      screen.getByText("Ningún empleado tiene saldos pendientes en este mes."),
     ).toBeInTheDocument()
   })
 })
