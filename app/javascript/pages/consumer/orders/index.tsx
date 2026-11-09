@@ -1,7 +1,7 @@
 import { Head, InfiniteScroll } from "@inertiajs/react"
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { db } from "@/lib/offline-db"
+
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
@@ -17,6 +17,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
+import { db } from "@/lib/offline-db"
 import { consumerOrders } from "@/routes"
 import type { BreadcrumbItem, ConsumerOrdersIndex, Order } from "@/types"
 

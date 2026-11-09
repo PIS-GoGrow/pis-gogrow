@@ -1,9 +1,10 @@
 import Dexie, { type EntityTable } from "dexie"
+
 import type { ConsumerOrdersIndex, ProviderOrdersIndex } from "@/types"
 
 interface CachedConsumerOrders {
   id: number
-  orders: ConsumerOrdersIndex["upcoming_orders"]
+  upcoming_orders: ConsumerOrdersIndex["upcoming_orders"]
   saved_at: number
 }
 
