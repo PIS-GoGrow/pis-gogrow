@@ -81,6 +81,8 @@ RSpec.describe "Auditoría de pedidos", type: :system do
 
     find("#event_action").click
     page.document.find("[role=option]", text: "Confirmación", exact_text: true).click
+    page.send_keys(:escape)
+    expect(page).to have_css("#event_action", text: "Confirmación")
     click_button "Filtrar"
     expect(page).to have_no_content("PED-#{modified.id}")
     expect(page).to have_content("PED-#{confirmed.id}")
@@ -88,6 +90,8 @@ RSpec.describe "Auditoría de pedidos", type: :system do
     clear_filters
     find("#role").click
     page.document.find("[role=option]", text: "Empleado", exact_text: true).click
+    page.send_keys(:escape)
+    expect(page).to have_css("#role", text: "Empleado")
     click_button "Filtrar"
     expect(page).to have_no_content("PED-#{confirmed.id}")
     expect(page).to have_content("PED-#{modified.id}")
