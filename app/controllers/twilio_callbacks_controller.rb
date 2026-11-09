@@ -17,7 +17,7 @@ class TwilioCallbacksController < ApplicationController
     @notification.with_lock do
       if DELIVERED_STATUSES.include?(callback_params[:MessageStatus]) && !@notification.delivered?
         @notification.update!(
-          delivered_at: Time.current,
+          whatsapp_delivered_at: Time.current,
           whatsapp_send_status: :delivered
         )
       elsif FAIL_STATUSES.include?(callback_params[:MessageStatus]) && @notification.accepted?
