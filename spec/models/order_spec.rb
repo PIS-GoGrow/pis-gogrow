@@ -845,7 +845,10 @@ RSpec.describe Order, type: :model do
   describe "#ensure_accounts!" do
     around do |example|
       travel_to(Date.current.beginning_of_month + 10.days) do
+        schedules(:today).update!(date: Date.current)
         schedules(:future).update!(date: Date.current + 3)
+        orders(:upcoming_confirmed_future).update!(delivery_date: Date.current)
+        orders(:other_consumer_upcoming).update!(delivery_date: Date.current)
         example.run
       end
     end
