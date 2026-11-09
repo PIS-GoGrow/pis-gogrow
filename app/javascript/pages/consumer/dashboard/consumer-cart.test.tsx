@@ -187,6 +187,24 @@ describe("ConsumerCart delivery address", () => {
     expect(
       screen.getByRole("button", { name: "Ver mis direcciones" }),
     ).toBeDisabled()
+    expect(
+      screen.getByText(
+        "Endulzate by Noe solo entrega en la Oficina, así que este pedido no puede ir a otra dirección.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("does not say the order must go to the office when a provider delivers home", async () => {
+    await renderCart({
+      cart: [
+        cartItem("Tu Viandita", true),
+        cartItem("Endulzate by Noe", false),
+      ],
+    })
+
+    expect(
+      screen.queryByText(/así que este pedido no puede ir a otra dirección/),
+    ).not.toBeInTheDocument()
   })
 
   it("warns which provider only delivers to the office in a mixed cart", async () => {
@@ -394,5 +412,24 @@ describe("ConsumerCart quantity", () => {
     expect(
       screen.getByRole("button", { name: "Quitar Plato 2" }),
     ).toBeDisabled()
+  })
+})
+
+describe("ConsumerCart notes", () => {
+  it("wraps long notes without spaces so they do not overflow the cart", async () => {
+    const longNote = "a".repeat(140)
+
+    await renderCart({
+      cart: [
+        {
+          ...cartItem("Tu Viandita", true),
+          notes: longNote,
+        },
+      ],
+    })
+
+    const notes = screen.getByText(longNote)
+
+    expect(notes).toHaveClass("[overflow-wrap:anywhere]")
   })
 })

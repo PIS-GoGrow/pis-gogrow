@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
 
@@ -11,10 +12,7 @@ vi.mock("@inertiajs/react", async () => {
   return {
     ...actual,
     Head: () => null,
-    router: { flushAll: vi.fn() },
-    usePage: () => ({
-      props: { auth: { user: { name: "Sofía" } }, locale: "es" },
-    }),
+    usePage: () => ({ url: "/payments", props: { locale: "es" } }),
   }
 })
 
@@ -24,67 +22,257 @@ vi.mock("@/layouts/app-layout", () => ({
   ),
 }))
 
+const detail = {
+  month: "Octubre 2026",
+  amount: 450.75,
+  orders: [
+    {
+      id: 1,
+      amount: 2,
+      price: 300.5,
+      date: "30/10/26",
+      menu_name: "Milanesa al pan",
+    },
+    {
+      id: 2,
+      amount: 1,
+      price: 150.25,
+      date: "20/10/26",
+      menu_name: "Tarta de jamón",
+    },
+  ],
+}
+
+const props = {
+  accounts: [],
+  history_accounts: [],
+  providers: [],
+  history: false,
+  current_month_debt: 450.75,
+  current_month_detail: detail,
+  total_debt: 0,
+  total_meals: 0,
+  benefit_used: 3,
+  benefit_available: 20,
+}
+
 const defaultProviders: PaymentProvider[] = [
   {
     id: 1,
     name: "Tu Viandita",
     bank_name: "Banco República",
-    bank_account_number: "00123456",
-    bank_account_holder: "Tu Viandita SRL",
+    bank_account_details: "00123456",
+    beneficiary: "Tu Viandita SRL",
+    payment_details_complete: true,
     home_delivery: true,
   },
 ]
 
-describe("Consumer Accounts Index Page", () => {
-  it("shows the subsidized meals used this month against the monthly limit", () => {
-    render(
-      <Index
-        accounts={[]}
-        history_accounts={[]}
-        providers={defaultProviders}
-        history={false}
-        current_month_debt={500}
-        total_debt={500}
-        benefit_used={3}
-        benefit_available={20}
-      />,
-    )
+describe("Consumer Payments Page", () => {
+  it("shows the consumption of the month against the benefit limit", () => {
+    render(<Index {...props} />)
 
-    expect(screen.getByText(/3 de 20 viandas/)).toBeInTheDocument()
+    expect(screen.getByText("Tu consumo")).toBeInTheDocument()
+    expect(screen.getByText("$450,75")).toBeInTheDocument()
+    expect(screen.getByText("| 3 de 20 viandas consumidas")).toBeInTheDocument()
+    expect(screen.getByRole("progressbar")).toBeInTheDocument()
   })
 
-  it("uses singular 'vianda' when the available benefit is 1", () => {
-    render(
-      <Index
-        accounts={[]}
-        history_accounts={[]}
-        providers={defaultProviders}
-        history={false}
-        current_month_debt={0}
-        total_debt={0}
-        benefit_used={1}
-        benefit_available={1}
-      />,
-    )
+  it("leaves out the progress bar when the employee has no monthly benefit", () => {
+    render(<Index {...props} benefit_available={0} />)
 
-    expect(screen.getByText(/1 de 1 vianda/)).toBeInTheDocument()
+    expect(screen.getByText("| 3 viandas consumidas")).toBeInTheDocument()
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
   })
 
-  it("displays zero meals used when no monthly benefit has been consumed", () => {
+  it("opens the orders of the month from the consumption card", () => {
+    render(<Index {...props} />)
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    )
+
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveTextContent("Consumo Octubre 2026")
+    expect(dialog).toHaveTextContent("Milanesa al pan")
+    expect(dialog).toHaveTextContent("Tarta de jamón")
+    expect(dialog).not.toHaveTextContent("Total")
+  })
+
+  it("displays only delivered consumption and excludes future orders from the detail dialog", () => {
     render(
       <Index
-        accounts={[]}
-        history_accounts={[]}
-        providers={defaultProviders}
-        history={false}
-        current_month_debt={0}
-        total_debt={0}
-        benefit_used={0}
-        benefit_available={20}
+        {...props}
+        current_month_debt={150.25}
+        current_month_detail={{
+          month: "Noviembre 2026",
+          amount: 150.25,
+          orders: [
+            {
+              id: 1,
+              amount: 1,
+              price: 150.25,
+              date: "03/11/26",
+              menu_name: "Milanesa consumida",
+            },
+          ],
+        }}
       />,
     )
 
-    expect(screen.getByText(/0 de 20 viandas/)).toBeInTheDocument()
+    expect(screen.getByText("$150,25")).toBeInTheDocument()
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    )
+
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveTextContent("Milanesa consumida")
+    expect(dialog).not.toHaveTextContent("Pedido futuro sin entregar")
+  })
+
+  it("shows how many meals the pending debt covers", () => {
+    render(<Index {...props} total_debt={450} total_meals={3} />)
+
+    expect(screen.getByText("(3 viandas)")).toBeInTheDocument()
+  })
+
+  it("uses the singular for one pending meal and shows zero without debt", () => {
+    const { rerender } = render(
+      <Index {...props} total_debt={150} total_meals={1} />,
+    )
+
+    expect(screen.getByText("(1 vianda)")).toBeInTheDocument()
+
+    rerender(<Index {...props} />)
+
+    expect(screen.getByText("(0 viandas)")).toBeInTheDocument()
+  })
+
+  it("disables the detail button while there is no consumption", () => {
+    render(
+      <Index
+        {...props}
+        current_month_detail={{ ...detail, orders: [], amount: 0 }}
+      />,
+    )
+
+    expect(
+      screen.getByRole("button", { name: "Ver detalle del consumo" }),
+    ).toBeDisabled()
+  })
+
+  describe("history tab", () => {
+    const provider = (id: number, name: string) => ({
+      id,
+      name,
+      home_delivery: true,
+      bank_name: null,
+      bank_account_details: null,
+      beneficiary: null,
+      payment_details_complete: false,
+    })
+
+    const closedPeriod = (
+      id: number,
+      provider_id: number,
+      month: string,
+      due_date: string,
+    ) => ({
+      id,
+      provider_id,
+      month,
+      due_date,
+      current: false,
+      due_date_passed: true,
+      collection_status: "approved" as const,
+      amount: 700,
+      vat_amount: 0,
+      payable_amount: 700,
+      outstanding_amount: 700,
+      orders_amount_sum: 5,
+      orders_price_sum: 700,
+      payments: [],
+    })
+
+    const historyProps = {
+      ...props,
+      history: true,
+      providers: [
+        provider(1, "Tu Viandita"),
+        provider(2, "Endulzate by Noe"),
+        provider(3, "Sin pagos"),
+      ],
+      history_accounts: [
+        closedPeriod(1, 2, "Agosto 2026", "05/09/26"),
+        closedPeriod(2, 1, "Julio 2026", "05/08/26"),
+      ],
+    }
+
+    it("lists the closed periods with their date, provider and month", () => {
+      render(<Index {...historyProps} />)
+
+      expect(screen.getByText("Proveedores:")).toBeInTheDocument()
+      expect(screen.getByText("Todos")).toBeInTheDocument()
+      expect(screen.getByText("05/09/26")).toBeInTheDocument()
+      expect(
+        screen.getByText("Endulzate by Noe: Agosto 2026"),
+      ).toBeInTheDocument()
+      expect(screen.getByText("05/08/26")).toBeInTheDocument()
+      expect(screen.getByText("Tu Viandita: Julio 2026")).toBeInTheDocument()
+      expect(screen.getAllByText("Confirmado")).toHaveLength(2)
+    })
+
+    it("filters the history by provider", async () => {
+      const user = userEvent.setup()
+      render(<Index {...historyProps} />)
+
+      await user.click(
+        screen.getByRole("button", { name: "Filtrar por proveedores" }),
+      )
+      await user.click(screen.getByLabelText("Endulzate by Noe"))
+      await user.click(screen.getByRole("button", { name: "Aplicar" }))
+
+      expect(
+        screen.getByText("Endulzate by Noe: Agosto 2026"),
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByText("Tu Viandita: Julio 2026"),
+      ).not.toBeInTheDocument()
+      expect(screen.queryByText("Todos")).not.toBeInTheDocument()
+    })
+
+    it("says so when the chosen provider has no payments", async () => {
+      const user = userEvent.setup()
+      render(<Index {...historyProps} />)
+
+      await user.click(
+        screen.getByRole("button", { name: "Filtrar por proveedores" }),
+      )
+      await user.click(screen.getByLabelText("Sin pagos"))
+      await user.click(screen.getByRole("button", { name: "Aplicar" }))
+
+      expect(
+        screen.getByText("No hay pagos de este proveedor"),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "Todavía no le pagaste ninguna cuenta a este proveedor.",
+        ),
+      ).toBeInTheDocument()
+    })
+
+    it("keeps the plain empty message when there are no closed periods", () => {
+      render(<Index {...historyProps} history_accounts={[]} />)
+
+      expect(
+        screen.getByText("Todavía no hiciste ningún pago"),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByText("Cuando pagues una cuenta, va a aparecer acá."),
+      ).toBeInTheDocument()
+      expect(screen.queryByText("Proveedores:")).not.toBeInTheDocument()
+    })
   })
 
   it("renders pending account cards in descending order from newest to oldest month", () => {
@@ -94,6 +282,7 @@ describe("Consumer Accounts Index Page", () => {
       amount: 450,
       vat_amount: 0,
       payable_amount: 450,
+      outstanding_amount: 450,
       current: true,
       month: "Octubre de 2026",
       due_date: "10/11/2026",
@@ -110,6 +299,7 @@ describe("Consumer Accounts Index Page", () => {
       amount: 600,
       vat_amount: 0,
       payable_amount: 600,
+      outstanding_amount: 600,
       current: false,
       month: "Setiembre de 2026",
       due_date: "10/10/2026",
@@ -122,14 +312,12 @@ describe("Consumer Accounts Index Page", () => {
 
     render(
       <Index
+        {...props}
         accounts={[newerAccount, olderAccount]}
-        history_accounts={[]}
         providers={defaultProviders}
-        history={false}
         current_month_debt={450}
         total_debt={1050}
         benefit_used={2}
-        benefit_available={20}
       />,
     )
 
@@ -138,13 +326,14 @@ describe("Consumer Accounts Index Page", () => {
     expect(monthElements[1].textContent).toContain("Setiembre de 2026")
   })
 
-  it("shows 'En revisión' consistently in both the card badge and receipt section when payment is submitted", () => {
+  it("shows 'En revisión' in the receipt section when the payment is submitted", () => {
     const submittedAccount = {
       id: 103,
       provider_id: 1,
       amount: 300,
       vat_amount: 0,
       payable_amount: 300,
+      outstanding_amount: 300,
       current: false,
       month: "Setiembre de 2026",
       due_date: "10/10/2026",
@@ -159,6 +348,7 @@ describe("Consumer Accounts Index Page", () => {
           receipt_url: "/uploads/receipt.png",
           created_at: "2026-10-05T12:00:00Z",
           rejection_reason: null,
+          expected_amount: null,
           receipt_uploaded_at: "2026-10-05T12:00:00Z",
         },
       ],
@@ -166,20 +356,15 @@ describe("Consumer Accounts Index Page", () => {
 
     render(
       <Index
+        {...props}
         accounts={[submittedAccount]}
-        history_accounts={[]}
         providers={defaultProviders}
-        history={false}
         current_month_debt={0}
         total_debt={300}
         benefit_used={0}
-        benefit_available={20}
       />,
     )
 
-    const badges = screen.getAllByText("En revisión")
-    expect(badges).toHaveLength(2)
-    expect(badges[0]).toBeInTheDocument()
-    expect(badges[1]).toBeInTheDocument()
+    expect(screen.getByText("En revisión")).toBeInTheDocument()
   })
 })

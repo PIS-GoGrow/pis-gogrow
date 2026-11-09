@@ -27,7 +27,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   def confirmed_order(consumer:, provider:, month:, quantity:, discounted_price:)
     travel_to(Time.zone.local(month.year, month.month, month.day, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa al pan", description: "Con papas", price: 1000)
-      schedule = Schedule.create!(menu:, date: month + 7, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer:, schedule:,
@@ -84,13 +84,9 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   def employee_submits_receipt
     sign_in employee
 
-    visit accounts_path
+    visit_hydrated accounts_path
     within(find("[role=tabpanel]")) do
-      expect(page).to have_button("Subir comprobante de pago")
-      click_on "Subir comprobante de pago"
-    end
-
-    within(find("[role=dialog]")) do
+      expect(page).to have_button("Subir comprobante de pago", disabled: true)
       attach_file("Comprobante", receipt_file)
       click_on "Subir comprobante de pago"
     end
@@ -108,9 +104,8 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     )
     sign_in employee
 
-    visit accounts_path
-    within(find("[role=tabpanel]")) { click_on "Subir comprobante de pago" }
-    within(find("[role=dialog]")) do
+    visit_hydrated accounts_path
+    within(find("[role=tabpanel]")) do
       attach_file("Comprobante", Rails.root.join("public/robots.txt"), make_visible: true)
       click_on "Subir comprobante de pago"
     end
@@ -119,6 +114,16 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     expect(page).to have_content(I18n.t("activerecord.errors.models.payment.attributes.receipt.invalid_content_type"))
     expect(page).to have_button(I18n.t("pages.accounts.show.receipt_error_action"))
     expect(consumers(:one).accounts.find_by!(provider:).payments).to be_empty
+
+    # Al cerrar el aviso el selector queda limpio y se puede elegir otro archivo
+    click_on I18n.t("pages.accounts.show.receipt_error_action")
+    within(find("[role=tabpanel]")) do
+      expect(page).to have_no_content("robots.txt")
+      expect(page).to have_button("Subir comprobante de pago", disabled: true)
+      attach_file("Comprobante", receipt_file)
+      expect(page).to have_content("icon.png")
+      expect(page).to have_button("Subir comprobante de pago", disabled: false)
+    end
   end
 
   it "shows an error notification and saves nothing when the receipt exceeds 10 MB" do
@@ -129,14 +134,13 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     sign_in employee
 
     visit accounts_path
-    within(find("[role=tabpanel]")) { click_on "Subir comprobante de pago" }
 
     Tempfile.create([ "comprobante-grande", ".pdf" ]) do |file|
       file.binmode
       file.write("x" * (10.megabytes + 1))
       file.rewind
 
-      within(find("[role=dialog]")) do
+      within(find("[role=tabpanel]")) do
         attach_file("Comprobante", file.path, make_visible: true)
         click_on "Subir comprobante de pago"
       end
@@ -179,7 +183,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     # abrirlo primero (PaymentReviewSheet), al que se entra por "Revisar pago"
     # desde la fila del empleado.
     click_on "Revisar pago"
-    within(find("[role=dialog]")) { click_on "Aprobar" }
+    within(find("[role=dialog]")) { click_on "Confirmar" }
     expect(page).to have_content(I18n.t("pages.provider_collections.review.approved_title"))
     click_on I18n.t("pages.provider_collections.review.done")
 
@@ -194,7 +198,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     within(find("[role=tabpanel]")) do
       expect(page).to have_content(month_label(closed_month))
       expect(page).to have_content(month_label(previous_month))
-      expect(page).to have_content("Aprobado", count: 2)
+      expect(page).to have_content("Confirmado", count: 2)
       # El mes anterior conserva su propio importe: el pago nuevo no lo pisa.
       expect(page).to have_content("$300")
       expect(page).to have_content("$500")
@@ -248,7 +252,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
     within(find("[role=tabpanel]")) do
       expect(page).to have_content(month_label(previous_month))
       expect(page).to have_content("$500")
-      expect(page).to have_content("Aprobado", count: 1)
+      expect(page).to have_content("Confirmado", count: 1)
       # Un pago rechazado no entra al historial: sigue siendo deuda pendiente.
       expect(page).to have_no_content(month_label(closed_month))
     end

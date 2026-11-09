@@ -20,7 +20,7 @@ RSpec.describe "Ver la personalización del pedido", type: :system do
   let(:salsa) { menu.option_groups.find_by!(name: "Salsa") }
   let(:relleno) { menu.option_groups.find_by!(name: "Relleno") }
 
-  let(:schedule) { Schedule.create!(menu:, date: monday, amount: 10) }
+  let(:schedule) { Schedule.create!(menu:, date: monday) }
 
   def order_with(values:, notes: nil)
     Order.create!(

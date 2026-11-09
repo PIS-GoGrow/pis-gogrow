@@ -62,6 +62,21 @@ RSpec.describe DebtReminders::Eligibility do
       end
     end
 
+    it "mantiene elegible una cuenta vencida cuyo último pago es parcial" do
+      consumer_account.payments.destroy_all
+      consumer_account.update!(amount: 150)
+      payment = consumer_account.payments.build(provider: consumer_account.provider, status: :partial)
+      payment.receipt.attach(io: Rails.root.join("public/icon.png").open, filename: "parcial.png", content_type: "image/png")
+      payment.save!
+
+      travel_to consumer_account.due_date + 1.day do
+        eligibility = described_class.new(account: consumer_account)
+
+        expect(eligibility.reason).to be_nil
+        expect(eligibility).to be_eligible
+      end
+    end
+
     def create_reminder_notification(at:, closed: true)
       configuration = Notification::Configuration.find_or_create_by!(key: "provider_payment_reminders") do |c|
         c.roles = [ "consumer" ]
@@ -117,6 +132,61 @@ RSpec.describe DebtReminders::Eligibility do
         eligibility = described_class.new(account: consumer_account)
         expect(eligibility.reason).to be_nil
         expect(eligibility.eligible?).to be true
+      end
+    end
+
+    [
+      [ "rechazó", { status: :rejected, rejection_reason: "El comprobante no corresponde" } ],
+      [ "aceptó parcialmente", { status: :partial } ]
+    ].each do |action, attributes|
+      it "devuelve :cooldown cuando se #{action} el último comprobante hace menos de 3 días" do
+        consumer_account.update!(amount: 150)
+        reference_date = consumer_account.due_date + 10.days
+
+        travel_to reference_date - 1.day do
+          consumer_account.payments.create!(provider: consumer_account.provider, **attributes)
+        end
+
+        travel_to reference_date do
+          eligibility = described_class.new(account: consumer_account.reload)
+          expect(eligibility.reason).to eq(:cooldown)
+          expect(eligibility.next_available_at).to be_present
+        end
+      end
+    end
+
+    it "permite enviar justo al cumplirse 3 días del rechazo, y no un segundo antes" do
+      consumer_account.update!(amount: 150)
+      rejected_at = consumer_account.due_date.in_time_zone + 10.days
+
+      travel_to rejected_at do
+        consumer_account.payments.create!(
+          provider: consumer_account.provider, status: :rejected, rejection_reason: "El comprobante no corresponde"
+        )
+      end
+
+      travel_to rejected_at + 3.days - 1.second do
+        expect(described_class.new(account: consumer_account.reload).reason).to eq(:cooldown)
+      end
+
+      travel_to rejected_at + 3.days do
+        expect(described_class.new(account: consumer_account.reload).reason).to be_nil
+      end
+    end
+
+    it "permite enviar cuando el último comprobante se rechazó hace más de 3 días" do
+      consumer_account.update!(amount: 150)
+      reference_date = consumer_account.due_date + 10.days
+
+      travel_to reference_date - 4.days do
+        consumer_account.payments.create!(
+          provider: consumer_account.provider, status: :rejected, rejection_reason: "El comprobante no corresponde"
+        )
+      end
+
+      travel_to reference_date do
+        eligibility = described_class.new(account: consumer_account.reload)
+        expect(eligibility.reason).to be_nil
       end
     end
   end

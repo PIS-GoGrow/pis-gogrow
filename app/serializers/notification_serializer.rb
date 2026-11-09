@@ -3,8 +3,8 @@
 class NotificationSerializer < ApplicationSerializer
   attributes :id, :title, :description, :requires_action
 
-  typelize title: :string
-  typelize description: :string
+  typelize title: "string | null"
+  typelize description: "string | null"
 end
 
 # == Schema Information
@@ -13,7 +13,6 @@ end
 #
 #  id                            :bigint           not null, primary key
 #  closed_at                     :datetime
-#  delivered_at                  :datetime
 #  description_data              :json
 #  event                         :string           not null
 #  notifiable_type               :string           not null
@@ -21,6 +20,7 @@ end
 #  role                          :string           not null
 #  title_data                    :json
 #  twilio_sid                    :string
+#  whatsapp_delivered_at         :datetime
 #  whatsapp_last_sent_at         :datetime
 #  whatsapp_send_attempts        :integer          default(0)
 #  whatsapp_send_status          :integer

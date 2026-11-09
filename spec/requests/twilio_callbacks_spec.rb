@@ -94,19 +94,19 @@ RSpec.describe "TwilioCallbacks", type: :request do
           notification.reload
           expect(response).to have_http_status(:ok)
           expect(notification.whatsapp_send_status).to eq("delivered")
-          expect(notification.delivered_at).to eq(Time.current)
+          expect(notification.whatsapp_delivered_at).to eq(Time.current)
         end
       end
     end
 
-    it "no pisa delivered_at si ya estaba entregada" do
-      delivered_at = 1.hour.ago.change(usec: 0)
-      notification.update!(whatsapp_send_status: :delivered, delivered_at: delivered_at)
+    it "no pisa whatsapp_delivered_at si ya estaba entregada" do
+      whatsapp_delivered_at = 1.hour.ago.change(usec: 0)
+      notification.update!(whatsapp_send_status: :delivered, whatsapp_delivered_at: whatsapp_delivered_at)
 
       post_callback(MessageStatus: "read")
 
       expect(response).to have_http_status(:ok)
-      expect(notification.reload.delivered_at).to eq(delivered_at)
+      expect(notification.reload.whatsapp_delivered_at).to eq(whatsapp_delivered_at)
     end
 
     it "no encola reintentos" do

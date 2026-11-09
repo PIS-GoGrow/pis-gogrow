@@ -30,7 +30,7 @@ class Notifier
     WhatsappSenderJob.perform_later(notification) if send_notification
 
     notification
-  rescue ActiveRecord::RecordInvalid => e
+  rescue ActiveRecord::RecordInvalid, I18n::MissingTranslationData, KeyError => e
     # El único error que permitimos es si no se pudo crear la notificación.
     # En ese caso, no queremos que el usuario no pueda completar su acción porque
     # no se pueden enviar las notificaciones.

@@ -39,7 +39,6 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
     agenda = milanesa.reload.current_agenda
     expect(agenda).to be_present
     expect(agenda.weekdays).to include(1, 3)
-    expect(agenda.amount).to be_nil
 
     # Al acceder a editar un día programado generado por la agenda, se mantiene el modo weekly
     future_schedule = Schedule.where(menu_id: milanesa.family_ids, date: Date.current..).first
@@ -74,6 +73,7 @@ RSpec.describe "Publicar menú para repetir todas las semanas", type: :system do
     fill_in "description", with: "Salteado con salsa de soja"
     fill_in "price", with: "320"
 
+    clear_weekdays
     find("label", text: "Repetir todas las semanas").click
     expect(page).to have_selector("#agenda-mode-weekly[data-state='checked']")
 

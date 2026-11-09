@@ -115,8 +115,8 @@ RSpec.describe "Integración de recordatorios de menú", type: :job do
       description_data: { consumer: "consumidor", amount: "cantidad", dish: "plato", date: "fecha" }
     )
     allow(Menus::MissingPublicationNotifier).to receive(:close_for)
-    menus(:milanesa).schedules.create!(date: Date.current, amount: 10)
-    menus(:sorrentinos).schedules.create!(date: Date.current, amount: 10)
+    menus(:milanesa).schedules.create!(date: Date.current)
+    menus(:sorrentinos).schedules.create!(date: Date.current)
     menus(:sorrentinos).update!(archived_at: Time.current)
 
     expect { 2.times { run_reminders } }.not_to change(Notification, :count)
