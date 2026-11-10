@@ -1,4 +1,4 @@
-import { Head, usePage } from "@inertiajs/react"
+import { Head, router, usePage } from "@inertiajs/react"
 import { useEffect, useMemo, useState } from "react"
 
 import { useConsumerMenuFilter } from "@/hooks/consumer-menu-filter"
@@ -13,7 +13,6 @@ import type { Pricing } from "./pricing"
 import { cartPricedItem, priceItems } from "./pricing"
 import { WeeklyMenu, today } from "./weekly-menu"
 
-type View = "menu" | "detail"
 
 export default function Index({
   week,
@@ -25,7 +24,11 @@ export default function Index({
   benefit,
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
-  const [view, setView] = useState<View>("menu")
+  const { url } = usePage()
+  const detailMatch = /^\/menu-semanal\/platos\/(\d+)(?:\?.*)?$/.exec(url)
+  const selected = detailMatch
+    ? schedules.find((item) => item.id === Number(detailMatch[1])) ?? null
+    : null
   const todayDate = week.today ?? today()
   const initialDate =
     week.days.find((d) => d.date === todayDate)?.date ??
@@ -33,7 +36,6 @@ export default function Index({
     ""
   const [date, setDate] = useState(initialDate)
   const { activeProviders, setActiveProviders } = useConsumerMenuFilter()
-  const [selected, setSelected] = useState<Schedule | null>(null)
   const [cart, setCart] = useConsumerCart()
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
@@ -45,7 +47,6 @@ export default function Index({
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   function openDetail(item: Schedule) {
-    setSelected(item)
     const existing = cart.find((c) => c.id === item.id)
     if (existing) {
       setEditingCartId(existing.cartId)
@@ -58,19 +59,25 @@ export default function Index({
       setNotes("")
       setSelections({})
     }
-    setView("detail")
+    router.visit(consumerDashboard.dish(item.id).url, {
+      preserveState: true,
+    })
   }
 
   function handleBack() {
     setEditingCartId(null)
-    setView("menu")
+    router.visit(consumerDashboard.index().url, {
+      preserveState: true,
+    })
   }
 
   function handleRemoveFromCartAndBack() {
     if (!editingCartId) return
     setCart((items) => items.filter((item) => item.cartId !== editingCartId))
     setEditingCartId(null)
-    setView("menu")
+    router.visit(consumerDashboard.index().url, {
+      preserveState: true,
+    })
   }
 
   function addToCart(benefitsSelected: number[]) {
@@ -141,7 +148,9 @@ export default function Index({
     })
 
     setEditingCartId(null)
-    setView("menu")
+    router.visit(consumerDashboard.index().url, {
+      preserveState: true,
+    })
   }
 
   const items = useMemo(() => cartPricedItem(cart), [cart])
@@ -187,7 +196,7 @@ export default function Index({
       </style>
       <div className="bg-background text-foreground min-h-svh md:min-h-[calc(100svh-4rem)]">
         <Head title="Menú semanal" />
-        {view === "menu" && (
+        {!selected && (
           <WeeklyMenu
             name={auth.user.name.split(" ")[0]}
             date={date}
@@ -208,7 +217,7 @@ export default function Index({
             todayDate={todayDate}
           />
         )}
-        {view === "detail" && selected && (
+        {selected && (
           <DishDetail
             item={selected}
             quantity={quantity}
