@@ -1511,10 +1511,12 @@ es:
           saved: "Platos guardados"
         added:
           title: "¡Plato agregado!"
+          title_plural: "¡Platos agregados!"
           description: "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando."
           back: "Volver a Menú"
           continue: "Seguir agregando"
           description_date: "Tu plato fue agregado al menú del %{date} correctamente."
+          description_date_plural: "Tus platos fueron agregados al menú del %{date} correctamente."
         saved:
           date_label: "¿Para qué fecha vas a agregar platos?"
           date_hint: "Elegí una fecha para ver qué platos podés agregar."
