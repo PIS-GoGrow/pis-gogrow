@@ -49,14 +49,14 @@ export default function Index({
     db.consumer_orders
       .put({
         id: 1,
-        session_id: auth.session.id,
+        session_id: auth?.session?.id, // Los ? solo aplican para los tests, si no la sesión está definida
         upcoming_orders,
         saved_at: Date.now(),
       })
       .catch((error) => {
         console.error("Error al cachear órdenes: ", error)
       })
-  }, [upcoming_orders, auth.session.id])
+  }, [upcoming_orders, auth?.session?.id])
 
   const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
   const selectedProviderId = activeProviders.values().next().value

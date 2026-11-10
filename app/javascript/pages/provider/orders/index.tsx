@@ -48,14 +48,14 @@ export default function Index({
     db.provider_orders
       .put({
         id: 1,
-        session_id: auth.session.id,
+        session_id: auth?.session?.id, // Los ? solo aplican para los tests, si no la sesión está definida
         upcoming_orders,
         saved_at: Date.now(),
       })
       .catch((error) => {
         console.error("Error al cachear órdenes: ", error)
       })
-  }, [upcoming_orders, auth.session.id])
+  }, [upcoming_orders, auth?.session?.id])
 
   const orders = period === "upcoming" ? upcoming_orders : past_orders
   // Sin pedidos en el período no hay nada que filtrar: el estado vacío mobile

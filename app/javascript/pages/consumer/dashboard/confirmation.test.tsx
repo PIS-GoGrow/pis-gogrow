@@ -7,6 +7,7 @@ vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
+    usePage: () => ({ props: { auth: null } }),
     Link: ({
       children,
       href,
