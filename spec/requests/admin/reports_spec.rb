@@ -83,7 +83,15 @@ RSpec.describe "Admin::Reports", type: :request do
           providers: [
             { id: providers(:tuviandita).id, name: "Provider User", orders: 1, meals: 2, company_amount: 400.0 },
             { id: providers(:endulzate).id, name: "Other Provider User", orders: 1, meals: 1, company_amount: 100.0 }
-          ]
+          ],
+          daily_consumption: [
+            { date: "2026-08-03", orders: 1, meals: 2, company_amount: 400.0 },
+            { date: "2026-08-25", orders: 1, meals: 1, company_amount: 100.0 }
+          ],
+          delivery_methods: {
+            office: { orders: 2, meals: 3 },
+            home: { orders: 0, meals: 0 }
+          }
         )
       end
 

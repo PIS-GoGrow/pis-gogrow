@@ -20,5 +20,7 @@ class Admin::ReportsController < Admin::InertiaController
     @providers = summary.by_provider.map do
       { id: it.provider_id, name: it.name, orders: it.orders_count, meals: it.meals, company_amount: it.company_amount.to_f }
     end
+    @daily_consumption = summary.daily_consumption
+    @delivery_methods = summary.delivery_methods
   end
 end

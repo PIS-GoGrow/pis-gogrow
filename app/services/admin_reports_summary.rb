@@ -54,6 +54,31 @@ class AdminReportsSummary
         .sort_by { [ -it.meals, I18n.transliterate(it.name.to_s).downcase ] }
   end
 
+  def daily_consumption
+    rows = orders.group(Arel.sql("COALESCE(orders.delivery_date, schedules.date)"))
+                 .pluck(
+                   Arel.sql("COALESCE(orders.delivery_date, schedules.date)"),
+                   Arel.sql("COUNT(*)"),
+                   Arel.sql("COALESCE(SUM(orders.amount), 0)"),
+                   Arel.sql("COALESCE(SUM(#{COMPANY_AMOUNT}), 0)")
+                 )
+
+    rows.compact
+        .reject { |date, _| date.nil? }
+        .map { |date, count, meals, amount| { date: date.to_s, orders: count, meals: meals.to_i, company_amount: amount.to_f } }
+        .sort_by { it[:date] }
+  end
+
+  def delivery_methods
+    rows = orders.group(:delivery_method)
+                 .pluck(:delivery_method, Arel.sql("COUNT(*)"), Arel.sql("COALESCE(SUM(orders.amount), 0)"))
+    counts = rows.to_h { |method, count, meals| [ Order.delivery_methods.key(method) || method.to_s, { orders: count, meals: meals.to_i } ] }
+    {
+      office: counts["office"] || { orders: 0, meals: 0 },
+      home: counts["home"] || { orders: 0, meals: 0 }
+    }
+  end
+
   private
 
   def orders

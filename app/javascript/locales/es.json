@@ -853,8 +853,19 @@
             "adhesion": "Adhesión",
             "adhesion_detail_one": "%{participants} de %{count} empleado",
             "adhesion_detail_other": "%{participants} de %{count} empleados",
+            "avg_per_participant": "Promedio por participante",
+            "avg_per_participant_detail": "Viandas por participante",
+            "avg_subsidy": "Subsidio promedio",
+            "avg_subsidy_detail": "Por vianda",
             "back": "Volver al inicio",
+            "company_subsidy": "Subsidio empresa",
+            "daily_activity": "Evolución en el período",
+            "daily_activity_empty": "Sin actividad en este período.",
+            "delivery_home": "A domicilio",
+            "delivery_methods": "Modalidad de entrega",
+            "delivery_office": "En oficina",
             "employee_amount": "Empleado: %{amount}",
+            "employee_contribution": "Aporte empleados",
             "empty_description": "No hay pedidos confirmados en este período.",
             "empty_title": "Sin consumos",
             "meals_one": "%{count} vianda",
@@ -869,10 +880,13 @@
               "today": "Hoy",
               "yesterday": "Ayer"
             },
+            "provider_share": "%{percent}% del total",
             "providers": "Consumo por proveedor",
             "spending": "Gasto acumulado",
+            "spending_distribution": "Distribución del gasto",
             "summary": "Uso del beneficio",
-            "title": "Reportes"
+            "title": "Reportes",
+            "total_spent": "Gasto total"
           }
         }
       },
