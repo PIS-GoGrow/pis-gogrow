@@ -54,6 +54,50 @@ RSpec.describe "Estado del pedido en el menú semanal del consumidor", type: :sy
     expect(page).to have_button("Agregar Milanesa con papas fritas", text: "1")
   end
 
+  it "muestra confirmado cuando el proveedor lo confirma desde su pantalla, igual que en Mis pedidos" do
+    order_milanesa
+    order = Order.sole
+    sign_out
+
+    sign_in users(:provider_user), role: :provider
+    visit_hydrated provider_order_path(order)
+    click_button "Confirmar"
+    expect(page).to have_content("Pedido confirmado")
+    sign_out
+
+    sign_in users(:one), role: :consumer
+    visit_hydrated dashboard_path
+
+    expect(page).to have_css('[data-status="confirmed"]', text: "Confirmado")
+    expect(page).to have_no_css('[data-status="pending"]')
+    expect(page).to have_button("Agregar Milanesa con papas fritas", text: "1", class: "bg-green-600")
+
+    visit_hydrated orders_path
+    expect(page).to have_css('[data-status="confirmed"]', text: "Confirmado")
+  end
+
+  it "deja de marcar el plato cuando el proveedor lo rechaza desde su pantalla" do
+    order_milanesa
+    order = Order.sole
+    sign_out
+
+    sign_in users(:provider_user), role: :provider
+    visit_hydrated provider_order_path(order)
+    click_button "Rechazar"
+    find("label", text: "Otro motivo").click
+    fill_in "rejection-details", with: "Sin insumos", fill_options: { rapid: false }
+    click_button "Rechazar pedido"
+    expect(page).to have_content("Pedido rechazado")
+    sign_out
+
+    sign_in users(:one), role: :consumer
+    visit_hydrated dashboard_path
+
+    expect(page).to have_content("Milanesa con papas fritas")
+    expect(page).to have_no_css("[data-status]")
+    expect(find_button("Agregar Milanesa con papas fritas").text).to eq("")
+  end
+
   it "no marca nada sobre un plato que el empleado no pidió" do
     visit_hydrated dashboard_path
 
