@@ -40,6 +40,7 @@ RSpec.describe "Ver la notificación de pedido confirmado", type: :system do
 
     sign_in users(:one), role: :consumer
     visit dashboard_path
+    open_notifications
 
     expect(page).to have_content(title)
     expect(page).to have_content(
@@ -51,6 +52,7 @@ RSpec.describe "Ver la notificación de pedido confirmado", type: :system do
 
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
     expect(page).to have_no_content(title)
   end
 

@@ -65,6 +65,7 @@ RSpec.describe "Asignar un cupón a empleados", type: :system do
 
     sign_in users(:one), role: :consumer
     visit dashboard_path
+    open_notifications
     expect(page).to have_content("Recibiste un cupón")
     expect(page).to have_content("RR. HH. te dio el cupón Premio del mes: 30% de descuento en 2 viandas para entregas del #{period}.")
 
