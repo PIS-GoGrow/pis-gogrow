@@ -90,9 +90,9 @@ RSpec.describe "Gestión de pagos del proveedor en mobile", type: :system do
     payment = submitted_payment
     open_employee_row
 
-    # Cuenta lo que todavía no está confirmado: el empleado por revisar y la
-    # empresa, que no subió comprobante.
-    expect(page).to have_content("2 cobros pendientes de confirmación")
+    # Cuenta solo los comprobantes por revisar: la empresa, que no subió
+    # comprobante, sigue pendiente pero no entra en el contador.
+    expect(page).to have_content("1 cobro pendiente de confirmación")
     expect(page).to have_content("Por revisar")
 
     click_on "Revisar pago"
@@ -108,7 +108,7 @@ RSpec.describe "Gestión de pagos del proveedor en mobile", type: :system do
 
     expect(payment.reload).to be_approved
     expect(page).to have_content("$300 en cobros confirmados")
-    expect(page).to have_content("1 cobro pendiente de confirmación")
+    expect(page).not_to have_content("pendiente de confirmación")
 
     # Historial solo lista meses cobrados por completo y la empresa sigue debiendo.
     visit_hydrated provider_collections_path

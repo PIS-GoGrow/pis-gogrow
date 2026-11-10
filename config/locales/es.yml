@@ -492,6 +492,7 @@ es:
       employees: "Empleados"
       payments: "Pagos"
       account: "Cuenta"
+      reports: "Reportes"
       mobile_navigation: "Navegación de RR. HH."
     settings:
       profile: "Perfil"
@@ -517,6 +518,12 @@ es:
       mismatch: "La contraseña no coincide."
     completed_sheet:
       done: "Listo"
+    notification_inbox:
+      trigger_one: "Tenés 1 notificación"
+      trigger_other: "Tenés %{count} notificaciones"
+      title: "Notificaciones"
+      empty: "No tenés notificaciones nuevas."
+      close: "Cerrar notificación"
     file_input:
       select: "Seleccionar archivo"
       empty: "Sin archivos seleccionados"
@@ -600,6 +607,7 @@ es:
           pending: "Pendiente %{amount}"
           projected: "Proyectado %{amount}"
           view_detail: "Ver detalle del consumo"
+          reports_link: "Ver reportes"
         payments:
           title: "Tus pagos de %{month}"
           view: "Ver pagos a proveedores"
@@ -608,6 +616,44 @@ es:
           title: "Ranking deuda de empleados"
           view: "Ver empleados con saldos pendientes"
           empty: "Ningún empleado tiene saldos pendientes."
+      reports:
+        index:
+          title: "Reportes"
+          back: "Volver al inicio"
+          period: "Período"
+          summary: "Uso del beneficio"
+          adhesion: "Adhesión"
+          adhesion_detail_one: "%{participants} de %{count} empleado"
+          adhesion_detail_other: "%{participants} de %{count} empleados"
+          orders: "Pedidos"
+          meals_one: "%{count} vianda"
+          meals_other: "%{count} viandas"
+          spending: "Gasto acumulado"
+          employee_amount: "Empleado: %{amount}"
+          avg_per_participant: "Promedio por participante"
+          avg_per_participant_detail: "Viandas por participante"
+          avg_subsidy: "Subsidio promedio"
+          avg_subsidy_detail: "Por vianda"
+          spending_distribution: "Distribución del gasto"
+          company_subsidy: "Subsidio empresa"
+          employee_contribution: "Aporte empleados"
+          total_spent: "Gasto total"
+          daily_activity: "Evolución en el período"
+          daily_activity_empty: "Sin actividad en este período."
+          delivery_methods: "Modalidad de entrega"
+          delivery_office: "En oficina"
+          delivery_home: "A domicilio"
+          provider_share: "%{percent}% del total"
+          providers: "Consumo por proveedor"
+          no_provider: "Sin proveedor"
+          empty_title: "Sin consumos"
+          empty_description: "No hay pedidos confirmados en este período."
+          presets:
+            today: "Hoy"
+            yesterday: "Ayer"
+            this_week: "Esta semana"
+            this_month: "Este mes"
+            last_month: "Mes pasado"
       order_events:
         index:
           title: "Auditoría de pedidos"
@@ -1465,10 +1511,12 @@ es:
           saved: "Platos guardados"
         added:
           title: "¡Plato agregado!"
+          title_plural: "¡Platos agregados!"
           description: "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando."
           back: "Volver a Menú"
           continue: "Seguir agregando"
           description_date: "Tu plato fue agregado al menú del %{date} correctamente."
+          description_date_plural: "Tus platos fueron agregados al menú del %{date} correctamente."
         saved:
           date_label: "¿Para qué fecha vas a agregar platos?"
           date_hint: "Elegí una fecha para ver qué platos podés agregar."

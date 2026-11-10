@@ -174,6 +174,13 @@
           "title": "Volvió la conexión"
         }
       },
+      "notification_inbox": {
+        "close": "Cerrar notificación",
+        "empty": "No tenés notificaciones nuevas.",
+        "title": "Notificaciones",
+        "trigger_one": "Tenés 1 notificación",
+        "trigger_other": "Tenés %{count} notificaciones"
+      },
       "password_fields": {
         "confirm_label": "Confirmar contraseña",
         "create_label": "Crear contraseña",
@@ -197,7 +204,8 @@
         "employees": "Empleados",
         "home": "Inicio",
         "mobile_navigation": "Navegación de RR. HH.",
-        "payments": "Pagos"
+        "payments": "Pagos",
+        "reports": "Reportes"
       },
       "benefit_configurations": "Subsidios",
       "change_to": "Cambiar a",
@@ -680,6 +688,7 @@
             "participation": "Participación",
             "pending": "Pendiente %{amount}",
             "projected": "Proyectado %{amount}",
+            "reports_link": "Ver reportes",
             "spending": "Gasto",
             "title": "Tu beneficio",
             "view_detail": "Ver detalle del consumo"
@@ -845,6 +854,47 @@
           "profile": "Perfil",
           "profile_description": "Consultá tu correo y editá tus datos autorizados",
           "title": "Perfil y Apariencia"
+        },
+        "reports": {
+          "index": {
+            "adhesion": "Adhesión",
+            "adhesion_detail_one": "%{participants} de %{count} empleado",
+            "adhesion_detail_other": "%{participants} de %{count} empleados",
+            "avg_per_participant": "Promedio por participante",
+            "avg_per_participant_detail": "Viandas por participante",
+            "avg_subsidy": "Subsidio promedio",
+            "avg_subsidy_detail": "Por vianda",
+            "back": "Volver al inicio",
+            "company_subsidy": "Subsidio empresa",
+            "daily_activity": "Evolución en el período",
+            "daily_activity_empty": "Sin actividad en este período.",
+            "delivery_home": "A domicilio",
+            "delivery_methods": "Modalidad de entrega",
+            "delivery_office": "En oficina",
+            "employee_amount": "Empleado: %{amount}",
+            "employee_contribution": "Aporte empleados",
+            "empty_description": "No hay pedidos confirmados en este período.",
+            "empty_title": "Sin consumos",
+            "meals_one": "%{count} vianda",
+            "meals_other": "%{count} viandas",
+            "no_provider": "Sin proveedor",
+            "orders": "Pedidos",
+            "period": "Período",
+            "presets": {
+              "last_month": "Mes pasado",
+              "this_month": "Este mes",
+              "this_week": "Esta semana",
+              "today": "Hoy",
+              "yesterday": "Ayer"
+            },
+            "provider_share": "%{percent}% del total",
+            "providers": "Consumo por proveedor",
+            "spending": "Gasto acumulado",
+            "spending_distribution": "Distribución del gasto",
+            "summary": "Uso del beneficio",
+            "title": "Reportes",
+            "total_spent": "Gasto total"
+          }
         }
       },
       "cart": {
@@ -1675,7 +1725,9 @@
             "continue": "Seguir agregando",
             "description": "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando.",
             "description_date": "Tu plato fue agregado al menú del %{date} correctamente.",
-            "title": "¡Plato agregado!"
+            "description_date_plural": "Tus platos fueron agregados al menú del %{date} correctamente.",
+            "title": "¡Plato agregado!",
+            "title_plural": "¡Platos agregados!"
           },
           "back": "Volver al menú",
           "saved": {
