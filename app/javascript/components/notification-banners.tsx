@@ -1,5 +1,6 @@
 import { router, usePage } from "@inertiajs/react"
 import { Bell, X } from "lucide-react"
+import * as React from "react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -188,15 +189,21 @@ function useCloseNotification() {
   return { closingId, closeNotification }
 }
 
-export function NotificationInbox() {
+interface NotificationInboxProps {
+  children?: React.ReactNode
+}
+
+export function NotificationInbox({ children }: NotificationInboxProps = {}) {
   const { t } = useTranslation()
   const notifications = usePage().props.notifications ?? []
   const { closingId, closeNotification } = useCloseNotification()
 
   const inbox = notifications.filter((n) => !n.requires_action)
+  const extraCount = React.Children.count(children)
+  const totalCount = inbox.length + extraCount
   const label =
-    inbox.length > 0
-      ? t("components.notification_inbox.trigger", { count: inbox.length })
+    totalCount > 0
+      ? t("components.notification_inbox.trigger", { count: totalCount })
       : t("components.notification_inbox.title")
 
   return (
@@ -210,12 +217,12 @@ export function NotificationInbox() {
           className="border-border bg-card hover:bg-accent relative size-9 shrink-0 rounded-full shadow-none"
         >
           <Bell className="size-5" strokeWidth={1.5} aria-hidden="true" />
-          {inbox.length > 0 && (
+          {totalCount > 0 && (
             <span
               aria-hidden="true"
               className="bg-foreground text-background absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] leading-none font-semibold tabular-nums"
             >
-              {inbox.length > 9 ? "9+" : inbox.length}
+              {totalCount > 9 ? "9+" : totalCount}
             </span>
           )}
         </Button>
@@ -231,8 +238,9 @@ export function NotificationInbox() {
           </AdaptableDialogTitle>
         </AdaptableDialogHeader>
 
-        {inbox.length > 0 ? (
+        {totalCount > 0 ? (
           <div className="flex flex-col gap-3 overflow-y-auto p-5">
+            {children}
             {inbox.map((notification) => (
               <NotificationAlert
                 key={notification.id}
