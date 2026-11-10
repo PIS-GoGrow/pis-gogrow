@@ -1,4 +1,3 @@
-// components/orders/order-card-summary.tsx
 import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -8,7 +7,6 @@ import {
   CardAction,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -79,7 +77,7 @@ export default function OrderCardReduced({
         </p>
       </CardContent>
 
-      {footer && <CardFooter className="relative">{footer}</CardFooter>}
+      {footer}
     </Card>
   )
 }

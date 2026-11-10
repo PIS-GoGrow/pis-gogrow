@@ -38,7 +38,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
           {/* El botón se muestra en el historial: habilitado solo si el pedido se
             puede calificar (confirmado, ya entregado y sin reseña). */}
           {section === "history" && (
-            <CardFooter className="relative">
+            <CardFooter className="relative px-4">
               {order.reviewable ? (
                 <Button
                   type="button"
@@ -72,7 +72,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
           )}
 
           {section === "upcoming" && (
-            <CardFooter className="relative grid grid-cols-2 items-start gap-2">
+            <CardFooter className="relative grid grid-cols-2 items-start gap-2 px-4">
               {order.cancellable ? (
                 <CancelOrderSheet order={order} />
               ) : (
