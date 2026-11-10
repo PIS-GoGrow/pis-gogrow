@@ -39,6 +39,15 @@ describe("AdminMobileNav", () => {
     currentUrl = "/rrhh/inicio"
   })
 
+  it("keeps Inicio active in the reports", () => {
+    currentUrl = "/rrhh/reportes?desde=2026-10-01&hasta=2026-10-15"
+    expect(nav().getByRole("link", { name: "Inicio" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    )
+    currentUrl = "/rrhh/inicio"
+  })
+
   function nav() {
     render(<AdminMobileNav />)
     return within(

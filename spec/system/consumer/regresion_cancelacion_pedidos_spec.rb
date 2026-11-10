@@ -20,6 +20,11 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
   end
 
   before do
+    # Evitar colisión transitoria con las fechas generadas al cargar fixtures
+    schedules(:past).update_columns(date: Date.new(2000, 1, 1))
+    sched_today.update_columns(date: Date.new(2000, 1, 2))
+    sched_future.update_columns(date: Date.new(2000, 1, 3))
+
     schedules(:past).update!(date: Date.current - 5.days)
     sched_today.update!(available: true, date: Date.current)
     sched_future.update!(available: true, date: Date.tomorrow)
