@@ -90,26 +90,24 @@ export default function OfflineApp() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
-      <h1 className="text-3xl font-bold">Estás sin conexión</h1>
+      <h1 className="text-3xl font-bold">{t("pages.offline.title")}</h1>
 
-      <Button onClick={() => location.reload()}>Reintentar</Button>
+      <Button onClick={() => location.reload()}>{t("pages.offline.retry")}</Button>
 
       {cached?.upcoming && cached?.upcoming.length > 0 && (
         <section className="w-full max-w-xl">
           <h2 className="mb-2 text-lg font-semibold">
-            {cached.role === "provider"
-              ? "Pedidos pendientes recibidos:"
-              : "Pedidos realizados:"}
+            {(cached.role === "provider" || cached.role === "consumer") &&
+              t(`pages.offline.heading.${cached.role}`)}
           </h2>
 
           <p>
-            {cached.role === "provider"
-              ? "Estos son los pedidos que recibiste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado."
-              : "Estos son los pedidos que hiciste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado."}
+            {(cached.role === "provider" || cached.role === "consumer") &&
+              t(`pages.offline.description.${cached.role}`)}
           </p>
 
           <p className="text-muted-foreground mb-4 text-sm">
-            Última actualización:{" "}
+            {t("pages.offline.updated_at")}
             {new Date(cached.saved_at).toLocaleString("es-UY")}
           </p>
 

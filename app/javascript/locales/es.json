@@ -1082,6 +1082,19 @@
         },
         "title": "Viandas GoGrow"
       },
+      "offline": {
+        "description": {
+          "consumer": "Estos son los pedidos que hiciste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado.",
+          "provider": "Estos son los pedidos que recibiste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado."
+        },
+        "heading": {
+          "consumer": "Pedidos realizados:",
+          "provider": "Pedidos pendientes recibidos:"
+        },
+        "retry": "Reintentar",
+        "title": "Estás sin conexión",
+        "updated_at": "Última actualización: "
+      },
       "orders": {
         "addresses": {
           "current": "Dirección actual",

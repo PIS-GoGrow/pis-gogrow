@@ -553,6 +553,16 @@ es:
         title: "Volvió la conexión"
         description: "Ya podés seguir navegando."
   pages:
+    offline:
+      title: "Estás sin conexión"
+      retry: "Reintentar"
+      updated_at: "Última actualización: "
+      heading:
+        provider: "Pedidos pendientes recibidos:"
+        consumer: "Pedidos realizados:"
+      description:
+        provider: "Estos son los pedidos que recibiste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado."
+        consumer: "Estos son los pedidos que hiciste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado."
     admin:
       account:
         title: "Cuenta"
