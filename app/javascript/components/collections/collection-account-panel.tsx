@@ -86,30 +86,15 @@ export default function CollectionAccountPanel({
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">
-        {settled ? (
-          <p className="text-foreground text-base font-semibold">
-            {formatMoney(account.payable_amount)}
-            <span className="text-muted-foreground font-normal">
-              {" | "}
-              {t("pages.provider_collections.meals", { count: account.meals })}
-            </span>
-          </p>
-        ) : (
-          <div className="min-w-0">
-            <p className="text-muted-foreground text-xs">
-              {t("pages.provider_collections.group.outstanding_amount")}
-            </p>
-            <p className="text-foreground text-base font-semibold">
-              {formatMoney(account.outstanding_amount)}
-            </p>
-            <p className="text-muted-foreground text-xs">
-              {t("pages.provider_collections.group.consumed_in_month", {
-                count: account.meals,
-                month: account.month_name,
-              })}
-            </p>
-          </div>
-        )}
+        <p className="text-foreground text-base font-semibold">
+          {formatMoney(
+            settled ? account.payable_amount : account.outstanding_amount,
+          )}
+          <span className="text-muted-foreground font-normal">
+            {" | "}
+            {t("pages.provider_collections.meals", { count: account.meals })}
+          </span>
+        </p>
 
         {detailMode === "dialog" ? (
           <CollectionAccountDetailDialog account={account} settled={settled} />
