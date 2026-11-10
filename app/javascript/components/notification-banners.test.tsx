@@ -2,14 +2,23 @@ import { render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import NotificationBanners from "./notification-banners"
+import NotificationBanners, { NotificationInbox } from "./notification-banners"
+
+function Notifications() {
+  return (
+    <>
+      <NotificationInbox />
+      <NotificationBanners />
+    </>
+  )
+}
 
 const mocks = vi.hoisted(() => ({
   patch: vi.fn(),
   notifications: [] as {
     id: number
     title: string
-    description: string
+    description: string | Record<string, string>
     requires_action: boolean
   }[],
 }))
@@ -32,6 +41,11 @@ vi.mock("@inertiajs/react", async () => {
   }
 })
 
+async function openInbox(user = userEvent.setup()) {
+  await user.click(screen.getByRole("button", { name: /Tenés \d+ notificaci/ }))
+  return user
+}
+
 describe("NotificationBanners", () => {
   beforeEach(() => {
     mocks.patch.mockClear()
@@ -44,7 +58,7 @@ describe("NotificationBanners", () => {
     expect(container).toBeEmptyDOMElement()
   })
 
-  it("renders a dismissable notification with a close button", () => {
+  it("renders a dismissable notification with a close button", async () => {
     mocks.notifications.push({
       id: 1,
       title: "Tu pedido fue cancelado",
@@ -52,7 +66,8 @@ describe("NotificationBanners", () => {
       requires_action: false,
     })
 
-    render(<NotificationBanners />)
+    render(<Notifications />)
+    await openInbox()
 
     expect(screen.getByText("Tu pedido fue cancelado")).toBeInTheDocument()
     expect(
@@ -63,7 +78,7 @@ describe("NotificationBanners", () => {
     ).toBeInTheDocument()
   })
 
-  it("renders a payment approved notification for consumer and can be dismissed", () => {
+  it("renders a payment approved notification for consumer and can be dismissed", async () => {
     mocks.notifications.push({
       id: 88,
       title: "Pago aprobado",
@@ -72,7 +87,8 @@ describe("NotificationBanners", () => {
       requires_action: false,
     })
 
-    render(<NotificationBanners />)
+    render(<Notifications />)
+    await openInbox()
 
     expect(screen.getByText("Pago aprobado")).toBeInTheDocument()
     expect(
@@ -85,7 +101,7 @@ describe("NotificationBanners", () => {
     ).toBeInTheDocument()
   })
 
-  it("renders an order rejection notification with rejected title and reason and can be dismissed", () => {
+  it("renders an order rejection notification with rejected title and reason and can be dismissed", async () => {
     mocks.notifications.push({
       id: 99,
       title: "Tu pedido fue rechazado",
@@ -94,7 +110,8 @@ describe("NotificationBanners", () => {
       requires_action: false,
     })
 
-    render(<NotificationBanners />)
+    render(<Notifications />)
+    await openInbox()
 
     expect(screen.getByText("Tu pedido fue rechazado")).toBeInTheDocument()
     expect(
@@ -121,7 +138,8 @@ describe("NotificationBanners", () => {
       requires_action: false,
     })
 
-    render(<NotificationBanners />)
+    render(<Notifications />)
+    await openInbox(user)
 
     expect(screen.getByText("Nuevo pedido")).toBeInTheDocument()
     expect(
@@ -147,7 +165,7 @@ describe("NotificationBanners", () => {
     )
   })
 
-  it("renders an HR debt payment reminder naming multiple creditors", () => {
+  it("renders an HR debt payment reminder naming multiple creditors", async () => {
     mocks.notifications.push({
       id: 2,
       title: "Recordatorio de pago pendiente",
@@ -156,7 +174,8 @@ describe("NotificationBanners", () => {
       requires_action: false,
     })
 
-    render(<NotificationBanners />)
+    render(<Notifications />)
+    await openInbox()
 
     expect(
       screen.getByText("Recordatorio de pago pendiente"),
@@ -179,7 +198,7 @@ describe("NotificationBanners", () => {
       requires_action: true,
     })
 
-    render(<NotificationBanners />)
+    render(<Notifications />)
 
     expect(screen.getByText("Tenés un pago pendiente")).toBeInTheDocument()
     expect(
@@ -197,7 +216,8 @@ describe("NotificationBanners", () => {
       requires_action: false,
     })
 
-    render(<NotificationBanners />)
+    render(<Notifications />)
+    await openInbox(user)
 
     await user.click(
       screen.getByRole("button", { name: "Cerrar notificación" }),
@@ -215,7 +235,7 @@ describe("NotificationBanners", () => {
     )
   })
 
-  it("renders the dismissable alert icon with currentColor stroke to support dark mode", () => {
+  it("renders the dismissable alert icon with currentColor stroke to support dark mode", async () => {
     mocks.notifications.push({
       id: 5,
       title: "Tu pedido fue cancelado",
@@ -223,9 +243,10 @@ describe("NotificationBanners", () => {
       requires_action: false,
     })
 
-    const { container } = render(<NotificationBanners />)
+    render(<Notifications />)
+    await openInbox()
 
-    const svg = container.querySelector("svg")
+    const svg = screen.getByRole("alert").querySelector("svg")
     expect(svg).toBeInTheDocument()
 
     const strokedElements = svg?.querySelectorAll("[stroke]") ?? []
@@ -237,7 +258,7 @@ describe("NotificationBanners", () => {
     })
   })
 
-  it("applies theme-adaptive classes on dark mode and keeps currentColor on dismissable alert icon", () => {
+  it("applies theme-adaptive classes on dark mode and keeps currentColor on dismissable alert icon", async () => {
     document.documentElement.classList.add("dark")
 
     mocks.notifications.push({
@@ -247,9 +268,10 @@ describe("NotificationBanners", () => {
       requires_action: false,
     })
 
-    const { container } = render(<NotificationBanners />)
+    render(<Notifications />)
+    await openInbox()
 
-    const alert = container.querySelector("[role='alert']")
+    const alert = screen.getByRole("alert")
     expect(alert).toHaveClass("text-foreground")
 
     const svg = alert?.querySelector("svg")
@@ -261,5 +283,141 @@ describe("NotificationBanners", () => {
     })
 
     document.documentElement.classList.remove("dark")
+  })
+
+  it("keeps only the notifications that require action as banners and counts the rest in the inbox", async () => {
+    mocks.notifications.push(
+      {
+        id: 10,
+        title: "Tenés un pago pendiente",
+        description: "Realizá el pago para continuar.",
+        requires_action: true,
+      },
+      {
+        id: 11,
+        title: "Pedido confirmado",
+        description: "Tu pedido fue confirmado.",
+        requires_action: false,
+      },
+      {
+        id: 12,
+        title: "Pago aprobado",
+        description: "Tu comprobante fue aprobado.",
+        requires_action: false,
+      },
+    )
+
+    render(<Notifications />)
+
+    expect(screen.getByText("Tenés un pago pendiente")).toBeInTheDocument()
+    expect(screen.queryByText("Pedido confirmado")).not.toBeInTheDocument()
+    expect(screen.queryByText("Pago aprobado")).not.toBeInTheDocument()
+
+    await openInbox()
+
+    expect(
+      screen.getByRole("heading", { name: "Notificaciones" }),
+    ).toBeInTheDocument()
+    expect(screen.getByText("Pedido confirmado")).toBeInTheDocument()
+    expect(screen.getByText("Pago aprobado")).toBeInTheDocument()
+  })
+
+  it("shows the inbox trigger with the singular label for one notification", () => {
+    mocks.notifications.push({
+      id: 13,
+      title: "Pedido confirmado",
+      description: "Tu pedido fue confirmado.",
+      requires_action: false,
+    })
+
+    render(<Notifications />)
+
+    expect(
+      screen.getByRole("button", { name: /Tenés 1 notificación/ }),
+    ).toBeInTheDocument()
+  })
+
+  it("shows the bell without a counter and an empty inbox when every notification requires action", async () => {
+    mocks.notifications.push({
+      id: 14,
+      title: "Tenés un pago pendiente",
+      description: "Realizá el pago para continuar.",
+      requires_action: true,
+    })
+
+    render(<Notifications />)
+
+    const user = userEvent.setup()
+    await user.click(screen.getByRole("button", { name: "Notificaciones" }))
+
+    expect(
+      screen.getByText("No tenés notificaciones nuevas."),
+    ).toBeInTheDocument()
+  })
+
+  it("displays 9+ badge when there are more than 9 dismissable notifications", () => {
+    for (let i = 1; i <= 12; i++) {
+      mocks.notifications.push({
+        id: i,
+        title: `Notificación ${i}`,
+        description: `Detalle ${i}`,
+        requires_action: false,
+      })
+    }
+
+    render(<Notifications />)
+
+    expect(
+      screen.getByRole("button", { name: "Tenés 12 notificaciones" }),
+    ).toBeInTheDocument()
+    expect(screen.getByText("9+")).toBeInTheDocument()
+  })
+
+  it("handles pluralized description object correctly", async () => {
+    mocks.notifications.push({
+      id: 20,
+      title: "Cupones asignados",
+      description: {
+        other: "Tenés 3 viandas con descuento disponibles.",
+        one: "Tenés 1 vianda con descuento disponible.",
+      },
+      requires_action: false,
+    })
+
+    render(<Notifications />)
+    await openInbox()
+
+    expect(screen.getByText("Cupones asignados")).toBeInTheDocument()
+    expect(
+      screen.getByText("Tenés 3 viandas con descuento disponibles."),
+    ).toBeInTheDocument()
+  })
+
+  it("disables the close button while closing request is in flight", async () => {
+    const user = userEvent.setup()
+
+    mocks.notifications.push({
+      id: 30,
+      title: "Notificación de prueba",
+      description: "Descripción de prueba.",
+      requires_action: false,
+    })
+
+    render(<Notifications />)
+    await openInbox(user)
+
+    const closeButton = screen.getByRole("button", {
+      name: "Cerrar notificación",
+    })
+    expect(closeButton).toBeEnabled()
+
+    await user.click(closeButton)
+
+    expect(mocks.patch).toHaveBeenCalledTimes(1)
+    expect(closeButton).toBeDisabled()
+
+    // Intentar hacer click nuevamente no debe enviar otro patch
+    await user.click(closeButton)
+    expect(mocks.patch).toHaveBeenCalledTimes(1)
   })
 })
