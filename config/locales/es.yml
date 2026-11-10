@@ -518,6 +518,12 @@ es:
       mismatch: "La contraseña no coincide."
     completed_sheet:
       done: "Listo"
+    notification_inbox:
+      trigger_one: "Tenés 1 notificación"
+      trigger_other: "Tenés %{count} notificaciones"
+      title: "Notificaciones"
+      empty: "No tenés notificaciones nuevas."
+      close: "Cerrar notificación"
     file_input:
       select: "Seleccionar archivo"
       empty: "Sin archivos seleccionados"

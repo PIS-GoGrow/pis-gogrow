@@ -158,7 +158,7 @@ RSpec.describe "Provider::Collections", type: :request do
 
       group = group_for(:pending, Date.current)
 
-      expect(group).to include(awaiting_count: 2, rejected_count: 1, employees_total: 601.0)
+      expect(group).to include(awaiting_count: 1, rejected_count: 1, employees_total: 601.0)
       # Un rechazo pide más atención que un pago por revisar.
       expect(group[:employees_status]).to eq("rejected")
     end

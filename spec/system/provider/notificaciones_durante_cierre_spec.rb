@@ -85,6 +85,7 @@ RSpec.describe "Notificaciones al proveedor durante cierres programados", type: 
 
       sign_in provider_user, role: :provider
       visit_hydrated provider_dashboard_path
+      open_notifications
 
       expect(page).to have_content(order_cancellation_title)
       expect(page).to have_content(
@@ -113,6 +114,7 @@ RSpec.describe "Notificaciones al proveedor durante cierres programados", type: 
 
       sign_in provider_user, role: :provider
       visit_hydrated provider_dashboard_path
+      open_notifications
 
       expect(page).to have_content(payment_receipt_title)
       expect(page).to have_content("#{consumer_user.name} envió un comprobante de pago")
