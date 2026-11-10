@@ -25,10 +25,24 @@ export default function Index({
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const { url } = usePage()
-  const detailMatch = /^\/menu-semanal\/platos\/(\d+)(?:\?.*)?$/.exec(url)
-  const selected = detailMatch
-    ? schedules.find((item) => item.id === Number(detailMatch[1])) ?? null
-    : null
+  const [selected, setSelected] = useState<Schedule | null>(() => {
+    const detailMatch = /^\/menu-semanal\/platos\/(\d+)(?:\?.*)?$/.exec(url)
+    return detailMatch
+      ? schedules.find((item) => item.id === Number(detailMatch[1])) ?? null
+      : null
+  })
+
+  useEffect(() => {
+    const detailMatch = /^\/menu-semanal\/platos\/(\d+)(?:\?.*)?$/.exec(url)
+    if (detailMatch) {
+      setSelected(
+        schedules.find((item) => item.id === Number(detailMatch[1])) ?? null,
+      )
+    } else {
+      setSelected(null)
+    }
+  }, [url, schedules])
+
   const todayDate = week.today ?? today()
   const initialDate =
     week.days.find((d) => d.date === todayDate)?.date ??
@@ -47,6 +61,7 @@ export default function Index({
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   function openDetail(item: Schedule) {
+    setSelected(item)
     const existing = cart.find((c) => c.id === item.id)
     if (existing) {
       setEditingCartId(existing.cartId)
@@ -59,14 +74,19 @@ export default function Index({
       setNotes("")
       setSelections({})
     }
-    router.visit(consumerDashboard.dish(item.id).url, {
+    const targetUrl = consumerDashboard.dish(item.id).url
+    window.history.pushState(window.history.state, "", targetUrl)
+    router.visit(targetUrl, {
       preserveState: true,
     })
   }
 
   function handleBack() {
+    setSelected(null)
     setEditingCartId(null)
-    router.visit(consumerDashboard.index().url, {
+    const targetUrl = consumerDashboard.index().url
+    window.history.pushState(window.history.state, "", targetUrl)
+    router.visit(targetUrl, {
       preserveState: true,
     })
   }
@@ -74,8 +94,11 @@ export default function Index({
   function handleRemoveFromCartAndBack() {
     if (!editingCartId) return
     setCart((items) => items.filter((item) => item.cartId !== editingCartId))
+    setSelected(null)
     setEditingCartId(null)
-    router.visit(consumerDashboard.index().url, {
+    const targetUrl = consumerDashboard.index().url
+    window.history.pushState(window.history.state, "", targetUrl)
+    router.visit(targetUrl, {
       preserveState: true,
     })
   }
@@ -147,8 +170,11 @@ export default function Index({
           ]
     })
 
+    setSelected(null)
     setEditingCartId(null)
-    router.visit(consumerDashboard.index().url, {
+    const targetUrl = consumerDashboard.index().url
+    window.history.pushState(window.history.state, "", targetUrl)
+    router.visit(targetUrl, {
       preserveState: true,
     })
   }

@@ -70,7 +70,7 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
     click_button "Agregar #{dish.name}"
     options.each { |group, option| pick_option(group, option) }
     fill_in "notes", with: notes if notes
-    click_button "Agregar"
+    click_button "Agregar", exact: true
   end
 
   # Cada grupo es una <section> "Elegí tu <nombre>": buscar por el título evita
@@ -81,16 +81,18 @@ RSpec.describe "Pedido de punta a punta: publicar, pedir, editar y consultar" do
 
   def open_cart
     click_link "Ver carrito"
+    expect(page).to have_current_path(dashboard_cart_path)
     expect(page).to have_content("Tu carrito")
   end
 
   def use_new_address(name:, street:)
-    click_button "Agregar"
+    click_button "Agregar", exact: true
     within("[role=dialog]", text: "Agregar una dirección") do
       fill_in "Nombre", with: name
       fill_in "Dirección", with: street
-      click_button "Agregar"
+      click_button "Agregar", exact: true
     end
+    expect(page).to have_no_css("[role=dialog]")
   end
 
   def publish(dish, date)
