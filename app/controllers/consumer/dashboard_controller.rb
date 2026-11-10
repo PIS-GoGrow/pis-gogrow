@@ -46,11 +46,27 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def schedule_data
-    schedules = Schedule.on_active_menus.includes(:orders, menu: [ { reviews: { consumer: :user } }, :option_groups, { provider: [ :user, :closures ] } ])
+    schedules = Schedule.on_active_menus.includes(menu: [ { reviews: { consumer: :user } }, :option_groups, { provider: [ :user, :closures ] } ])
                         .where(date: week_range)
                         .order(:date, :id)
+                        .reject(&:provider_closed?)
 
-    schedules.reject(&:provider_closed?).map { dish_data(it) }
+    ordered = ordered_amounts(schedules.map(&:id))
+
+    schedules.map { dish_data(it).merge(ordered: ordered[it.id]) }
+  end
+
+  # Cada línea del carrito se guarda como un pedido aparte, así que un mismo
+  # plato puede tener unidades pendientes y confirmadas a la vez.
+  def ordered_amounts(schedule_ids)
+    amounts = @consumer.orders
+                       .where(schedule_id: schedule_ids, status: [ :pending, :confirmed ])
+                       .group(:schedule_id, :status)
+                       .sum(:amount)
+
+    schedule_ids.index_with do |schedule_id|
+      { pending: amounts[[ schedule_id, "pending" ]].to_i, confirmed: amounts[[ schedule_id, "confirmed" ]].to_i }
+    end
   end
 
   def favorite_data
