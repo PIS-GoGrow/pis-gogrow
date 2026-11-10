@@ -40,3 +40,6 @@ production:
   employee_order_reminders:
     class: EmployeeOrderRemindersJob
     schedule: every minute
+  unanswered_orders_rejection:
+    class: UnansweredOrdersRejectionJob
+    schedule: every minute
