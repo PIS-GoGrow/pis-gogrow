@@ -1,6 +1,7 @@
-import { render, screen } from "@testing-library/react"
+import { router } from "@inertiajs/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { ProviderCollectionAccount } from "@/types"
 
@@ -56,6 +57,10 @@ const historicalCompanyAccount = {
 } satisfies ProviderCollectionAccount
 
 describe("InvoiceSection", () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it("uses the company payable amount as the suggested invoice total", async () => {
     const user = userEvent.setup()
     const account = {
@@ -74,6 +79,53 @@ describe("InvoiceSection", () => {
 
     expect(screen.getByLabelText("Monto total")).toHaveValue(36_600)
     expect(screen.getByText(/\$36\.600/)).toBeInTheDocument()
+  })
+
+  it("clears the previous file error when reopening the dialog with a new file", async () => {
+    const user = userEvent.setup({ applyAccept: false })
+    const fileError = "El archivo debe ser PDF, JPG o PNG."
+    const account = {
+      ...historicalCompanyAccount,
+      status: "pending",
+      invoice: null,
+    } satisfies ProviderCollectionAccount
+
+    // El servidor rechaza el envío: Inertia entrega los errores a useForm.
+    vi.spyOn(router, "post").mockImplementation((...args: unknown[]) => {
+      const options = args[2] as {
+        onError?: (errors: Record<string, string[]>) => void
+      }
+      options.onError?.({ file: [fileError] })
+    })
+
+    render(<InvoiceSection account={account} />)
+
+    await user.upload(
+      screen.getByLabelText("Archivo de la factura"),
+      new File(["texto"], "no-admitido.txt", { type: "text/plain" }),
+    )
+    await user.click(screen.getByRole("button", { name: "Subir factura" }))
+    await user.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Subir factura",
+      }),
+    )
+
+    expect(screen.getByText(fileError)).toBeInTheDocument()
+
+    await user.click(screen.getByRole("button", { name: "Cancelar" }))
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    )
+
+    await user.upload(
+      screen.getByLabelText("Archivo de la factura"),
+      new File(["factura"], "factura.pdf", { type: "application/pdf" }),
+    )
+    await user.click(screen.getByRole("button", { name: "Subir factura" }))
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument()
+    expect(screen.queryByText(fileError)).not.toBeInTheDocument()
   })
 
   it("shows the invoice download in collection history", () => {
