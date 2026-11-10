@@ -1720,7 +1720,9 @@
             "continue": "Seguir agregando",
             "description": "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando.",
             "description_date": "Tu plato fue agregado al menú del %{date} correctamente.",
-            "title": "¡Plato agregado!"
+            "description_date_plural": "Tus platos fueron agregados al menú del %{date} correctamente.",
+            "title": "¡Plato agregado!",
+            "title_plural": "¡Platos agregados!"
           },
           "back": "Volver al menú",
           "saved": {

@@ -48,7 +48,7 @@ interface SavedMenusTabProps {
   published: ProviderMenusNew["published"]
   today: string
   maximumPublishDate: string
-  onPublished: (date: string) => void
+  onPublished: (date: string, count: number) => void
   defaultDate: string | null
 }
 
@@ -202,6 +202,8 @@ export default function SavedMenusTab({
   }
 
   function submit() {
+    const selectedCount = selected.length
+
     setProcessing(true)
     setError(null)
 
@@ -213,7 +215,7 @@ export default function SavedMenusTab({
         preserveState: true,
         onSuccess: () => {
           setSelected([])
-          onPublished(date)
+          onPublished(date, selectedCount)
         },
         onError: (errors) => {
           const first = Object.values(errors)[0]
