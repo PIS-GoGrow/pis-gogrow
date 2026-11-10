@@ -62,12 +62,22 @@ class Consumer < ApplicationRecord
   end
 
   def current_monthly_benefit
-    benefits.current.monthly.first
+    monthly_benefit_on(Date.current)
+  end
+
+  def monthly_benefit_on(date)
+    candidates = monthly_benefits
+      .where.not(status: :expired)
+      .where(due_date: date..)
+      .order(due_date: :asc)
+    candidates = candidates.current if date <= Date.current
+
+    candidates.find { it.valid_on?(date) }
   end
 
   # Devuelve el porcentaje del beneficio mensual actual
-  def monthly_benefit_percentage
-    current_monthly_benefit&.percentage || 0
+  def monthly_benefit_percentage(date: Date.current)
+    monthly_benefit_on(date)&.percentage || 0
   end
 
   def special_benefits
@@ -78,28 +88,28 @@ class Consumer < ApplicationRecord
   # Devuelve la cantidad del beneficio mensual actual.
   # No tiene en cuenta las órdenes que ya se hicieron: para eso consultar
   # remaining_monthly_benefit
-  def monthly_benefit_available
-    current_monthly_benefit&.amount || 0
+  def monthly_benefit_available(date: Date.current)
+    monthly_benefit_on(date)&.amount || 0
   end
 
   # Los usos del cupo mensual en pedidos activos (pendientes y confirmados) con
   # entrega este mes; una orden de dos viandas subsidiadas cuenta por dos. Es el
   # único conteo del cupo: RR. HH., Pagos, Cuenta e Inicio lo leen de acá.
-  def monthly_benefit_usages
+  def monthly_benefit_usages(date: Date.current)
     OrderBenefit
       .joins(order: :schedule)
-      .where(schedules: { date: Date.current.all_month })
+      .where(schedules: { date: date.all_month })
       .where.not(orders: { status: [ :rejected, :cancelled ] })
       .where(benefit_id: monthly_benefits)
   end
 
-  def monthly_benefit_used_this_month
-    monthly_benefit_usages.sum(:benefit_used)
+  def monthly_benefit_used_this_month(date: Date.current)
+    monthly_benefit_usages(date:).sum(:benefit_used)
   end
 
   # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes
-  def remaining_monthly_benefit
-    [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
+  def remaining_monthly_benefit(date: Date.current)
+    [ monthly_benefit_available(date:) - monthly_benefit_used_this_month(date:), 0 ].max
   end
 
   def weekly_benefit_usages(date: Date.current)
@@ -114,19 +124,19 @@ class Consumer < ApplicationRecord
     weekly_benefit_usages(date:).sum(:benefit_used)
   end
 
+  def weekly_benefit_limit(date: Date.current)
+    monthly_benefit_on(date) ? WEEKLY_BENEFIT_LIMIT : 0
+  end
+
   def remaining_weekly_benefit(date: Date.current)
-    [ WEEKLY_BENEFIT_LIMIT - weekly_benefit_used(date:), 0 ].max
+    [ weekly_benefit_limit(date:) - weekly_benefit_used(date:), 0 ].max
   end
 
   # Devuelve el beneficio mensual que puede ser aplicado en un schedule.
   # Esto es, el current_monthly_benefit si la fecha del schedule lo permite,
   # o el siguiente si no.
   def monthly_benefit_for(schedule)
-    monthly_benefits
-      .where.not(status: :expired)
-      .where(due_date: schedule.date..)
-      .order(due_date: :asc) # Debería haber a lo sumo 2: uno current y uno future
-      .first # Obtenemos el que debería ser el current
+    monthly_benefit_on(schedule.date)
   end
 
   # Se espera que no se incluyan direcciones blank acá

@@ -12,6 +12,8 @@ interface Props {
 export function BenefitCard({ benefit, mobile = false }: Props) {
   const { t } = useTranslation()
   const card = "pages.consumer_dashboard.benefit_card"
+  if (benefit.weekly_limit <= 0) return null
+
   const progress = Math.min(
     100,
     (benefit.weekly_used / Math.max(benefit.weekly_limit, 1)) * 100,

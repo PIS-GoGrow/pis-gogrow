@@ -128,7 +128,7 @@ class Orders::Pricing
   # Lo que le corresponde hoy a una vianda que entre en todos los cupos: el base
   # y los especiales vigentes que todavía tienen usos. nil si no tiene ninguno.
   def summary(date: Date.current)
-    base_percentage = @consumer.monthly_benefit_percentage
+    base_percentage = @consumer.monthly_benefit_percentage(date:)
     specials = @consumer.special_benefits.select { it.valid_on?(date) && remaining_uses(it) != 0 }
 
     return if base_percentage.zero? && specials.empty?

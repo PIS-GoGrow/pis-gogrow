@@ -86,11 +86,11 @@ class Consumer::DashboardController < Consumer::InertiaController
     week_date = week_range.first
 
     {
-      percentage: @consumer.monthly_benefit_percentage,
-      monthly_limit: @consumer.monthly_benefit_available,
-      monthly_used: @consumer.monthly_benefit_used_this_month,
-      monthly_remaining: @consumer.remaining_monthly_benefit,
-      weekly_limit: Consumer::WEEKLY_BENEFIT_LIMIT,
+      percentage: @consumer.monthly_benefit_percentage(date: week_date),
+      monthly_limit: @consumer.monthly_benefit_available(date: week_date),
+      monthly_used: @consumer.monthly_benefit_used_this_month(date: week_date),
+      monthly_remaining: @consumer.remaining_monthly_benefit(date: week_date),
+      weekly_limit: @consumer.weekly_benefit_limit(date: week_date),
       weekly_used: @consumer.weekly_benefit_used(date: week_date),
       weekly_remaining: @consumer.remaining_weekly_benefit(date: week_date),
       specials: @consumer.special_benefits.map do |benefit|

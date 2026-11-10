@@ -93,8 +93,21 @@ RSpec.describe "Consumer dashboard", type: :request do
       }
     end
 
-  # La tarjeta "Tu consumo" muestra el mes contra el tope mensual: no hay tope
-  # semanal en los requisitos, y dividir el mensual entre 4 daba 0 con K < 4.
+  it "does not report quotas from a benefit expired by date" do
+    travel_to(Time.zone.local(2026, 9, 14, 10))
+    user = consumer_user
+    user.consumer.benefits.sole.update_columns(due_date: Date.current.yesterday)
+    sign_in_as_consumer(user)
+
+    get dashboard_path
+
+    expect(inertia).to have_props { |props|
+      props[:benefit].except(:specials).values.all?(&:zero?)
+    }
+  end
+
+  # El detalle mensual conserva los usos de otras semanas aunque la tarjeta de
+  # consumo principal muestre el cupo semanal.
   it "reports the monthly allowance using delivery dates" do
     travel_to(Time.zone.local(2026, 9, 14, 10))
     Order.destroy_all
@@ -117,6 +130,9 @@ RSpec.describe "Consumer dashboard", type: :request do
         monthly_limit: 20,
         monthly_used: 5,
         monthly_remaining: 15,
+        weekly_limit: 5,
+        weekly_used: 2,
+        weekly_remaining: 3,
         specials: []
       }
     )

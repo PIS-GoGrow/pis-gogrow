@@ -33,4 +33,10 @@ describe("BenefitCard", () => {
 
     expect(screen.getByText("6 de 5")).toBeInTheDocument()
   })
+
+  it("does not show a quota when there is no valid base subsidy", () => {
+    render(<BenefitCard benefit={benefit(0, 0)} />)
+
+    expect(screen.queryByText("Tu consumo")).not.toBeInTheDocument()
+  })
 })

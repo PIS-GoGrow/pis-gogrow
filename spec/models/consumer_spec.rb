@@ -166,6 +166,16 @@ RSpec.describe Consumer, type: :model do
 
       expect(consumer.monthly_benefit_available).to eq(0)
     end
+
+    it "ignores a current benefit that has already expired by date" do
+      consumer.benefits.where.not(id: benefits(:monthly).id).destroy_all
+      benefits(:monthly).update_columns(due_date: Date.current.yesterday)
+
+      expect(consumer.current_monthly_benefit).to be_nil
+      expect(consumer.monthly_benefit_available).to eq(0)
+      expect(consumer.weekly_benefit_limit).to eq(0)
+      expect(consumer.remaining_weekly_benefit).to eq(0)
+    end
   end
 
   describe "debt and spending" do
