@@ -37,10 +37,10 @@ RSpec.describe Menus::Update do
   end
 
   it "only changes the programmed day when asked for that day" do
-    today = menu.schedules.create!(date: wednesday, amount: 5)
-    tomorrow = menu.schedules.create!(date: thursday, amount: 5)
+    today = menu.schedules.create!(date: wednesday)
+    tomorrow = menu.schedules.create!(date: thursday)
 
-    update({ mode: "single", date: thursday.iso8601, amount: 5 }, scope: "day")
+    update({ mode: "single", date: thursday.iso8601 }, scope: "day")
 
     expect(today.reload.menu.name).to eq("Milanesa")
     expect(tomorrow.reload.menu.name).to eq("Milanesa napolitana")
@@ -50,10 +50,10 @@ RSpec.describe Menus::Update do
   end
 
   it "changes the saved dish from that day on and keeps the earlier days as they were" do
-    today = menu.schedules.create!(date: wednesday, amount: 5)
-    tomorrow = menu.schedules.create!(date: thursday, amount: 5)
+    today = menu.schedules.create!(date: wednesday)
+    tomorrow = menu.schedules.create!(date: thursday)
 
-    update({ mode: "single", date: thursday.iso8601, amount: 5 }, scope: "saved")
+    update({ mode: "single", date: thursday.iso8601 }, scope: "saved")
 
     expect(menu.reload.name).to eq("Milanesa napolitana")
     expect(tomorrow.reload.menu).to eq(menu)
@@ -62,17 +62,17 @@ RSpec.describe Menus::Update do
   end
 
   it "programs a single day that was not programmed" do
-    update({ mode: "single", date: friday.iso8601, amount: 4 }, scope: "day")
+    update({ mode: "single", date: friday.iso8601 }, scope: "day")
 
     schedule = Schedule.find_by(menu_id: menu.family_ids, date: friday)
-    expect(schedule.amount).to eq(4)
+    expect(schedule).to be_present
     expect(schedule.menu.name).to eq("Milanesa napolitana")
   end
 
   it "does not program a single day the provider closed, and changes nothing" do
     providers(:tuviandita).closures.create!(starts_on: friday, ends_on: friday, reason: "Feriado")
 
-    result = update({ mode: "single", date: friday.iso8601, amount: 4 }, scope: "day")
+    result = update({ mode: "single", date: friday.iso8601 }, scope: "day")
 
     expect(result.errors[:agenda]).to eq([ I18n.t("validations.menu_agenda.date_closed") ])
     expect(Schedule.where(menu_id: menu.family_ids, date: friday)).to be_empty
@@ -80,10 +80,10 @@ RSpec.describe Menus::Update do
   end
 
   it "still edits a closed day that was published before the closure" do
-    published = menu.schedules.create!(date: friday, amount: 5)
+    published = menu.schedules.create!(date: friday)
     providers(:tuviandita).closures.create!(starts_on: friday, ends_on: friday, reason: "Feriado")
 
-    result = update({ mode: "single", date: friday.iso8601, amount: 4 }, scope: "day")
+    result = update({ mode: "single", date: friday.iso8601 }, scope: "day")
 
     expect(result.errors).to be_empty
     expect(Schedule.find_by(menu_id: menu.family_ids, date: friday).menu.name).to eq("Milanesa napolitana")
@@ -93,14 +93,14 @@ RSpec.describe Menus::Update do
   it "skips the closed days of a weekly agenda without failing" do
     providers(:tuviandita).closures.create!(starts_on: next_monday, ends_on: next_monday, reason: "Feriado")
 
-    result = update({ mode: "weekly", weekdays: [ "1", "5" ], starts_on: wednesday.iso8601, amount: 6 })
+    result = update({ mode: "weekly", weekdays: [ "1", "5" ], starts_on: wednesday.iso8601 })
 
     expect(result.errors).to be_empty
     expect(Schedule.where(menu_id: menu.family_ids).pluck(:date)).to contain_exactly(friday, Date.new(2030, 1, 18))
   end
 
   it "applies a weekly agenda from its start and programs it" do
-    update({ mode: "weekly", weekdays: [ "1", "5" ], starts_on: wednesday.iso8601, amount: 6 })
+    update({ mode: "weekly", weekdays: [ "1", "5" ], starts_on: wednesday.iso8601 })
 
     expect(menu.reload.name).to eq("Milanesa napolitana")
     expect(menu.current_agenda.weekdays).to eq([ 1, 5 ])
@@ -111,17 +111,17 @@ RSpec.describe Menus::Update do
   it "programs again the dates the provider had removed when a new agenda starts" do
     menu.update!(skipped_dates: [ friday ])
 
-    update({ mode: "weekly", weekdays: [ "1", "5" ], starts_on: wednesday.iso8601, amount: 6 })
+    update({ mode: "weekly", weekdays: [ "1", "5" ], starts_on: wednesday.iso8601 })
 
     expect(menu.reload.skipped_dates).to be_empty
     expect(Schedule.where(menu_id: menu.family_ids, date: friday)).to exist
   end
 
   it "applies the changes only during a range and goes back to the saved dish after it" do
-    menu.agendas.create!(weekdays: [ 1, 2, 3, 4, 5 ], starts_on: wednesday, amount: 5)
+    menu.agendas.create!(weekdays: [ 1, 2, 3, 4, 5 ], starts_on: wednesday)
     Menus::AgendaScheduler.call(menu)
 
-    update({ mode: "range", weekdays: [ "4", "5" ], starts_on: thursday.iso8601, ends_on: friday.iso8601, amount: 2 })
+    update({ mode: "range", weekdays: [ "4", "5" ], starts_on: thursday.iso8601, ends_on: friday.iso8601 })
 
     changed = Schedule.where(menu_id: menu.family_ids, date: thursday..friday).map { it.menu.name }
     expect(changed).to eq([ "Milanesa napolitana", "Milanesa napolitana" ])
@@ -130,20 +130,20 @@ RSpec.describe Menus::Update do
   end
 
   it "keeps the confirmed orders when asked to" do
-    order = order_for(menu.schedules.create!(date: thursday, amount: 5))
+    order = order_for(menu.schedules.create!(date: thursday))
 
-    update({ mode: "single", date: thursday.iso8601, amount: 5 }, scope: "day", confirmed_orders: "keep")
+    update({ mode: "single", date: thursday.iso8601 }, scope: "day", confirmed_orders: "keep")
 
     expect(order.reload).to be_confirmed
     expect(order.menu_name).to eq("Milanesa")
   end
 
   it "rejects the confirmed orders of the affected days when asked to" do
-    affected = order_for(menu.schedules.create!(date: thursday, amount: 5))
+    affected = order_for(menu.schedules.create!(date: thursday))
     pending = order_for(Schedule.find_by!(menu: menu, date: thursday), status: :pending)
-    other_day = order_for(menu.schedules.create!(date: friday, amount: 5))
+    other_day = order_for(menu.schedules.create!(date: friday))
 
-    update({ mode: "single", date: thursday.iso8601, amount: 5 }, scope: "day", confirmed_orders: "reject")
+    update({ mode: "single", date: thursday.iso8601 }, scope: "day", confirmed_orders: "reject")
 
     expect(affected.reload).to be_rejected
     expect(affected).to be_rejection_reason_dish_modified
@@ -152,7 +152,7 @@ RSpec.describe Menus::Update do
   end
 
   it "does not rewrite what an earlier order shows" do
-    order = order_for(menu.schedules.create!(date: wednesday, amount: 5))
+    order = order_for(menu.schedules.create!(date: wednesday))
 
     update({ mode: "none" })
 
@@ -162,7 +162,7 @@ RSpec.describe Menus::Update do
   end
 
   it "removes the agenda when no day is picked" do
-    menu.agendas.create!(weekdays: [ 1 ], starts_on: wednesday, amount: 5)
+    menu.agendas.create!(weekdays: [ 1 ], starts_on: wednesday)
 
     update({ mode: "none" })
 
@@ -170,8 +170,8 @@ RSpec.describe Menus::Update do
   end
 
   it "returns the dish errors and changes nothing when the data is invalid" do
-    menu.schedules.create!(date: thursday, amount: 5)
-    service = described_class.new(menu:, attributes: attributes.merge(name: ""), agenda: { mode: "single", date: thursday.iso8601, amount: 5 }, scope: "day")
+    menu.schedules.create!(date: thursday)
+    service = described_class.new(menu:, attributes: attributes.merge(name: ""), agenda: { mode: "single", date: thursday.iso8601 }, scope: "day")
 
     expect(service.call).to be(false)
     expect(service.errors[:name]).to be_present
@@ -179,7 +179,7 @@ RSpec.describe Menus::Update do
   end
 
   it "rejects an agenda without weekdays or with a past start" do
-    service = described_class.new(menu:, attributes:, agenda: { mode: "weekly", weekdays: [], starts_on: (wednesday - 1).iso8601, amount: 5 })
+    service = described_class.new(menu:, attributes:, agenda: { mode: "weekly", weekdays: [], starts_on: (wednesday - 1).iso8601 })
 
     expect(service.call).to be(false)
     expect(service.errors[:agenda].size).to eq(2)
@@ -188,9 +188,9 @@ RSpec.describe Menus::Update do
 
   describe "#affected_schedules" do
     it "counts only the programmed days the change reaches" do
-      menu.schedules.create!(date: wednesday, amount: 5)
-      menu.schedules.create!(date: thursday, amount: 5)
-      menu.schedules.create!(date: friday, amount: 5)
+      menu.schedules.create!(date: wednesday)
+      menu.schedules.create!(date: thursday)
+      menu.schedules.create!(date: friday)
 
       day = described_class.new(menu:, attributes:, agenda: { mode: "single", date: thursday.iso8601 }, scope: "day")
       range = described_class.new(menu:, attributes:, agenda: { mode: "range", starts_on: thursday.iso8601, ends_on: friday.iso8601 })
@@ -203,35 +203,28 @@ RSpec.describe Menus::Update do
   describe "edge cases and database integrity" do
     it "rejects single mode on a weekend date" do
       saturday = Date.new(2030, 1, 12)
-      service = described_class.new(menu:, attributes:, agenda: { mode: "single", date: saturday.iso8601, amount: 5 }, scope: "day")
+      service = described_class.new(menu:, attributes:, agenda: { mode: "single", date: saturday.iso8601 }, scope: "day")
 
       expect(service.call).to be(false)
       expect(service.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_date"))
     end
 
     it "rejects range mode when ends_on is before starts_on" do
-      service = described_class.new(menu:, attributes:, agenda: { mode: "range", weekdays: [ "1" ], starts_on: friday.iso8601, ends_on: thursday.iso8601, amount: 5 })
+      service = described_class.new(menu:, attributes:, agenda: { mode: "range", weekdays: [ "1" ], starts_on: friday.iso8601, ends_on: thursday.iso8601 })
 
       expect(service.call).to be(false)
       expect(service.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_range"))
     end
 
-    it "rejects invalid amounts such as zero or negative" do
-      service = described_class.new(menu:, attributes:, agenda: { mode: "single", date: thursday.iso8601, amount: -3 }, scope: "day")
-
-      expect(service.call).to be(false)
-      expect(service.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_amount"))
-    end
-
     it "rolls back all database changes and preserves orders when record validation fails" do
-      schedule = menu.schedules.create!(date: thursday, amount: 5)
+      schedule = menu.schedules.create!(date: thursday)
       order = order_for(schedule)
 
       invalid_attrs = attributes.merge(price: -100)
       service = described_class.new(
         menu:,
         attributes: invalid_attrs,
-        agenda: { mode: "single", date: thursday.iso8601, amount: 5 },
+        agenda: { mode: "single", date: thursday.iso8601 },
         scope: "day",
         confirmed_orders: "reject"
       )
@@ -276,7 +269,7 @@ RSpec.describe Menus::Update do
         described_class.new(
           menu:,
           attributes: { name: "Milanesa especial", price: 350.0, description: "Con queso" },
-          agenda: { mode: "single", date: thursday.iso8601, amount: 10 },
+          agenda: { mode: "single", date: thursday.iso8601 },
           scope: "day",
           by: author
         ).call
@@ -300,7 +293,7 @@ RSpec.describe Menus::Update do
 
   describe "validaciones de agenda con repetición" do
     it "rechaza actualizar a repetición semanal con weekdays vacío y no altera agendas" do
-      result = update({ mode: "weekly", starts_on: thursday.iso8601, weekdays: [], amount: 5 })
+      result = update({ mode: "weekly", starts_on: thursday.iso8601, weekdays: [] })
 
       expect(result.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
       expect(menu.reload.agendas).to be_empty
@@ -311,8 +304,7 @@ RSpec.describe Menus::Update do
         mode: "range",
         starts_on: thursday.iso8601,
         ends_on: friday.iso8601,
-        weekdays: [],
-        amount: 5
+        weekdays: []
       })
 
       expect(result.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
@@ -320,7 +312,7 @@ RSpec.describe Menus::Update do
     end
 
     it "rechaza weekdays con días fuera del rango laboral 1..5" do
-      result = update({ mode: "weekly", starts_on: thursday.iso8601, weekdays: [ 0, 6 ], amount: 5 })
+      result = update({ mode: "weekly", starts_on: thursday.iso8601, weekdays: [ 0, 6 ] })
 
       expect(result.errors[:agenda]).to include(I18n.t("validations.menu_agenda.invalid_weekdays"))
     end

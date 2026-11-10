@@ -3,6 +3,7 @@ import {
   CalendarDays,
   CalendarPlus,
   ChartNoAxesCombined,
+  ChartPie,
   ClipboardList,
   CreditCard,
   FileText,
@@ -33,6 +34,7 @@ import {
   adminBenefitUsage,
   adminInvoices,
   adminOrderEvents,
+  adminReports,
   consumerAccounts,
   consumerDashboard,
   consumerOrders,
@@ -80,6 +82,11 @@ export function AppSidebar() {
         title: t("benefit_usage.ui.title"),
         href: adminBenefitUsage.analysis().url,
         icon: ChartNoAxesCombined,
+      },
+      {
+        title: t("nav.admin.reports"),
+        href: adminReports.index().url,
+        icon: ChartPie,
       },
       ...adminPrimaryNavItems
         .slice(1)

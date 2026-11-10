@@ -100,6 +100,7 @@ RSpec.describe "Notificación del estado de un pago a proveedor", type: :system 
     sign_out
 
     open_admin_home
+    open_notifications
 
     expect(page).to have_content(approved_title)
     expect(page).to have_content(

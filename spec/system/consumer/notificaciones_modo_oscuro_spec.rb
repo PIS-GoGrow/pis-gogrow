@@ -21,18 +21,18 @@ RSpec.describe "Notificaciones en modo oscuro", type: :system do
       event: "order_confirmation",
       requires_action: false,
       notifiable: consumer_user,
-      title: "Tu pedido fue confirmado",
-      description: "Tu pedido fue confirmado por el proveedor."
+      description_data: { provider: "TuViandita", date: "31/10" }
     )
   end
 
   it "muestra el ícono con currentColor en modo claro y oscuro, y permite cerrarla en modo oscuro" do
     sign_in consumer_user, role: :consumer
     visit dashboard_path
+    open_notifications
 
     # Modo claro
     expect(page).to have_content("Tu pedido fue confirmado")
-    expect(page).to have_content("Tu pedido fue confirmado por el proveedor.")
+    expect(page).to have_content("Tu pedido del 31/10 fue confirmado por TuViandita.")
     expect(page).to have_css("[role=alert] svg circle[stroke='currentColor']")
     expect(page).to have_no_css("[role=alert] svg [stroke='#0A0A0A']")
 
@@ -44,8 +44,9 @@ RSpec.describe "Notificaciones en modo oscuro", type: :system do
     # Volver al inicio y verificar el banner en modo oscuro
     visit dashboard_path
     expect(page).to have_css("html.dark")
+    open_notifications
     expect(page).to have_content("Tu pedido fue confirmado")
-    expect(page).to have_content("Tu pedido fue confirmado por el proveedor.")
+    expect(page).to have_content("Tu pedido del 31/10 fue confirmado por TuViandita.")
     expect(page).to have_css("[role=alert] svg circle[stroke='currentColor']")
     expect(page).to have_no_css("[role=alert] svg [stroke='#0A0A0A']")
 
@@ -55,6 +56,7 @@ RSpec.describe "Notificaciones en modo oscuro", type: :system do
 
     # Persiste cerrada al recargar
     visit dashboard_path
+    open_notifications
     expect(page).to have_no_content("Tu pedido fue confirmado")
   end
 end

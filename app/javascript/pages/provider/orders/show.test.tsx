@@ -49,11 +49,10 @@ function order(overrides: Partial<ProviderOrderDetail> = {}) {
     menu_name: "Wok de verduras + arroz",
     address: "Av. 18 de Julio 1234, Centro",
     consumer_email: "matias.rodriguez@gogrow.dev",
+    consumer_phone: null,
     created_on: "2026-09-11",
     menu_option_groups: [],
     selected_options: [],
-    schedule_amount: 10,
-    remaining_amount: 8,
     rejection_reason: null,
     rejection_details: null,
     rejectable: true,
@@ -78,8 +77,8 @@ describe("Provider::Orders Show Page", () => {
     ).toBeInTheDocument()
   })
 
-  it("muestra los datos del empleado y deja el teléfono como no disponible", () => {
-    render(<Show order={order()} />)
+  it("muestra los datos del empleado y deja el teléfono como no disponible cuando no tiene", () => {
+    render(<Show order={order({ consumer_phone: null })} />)
 
     expect(screen.getByText("Empleado GoGrow")).toBeInTheDocument()
     expect(screen.getByText("Matías Rodríguez")).toBeInTheDocument()
@@ -88,6 +87,12 @@ describe("Provider::Orders Show Page", () => {
     expect(
       screen.getByText("Oficina · Av. 18 de Julio 1234, Centro"),
     ).toBeInTheDocument()
+  })
+
+  it("muestra el teléfono del empleado cuando está presente", () => {
+    render(<Show order={order({ consumer_phone: "+59899123456" })} />)
+
+    expect(screen.getByText("+59899123456")).toBeInTheDocument()
   })
 
   it("muestra el plato, la cantidad y el total", () => {

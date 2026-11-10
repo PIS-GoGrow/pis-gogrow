@@ -37,6 +37,30 @@ RSpec.describe User, type: :model do
       expect(user.save).to be(true)
     end
   end
+
+  describe "phone" do
+    it "guarda un celular uruguayo sin código de país en formato internacional" do
+      expect(User.new(phone: "099 123 456").phone).to eq("+59899123456")
+    end
+
+    it "respeta el código de país de un celular extranjero" do
+      expect(User.new(phone: "+54 9 11 2345-6789").phone).to eq("+5491123456789")
+    end
+
+    it "guarda nil si se deja vacío" do
+      expect(User.new(phone: " ").phone).to be_nil
+    end
+
+    [ "2900 1234", "1234567", "llamame" ].each do |phone|
+      it "rechaza #{phone.inspect}" do
+        user = User.new(phone:)
+
+        user.validate
+
+        expect(user.errors[:phone]).to be_present
+      end
+    end
+  end
 end
 
 # == Schema Information

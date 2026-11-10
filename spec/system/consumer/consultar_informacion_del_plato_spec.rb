@@ -39,8 +39,8 @@ RSpec.describe "Consultar la información de un plato" do
     Schedule.delete_all
   end
 
-  def publish(menu, date, amount: 5)
-    Schedule.create!(menu:, date:, amount:)
+  def publish(menu, date, available: true)
+    Schedule.create!(menu:, date:, available:)
   end
 
   def order_away(schedule, quantity)
@@ -83,8 +83,8 @@ RSpec.describe "Consultar la información de un plato" do
   # Criterio 2: el mismo plato, publicado dos días con cupo distinto. Lo que el
   # detalle muestra tiene que seguir al día elegido, no al plato.
   it "shows the availability of the date picked, not of the dish" do
-    publish(menus(:sorrentinos), monday, amount: 5)
-    publish(menus(:sorrentinos), wednesday, amount: 1)
+    publish(menus(:sorrentinos), monday, available: true)
+    publish(menus(:sorrentinos), wednesday, available: false)
     sign_in users(:one)
 
     visit dashboard_path
@@ -93,11 +93,10 @@ RSpec.describe "Consultar la información de un plato" do
 
     click_on "Volver"
     pick_day(wednesday)
-    open_dish(menus(:sorrentinos))
 
-    # Con una sola unidad publicada para el miércoles, no se puede subir la
-    # cantidad: el cupo del lunes no se arrastra.
-    expect(page).to have_button("Agregar uno", disabled: true)
+    expect(page).to have_content("Sorrentinos artesanales")
+    expect(page).to have_content("Agotado")
+    expect(page).to have_button("Agregar Sorrentinos artesanales", disabled: true)
   end
 
   it "shows the discount of the employee benefit on the dish price" do
@@ -129,15 +128,14 @@ RSpec.describe "Consultar la información de un plato" do
 
   # Criterio 4
   it "reflects what changed in the menu after a reload" do
-    schedule = publish(menus(:milanesa), monday, amount: 2)
+    schedule = publish(menus(:milanesa), monday)
     sign_in users(:one)
 
     visit dashboard_path
     expect(page).to have_button("Agregar Milanesa con papas fritas", disabled: false)
     expect(page).to have_no_content("Agotado")
 
-    # Otro empleado se lleva las dos unidades que quedaban.
-    order_away(schedule, 2)
+    schedule.update!(available: false)
     refresh
 
     expect(page).to have_content("Agotado")

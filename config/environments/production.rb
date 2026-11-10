@@ -58,7 +58,8 @@ Rails.application.configure do
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
   # config.action_mailer.raise_delivery_errors = false
 
-  # Set host to be used by links generated in mailer templates.
+  # Set host to be used by links generated in mailer templates and in jobs.
+  Rails.application.routes.default_url_options = { host: ENV.fetch("APP_HOST"), protocol: "https" }
   config.action_mailer.default_url_options = { host: ENV["APP_HOST"], protocol: "https" }
 
   config.action_mailer.smtp_settings = {

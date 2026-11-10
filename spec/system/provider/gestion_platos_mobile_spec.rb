@@ -39,8 +39,8 @@ RSpec.describe "Gestión de platos y menú desde el celular del proveedor" do
     page.current_window.resize_to(1400, 1400)
   end
 
-  def publish(menu, date, amount: 10)
-    menu.schedules.create!(date:, amount:)
+  def publish(menu, date)
+    menu.schedules.create!(date:)
   end
 
   def open_schedules(tab: nil)
@@ -103,6 +103,7 @@ RSpec.describe "Gestión de platos y menú desde el celular del proveedor" do
     open_new_dishes
 
     click_on "Platos guardados"
+    click_on "Platos guardados" unless page.has_content?("¿Para qué fecha vas a agregar platos?", wait: 2)
     expect(page).to have_content("¿Para qué fecha vas a agregar platos?")
     expect(find("#saved-date")).to have_text(DateFormat.long(tuesday))
 

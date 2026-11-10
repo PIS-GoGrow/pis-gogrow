@@ -30,8 +30,8 @@ RSpec.describe AdminConsumerSummary do
     let(:menu2) do
       Menu.create!(provider: provider2, name: "Tarta casera", description: "Con masa casera", price: 300)
     end
-    let(:schedule_today1) { Schedule.create!(menu: menu1, date: Date.current, amount: 20) }
-    let(:schedule_today2) { Schedule.create!(menu: menu2, date: Date.current, amount: 20) }
+    let(:schedule_today1) { Schedule.create!(menu: menu1, date: Date.current) }
+    let(:schedule_today2) { Schedule.create!(menu: menu2, date: Date.current) }
 
     it "reports meals_used and meals_limit matching the consumer unified calculations" do
       order1 = Order.create!(
@@ -85,7 +85,7 @@ RSpec.describe AdminConsumerSummary do
     end
 
     it "does not include providers from other consumers or out-of-month orders" do
-      past_schedule = Schedule.create!(menu: menu1, date: 1.month.ago.beginning_of_month, amount: 10)
+      past_schedule = Schedule.create!(menu: menu1, date: 1.month.ago.beginning_of_month)
       Order.create!(
         consumer:, schedule: past_schedule, amount: 5,
         price: 1500, address: consumer.company.address, delivery_method: :office, status: :confirmed

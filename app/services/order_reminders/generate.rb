@@ -67,6 +67,7 @@ module OrderReminders
 
     def notify_if_eligible(consumer)
       return if ordered_for_date?(consumer)
+      return if already_notified?(consumer)
 
       consumer.with_lock do
         return if ordered_for_date?(consumer)
