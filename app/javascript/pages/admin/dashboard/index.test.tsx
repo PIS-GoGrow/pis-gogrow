@@ -75,9 +75,17 @@ const props: AdminDashboardIndex = {
 describe("Admin Dashboard Page", () => {
   it("links the analysis with the selected month", () => {
     render(<AdminDashboard {...props} month="2026-09" />)
-    expect(
-      screen.getByRole("link", { name: "Ver análisis del beneficio" }),
-    ).toHaveAttribute("href", "/rrhh/analisis-beneficio?month=2026-09")
+
+    const analysisLink = screen.getByRole("link", {
+      name: "Ver análisis del beneficio",
+    })
+
+    expect(analysisLink).toHaveAttribute(
+      "href",
+      "/rrhh/analisis-beneficio?month=2026-09",
+    )
+    expect(analysisLink).toHaveClass("md:hidden")
+
     expect(
       screen.getByRole("button", { name: "Ver detalle del consumo" }),
     ).toBeInTheDocument()
@@ -110,8 +118,8 @@ describe("Admin Dashboard Page", () => {
     expect(screen.getByText("72%")).toBeInTheDocument()
     expect(screen.getByText("$5.425")).toBeInTheDocument()
     expect(screen.getByRole("progressbar")).toBeInTheDocument()
-    expect(screen.getByText(/Pagado/)).toBeInTheDocument()
-    expect(screen.queryByText(/Proyectado/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Pagado /)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Proyectado /)).not.toBeInTheDocument()
     expect(
       screen.getByRole("combobox", { name: "Mes del resumen" }),
     ).toHaveTextContent("Este mes")
