@@ -35,6 +35,7 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
     sign_in users(:one), role: :consumer
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
   end
 
   def due_date_text(account)
@@ -75,6 +76,7 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
 
       visit dashboard_path
       expect(page).to have_content("Hola,")
+      open_notifications
       expect(page).to have_no_content(title)
     end
 
@@ -87,6 +89,7 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
 
       visit dashboard_path
       expect(page).to have_content("Hola,")
+      open_notifications
       expect(page).to have_no_content(title)
 
       sign_out

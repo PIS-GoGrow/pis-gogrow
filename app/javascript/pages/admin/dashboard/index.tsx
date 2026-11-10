@@ -11,7 +11,9 @@ import {
   SummaryRow,
   SummarySection,
 } from "@/components/admin/summary-section"
-import NotificationBanners from "@/components/notification-banners"
+import NotificationBanners, {
+  NotificationInbox,
+} from "@/components/notification-banners"
 import PageContainer from "@/components/page-container"
 import StatusBadge from "@/components/status-badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -87,6 +89,8 @@ export default function AdminDashboard({
         description={today}
         titleVariant="prominent"
         compactHeading
+        actions={<NotificationInbox />}
+        actionsCentered
       >
         <NotificationBanners />
 

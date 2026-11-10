@@ -34,6 +34,7 @@ RSpec.describe "Ver la notificación de pedido cancelado", type: :system do
 
     sign_in users(:provider_user), role: :provider
     visit_hydrated provider_dashboard_path
+    open_notifications
 
     expect(page).to have_content(title)
     expect(page).to have_content(
@@ -45,6 +46,7 @@ RSpec.describe "Ver la notificación de pedido cancelado", type: :system do
 
     visit provider_dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
     expect(page).to have_no_content(title)
   end
 
@@ -53,6 +55,7 @@ RSpec.describe "Ver la notificación de pedido cancelado", type: :system do
 
     sign_in users(:provider_user), role: :provider
     visit provider_dashboard_path
+    open_notifications
 
     expect(page).to have_css("[role=alert]", text: title, count: 1)
   end
