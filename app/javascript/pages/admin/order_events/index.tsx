@@ -72,7 +72,7 @@ export default function Index({
         description={t(`${page}.description`)}
         back={
           <Button variant="ghost" size="icon" asChild>
-            <Link href={adminAccount()} aria-label={t(`${page}.back`)}>
+            <Link href={adminAccount().url} aria-label={t(`${page}.back`)}>
               <ArrowLeft aria-hidden="true" />
             </Link>
           </Button>

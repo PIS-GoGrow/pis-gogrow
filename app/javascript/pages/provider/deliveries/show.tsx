@@ -64,7 +64,7 @@ export default function Deliveries({
         description={t(`${page}.description`)}
         back={
           <Button variant="ghost" size="icon" asChild>
-            <Link href={providerAccount()} aria-label={t(`${page}.back`)}>
+            <Link href={providerAccount().url} aria-label={t(`${page}.back`)}>
               <ArrowLeft aria-hidden="true" />
             </Link>
           </Button>

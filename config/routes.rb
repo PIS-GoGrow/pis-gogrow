@@ -130,6 +130,7 @@ Rails.application.routes.draw do
     get "inicio", to: "dashboard#index", as: :dashboard
     get "uso-beneficio", to: "benefit_usage#show", as: :benefit_usage
     get "analisis-beneficio", to: "benefit_usage#analysis", as: :benefit_usage_analysis
+    get "reportes", to: "reports#index", as: :reports
     post "uso-beneficio/resumen", to: "benefit_usage#create_summary", as: :benefit_usage_summary
     get "cuenta", to: "accounts#show", as: :account
     get "preferencias", to: "preferences#show", as: :preferences
@@ -153,6 +154,7 @@ Rails.application.routes.draw do
   root "home#index"
   get "consumidor", to: "home#consumer", as: :consumer_welcome
   get "rrhh", to: "home#admin", as: :admin_welcome
+  post "twilio-callback", to: "twilio_callbacks#callback", as: :twilio_callback
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   get "up" => "rails/health#show", as: :rails_health_check
