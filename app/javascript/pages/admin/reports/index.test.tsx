@@ -184,4 +184,41 @@ describe("Admin Reports Page", () => {
       { preserveScroll: true },
     )
   })
+
+  it("muestra adhesión 0% y 0 de 0 empleados si la empresa no tiene empleados registrados", () => {
+    render(
+      <AdminReports
+        {...props}
+        summary={{
+          adhesion: 0,
+          participants: 0,
+          employees: 0,
+          orders: 0,
+          meals: 0,
+          company_amount: 0,
+          employee_amount: 0,
+        }}
+        providers={[]}
+      />,
+    )
+
+    expect(screen.getByText("0%")).toBeInTheDocument()
+    expect(screen.getByText("0 de 0 empleados")).toBeInTheDocument()
+  })
+
+  it("formatea correctamente cifras con decimales", () => {
+    render(
+      <AdminReports
+        {...props}
+        summary={{
+          ...props.summary,
+          company_amount: 440.25,
+          employee_amount: 150.75,
+        }}
+      />,
+    )
+
+    expect(screen.getByText(/440,25/)).toBeInTheDocument()
+    expect(screen.getByText(/Empleado: \$\s?150,75/)).toBeInTheDocument()
+  })
 })

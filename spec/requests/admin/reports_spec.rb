@@ -122,6 +122,33 @@ RSpec.describe "Admin::Reports", type: :request do
           providers: []
         )
       end
+
+      it "ignora pedidos de empleados de otras empresas en el período" do
+        other_company = Company.create!(name: "Otra Empresa", address: "Av Italia 1234")
+        other_user = User.create!(name: "Empleado Externo", email: "externo@example.com", password: "secret-password-123")
+        other_consumer = Consumer.create!(user: other_user, company: other_company)
+        order(other_consumer, wok, Date.new(2026, 8, 10), amount: 10)
+
+        get admin_reports_path
+
+        expect(inertia).to have_props(
+          summary: { adhesion: 50, participants: 1, employees: 2, orders: 2, meals: 3, company_amount: 500.0, employee_amount: 300.0 }
+        )
+      end
+
+      it "maneja parámetros parciales o estructuras de datos inesperadas cayendo al mes actual" do
+        [
+          { desde: "2026-08-01" },
+          { hasta: "2026-08-31" },
+          { desde: [ "2026-08-01" ], hasta: "2026-08-31" },
+          { desde: "null", hasta: "undefined" }
+        ].each do |invalid_params|
+          get admin_reports_path(invalid_params)
+
+          expect(response).to have_http_status(:ok)
+          expect(inertia).to have_props(from: "2026-08-01", to: "2026-08-31")
+        end
+      end
     end
   end
 end

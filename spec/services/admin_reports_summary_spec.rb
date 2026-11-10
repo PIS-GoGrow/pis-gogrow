@@ -106,4 +106,32 @@ RSpec.describe AdminReportsSummary do
 
     expect(described_class.new(empty, month.all_month)).to have_attributes(employees_count: 0, adhesion: 0, orders_count: 0)
   end
+
+  it "computa la totalidad del gasto a la empresa cuando el subsidio es del 100%" do
+    order(ana, tuviandita, month + 1, amount: 1, discounted: 0)
+
+    expect(summary).to have_attributes(company_amount: 300, employee_amount: 0)
+  end
+
+  it "toma la fecha de entrega directamente de la orden cuando el schedule fue eliminado" do
+    ord = order(ana, tuviandita, month + 2, discounted: 100)
+    ord.schedule.destroy!
+
+    expect(summary).to have_attributes(orders_count: 1, meals: 1, company_amount: 200, employee_amount: 100)
+  end
+
+  it "cuenta como un solo participante a un empleado con múltiples pedidos en el período" do
+    order(ana, tuviandita, month + 1)
+    order(ana, endulzate, month + 2)
+
+    expect(summary).to have_attributes(orders_count: 2, meals: 2, participants_count: 1, adhesion: 25)
+  end
+
+  it "aísla los pedidos de otras empresas en el mismo período" do
+    other_company = Company.create!(name: "Empresa Vecina", address: "Rivera 1234")
+    other_employee = employee("Lucas", company: other_company)
+    order(other_employee, tuviandita, month + 1, amount: 5, discounted: 0)
+
+    expect(summary).to have_attributes(orders_count: 0, meals: 0, company_amount: 0, participants_count: 0, by_provider: [])
+  end
 end
