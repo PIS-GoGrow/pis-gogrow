@@ -48,11 +48,11 @@ export default function Index({
   useEffect(() => {
     db.provider_orders.put({
       id: 1,
-      user_id: auth.user.id,
+      session_id: auth.session.id,
       upcoming_orders,
       saved_at: Date.now(),
     })
-  }, [upcoming_orders, auth.user.id])
+  }, [upcoming_orders, auth.session.id])
 
   const orders = period === "upcoming" ? upcoming_orders : past_orders
   // Sin pedidos en el período no hay nada que filtrar: el estado vacío mobile

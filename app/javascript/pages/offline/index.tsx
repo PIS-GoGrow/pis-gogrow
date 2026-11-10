@@ -104,8 +104,8 @@ export default function OfflineApp() {
 
           <p>
             {cached.role === "provider"
-              ? "Estos son los pedidos que recibiste, según la última vez que estuviste en línea."
-              : "Estos son los pedidos que hiciste, según la última vez que estuviste en línea."}
+              ? "Estos son los pedidos que recibiste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado."
+              : "Estos son los pedidos que hiciste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado."}
           </p>
 
           <p className="text-muted-foreground mb-4 text-sm">

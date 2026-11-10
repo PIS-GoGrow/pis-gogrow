@@ -48,11 +48,11 @@ export default function Index({
   useEffect(() => {
     db.consumer_orders.put({
       id: 1,
-      user_id: auth.user.id,
+      session_id: auth.session.id,
       upcoming_orders,
       saved_at: Date.now(),
     })
-  }, [upcoming_orders, auth.user.id])
+  }, [upcoming_orders, auth.session.id])
 
   const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
   const selectedProviderId = activeProviders.values().next().value

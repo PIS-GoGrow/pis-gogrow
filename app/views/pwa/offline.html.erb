@@ -3,13 +3,16 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Viandas GoGrow">
+    <meta name="mobile-web-app-capable" content="yes">
+
     <title>Sin conexión</title>
 
     <link rel="manifest" href="<%= pwa_manifest_path(format: :json) %>">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%= vite_typescript_tag "offline.tsx" %>
+    <%= vite_tags "application.css", "offline.tsx" %>
   </head>
   <body>
     <div id="root"></div>
