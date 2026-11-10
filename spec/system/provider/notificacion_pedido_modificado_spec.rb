@@ -36,6 +36,7 @@ RSpec.describe "Notificación al proveedor cuando el empleado modifica la cantid
   it "actualiza la notificación activa cuando el empleado cambia la cantidad y no crea duplicados" do
     sign_in provider_user, role: :provider
     visit_hydrated provider_dashboard_path
+    open_notifications
 
     expect(page).to have_content(notification_title)
     expect(page).to have_content("pidió 1 de")
@@ -46,6 +47,7 @@ RSpec.describe "Notificación al proveedor cuando el empleado modifica la cantid
 
     sign_in provider_user, role: :provider
     visit_hydrated provider_dashboard_path
+    open_notifications
 
     expect(page).to have_content(notification_title)
     expect(page).to have_content("pidió 3 de")
@@ -55,6 +57,7 @@ RSpec.describe "Notificación al proveedor cuando el empleado modifica la cantid
   it "crea una nueva notificación activa si la anterior ya había sido cerrada" do
     sign_in provider_user, role: :provider
     visit_hydrated provider_dashboard_path
+    open_notifications
 
     expect(page).to have_content(notification_title)
     click_button "Cerrar notificación"
@@ -65,6 +68,7 @@ RSpec.describe "Notificación al proveedor cuando el empleado modifica la cantid
 
     sign_in provider_user, role: :provider
     visit_hydrated provider_dashboard_path
+    open_notifications
 
     expect(page).to have_content(notification_title)
     expect(page).to have_content("pidió 4 de")
@@ -74,6 +78,7 @@ RSpec.describe "Notificación al proveedor cuando el empleado modifica la cantid
   it "no modifica ni recrea la notificación cuando solo se modifican notas" do
     sign_in provider_user, role: :provider
     visit_hydrated provider_dashboard_path
+    open_notifications
     expect(page).to have_content(notification_title)
     expect(page).to have_content("pidió 1 de")
     sign_out
@@ -82,6 +87,7 @@ RSpec.describe "Notificación al proveedor cuando el empleado modifica la cantid
 
     sign_in provider_user, role: :provider
     visit_hydrated provider_dashboard_path
+    open_notifications
 
     expect(page).to have_content(notification_title)
     expect(page).to have_content("pidió 1 de")

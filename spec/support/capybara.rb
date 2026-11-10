@@ -9,7 +9,10 @@ RSpec.configure do |config|
   config.before(:each, type: :system) do
     browser = ENV["USE_FIREFOX"] ? :firefox : :headless_chrome
 
-    driven_by :selenium, using: browser, screen_size: [ 1400, 1400 ] do |driver_option|
+    client = Selenium::WebDriver::Remote::Http::Default.new
+    client.read_timeout = 240
+
+    driven_by :selenium, using: browser, screen_size: [ 1400, 1400 ], options: { http_client: client } do |driver_option|
       driver_option.add_argument("--no-sandbox")
       driver_option.add_argument("--disable-dev-shm-usage")
       driver_option.add_argument("--disable-gpu")

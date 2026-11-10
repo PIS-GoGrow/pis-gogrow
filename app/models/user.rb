@@ -35,11 +35,15 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, allow_nil: true, length: { minimum: 12 }
   validates :google_uid, uniqueness: true, allow_nil: true
-  validates :phone, format: { with: /\A\+?\d{8,15}\z/ }, allow_blank: true
+  validates :phone, phone: { types: %i[mobile fixed_or_mobile] }, allow_blank: true
   validate :password_meets_provider_policy, on: :provider_password
 
   normalizes :email, with: -> { _1.strip.downcase }
-  normalizes :phone, with: -> { it.gsub(/[\s()-]/, "").presence }
+  # Si no se puede interpretar, se guarda lo escrito para que la validación lo rechace.
+  normalizes :phone, with: ->(raw) do
+    phone = Phonelib.parse(raw)
+    phone.valid? ? phone.e164 : raw.strip.presence
+  end
 
   audits :email, :phone
 
@@ -53,24 +57,6 @@ class User < ApplicationRecord
 
   def self.google_allowed_domains
     ENV.fetch("GOOGLE_ALLOWED_DOMAINS", "gmail.com,gogrow.com").split(",").filter_map { it.strip.downcase.presence }
-  end
-
-  # Finds or creates the account behind a Google Sign-In, from the payload
-  # OmniAuth returns after a successful login (request.env["omniauth.auth"]).
-  # A random password satisfies has_secure_password's presence check on
-  # create — the account can still set a real one later through the normal
-  # "forgot password" flow if it ever wants password-based login too.
-  def self.find_or_create_from_google(auth)
-    email = auth.info.email.to_s.downcase
-    raise DomainNotAllowed unless google_allowed_domains.include?(email.split("@").last)
-
-    user = find_or_initialize_by(email: email)
-    user.password = SecureRandom.hex(32) if user.new_record?
-    user.name = auth.info.name
-    user.google_uid = auth.uid
-    user.avatar_url = auth.info.image
-    user.save!
-    user
   end
 
   def self.find_from_google(auth)

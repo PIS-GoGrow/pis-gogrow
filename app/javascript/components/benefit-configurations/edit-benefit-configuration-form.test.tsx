@@ -82,6 +82,29 @@ describe("EditBenefitConfigurationForm", () => {
     ).toHaveValue(20)
   })
 
+  it("keeps numeric inputs wide enough for three-digit values on mobile", () => {
+    render(
+      <EditBenefitConfigurationForm
+        defaultValues={{
+          subsidy_percentage: 100,
+          max_voucher_price: 500,
+          monthly_voucher_limit: 100,
+        }}
+        onCancel={vi.fn()}
+        onSuccess={vi.fn()}
+        configurableMonth={"2026-12-12"}
+      />,
+    )
+
+    expect(screen.getByLabelText(/se descuenta/i)).toHaveClass("max-md:w-20")
+    expect(
+      screen.getByLabelText(/cuando el precio por vianda es/i),
+    ).toHaveClass("max-md:w-20")
+    expect(
+      screen.getByLabelText(/hasta un límite por empleado de/i),
+    ).toHaveClass("max-md:w-20")
+  })
+
   it("submits the form with replace_pending: false when there is no pending configuration", async () => {
     const user = userEvent.setup()
     const onSuccess = vi.fn()

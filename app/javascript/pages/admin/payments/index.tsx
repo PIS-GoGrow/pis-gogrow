@@ -128,7 +128,10 @@ export default function Index({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.admin.payments.index.title")} />
 
-      <PageContainer title={t("pages.admin.payments.index.title")}>
+      <PageContainer
+        title={t("pages.admin.payments.index.title")}
+        titleVariant="prominent"
+      >
         <Stat
           label={t("pages.admin.payments.index.spending")}
           badge={
@@ -144,7 +147,6 @@ export default function Index({
           detail={
             <span className="text-foreground font-semibold">{`| ${meals}`}</span>
           }
-          className="lg:mx-auto lg:w-full lg:max-w-[50%]"
           action={
             <div className="grid w-full gap-4">
               {summary.limit !== null && (

@@ -27,7 +27,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   def confirmed_order(consumer:, provider:, month:, quantity:, discounted_price:)
     travel_to(Time.zone.local(month.year, month.month, month.day, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa al pan", description: "Con papas", price: 1000)
-      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer:, schedule:,

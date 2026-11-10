@@ -34,6 +34,7 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
     sign_in user, role: :consumer
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
   end
 
   it "le muestra al empleado el proveedor, el monto y la fecha de vencimiento" do
@@ -57,6 +58,7 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
 
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
     expect(page).to have_no_content(title)
 
     sign_out
@@ -79,6 +81,7 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
 
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
     expect(page).to have_no_content(title)
   end
 

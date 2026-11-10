@@ -37,7 +37,7 @@ RSpec.describe "Gestión de pagos del proveedor en mobile", type: :system do
   def confirmed_order(month:, dish: "Milanesa al pan")
     travel_to Time.zone.local(month.year, month.month, 5, 12)
     menu = Menu.create!(provider:, name: dish, description: "Con papas", price: 1000)
-    schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
+    schedule = Schedule.create!(menu:, date: Date.current)
     Order.create!(
       consumer: consumers(:one), schedule:, amount: 1, price: 1000, discounted_price: 300,
       delivery_method: :office, status: :confirmed

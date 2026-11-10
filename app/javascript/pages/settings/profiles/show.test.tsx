@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 import Profile from "./show"
 
 let currentRole = "provider"
+let formErrors: Record<string, string[]> = {}
 
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
@@ -30,7 +31,7 @@ vi.mock("@inertiajs/react", async () => {
     }) => (
       <form>
         {children({
-          errors: {},
+          errors: formErrors,
           processing: false,
           recentlySuccessful: false,
         })}
@@ -58,6 +59,7 @@ vi.mock("@/components/delete-user", () => ({
 describe("Settings Profiles Show Page", () => {
   beforeEach(() => {
     currentRole = "provider"
+    formErrors = {}
   })
 
   it("shows personal, email, and password fields to providers with account navigation", () => {
@@ -132,5 +134,25 @@ describe("Settings Profiles Show Page", () => {
 
     // 5. Sin eliminar cuenta
     expect(screen.queryByTestId("delete-user")).not.toBeInTheDocument()
+  })
+
+  it("renders phone validation error message when present", () => {
+    formErrors = { phone: ["El formato del celular es inválido."] }
+
+    render(<Profile phone="2900 1234" />)
+
+    expect(
+      screen.getByText("El formato del celular es inválido."),
+    ).toBeInTheDocument()
+  })
+
+  it("renders phone helper description", () => {
+    render(<Profile phone="+59899123456" />)
+
+    expect(
+      screen.getByText(
+        "Lo usamos para enviarte notificaciones por WhatsApp. Si tu celular no es de Uruguay, escribilo con + y el código de país.",
+      ),
+    ).toBeInTheDocument()
   })
 })

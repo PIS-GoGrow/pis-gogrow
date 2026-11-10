@@ -26,7 +26,7 @@ RSpec.describe "Editar un plato desde el celular y verlo como consumidor" do
     page.current_window.resize_to(375, 667)
     Order.destroy_all
     Schedule.delete_all
-    Schedule.create!(menu: milanesa, date: monday, amount: 10)
+    Schedule.create!(menu: milanesa, date: monday)
     sign_in provider_user, role: :provider
   end
 

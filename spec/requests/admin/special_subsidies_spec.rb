@@ -126,7 +126,7 @@ RSpec.describe "Admin::SpecialSubsidies", type: :request do
       expect(response).to redirect_to(admin_benefit_configurations_path)
       expect(special.reload).to have_attributes(name: "2 años", subsidy_percentage: 25, applies_to_all: false)
       expect(special.benefit_rules.sole).to be_a(SeniorityBenefit)
-      expect(special.benefit_configuration_changes.map(&:action)).to eq(%w[created updated])
+      expect(special.benefit_configuration_changes.order(:id).map(&:action)).to eq(%w[created updated])
     end
 
     it "no permite editar el subsidio base" do
