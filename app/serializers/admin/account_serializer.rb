@@ -15,7 +15,7 @@ class Admin::AccountSerializer < AccountSerializer
 
   typelize :string?
   attribute :invoice_download_url do |account|
-    invoice = account.invoices.detect(&:approved?)
+    invoice = account.invoices.detect { it.pending? || it.approved? }
     file_admin_invoice_path(invoice, download: 1) if invoice
   end
 
