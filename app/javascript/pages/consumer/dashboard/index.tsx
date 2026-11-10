@@ -24,23 +24,22 @@ export default function Index({
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
   const { url } = usePage()
-  const [selected, setSelected] = useState<Schedule | null>(() => {
-    const detailMatch = /^\/menu-semanal\/platos\/(\d+)(?:\?.*)?$/.exec(url)
-    return detailMatch
-      ? (schedules.find((item) => item.id === Number(detailMatch[1])) ?? null)
-      : null
-  })
+  const detailMatch = /^\/menu-semanal\/platos\/(\d+)(?:\?.*)?$/.exec(url)
+  const urlScheduleId = detailMatch ? Number(detailMatch[1]) : null
 
-  useEffect(() => {
-    const detailMatch = /^\/menu-semanal\/platos\/(\d+)(?:\?.*)?$/.exec(url)
-    if (detailMatch) {
-      setSelected(
-        schedules.find((item) => item.id === Number(detailMatch[1])) ?? null,
-      )
-    } else {
-      setSelected(null)
-    }
-  }, [url, schedules])
+  const [activeScheduleId, setActiveScheduleId] = useState<number | null>(
+    urlScheduleId,
+  )
+  const [prevUrl, setPrevUrl] = useState(url)
+
+  if (url !== prevUrl) {
+    setPrevUrl(url)
+    setActiveScheduleId(urlScheduleId)
+  }
+
+  const selected = activeScheduleId
+    ? (schedules.find((item) => item.id === activeScheduleId) ?? null)
+    : null
 
   const todayDate = week.today ?? today()
   const initialDate =
@@ -60,7 +59,7 @@ export default function Index({
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   function openDetail(item: Schedule) {
-    setSelected(item)
+    setActiveScheduleId(item.id)
     const existing = cart.find((c) => c.id === item.id)
     if (existing) {
       setEditingCartId(existing.cartId)
@@ -81,7 +80,7 @@ export default function Index({
   }
 
   function handleBack() {
-    setSelected(null)
+    setActiveScheduleId(null)
     setEditingCartId(null)
     const targetUrl = consumerDashboard.index().url
     window.history.pushState(window.history.state, "", targetUrl)
@@ -93,7 +92,7 @@ export default function Index({
   function handleRemoveFromCartAndBack() {
     if (!editingCartId) return
     setCart((items) => items.filter((item) => item.cartId !== editingCartId))
-    setSelected(null)
+    setActiveScheduleId(null)
     setEditingCartId(null)
     const targetUrl = consumerDashboard.index().url
     window.history.pushState(window.history.state, "", targetUrl)
@@ -169,7 +168,7 @@ export default function Index({
           ]
     })
 
-    setSelected(null)
+    setActiveScheduleId(null)
     setEditingCartId(null)
     const targetUrl = consumerDashboard.index().url
     window.history.pushState(window.history.state, "", targetUrl)
