@@ -26,6 +26,7 @@ type CachedOrders =
 export default function OfflineApp() {
   const { t } = useTranslation()
   const [cached, setCached] = useState<CachedOrders | null>(null)
+  const [now] = useState(() => Date.now())
 
   useEffect(() => {
     async function loadOrders() {
@@ -88,6 +89,11 @@ export default function OfflineApp() {
       </section>
     ))
 
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000
+
+  const savedAt = cached?.saved_at ? new Date(cached.saved_at).getTime() : NaN
+  const isFresh = Number.isFinite(savedAt) && savedAt > now - ONE_DAY_MS
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
       <h1 className="text-3xl font-bold">{t("pages.offline.title")}</h1>
@@ -96,7 +102,7 @@ export default function OfflineApp() {
         {t("pages.offline.retry")}
       </Button>
 
-      {cached?.upcoming && cached?.upcoming.length > 0 && (
+      {cached?.upcoming && cached?.upcoming.length > 0 && isFresh && (
         <section className="w-full max-w-xl">
           <h2 className="mb-2 text-lg font-semibold">
             {(cached.role === "provider" || cached.role === "consumer") &&
