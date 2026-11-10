@@ -3,7 +3,6 @@ import { Download, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-
 import DeliveryFilterSheet from "@/components/orders/delivery-filter-sheet"
 import ProviderOrderDays from "@/components/orders/provider-order-days"
 import ProviderOrderDecidedSheet, {
@@ -46,12 +45,16 @@ export default function Index({
   const [decision, setDecision] = useState<ProviderOrderDecision | null>(null)
 
   useEffect(() => {
-    db.provider_orders.put({
-      id: 1,
-      session_id: auth.session.id,
-      upcoming_orders,
-      saved_at: Date.now(),
-    })
+    db.provider_orders
+      .put({
+        id: 1,
+        session_id: auth.session.id,
+        upcoming_orders,
+        saved_at: Date.now(),
+      })
+      .catch((error) => {
+        console.error("Error al cachear órdenes: ", error)
+      })
   }, [upcoming_orders, auth.session.id])
 
   const orders = period === "upcoming" ? upcoming_orders : past_orders

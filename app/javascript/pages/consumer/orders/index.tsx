@@ -46,12 +46,16 @@ export default function Index({
   const { auth } = usePage().props
 
   useEffect(() => {
-    db.consumer_orders.put({
-      id: 1,
-      session_id: auth.session.id,
-      upcoming_orders,
-      saved_at: Date.now(),
-    })
+    db.consumer_orders
+      .put({
+        id: 1,
+        session_id: auth.session.id,
+        upcoming_orders,
+        saved_at: Date.now(),
+      })
+      .catch((error) => {
+        console.error("Error al cachear órdenes: ", error)
+      })
   }, [upcoming_orders, auth.session.id])
 
   const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())

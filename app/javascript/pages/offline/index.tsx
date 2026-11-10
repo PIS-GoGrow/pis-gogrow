@@ -92,7 +92,9 @@ export default function OfflineApp() {
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
       <h1 className="text-3xl font-bold">{t("pages.offline.title")}</h1>
 
-      <Button onClick={() => location.reload()}>{t("pages.offline.retry")}</Button>
+      <Button onClick={() => location.reload()}>
+        {t("pages.offline.retry")}
+      </Button>
 
       {cached?.upcoming && cached?.upcoming.length > 0 && (
         <section className="w-full max-w-xl">
