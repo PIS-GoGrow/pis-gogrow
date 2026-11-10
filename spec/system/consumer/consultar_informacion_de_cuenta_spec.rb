@@ -83,6 +83,43 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
     end
   end
 
+  it "no muestra cupones vencidos y mantiene los vigentes en Mis cupones" do
+    expired_configuration = benefit_configurations(:gift2)
+    expired_configuration.benefit_rules.create!(
+      type: "GiftBenefit",
+      limit: 10,
+      effective_from: Date.current - 5.days,
+      deadline_date: Date.current - 1.day
+    )
+
+    consumer.benefits.create!(
+      benefit_configuration: expired_configuration,
+      description: "Cupón vencido",
+      percentage: 30,
+      amount: 1,
+      starts_on: Date.current - 5.days,
+      due_date: Date.current - 1.day,
+      status: :current
+    )
+    consumer.benefits.create!(
+      benefit_configuration: benefit_configurations(:gift),
+      description: "Cupón vigente",
+      percentage: 30,
+      amount: 2,
+      starts_on: Date.current,
+      due_date: Date.current + 5.days,
+      status: :current
+    )
+
+    sign_in employee
+    visit profile_path
+
+    within(find("section[aria-labelledby=coupons-title]")) do
+      expect(page).to have_content("Cupón vigente")
+      expect(page).to have_no_content("Cupón vencido")
+    end
+  end
+
   it "muestra las secciones de configuración en la cuenta del empleado y permite ingresar a cuenta" do
     sign_in employee
 

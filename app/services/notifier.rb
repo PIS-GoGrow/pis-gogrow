@@ -8,30 +8,29 @@ class Notifier
   class MissingConfiguration < StandardError; end
 
   def self.call(event_key:, user:, notifiable:, title_data: {}, description_data: {})
+    # Buscamos el evento indicado y la Notification::Configuration correspondiente
     event = Notification::Registry.event!(event_key)
-
-    # Buscamos la Notification::Configuration correspondiente a ese evento
     configuration = find_configuration_for! event
 
-    # I18n.t! lanza I18n::MissingTranslationData si falta la traducción, en vez de
-    # guardar un texto tipo "translation missing: ..." en la notificación.
-    notification = Notification.create!(
+    notification = Notification.new(
       notification_configuration: configuration,
       user:,
       role: event.role,
       event: event.key,
       requires_action: event.requires_action,
       notifiable:,
-      title: I18n.t!("notifications.#{event.key}.title", **title_data),
-      description: I18n.t!("notifications.#{event.key}.description", **description_data)
+      title_data: title_data,
+      description_data: description_data
     )
 
-    if configuration.users.where(id: user.id).exists?
-      WhatsappSenderJob.perform_later(event_key, title_data, description_data, user.phone)
-    end
+    send_notification = notification.send_to_user?
+    notification.whatsapp_send_status = send_notification ? :pending : :skipped
+    notification.save!
+
+    WhatsappSenderJob.perform_later(notification) if send_notification
 
     notification
-  rescue ActiveRecord::RecordInvalid, I18n::MissingTranslationData, KeyError => e
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, I18n::MissingTranslationData, KeyError => e
     # El único error que permitimos es si no se pudo crear la notificación.
     # En ese caso, no queremos que el usuario no pueda completar su acción porque
     # no se pueden enviar las notificaciones.

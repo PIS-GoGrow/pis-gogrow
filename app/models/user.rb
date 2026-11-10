@@ -35,11 +35,15 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, allow_nil: true, length: { minimum: 12 }
   validates :google_uid, uniqueness: true, allow_nil: true
-  validates :phone, format: { with: /\A\+?\d{8,15}\z/ }, allow_blank: true
+  validates :phone, phone: { types: %i[mobile fixed_or_mobile] }, allow_blank: true
   validate :password_meets_provider_policy, on: :provider_password
 
   normalizes :email, with: -> { _1.strip.downcase }
-  normalizes :phone, with: -> { it.gsub(/[\s()-]/, "").presence }
+  # Si no se puede interpretar, se guarda lo escrito para que la validación lo rechace.
+  normalizes :phone, with: ->(raw) do
+    phone = Phonelib.parse(raw)
+    phone.valid? ? phone.e164 : raw.strip.presence
+  end
 
   audits :email, :phone
 
