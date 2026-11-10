@@ -108,7 +108,7 @@ export default function PeriodCard({
             account.month
           )}
         </CardDescription>
-        <CardAction className="flex flex-wrap items-center justify-end gap-2">
+        <CardAction>
           <span
             className={cn(
               "flex items-center gap-1.5 text-xs",
@@ -120,9 +120,6 @@ export default function PeriodCard({
             <TriangleAlert className="size-3.5" aria-hidden="true" />
             {t("pages.admin.payments.index.due", { date: account.due_date })}
           </span>
-          {status !== "pending" && (
-            <StatusBadge status={status} kind="payment" />
-          )}
         </CardAction>
       </CardHeader>
 
@@ -147,7 +144,14 @@ export default function PeriodCard({
           </Button>
         </div>
 
-        <Separator />
+        {!account.current && account.invoice_download_url && (
+          <Button className="h-10 w-full rounded-[10px] font-medium" asChild>
+            <a href={account.invoice_download_url}>
+              <Download aria-hidden="true" className="size-4" />
+              {t("pages.admin.payments.index.download_invoice")}
+            </a>
+          </Button>
+        )}
 
         <div className="flex flex-1 flex-col justify-center">
           <PaymentReceiptDialog
