@@ -309,6 +309,44 @@ RSpec.describe Consumer, type: :model do
     end
   end
 
+  describe "weekly subsidized meals" do
+    before do
+      Order.destroy_all
+      Schedule.delete_all
+    end
+
+    let(:menu) { menus(:milanesa) }
+    let(:monday) { Date.current.beginning_of_week(:monday) }
+
+    def subsidized_order(date:, amount:, status: :pending)
+      schedule = Schedule.create!(menu:, date:)
+      order = Order.create!(
+        consumer:, schedule:, amount:, price: menu.price * amount,
+        address: consumer.company.address, delivery_method: :office, status:,
+        rejection_reason: (:out_of_stock if status == :rejected)
+      )
+      order.apply_benefit!(benefits(:monthly), amount)
+    end
+
+    it "counts quantities delivered in the same workweek" do
+      subsidized_order(date: monday, amount: 2)
+      subsidized_order(date: monday + 4.days, amount: 1, status: :confirmed)
+      subsidized_order(date: monday + 7.days, amount: 4)
+
+      expect(consumer.weekly_benefit_used(date: monday)).to eq(3)
+      expect(consumer.remaining_weekly_benefit(date: monday)).to eq(2)
+      expect(consumer.weekly_benefit_used(date: monday + 7.days)).to eq(4)
+    end
+
+    it "gives back weekly quota when an order is cancelled or rejected" do
+      subsidized_order(date: monday, amount: 2, status: :cancelled)
+      subsidized_order(date: monday + 1.day, amount: 1, status: :rejected)
+
+      expect(consumer.weekly_benefit_used(date: monday)).to eq(0)
+      expect(consumer.remaining_weekly_benefit(date: monday)).to eq(Consumer::WEEKLY_BENEFIT_LIMIT)
+    end
+  end
+
   describe "#monthly_benefit_usages" do
     before do
       Order.destroy_all

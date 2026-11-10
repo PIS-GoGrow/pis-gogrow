@@ -12,7 +12,14 @@
 # esa orden ya tenía reservado, para no rechazarla contra su propio consumo.
 class Orders::Pricing
   BenefitUsed = Data.define(:units_used, :discount)
-  OrderItemPricing = Data.define(:price, :discounted_price, :benefits, :subsidized_quantity)
+  OrderItemPricing = Data.define(
+    :price,
+    :discounted_price,
+    :benefits,
+    :subsidized_quantity,
+    :base_subsidized_quantity,
+    :weekly_limit_quantity
+  )
   # total contiene el porcentaje total de subsidios aplicable, base el porcentaje de
   # subsidio mensual, y specials es un arreglo de hashes de la forma
   #   { name:, percentage: }
@@ -40,6 +47,7 @@ class Orders::Pricing
     # Los beneficios que tenemos disponible para usar.
     # De la forma { benefit: remaining_uses }
     benefit_left = benefits.to_h { |benefit| [ benefit, remaining_uses(benefit) ] }
+    weekly_left = {}
 
     items.map do |item|
       schedule = item[:schedule]
@@ -51,6 +59,7 @@ class Orders::Pricing
 
       coverage = Array.new(quantity) { [] } # indica qué beneficios se aplican para cada unidad
       pct_sum = Array.new(quantity, 0) # indica cuánto se descuenta para cada unidad
+      weekly_limit_quantity = 0
 
       # Calculamos para cada beneficio cuánto podemos aplicar a la orden
       selected_benefits.each do |benefit|
@@ -59,9 +68,18 @@ class Orders::Pricing
         # No aplicar el beneficio si se supera el precio máximo
         next if benefit.max_price && benefit.max_price < schedule.price
 
+        available_uses = [ benefit_left[benefit] || quantity, quantity ].min
+
+        if benefit.monthly?
+          week = Calendar.week_range(schedule.date).first
+          weekly_left[week] ||= remaining_weekly_uses(schedule.date)
+          weekly_limit_quantity += [ available_uses - weekly_left[week], 0 ].max
+          available_uses = [ available_uses, weekly_left[week] ].min
+        end
+
         # Para cada una de las unidades disponibles del beneficio, con límite en quantity,
         # seleccionamos la unidad del pedido a la que aplicársela.
-        [ benefit_left[benefit] || quantity, quantity ].min.times do
+        available_uses.times do
           # Calculamos las unidades con:
           best = nil # mayor descuento con espacio disponible para este beneficio,
           low = nil  # menor descuento
@@ -86,11 +104,12 @@ class Orders::Pricing
         end
 
         benefit_left[benefit] -= benefit_used[benefit].units_used if benefit_left[benefit]
+        weekly_left[week] -= benefit_used[benefit].units_used if benefit.monthly?
       end
 
       benefit_used.select! { |_benefit, benefit_used| benefit_used.units_used > 0 }
 
-      [ schedule.id, pricing_for(schedule.price, quantity, benefit_used, pct_sum) ]
+      [ schedule.id, pricing_for(schedule.price, quantity, benefit_used, pct_sum, weekly_limit_quantity:) ]
     end
   end
 
@@ -125,7 +144,7 @@ class Orders::Pricing
 
   # Por vianda y no por ítem: cada vianda puede tener una combinación distinta
   # de beneficios según cuántos usos le quedaban a cada uno.
-  def pricing_for(unit_price, quantity, benefit_used, pct_sum)
+  def pricing_for(unit_price, quantity, benefit_used, pct_sum, weekly_limit_quantity:)
     # Para cada unidad, evaluamos qué beneficios se pueden aplicar a él y calculamos
     # su precio.
     # El precio descontado total es la suma de los precios descontados de cada unidad
@@ -136,8 +155,21 @@ class Orders::Pricing
       price: unit_price * quantity,
       discounted_price: discounted_price.round(2),
       benefits: benefit_used,
-      subsidized_quantity: pct_sum.count(&:positive?)
+      subsidized_quantity: pct_sum.count(&:positive?),
+      base_subsidized_quantity: benefit_used.sum { |benefit, used| benefit.monthly? ? used.units_used : 0 },
+      weekly_limit_quantity:
     )
+  end
+
+  def remaining_weekly_uses(date)
+    consumer.remaining_weekly_benefit(date:) + weekly_benefit_held(date)
+  end
+
+  def weekly_benefit_held(date)
+    return 0 unless @modifiable_order&.schedule
+    return 0 unless Calendar.week_range(date).cover?(@modifiable_order.schedule.date)
+
+    @modifiable_order.order_benefits.where(benefit_id: monthly_benefits.map(&:id)).sum(:benefit_used)
   end
 
   # Devuelve los beneficios no expirados seleccionados por el usuario.

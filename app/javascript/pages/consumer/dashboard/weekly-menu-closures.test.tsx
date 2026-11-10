@@ -84,6 +84,9 @@ function renderMenu(props: Partial<MenuProps> = {}, date = monday) {
         monthly_limit: 20,
         monthly_used: 2,
         monthly_remaining: 18,
+        weekly_limit: 5,
+        weekly_used: 2,
+        weekly_remaining: 3,
         specials: [],
       }}
       providers={[

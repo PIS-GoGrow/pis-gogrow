@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Consumer < ApplicationRecord
+  WEEKLY_BENEFIT_LIMIT = 5
+
   include SyncsUserRoles
 
   belongs_to :company
@@ -98,6 +100,22 @@ class Consumer < ApplicationRecord
   # Devuelve la cantidad de viandas subsidiadas mensuales restantes para este mes
   def remaining_monthly_benefit
     [ monthly_benefit_available - monthly_benefit_used_this_month, 0 ].max
+  end
+
+  def weekly_benefit_usages(date: Date.current)
+    OrderBenefit
+      .joins(order: :schedule)
+      .where(schedules: { date: Calendar.week_range(date) })
+      .where.not(orders: { status: [ :rejected, :cancelled ] })
+      .where(benefit_id: monthly_benefits)
+  end
+
+  def weekly_benefit_used(date: Date.current)
+    weekly_benefit_usages(date:).sum(:benefit_used)
+  end
+
+  def remaining_weekly_benefit(date: Date.current)
+    [ WEEKLY_BENEFIT_LIMIT - weekly_benefit_used(date:), 0 ].max
   end
 
   # Devuelve el beneficio mensual que puede ser aplicado en un schedule.

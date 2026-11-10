@@ -6,29 +6,31 @@ import type { ConsumerDashboardIndex } from "@/types"
 import { BenefitCard } from "./benefit-card"
 
 const benefit = (
-  monthlyUsed: number,
-  monthlyLimit: number,
+  weeklyUsed: number,
+  weeklyLimit: number,
 ): ConsumerDashboardIndex["benefit"] => ({
   percentage: 50,
-  monthly_limit: monthlyLimit,
-  monthly_used: monthlyUsed,
-  monthly_remaining: Math.max(monthlyLimit - monthlyUsed, 0),
+  monthly_limit: 20,
+  monthly_used: 7,
+  monthly_remaining: 13,
+  weekly_limit: weeklyLimit,
+  weekly_used: weeklyUsed,
+  weekly_remaining: Math.max(weeklyLimit - weeklyUsed, 0),
   specials: [],
 })
 
-// El beneficio es mensual: la tarjeta no inventa un tope semanal.
 describe("BenefitCard", () => {
-  it("shows the subsidized meals used this month against the monthly limit", () => {
-    render(<BenefitCard benefit={benefit(3, 2)} />)
+  it("shows the subsidized meals used this week against the weekly limit", () => {
+    render(<BenefitCard benefit={benefit(2, 5)} />)
 
-    expect(screen.getByText("Este mes")).toBeInTheDocument()
-    expect(screen.getByText("3 de 2")).toBeInTheDocument()
+    expect(screen.getByText("Esta semana")).toBeInTheDocument()
+    expect(screen.getByText("2 de 5")).toBeInTheDocument()
     expect(screen.getByText("viandas pedidas")).toBeInTheDocument()
   })
 
-  it("does not divide a small monthly limit down to zero", () => {
-    render(<BenefitCard benefit={benefit(1, 3)} />)
+  it("caps the progress when persisted usage exceeds the weekly limit", () => {
+    render(<BenefitCard benefit={benefit(6, 5)} />)
 
-    expect(screen.getByText("1 de 3")).toBeInTheDocument()
+    expect(screen.getByText("6 de 5")).toBeInTheDocument()
   })
 })

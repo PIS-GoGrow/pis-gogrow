@@ -30,6 +30,9 @@ export interface Pricing {
   lines: PricedLine[]
   subsidizedQuantity: number
   fullPriceQuantity: number
+  baseSubsidizedQuantity: number
+  withoutBaseSubsidyQuantity: number
+  weeklyLimitQuantity: number
 }
 
 // No hace ningún cálculo: Obtiene los precios de la orden desde el backend
