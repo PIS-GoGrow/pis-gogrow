@@ -13,7 +13,6 @@ import type { Pricing } from "./pricing"
 import { cartPricedItem, priceItems } from "./pricing"
 import { WeeklyMenu, today } from "./weekly-menu"
 
-
 export default function Index({
   week,
   schedules,
@@ -28,7 +27,7 @@ export default function Index({
   const [selected, setSelected] = useState<Schedule | null>(() => {
     const detailMatch = /^\/menu-semanal\/platos\/(\d+)(?:\?.*)?$/.exec(url)
     return detailMatch
-      ? schedules.find((item) => item.id === Number(detailMatch[1])) ?? null
+      ? (schedules.find((item) => item.id === Number(detailMatch[1])) ?? null)
       : null
   })
 
