@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   notifications: [] as {
     id: number
     title: string
-    description: string
+    description: string | Record<string, string>
     requires_action: boolean
   }[],
 }))
@@ -353,5 +353,71 @@ describe("NotificationBanners", () => {
     expect(
       screen.getByText("No tenés notificaciones nuevas."),
     ).toBeInTheDocument()
+  })
+
+  it("displays 9+ badge when there are more than 9 dismissable notifications", () => {
+    for (let i = 1; i <= 12; i++) {
+      mocks.notifications.push({
+        id: i,
+        title: `Notificación ${i}`,
+        description: `Detalle ${i}`,
+        requires_action: false,
+      })
+    }
+
+    render(<Notifications />)
+
+    expect(
+      screen.getByRole("button", { name: "Tenés 12 notificaciones" }),
+    ).toBeInTheDocument()
+    expect(screen.getByText("9+")).toBeInTheDocument()
+  })
+
+  it("handles pluralized description object correctly", async () => {
+    mocks.notifications.push({
+      id: 20,
+      title: "Cupones asignados",
+      description: {
+        other: "Tenés 3 viandas con descuento disponibles.",
+        one: "Tenés 1 vianda con descuento disponible.",
+      },
+      requires_action: false,
+    })
+
+    render(<Notifications />)
+    await openInbox()
+
+    expect(screen.getByText("Cupones asignados")).toBeInTheDocument()
+    expect(
+      screen.getByText("Tenés 3 viandas con descuento disponibles."),
+    ).toBeInTheDocument()
+  })
+
+  it("disables the close button while closing request is in flight", async () => {
+    const user = userEvent.setup()
+
+    mocks.notifications.push({
+      id: 30,
+      title: "Notificación de prueba",
+      description: "Descripción de prueba.",
+      requires_action: false,
+    })
+
+    render(<Notifications />)
+    await openInbox(user)
+
+    const closeButton = screen.getByRole("button", {
+      name: "Cerrar notificación",
+    })
+    expect(closeButton).toBeEnabled()
+
+    await user.click(closeButton)
+
+    expect(mocks.patch).toHaveBeenCalledTimes(1)
+    expect(closeButton).toBeDisabled()
+
+    // Intentar hacer click nuevamente no debe enviar otro patch
+    await user.click(closeButton)
+    expect(mocks.patch).toHaveBeenCalledTimes(1)
   })
 })

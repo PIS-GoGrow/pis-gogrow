@@ -129,6 +129,25 @@ RSpec.describe Notification, type: :model do
 
       expect { duplicate.save(validate: false) }.to raise_error(ActiveRecord::RecordNotUnique)
     end
+
+    it "permite crear una nueva notificación activa para el mismo evento si la anterior fue cerrada" do
+      notification.save!
+      notification.close!
+
+      recreated = described_class.new(
+        notification_configuration: configuration,
+        user: consumer_user,
+        role: "consumer",
+        event: "order_confirmation",
+        requires_action: false,
+        notifiable: order,
+        title_data: {},
+        description_data: {}
+      )
+
+      expect { recreated.save! }.not_to raise_error
+      expect(recreated).to be_persisted
+    end
   end
 
   describe "send_to_user" do
