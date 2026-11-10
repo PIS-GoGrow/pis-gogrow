@@ -25,23 +25,46 @@ vi.mock("@/layouts/app-layout", () => ({
   default: ({ children }: { children: ReactNode }) => children,
 }))
 
-vi.mock("@inertiajs/react", async () => ({
-  ...(await vi.importActual("@inertiajs/react")),
-  Head: () => null,
-  usePage: () => ({
-    url: "/menu-semanal",
-    props: {
-      auth: {
-        user: { name: "Sofía" },
-        session: { id: 10, role: "consumer" },
-      },
-      notifications: [],
-    },
-  }),
-  Link: ({ children, ...props }: ComponentProps<"a">) => (
-    <a {...props}>{children}</a>
-  ),
+const navigation = vi.hoisted(() => ({
+  url: "/menu-semanal",
+  listeners: new Set<() => void>(),
 }))
+
+vi.mock("@inertiajs/react", async () => {
+  const { useSyncExternalStore } = await import("react")
+
+  return {
+    ...(await vi.importActual("@inertiajs/react")),
+    Head: () => null,
+    router: {
+      visit: vi.fn((url: string) => {
+        navigation.url = url
+        navigation.listeners.forEach((listener) => listener())
+      }),
+    },
+    usePage: () => ({
+      url: useSyncExternalStore(
+        (listener) => {
+          navigation.listeners.add(listener)
+          return () => {
+            navigation.listeners.delete(listener)
+          }
+        },
+        () => navigation.url,
+      ),
+      props: {
+        auth: {
+          user: { name: "Sofía" },
+          session: { id: 10, role: "consumer" },
+        },
+        notifications: [],
+      },
+    }),
+    Link: ({ children, ...props }: ComponentProps<"a">) => (
+      <a {...props}>{children}</a>
+    ),
+  }
+})
 
 vi.mock("./pricing", async () => ({
   ...(await vi.importActual("./pricing")),
@@ -121,6 +144,7 @@ function expectFilteredDay(day: number) {
 }
 
 beforeEach(() => {
+  navigation.url = "/menu-semanal"
   vi.useFakeTimers({ toFake: ["Date"] })
   vi.setSystemTime(new Date(2026, 9, 26, 12))
   window.sessionStorage.clear()
@@ -215,6 +239,7 @@ describe("Consumer menu provider filter navigation", () => {
     await user.click(
       screen.getByRole("button", { name: "Agregar Plato 1 d\u00eda 26" }),
     )
+    expect(navigation.url).toBe("/menu-semanal/platos/261")
     expect(
       screen.getByRole("heading", { name: "Opiniones del plato" }),
     ).toBeInTheDocument()
@@ -224,6 +249,7 @@ describe("Consumer menu provider filter navigation", () => {
     expect(screen.getByText("Luis")).toBeInTheDocument()
     expect(screen.getByText("Muy buena comida")).toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: "Volver" }))
+    expect(navigation.url).toBe("/menu-semanal")
     expectFilteredDay(26)
     expect(window.sessionStorage.getItem(cartStorageKey)).toBe(cartBefore)
   })
