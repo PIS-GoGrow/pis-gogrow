@@ -38,6 +38,7 @@ RSpec.describe "Recordatorio de deuda vencida enviado por Recursos Humanos", typ
 
       sign_in consumer.user, role: :consumer
       visit_hydrated dashboard_path
+      open_notifications
 
       expect(page).to have_content("Recordatorio de pago pendiente")
       expect(page).to have_content(
@@ -68,6 +69,7 @@ RSpec.describe "Recordatorio de deuda vencida enviado por Recursos Humanos", typ
 
       sign_in consumer.user, role: :consumer
       visit_hydrated dashboard_path
+      open_notifications
 
       within("[role='alert']") do
         expect(page).to have_content("Recordatorio de pago pendiente")

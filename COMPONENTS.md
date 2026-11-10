@@ -135,7 +135,7 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | Componente | Importar desde | Usar para |
 |---|---|---|
 | `AppLayout` | `@/layouts/app-layout` | Toda pantalla con sesión iniciada; recibe `breadcrumbs` |
-| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `badge` (al lado del título, como el contador de Empleados), `actions`, `back` y `centered` |
+| `PageContainer` | `@/components/page-container` | Ancho, márgenes y encabezado de toda pantalla; recibe `title`, `eyebrow`, `description`, `badge` (al lado del título, como el contador de Empleados), `actions`, `back`, `centered` y `actionsCentered` (centra las `actions` verticalmente con el título, como la campana de notificaciones de los inicios) |
 | `ListItemCard` | `@/components/list-item-card` | Tarjeta compacta para cada ítem de una lista; acepta las mismas partes que `Card` |
 | `Heading` | `@/components/heading` | Encabezado con `eyebrow`, `description` y `actions` opcionales. En las pantallas se usa a través de `PageContainer` |
 | `HeadingSmall` | `@/components/heading-small` | Encabezado de sección dentro de una pantalla |
@@ -147,6 +147,8 @@ Los usa el prototipo y todavía no están instalados. Se agregan con el CLI la p
 | `DashboardMetric` | `@/components/provider/dashboard-metric` | Número con su etiqueta en el Inicio y en Hallazgos del proveedor; `valueFirst` pone el número arriba y centrado. El fondo y el borde los pasa quien lo usa con `className` |
 | `InsightsMetrics` | `@/components/provider/insights-metrics` | Las tres métricas grises de los hallazgos del proveedor (Pedidos, Platos y ★ Valoración, con «—» si no hay reseñas). Recibe `orders`, `dishes` y `rating` |
 | `AiInsightCard` | `@/components/provider/ai-insight-card` | Tarjeta violeta con gradiente y el pie «Generado por IA»; el texto va como `children` |
+| `BenefitMetric` | `@/components/admin/benefit-metric` | Métrica blanca dentro de la tarjeta gris del beneficio (Participación y Gasto del Inicio, métricas de Reportes): `label`, `value` y `detail` opcional. El ancho lo da el `grid` de la tarjeta |
+| `SummarySection`, `SummaryList`, `SummaryRow` | `@/components/admin/summary-section` | Secciones con lista de RR. HH. («Tus pagos de agosto», «Consumo por proveedor»): título con `HeadingSmall` y `action` opcional (flecha a otra pantalla), la tarjeta con separadores y cada fila |
 | `MobileNav` | `@/components/mobile-nav` | Barra inferior móvil de RRHH; recibe ítems con ícono, ruta opcional y estado activo |
 | `TextLink` | `@/components/text-link` | Enlace de texto dentro de un párrafo (usa `Link` de Inertia) |
 | `UserInfo` | `@/components/user-info` | Avatar con nombre y, opcionalmente, email |

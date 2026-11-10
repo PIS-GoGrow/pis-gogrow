@@ -455,12 +455,7 @@ class Order < ApplicationRecord
       .find_by(event: "order_received", notifiable: self)
 
     if notification
-      notification.update!(
-        description: I18n.t!(
-          "notifications.order_received.description",
-          **order_received_description_data
-        )
-      )
+      notification.update! description_data: order_received_description_data
     else
       notify_received
     end

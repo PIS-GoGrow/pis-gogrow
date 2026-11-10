@@ -45,6 +45,7 @@ RSpec.describe "Ver notificación de pago aprobado para empleado", type: :system
 
     sign_in consumer_user, role: :consumer
     visit dashboard_path
+    open_notifications
 
     expect(page).to have_content(title)
     expected_period = I18n.l(account.month, format: "%B %Y")

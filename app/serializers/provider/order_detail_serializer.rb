@@ -8,6 +8,11 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
     order.consumer.user.email
   end
 
+  typelize :string, nullable: true
+  attribute :consumer_phone do |order|
+    order.consumer.user.phone
+  end
+
   typelize :string
   attribute :created_on do |order|
     order.created_at.to_date.iso8601

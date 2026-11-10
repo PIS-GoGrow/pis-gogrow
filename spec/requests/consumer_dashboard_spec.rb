@@ -129,7 +129,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       end
     end
 
-    def create_notification(user:, notifiable:, role: "consumer", title:)
+    def create_notification(user:, notifiable:, role: "consumer", description_data:)
       Notification.create!(
         notification_configuration:,
         user:,
@@ -137,8 +137,7 @@ RSpec.describe "Consumer dashboard", type: :request do
         event: "order_confirmation",
         requires_action: false,
         notifiable:,
-        title:,
-        description: "#{title} description"
+        description_data:
       )
     end
 
@@ -153,13 +152,13 @@ RSpec.describe "Consumer dashboard", type: :request do
       visible = create_notification(
         user:,
         notifiable: user,
-        title: "Visible"
+        description_data: { date: "12/12", provider: "Visible" }
       )
 
       closed = create_notification(
         user:,
         notifiable: user.consumer,
-        title: "Closed"
+        description_data: { date: "", provider: "Closed" }
       )
       closed.update_column(:closed_at, Time.current)
 
@@ -167,7 +166,7 @@ RSpec.describe "Consumer dashboard", type: :request do
         user:,
         notifiable: provider,
         role: "provider",
-        title: "Wrong role"
+        description_data: { date: "", provider: "Wrong role" }
       )
 
       other_user = User.create!(
@@ -189,7 +188,7 @@ RSpec.describe "Consumer dashboard", type: :request do
       create_notification(
         user: other_user,
         notifiable: other_consumer,
-        title: "Other user"
+        description_data: { date: "", provider: "Other user" }
       )
 
       sign_in_as_consumer(user)
@@ -200,7 +199,7 @@ RSpec.describe "Consumer dashboard", type: :request do
 
       expect(notifications.pluck("id")).to eq([ visible.id ])
       expect(notifications.first).to include(
-        "title" => "Visible",
+        "description" => "Tu pedido del 12/12 fue confirmado por Visible.",
         "requires_action" => false
       )
     end
