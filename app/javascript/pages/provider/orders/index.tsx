@@ -1,4 +1,4 @@
-import { Head } from "@inertiajs/react"
+import { Head, usePage } from "@inertiajs/react"
 import { Download, Search } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -37,6 +37,8 @@ export default function Index({
   past_orders,
 }: ProviderOrdersIndex) {
   const { t } = useTranslation()
+  const { auth } = usePage().props
+
   const [period, setPeriod] = useState<Period>("upcoming")
   const [status, setStatus] = useState<StatusFilter>("all")
   const [delivery, setDelivery] = useState<DeliveryFilter>("all")
@@ -46,10 +48,11 @@ export default function Index({
   useEffect(() => {
     db.provider_orders.put({
       id: 1,
+      user_id: auth.user.id,
       upcoming_orders,
       saved_at: Date.now(),
     })
-  }, [upcoming_orders])
+  }, [upcoming_orders, auth.user.id])
 
   const orders = period === "upcoming" ? upcoming_orders : past_orders
   // Sin pedidos en el período no hay nada que filtrar: el estado vacío mobile

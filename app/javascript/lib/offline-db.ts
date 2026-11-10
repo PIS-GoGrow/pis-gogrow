@@ -4,12 +4,14 @@ import type { ConsumerOrdersIndex, ProviderOrdersIndex } from "@/types"
 
 interface CachedConsumerOrders {
   id: number
+  user_id: number
   upcoming_orders: ConsumerOrdersIndex["upcoming_orders"]
   saved_at: number
 }
 
 interface CachedProviderOrders {
   id: number
+  user_id: number
   upcoming_orders: ProviderOrdersIndex["upcoming_orders"]
   saved_at: number
 }

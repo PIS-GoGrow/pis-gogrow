@@ -1,7 +1,6 @@
-import { Head, InfiniteScroll } from "@inertiajs/react"
+import { Head, InfiniteScroll, usePage } from "@inertiajs/react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
 import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
@@ -44,14 +43,16 @@ export default function Index({
 }: ConsumerOrdersIndex) {
   const { t } = useTranslation()
   const { formatLongDate } = useFormatters()
+  const { auth } = usePage().props
 
   useEffect(() => {
     db.consumer_orders.put({
       id: 1,
+      user_id: auth.user.id,
       upcoming_orders,
       saved_at: Date.now(),
     })
-  }, [upcoming_orders])
+  }, [upcoming_orders, auth.user.id])
 
   const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
   const selectedProviderId = activeProviders.values().next().value
