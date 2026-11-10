@@ -19,6 +19,7 @@ import {
   adminOrderEvents,
   adminPayments,
   adminPreferences,
+  adminReports,
 } from "@/routes"
 import type { NavItem } from "@/types"
 
@@ -37,6 +38,7 @@ export function useAdminPrimaryNavItems(): AdminPrimaryNavItem[] {
       mobileActivePaths: [
         adminDashboard.index().url,
         adminBenefitUsage.analysis().url,
+        adminReports.index().url,
       ],
       icon: House,
       mobileIcon: (
