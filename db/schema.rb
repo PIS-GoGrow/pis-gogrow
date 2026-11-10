@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_09_135803) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -193,7 +193,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
   end
 
   create_table "menu_agendas", force: :cascade do |t|
-    t.integer "amount"
     t.datetime "created_at", null: false
     t.date "ends_on"
     t.bigint "menu_id", null: false
@@ -255,21 +254,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
   create_table "notifications", force: :cascade do |t|
     t.datetime "closed_at"
     t.datetime "created_at", null: false
-    t.string "description"
+    t.datetime "whatsapp_delivered_at"
+    t.json "description_data"
     t.string "event", null: false
-    t.boolean "failed"
     t.bigint "notifiable_id", null: false
     t.string "notifiable_type", null: false
     t.bigint "notification_configuration_id", null: false
     t.boolean "requires_action", null: false
     t.string "role", null: false
-    t.string "title"
+    t.json "title_data"
+    t.string "twilio_sid"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
-    t.datetime "whatsapp_sent_at"
+    t.datetime "whatsapp_last_sent_at"
+    t.integer "whatsapp_send_attempts", default: 0
+    t.integer "whatsapp_send_status"
     t.index ["notifiable_type", "notifiable_id", "event", "user_id"], name: "index_notifications_one_active_per_event", unique: true, where: "(closed_at IS NULL)"
     t.index ["notifiable_type", "notifiable_id"], name: "index_notifications_on_notifiable"
     t.index ["notification_configuration_id"], name: "index_notifications_on_notification_configuration_id"
+    t.index ["twilio_sid"], name: "index_notifications_on_twilio_sid"
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
@@ -278,6 +281,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
     t.datetime "created_at", null: false
     t.bigint "order_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["account_id", "order_id"], name: "index_order_accounts_on_account_id_and_order_id", unique: true
     t.index ["account_id"], name: "index_order_accounts_on_account_id"
     t.index ["order_id"], name: "index_order_accounts_on_order_id"
   end
@@ -412,7 +416,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
   end
 
   create_table "schedules", force: :cascade do |t|
-    t.integer "amount"
     t.datetime "availability_changed_at"
     t.bigint "availability_changed_by_id"
     t.boolean "available", default: true, null: false
@@ -423,7 +426,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_120000) do
     t.index ["availability_changed_by_id"], name: "index_schedules_on_availability_changed_by_id"
     t.index ["menu_id", "date"], name: "index_schedules_on_menu_id_and_date", unique: true
     t.index ["menu_id"], name: "index_schedules_on_menu_id"
-    t.check_constraint "amount >= 0", name: "schedules_amount_non_negative"
   end
 
   create_table "sessions", force: :cascade do |t|

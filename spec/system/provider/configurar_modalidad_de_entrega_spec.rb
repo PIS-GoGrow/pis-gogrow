@@ -76,7 +76,7 @@ RSpec.describe "Configurar la modalidad de entrega como proveedor" do
 
     choose_delivery("Solo Oficinas")
 
-    expect(schedule.reload).to have_attributes(menu: menus(:milanesa), amount: 10)
+    expect(schedule.reload).to have_attributes(menu: menus(:milanesa))
     expect(order.reload).to have_attributes(delivery_method: "home", address: "Julio Herrera y Reissig 565")
   end
 

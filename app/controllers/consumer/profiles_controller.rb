@@ -8,7 +8,10 @@ class Consumer::ProfilesController < Consumer::InertiaController
     benefit = consumer.current_monthly_benefit
     pricing = Orders::Pricing.new(consumer)
     @benefit_summary = pricing.summary
-    @coupons = consumer.special_benefits.includes(benefit_configuration: :benefit_rules).select(&:coupon?).map do |coupon|
+    @coupons = consumer.special_benefits
+      .includes(benefit_configuration: :benefit_rules)
+      .select { |coupon| coupon.coupon? && coupon.valid_on?(Date.current) }
+      .map do |coupon|
       {
         id: coupon.id,
         name: coupon.description.to_s,

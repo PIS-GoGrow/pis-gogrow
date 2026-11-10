@@ -8,6 +8,11 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
     order.consumer.user.email
   end
 
+  typelize :string, nullable: true
+  attribute :consumer_phone do |order|
+    order.consumer.user.phone
+  end
+
   typelize :string
   attribute :created_on do |order|
     order.created_at.to_date.iso8601
@@ -31,16 +36,6 @@ class Provider::OrderDetailSerializer < Provider::OrderSerializer
     order.selected_options
   end
 
-  # Cupo del día del plato: cuánto se publicó y cuánto queda sin comprometer.
-  typelize :number, nullable: true
-  attribute :schedule_amount do |order|
-    order.schedule&.amount
-  end
-
-  typelize :number, nullable: true
-  attribute :remaining_amount do |order|
-    order.schedule&.remaining_amount
-  end
 
   typelize :string, nullable: true
   attribute :rejection_reason do |order|

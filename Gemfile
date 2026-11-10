@@ -13,9 +13,6 @@ gem "propshaft"
 gem "pg", "~> 1.6", ">= 1.6.2"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
-# Build JSON APIs with ease [https://github.com/rails/jbuilder]
-gem "jbuilder"
-
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"
 
@@ -60,11 +57,14 @@ gem "i18n-js", "~> 4.2"
 # Traducciones de Rails (validaciones, fechas, números) en español
 gem "rails-i18n", "~> 8.0"
 
-# Hacer requests HTTP cómodamente y poder testearlas
-gem "faraday"
+# Usar Twilio para notificaciones por Whatsapp
+gem "twilio-ruby"
 
 # Exportar planillas de Excel
 gem "caxlsx", "~> 4.5"
+
+# Normalizar y validar teléfonos (formato E.164 que pide Twilio)
+gem "phonelib"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem

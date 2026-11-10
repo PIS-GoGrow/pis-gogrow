@@ -22,7 +22,7 @@ RSpec.describe "Historial de pedidos con scroll infinito", type: :system do
   end
 
   def create_history_order(delivery_date:, menu_name:, created_at: nil)
-    schedule = Schedule.create!(menu: history_menu, date: delivery_date, amount: 10)
+    schedule = Schedule.create!(menu: history_menu, date: delivery_date)
 
     Order.create!(
       consumer:,

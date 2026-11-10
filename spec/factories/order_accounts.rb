@@ -19,8 +19,9 @@ end
 #
 # Indexes
 #
-#  index_order_accounts_on_account_id  (account_id)
-#  index_order_accounts_on_order_id    (order_id)
+#  index_order_accounts_on_account_id               (account_id)
+#  index_order_accounts_on_account_id_and_order_id  (account_id,order_id) UNIQUE
+#  index_order_accounts_on_order_id                 (order_id)
 #
 # Foreign Keys
 #

@@ -167,7 +167,7 @@ RSpec.describe "Provider::Deliveries", type: :request do
         patch provider_deliveries_path, params: { home_delivery: false }
 
         expect(provider.reload.home_delivery).to be(false)
-        expect(schedule.reload).to have_attributes(menu: menus(:milanesa), amount: 10)
+        expect(schedule.reload).to have_attributes(menu: menus(:milanesa))
         expect(order.reload).to have_attributes(delivery_method: "home", address: "Julio Herrera y Reissig 565")
       end
     end

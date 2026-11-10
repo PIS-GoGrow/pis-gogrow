@@ -3,7 +3,7 @@ monthly:
   consumer: one
   amount: 20
   percentage: 50
-  due_date: <%= Date.current + 2 %>
+  due_date: <%= Date.current.end_of_month %>
   status: current
 one:
   consumer: other
