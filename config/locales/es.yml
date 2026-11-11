@@ -292,6 +292,9 @@ es:
       description:
         one: "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} vianda para entregas del %{period}."
         other: "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} viandas para entregas del %{period}."
+    hr_invoice_missing:
+      title: "Falta una factura"
+      description: "%{provider} todavía no envió la factura de %{period}. Podés recordarle el envío desde Pagos."
     invoice_reminder:
       title: "Recordatorio de factura"
       description: "%{company} te recuerda enviar la factura de %{period}. Podés cargarla desde Cobros."

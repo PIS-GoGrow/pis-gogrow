@@ -361,6 +361,10 @@
         "title": "Recordatorio de pago pendiente",
         "unknown_provider": "un proveedor"
       },
+      "hr_invoice_missing": {
+        "description": "%{provider} todavía no envió la factura de %{period}. Podés recordarle el envío desde Pagos.",
+        "title": "Falta una factura"
+      },
       "invoice_reminder": {
         "description": "%{company} te recuerda enviar la factura de %{period}. Podés cargarla desde Cobros.",
         "title": "Recordatorio de factura"

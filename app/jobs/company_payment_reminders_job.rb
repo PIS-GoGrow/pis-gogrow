@@ -5,5 +5,6 @@ class CompanyPaymentRemindersJob < ApplicationJob
 
   def perform(date: Date.current)
     CompanyPaymentNotifications.remind!(date:)
+    InvoiceReminders::MissingNotices.remind!(date:)
   end
 end

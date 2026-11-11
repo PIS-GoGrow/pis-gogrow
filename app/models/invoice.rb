@@ -13,7 +13,7 @@ class Invoice < ApplicationRecord
   has_one_attached :file
 
   before_create :approve_if_account_settled
-  after_create_commit { InvoiceReminders::Request.close(self) }
+  after_create_commit :close_invoice_notices
 
   validates :issued_on, presence: true, comparison: { less_than_or_equal_to: -> { Date.current } }
   validates :total_amount, numericality: { greater_than: 0 }
@@ -31,6 +31,11 @@ class Invoice < ApplicationRecord
   end
 
   private
+
+  def close_invoice_notices
+    InvoiceReminders::Request.close(self)
+    InvoiceReminders::MissingNotices.close(account)
+  end
 
   def approve_if_account_settled
     self.status = :approved if pending? && account.collection_status == "approved"
