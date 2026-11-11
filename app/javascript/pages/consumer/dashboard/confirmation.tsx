@@ -1,8 +1,8 @@
 import { Tick01Icon } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { Link } from "@inertiajs/react"
+import { Link, usePage } from "@inertiajs/react"
 import { X } from "lucide-react"
-import { useMemo } from "react"
+import { useEffect, useMemo } from "react"
 import { useTranslation } from "react-i18next"
 
 import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
@@ -10,13 +10,32 @@ import { Button } from "@/components/ui/button"
 import AppLayout from "@/layouts/app-layout"
 import { formatLongDate } from "@/lib/dates"
 import { formatMoney } from "@/lib/money"
+import { db } from "@/lib/offline-db"
 import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardConfirmation } from "@/types"
 
 type Confirmation = ConsumerDashboardConfirmation
 
-export default function OrderConfirmation({ total, orders }: Confirmation) {
+export default function OrderConfirmation({
+  total,
+  orders,
+  upcoming_orders,
+}: Confirmation) {
   const { t } = useTranslation()
+  const { auth } = usePage().props
+
+  useEffect(() => {
+    db.consumer_orders
+      .put({
+        id: 1,
+        session_id: auth?.session?.id, // Los ? solo aplican para los tests, si no la sesión está definida
+        upcoming_orders,
+        saved_at: Date.now(),
+      })
+      .catch((error) => {
+        console.error("Error al cachear órdenes: ", error)
+      })
+  }, [upcoming_orders, auth?.session?.id])
 
   const deliveries = useMemo(() => {
     return Object.values(

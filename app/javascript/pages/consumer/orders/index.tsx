@@ -1,5 +1,5 @@
-import { Head, InfiniteScroll } from "@inertiajs/react"
-import { useState } from "react"
+import { Head, InfiniteScroll, usePage } from "@inertiajs/react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { ConsumerMobileNav } from "@/components/consumer/consumer-mobile-nav"
@@ -16,6 +16,7 @@ import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useFormatters } from "@/hooks/use-formatters"
 import AppLayout from "@/layouts/app-layout"
+import { db } from "@/lib/offline-db"
 import { consumerOrders } from "@/routes"
 import type { BreadcrumbItem, ConsumerOrdersIndex, Order } from "@/types"
 
@@ -42,6 +43,20 @@ export default function Index({
 }: ConsumerOrdersIndex) {
   const { t } = useTranslation()
   const { formatLongDate } = useFormatters()
+  const { auth } = usePage().props
+
+  useEffect(() => {
+    db.consumer_orders
+      .put({
+        id: 1,
+        session_id: auth?.session?.id, // Los ? solo aplican para los tests, si no la sesión está definida
+        upcoming_orders,
+        saved_at: Date.now(),
+      })
+      .catch((error) => {
+        console.error("Error al cachear órdenes: ", error)
+      })
+  }, [upcoming_orders, auth?.session?.id])
 
   const [activeProviders, setActiveProviders] = useState<Set<number>>(new Set())
   const selectedProviderId = activeProviders.values().next().value
