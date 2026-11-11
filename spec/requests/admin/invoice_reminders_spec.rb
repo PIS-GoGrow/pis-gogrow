@@ -101,8 +101,13 @@ RSpec.describe "Admin::InvoiceReminders", type: :request do
 
         get admin_payments_path
 
-        expect(inertia.props[:accounts].find { it[:id] == account.id }[:invoice_reminder_available_at])
-          .to eq(DateFormat.long_with_time((reminders.sole.created_at + 3.days).in_time_zone(Time.zone), inline: true))
+        expect(inertia.props[:accounts].find { it[:id] == account.id }[:invoice_reminder_days_left]).to eq(3)
+
+        travel 2.days + 1.hour do
+          get admin_payments_path
+
+          expect(inertia.props[:accounts].find { it[:id] == account.id }[:invoice_reminder_days_left]).to eq(1)
+        end
       end
     end
   end

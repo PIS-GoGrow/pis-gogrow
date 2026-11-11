@@ -20,13 +20,13 @@ class Admin::AccountSerializer < AccountSerializer
   end
 
   # Solo viene cuando hay que esperar para volver a recordar la factura.
-  typelize :string?
-  attribute :invoice_reminder_available_at do |account|
+  typelize :number?
+  attribute :invoice_reminder_days_left do |account|
     last_sent_at = params[:invoice_reminders]&.[](account.id)
     eligibility = InvoiceReminders::Eligibility.new(account:, last_sent_at:)
     next unless eligibility.reason == :cooldown
 
-    DateFormat.long_with_time(eligibility.next_available_at.in_time_zone(Time.zone), inline: true)
+    ((eligibility.next_available_at - Time.current) / 1.day).ceil
   end
 
   private

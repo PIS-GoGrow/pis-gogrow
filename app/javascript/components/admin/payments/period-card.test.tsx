@@ -186,15 +186,15 @@ describe("PeriodCard", () => {
   })
 
   it("disables the invoice reminder until the cooldown ends", () => {
-    renderCard(
-      makeAccount({ invoice_reminder_available_at: "13 de noviembre, 10:00" }),
-    )
+    renderCard(makeAccount({ invoice_reminder_days_left: 3 }))
 
     expect(
       screen.getByRole("button", { name: "Recordar envío de factura" }),
     ).toBeDisabled()
     expect(
-      screen.getByText("Podés volver a recordarle el 13 de noviembre, 10:00"),
+      screen.getByText(
+        "Recordatorio enviado con éxito. Próximo envío disponible en 3 días.",
+      ),
     ).toBeInTheDocument()
   })
 

@@ -166,7 +166,7 @@ export default function PeriodCard({
                   <Button
                     type="submit"
                     disabled={
-                      processing || !!account.invoice_reminder_available_at
+                      processing || account.invoice_reminder_days_left != null
                     }
                     className="h-10 w-full rounded-[10px] font-medium"
                   >
@@ -184,15 +184,12 @@ export default function PeriodCard({
                   </Button>
                 )}
               </Form>
-              {account.invoice_reminder_available_at && (
+              {account.invoice_reminder_days_left != null && (
                 <p className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
-                  <CircleCheck className="size-4" aria-hidden="true" />
-                  {t(
-                    "pages.admin.payments.index.remind_invoice_next_available",
-                    {
-                      date: account.invoice_reminder_available_at,
-                    },
-                  )}
+                  <CircleCheck className="size-4 shrink-0" aria-hidden="true" />
+                  {t("pages.admin.payments.index.remind_invoice_sent", {
+                    count: account.invoice_reminder_days_left,
+                  })}
                 </p>
               )}
             </div>
