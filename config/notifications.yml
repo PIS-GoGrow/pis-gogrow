@@ -219,4 +219,4 @@ events:
     configuration: provider_invoice_reminders
     role: provider
     requires_action: true
-    content_sid: TODO_SID_GOGROW_INVOICE_REMINDER # TODO: SID real de gogrow_invoice_reminder
+    content_sid: HXa65954f2c4f614b713c292230ffd7862
