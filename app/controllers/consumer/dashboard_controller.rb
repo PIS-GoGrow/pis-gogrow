@@ -5,11 +5,25 @@ class Consumer::DashboardController < Consumer::InertiaController
     @consumer = Current.user.consumer
     @week = week_data
     @schedules = schedule_data
+    if params[:schedule_id]
+      schedule = Schedule.on_active_menus.find(params[:schedule_id])
+      raise ActiveRecord::RecordNotFound if schedule.provider_closed?
+
+      unless @schedules.any? { |item| item[:id] == schedule.id }
+        @schedules << dish_data(schedule)
+      end
+    end
     @benefit = benefit_data
     @providers = Provider.includes(:user).all
     @favorites = favorite_data
     @frequent = frequent_data
     @closures = ProviderClosure.upcoming.includes(provider: :user)
+  end
+
+  def dish
+    index
+    render_inertia "consumer/dashboard/index",
+                  serializer: Consumer::DashboardIndexSerializer
   end
 
   def confirmation

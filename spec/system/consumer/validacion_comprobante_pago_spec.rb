@@ -12,6 +12,11 @@ RSpec.describe "Validación de comprobante de pago en español", type: :system d
   let(:receipt_file) { Rails.root.join("public/icon.png").to_s }
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     consumer.orders.destroy_all
     consumer.accounts.destroy_all
 

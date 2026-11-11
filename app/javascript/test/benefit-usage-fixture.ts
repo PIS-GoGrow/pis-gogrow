@@ -4,6 +4,7 @@ export function benefitUsageFixture(month = "2026-10"): BenefitUsageStats {
   const change = { reference: null, difference: null, percent: null }
   return {
     schema_version: 1,
+    analysis_revision: `revision-${month}`,
     period: { month, closed: false },
     consumption: {
       confirmed_orders: 12,

@@ -29,6 +29,11 @@ RSpec.describe "Importe esperado del comprobante y saldo pendiente (B4)", type: 
   end
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     consumer.orders.destroy_all
     consumer.accounts.destroy_all
     provider.accounts.where(month: closed_month).destroy_all

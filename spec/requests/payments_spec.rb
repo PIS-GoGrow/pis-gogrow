@@ -14,7 +14,12 @@ RSpec.describe "Payments", type: :request do
     consumer_user = User.create!(email: "payment-consumer@gmail.com", name: "Consumer", password: "password123456")
     consumer = Consumer.create!(user: consumer_user, company:, address: "Ellauri 1234")
     provider_user = User.create!(email: "payment-provider@gmail.com", name: "Provider", password: "password123456")
-    provider = Provider.create!(user: provider_user)
+    provider = Provider.create!(
+      user: provider_user,
+      bank_name: "BROU",
+      bank_account_details: "Caja de ahorro 123456",
+      beneficiary: "Provider"
+    )
     account = Account.create!(owner: consumer, provider:, month: Date.current.prev_month, amount: 500)
 
     [ consumer_user, account, provider ]
@@ -108,6 +113,36 @@ RSpec.describe "Payments", type: :request do
     get provider_dashboard_path
     expect(response).to have_http_status(:ok)
     expect(inertia.props[:notifications].map { |n| n["title"] || n[:title] }).not_to include(I18n.t("notifications.payment_receipt_submitted.title"))
+  end
+
+  it "does not accept a receipt while the provider has not loaded its payment details" do
+    user, account, provider = setup_payment_account
+    provider.update!(
+      bank_name: nil,
+      bank_account_details: nil,
+      beneficiary: nil
+    )
+    sign_in(user, role: :consumer)
+
+    expect {
+      post payments_path, params: {
+        payment: { account_id: account.id, receipt: receipt_upload }
+      }, headers: account_page_headers
+    }.not_to change(Payment, :count)
+
+    expect(response).to redirect_to(accounts_path)
+
+    follow_redirect!
+
+    expect(inertia).to have_props(
+      errors: {
+        receipt: [
+          I18n.t(
+            "activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing"
+          )
+        ]
+      }
+    )
   end
 
   it "notifies the provider and sets inertia props when a receipt is submitted while the provider is open" do
