@@ -104,6 +104,11 @@ function renderMenu(props: Partial<MenuProps> = {}, date = monday) {
   )
 }
 
+async function openInbox(user = userEvent.setup()) {
+  await user.click(screen.getByRole("button", { name: /Tenés \d+ notificaci/ }))
+  return user
+}
+
 describe("WeeklyMenu closures", () => {
   beforeEach(() => {
     window.sessionStorage.clear()
@@ -117,8 +122,15 @@ describe("WeeklyMenu closures", () => {
     expect(screen.getByText("Wok de verduras + arroz")).toBeInTheDocument()
   })
 
-  it("warns ahead of a closure that starts later, with the reason", () => {
+  it("warns ahead of a closure that starts later, with the reason", async () => {
+    const user = userEvent.setup()
     renderMenu({ closures: [closure()] })
+
+    expect(
+      screen.queryByText("Tu Viandita no estará disponible"),
+    ).not.toBeInTheDocument()
+
+    await openInbox(user)
 
     expect(
       screen.getByText("Tu Viandita no estará disponible"),
@@ -135,6 +147,7 @@ describe("WeeklyMenu closures", () => {
     const user = userEvent.setup()
     const { unmount } = renderMenu({ closures: [closure()] })
 
+    await openInbox(user)
     await user.click(screen.getByRole("button", { name: "Cerrar aviso" }))
     expect(
       screen.queryByText("Tu Viandita no estará disponible"),
@@ -143,6 +156,9 @@ describe("WeeklyMenu closures", () => {
     unmount()
     renderMenu({ closures: [closure()] })
 
+    expect(
+      screen.queryByRole("button", { name: /Tenés \d+ notificaci/ }),
+    ).not.toBeInTheDocument()
     expect(
       screen.queryByText("Tu Viandita no estará disponible"),
     ).not.toBeInTheDocument()
@@ -199,6 +215,7 @@ describe("WeeklyMenu closures", () => {
     const midweek = closure({ starts_on: "2026-09-16", ends_on: "2026-09-18" })
     const { unmount } = renderMenu({ closures: [midweek] }, "2026-09-14")
 
+    await openInbox(user)
     await user.click(screen.getByRole("button", { name: "Cerrar aviso" }))
     unmount()
     renderMenu({ closures: [midweek] }, "2026-09-16")
@@ -217,6 +234,7 @@ describe("WeeklyMenu closures", () => {
     unmount()
     renderMenu({ closures: [midweek] }, "2026-09-14")
 
+    await openInbox(user)
     expect(
       screen.getByText("Tu Viandita no estará disponible"),
     ).toBeInTheDocument()
