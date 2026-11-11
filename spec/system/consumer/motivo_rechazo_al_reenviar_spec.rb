@@ -17,6 +17,11 @@ RSpec.describe "Conservar el motivo de rechazo al reenviar un comprobante", type
   let(:provider) { providers(:tuviandita) }
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     consumers(:one).accounts.where.not(id: account.id).destroy_all
     Payment.where(account:).destroy_all
     account.update!(month: Date.current.prev_month.beginning_of_month)

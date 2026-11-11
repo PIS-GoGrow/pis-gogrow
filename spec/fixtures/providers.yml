@@ -2,12 +2,6 @@
 tuviandita:
   user: provider_user
   home_delivery: true
-  bank_name: Santander
-  bank_account_details: |
-    Transferencias desde Santander
-    Cuenta: 1150260
-    Moneda: UYU
-  beneficiary: "Tu Viandita S.A."
   onboarding_completed_at: <%= configured %>
   payment_details_configured_at: <%= configured %>
   order_deadline_configured_at: <%= configured %>

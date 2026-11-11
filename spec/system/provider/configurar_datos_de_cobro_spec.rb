@@ -8,10 +8,6 @@ RSpec.describe "Configurar los datos de cobro del proveedor" do
   let(:provider) { providers(:tuviandita) }
   let(:provider_user) { users(:provider_user) }
 
-  before do
-    provider.update!(bank_name: nil, bank_account_details: nil, beneficiary: nil)
-  end
-
   def choose_bank(label)
     find_by_id("bank_name").click
     find("[role=option]", exact_text: label).click
