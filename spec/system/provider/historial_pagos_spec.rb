@@ -24,6 +24,11 @@ RSpec.describe "Historial de pagos del proveedor" do
   let(:previous_month) { Date.current.beginning_of_month.months_ago(1) }
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     Account.where(provider:).destroy_all
     consumers(:one).orders.destroy_all
   end
