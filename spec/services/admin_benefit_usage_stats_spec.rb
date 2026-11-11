@@ -68,6 +68,13 @@ RSpec.describe AdminBenefitUsageStats do
     expect(stats[:orders]).to eq(confirmed_orders: 1, confirmed_meals: 2, pending_orders: 1, pending_meals: 3)
   end
 
+  it "does not report a misleading pending-meal total when an order has no amount" do
+    insert_order(status: :pending, amount: 1, discounted_price: 0).update_columns(amount: nil)
+
+    expect(stats[:orders][:pending_orders]).to eq(1)
+    expect(stats[:orders][:pending_meals]).to be_nil
+  end
+
   it "uses delivery_date before the schedule date and excludes other months" do
     schedule = Schedule.insert!({ menu_id: menus(:milanesa).id, date: month.next_month,
                                   created_at: Time.current, updated_at: Time.current })
@@ -250,6 +257,29 @@ RSpec.describe AdminBenefitUsageStats do
                                          monthly_quota_meals: 40, monthly_available_meals: 40)
       expect(stats[:employees][:participation_percent]).to eq(0.0)
       expect(stats[:employees][:eligible_without_orders]).to eq(2)
+    end
+
+    it "keeps quota and participation unknown when both employees lack monthly grants" do
+      expect(stats[:employees][:eligibility]).to eq(eligible: 0, ineligible: 0, unknown: 2)
+      expect(stats[:benefits]).to include(monthly_quota_meals: nil, monthly_available_meals: nil)
+      expect(stats[:employees][:participation_percent]).to be_nil
+      expect(stats[:orders][:confirmed_orders]).to eq(0)
+      expect(warning_codes).to include("eligibility_unknown")
+    end
+
+    it "keeps eligibility unknown for two employees without a monthly configuration" do
+      unconfigured = Company.create!(name: "Empresa sin configuración")
+      2.times do |index|
+        user = User.create!(name: "Empleado #{index}", email: "sin-config-#{index}@example.test",
+                            password: "secret-password-123")
+        Consumer.create!(user:, company: unconfigured)
+      end
+
+      result = described_class.new(company: unconfigured, month:).to_h
+
+      expect(result.dig(:employees, :eligibility)).to eq(eligible: 0, ineligible: 0, unknown: 2)
+      expect(result.dig(:benefits, :monthly_quota_meals)).to be_nil
+      expect(result.dig(:employees, :participation_percent)).to be_nil
     end
 
     it "separates full and partial confirmed use from pending reservations" do

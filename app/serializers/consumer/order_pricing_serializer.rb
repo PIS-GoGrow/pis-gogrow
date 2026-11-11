@@ -13,7 +13,10 @@ class Consumer::OrderPricingSerializer
       total: lines.sum { |l| l[:total] },
       lines: lines,
       subsidizedQuantity: subsidized_quantities.sum,
-      fullPriceQuantity: @items.zip(subsidized_quantities).sum { |item, subsidized| item[:quantity] - subsidized }
+      fullPriceQuantity: @items.zip(subsidized_quantities).sum { |item, subsidized| item[:quantity] - subsidized },
+      baseSubsidizedQuantity: @pricings.sum { |pricing| pricing[1].base_subsidized_quantity },
+      withoutBaseSubsidyQuantity: @items.sum { |item| item[:quantity] } - @pricings.sum { |pricing| pricing[1].base_subsidized_quantity },
+      weeklyLimitQuantity: @pricings.sum { |pricing| pricing[1].weekly_limit_quantity }
     }
   end
 

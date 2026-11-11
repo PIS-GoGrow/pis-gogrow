@@ -11,6 +11,7 @@ import { type ReactNode, StrictMode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { benefitUsageFixture } from "@/test/benefit-usage-fixture"
+import type { BenefitUsageHistoryMetrics } from "@/types/benefit-usage"
 import type { AdminBenefitUsageAnalysis } from "@/types/serializers"
 
 import Analysis from "./analysis"
@@ -66,6 +67,107 @@ describe("Uso del beneficio", () => {
     Element.prototype.scrollIntoView = vi.fn()
   })
   afterEach(() => vi.unstubAllGlobals())
+
+  it("shows September and October from their own historical snapshots after month navigation", async () => {
+    const emptyMetrics = Object.fromEntries(
+      [
+        "employees",
+        "eligible_employees",
+        "employees_with_confirmed_orders",
+        "eligible_with_confirmed_orders",
+        "eligible_without_orders",
+        "participation_percent",
+        "average_confirmed_meals_per_employee",
+        "monthly_quota_meals",
+        "monthly_subsidized_meals",
+        "monthly_pending_reserved_meals",
+        "monthly_available_meals",
+        "monthly_unused_closed_meals",
+        "confirmed_orders",
+        "confirmed_meals",
+        "confirmed_meals_without_monthly_subsidy",
+        "pending_orders",
+        "pending_meals",
+        "company_subsidy_amount",
+      ].map((key) => [key, null]),
+    ) as unknown as BenefitUsageHistoryMetrics
+    function historical(month: string, employees: number, meals: number) {
+      const data = benefitUsageFixture(month)
+      data.consumption.confirmed_meals = null
+      data.history = {
+        period: {
+          month,
+          state: "incomplete",
+          source: "historical_snapshot",
+          fictional: true,
+          captured_at: `${month}-${month === "2026-10" ? "31" : "30"}T23:55:00-03:00`,
+          calculation_version: 1,
+        },
+        metrics: { ...emptyMetrics, employees, confirmed_meals: meals },
+        unavailable_reasons: { period: "close_not_verified" },
+        trends: [],
+        comparisons: [],
+      }
+      return data
+    }
+    fetchMock
+      .mockResolvedValueOnce(response(historical("2026-09", 38, 28)))
+      .mockResolvedValueOnce(
+        response({
+          success: true,
+          text: "Resumen simulado de septiembre",
+          month: "2026-09",
+          generated_at: "2026-11-04T12:00:00-03:00",
+          generated_at_label: "miércoles 4 de noviembre a las 12:00",
+          generated_by_ai: true,
+        }),
+      )
+      .mockResolvedValueOnce(response(historical("2026-10", 40, 44)))
+    const view = render(<Analysis {...props} month="2026-09" />)
+    await screen.findByText("Fotografía sin cierre verificado")
+    expect(
+      screen.getByRole("button", { name: "Generar resumen con IA" }),
+    ).toBeEnabled()
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Generar resumen con IA" }))
+    await screen.findByText("Resumen simulado de septiembre")
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({
+      method: "POST",
+      body: JSON.stringify({
+        month: "2026-09",
+        analysis_revision: "revision-2026-09",
+      }),
+    })
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Participación de empleados" }))
+    expect(
+      screen.getByText("Empleados del período").parentElement,
+    ).toHaveTextContent("38")
+    expect(
+      screen.getByText("Viandas confirmadas").parentElement,
+    ).toHaveTextContent("28")
+    view.rerender(<Analysis {...props} month="2026-10" />)
+    await screen.findByText("Datos registrados el 31/10, 23:55")
+    expect(
+      screen.queryByText("Resumen simulado de septiembre"),
+    ).not.toBeInTheDocument()
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Participación de empleados" }))
+    expect(
+      screen.getByText("Empleados del período").parentElement,
+    ).toHaveTextContent("40")
+    expect(
+      screen.getByText("Viandas confirmadas").parentElement,
+    ).toHaveTextContent("44")
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      "/rrhh/uso-beneficio?month=2026-09",
+      "/rrhh/uso-beneficio/resumen",
+      "/rrhh/uso-beneficio?month=2026-10",
+    ])
+  })
 
   it("loads once in StrictMode and never generates AI automatically", async () => {
     const user = userEvent.setup()
@@ -260,6 +362,34 @@ describe("Uso del beneficio", () => {
     }
   })
 
+  it("keeps current-month capacity and participation cards independently sized", async () => {
+    const user = userEvent.setup()
+    render(<Analysis {...props} />)
+    await screen.findByText("$5.425,25")
+    const capacity = screen.getByRole("button", {
+      name: "Capacidad del beneficio",
+    })
+    const participation = screen.getByRole("button", {
+      name: "Participación de empleados",
+    })
+    const grid = capacity.closest('[data-slot="card-header"]')?.parentElement
+      ?.parentElement
+    expect(grid).toHaveClass("grid", "items-start", "lg:grid-cols-2")
+    expect(capacity).toHaveAttribute("aria-expanded", "false")
+    expect(participation).toHaveAttribute("aria-expanded", "false")
+
+    await user.click(capacity)
+    expect(capacity).toHaveAttribute("aria-expanded", "true")
+    expect(participation).toHaveAttribute("aria-expanded", "false")
+    await user.click(capacity)
+    await user.click(participation)
+    expect(capacity).toHaveAttribute("aria-expanded", "false")
+    expect(participation).toHaveAttribute("aria-expanded", "true")
+    await user.click(capacity)
+    expect(capacity).toHaveAttribute("aria-expanded", "true")
+    expect(participation).toHaveAttribute("aria-expanded", "true")
+  })
+
   it.each([
     ["440.25", "$440,25", false],
     ["1250.50", "$1.250,50", false],
@@ -288,6 +418,40 @@ describe("Uso del beneficio", () => {
       )
     },
   )
+
+  it("refreshes stale statistics without retrying Claude automatically", async () => {
+    const updated = benefitUsageFixture()
+    updated.analysis_revision = "updated-revision"
+    fetchMock
+      .mockResolvedValueOnce(response(benefitUsageFixture()))
+      .mockResolvedValueOnce(
+        response({ success: false, error: { code: "stale_analysis" } }, 409),
+      )
+      .mockResolvedValueOnce(response(updated))
+    render(<Analysis {...props} />)
+    await screen.findByText("$5.425,25")
+    fireEvent.click(
+      screen.getByRole("button", { name: "Generar resumen con IA" }),
+    )
+    await screen.findByRole("button", { name: "Actualizar datos" })
+    expect(
+      screen.getByRole("button", { name: "Generar resumen con IA" }),
+    ).toBeDisabled()
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+
+    fireEvent.click(screen.getByRole("button", { name: "Actualizar datos" }))
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", { name: "Generar resumen con IA" }),
+      ).toBeEnabled(),
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(3)
+    expect(fetchMock.mock.calls.map((call) => call[0])).toEqual([
+      "/rrhh/uso-beneficio?month=2026-10",
+      "/rrhh/uso-beneficio/resumen",
+      "/rrhh/uso-beneficio?month=2026-10",
+    ])
+  })
 
   it("keeps all monthly indicators, trends and expandable data limitations without anomaly cards", async () => {
     const user = userEvent.setup()
@@ -531,7 +695,7 @@ describe("Uso del beneficio", () => {
     },
   )
 
-  it("posts only the month with CSRF, prevents duplicates and renders AI as safe text", async () => {
+  it("posts only the month and revision with CSRF, prevents duplicates and renders AI as safe text", async () => {
     const user = userEvent.setup()
     const request = deferred()
     fetchMock
@@ -552,7 +716,10 @@ describe("Uso del beneficio", () => {
     expect(fetchMock.mock.calls[1][0]).toBe("/rrhh/uso-beneficio/resumen")
     expect(fetchMock.mock.calls[1][1]).toMatchObject({
       method: "POST",
-      body: JSON.stringify({ month: "2026-10" }),
+      body: JSON.stringify({
+        month: "2026-10",
+        analysis_revision: "revision-2026-10",
+      }),
       credentials: "same-origin",
       headers: { "X-CSRF-Token": "csrf-test" },
     })
@@ -625,6 +792,11 @@ describe("Uso del beneficio", () => {
 
   it.each([
     [429, "rate_limited", "Alcanzaste el límite de generación."],
+    [
+      422,
+      "insufficient_data",
+      "No hay estadísticas suficientes de este período",
+    ],
     [
       503,
       "configuration_missing",

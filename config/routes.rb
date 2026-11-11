@@ -100,6 +100,9 @@ Rails.application.routes.draw do
     get "menu-semanal/confirmacion", to: "dashboard#confirmation", as: :dashboard_confirmation
     get "menu-semanal/carrito", to: "dashboard#cart", as: :dashboard_cart
     get "menu-semanal/error", to: "dashboard#error", as: :dashboard_error
+    get "menu-semanal/platos/:schedule_id",
+        to: "dashboard#dish",
+        as: :dashboard_dish
 
     resources :menus, path: "menu-del-dia", only: [ :index ]
     resource :favorite, path: "favoritos/:kind/:id", only: [ :update, :destroy ],

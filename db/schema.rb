@@ -114,6 +114,59 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_135803) do
     t.index ["benefit_configuration_id"], name: "index_benefit_rules_on_benefit_configuration_id"
   end
 
+  create_table "benefit_usage_monthly_snapshots", force: :cascade do |t|
+    t.integer "calculation_version", default: 1, null: false
+    t.datetime "captured_at", null: false
+    t.datetime "closed_at"
+    t.bigint "company_id", null: false
+    t.decimal "company_subsidy_amount", precision: 14, scale: 2
+    t.integer "confirmed_meals"
+    t.integer "confirmed_meals_without_monthly_subsidy"
+    t.integer "confirmed_orders"
+    t.datetime "created_at", null: false
+    t.integer "eligible_employees"
+    t.integer "eligible_with_confirmed_orders"
+    t.integer "eligible_without_orders"
+    t.integer "employees"
+    t.integer "employees_with_confirmed_orders"
+    t.boolean "fictional", default: false, null: false
+    t.date "month", null: false
+    t.integer "monthly_available_meals"
+    t.integer "monthly_pending_reserved_meals"
+    t.integer "monthly_quota_meals"
+    t.integer "monthly_subsidized_meals"
+    t.integer "monthly_unused_closed_meals"
+    t.integer "pending_meals"
+    t.integer "pending_orders"
+    t.integer "status", default: 0, null: false
+    t.jsonb "unavailable_reasons", default: {}, null: false
+    t.integer "unknown_eligibility_employees"
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "month"], name: "index_benefit_usage_monthly_snapshots_on_company_id_and_month", unique: true
+    t.index ["company_id"], name: "index_benefit_usage_monthly_snapshots_on_company_id"
+    t.check_constraint "(status = 1) = (closed_at IS NOT NULL)", name: "benefit_usage_snapshot_closed_at"
+    t.check_constraint "calculation_version > 0", name: "benefit_usage_snapshot_version"
+    t.check_constraint "company_subsidy_amount >= 0::numeric", name: "bus_company_subsidy_amount_nonnegative"
+    t.check_constraint "confirmed_meals >= 0", name: "bus_confirmed_meals_nonnegative"
+    t.check_constraint "confirmed_meals_without_monthly_subsidy >= 0", name: "bus_confirmed_meals_without_monthly_subsidy_nonnegative"
+    t.check_constraint "confirmed_orders >= 0", name: "bus_confirmed_orders_nonnegative"
+    t.check_constraint "eligible_employees >= 0", name: "bus_eligible_employees_nonnegative"
+    t.check_constraint "eligible_with_confirmed_orders >= 0", name: "bus_eligible_with_confirmed_orders_nonnegative"
+    t.check_constraint "eligible_without_orders >= 0", name: "bus_eligible_without_orders_nonnegative"
+    t.check_constraint "employees >= 0", name: "bus_employees_nonnegative"
+    t.check_constraint "employees_with_confirmed_orders >= 0", name: "bus_employees_with_confirmed_orders_nonnegative"
+    t.check_constraint "month = date_trunc('month'::text, month::timestamp with time zone)::date", name: "benefit_usage_snapshot_first_day"
+    t.check_constraint "monthly_available_meals >= 0", name: "bus_monthly_available_meals_nonnegative"
+    t.check_constraint "monthly_pending_reserved_meals >= 0", name: "bus_monthly_pending_reserved_meals_nonnegative"
+    t.check_constraint "monthly_quota_meals >= 0", name: "bus_monthly_quota_meals_nonnegative"
+    t.check_constraint "monthly_subsidized_meals >= 0", name: "bus_monthly_subsidized_meals_nonnegative"
+    t.check_constraint "monthly_unused_closed_meals >= 0", name: "bus_monthly_unused_closed_meals_nonnegative"
+    t.check_constraint "pending_meals >= 0", name: "bus_pending_meals_nonnegative"
+    t.check_constraint "pending_orders >= 0", name: "bus_pending_orders_nonnegative"
+    t.check_constraint "status = ANY (ARRAY[0, 1, 2])", name: "benefit_usage_snapshot_status"
+    t.check_constraint "unknown_eligibility_employees >= 0", name: "bus_unknown_eligibility_employees_nonnegative"
+  end
+
   create_table "benefits", force: :cascade do |t|
     t.integer "amount"
     t.bigint "benefit_configuration_id"
@@ -254,19 +307,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_135803) do
   create_table "notifications", force: :cascade do |t|
     t.datetime "closed_at"
     t.datetime "created_at", null: false
-    t.datetime "whatsapp_delivered_at"
-    t.json "description_data"
     t.string "event", null: false
     t.bigint "notifiable_id", null: false
     t.string "notifiable_type", null: false
     t.bigint "notification_configuration_id", null: false
     t.boolean "requires_action", null: false
     t.string "role", null: false
-    t.json "title_data"
-    t.string "twilio_sid"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.datetime "whatsapp_last_sent_at"
+    t.string "twilio_sid"
+    t.datetime "whatsapp_delivered_at"
+    t.json "title_data"
+    t.json "description_data"
     t.integer "whatsapp_send_attempts", default: 0
     t.integer "whatsapp_send_status"
     t.index ["notifiable_type", "notifiable_id", "event", "user_id"], name: "index_notifications_one_active_per_event", unique: true, where: "(closed_at IS NULL)"
@@ -635,6 +688,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_09_135803) do
   add_foreign_key "benefit_configurations", "companies"
   add_foreign_key "benefit_configurations", "users", column: "created_by_id"
   add_foreign_key "benefit_rules", "benefit_configurations"
+  add_foreign_key "benefit_usage_monthly_snapshots", "companies"
   add_foreign_key "benefits", "benefit_configurations"
   add_foreign_key "benefits", "consumers"
   add_foreign_key "consumer_benefit_configurations", "benefit_configurations"

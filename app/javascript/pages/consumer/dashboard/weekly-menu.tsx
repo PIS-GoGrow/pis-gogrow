@@ -126,20 +126,19 @@ export function WeeklyMenu({
               {formatLongDate(currentDate)}
             </p>
           </div>
-          <NotificationInbox />
+          <NotificationInbox>
+            {soonClosures.map((closure) => (
+              <ClosureBanner
+                key={closure.id}
+                closure={closure}
+                when="soon"
+                onDismiss={() => dismiss(`soon-${closure.id}`)}
+              />
+            ))}
+          </NotificationInbox>
         </header>
 
-        <div className="mb-6 flex flex-col gap-3">
-          <NotificationBanners />
-          {soonClosures.map((closure) => (
-            <ClosureBanner
-              key={closure.id}
-              closure={closure}
-              when="soon"
-              onDismiss={() => dismiss(`soon-${closure.id}`)}
-            />
-          ))}
-        </div>
+        <NotificationBanners className="mb-6" />
 
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_330px] lg:gap-8">
           <section className="min-w-0">
@@ -233,6 +232,8 @@ export function WeeklyMenu({
                       ordersClosed={item.orders_closed}
                       isPast={item.date < currentDate}
                       addedQuantity={addedQuantity || undefined}
+                      pendingQuantity={item.ordered?.pending}
+                      confirmedQuantity={item.ordered?.confirmed}
                       onSelect={() => openDetail(item)}
                       favorite={favoriteMenuIds.has(item.menu.saved_menu_id)}
                       onToggleFavorite={() =>

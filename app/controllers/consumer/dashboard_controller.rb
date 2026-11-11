@@ -5,11 +5,25 @@ class Consumer::DashboardController < Consumer::InertiaController
     @consumer = Current.user.consumer
     @week = week_data
     @schedules = schedule_data
+    if params[:schedule_id]
+      schedule = Schedule.on_active_menus.find(params[:schedule_id])
+      raise ActiveRecord::RecordNotFound if schedule.provider_closed?
+
+      unless @schedules.any? { |item| item[:id] == schedule.id }
+        @schedules << dish_data(schedule)
+      end
+    end
     @benefit = benefit_data
     @providers = Provider.includes(:user).all
     @favorites = favorite_data
     @frequent = frequent_data
     @closures = ProviderClosure.upcoming.includes(provider: :user)
+  end
+
+  def dish
+    index
+    render_inertia "consumer/dashboard/index",
+                  serializer: Consumer::DashboardIndexSerializer
   end
 
   def confirmation
@@ -48,11 +62,27 @@ class Consumer::DashboardController < Consumer::InertiaController
   end
 
   def schedule_data
-    schedules = Schedule.on_active_menus.includes(:orders, menu: [ { reviews: { consumer: :user } }, :option_groups, { provider: [ :user, :closures ] } ])
+    schedules = Schedule.on_active_menus.includes(menu: [ { reviews: { consumer: :user } }, :option_groups, { provider: [ :user, :closures ] } ])
                         .where(date: week_range)
                         .order(:date, :id)
+                        .reject(&:provider_closed?)
 
-    schedules.reject(&:provider_closed?).map { dish_data(it) }
+    ordered = ordered_amounts(schedules.map(&:id))
+
+    schedules.map { dish_data(it).merge(ordered: ordered[it.id]) }
+  end
+
+  # Cada línea del carrito se guarda como un pedido aparte, así que un mismo
+  # plato puede tener unidades pendientes y confirmadas a la vez.
+  def ordered_amounts(schedule_ids)
+    amounts = @consumer.orders
+                       .where(schedule_id: schedule_ids, status: [ :pending, :confirmed ])
+                       .group(:schedule_id, :status)
+                       .sum(:amount)
+
+    schedule_ids.index_with do |schedule_id|
+      { pending: amounts[[ schedule_id, "pending" ]].to_i, confirmed: amounts[[ schedule_id, "confirmed" ]].to_i }
+    end
   end
 
   def favorite_data
@@ -85,12 +115,16 @@ class Consumer::DashboardController < Consumer::InertiaController
 
   def benefit_data
     pricing = Orders::Pricing.new(@consumer)
+    week_date = week_range.first
 
     {
-      percentage: @consumer.monthly_benefit_percentage,
-      monthly_limit: @consumer.monthly_benefit_available,
-      monthly_used: @consumer.monthly_benefit_used_this_month,
-      monthly_remaining: @consumer.remaining_monthly_benefit,
+      percentage: @consumer.monthly_benefit_percentage(date: week_date),
+      monthly_limit: @consumer.monthly_benefit_available(date: week_date),
+      monthly_used: @consumer.monthly_benefit_used_this_month(date: week_date),
+      monthly_remaining: @consumer.remaining_monthly_benefit(date: week_date),
+      weekly_limit: @consumer.weekly_benefit_limit(date: week_date),
+      weekly_used: @consumer.weekly_benefit_used(date: week_date),
+      weekly_remaining: @consumer.remaining_weekly_benefit(date: week_date),
       specials: @consumer.special_benefits.map do |benefit|
         {
           id: benefit.id,

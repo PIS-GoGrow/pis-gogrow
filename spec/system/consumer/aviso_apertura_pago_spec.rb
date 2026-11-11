@@ -17,6 +17,11 @@ RSpec.describe "Aviso de apertura del período de pago", type: :system do
   let(:previous_month) { Date.current.prev_month.beginning_of_month }
 
   before do
+    account.provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     Notification::Configuration.find_or_create_by!(key: "automatic_payment_reminders") do |configuration|
       configuration.roles = %w[consumer]
     end

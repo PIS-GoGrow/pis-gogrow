@@ -15,6 +15,11 @@ RSpec.describe "Recordatorio de vencimiento de pago", type: :system do
   let(:title) { "Tu pago vence pronto..." }
 
   before do
+    account.provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     Notification::Configuration.find_or_create_by!(key: "automatic_payment_reminders") do |configuration|
       configuration.roles = %w[consumer]
     end

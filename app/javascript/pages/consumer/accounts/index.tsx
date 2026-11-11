@@ -125,6 +125,10 @@ export default function Index({
         setDetail={setDetail}
         setLoading={setLoading}
         account={account}
+        paymentDetailsComplete={
+          providers.find(({ id }) => id === providerId)
+            ?.payment_details_complete ?? false
+        }
       />,
     )
   })
