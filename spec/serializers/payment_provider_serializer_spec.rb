@@ -42,6 +42,10 @@ RSpec.describe PaymentProviderSerializer do
     end
 
     context "when provider has nil bank information" do
+      before do
+        provider.update!(bank_name: nil, bank_account_details: nil, beneficiary: nil)
+      end
+
       it "serializes nil bank fields cleanly without error" do
         serialized = described_class.new(provider).to_h
 
