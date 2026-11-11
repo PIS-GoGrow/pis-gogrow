@@ -754,6 +754,32 @@ RSpec.describe "Consumer dashboard", type: :request do
       )
     end
 
+    it "shares the consumer's upcoming orders for the offline page" do
+      provider = Provider.create!(user: User.create!(email: "prov-conf-4@gmail.com", name: "La Cocina", password: "password123456"))
+      menu = Menu.create!(provider:, name: "Tarta Pascualina", description: "Plato de prueba", price: 250)
+      other_consumer = Consumer.create!(
+        user: User.create!(email: "other-conf-2@gmail.com", name: "Otro", password: "password123456"),
+        company: consumer.company,
+        address: "Dir 123"
+      )
+      order_on = ->(date, status: :pending, owner: consumer) do
+        Order.create!(
+          consumer: owner, schedule: Schedule.find_or_create_by!(menu:, date:), amount: 1, price: 250,
+          discounted_price: 250, address: "Dir 123", delivery_method: :office, status:
+        )
+      end
+      confirmed = order_on.call(Date.current)
+      later = order_on.call(Date.current + 2, status: :confirmed)
+      order_on.call(Date.current + 1, status: :cancelled)
+      order_on.call(Date.current - 1)
+      order_on.call(Date.current + 1, owner: other_consumer)
+
+      sign_in_as_consumer(user)
+      get dashboard_confirmation_path(confirmed_order_ids: [ confirmed.id ])
+
+      expect(inertia.props[:upcoming_orders].map { |order| order[:id] }).to eq([ confirmed.id, later.id ])
+    end
+
     it "redirects to the dashboard when order IDs do not belong to the signed-in consumer" do
       other_user = User.create!(email: "other-conf@gmail.com", name: "Otro", password: "password123456")
       other_consumer = Consumer.create!(user: other_user, company: consumer.company, address: "Dir 123")
