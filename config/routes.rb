@@ -151,6 +151,7 @@ Rails.application.routes.draw do
     resources :order_events, path: "auditoria", only: [ :index ]
     resources :payments, path: "pagos", only: [ :index, :show, :create, :destroy ] do
       get :receipt, on: :member, path: "archivo"
+      resources :invoice_reminders, path: "recordatorios-de-factura", only: [ :create ]
     end
   end
 

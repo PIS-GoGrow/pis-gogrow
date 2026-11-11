@@ -25,7 +25,13 @@ RSpec.describe Notification::Configuration do
         "hr_subsidy_changes"
       )
       expect(described_class.for_role(:provider).pluck(:key))
-        .to contain_exactly("provider_orders", "provider_payments", "order_cancellations", "menu_publication_reminders")
+        .to contain_exactly(
+          "provider_orders",
+          "provider_payments",
+          "order_cancellations",
+          "menu_publication_reminders",
+          "provider_invoice_reminders"
+        )
     end
   end
 end

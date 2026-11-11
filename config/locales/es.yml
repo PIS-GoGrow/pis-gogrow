@@ -220,6 +220,7 @@ es:
     order_deadline_updated: "La hora límite de pedidos fue actualizada."
     payment_receipt_submitted: "Comprobante enviado para su validacion."
     payment_receipt_removed: "Comprobante eliminado."
+    invoice_reminder_sent: "Le recordamos a %{provider} que envíe la factura."
     invoice_uploaded: "Factura enviada. GoGrow la va a revisar."
     invoice_removed: "Factura eliminada."
     provider_closure_deleted: "Cierre eliminado."
@@ -273,6 +274,11 @@ es:
     debt_reminder_cooldown: "Todavía no podés enviar otro recordatorio."
     debt_reminder_limit_reached: "Se alcanzó el límite de recordatorios."
     debt_reminder_failed: "No pudimos enviar el recordatorio. Intentá nuevamente."
+    invoice_reminder_not_company: "Solo podés recordar facturas de la empresa."
+    invoice_reminder_invoiced: "El proveedor ya envió la factura de este período."
+    invoice_reminder_current_month: "Podés recordar la factura cuando cierre el mes."
+    invoice_reminder_cooldown: "Todavía no podés enviar otro recordatorio."
+    invoice_reminder_failed: "No pudimos enviar el recordatorio. Intentá nuevamente."
     menu_agenda:
       invalid_date: "Elegí un día hábil desde hoy y dentro del período de publicación."
       invalid_range: "La fecha de fin no puede ser anterior a la de inicio."
@@ -359,6 +365,12 @@ es:
       description:
         one: "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} vianda para entregas del %{period}."
         other: "RR. HH. te dio el cupón %{name}: %{percentage}% de descuento en %{count} viandas para entregas del %{period}."
+    hr_invoice_missing:
+      title: "Falta una factura"
+      description: "%{provider} todavía no envió la factura de %{period}. Podés recordarle el envío desde Pagos."
+    invoice_reminder:
+      title: "Recordatorio de factura"
+      description: "%{company} te recuerda enviar la factura de %{period}. Podés cargarla desde Cobros."
   notification_configurations:
     provider_orders:
       title: "Nuevos pedidos"
@@ -408,6 +420,9 @@ es:
     hr_payment_reminders:
       title: "Recordatorios de pago de Recursos Humanos"
       description: "Recordatorios de pagos vencidos enviados por Recursos Humanos."
+    provider_invoice_reminders:
+      title: "Recordatorios de factura"
+      description: "Recordatorios de RR. HH. para que envíes la factura de un período."
     order_reminders:
       title: "Recordatorios de pedidos"
       description: "Recibí un aviso para no olvidarte de pedir tu vianda."
@@ -1002,6 +1017,9 @@ es:
           total_paid: "Total pagado"
           download_invoice: "Descargar factura"
           download_receipt: "Descargar comprobante de pago"
+          remind_invoice: "Recordar envío de factura"
+          remind_invoice_sent_one: "Recordatorio enviado con éxito. Próximo envío disponible en %{count} día."
+          remind_invoice_sent_other: "Recordatorio enviado con éxito. Próximo envío disponible en %{count} días."
           providers_filter: "Proveedores:"
           all_providers: "Todos"
           filter_providers: "Filtrar por proveedor"

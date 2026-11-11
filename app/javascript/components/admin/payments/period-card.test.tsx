@@ -138,19 +138,82 @@ describe("PeriodCard", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("shows the status next to the due date once a receipt was sent", () => {
+  // El estado se ve en cada comprobante de la lista, no en el encabezado.
+  it.each(["submitted", "rejected", "partial"] as const)(
+    "shows no status badge in the header with a %s receipt",
+    (status) => {
+      renderCard(
+        makeAccount({
+          collection_status: status,
+          payments: [
+            makePayment({
+              status,
+              rejection_reason: status === "rejected" ? "Ilegible" : null,
+            }),
+          ],
+        }),
+      )
+
+      const header = document.querySelector("[data-slot='card-header']")
+      expect(header?.querySelector("[data-status]")).not.toBeInTheDocument()
+    },
+  )
+
+  it("downloads the invoice of a closed period once the provider sent it", () => {
     renderCard(
       makeAccount({
-        collection_status: "submitted",
-        payments: [makePayment({ status: "submitted" })],
+        invoice_download_url: "/rrhh/facturas/3/archivo?download=1",
       }),
     )
 
-    const header = document.querySelector("[data-slot='card-header']")
     expect(
-      header?.querySelector("[data-status='submitted']"),
+      screen.getByRole("link", { name: "Descargar factura" }),
+    ).toHaveAttribute("href", "/rrhh/facturas/3/archivo?download=1")
+    expect(
+      screen.queryByRole("button", { name: "Recordar envío de factura" }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("offers to remind the provider to send the invoice of a closed period", () => {
+    renderCard(makeAccount())
+
+    expect(
+      screen.getByRole("button", { name: "Recordar envío de factura" }),
+    ).toBeEnabled()
+    expect(
+      screen.queryByRole("link", { name: "Descargar factura" }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("disables the invoice reminder until the cooldown ends", () => {
+    renderCard(makeAccount({ invoice_reminder_days_left: 3 }))
+
+    expect(
+      screen.getByRole("button", { name: "Recordar envío de factura" }),
+    ).toBeDisabled()
+    expect(
+      screen.getByText(
+        "Recordatorio enviado con éxito. Próximo envío disponible en 3 días.",
+      ),
     ).toBeInTheDocument()
   })
+
+  it.each([
+    ["with", "/rrhh/facturas/3/archivo?download=1"],
+    ["without", undefined],
+  ])(
+    "offers no invoice action for the current month %s an invoice",
+    (_, url) => {
+      renderCard(makeAccount({ current: true, invoice_download_url: url }))
+
+      expect(
+        screen.queryByRole("link", { name: "Descargar factura" }),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: "Recordar envío de factura" }),
+      ).not.toBeInTheDocument()
+    },
+  )
 
   it("highlights overdue date when due_date_passed is true", () => {
     renderCard(makeAccount({ due_date_passed: true }))

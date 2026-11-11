@@ -103,6 +103,29 @@ RSpec.describe "Admin::Payments", type: :request do
         )
       end
 
+      # Mientras GoGrow no pagó, la factura del proveedor sigue sin revisar: igual
+      # se tiene que poder bajar desde Pendientes.
+      it "lets HR download the invoice of a pending period before paying it" do
+        account = Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: 1.month.ago.beginning_of_month, amount: 500)
+        invoice = account.invoices.create!(issued_on: Date.current, total_amount: 500, file: receipt_upload(filename: "factura.png"))
+
+        get admin_payments_path
+
+        expect(invoice.reload).to be_pending
+        expect(inertia.props[:accounts].find { it[:id] == account.id }).to include(
+          current: false,
+          invoice_download_url: file_admin_invoice_path(invoice, download: 1)
+        )
+      end
+
+      it "sends no invoice for a pending period the provider has not invoiced" do
+        account = Account.create!(owner: companies(:gogrow), provider: providers(:endulzate), month: 1.month.ago.beginning_of_month, amount: 500)
+
+        get admin_payments_path
+
+        expect(inertia.props[:accounts].find { it[:id] == account.id }[:invoice_download_url]).to be_nil
+      end
+
       it "offers no invoice to download until the provider sends it" do
         get admin_payments_path
 
