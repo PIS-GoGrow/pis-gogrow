@@ -864,6 +864,81 @@ RSpec.describe "Consumer dashboard", type: :request do
 
   # IBP-037: el carrito necesita los subsidios especiales vigentes para mostrar
   # el precio con base + especial antes de confirmar.
+  # SC-008: sobre cada plato del menú semanal el empleado ve lo que ya pidió
+  # para ese día y si el proveedor se lo confirmó.
+  describe "GET /menu-semanal — lo ya pedido de cada plato" do
+    fixtures :users, :consumers, :companies, :providers, :menus, :benefit_configurations, :benefits
+
+    around do |example|
+      travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }
+    end
+
+    let(:monday) { Date.current.beginning_of_week(:monday) }
+    let(:schedule) { Schedule.create!(menu: menus(:milanesa), date: monday) }
+
+    before do
+      Order.destroy_all
+      Schedule.delete_all
+    end
+
+    def order_for(schedule, quantity, consumer: consumers(:one), **attributes)
+      Order.create!(
+        consumer:,
+        schedule:,
+        amount: quantity,
+        price: schedule.menu.price * quantity,
+        address: consumer.company.address,
+        delivery_method: :office,
+        **attributes
+      )
+    end
+
+    def ordered_for(schedule)
+      inertia.props[:schedules].find { |dish| dish[:id] == schedule.id }[:ordered].symbolize_keys
+    end
+
+    it "reports nothing ordered on a dish the consumer never ordered" do
+      schedule
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(ordered_for(schedule)).to eq(pending: 0, confirmed: 0)
+    end
+
+    # Cada línea del carrito se guarda como un pedido aparte, así que el
+    # proveedor puede haber confirmado una y todavía no la otra.
+    it "separates the units still pending from the ones already confirmed" do
+      order_for(schedule, 1, status: :pending)
+      order_for(schedule, 2, status: :confirmed)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(ordered_for(schedule)).to eq(pending: 1, confirmed: 2)
+    end
+
+    it "leaves out the orders that were cancelled or rejected" do
+      order_for(schedule, 1, status: :cancelled)
+      order_for(schedule, 2, status: :rejected, rejection_reason: :out_of_stock)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(ordered_for(schedule)).to eq(pending: 0, confirmed: 0)
+    end
+
+    # El menú es común a todos los empleados, pero lo pedido es personal.
+    it "does not report another employee orders on the dish" do
+      order_for(schedule, 3, consumer: consumers(:other), status: :confirmed)
+      sign_in users(:one)
+
+      get dashboard_path
+
+      expect(ordered_for(schedule)).to eq(pending: 0, confirmed: 0)
+    end
+  end
+
   describe "GET /menu-semanal — subsidios especiales" do
     around do |example|
       travel_to(Time.zone.local(2026, 9, 14, 10)) { example.run }

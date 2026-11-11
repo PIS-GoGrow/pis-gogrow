@@ -232,6 +232,8 @@ export function WeeklyMenu({
                       ordersClosed={item.orders_closed}
                       isPast={item.date < currentDate}
                       addedQuantity={addedQuantity || undefined}
+                      pendingQuantity={item.ordered?.pending}
+                      confirmedQuantity={item.ordered?.confirmed}
                       onSelect={() => openDetail(item)}
                       favorite={favoriteMenuIds.has(item.menu.saved_menu_id)}
                       onToggleFavorite={() =>

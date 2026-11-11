@@ -131,4 +131,28 @@ describe("CollectionGroupCard", () => {
 
     expect(screen.getByText("$450")).toBeInTheDocument()
   })
+
+  it.each([
+    [1, "1 cobro pendiente de confirmación"],
+    [2, "2 cobros pendientes de confirmación"],
+  ])(
+    "dice lo mismo en cada período cuando hay %i comprobantes por revisar",
+    (count, text) => {
+      render(
+        <CollectionGroupCard
+          group={{ ...groupWith(company), awaiting_count: count }}
+        />,
+      )
+
+      expect(screen.getByText(text)).toBeInTheDocument()
+    },
+  )
+
+  it("no muestra el aviso de comprobantes por revisar cuando no hay ninguno", () => {
+    render(<CollectionGroupCard group={groupWith(company)} />)
+
+    expect(
+      screen.queryByText(/pendientes? de confirmación/),
+    ).not.toBeInTheDocument()
+  })
 })

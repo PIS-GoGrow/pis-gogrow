@@ -39,6 +39,7 @@ import {
   consumerDashboard,
   consumerOrders,
   consumerProfiles,
+  providerAccount,
   providerCollections,
   providerDashboard,
   providerOrders,
@@ -74,6 +75,11 @@ export function AppSidebar() {
         title: t("nav.collections"),
         href: providerCollections.index().url,
         icon: Wallet,
+      },
+      {
+        title: t("nav.provider.account"),
+        href: providerAccount().url,
+        icon: UserRound,
       },
     ],
     admin: [

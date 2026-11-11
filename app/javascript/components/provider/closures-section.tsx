@@ -15,6 +15,7 @@ import { DateRangePicker } from "@/components/date-picker"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { providerClosures } from "@/routes"
 import type { ProviderClosure } from "@/types/serializers/ProviderClosure"
 
@@ -45,6 +46,7 @@ export default function ClosuresSection({
   const [range, setRange] = useState<Range>({ from: "", to: "" })
   const [saved, setSaved] = useState<Range>({ from: "", to: "" })
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const isMobile = useIsMobile()
 
   // Un solo día se elige con un solo toque: el fin es el mismo día.
   const endsOn = range.to || range.from
@@ -187,6 +189,7 @@ export default function ClosuresSection({
                           to={range.to}
                           min={today}
                           weekdaysOnly
+                          inline={isMobile}
                           className="w-full"
                           onChange={(from, to) => setRange({ from, to })}
                         />

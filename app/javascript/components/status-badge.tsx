@@ -51,18 +51,20 @@ interface StatusBadgeProps {
   // alcanza para saber qué color y qué texto corresponden.
   kind?: "order" | "payment" | "provider_payment" | "invoice" | "provider_order"
   label?: string
+  className?: string
 }
 
 export default function StatusBadge({
   status,
   kind = "order",
   label: customLabel,
+  className,
 }: StatusBadgeProps) {
   const { t } = useTranslation()
 
   if (!status) return null
 
-  const { className, label } = {
+  const { className: styles, label } = {
     order: {
       className: orderStyles[status as OrderStatus],
       label: customLabel ?? t(`pages.orders.statuses.${status}`),
@@ -93,7 +95,7 @@ export default function StatusBadge({
     <Badge
       variant="outline"
       data-status={status}
-      className={cn("gap-1.5 border-none px-2.5 py-1", className)}
+      className={cn("gap-1.5 border-none px-2.5 py-1", styles, className)}
     >
       <span className="size-1.5 rounded-full" />
       {label}
