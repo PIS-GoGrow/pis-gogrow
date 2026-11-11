@@ -56,7 +56,7 @@ RSpec.describe "Flujo de pagos del empleado en mobile", type: :system do
       menu = Menu.create!(
         provider: tuviandita, name: "Milanesa al pan", description: "Con papas", price: 1000
       )
-      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer: consumers(:one), schedule:,

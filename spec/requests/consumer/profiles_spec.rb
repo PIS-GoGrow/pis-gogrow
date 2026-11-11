@@ -88,6 +88,22 @@ RSpec.describe "Consumer::Profiles", type: :request do
         )
       end
 
+      it "does not list expired coupons" do
+        consumers(:one).benefits.create!(
+          benefit_configuration: benefit_configurations(:gift),
+          description: "Cupón vencido",
+          percentage: 30,
+          amount: 1,
+          starts_on: Date.current - 5.days,
+          due_date: Date.current - 1.day,
+          status: :current
+        )
+
+        get profile_path
+
+        expect(inertia.props[:coupons]).to be_empty
+      end
+
       it "reports how many subsidized meals are left this month" do
         get profile_path
 

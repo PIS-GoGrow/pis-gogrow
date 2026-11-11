@@ -37,7 +37,11 @@ export function OrderError({ retry, error }: Props) {
           onClick={retry}
           className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground h-12 flex-1"
         >
-          <Link href={consumerDashboard.cart().url} preserveState={false}>
+          <Link
+            href={consumerDashboard.cart().url}
+            preserveState={false}
+            role="button"
+          >
             {t("pages.cart.order_error.retry")}
           </Link>
         </Button>

@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 class AdminBenefitUsageStats
+  # Los pedidos de los empleados de la empresa con entrega en [from, before).
+  def self.orders_delivered_between(company, from, before)
+    Order.where(consumer_id: company.consumers.select(:id))
+         .left_joins(:schedule)
+         .where("COALESCE(orders.delivery_date, schedules.date) >= ? AND COALESCE(orders.delivery_date, schedules.date) < ?", from, before)
+  end
+
   def initialize(company:, month:)
     @company = company
     @month = month.to_date.beginning_of_month
@@ -113,9 +120,7 @@ class AdminBenefitUsageStats
   end
 
   def orders_for(month)
-    Order.where(consumer_id: consumers.select(:id))
-         .left_joins(:schedule)
-         .where("COALESCE(orders.delivery_date, schedules.date) >= ? AND COALESCE(orders.delivery_date, schedules.date) < ?", month, month.next_month)
+    self.class.orders_delivered_between(@company, month, month.next_month)
   end
 
   def company_subsidy_for(relation)

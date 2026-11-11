@@ -22,7 +22,8 @@ RSpec.describe Notifier do
       key: :order_confirmation,
       configuration_key: :config_key,
       role: event_role,
-      requires_action: requires_action
+      requires_action: requires_action,
+      content_sid: nil
     )
   end
 
@@ -202,11 +203,8 @@ RSpec.describe Notifier do
     describe "unicidad por evento, usuario y notifiable" do
       before { described_class.call(**params) }
 
-      # SUPUESTO: no se crea un duplicado en silencio. Si Notifier deja subir el
-      # error del índice único, cambiar por raise_error(ActiveRecord::RecordNotUnique).
-      it "no crea una segunda notificación activa para el mismo evento, usuario y notifiable" do
-        expect { described_class.call(**params) }
-          .to raise_error(ActiveRecord::RecordNotUnique)
+      it "no crea una segunda notificación activa para el mismo evento, usuario y notifiable y devuelve nil" do
+        expect(described_class.call(**params)).to be_nil
       end
 
       it "permite notificar al mismo usuario por el mismo evento sobre otro notifiable" do
@@ -230,10 +228,11 @@ RSpec.describe Notifier do
     describe "WhatsApp" do
       include ActiveJob::TestHelper
 
-      let(:other_configuration) { create(:notification_configuration, key: "other_key", roles: %w[consumer]) }
+      let(:other_configuration) { create(:notification_configuration, key: "other_key", roles: %w[consumer], configurable: true) }
 
       before do
         user.update!(phone: "+59899123456")
+        configuration.update!(configurable: true)
         Notification::Registry.set_data([
           {
             config_key: registry_configuration,
@@ -242,7 +241,8 @@ RSpec.describe Notifier do
           {
             order_confirmation: registry_event,
             debt_payment_reminder: Notification::Registry::Event.new(
-              key: :debt_payment_reminder, configuration_key: :other_key, role: :consumer, requires_action: true
+              key: :debt_payment_reminder, configuration_key: :other_key, role: :consumer, requires_action: true,
+              content_sid: nil
             )
           }
         ])
@@ -252,7 +252,20 @@ RSpec.describe Notifier do
         configuration.users << user
 
         expect { described_class.call(**params) }
-          .to have_enqueued_job(WhatsappSenderJob).with(event_key, {}, {}, "+59899123456")
+          .to have_enqueued_job(WhatsappSenderJob).with(instance_of(Notification))
+      end
+
+      it "encola el envío sin suscripción si el grupo no es configurable" do
+        configuration.update!(configurable: false)
+
+        expect { described_class.call(**params) }.to have_enqueued_job(WhatsappSenderJob)
+      end
+
+      it "no encola nada si el usuario no tiene teléfono" do
+        configuration.users << user
+        user.update!(phone: nil)
+
+        expect { described_class.call(**params) }.not_to have_enqueued_job(WhatsappSenderJob)
       end
 
       it "no encola nada si el usuario no está suscrito" do

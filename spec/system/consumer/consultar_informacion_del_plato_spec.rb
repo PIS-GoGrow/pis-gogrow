@@ -5,11 +5,8 @@ require "rails_helper"
 # Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
 # plato, para tomar una decisión informada."
 #
-# El detalle del plato no tiene ruta propia: es una vista del dashboard que se
-# abre al tocar un plato de la lista. Por eso el límite de permisos no se
-# repite acá — es el mismo /dashboard que ya cubre
-# consultar_menu_por_fecha_spec.rb, y no hay endpoint aparte al que un rol
-# equivocado pueda llegar de forma directa.
+# El detalle del plato tiene una URL propia basada en el Schedule.
+# Puede abrirse desde el menú semanal o directamente mediante su ruta.
 #
 # TODO(integración): falta corregir el bloque de opiniones antes de poder
 # testear qué ve el empleado cuando un plato no tiene reseñas. Hoy la pantalla
@@ -39,8 +36,8 @@ RSpec.describe "Consultar la información de un plato" do
     Schedule.delete_all
   end
 
-  def publish(menu, date, amount: 5)
-    Schedule.create!(menu:, date:, amount:)
+  def publish(menu, date, available: true)
+    Schedule.create!(menu:, date:, available:)
   end
 
   def order_away(schedule, quantity)
@@ -83,8 +80,8 @@ RSpec.describe "Consultar la información de un plato" do
   # Criterio 2: el mismo plato, publicado dos días con cupo distinto. Lo que el
   # detalle muestra tiene que seguir al día elegido, no al plato.
   it "shows the availability of the date picked, not of the dish" do
-    publish(menus(:sorrentinos), monday, amount: 5)
-    publish(menus(:sorrentinos), wednesday, amount: 1)
+    publish(menus(:sorrentinos), monday, available: true)
+    publish(menus(:sorrentinos), wednesday, available: false)
     sign_in users(:one)
 
     visit dashboard_path
@@ -93,11 +90,10 @@ RSpec.describe "Consultar la información de un plato" do
 
     click_on "Volver"
     pick_day(wednesday)
-    open_dish(menus(:sorrentinos))
 
-    # Con una sola unidad publicada para el miércoles, no se puede subir la
-    # cantidad: el cupo del lunes no se arrastra.
-    expect(page).to have_button("Agregar uno", disabled: true)
+    expect(page).to have_content("Sorrentinos artesanales")
+    expect(page).to have_content("Agotado")
+    expect(page).to have_button("Agregar Sorrentinos artesanales", disabled: true)
   end
 
   it "shows the discount of the employee benefit on the dish price" do
@@ -129,15 +125,14 @@ RSpec.describe "Consultar la información de un plato" do
 
   # Criterio 4
   it "reflects what changed in the menu after a reload" do
-    schedule = publish(menus(:milanesa), monday, amount: 2)
+    schedule = publish(menus(:milanesa), monday)
     sign_in users(:one)
 
     visit dashboard_path
     expect(page).to have_button("Agregar Milanesa con papas fritas", disabled: false)
     expect(page).to have_no_content("Agotado")
 
-    # Otro empleado se lleva las dos unidades que quedaban.
-    order_away(schedule, 2)
+    schedule.update!(available: false)
     refresh
 
     expect(page).to have_content("Agotado")
@@ -155,5 +150,31 @@ RSpec.describe "Consultar la información de un plato" do
     refresh
 
     expect(page).to have_content("Sorrentinos artesanales")
+  end
+
+  it "navigates to the dish URL and preserves the detail after reloading" do
+    schedule = publish(menus(:sorrentinos), monday)
+    sign_in users(:one)
+
+    visit dashboard_path
+    open_dish(menus(:sorrentinos))
+
+    expect(page).to have_current_path(dashboard_dish_path(schedule))
+
+    refresh
+    expect(page).to have_css("h1", text: "Sorrentinos artesanales")
+
+    click_on "Volver"
+    expect(page).to have_current_path(dashboard_path)
+  end
+
+  it "opens a dish directly through its URL, even from another week" do
+    schedule = publish(menus(:sorrentinos), monday - 7.days)
+    sign_in users(:one)
+
+    visit dashboard_dish_path(schedule)
+
+    expect(page).to have_current_path(dashboard_dish_path(schedule))
+    expect(page).to have_css("h1", text: "Sorrentinos artesanales")
   end
 end

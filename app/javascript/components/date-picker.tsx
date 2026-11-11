@@ -117,6 +117,7 @@ interface DateRangePickerProps {
   label?: string
   className?: string
   weekdaysOnly?: boolean
+  inline?: boolean
 }
 
 // "09/06/27 – 27/06/27": un rango se muestra con fechas cortas.
@@ -139,6 +140,7 @@ export function DateRangePicker({
   label,
   className,
   weekdaysOnly,
+  inline = false,
 }: DateRangePickerProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -170,6 +172,82 @@ export function DateRangePicker({
     apply(toIso(first), toIso(last))
   }
 
+  const calendar = (
+    <>
+      <Calendar
+        mode="range"
+        locale={es}
+        weekStartsOn={0}
+        formatters={calendarFormatters}
+        captionLayout="dropdown"
+        selected={
+          pendingStart ? { from: pendingStart } : { from: start, to: end }
+        }
+        defaultMonth={start ?? toDate(min ?? "")}
+        disabled={disabledDays(min, max, weekdaysOnly)}
+        endMonth={endMonth(max)}
+        onSelect={(range, day) =>
+          commitOnComplete
+            ? selectDay(day)
+            : onChange(
+                range?.from ? toIso(range.from) : "",
+                range?.to ? toIso(range.to) : "",
+              )
+        }
+      />
+
+      {presets && (
+        <div className="flex w-0 min-w-full flex-wrap gap-2 border-t p-3">
+          {presets.map((preset) => (
+            <Button
+              key={preset.label}
+              type="button"
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              disabled={
+                (!!min && preset.to < min) || (!!max && preset.from > max)
+              }
+              onClick={() => apply(preset.from, preset.to)}
+            >
+              {preset.label}
+            </Button>
+          ))}
+        </div>
+      )}
+    </>
+  )
+
+  if (inline) {
+    return (
+      <div>
+        <Button
+          id={id}
+          type="button"
+          variant="outline"
+          className={cn(
+            "w-fit min-w-44 justify-between font-normal",
+            className,
+          )}
+          aria-expanded={open}
+          onClick={() => handleOpenChange(!open)}
+        >
+          {label ??
+            (start
+              ? rangeLabel(start, end)
+              : t("components.date_picker.range_placeholder"))}
+          <ChevronDown aria-hidden="true" className="text-muted-foreground" />
+        </Button>
+
+        {open && (
+          <div className="bg-popover text-popover-foreground mt-2 w-fit max-w-full overflow-hidden rounded-md border shadow-md">
+            {calendar}
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div>
       <Popover open={open} onOpenChange={handleOpenChange}>
@@ -190,47 +268,9 @@ export function DateRangePicker({
             <ChevronDown aria-hidden="true" className="text-muted-foreground" />
           </Button>
         </PopoverTrigger>
+
         <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-          <Calendar
-            mode="range"
-            locale={es}
-            weekStartsOn={0}
-            formatters={calendarFormatters}
-            captionLayout="dropdown"
-            selected={
-              pendingStart ? { from: pendingStart } : { from: start, to: end }
-            }
-            defaultMonth={start ?? toDate(min ?? "")}
-            disabled={disabledDays(min, max, weekdaysOnly)}
-            endMonth={endMonth(max)}
-            onSelect={(range, day) =>
-              commitOnComplete
-                ? selectDay(day)
-                : onChange(
-                    range?.from ? toIso(range.from) : "",
-                    range?.to ? toIso(range.to) : "",
-                  )
-            }
-          />
-          {presets && (
-            <div className="flex w-0 min-w-full flex-wrap gap-2 border-t p-3">
-              {presets.map((preset) => (
-                <Button
-                  key={preset.label}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  disabled={
-                    (!!min && preset.to < min) || (!!max && preset.from > max)
-                  }
-                  onClick={() => apply(preset.from, preset.to)}
-                >
-                  {preset.label}
-                </Button>
-              ))}
-            </div>
-          )}
+          {calendar}
         </PopoverContent>
       </Popover>
     </div>

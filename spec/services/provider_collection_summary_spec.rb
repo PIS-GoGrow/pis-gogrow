@@ -41,6 +41,24 @@ RSpec.describe ProviderCollectionSummary do
     expect(described_class.new(provider:).outstanding[:total]).to be_zero
   end
 
+  it "cuenta como por revisar solo las cuentas con un comprobante en revisión" do
+    month = Date.current.prev_month
+    company_account = provider.accounts.create!(owner: consumer.company, month:, amount: 300)
+    employee_account = provider.accounts.create!(owner: consumer, month:, amount: 200)
+    awaiting_count = -> { described_class.new(provider:).pending.sole.awaiting_count }
+
+    expect(awaiting_count.call).to eq(0)
+
+    employee_account.payments.create!(provider:, status: :approved)
+    expect(awaiting_count.call).to eq(0)
+
+    company_account.payments.create!(
+      provider:, status: :submitted,
+      receipt: Rack::Test::UploadedFile.new(Rails.root.join("public/icon.png"), "image/png")
+    )
+    expect(awaiting_count.call).to eq(1)
+  end
+
   it "suma los saldos de cuentas sin pagos, parcialmente cubiertas y saldadas" do
     unpaid = provider.accounts.create!(owner: consumer, month: Date.current.prev_month, amount: 100)
     partially_covered = provider.accounts.create!(owner: consumer.company, month: Date.current.prev_month, amount: 300)
@@ -114,7 +132,7 @@ RSpec.describe ProviderCollectionSummary do
   end
 
   def create_order(menu:, date:, status: :confirmed)
-    schedule = menu.schedules.create!(date:, amount: 20)
+    schedule = menu.schedules.create!(date:)
     Order.create!(
       consumer:, schedule:, status:, amount: 2, price: 200, discounted_price: 100, delivery_method: :office,
       rejection_reason: status == :rejected ? :out_of_stock : nil

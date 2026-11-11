@@ -146,9 +146,9 @@ menus = [
 
 menus.each do |attributes|
   day = attributes.delete(:day)
-  amount = attributes.delete(:amount)
+  attributes.delete(:amount)
   menu = Menu.create!(**attributes)
-  Schedule.create!(menu:, date: week_start + day.days, amount:)
+  Schedule.create!(menu:, date: week_start + day.days)
 end
 
 Review.create!(
@@ -214,8 +214,7 @@ consumer.saved_addresses.create!(
 # incluida la orden sin schedule que deja el dependent: :nullify.
 past_schedule = Schedule.create!(
   menu: Menu.first,
-  date: week_start - 7.days,
-  amount: 7
+  date: week_start - 7.days
 )
 
 # Un pedido de un plato con opciones necesita la elección del empleado, así que
@@ -245,22 +244,24 @@ end
 # Una orden confirmada por proveedor genera las cuentas que aparecen en Pagos
 # pendientes. El Payment se crea recién cuando el empleado sube el comprobante.
 [ tu_viandita, endulzate ].each do |provider|
-  schedule = Schedule.joins(:menu)
-                     .where(menus: { provider_id: provider.id })
-                     .order(date: :desc)
-                     .first
-  next unless schedule
+  menu = provider.menus.first
+  next unless menu
+
+  schedule = Schedule.find_or_create_by!(
+    menu:,
+    date: Date.current.beginning_of_month + 3.days
+  )
 
   order = Order.create!(
     consumer:,
     schedule:,
     status: :confirmed,
-    price: schedule.menu.price,
-    discounted_price: schedule.menu.price / 2,
+    price: menu.price,
+    discounted_price: menu.price / 2,
     amount: 1,
     address: company.address,
     delivery_method: :office,
-    selected_options: default_selection_for(schedule.menu)
+    selected_options: default_selection_for(menu)
   )
   order.apply_benefit! benefit, 1
 end
@@ -290,8 +291,7 @@ order.apply_benefit! benefit, 1
   travel_to(data[:months_ago].months.ago.beginning_of_month + 3.days) do
     schedule = Schedule.create!(
       menu:,
-      date: Date.current,
-      amount: 5
+      date: Date.current
     )
 
     Order.create!(

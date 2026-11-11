@@ -18,6 +18,7 @@ import {
   formatBenefitMonth,
 } from "@/lib/benefit-usage"
 import { adminBenefitUsage, adminDashboard } from "@/routes"
+import type { BreadcrumbItem } from "@/types"
 import type { AdminBenefitUsageAnalysis } from "@/types/serializers"
 
 export default function Analysis(props: AdminBenefitUsageAnalysis) {
@@ -33,6 +34,12 @@ function AnalysisMonth({
   const usage = useBenefitUsage(month)
   const [navigating, setNavigating] = useState(false)
   const p = "benefit_usage.ui"
+  const breadcrumbs: BreadcrumbItem[] = [
+    {
+      title: t(`${p}.title`),
+      href: adminBenefitUsage.analysis({ query: { month } }).url,
+    },
+  ]
 
   function selectMonth(value: string) {
     if (value === month) return
@@ -112,7 +119,7 @@ function AnalysisMonth({
   )
 
   return (
-    <AppLayout>
+    <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t(`${p}.title`)} />
       <PageContainer
         title={t(`${p}.title`)}

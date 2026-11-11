@@ -108,7 +108,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
     it "lists the past orders of the signed-in provider, most recent delivery first" do
       other_provider_order
-      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10, amount: 5)
+      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10)
       older = Order.create!(
         consumer: consumers(:one),
         schedule: older_schedule,
@@ -151,8 +151,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
       tomorrow_schedule = Schedule.create!(
         menu: menus(:milanesa),
-        date: Date.current + 1.day,
-        amount: 5
+        date: Date.current + 1.day
       )
       order_tomorrow = Order.create!(
         consumer: consumers(:one),
@@ -294,9 +293,7 @@ RSpec.describe "Provider::Orders", type: :request do
           order[:consumer_name] == "Test User" &&
           order[:consumer_email] == "one@example.com" &&
           order[:consumer_company] == "GoGrow" &&
-          order[:menu_name] == "Milanesa con papas fritas" &&
-          order[:schedule_amount] == 5 &&
-          order[:remaining_amount] == 4
+          order[:menu_name] == "Milanesa con papas fritas"
       }
     end
 
@@ -491,7 +488,7 @@ RSpec.describe "Provider::Orders", type: :request do
     it "still confirms the order when the notification cannot be saved" do
       sign_in users(:provider_user), role: :provider
       order = orders(:upcoming_pending_today)
-      allow(Notification).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
+      allow_any_instance_of(Notification).to receive(:save!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
 
       patch confirm_provider_order_path(order)
 

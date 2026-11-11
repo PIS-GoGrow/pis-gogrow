@@ -112,12 +112,6 @@ class SchedulesController < Provider::InertiaController
       return
     end
 
-    unless valid_initial_stock?(items)
-      redirect_to schedules_path,
-                  inertia: { errors: { amount: [ "El stock inicial debe ser un entero entre 1 y #{Schedule::MAX_AMOUNT}" ] } }
-      return
-    end
-
     if published_date?(provider, date)
       redirect_to schedules_path,
                   inertia: { errors: { date: [ "Ya existe un menú publicado para esta fecha" ] } }
@@ -128,10 +122,7 @@ class SchedulesController < Provider::InertiaController
       items.each do |item|
         menu = provider.menus.saved.find(item.require(:menu_id))
 
-        menu.schedules.create!(
-        date: date,
-        amount: item.require(:amount)
-        )
+        menu.schedules.create!(date:)
       end
     end
 
@@ -164,15 +155,6 @@ class SchedulesController < Provider::InertiaController
   end
 
   private
-
-  def valid_initial_stock?(items)
-    items.all? do |item|
-      amount = Integer(item.require(:amount), exception: false)
-      amount.present? &&
-        amount.positive? &&
-        amount <= Schedule::MAX_AMOUNT
-    end
-  end
 
   def published_date?(provider, date)
     provider.menus

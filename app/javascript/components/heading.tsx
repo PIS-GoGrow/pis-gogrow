@@ -13,6 +13,7 @@ export default function Heading({
   compact = false,
   centered = false,
   mobileCentered = false,
+  actionsCentered = false,
 }: {
   title: string
   description?: string
@@ -24,6 +25,7 @@ export default function Heading({
   compact?: boolean
   centered?: boolean
   mobileCentered?: boolean
+  actionsCentered?: boolean
 }) {
   return (
     <div className={cn("grid gap-4", compact ? "mb-4" : "mb-8")}>
@@ -34,7 +36,8 @@ export default function Heading({
       {back && mobileCentered && <div className="hidden md:flex">{back}</div>}
       <div
         className={cn(
-          "flex flex-wrap items-end gap-4",
+          "flex gap-4",
+          actionsCentered ? "items-center" : "flex-wrap items-end",
           centered
             ? "relative justify-center text-center"
             : mobileCentered
@@ -51,7 +54,7 @@ export default function Heading({
             {back}
           </div>
         )}
-        <div className="space-y-0.5">
+        <div className={cn("space-y-0.5", actionsCentered && "min-w-0")}>
           {eyebrow && (
             <p className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
               {eyebrow}

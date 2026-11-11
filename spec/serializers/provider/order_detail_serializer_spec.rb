@@ -27,8 +27,17 @@ RSpec.describe Provider::OrderDetailSerializer do
     serialized = described_class.new(order).to_h
 
     expect(serialized).to include(
-      "date" => nil, "schedule_amount" => nil, "remaining_amount" => nil,
+      "date" => nil,
       "menu_option_groups" => [], "selected_options" => []
     )
+  end
+
+  it "serializes the consumer phone when present" do
+    order = orders(:upcoming_pending_today)
+    order.consumer.user.update!(phone: "+59899123456")
+
+    serialized = described_class.new(order).to_h
+
+    expect(serialized).to include("consumer_phone" => "+59899123456")
   end
 end
