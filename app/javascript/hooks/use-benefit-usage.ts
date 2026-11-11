@@ -31,7 +31,12 @@ export function useBenefitUsage(month: string) {
         )
         if (!response.ok) throw new Error("Statistics unavailable")
         const data = (await response.json()) as BenefitUsageStats
-        if (data.schema_version !== 1 || data.period.month !== month)
+        if (
+          data.schema_version !== 1 ||
+          data.period.month !== month ||
+          typeof data.analysis_revision !== "string" ||
+          !data.analysis_revision
+        )
           throw new Error("Unexpected period")
         if (!request.signal.aborted) setStats(data)
       } catch {
@@ -47,6 +52,7 @@ export function useBenefitUsage(month: string) {
   function retry() {
     setError(false)
     setStats(null)
+    setSummaryError(null)
     setAttempt((value) => value + 1)
   }
 
@@ -77,7 +83,10 @@ export function useBenefitUsage(month: string) {
             document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
               ?.content ?? "",
         },
-        body: JSON.stringify({ month }),
+        body: JSON.stringify({
+          month,
+          analysis_revision: stats.analysis_revision,
+        }),
       })
       if (request.signal.aborted) return
       if (response.status === 429) {
@@ -89,8 +98,13 @@ export function useBenefitUsage(month: string) {
       if (request.signal.aborted) return
       if (!response.ok || !data.success) {
         setSummaryError(
-          !data.success && data.error.code === "configuration_missing"
-            ? "configuration_missing"
+          !data.success &&
+            [
+              "configuration_missing",
+              "insufficient_data",
+              "stale_analysis",
+            ].includes(data.error.code)
+            ? data.error.code
             : "summary_unavailable",
         )
       } else if (

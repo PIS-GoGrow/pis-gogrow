@@ -17,7 +17,7 @@ class AnthropicMessagesClient
       request.headers["anthropic-version"] = "2026-10-21"
       request.headers["Content-Type"] = "application/json"
       request.body = JSON.generate(
-        model:, max_tokens: 500, system:,
+        model:, max_tokens: 2500, system:,
         messages: [ { role: "user", content: payload_json } ]
       )
     end
@@ -34,9 +34,9 @@ class AnthropicMessagesClient
 
     blocks = message["content"]
     return failure("invalid_response") unless blocks.is_a?(Array) && blocks.any? &&
-                                              blocks.all? { it.is_a?(Hash) && it["type"] == "text" && it["text"].is_a?(String) }
+                                              blocks.all? { valid_content_block?(it) }
 
-    summary = blocks.pluck("text").join("\n").strip
+    summary = blocks.filter_map { it["text"] if it["type"] == "text" }.join("\n").strip
     summary.present? ? { ok: true, text: summary } : failure("invalid_response")
   rescue Faraday::TimeoutError
     failure("timeout")
@@ -47,6 +47,17 @@ class AnthropicMessagesClient
   end
 
   private
+
+  def valid_content_block?(block)
+    return false unless block.is_a?(Hash)
+
+    case block["type"]
+    when "text" then block["text"].is_a?(String)
+    when "thinking" then block["thinking"].is_a?(String) && block["signature"].is_a?(String)
+    when "redacted_thinking" then block["data"].is_a?(String)
+    else false
+    end
+  end
 
   def connection
     @connection ||= Faraday.new(url: "https://api.anthropic.com") do |client|

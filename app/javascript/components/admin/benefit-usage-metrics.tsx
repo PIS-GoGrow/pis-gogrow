@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { useTranslation } from "react-i18next"
 
 import BenefitUsageCollapsibleCard from "@/components/admin/benefit-usage-collapsible-card"
+import BenefitUsageHistoricalMetrics from "@/components/admin/benefit-usage-historical-metrics"
 import HeadingSmall from "@/components/heading-small"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -22,6 +23,13 @@ interface BenefitUsageMetricsProps {
 export default function BenefitUsageMetrics({
   stats,
 }: BenefitUsageMetricsProps) {
+  if (stats.history)
+    return <BenefitUsageHistoricalMetrics history={stats.history} />
+
+  return <CurrentBenefitUsageMetrics stats={stats} />
+}
+
+function CurrentBenefitUsageMetrics({ stats }: BenefitUsageMetricsProps) {
   const { t } = useTranslation()
   const p = "benefit_usage.ui"
   const unknown = t(`${p}.unavailable`)
@@ -142,7 +150,10 @@ export default function BenefitUsageMetrics({
       </BenefitUsageCollapsibleCard>
 
       <div
-        className={cn("grid gap-4", !stats.period.closed && "lg:grid-cols-2")}
+        className={cn(
+          "grid items-start gap-4",
+          !stats.period.closed && "lg:grid-cols-2",
+        )}
       >
         {!stats.period.closed && (
           <BenefitUsageCollapsibleCard title={t(`${p}.capacity`)}>
