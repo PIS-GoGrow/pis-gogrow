@@ -13,6 +13,7 @@ class Invoice < ApplicationRecord
   has_one_attached :file
 
   before_create :approve_if_account_settled
+  after_create_commit { InvoiceReminders::Request.close(self) }
 
   validates :issued_on, presence: true, comparison: { less_than_or_equal_to: -> { Date.current } }
   validates :total_amount, numericality: { greater_than: 0 }

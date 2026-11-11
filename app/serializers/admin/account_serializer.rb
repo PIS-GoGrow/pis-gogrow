@@ -19,6 +19,16 @@ class Admin::AccountSerializer < AccountSerializer
     file_admin_invoice_path(invoice, download: 1) if invoice
   end
 
+  # Solo viene cuando hay que esperar para volver a recordar la factura.
+  typelize :string?
+  attribute :invoice_reminder_available_at do |account|
+    last_sent_at = params[:invoice_reminders]&.[](account.id)
+    eligibility = InvoiceReminders::Eligibility.new(account:, last_sent_at:)
+    next unless eligibility.reason == :cooldown
+
+    DateFormat.long_with_time(eligibility.next_available_at.in_time_zone(Time.zone), inline: true)
+  end
+
   private
 
   def approved_payment(account)

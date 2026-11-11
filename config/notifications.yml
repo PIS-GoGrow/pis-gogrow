@@ -56,6 +56,10 @@ configurations:
     roles: [consumer]
     configurable: false
 
+  provider_invoice_reminders:
+    roles: [provider]
+    configurable: false
+
   provider_orders:
     roles: [provider]
     configurable: true
@@ -210,3 +214,9 @@ events:
     content_sid:
       one: HXc541aca91f3627b2ed052e649564606f
       other: HXaf87b6ad70514ab9d4bc9772bb62c510
+
+  invoice_reminder:
+    configuration: provider_invoice_reminders
+    role: provider
+    requires_action: true
+    content_sid: TODO_SID_GOGROW_INVOICE_REMINDER # TODO: SID real de gogrow_invoice_reminder
