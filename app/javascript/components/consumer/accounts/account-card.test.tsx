@@ -44,10 +44,15 @@ function makeAccount(overrides: Partial<Account> = {}): Account {
   }
 }
 
-function renderCard(account: Account) {
+function renderCard(account: Account, paymentDetailsComplete = true) {
   return render(
     <Sheet>
-      <AccountCard account={account} setDetail={vi.fn()} setLoading={vi.fn()} />
+      <AccountCard
+        account={account}
+        setDetail={vi.fn()}
+        setLoading={vi.fn()}
+        paymentDetailsComplete={paymentDetailsComplete}
+      />
     </Sheet>,
   )
 }
@@ -133,6 +138,22 @@ describe("AccountCard", () => {
     renderCard(account)
 
     expect(screen.getByLabelText("Comprobante")).toBeEnabled()
+  })
+
+  it("does not offer receipt upload while the provider has no payment details", () => {
+    renderCard(makeAccount({ payments: [] }), false)
+
+    expect(screen.queryByLabelText("Comprobante")).not.toBeInTheDocument()
+
+    expect(
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
+
+    expect(
+      screen.getByText(
+        "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro.",
+      ),
+    ).toBeInTheDocument()
   })
 
   it("does not offer uploading while the month is still in progress", () => {

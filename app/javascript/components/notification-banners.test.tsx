@@ -420,4 +420,22 @@ describe("NotificationBanners", () => {
     await user.click(closeButton)
     expect(mocks.patch).toHaveBeenCalledTimes(1)
   })
+
+  it("includes custom children in the notification count and renders them inside the inbox", async () => {
+    render(
+      <NotificationInbox>
+        <div data-testid="custom-notice">Aviso personalizado</div>
+      </NotificationInbox>,
+    )
+
+    expect(
+      screen.getByRole("button", { name: /Tenés 1 notificaci/ }),
+    ).toBeInTheDocument()
+    expect(screen.getByText("1")).toBeInTheDocument()
+
+    await openInbox()
+
+    expect(screen.getByTestId("custom-notice")).toBeInTheDocument()
+    expect(screen.getByText("Aviso personalizado")).toBeInTheDocument()
+  })
 })
