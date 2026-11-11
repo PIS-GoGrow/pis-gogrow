@@ -15,6 +15,11 @@ RSpec.describe "Recordatorio de pago pendiente", type: :system do
   end
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     Notification::Configuration.find_or_create_by!(key: "provider_payment_reminders") do |c|
       c.roles = [ "consumer" ]
     end

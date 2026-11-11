@@ -24,6 +24,9 @@ const NO_SELECTABLE_BENEFITS = {
   monthly_limit: 0,
   monthly_used: 0,
   monthly_remaining: 0,
+  weekly_limit: 5,
+  weekly_used: 0,
+  weekly_remaining: 5,
   specials: [],
 }
 

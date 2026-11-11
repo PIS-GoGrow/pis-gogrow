@@ -379,6 +379,10 @@
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
       },
+      "provider_invoice_reminders": {
+        "description": "Recordatorios de RR. HH. para que envíes la factura de un período.",
+        "title": "Recordatorios de factura"
+      },
       "provider_orders": {
         "description": "Recibí una notificación cada vez que un cliente haga un pedido nuevo.",
         "title": "Nuevos pedidos"
@@ -435,6 +439,14 @@
         "description": "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos con %{providers}. Podés verlos en tus pagos.",
         "title": "Recordatorio de pago pendiente",
         "unknown_provider": "un proveedor"
+      },
+      "hr_invoice_missing": {
+        "description": "%{provider} todavía no envió la factura de %{period}. Podés recordarle el envío desde Pagos.",
+        "title": "Falta una factura"
+      },
+      "invoice_reminder": {
+        "description": "%{company} te recuerda enviar la factura de %{period}. Podés cargarla desde Cobros.",
+        "title": "Recordatorio de factura"
       },
       "order_cancellation": {
         "description": "El pedido de %{consumer} del %{date} de %{dish} fue cancelado.",
@@ -916,6 +928,9 @@
             "pending_payments": "Pagos pendientes",
             "pending_tab": "Pendientes",
             "providers_filter": "Proveedores:",
+            "remind_invoice": "Recordar envío de factura",
+            "remind_invoice_sent_one": "Recordatorio enviado con éxito. Próximo envío disponible en %{count} día.",
+            "remind_invoice_sent_other": "Recordatorio enviado con éxito. Próximo envío disponible en %{count} días.",
             "section": "Pagos",
             "see_detail": "Ver detalle",
             "spending": "Tu consumo",
@@ -1029,11 +1044,16 @@
         },
         "subtotal": "Precio vianda",
         "title": "Tu carrito",
-        "total": "Monto a pagar"
+        "total": "Monto a pagar",
+        "weekly": {
+          "split_one": "Con Subsidio Base: %{subsidized}. Sin Subsidio Base por el límite semanal: 1.",
+          "split_other": "Con Subsidio Base: %{subsidized}. Sin Subsidio Base por el límite semanal: %{count}.",
+          "used_up": "Alcanzaste el límite de %{count} viandas subsidiadas de esta semana. Podés seguir realizando pedidos, pero las próximas viandas no recibirán el Subsidio Base."
+        }
       },
       "consumer_dashboard": {
         "benefit_card": {
-          "period": "Este mes",
+          "period": "Esta semana",
           "title": "Tu consumo",
           "unit": "viandas pedidas",
           "used": "%{used} de %{limit}"
@@ -1210,6 +1230,19 @@
           "sign_in": "Continuar con Email"
         },
         "title": "Viandas GoGrow"
+      },
+      "offline": {
+        "description": {
+          "consumer": "Estos son los pedidos que hiciste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado.",
+          "provider": "Estos son los pedidos que recibiste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado."
+        },
+        "heading": {
+          "consumer": "Pedidos realizados:",
+          "provider": "Pedidos pendientes recibidos:"
+        },
+        "retry": "Reintentar",
+        "title": "Estás sin conexión",
+        "updated_at": "Última actualización: "
       },
       "orders": {
         "addresses": {

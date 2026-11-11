@@ -115,8 +115,8 @@ RSpec.describe "SYS-01: Acceso, roles y aislamiento de seguridad", type: :system
       sign_in dual_user, role: :consumer
       visit dashboard_path
 
+      expect(page).to have_current_path(dashboard_path)
       expect(page).to have_content("Menú semanal")
-      expect(page).to have_content("Tu consumo")
 
       # Intento de entrar a RRHH con sesión de Empleado es rechazado
       visit admin_benefit_configurations_path

@@ -11,7 +11,10 @@ class Admin::PaymentsController < Admin::InertiaController
     settled, unpaid = accounts.partition { it.collection_status == "approved" }
     sums = Account.amount_and_price_sum(accounts.map(&:id))
 
-    @accounts = serialize(unpaid, sums)
+    reminders = Notification.where(event: InvoiceReminders::Eligibility::EVENT, notifiable: unpaid)
+      .group(:notifiable_id).maximum(:created_at)
+
+    @accounts = serialize(unpaid, sums, reminders)
     @history = serialize(settled, sums)
     @providers = Provider.eager_load(:user).order("LOWER(users.name)")
     @total_debt = unpaid.sum(&:outstanding_amount).to_f
@@ -120,7 +123,7 @@ class Admin::PaymentsController < Admin::InertiaController
 
   # Las viandas de todas las cuentas salen de una consulta sola y viajan como
   # params, que no llegan al serializer de la página: por eso se arma acá.
-  def serialize(accounts, sums)
-    Admin::AccountSerializer.new(accounts, params: { orders_sum: sums }).serializable_hash
+  def serialize(accounts, sums, invoice_reminders = {})
+    Admin::AccountSerializer.new(accounts, params: { orders_sum: sums, invoice_reminders: }).serializable_hash
   end
 end

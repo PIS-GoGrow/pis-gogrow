@@ -166,6 +166,16 @@ RSpec.describe Consumer, type: :model do
 
       expect(consumer.monthly_benefit_available).to eq(0)
     end
+
+    it "ignores a current benefit that has already expired by date" do
+      consumer.benefits.where.not(id: benefits(:monthly).id).destroy_all
+      benefits(:monthly).update_columns(due_date: Date.current.yesterday)
+
+      expect(consumer.current_monthly_benefit).to be_nil
+      expect(consumer.monthly_benefit_available).to eq(0)
+      expect(consumer.weekly_benefit_limit).to eq(0)
+      expect(consumer.remaining_weekly_benefit).to eq(0)
+    end
   end
 
   describe "debt and spending" do
@@ -306,6 +316,44 @@ RSpec.describe Consumer, type: :model do
       ).apply_benefit! benefits(:monthly), 4
 
       expect(consumer.monthly_benefit_used_this_month).to eq(3)
+    end
+  end
+
+  describe "weekly subsidized meals" do
+    before do
+      Order.destroy_all
+      Schedule.delete_all
+    end
+
+    let(:menu) { menus(:milanesa) }
+    let(:monday) { Date.current.beginning_of_week(:monday) }
+
+    def subsidized_order(date:, amount:, status: :pending)
+      schedule = Schedule.create!(menu:, date:)
+      order = Order.create!(
+        consumer:, schedule:, amount:, price: menu.price * amount,
+        address: consumer.company.address, delivery_method: :office, status:,
+        rejection_reason: (:out_of_stock if status == :rejected)
+      )
+      order.apply_benefit!(benefits(:monthly), amount)
+    end
+
+    it "counts quantities delivered in the same workweek" do
+      subsidized_order(date: monday, amount: 2)
+      subsidized_order(date: monday + 4.days, amount: 1, status: :confirmed)
+      subsidized_order(date: monday + 7.days, amount: 4)
+
+      expect(consumer.weekly_benefit_used(date: monday)).to eq(3)
+      expect(consumer.remaining_weekly_benefit(date: monday)).to eq(2)
+      expect(consumer.weekly_benefit_used(date: monday + 7.days)).to eq(4)
+    end
+
+    it "gives back weekly quota when an order is cancelled or rejected" do
+      subsidized_order(date: monday, amount: 2, status: :cancelled)
+      subsidized_order(date: monday + 1.day, amount: 1, status: :rejected)
+
+      expect(consumer.weekly_benefit_used(date: monday)).to eq(0)
+      expect(consumer.remaining_weekly_benefit(date: monday)).to eq(Consumer::WEEKLY_BENEFIT_LIMIT)
     end
   end
 

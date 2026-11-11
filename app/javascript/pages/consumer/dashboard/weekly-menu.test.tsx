@@ -32,6 +32,9 @@ const defaultBenefit: ConsumerDashboardIndex["benefit"] = {
   monthly_limit: 20,
   monthly_used: 0,
   monthly_remaining: 20,
+  weekly_limit: 5,
+  weekly_used: 0,
+  weekly_remaining: 5,
   specials: [],
 }
 

@@ -3,19 +3,12 @@ import { Pencil, Star, X } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 import CancelOrderSheet from "@/components/orders/cancel-order-sheet"
-import StatusBadge from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { CardFooter } from "@/components/ui/card"
 import { consumerOrders, consumerReviews } from "@/routes"
 import type { Order } from "@/types"
+
+import OrderCardReduced from "./order-card-reduced"
 
 interface OrderCardProps {
   order: Order
@@ -25,153 +18,122 @@ interface OrderCardProps {
 export default function OrderCard({ order, section }: OrderCardProps) {
   const { t } = useTranslation()
 
-  const notReceived =
-    order.status === "cancelled" || order.status === "rejected"
-  const addressKey = notReceived ? "cancelled_address" : `${section}_address`
-
   return (
-    <Card className="hover:bg-accent/40 focus-within:ring-ring/50 relative gap-2 py-4 transition-colors focus-within:ring-[3px]">
-      <CardHeader className="gap-1 px-4">
-        <CardDescription>
-          {order.provider_name ?? t("pages.orders.index.no_provider")}
-        </CardDescription>
-        <CardTitle>
-          {/* El ::after estirado hace clickeable toda la tarjeta sin duplicar
-              enlaces ni anidar el badge dentro del link. */}
-          <Link
-            href={consumerOrders.show(order.id).url}
-            className="after:absolute after:inset-0 hover:underline"
-          >
-            {order.menu_name ?? t("pages.orders.index.no_menu")}
-          </Link>{" "}
-          <span className="text-muted-foreground font-normal">
-            {t("pages.orders.index.quantity", { count: order.amount ?? 0 })}
-          </span>
-        </CardTitle>
-        <CardAction>
-          <StatusBadge
-            status={order.status}
-            label={
-              section === "history" && order.status === "confirmed"
-                ? t("pages.orders.statuses.delivered")
-                : undefined
-            }
-          />
-        </CardAction>
-      </CardHeader>
-
-      <CardContent className="px-4">
-        <p className="text-muted-foreground text-sm">
-          {order.address
-            ? t(`pages.orders.index.${addressKey}`, {
-                address: order.address,
-                delivery_method: t(
-                  `pages.orders.delivery_methods.${order.delivery_method}`,
-                ),
-              })
-            : t("pages.orders.index.no_address")}
-        </p>
-      </CardContent>
-
-      {/* El ::after de la tarjeta cubre todo para hacerla clickeable, así que
-          las acciones necesitan quedar por encima para poder tocarlas. */}
-      {/* El botón se muestra en el historial: habilitado solo si el pedido se
-          puede calificar (confirmado, ya entregado y sin reseña). */}
-      {section === "history" && (
-        <CardFooter className="relative">
-          {order.reviewable ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full"
-              asChild
-            >
-              <Link href={consumerReviews.new(order.id)}>
-                <Star aria-hidden="true" />
-                {t("pages.orders.index.review")}
-              </Link>
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full"
-              disabled
-            >
-              <Star aria-hidden="true" />
-              {t(
-                order.reviewed
-                  ? "pages.orders.index.reviewed"
-                  : "pages.orders.index.review",
-              )}
-            </Button>
-          )}
-        </CardFooter>
-      )}
-
-      {section === "upcoming" && (
-        <CardFooter className="relative grid grid-cols-2 items-start gap-2">
-          {order.cancellable ? (
-            <CancelOrderSheet order={order} />
-          ) : (
-            <div className="flex flex-col gap-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full"
-                disabled
-              >
-                <X aria-hidden="true" />
-                {t("pages.orders.index.cancel")}
-              </Button>
-              {order.status !== "confirmed" && (
-                <p className="text-muted-foreground text-xs">
+    <OrderCardReduced
+      order={order}
+      section={section}
+      clickable
+      title={
+        <Link
+          href={consumerOrders.show(order.id).url}
+          className="after:absolute after:inset-0 hover:underline"
+        >
+          {order.menu_name ?? t("pages.orders.index.no_menu")}
+        </Link>
+      }
+      footer={
+        <>
+          {/* El ::after de la tarjeta cubre todo para hacerla clickeable, así que
+            las acciones necesitan quedar por encima para poder tocarlas. */}
+          {/* El botón se muestra en el historial: habilitado solo si el pedido se
+            puede calificar (confirmado, ya entregado y sin reseña). */}
+          {section === "history" && (
+            <CardFooter className="relative px-4">
+              {order.reviewable ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  asChild
+                >
+                  <Link href={consumerReviews.new(order.id)}>
+                    <Star aria-hidden="true" />
+                    {t("pages.orders.index.review")}
+                  </Link>
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  disabled
+                >
+                  <Star aria-hidden="true" />
                   {t(
-                    `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
+                    order.reviewed
+                      ? "pages.orders.index.reviewed"
+                      : "pages.orders.index.review",
                   )}
-                </p>
+                </Button>
               )}
-            </div>
+            </CardFooter>
           )}
-          {order.modifiable ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full"
-              asChild
-            >
-              <Link href={consumerOrders.edit(order.id)}>
-                <Pencil aria-hidden="true" />
-                {t("pages.orders.show.edit")}
-              </Link>
-            </Button>
-          ) : (
-            <div className="flex flex-col gap-1">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full"
-                disabled
-              >
-                <Pencil aria-hidden="true" />
-                {t("pages.orders.show.edit")}
-              </Button>
-              {order.status !== "confirmed" && (
-                <p className="text-muted-foreground text-xs">
-                  {t(
-                    `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+
+          {section === "upcoming" && (
+            <CardFooter className="relative grid grid-cols-2 items-start gap-2 px-4">
+              {order.cancellable ? (
+                <CancelOrderSheet order={order} />
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    disabled
+                  >
+                    <X aria-hidden="true" />
+                    {t("pages.orders.index.cancel")}
+                  </Button>
+                  {order.status !== "confirmed" && (
+                    <p className="text-muted-foreground text-xs">
+                      {t(
+                        `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
+                      )}
+                    </p>
                   )}
-                </p>
+                </div>
               )}
-            </div>
+              {order.modifiable ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  asChild
+                >
+                  <Link href={consumerOrders.edit(order.id)}>
+                    <Pencil aria-hidden="true" />
+                    {t("pages.orders.show.edit")}
+                  </Link>
+                </Button>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    disabled
+                  >
+                    <Pencil aria-hidden="true" />
+                    {t("pages.orders.show.edit")}
+                  </Button>
+                  {order.status !== "confirmed" && (
+                    <p className="text-muted-foreground text-xs">
+                      {t(
+                        `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
+                      )}
+                    </p>
+                  )}
+                </div>
+              )}
+            </CardFooter>
           )}
-        </CardFooter>
-      )}
-    </Card>
+        </>
+      }
+    />
   )
 }

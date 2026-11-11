@@ -241,11 +241,13 @@ describe("Admin Payments Page", () => {
     expect(screen.getByText("(130 viandas)")).toBeInTheDocument()
   })
 
-  it("shows the status the server resolved for each period", () => {
+  it("shows the status of each receipt instead of a badge per period", () => {
     const payment = {
       rejection_reason: null,
       expected_amount: null,
       receipt_uploaded_at: "01/09/2026",
+      receipt_url: "/rrhh/pagos/1/archivo",
+      receipt_filename: "comprobante.png",
     }
 
     render(
@@ -287,7 +289,10 @@ describe("Admin Payments Page", () => {
 
     expect(
       document.querySelector("[data-slot='card-header'] [data-status]"),
-    ).toHaveAttribute("data-status", "submitted")
+    ).not.toBeInTheDocument()
+    expect(
+      document.querySelector("[data-status='submitted']"),
+    ).toBeInTheDocument()
   })
 
   it("disables upload and displays the bank missing notice when provider payment details are incomplete", () => {

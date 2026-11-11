@@ -56,6 +56,10 @@ configurations:
     roles: [consumer]
     configurable: false
 
+  provider_invoice_reminders:
+    roles: [provider]
+    configurable: false
+
   provider_orders:
     roles: [provider]
     configurable: true
@@ -135,6 +139,12 @@ events:
     requires_action: false
     content_sid: HX5a4e2f534503a00bab886b85da09f75f
 
+  hr_invoice_missing:
+    configuration: hr_pending_invoices
+    role: admin
+    requires_action: false
+    content_sid: HX7706da353263ed639b630ec710fa829e
+
   employee_debt_overdue:
     configuration: employee_debts
     role: admin
@@ -210,3 +220,9 @@ events:
     content_sid:
       one: HXc541aca91f3627b2ed052e649564606f
       other: HXaf87b6ad70514ab9d4bc9772bb62c510
+
+  invoice_reminder:
+    configuration: provider_invoice_reminders
+    role: provider
+    requires_action: true
+    content_sid: HXa65954f2c4f614b713c292230ffd7862
