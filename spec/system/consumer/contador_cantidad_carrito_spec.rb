@@ -67,6 +67,39 @@ RSpec.describe "Contador de cantidad y botón quitar en el carrito del consumido
     expect(Order.last.amount).to eq(2)
   end
 
+  it "subsidia solo 5 de 6 viandas y muestra el cupo semanal consumido en Inicio" do
+    add_milanesa_to_cart
+
+    5.times do
+      click_button "Agregar una unidad de Milanesa con papas fritas"
+    end
+
+    expect(page).to have_content("Milanesa con papas fritas x6")
+    expect(page).to have_content(
+      /Con Subsidio Base: 5.*Sin Subsidio Base por el límite semanal: 1/
+    )
+
+    click_button "Confirmar pedido"
+    expect(page).to have_content("¡Pedido recibido!")
+
+    order = Order.last
+    expect(order.amount).to eq(6)
+    expect(order.order_benefits.sum(:benefit_used)).to eq(5)
+
+    visit dashboard_path
+    expect(page).to have_content("5 de 5")
+    expect(page).to have_content("viandas pedidas")
+  end
+
+  it "no muestra cupo semanal cuando el beneficio mensual está vencido" do
+    benefits(:monthly).update_columns(due_date: Date.current.yesterday)
+
+    visit_hydrated dashboard_path
+
+    expect(page).to have_no_content("Tu consumo")
+    expect(page).to have_no_content("de 5")
+  end
+
   it "elimina el plato del carrito al presionar el ícono de tacho cuando la cantidad es 1" do
     add_milanesa_to_cart
 
