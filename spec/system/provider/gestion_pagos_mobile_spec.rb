@@ -31,7 +31,7 @@ RSpec.describe "Gestión de pagos del proveedor en mobile", type: :system do
 
   after { travel_back }
 
-  def receipt_file = Rails.root.join("public/icon.png").to_s
+  def receipt_file = file_fixture("comprobante.png").to_s
 
   # Order#ensure_accounts! crea la cuenta del mes en que se crea el pedido.
   def confirmed_order(month:, dish: "Milanesa al pan")

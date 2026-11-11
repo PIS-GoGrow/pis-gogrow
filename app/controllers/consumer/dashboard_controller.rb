@@ -33,6 +33,8 @@ class Consumer::DashboardController < Consumer::InertiaController
 
     @total = order_confirmation[:total]
     @orders = order_confirmation[:orders]
+
+    @upcoming_orders = @consumer.orders.preload(:review, provider: :user, schedule: { menu: { provider: :user } }).upcoming
   end
 
   def cart

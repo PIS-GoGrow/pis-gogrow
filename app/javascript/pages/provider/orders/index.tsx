@@ -1,6 +1,6 @@
-import { Head } from "@inertiajs/react"
+import { Head, usePage } from "@inertiajs/react"
 import { Download, Search } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import DeliveryFilterSheet from "@/components/orders/delivery-filter-sheet"
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
+import { db } from "@/lib/offline-db"
 import {
   type DeliveryFilter,
   type StatusFilter,
@@ -35,11 +36,26 @@ export default function Index({
   past_orders,
 }: ProviderOrdersIndex) {
   const { t } = useTranslation()
+  const { auth } = usePage().props
+
   const [period, setPeriod] = useState<Period>("upcoming")
   const [status, setStatus] = useState<StatusFilter>("all")
   const [delivery, setDelivery] = useState<DeliveryFilter>("all")
   const [search, setSearch] = useState("")
   const [decision, setDecision] = useState<ProviderOrderDecision | null>(null)
+
+  useEffect(() => {
+    db.provider_orders
+      .put({
+        id: 1,
+        session_id: auth?.session?.id, // Los ? solo aplican para los tests, si no la sesión está definida
+        upcoming_orders,
+        saved_at: Date.now(),
+      })
+      .catch((error) => {
+        console.error("Error al cachear órdenes: ", error)
+      })
+  }, [upcoming_orders, auth?.session?.id])
 
   const orders = period === "upcoming" ? upcoming_orders : past_orders
   // Sin pedidos en el período no hay nada que filtrar: el estado vacío mobile
