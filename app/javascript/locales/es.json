@@ -1029,11 +1029,16 @@
         },
         "subtotal": "Precio vianda",
         "title": "Tu carrito",
-        "total": "Monto a pagar"
+        "total": "Monto a pagar",
+        "weekly": {
+          "split_one": "Con Subsidio Base: %{subsidized}. Sin Subsidio Base por el límite semanal: 1.",
+          "split_other": "Con Subsidio Base: %{subsidized}. Sin Subsidio Base por el límite semanal: %{count}.",
+          "used_up": "Alcanzaste el límite de %{count} viandas subsidiadas de esta semana. Podés seguir realizando pedidos, pero las próximas viandas no recibirán el Subsidio Base."
+        }
       },
       "consumer_dashboard": {
         "benefit_card": {
-          "period": "Este mes",
+          "period": "Esta semana",
           "title": "Tu consumo",
           "unit": "viandas pedidas",
           "used": "%{used} de %{limit}"

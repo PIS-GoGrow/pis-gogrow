@@ -1729,6 +1729,10 @@ es:
         full_price_one: "La vianda de este pedido se cobra a precio completo."
         full_price_other: "Las %{count} viandas de este pedido se cobran a precio completo."
         split: "De este pedido, %{subsidized} con beneficio y %{full} a precio completo."
+      weekly:
+        used_up: "Alcanzaste el límite de %{count} viandas subsidiadas de esta semana. Podés seguir realizando pedidos, pero las próximas viandas no recibirán el Subsidio Base."
+        split_one: "Con Subsidio Base: %{subsidized}. Sin Subsidio Base por el límite semanal: 1."
+        split_other: "Con Subsidio Base: %{subsidized}. Sin Subsidio Base por el límite semanal: %{count}."
       total: "Monto a pagar"
       new_address:
         title: "Agregar una dirección"
@@ -1972,7 +1976,7 @@ es:
     consumer_dashboard:
       benefit_card:
         title: "Tu consumo"
-        period: "Este mes"
+        period: "Esta semana"
         used: "%{used} de %{limit}"
         unit: "viandas pedidas"
       index:

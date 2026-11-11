@@ -57,7 +57,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       # 1.1: Autenticarse como E1 y verificar consumo inicial en dashboard y navegar a Mis Órdenes
       sign_in consumer_user, role: :consumer
       visit dashboard_path
-      expect(page).to have_content("1 de 20")
+      expect(page).to have_content("1 de 5")
 
       visit orders_path
       sleep 1.5
@@ -87,7 +87,7 @@ RSpec.describe "REG-04: Regresión de cancelación de pedidos", type: :system do
       expect(consumer.remaining_monthly_benefit).to eq(20)
 
       visit dashboard_path
-      expect(page).to have_content("0 de 20")
+      expect(page).to have_content("0 de 5")
 
       sign_out
 
