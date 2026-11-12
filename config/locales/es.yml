@@ -1,4 +1,11 @@
 es:
+  review_insights:
+    errors:
+      invalid_request: "Enviá únicamente el período que querés analizar."
+      invalid_period: "Seleccioná un período válido dentro de las fechas disponibles."
+      insufficient_data: "Se necesitan al menos cinco reseñas para generar conclusiones."
+      rate_limited: "Alcanzaste el límite de generación. Intentá nuevamente más tarde."
+      generation_unavailable: "No pudimos generar las conclusiones. Intentá nuevamente más tarde."
   benefit_usage:
     ui:
       title: "Uso del beneficio"
@@ -1368,7 +1375,7 @@ es:
           deadline_all_day: "Recibiendo pedidos todo el día"
         insights:
           title: "Hallazgos del mes"
-          description: "Los hallazgos basados en las valoraciones estarán disponibles próximamente."
+          description: "Generá conclusiones sobre las reseñas desde Hallazgos."
           generated: "Generado por IA"
         top_rated:
           title: "Mejor valorados"
@@ -1383,6 +1390,18 @@ es:
         title: "Hallazgos"
         back: "Volver al inicio"
         period: "Período"
+        ai_initial: "Las conclusiones de las reseñas estarán disponibles cuando las generes."
+        ai_generate: "Generar conclusiones con IA"
+        ai_generating: "Generando conclusiones…"
+        analysis_period: "Período analizado: %{from} – %{to}"
+        reviews_considered_one: "%{count} reseña considerada"
+        reviews_considered_other: "%{count} reseñas consideradas"
+        ai_errors:
+          insufficient_data: "Se necesitan al menos 5 reseñas válidas para generar conclusiones sobre este período."
+          rate_limited: "Alcanzaste el límite temporal de generaciones. Intentá nuevamente más tarde."
+          invalid_period: "El período seleccionado ya no es válido. Elegí otro período e intentá nuevamente."
+          timeout: "La generación tardó demasiado. Podés intentar nuevamente."
+          unavailable: "No pudimos generar las conclusiones. Podés intentar nuevamente más tarde."
         top_dishes: "Platos más pedidos"
         top_rated_dishes: "Mejor valorados"
         orders_count: "x%{count}"

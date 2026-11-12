@@ -214,7 +214,9 @@ export default function ProviderDashboard({
                 rating={average_rating}
               />
               <AiInsightCard>
-                {t("pages.provider_dashboard.index.insights.description")}
+                <p>
+                  {t("pages.provider_dashboard.index.insights.description")}
+                </p>
               </AiInsightCard>
             </section>
 
