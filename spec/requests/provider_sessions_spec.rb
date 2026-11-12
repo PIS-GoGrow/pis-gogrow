@@ -81,11 +81,13 @@ RSpec.describe "ProviderSessions", type: :request do
     end
 
     it "blocks an IP after too many attempts across different emails" do
-      20.times { |i| post provider_sign_in_path, params: { email: "u#{i}@example.com", password: "wrong" } }
+      freeze_time do
+        20.times { |i| post provider_sign_in_path, params: { email: "u#{i}@example.com", password: "wrong" } }
 
-      post provider_sign_in_path, params: { email: provider.email, password: password }
+        post provider_sign_in_path, params: { email: provider.email, password: password }
 
-      expect(flash[:alert]).to eq(I18n.t("flash.too_many_attempts"))
+        expect(flash[:alert]).to eq(I18n.t("flash.too_many_attempts"))
+      end
     end
 
     it "rejects an admin trying to sign in through provider sign in" do
@@ -116,6 +118,18 @@ RSpec.describe "ProviderSessions", type: :request do
       delete session_path(session)
 
       expect(response).to redirect_to(root_path)
+      follow_redirect!
+      expect(flash[:notice]).to eq(I18n.t("flash.session_logged_out"))
+    end
+
+    it "redirects an admin back to /rrhh upon logout" do
+      admin_user = users(:admin)
+      sign_in admin_user, role: :admin
+      session = admin_user.sessions.last
+
+      delete session_path(session)
+
+      expect(response).to redirect_to(admin_welcome_path)
       follow_redirect!
       expect(flash[:notice]).to eq(I18n.t("flash.session_logged_out"))
     end

@@ -1,4 +1,4 @@
-import { Head, usePage } from "@inertiajs/react"
+import { Head, router, usePage } from "@inertiajs/react"
 import { useEffect, useMemo, useState } from "react"
 
 import { useConsumerMenuFilter } from "@/hooks/consumer-menu-filter"
@@ -13,8 +13,6 @@ import type { Pricing } from "./pricing"
 import { cartPricedItem, priceItems } from "./pricing"
 import { WeeklyMenu, today } from "./weekly-menu"
 
-type View = "menu" | "detail"
-
 export default function Index({
   week,
   schedules,
@@ -25,7 +23,24 @@ export default function Index({
   benefit,
 }: ConsumerDashboardIndex) {
   const { auth } = usePage().props
-  const [view, setView] = useState<View>("menu")
+  const { url } = usePage()
+  const detailMatch = /^\/menu-semanal\/platos\/(\d+)(?:\?.*)?$/.exec(url)
+  const urlScheduleId = detailMatch ? Number(detailMatch[1]) : null
+
+  const [activeScheduleId, setActiveScheduleId] = useState<number | null>(
+    urlScheduleId,
+  )
+  const [prevUrl, setPrevUrl] = useState(url)
+
+  if (url !== prevUrl) {
+    setPrevUrl(url)
+    setActiveScheduleId(urlScheduleId)
+  }
+
+  const selected = activeScheduleId
+    ? (schedules.find((item) => item.id === activeScheduleId) ?? null)
+    : null
+
   const todayDate = week.today ?? today()
   const initialDate =
     week.days.find((d) => d.date === todayDate)?.date ??
@@ -33,7 +48,6 @@ export default function Index({
     ""
   const [date, setDate] = useState(initialDate)
   const { activeProviders, setActiveProviders } = useConsumerMenuFilter()
-  const [selected, setSelected] = useState<Schedule | null>(null)
   const [cart, setCart] = useConsumerCart()
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState("")
@@ -45,7 +59,7 @@ export default function Index({
   const count = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   function openDetail(item: Schedule) {
-    setSelected(item)
+    setActiveScheduleId(item.id)
     const existing = cart.find((c) => c.id === item.id)
     if (existing) {
       setEditingCartId(existing.cartId)
@@ -58,19 +72,33 @@ export default function Index({
       setNotes("")
       setSelections({})
     }
-    setView("detail")
+    const targetUrl = consumerDashboard.dish(item.id).url
+    window.history.pushState(window.history.state, "", targetUrl)
+    router.visit(targetUrl, {
+      preserveState: true,
+    })
   }
 
   function handleBack() {
+    setActiveScheduleId(null)
     setEditingCartId(null)
-    setView("menu")
+    const targetUrl = consumerDashboard.index().url
+    window.history.pushState(window.history.state, "", targetUrl)
+    router.visit(targetUrl, {
+      preserveState: true,
+    })
   }
 
   function handleRemoveFromCartAndBack() {
     if (!editingCartId) return
     setCart((items) => items.filter((item) => item.cartId !== editingCartId))
+    setActiveScheduleId(null)
     setEditingCartId(null)
-    setView("menu")
+    const targetUrl = consumerDashboard.index().url
+    window.history.pushState(window.history.state, "", targetUrl)
+    router.visit(targetUrl, {
+      preserveState: true,
+    })
   }
 
   function addToCart(benefitsSelected: number[]) {
@@ -140,8 +168,13 @@ export default function Index({
           ]
     })
 
+    setActiveScheduleId(null)
     setEditingCartId(null)
-    setView("menu")
+    const targetUrl = consumerDashboard.index().url
+    window.history.pushState(window.history.state, "", targetUrl)
+    router.visit(targetUrl, {
+      preserveState: true,
+    })
   }
 
   const items = useMemo(() => cartPricedItem(cart), [cart])
@@ -187,7 +220,7 @@ export default function Index({
       </style>
       <div className="bg-background text-foreground min-h-svh md:min-h-[calc(100svh-4rem)]">
         <Head title="Menú semanal" />
-        {view === "menu" && (
+        {!selected && (
           <WeeklyMenu
             name={auth.user.name.split(" ")[0]}
             date={date}
@@ -208,7 +241,7 @@ export default function Index({
             todayDate={todayDate}
           />
         )}
-        {view === "detail" && selected && (
+        {selected && (
           <DishDetail
             item={selected}
             quantity={quantity}

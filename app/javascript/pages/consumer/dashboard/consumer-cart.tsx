@@ -24,6 +24,7 @@ import { SavedAddressesSheet } from "./saved-addresses-sheet"
 interface Props {
   monthlyLimit: number
   monthlyRemaining: number
+  weeklyLimit: number
   pricing: Pricing | null
   cart: CartItem[]
   addresses: DeliveryAddressOption[]
@@ -41,6 +42,7 @@ interface Props {
 export function ConsumerCart({
   monthlyLimit,
   monthlyRemaining,
+  weeklyLimit,
   pricing,
   cart,
   addresses,
@@ -63,6 +65,9 @@ export function ConsumerCart({
         .map((item) => item.menu.provider_name),
     ),
   ]
+  const officeOnlyNames = new Intl.ListFormat("es", {
+    type: "conjunction",
+  }).format(officeOnlyProviders)
   const missingOffice = officeOnlyProviders.length > 0 && !office
   // Sin ningún proveedor que entregue a domicilio, todo el pedido va a la oficina.
   const homeDeliveryAvailable = cart.some((item) => item.menu.home_delivery)
@@ -135,6 +140,14 @@ export function ConsumerCart({
           disabled={customDisabled}
           onSelect={setAddress}
         />
+        {!homeDeliveryAvailable && office && cart.length > 0 && (
+          <p className="text-muted-foreground mt-3 text-sm">
+            {t("pages.cart.office_only", {
+              count: officeOnlyProviders.length,
+              providers: officeOnlyNames,
+            })}
+          </p>
+        )}
         {showDeliveryWarning && (
           <Alert className="mt-3 border-0 bg-transparent p-0 text-amber-700">
             <TriangleAlert aria-hidden="true" className="text-amber-500" />
@@ -145,9 +158,7 @@ export function ConsumerCart({
                 <p>
                   {t("pages.cart.office_delivery_warning", {
                     count: officeOnlyProviders.length,
-                    providers: new Intl.ListFormat("es", {
-                      type: "conjunction",
-                    }).format(officeOnlyProviders),
+                    providers: officeOnlyNames,
                   })}
                 </p>
               )}
@@ -156,11 +167,20 @@ export function ConsumerCart({
         )}
       </section>
 
-      {(pricing?.fullPriceQuantity ?? 0) > 0 && (
+      {((pricing?.fullPriceQuantity ?? 0) > 0 ||
+        (pricing?.weeklyLimitQuantity ?? 0) > 0) && (
         <Alert className="mt-4 border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-950/30 dark:text-amber-200">
           <TriangleAlert aria-hidden="true" className="text-amber-600" />
           <AlertDescription>
-            <p>{fullPriceNotice(t, monthlyLimit, monthlyRemaining, pricing)}</p>
+            <p>
+              {fullPriceNotice(
+                t,
+                monthlyLimit,
+                monthlyRemaining,
+                weeklyLimit,
+                pricing,
+              )}
+            </p>
           </AlertDescription>
         </Alert>
       )}
@@ -284,10 +304,22 @@ function fullPriceNotice(
   t: TFunction,
   monthlyLimit: number,
   monthlyRemaining: number,
+  weeklyLimit: number,
   pricing: Pricing | null,
 ) {
   const subsidized = pricing?.subsidizedQuantity ?? 0
   const full = pricing?.fullPriceQuantity ?? 0
+
+  if ((pricing?.weeklyLimitQuantity ?? 0) > 0) {
+    const baseSubsidized = pricing?.baseSubsidizedQuantity ?? 0
+
+    return baseSubsidized > 0
+      ? t("pages.cart.weekly.split", {
+          subsidized: baseSubsidized,
+          count: pricing?.withoutBaseSubsidyQuantity ?? 0,
+        })
+      : t("pages.cart.weekly.used_up", { count: weeklyLimit })
+  }
 
   const reason =
     monthlyLimit === 0

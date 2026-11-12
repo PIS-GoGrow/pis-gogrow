@@ -7,10 +7,12 @@ RSpec.describe CompanyPaymentRemindersJob, type: :job do
     it "revisa los pagos de la empresa a la fecha indicada" do
       date = Date.new(2026, 9, 2)
       allow(CompanyPaymentNotifications).to receive(:remind!)
+      allow(InvoiceReminders::MissingNotices).to receive(:remind!)
 
       described_class.perform_now(date:)
 
       expect(CompanyPaymentNotifications).to have_received(:remind!).with(date:)
+      expect(InvoiceReminders::MissingNotices).to have_received(:remind!).with(date:)
     end
   end
 end

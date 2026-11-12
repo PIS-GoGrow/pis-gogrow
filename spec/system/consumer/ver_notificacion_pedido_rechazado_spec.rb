@@ -26,7 +26,7 @@ RSpec.describe "Ver la notificación de pedido rechazado", type: :system do
     expect(page).to have_button("Rechazar pedido", disabled: false)
     click_button "Rechazar pedido"
 
-    expect(page).to have_content("Pedido rechazado.")
+    expect(page).to have_content("Pedido rechazado")
     expect(order.reload).to be_rejected
     sign_out
   end
@@ -42,6 +42,7 @@ RSpec.describe "Ver la notificación de pedido rechazado", type: :system do
 
     sign_in users(:one), role: :consumer
     visit_hydrated dashboard_path
+    open_notifications
 
     expect(page).to have_content(title)
     expect(page).to have_no_content("Tu pedido fue cancelado")
@@ -53,6 +54,7 @@ RSpec.describe "Ver la notificación de pedido rechazado", type: :system do
 
     visit_hydrated dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
     expect(page).to have_no_content(title)
   end
 

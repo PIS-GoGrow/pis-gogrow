@@ -33,6 +33,7 @@ RSpec.describe "Recordatorio de pedido", type: :system do
     sign_in user, role: :consumer
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
   end
 
   it "le muestra el recordatorio al empleado sin pedido y no vuelve después de cerrarlo" do
@@ -45,6 +46,7 @@ RSpec.describe "Recordatorio de pedido", type: :system do
 
     visit dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
     expect(page).to have_no_content(message)
 
     sign_out

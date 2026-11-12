@@ -75,12 +75,29 @@ const props: AdminDashboardIndex = {
 describe("Admin Dashboard Page", () => {
   it("links the analysis with the selected month", () => {
     render(<AdminDashboard {...props} month="2026-09" />)
-    expect(
-      screen.getByRole("link", { name: "Ver análisis del beneficio" }),
-    ).toHaveAttribute("href", "/rrhh/analisis-beneficio?month=2026-09")
+
+    const analysisLink = screen.getByRole("link", {
+      name: "Ver análisis del beneficio",
+    })
+
+    expect(analysisLink).toHaveAttribute(
+      "href",
+      "/rrhh/analisis-beneficio?month=2026-09",
+    )
+    expect(analysisLink).toHaveClass("md:hidden")
+
     expect(
       screen.getByRole("button", { name: "Ver detalle del consumo" }),
     ).toBeInTheDocument()
+  })
+
+  it("links the reports", () => {
+    render(<AdminDashboard {...props} />)
+
+    expect(screen.getByRole("link", { name: "Ver reportes" })).toHaveAttribute(
+      "href",
+      "/rrhh/reportes",
+    )
   })
 
   it("greets HR by first name with today's date", () => {
@@ -101,8 +118,8 @@ describe("Admin Dashboard Page", () => {
     expect(screen.getByText("72%")).toBeInTheDocument()
     expect(screen.getByText("$5.425")).toBeInTheDocument()
     expect(screen.getByRole("progressbar")).toBeInTheDocument()
-    expect(screen.getByText(/Pagado/)).toBeInTheDocument()
-    expect(screen.queryByText(/Proyectado/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Pagado /)).not.toBeInTheDocument()
+    expect(screen.queryByText(/^Proyectado /)).not.toBeInTheDocument()
     expect(
       screen.getByRole("combobox", { name: "Mes del resumen" }),
     ).toHaveTextContent("Este mes")
@@ -265,7 +282,7 @@ describe("Admin Dashboard Page", () => {
       screen.getByText("No hay pagos a proveedores de septiembre."),
     ).toBeInTheDocument()
     expect(
-      screen.getByText("Ningún empleado tiene saldos pendientes en este mes."),
+      screen.getByText("Ningún empleado tiene saldos pendientes."),
     ).toBeInTheDocument()
   })
 })

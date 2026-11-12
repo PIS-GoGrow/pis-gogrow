@@ -2,13 +2,15 @@
   "es": {
     "benefit_usage": {
       "errors": {
+        "insufficient_data": "No hay estadísticas suficientes de este período para generar un resumen confiable.",
         "invalid_month": "Seleccioná un mes válido que no sea futuro.",
         "invalid_request": "Enviá únicamente el mes que querés consultar.",
         "rate_limited": "Alcanzaste el límite de resúmenes. Intentá de nuevo en unos minutos.",
+        "stale_analysis": "Los datos de este período cambiaron. Actualizalos antes de generar un nuevo resumen.",
         "summary_unavailable": "No pudimos generar el resumen. Intentá nuevamente más tarde."
       },
       "ui": {
-        "ai_description": "Generá una lectura de las estadísticas de este mes. Es opcional y no modifica los indicadores.",
+        "ai_description": "Generá una lectura de las estadísticas del período seleccionado. Es opcional y no modifica los indicadores.",
         "ai_notice": "Texto generado mediante IA. Contrastalo con los indicadores y sus advertencias.",
         "ai_title": "Resumen con IA",
         "analysis_link": "Ver análisis del beneficio",
@@ -28,7 +30,9 @@
         "empty": "No hay pedidos confirmados en este período.",
         "errors": {
           "configuration_missing": "La generación con IA todavía no está configurada. Las estadísticas siguen disponibles.",
+          "insufficient_data": "No hay estadísticas suficientes de este período para generar un resumen confiable.",
           "rate_limited": "Alcanzaste el límite de generación. Intentá nuevamente más tarde.",
+          "stale_analysis": "Los datos de este período cambiaron. Actualizalos antes de generar un nuevo resumen.",
           "summary_unavailable": "No pudimos generar el resumen. Intentá nuevamente más tarde. Las estadísticas siguen disponibles."
         },
         "generate": "Generar resumen con IA",
@@ -39,6 +43,80 @@
         "historical_capacity": "No se conserva el estado del cupo al cierre de los meses históricos.",
         "historical_limitations": "Limitaciones históricas",
         "historical_warnings_grouped": "Algunas estadísticas históricas no pueden calcularse completamente con los registros disponibles.",
+        "history": {
+          "ai_insufficient": "No hay estadísticas suficientes de este período para generar un resumen confiable.",
+          "available_at_capture": "Cupo disponible al momento de la captura",
+          "available_at_close": "Cupo disponible al cierre",
+          "available_note": "El cupo disponible descuenta consumo y reservas pendientes al momento de la captura; no equivale al cupo no utilizado al cierre.",
+          "captured_at": "Última captura: %{date}",
+          "comparison_period": "%{from} a %{to}",
+          "comparison_title": "Comparación con el mes anterior",
+          "eligible_employees": "Empleados elegibles",
+          "eligible_participants": "Elegibles con pedidos confirmados",
+          "employees_of_period": "Empleados del período",
+          "fictional": "Datos de prueba",
+          "indicator": {
+            "average_confirmed_meals_per_employee": "Promedio de viandas por empleado",
+            "company_subsidy_amount": "Subsidio comprometido sin IVA",
+            "confirmed_meals": "Viandas confirmadas",
+            "confirmed_meals_without_monthly_subsidy": "Viandas sin subsidio mensual",
+            "confirmed_orders": "Pedidos confirmados",
+            "eligible_employees": "Empleados elegibles",
+            "eligible_with_confirmed_orders": "Elegibles con pedidos confirmados",
+            "eligible_without_orders": "Elegibles sin pedidos confirmados",
+            "employees": "Empleados del período",
+            "employees_with_confirmed_orders": "Empleados con pedidos confirmados",
+            "monthly_available_meals": "Cupo disponible al momento de la captura",
+            "monthly_pending_reserved_meals": "Viandas con cupo reservado",
+            "monthly_quota_meals": "Cupo mensual total",
+            "monthly_subsidized_meals": "Viandas con subsidio mensual",
+            "monthly_unused_closed_meals": "Cupo no utilizado al cierre",
+            "other": "Indicador",
+            "participation_percent": "Participación",
+            "pending_meals": "Viandas pendientes",
+            "pending_orders": "Pedidos pendientes",
+            "period": "Estado del período",
+            "reconstructed_orders": "Reconstrucción de pedidos"
+          },
+          "limitations_note": "Algunos indicadores no cuentan con información suficiente. Sin datos no equivale a cero.",
+          "meals_unit": "viandas",
+          "missing_description": "No existe una fotografía mensual de este período. Por eso no podemos conocer con precisión la participación de empleados ni los cupos del beneficio. Esto no significa que no haya habido actividad durante el mes.",
+          "missing_title": "No hay estadísticas históricas completas para este mes",
+          "not_comparable": "No hay una comparación confiable con el mes anterior.",
+          "partial_consumption": "Información parcial recuperada",
+          "points_unit": "puntos porcentuales",
+          "quality": {
+            "capture_only": "Comparación de capturas; cierres no verificados",
+            "verified_close": "Cierres verificados"
+          },
+          "reason": {
+            "close_not_verified": "No se verificó el cierre exacto de este período.",
+            "eligibility_unknown": "No se conoce la elegibilidad completa del período.",
+            "historical_snapshot_missing": "No existe una fotografía persistida para este período.",
+            "no_eligible_employees": "No había empleados elegibles para calcular participación.",
+            "no_employees": "No había empleados para calcular el promedio.",
+            "period_open": "El período todavía está abierto.",
+            "quota_unknown_or_zero": "El cupo del período es desconocido o cero.",
+            "retained_records_current_roster": "Los registros conservados pueden no reflejar toda la nómina histórica.",
+            "source_unavailable": "La fuente no permite verificar este indicador."
+          },
+          "reconstructed_origin": "Estos datos provienen de registros conservados, no de una fotografía histórica.",
+          "relative_change": "%{percent} respecto al mes anterior",
+          "source": {
+            "current_calculation": "Cálculo del mes actual",
+            "historical_reconstruction": "Reconstrucción de registros disponibles",
+            "historical_snapshot": "Fotografía histórica"
+          },
+          "state": {
+            "closed": "Cierre verificado",
+            "incomplete": "Fotografía sin cierre verificado",
+            "missing_snapshot": "Sin fotografía histórica",
+            "provisional": "Mes abierto · parcial"
+          },
+          "trends_note": "Viandas confirmadas por mes. Cada barra representa un mes por separado; la procedencia y calidad pueden variar.",
+          "unknown": "Sin datos",
+          "unused_at_close": "Cupo no utilizado al cierre"
+        },
         "indicators": {
           "company_subsidy_amount": "Subsidio comprometido por la empresa, sin IVA",
           "confirmed_meals": "Viandas confirmadas",
@@ -60,6 +138,7 @@
         "pending_orders_one": "%{count} pedido",
         "pending_orders_other": "%{count} pedidos",
         "quota": "Cupo mensual total",
+        "refresh_stats": "Actualizar datos",
         "reserved": "Viandas con cupo reservado",
         "retry": "Reintentar",
         "specific_limitations": "Otras limitaciones detectadas",
@@ -164,6 +243,23 @@
       "month_select": {
         "this_month": "Este mes"
       },
+      "network_status": {
+        "offline": {
+          "description": "No pudimos cargar la página. Revisá tu conexión y volvé a intentar.",
+          "title": "Sin conexión a internet"
+        },
+        "online": {
+          "description": "Ya podés seguir navegando.",
+          "title": "Volvió la conexión"
+        }
+      },
+      "notification_inbox": {
+        "close": "Cerrar notificación",
+        "empty": "No tenés notificaciones nuevas.",
+        "title": "Notificaciones",
+        "trigger_one": "Tenés 1 notificación",
+        "trigger_other": "Tenés %{count} notificaciones"
+      },
       "password_fields": {
         "confirm_label": "Confirmar contraseña",
         "create_label": "Crear contraseña",
@@ -187,7 +283,8 @@
         "employees": "Empleados",
         "home": "Inicio",
         "mobile_navigation": "Navegación de RR. HH.",
-        "payments": "Pagos"
+        "payments": "Pagos",
+        "reports": "Reportes"
       },
       "benefit_configurations": "Subsidios",
       "change_to": "Cambiar a",
@@ -223,8 +320,8 @@
     },
     "notification_configurations": {
       "automatic_payment_reminders": {
-        "description": "Avisos sobre la apertura y el vencimiento próximo de pagos.",
-        "title": "Recordatorios automáticos de pago"
+        "description": "Avisos sobre la apertura y el vencimiento próximo de tus pagos.",
+        "title": "Recordatorios de pago"
       },
       "company_payments": {
         "description": "Avisos sobre el vencimiento y la revisión de los pagos de la empresa a cada proveedor.",
@@ -282,6 +379,10 @@
         "description": "Recibí una notificación cuando tu pedido sea confirmado, enviado o cancelado.",
         "title": "Actualizaciones de pedidos"
       },
+      "provider_invoice_reminders": {
+        "description": "Recordatorios de RR. HH. para que envíes la factura de un período.",
+        "title": "Recordatorios de factura"
+      },
       "provider_orders": {
         "description": "Recibí una notificación cada vez que un cliente haga un pedido nuevo.",
         "title": "Nuevos pedidos"
@@ -329,8 +430,8 @@
       },
       "employee_debt_overdue": {
         "description": {
-          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda asciende a %{amount}. Podés enviarle un recordatorio.",
-          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda total asciende a %{amount}. Podés enviarles un recordatorio."
+          "one": "%{employee} tiene pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarle un recordatorio.",
+          "other": "%{count} empleados tienen pendiente su pago a %{provider} correspondiente a %{period}. La deuda vencida asciende a %{amount}. Podés enviarles un recordatorio."
         },
         "title": "Hay empleados con pagos pendientes"
       },
@@ -338,6 +439,14 @@
         "description": "Recursos Humanos te recuerda que tenés %{amount} en pagos vencidos con %{providers}. Podés verlos en tus pagos.",
         "title": "Recordatorio de pago pendiente",
         "unknown_provider": "un proveedor"
+      },
+      "hr_invoice_missing": {
+        "description": "%{provider} todavía no envió la factura de %{period}. Podés recordarle el envío desde Pagos.",
+        "title": "Falta una factura"
+      },
+      "invoice_reminder": {
+        "description": "%{company} te recuerda enviar la factura de %{period}. Podés cargarla desde Cobros.",
+        "title": "Recordatorio de factura"
       },
       "order_cancellation": {
         "description": "El pedido de %{consumer} del %{date} de %{dish} fue cancelado.",
@@ -395,8 +504,10 @@
         "index": {
           "all_providers": "Todos",
           "history": "Historial",
-          "history_empty": "Todavía no hiciste ningún pago.",
-          "history_filtered_empty": "No hay pagos de este proveedor.",
+          "history_empty_description": "Cuando pagues una cuenta, va a aparecer acá.",
+          "history_empty_title": "Todavía no hiciste ningún pago",
+          "history_filtered_empty_description": "Todavía no le pagaste ninguna cuenta a este proveedor.",
+          "history_filtered_empty_title": "No hay pagos de este proveedor",
           "meals_used_one": "%{count} vianda consumida",
           "meals_used_other": "%{count} viandas consumidas",
           "meals_used_with_limit_one": "%{meals} de %{limit} vianda consumida",
@@ -668,13 +779,14 @@
             "participation": "Participación",
             "pending": "Pendiente %{amount}",
             "projected": "Proyectado %{amount}",
+            "reports_link": "Ver reportes",
             "spending": "Gasto",
             "title": "Tu beneficio",
             "view_detail": "Ver detalle del consumo"
           },
           "coming_soon": "Próximamente",
           "debts": {
-            "empty": "Ningún empleado tiene saldos pendientes en este mes.",
+            "empty": "Ningún empleado tiene saldos pendientes.",
             "title": "Ranking deuda de empleados",
             "view": "Ver empleados con saldos pendientes"
           },
@@ -770,10 +882,10 @@
             "all_providers": "Todos",
             "bank": {
               "account_number": "Nº de cuenta: %{number}",
-              "copied": "Número de cuenta copiado",
-              "copy": "Copiar número de cuenta",
-              "copy_failed": "No pudimos copiar el número de cuenta",
-              "holder": "Beneficiario: %{holder}",
+              "beneficiary": "Beneficiario: %{beneficiary}",
+              "copied": "Datos de la cuenta copiados",
+              "copy": "Copiar datos de la cuenta",
+              "copy_failed": "No pudimos copiar los datos de la cuenta",
               "missing": "Este proveedor todavía no cargó sus datos de cobro.",
               "missing_upload_hint": "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro."
             },
@@ -786,6 +898,7 @@
               "filter_providers": "Filtrar por proveedor",
               "loading_title": "Detalle del consumo",
               "meals_tab": "Viandas",
+              "meals_title": "%{provider}: Consumos %{month}",
               "payment_tab": "Pago",
               "provider": "Proveedor:",
               "quantity": "Cant.",
@@ -815,6 +928,9 @@
             "pending_payments": "Pagos pendientes",
             "pending_tab": "Pendientes",
             "providers_filter": "Proveedores:",
+            "remind_invoice": "Recordar envío de factura",
+            "remind_invoice_sent_one": "Recordatorio enviado con éxito. Próximo envío disponible en %{count} día.",
+            "remind_invoice_sent_other": "Recordatorio enviado con éxito. Próximo envío disponible en %{count} días.",
             "section": "Pagos",
             "see_detail": "Ver detalle",
             "spending": "Tu consumo",
@@ -832,6 +948,47 @@
           "profile": "Perfil",
           "profile_description": "Consultá tu correo y editá tus datos autorizados",
           "title": "Perfil y Apariencia"
+        },
+        "reports": {
+          "index": {
+            "adhesion": "Adhesión",
+            "adhesion_detail_one": "%{participants} de %{count} empleado",
+            "adhesion_detail_other": "%{participants} de %{count} empleados",
+            "avg_per_participant": "Promedio por participante",
+            "avg_per_participant_detail": "Viandas por participante",
+            "avg_subsidy": "Subsidio promedio",
+            "avg_subsidy_detail": "Por vianda",
+            "back": "Volver al inicio",
+            "company_subsidy": "Subsidio empresa",
+            "daily_activity": "Evolución en el período",
+            "daily_activity_empty": "Sin actividad en este período.",
+            "delivery_home": "A domicilio",
+            "delivery_methods": "Modalidad de entrega",
+            "delivery_office": "En oficina",
+            "employee_amount": "Empleado: %{amount}",
+            "employee_contribution": "Aporte empleados",
+            "empty_description": "No hay pedidos confirmados en este período.",
+            "empty_title": "Sin consumos",
+            "meals_one": "%{count} vianda",
+            "meals_other": "%{count} viandas",
+            "no_provider": "Sin proveedor",
+            "orders": "Pedidos",
+            "period": "Período",
+            "presets": {
+              "last_month": "Mes pasado",
+              "this_month": "Este mes",
+              "this_week": "Esta semana",
+              "today": "Hoy",
+              "yesterday": "Ayer"
+            },
+            "provider_share": "%{percent}% del total",
+            "providers": "Consumo por proveedor",
+            "spending": "Gasto acumulado",
+            "spending_distribution": "Distribución del gasto",
+            "summary": "Uso del beneficio",
+            "title": "Reportes",
+            "total_spent": "Gasto total"
+          }
         }
       },
       "cart": {
@@ -871,6 +1028,8 @@
         "office_address_missing": "Falta configurar la dirección de oficina. Contactá a RR. HH. antes de confirmar.",
         "office_delivery_warning_one": "%{providers} entrega en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
         "office_delivery_warning_other": "%{providers} entregan en la Oficina. Sus viandas irán allí y las demás a la dirección seleccionada.",
+        "office_only_one": "%{providers} solo entrega en la Oficina, así que este pedido no puede ir a otra dirección.",
+        "office_only_other": "%{providers} solo entregan en la Oficina, así que este pedido no puede ir a otra dirección.",
         "order_error": {
           "description": "Hubo un problema al procesar tu pedido. Intentá de nuevo.",
           "menu": "Volver al menú",
@@ -886,11 +1045,16 @@
         },
         "subtotal": "Precio vianda",
         "title": "Tu carrito",
-        "total": "Monto a pagar"
+        "total": "Monto a pagar",
+        "weekly": {
+          "split_one": "Con Subsidio Base: %{subsidized}. Sin Subsidio Base por el límite semanal: 1.",
+          "split_other": "Con Subsidio Base: %{subsidized}. Sin Subsidio Base por el límite semanal: %{count}.",
+          "used_up": "Alcanzaste el límite de %{count} viandas subsidiadas de esta semana. Podés seguir realizando pedidos, pero las próximas viandas no recibirán el Subsidio Base."
+        }
       },
       "consumer_dashboard": {
         "benefit_card": {
-          "period": "Este mes",
+          "period": "Esta semana",
           "title": "Tu consumo",
           "unit": "viandas pedidas",
           "used": "%{used} de %{limit}"
@@ -900,7 +1064,9 @@
           "reached_100": {
             "one": "Se llegó al 100%, no se aplicará el beneficio %{benefits}",
             "other": "Se llegó al 100%, no se aplicarán los beneficios: %{benefits}"
-          }
+          },
+          "stock_limit_one": "Solo queda 1 vianda disponible de este plato.",
+          "stock_limit_other": "Solo quedan %{count} viandas disponibles de este plato."
         },
         "index": {
           "add": "Agregar",
@@ -985,6 +1151,8 @@
       },
       "consumer_profiles": {
         "show": {
+          "account": "Cuenta",
+          "account_description": "Modificá tu teléfono, nombre, correo, contraseña y apariencia",
           "addresses": "Direcciones",
           "addresses_description": "Gestioná tus direcciones de entrega",
           "benefit": "Mi beneficio",
@@ -1003,7 +1171,7 @@
           "notifications_description": "Configurá qué alertas querés recibir",
           "settings": "Configuración",
           "sign_out": "Salir",
-          "title": "Mi cuenta"
+          "title": "Cuenta"
         }
       },
       "dashboard": {
@@ -1064,6 +1232,19 @@
         },
         "title": "Viandas GoGrow"
       },
+      "offline": {
+        "description": {
+          "consumer": "Estos son los pedidos que hiciste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado.",
+          "provider": "Estos son los pedidos que recibiste, según la última vez que estuviste en línea. Sus estados pueden haber cambiado."
+        },
+        "heading": {
+          "consumer": "Pedidos realizados:",
+          "provider": "Pedidos pendientes recibidos:"
+        },
+        "retry": "Reintentar",
+        "title": "Estás sin conexión",
+        "updated_at": "Última actualización: "
+      },
       "orders": {
         "addresses": {
           "current": "Dirección actual",
@@ -1123,6 +1304,7 @@
           "history_empty_title": "No tenés pedidos anteriores",
           "history_filtered_empty_description": "No tenés pedidos anteriores realizados a este proveedor.",
           "history_filtered_empty_title": "No hay pedidos de este proveedor",
+          "history_loading": "Cargando pedidos anteriores…",
           "history_tab": "Historial",
           "no_address": "Sin dirección de entrega",
           "no_date": "Sin fecha de entrega",
@@ -1137,6 +1319,8 @@
           "upcoming_address": "Lo recibís en: %{address} (%{delivery_method})",
           "upcoming_empty_description": "No tenés viandas en camino.",
           "upcoming_empty_title": "No tenés pedidos próximos",
+          "upcoming_filtered_empty_description": "No tenés pedidos próximos con este proveedor.",
+          "upcoming_filtered_empty_title": "No hay pedidos de este proveedor",
           "upcoming_tab": "Próximos"
         },
         "show": {
@@ -1179,7 +1363,7 @@
           "payment_details": "Datos de cobro",
           "payment_details_description": "Configurá dónde querés recibir tus cobros",
           "profile": "Perfil",
-          "profile_description": "Editá tu nombre, correo, teléfono y contraseña",
+          "profile_description": "Editá tu nombre, correo, teléfono, contraseña y apariencia",
           "settings": "Configuración",
           "sign_out": "Salir",
           "title": "Cuenta"
@@ -1649,7 +1833,9 @@
             "continue": "Seguir agregando",
             "description": "Tu plato ya fue agregado correctamente, elegí si querés volver al menú o seguir agregando.",
             "description_date": "Tu plato fue agregado al menú del %{date} correctamente.",
-            "title": "¡Plato agregado!"
+            "description_date_plural": "Tus platos fueron agregados al menú del %{date} correctamente.",
+            "title": "¡Plato agregado!",
+            "title_plural": "¡Platos agregados!"
           },
           "back": "Volver al menú",
           "saved": {
@@ -1793,14 +1979,11 @@
             "open": "Filtrar por tipo de entrega",
             "title": "Filtrar por Tipo de entrega"
           },
-          "empty_description": "Todavía no recibiste pedidos para los próximos días.",
-          "empty_filtered_description": "No tenés pedidos que coincidan con los filtros.",
-          "empty_history_description": "Todavía no tenés pedidos anteriores.",
-          "empty_title": "No hay pedidos",
           "export": "Exportar pedidos",
           "no_address": "Sin dirección de entrega",
           "no_orders_description": "Cuando tus clientes hagan pedidos, van a aparecer acá.",
           "no_orders_title": "No tenés pedidos",
+          "number": "#%{id}",
           "quantity": "x%{count}",
           "search_label": "Buscar pedidos",
           "search_placeholder": "Buscar pedido, plato, consumidor...",
@@ -1829,18 +2012,14 @@
         },
         "show": {
           "back": "Volver a pedidos",
-          "charged": "Paga el empleado",
-          "delivery_date": "Entrega",
           "employee": "Empleado",
           "employee_company": "Empleado %{company}",
           "heading": "Detalle de pedido",
-          "no_price": "Importe no disponible",
           "not_charged": "Este pedido no será cobrado",
           "notes": "Comentarios",
           "order_detail": "Detalle del pedido",
           "phone_unavailable": "No disponible",
           "rejection_reason": "Motivo de cancelación",
-          "subsidy": "Beneficio aplicado",
           "title": "Pedido %{code}",
           "total": "Total"
         },
@@ -1873,21 +2052,19 @@
       "provider_payment_details": {
         "show": {
           "back": "Volver a Cuenta",
-          "bank_account_holder": "Titular de la cuenta",
-          "bank_account_number": "Número de cuenta",
-          "bank_account_type": "Tipo de cuenta",
-          "bank_account_type_placeholder": "Elegí el tipo de cuenta",
-          "bank_account_types": {
-            "checking": "Cuenta corriente",
-            "savings": "Caja de ahorro"
-          },
+          "bank_account_details": "Datos de la cuenta",
+          "bank_account_details_placeholder": "Pegá los datos de la cuenta acá...",
           "bank_name": "Banco",
-          "bank_name_placeholder": "Ej. BROU",
-          "description": "Indicá la cuenta donde querés recibir los pagos de los empleados.",
-          "sensitive_notice": "Los cambios en estos datos quedan registrados.",
+          "bank_name_placeholder": "Elegí el banco",
+          "beneficiary": "Beneficiario",
+          "beneficiary_value": "Beneficiario: %{beneficiary}",
+          "cancel": "Cancelar",
+          "consultation_description": "Configurá dónde querés recibir tus cobros.",
+          "description": "Ingresá los datos de la cuenta donde recibirás los pagos de tus pedidos.",
+          "edit": "Editar",
+          "edit_title": "Editar datos de cobro",
+          "save_changes": "Guardar cambios",
           "submit": "Guardar",
-          "tax_id": "RUT o CI del titular",
-          "tax_id_description": "Solo números: 12 dígitos para RUT, 7 u 8 para CI.",
           "title": "Datos de cobro"
         }
       },
@@ -2041,12 +2218,13 @@
           "description": "Actualizá tu dirección de correo y verificala",
           "heading": "Actualizar correo electrónico",
           "resend": "Hacé clic aquí para reenviar el correo de verificación.",
+          "submit": "Guardar correo",
           "title": "Configuración de correo",
           "unverified": "Tu dirección de correo no está verificada."
         },
         "notifications": {
           "back": "Volver a Cuenta",
-          "back_to_account": "Volver a Mi cuenta",
+          "back_to_account": "Volver a Cuenta",
           "description": "Configurá qué alertas querés recibir por WhatsApp",
           "heading": "Notificaciones",
           "preferences_description": "Activá o desactivá las categorías de avisos que querés recibir.",
@@ -2070,8 +2248,8 @@
             "label": "También realizo entregas a domicilio"
           },
           "phone": "Teléfono",
-          "phone_description": "Lo usamos para enviarte notificaciones por WhatsApp.",
-          "phone_placeholder": "+59899123456",
+          "phone_description": "Lo usamos para enviarte notificaciones por WhatsApp. Si tu celular no es de Uruguay, escribilo con + y el código de país.",
+          "phone_placeholder": "099 123 456",
           "title": "Configuración del perfil"
         },
         "sessions": {

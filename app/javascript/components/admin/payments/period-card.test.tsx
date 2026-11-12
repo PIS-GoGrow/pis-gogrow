@@ -79,8 +79,8 @@ describe("PeriodCard", () => {
     renderCard(account)
 
     expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeDisabled()
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
     expect(
       screen.getByText(/Ya hay un comprobante en revisión/),
     ).toBeInTheDocument()
@@ -98,14 +98,14 @@ describe("PeriodCard", () => {
     )
 
     expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeDisabled()
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
     expect(
       screen.getByText(/cuando el proveedor cargue sus datos de cobro/),
     ).toBeInTheDocument()
   })
 
-  it("enables the upload button when there is no submitted receipt", () => {
+  it("offers the receipt upload inline when there is no submitted receipt", () => {
     const account = makeAccount({
       collection_status: "rejected",
       payments: [
@@ -119,21 +119,101 @@ describe("PeriodCard", () => {
 
     renderCard(account)
 
+    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
     expect(
       screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeEnabled()
+    ).toBeDisabled()
     expect(
       screen.queryByText(/Ya hay un comprobante en revisión/),
     ).not.toBeInTheDocument()
   })
 
-  it("shows the due date in the header next to the status", () => {
+  it("shows the due date in the header without a pending badge", () => {
     renderCard(makeAccount())
 
     const header = document.querySelector("[data-slot='card-header']")
     expect(header).toHaveTextContent("Vence: 10/10/26")
-    expect(header?.querySelector("[data-status='pending']")).toBeInTheDocument()
+    expect(
+      header?.querySelector("[data-status='pending']"),
+    ).not.toBeInTheDocument()
   })
+
+  // El estado se ve en cada comprobante de la lista, no en el encabezado.
+  it.each(["submitted", "rejected", "partial"] as const)(
+    "shows no status badge in the header with a %s receipt",
+    (status) => {
+      renderCard(
+        makeAccount({
+          collection_status: status,
+          payments: [
+            makePayment({
+              status,
+              rejection_reason: status === "rejected" ? "Ilegible" : null,
+            }),
+          ],
+        }),
+      )
+
+      const header = document.querySelector("[data-slot='card-header']")
+      expect(header?.querySelector("[data-status]")).not.toBeInTheDocument()
+    },
+  )
+
+  it("downloads the invoice of a closed period once the provider sent it", () => {
+    renderCard(
+      makeAccount({
+        invoice_download_url: "/rrhh/facturas/3/archivo?download=1",
+      }),
+    )
+
+    expect(
+      screen.getByRole("link", { name: "Descargar factura" }),
+    ).toHaveAttribute("href", "/rrhh/facturas/3/archivo?download=1")
+    expect(
+      screen.queryByRole("button", { name: "Recordar envío de factura" }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("offers to remind the provider to send the invoice of a closed period", () => {
+    renderCard(makeAccount())
+
+    expect(
+      screen.getByRole("button", { name: "Recordar envío de factura" }),
+    ).toBeEnabled()
+    expect(
+      screen.queryByRole("link", { name: "Descargar factura" }),
+    ).not.toBeInTheDocument()
+  })
+
+  it("disables the invoice reminder until the cooldown ends", () => {
+    renderCard(makeAccount({ invoice_reminder_days_left: 3 }))
+
+    expect(
+      screen.getByRole("button", { name: "Recordar envío de factura" }),
+    ).toBeDisabled()
+    expect(
+      screen.getByText(
+        "Recordatorio enviado con éxito. Próximo envío disponible en 3 días.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it.each([
+    ["with", "/rrhh/facturas/3/archivo?download=1"],
+    ["without", undefined],
+  ])(
+    "offers no invoice action for the current month %s an invoice",
+    (_, url) => {
+      renderCard(makeAccount({ current: true, invoice_download_url: url }))
+
+      expect(
+        screen.queryByRole("link", { name: "Descargar factura" }),
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole("button", { name: "Recordar envío de factura" }),
+      ).not.toBeInTheDocument()
+    },
+  )
 
   it("highlights overdue date when due_date_passed is true", () => {
     renderCard(makeAccount({ due_date_passed: true }))

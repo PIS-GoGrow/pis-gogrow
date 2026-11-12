@@ -108,9 +108,9 @@ describe("Admin Payments Page", () => {
       screen.getByRole("button", { name: "Ver detalle del consumo" }),
     )
 
-    expect(screen.getByRole("dialog")).toHaveTextContent(
-      "Endulzate by Noe: Consumo Agosto 2026",
-    )
+    const dialog = screen.getByRole("dialog")
+    expect(dialog).toHaveTextContent("Endulzate by Noe: Consumos Agosto 2026")
+    expect(screen.queryByRole("tab", { name: "Pago" })).not.toBeInTheDocument()
   })
 
   it("starts closed on the pending tab without a period", () => {
@@ -141,8 +141,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
             payment_details_complete: false,
           },
         ]}
@@ -167,8 +167,8 @@ describe("Admin Payments Page", () => {
     const bankless = {
       home_delivery: true,
       bank_name: null,
-      bank_account_number: null,
-      bank_account_holder: null,
+      bank_account_details: null,
+      beneficiary: null,
       payment_details_complete: false,
     }
 
@@ -207,8 +207,8 @@ describe("Admin Payments Page", () => {
     const bankless = {
       home_delivery: true,
       bank_name: null,
-      bank_account_number: null,
-      bank_account_holder: null,
+      bank_account_details: null,
+      beneficiary: null,
       payment_details_complete: false,
     }
 
@@ -241,11 +241,13 @@ describe("Admin Payments Page", () => {
     expect(screen.getByText("(130 viandas)")).toBeInTheDocument()
   })
 
-  it("shows the status the server resolved for each period", () => {
+  it("shows the status of each receipt instead of a badge per period", () => {
     const payment = {
       rejection_reason: null,
       expected_amount: null,
       receipt_uploaded_at: "01/09/2026",
+      receipt_url: "/rrhh/pagos/1/archivo",
+      receipt_filename: "comprobante.png",
     }
 
     render(
@@ -277,8 +279,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
             payment_details_complete: false,
           },
         ]}
@@ -287,7 +289,10 @@ describe("Admin Payments Page", () => {
 
     expect(
       document.querySelector("[data-slot='card-header'] [data-status]"),
-    ).toHaveAttribute("data-status", "submitted")
+    ).not.toBeInTheDocument()
+    expect(
+      document.querySelector("[data-status='submitted']"),
+    ).toBeInTheDocument()
   })
 
   it("disables upload and displays the bank missing notice when provider payment details are incomplete", () => {
@@ -301,8 +306,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: null,
-            bank_account_number: null,
-            bank_account_holder: null,
+            bank_account_details: null,
+            beneficiary: null,
             payment_details_complete: false,
           },
         ]}
@@ -313,8 +318,8 @@ describe("Admin Payments Page", () => {
       screen.getByText("Este proveedor todavía no cargó sus datos de cobro."),
     ).toBeInTheDocument()
     expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeDisabled()
+      screen.queryByRole("button", { name: "Subir comprobante de pago" }),
+    ).not.toBeInTheDocument()
     expect(
       screen.getByText(
         "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro.",
@@ -333,8 +338,8 @@ describe("Admin Payments Page", () => {
             name: "Tu Viandita",
             home_delivery: true,
             bank_name: "Santander",
-            bank_account_number: "1150260",
-            bank_account_holder: "Tu Viandita S.A.",
+            bank_account_details: "1150260",
+            beneficiary: "Tu Viandita S.A.",
             payment_details_complete: true,
           },
         ]}
@@ -343,9 +348,7 @@ describe("Admin Payments Page", () => {
 
     expect(screen.getByText("Santander")).toBeInTheDocument()
     expect(screen.getByText(/1150260/)).toBeInTheDocument()
-    expect(
-      screen.getByRole("button", { name: "Subir comprobante de pago" }),
-    ).toBeEnabled()
+    expect(screen.getByLabelText("Comprobante")).toBeEnabled()
     expect(
       screen.queryByText(
         "Podrás enviar el comprobante cuando el proveedor cargue sus datos de cobro.",

@@ -91,6 +91,38 @@ RSpec.describe "Admin::Consumers", type: :request do
         )
       end
 
+      it "does not add a current month that is already paid to the debt of earlier months" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+        payments(:other_submitted).update_columns(status: Payment.statuses[:approved], expected_amount: 150.25)
+
+        get admin_consumers_path
+
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:other).id, amount: 80.0, status: "pending")
+        )
+      end
+
+      it "shows the balance when an approved payment covers part of the account" do
+        payments(:other_submitted).update_columns(status: Payment.statuses[:approved], expected_amount: 100)
+
+        get admin_consumers_path
+
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:other).id, amount: 50.25, status: "pending")
+        )
+      end
+
+      it "keeps the consumption of the month for an employee who owes nothing" do
+        payments(:other_submitted).update_columns(status: Payment.statuses[:approved], expected_amount: 150.25)
+
+        get admin_consumers_path
+
+        expect(inertia.props[:consumers]).to include(
+          hash_including(id: consumers(:other).id, amount: 150.25, status: "approved")
+        )
+      end
+
       it "never includes the debt of another company's employees" do
         previous = 1.month.ago.to_date.beginning_of_month
         Account.create!(owner: outsider, provider: providers(:tuviandita), month: previous, amount: 500)
@@ -139,6 +171,28 @@ RSpec.describe "Admin::Consumers", type: :request do
         expect(inertia.props[:consumer]).to include(name: "Test User", email: "one@example.com", company_name: "GoGrow")
         expect(inertia.props[:summary]).to include(amount: 950.75, status: "pending", meals_limit: 20)
         expect(inertia).to have_props(benefit_summary: { total: 50, base: 50, specials: [] })
+      end
+
+      it "shows the same status as Empleados when the debt is from an earlier month" do
+        previous = 1.month.ago.to_date.beginning_of_month
+        Account.create!(owner: consumers(:other), provider: providers(:tuviandita), month: previous, amount: 80)
+        payments(:other_submitted).update_columns(status: Payment.statuses[:approved], expected_amount: 150.25)
+
+        get admin_consumer_path(consumers(:other))
+
+        expect(inertia.props[:summary]).to include(amount: 150.25, status: "pending")
+
+        get admin_consumers_path
+
+        expect(inertia.props[:consumers]).to include(hash_including(id: consumers(:other).id, status: "pending"))
+      end
+
+      it "stays approved when the employee owes nothing" do
+        payments(:other_submitted).update_columns(status: Payment.statuses[:approved], expected_amount: 150.25)
+
+        get admin_consumer_path(consumers(:other))
+
+        expect(inertia.props[:summary]).to include(status: "approved")
       end
 
       it "groups the consumption history by month with its providers and confirmed orders" do

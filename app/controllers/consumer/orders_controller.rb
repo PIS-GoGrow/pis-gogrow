@@ -16,12 +16,8 @@ class Consumer::OrdersController < Consumer::InertiaController
     orders = @consumer.orders.preload(:review, provider: :user, schedule: { menu: { provider: :user } })
 
     @upcoming_orders = orders.upcoming
-    @past_orders = orders.history.where(created_at: (Date.current - 3.months)..)
-
-    @providers = (@upcoming_orders + @past_orders)
-      .map(&:provider)
-      .compact_blank
-      .uniq
+    @past_orders, @past_orders_page = paginate_history(orders.history)
+    @providers = Provider.where(id: @consumer.orders.select(:provider_id)).joins(:user).preload(:user).order("users.name")
   end
 
   def show
@@ -193,6 +189,23 @@ class Consumer::OrdersController < Consumer::InertiaController
 
   private
 
+  # La primera carga del historial son los últimos tres meses por fecha de
+  # entrega; el scroll trae los anteriores de a 20, hasta el primero.
+  def paginate_history(history)
+    page = [ params[:page].to_i, 1 ].max
+    older = history.delivered_before(Date.current - 3.months)
+
+    if page == 1
+      orders = history.delivered_since(Date.current - 3.months)
+      next_page = 2 if older.exists?
+    else
+      orders = older.offset((page - 2) * 20).limit(20)
+      next_page = page + 1 if older.offset((page - 1) * 20).exists?
+    end
+
+    [ orders, { page_name: "page", current_page: page, previous_page: (page - 1 if page > 1), next_page: } ]
+  end
+
   # Convierte las id de schedule
   def build_requested_items
     requested_items = pricing_params
@@ -231,7 +244,6 @@ class Consumer::OrdersController < Consumer::InertiaController
     schedule = order.schedule
 
     return :schedule_unavailable if schedule && !schedule.available
-    return :insufficient_stock if schedule && schedule.remaining_amount < order.amount.to_i
 
     :cart_unavailable
   end
@@ -281,9 +293,7 @@ class Consumer::OrdersController < Consumer::InertiaController
   end
 
   def max_quantity(order)
-    return order.amount.to_i if order.schedule.nil?
-
-    order.schedule.remaining_amount + order.amount.to_i
+    order.max_quantity
   end
 
   def update_params

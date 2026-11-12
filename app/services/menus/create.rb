@@ -43,9 +43,9 @@ class Menus::Create
 
   def program
     case mode
-    when "single" then @menu.schedules.create!(date:, amount: @agenda[:amount])
-    when "weekly" then @menu.agendas.create!(weekdays:, starts_on:, amount: @agenda[:amount])
-    when "range" then @menu.agendas.create!(weekdays:, starts_on:, ends_on:, amount: @agenda[:amount])
+    when "single" then @menu.schedules.create!(date:)
+    when "weekly" then @menu.agendas.create!(weekdays:, starts_on:)
+    when "range" then @menu.agendas.create!(weekdays:, starts_on:, ends_on:)
     end
   end
 
@@ -59,10 +59,6 @@ class Menus::Create
       add_agenda_error(:invalid_range) if mode == "range" && !(ends_on && starts_on && ends_on >= starts_on)
       add_agenda_error(:invalid_weekdays) unless weekdays.any? && weekdays.all? { (1..5).cover?(it) }
     end
-
-    return if mode == "none"
-
-    add_agenda_error(:invalid_amount) unless MenuAgenda.new(amount: @agenda[:amount]).tap(&:validate).errors[:amount].empty?
   end
 
   def add_agenda_error(type)

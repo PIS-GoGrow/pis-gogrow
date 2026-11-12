@@ -20,9 +20,9 @@ export default function ClosureBanner({
   const { t } = useTranslation()
 
   return (
-    <Alert className="text-foreground">
+    <Alert className="text-foreground pr-10">
       <CircleAlert aria-hidden="true" />
-      <AlertTitle className="pr-6 text-sm leading-5 font-semibold">
+      <AlertTitle className="text-sm leading-5 font-semibold">
         {t(`${page}.title_${when}`, { provider: closure.provider_name })}
       </AlertTitle>
       <AlertDescription className="text-foreground text-sm leading-5">

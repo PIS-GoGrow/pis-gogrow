@@ -56,7 +56,7 @@ RSpec.describe "Flujo de pagos del empleado en mobile", type: :system do
       menu = Menu.create!(
         provider: tuviandita, name: "Milanesa al pan", description: "Con papas", price: 1000
       )
-      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer: consumers(:one), schedule:,
@@ -143,7 +143,7 @@ RSpec.describe "Flujo de pagos del empleado en mobile", type: :system do
     open_history_tab
 
     within(find("[role=tabpanel]")) do
-      expect(page).to have_content(I18n.t("pages.accounts.index.history_empty"))
+      expect(page).to have_content(I18n.t("pages.accounts.index.history_empty_title"))
       expect(page).to have_no_link(I18n.t("pages.accounts.show.download_receipt"))
     end
   end

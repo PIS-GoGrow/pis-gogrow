@@ -83,6 +83,65 @@ RSpec.describe "Consultar la información de la cuenta del empleado" do
     end
   end
 
+  it "no muestra cupones vencidos y mantiene los vigentes en Mis cupones" do
+    expired_configuration = benefit_configurations(:gift2)
+    expired_configuration.benefit_rules.create!(
+      type: "GiftBenefit",
+      limit: 10,
+      effective_from: Date.current - 5.days,
+      deadline_date: Date.current - 1.day
+    )
+
+    consumer.benefits.create!(
+      benefit_configuration: expired_configuration,
+      description: "Cupón vencido",
+      percentage: 30,
+      amount: 1,
+      starts_on: Date.current - 5.days,
+      due_date: Date.current - 1.day,
+      status: :current
+    )
+    consumer.benefits.create!(
+      benefit_configuration: benefit_configurations(:gift),
+      description: "Cupón vigente",
+      percentage: 30,
+      amount: 2,
+      starts_on: Date.current,
+      due_date: Date.current + 5.days,
+      status: :current
+    )
+
+    sign_in employee
+    visit profile_path
+
+    within(find("section[aria-labelledby=coupons-title]")) do
+      expect(page).to have_content("Cupón vigente")
+      expect(page).to have_no_content("Cupón vencido")
+    end
+  end
+
+  it "muestra las secciones de configuración en la cuenta del empleado y permite ingresar a cuenta" do
+    sign_in employee
+
+    visit profile_path
+
+    within(find("section[aria-labelledby=consumer-settings-title]")) do
+      expect(page).to have_link("Cuenta", href: settings_profile_path)
+      expect(page).to have_content("Modificá tu teléfono, nombre, correo, contraseña y apariencia")
+      expect(page).to have_link("Direcciones", href: delivery_addresses_path)
+      expect(page).to have_link("Notificaciones", href: settings_notifications_path)
+      click_link "Cuenta"
+    end
+
+    expect(page).to have_current_path(settings_profile_path)
+    expect(page).to have_field("name", with: employee.name)
+    expect(page).to have_field("phone")
+    expect(page).to have_field("email", with: employee.email)
+    expect(page).to have_field("password")
+    expect(page).to have_content("Configuración de apariencia")
+    expect(page).to have_link("Volver a Cuenta", href: profile_path)
+  end
+
   # Criterio 2 -- cerrar sesión. No alcanza con que el botón exista: tiene que
   # mandar el DELETE y dejar la pantalla sin acceso.
   #

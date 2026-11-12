@@ -15,13 +15,13 @@ RSpec.describe "Consumer Payments and Bank Details", type: :system do
     before do
       provider_with_bank.update!(
         bank_name: "Banco Itaú",
-        bank_account_number: "1951234",
-        bank_account_holder: "Tu Vianda SRL"
+        bank_account_details: "1951234",
+        beneficiary: "Tu Vianda SRL"
       )
       provider_without_bank.update!(
         bank_name: nil,
-        bank_account_number: nil,
-        bank_account_holder: nil
+        bank_account_details: nil,
+        beneficiary: nil
       )
       sign_in consumer_user, role: :consumer
     end
@@ -35,7 +35,7 @@ RSpec.describe "Consumer Payments and Bank Details", type: :system do
         expect(page).to have_content("Banco Itaú")
         expect(page).to have_content("Nº de cuenta: 1951234")
         expect(page).to have_content("Beneficiario: Tu Vianda SRL")
-        expect(page).to have_button("Copiar número de cuenta")
+        expect(page).to have_button("Copiar datos de la cuenta")
       end
     end
 
@@ -48,7 +48,7 @@ RSpec.describe "Consumer Payments and Bank Details", type: :system do
         expect(page).to have_content("Este proveedor todavía no cargó sus datos de cobro.")
         expect(page).not_to have_content("Nº de cuenta:")
         expect(page).not_to have_content("Beneficiario:")
-        expect(page).not_to have_button("Copiar número de cuenta")
+        expect(page).not_to have_button("Copiar datos de la cuenta")
       end
     end
   end

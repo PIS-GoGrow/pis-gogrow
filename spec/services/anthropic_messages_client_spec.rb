@@ -27,13 +27,51 @@ RSpec.describe AnthropicMessagesClient do
     expect(result).to eq(ok: true, text: "Resumen claro.")
     expect(requests.size).to eq(1)
     expect(requests.first[:url]).to eq("https://api.anthropic.com/v1/messages")
-    expect(requests.first[:headers]).to include("Authorization" => "Bearer test-only-key",
+    expect(requests.first[:headers]).to include("x-api-key" => "test-only-key",
                                                 "anthropic-version" => "2026-10-21",
                                                 "Content-Type" => "application/json")
     expect(JSON.parse(requests.first[:body])).to eq(
-      "model" => "configured-test-model", "max_tokens" => 500, "system" => "Instrucciones de prueba",
+      "model" => "configured-test-model", "max_tokens" => 2500, "system" => "Instrucciones de prueba",
       "messages" => [ { "role" => "user", "content" => '{"schema_version":1}' } ]
     )
+  end
+
+  context "when the response includes thinking" do
+    let(:response_body) do
+      JSON.generate(type: "message", role: "assistant", stop_reason: "end_turn", content: [
+        { type: "thinking", thinking: "Razonamiento interno", signature: "firma" },
+        { type: "text", text: "Resumen visible." }
+      ])
+    end
+
+    it "returns only the final text and never exposes reasoning" do
+      expect(result).to eq(ok: true, text: "Resumen visible.")
+    end
+  end
+
+  context "when the response includes redacted thinking" do
+    let(:response_body) do
+      JSON.generate(type: "message", role: "assistant", stop_reason: "end_turn", content: [
+        { type: "redacted_thinking", data: "datos cifrados" },
+        { type: "text", text: "Resumen visible." }
+      ])
+    end
+
+    it "returns only the final text" do
+      expect(result).to eq(ok: true, text: "Resumen visible.")
+    end
+  end
+
+  it "rejects a complete response with thinking but no useful text" do
+    body = JSON.generate(type: "message", role: "assistant", stop_reason: "end_turn",
+                         content: [ { type: "thinking", thinking: "Razonamiento interno", signature: "firma" } ])
+    allow(client).to receive(:connection).and_return(Faraday.new(url: "https://api.anthropic.com") do |faraday|
+      faraday.adapter :test do |stub|
+        stub.post("/v1/messages") { [ 200, {}, body ] }
+      end
+    end)
+
+    expect(result).to eq(ok: false, error: { code: "invalid_response" })
   end
 
   it "does not send a request when either configuration value is missing" do
@@ -63,8 +101,10 @@ RSpec.describe AnthropicMessagesClient do
     end
   end
 
-  it "rejects non-text content and blank text" do
-    [ [ { type: "tool_use", id: "tool" } ], [ { type: "text", text: "  " } ] ].each do |blocks|
+  it "rejects unknown or malformed content blocks and blank text" do
+    [ [ { type: "tool_use", id: "tool" } ], [ { type: "text", text: "  " } ],
+      [ { type: "thinking", thinking: "Razonamiento interno" }, { type: "text", text: "Resumen" } ],
+      [ { type: "redacted_thinking", data: nil }, { type: "text", text: "Resumen" } ] ].each do |blocks|
       allow(client).to receive(:connection).and_return(Faraday.new(url: "https://api.anthropic.com") do |faraday|
         faraday.adapter :test do |stub|
           stub.post("/v1/messages") do

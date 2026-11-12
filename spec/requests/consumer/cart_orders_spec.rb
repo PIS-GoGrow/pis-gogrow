@@ -77,7 +77,9 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(inertia.props).to include(:week, :schedules, :benefit, :providers)
       expect(inertia.props[:week]).to include(:start_date, :end_date, :days)
       expect(inertia.props[:schedules]).to be_an(Array)
-      expect(inertia.props[:benefit]).to include(:percentage, :monthly_remaining)
+      expect(inertia.props[:benefit]).to include(
+        :percentage, :monthly_remaining, :weekly_limit, :weekly_used, :weekly_remaining
+      )
       expect(inertia.props[:providers]).to all(include(:id, :name))
 
       if inertia.props[:schedules].any?
@@ -183,7 +185,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
     it "no persiste órdenes parciales si uno de los platos del carrito falla por falta de stock" do
       sold_out_schedule = schedules(:office)
-      sold_out_schedule.update!(date: schedule.date, amount: 0)
+      sold_out_schedule.update!(date: schedule.date, available: false)
 
       expect {
         post orders_path, params: {
@@ -199,7 +201,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
       expect(response).to redirect_to(dashboard_cart_path)
       follow_redirect!
-      expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.insufficient_stock"))
+      expect(inertia.props.dig(:errors, :order_error)).to eq(I18n.t("validations.schedule_unavailable"))
     end
 
     it "crea las órdenes atómicamente cuando el carrito es válido y redirige a la confirmación" do
@@ -232,8 +234,8 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
 
     let(:consumer) { consumers(:one) }
     let(:menu) { Menu.create!(provider: providers(:tuviandita), name: "Milanesa", description: "Con puré", price: 300) }
-    let(:wednesday) { Schedule.create!(menu:, date: Date.new(2026, 9, 16), amount: 10) }
-    let(:thursday) { Schedule.create!(menu:, date: Date.new(2026, 9, 17), amount: 10) }
+    let(:wednesday) { Schedule.create!(menu:, date: Date.new(2026, 9, 16)) }
+    let(:thursday) { Schedule.create!(menu:, date: Date.new(2026, 9, 17)) }
     let!(:base) do
       consumer.benefits.destroy_all
       consumer.benefits.create!(
@@ -397,7 +399,8 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(inertia).to render_component("consumer/dashboard/cart")
       expect(inertia.props).to include(:benefit, :addresses)
       expect(inertia.props[:benefit]).to include(
-        :percentage, :monthly_limit, :monthly_used, :monthly_remaining, :specials
+        :percentage, :monthly_limit, :monthly_used, :monthly_remaining,
+        :weekly_limit, :weekly_used, :weekly_remaining, :specials
       )
       expect(inertia.props[:addresses]).to be_an(Array)
     end
@@ -487,6 +490,46 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(json["lines"].first["tiers"].first["percentage"]).to eq(50)
     end
 
+    it "cuenta una sola vez la vianda que acumula el beneficio base y un cupón" do
+      consumer_user.consumer.benefits.destroy_all
+      consumer_user.consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly), percentage: 50, amount: 2, due_date: 1.month.from_now
+      )
+      coupon = consumer_user.consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:gift), percentage: 25, amount: 1, due_date: 1.month.from_now
+      )
+
+      post pricing_orders_path, params: {
+        items: [ { schedule_id: schedule.id, quantity: 5, benefits: [ coupon.id ] } ]
+      }
+
+      json = response.parsed_body
+      expect(json["lines"].first["tiers"].sum { it["quantity"] }).to eq(3)
+      expect(json["subsidizedQuantity"]).to eq(2)
+      expect(json["fullPriceQuantity"]).to eq(3)
+    end
+
+    it "informa cuántas viandas quedan fuera del subsidio base por el límite semanal" do
+      consumer = consumer_user.consumer
+      consumer.orders.destroy_all
+      existing = Order.create!(
+        consumer:, schedule:, amount: 4, price: schedule.price * 4,
+        discounted_price: schedule.price * 2, address: company_address,
+        delivery_method: :office, status: :confirmed
+      )
+      existing.apply_benefit!(benefits(:monthly), 4)
+
+      post pricing_orders_path, params: {
+        items: [ { schedule_id: schedule.id, quantity: 3 } ]
+      }
+
+      expect(response.parsed_body).to include(
+        "baseSubsidizedQuantity" => 1,
+        "withoutBaseSubsidyQuantity" => 2,
+        "weeklyLimitQuantity" => 2
+      )
+    end
+
     it "al modificar un pedido le devuelve los usos del beneficio que ese pedido ya tiene" do
       consumer_user.consumer.benefits.destroy_all
       benefit = consumer_user.consumer.benefits.create!(
@@ -547,6 +590,43 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
       expect(order.discounted_price).to eq(schedule.menu.price)
       expect(order.order_benefits).to be_empty
       expect(consumer.remaining_monthly_benefit).to eq(10)
+    end
+  end
+
+  describe "POST /orders con límite semanal" do
+    before do
+      sign_in consumer_user, role: :consumer
+      consumer_user.consumer.orders.destroy_all
+      schedule.update!(date: Calendar.new.allowed_order_dates.begin)
+    end
+
+    it "subsidia solo el cupo semanal restante y cobra el resto a precio completo" do
+      consumer = consumer_user.consumer
+      benefit = benefits(:monthly)
+      existing = Order.create!(
+        consumer:, schedule:, amount: 4, price: schedule.price * 4,
+        discounted_price: schedule.price * 2, address: company_address,
+        delivery_method: :office, status: :confirmed
+      )
+      existing.apply_benefit!(benefit, 4)
+
+      expect {
+        post orders_path, params: {
+          order: {
+            address: company_address,
+            items: [ { schedule_id: schedule.id, quantity: 3, notes: "", options: [] } ]
+          }
+        }
+      }.to change(Order, :count).by(1)
+
+      order = consumer.orders.order(:id).last
+      expect(order).to have_attributes(
+        amount: 3,
+        price: schedule.price * 3,
+        discounted_price: schedule.price * 2.5
+      )
+      expect(order.order_benefits.pluck(:benefit_id, :benefit_used)).to contain_exactly([ benefit.id, 1 ])
+      expect(consumer.weekly_benefit_used(date: schedule.date)).to eq(5)
     end
   end
 
@@ -628,6 +708,12 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
   describe "POST /orders con precio esperado inconsistente" do
     before do
       sign_in consumer_user, role: :consumer
+      order_date = Calendar.new.allowed_order_dates.first
+      Schedule.where(menu: [ schedule.menu, schedules(:sorrentinos_today).menu ], date: order_date)
+              .where.not(id: [ schedule.id, schedules(:sorrentinos_today).id ]).destroy_all
+      schedule.update_columns(date: order_date, available: true)
+      schedules(:sorrentinos_today).update_columns(date: order_date, available: true)
+      benefits(:monthly).update_columns(due_date: order_date)
     end
 
     it "no hace el pedido y muestra error" do
@@ -666,8 +752,7 @@ RSpec.describe "Consumer cart and orders lifecycle", type: :request do
         }
       ]
 
-      post pricing_orders_path, params: { items: items.map { it.slice(:schedule_id, :quantity) } }, as: :json
-      cart_total = response.parsed_body["total"]
+      cart_total = 100.1 * 0.5 + 220.2 * 0.5
       expect(cart_total).not_to eq(cart_total.round(2))
 
       expect {

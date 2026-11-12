@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { DatePicker } from "@/components/date-picker"
+import { cwday } from "@/components/menus/menu-agenda-fields"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -47,17 +48,25 @@ interface SavedMenusTabProps {
   published: ProviderMenusNew["published"]
   today: string
   maximumPublishDate: string
-  onPublished: (date: string) => void
+  onPublished: (date: string, count: number) => void
   defaultDate: string | null
+}
+
+function mondayOf(isoDate: string) {
+  const date = new Date(`${isoDate}T00:00:00Z`)
+  date.setUTCDate(date.getUTCDate() - (cwday(isoDate) - 1))
+  return date.toISOString().slice(0, 10)
 }
 
 function SavedMenuCard({
   menu,
+  weekdays,
   selected,
   disabled,
   onToggle,
 }: {
   menu: SavedMenu
+  weekdays: number[]
   selected: boolean
   disabled: boolean
   onToggle?: () => void
@@ -99,12 +108,13 @@ function SavedMenuCard({
         </CardAction>
       </CardHeader>
       <CardContent>
-        {/* Mismos días que en "Platos nuevos", pero solo de lectura. */}
+        {/* Días en que se repite todas las semanas y días publicados en la
+            semana elegida. Solo de lectura. */}
         <ToggleGroup
           type="multiple"
           variant="outline"
           spacing={2}
-          value={menu.weekdays.map(String)}
+          value={weekdays.map(String)}
           inert
           aria-hidden="true"
         >
@@ -119,7 +129,7 @@ function SavedMenuCard({
           ))}
         </ToggleGroup>
         <span className="sr-only">
-          {menu.weekdays
+          {weekdays
             .map((day) =>
               t(`pages.provider_menus.edit.agenda.weekday_names.${day}`),
             )
@@ -149,6 +159,21 @@ export default function SavedMenusTab({
   const publishedIds = new Set(
     published.filter((item) => item.date === date).map((item) => item.menu_id),
   )
+  // Lo que se muestra en cada plato: los días en que se repite todas las semanas
+  // y los días en que está publicado en la semana de la fecha elegida.
+  const weekdaysOf = (menu: SavedMenu) =>
+    [
+      ...new Set([
+        ...menu.weekdays,
+        ...published
+          .filter(
+            (item) =>
+              item.menu_id === menu.id &&
+              mondayOf(item.date) === mondayOf(date || today),
+          )
+          .map((item) => cwday(item.date)),
+      ]),
+    ].sort()
   const query = normalizeText(search.trim())
   const matching = menus.filter((menu) =>
     normalizeText(menu.name ?? "").includes(query),
@@ -177,6 +202,8 @@ export default function SavedMenusTab({
   }
 
   function submit() {
+    const selectedCount = selected.length
+
     setProcessing(true)
     setError(null)
 
@@ -188,7 +215,7 @@ export default function SavedMenusTab({
         preserveState: true,
         onSuccess: () => {
           setSelected([])
-          onPublished(date)
+          onPublished(date, selectedCount)
         },
         onError: (errors) => {
           const first = Object.values(errors)[0]
@@ -290,6 +317,7 @@ export default function SavedMenusTab({
             <SavedMenuCard
               key={menu.id}
               menu={menu}
+              weekdays={weekdaysOf(menu)}
               selected={selected.includes(menu.id)}
               disabled={false}
               onToggle={() => toggle(menu.id)}
@@ -308,6 +336,7 @@ export default function SavedMenusTab({
                 <SavedMenuCard
                   key={menu.id}
                   menu={menu}
+                  weekdays={weekdaysOf(menu)}
                   selected={false}
                   disabled
                 />

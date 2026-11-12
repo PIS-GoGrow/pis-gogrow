@@ -148,6 +148,7 @@ function UploadInvoice({ account }: { account: ProviderCollectionAccount }) {
     processing,
     progress,
     errors,
+    clearErrors,
     reset,
     transform,
   } = useForm({
@@ -162,12 +163,17 @@ function UploadInvoice({ account }: { account: ProviderCollectionAccount }) {
     .filter(([key]) => !fieldErrors.includes(key))
     .flatMap(([, messages]) => messages ?? [])
 
+  // useForm conserva los errores de un envío fallido hasta que otro sale bien.
+  // Un archivo nuevo es un intento nuevo: sin limpiar, el diálogo volvería a
+  // mostrar el error del archivo anterior sobre uno que todavía no se validó.
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    clearErrors()
     setData("file", event.target.files?.[0] ?? null)
   }
 
   function handleOpenChange(nextOpen: boolean) {
     if (nextOpen) {
+      clearErrors()
       const date = today()
       setMaxDate(date)
       if (!data.issued_on) setData("issued_on", date)

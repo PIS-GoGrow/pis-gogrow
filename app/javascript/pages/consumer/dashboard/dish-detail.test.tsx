@@ -42,6 +42,9 @@ const benefit: Benefit = {
   monthly_limit: 20,
   monthly_used: 0,
   monthly_remaining: 20,
+  weekly_limit: 5,
+  weekly_used: 0,
+  weekly_remaining: 5,
   specials: [],
 }
 
@@ -89,6 +92,18 @@ describe("DishDetail", () => {
     expect(screen.getByText("$320")).toBeInTheDocument()
   })
 
+  it("keeps the amount to pay in the bottom bar, next to the add button", () => {
+    renderDetail()
+
+    const bar = screen.getByText("Monto a pagar").closest(".fixed")
+
+    expect(bar).not.toBeNull()
+    expect(bar).toContainElement(
+      screen.getByRole("button", { name: "Agregar" }),
+    )
+    expect(screen.getByText("Precio vianda").closest(".fixed")).toBeNull()
+  })
+
   // Criterio 3: sin descripción no se inventa texto, y sobre todo no se filtra
   // el "null" del prop a la pantalla, que es la forma más común de que esto
   // salga mal.
@@ -112,6 +127,17 @@ describe("DishDetail", () => {
     renderDetail({ item: { ...schedule(), remaining: 2 }, quantity: 2 })
 
     expect(screen.getByRole("button", { name: "Agregar uno" })).toBeDisabled()
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Solo quedan 2 viandas disponibles de este plato.",
+    )
+  })
+
+  it("does not warn about the quota before reaching it", () => {
+    renderDetail({ item: { ...schedule(), remaining: 2 }, quantity: 1 })
+
+    expect(
+      screen.queryByText(/disponibles? de este plato/),
+    ).not.toBeInTheDocument()
   })
 
   it("marks the dish as added when it is already in the cart", () => {
@@ -518,6 +544,9 @@ describe("benefits message and lines", () => {
       total: 320,
       subsidizedQuantity: 0,
       fullPriceQuantity: 1,
+      baseSubsidizedQuantity: 0,
+      withoutBaseSubsidyQuantity: 1,
+      weeklyLimitQuantity: 0,
       lines: [
         {
           subtotal: 320,
@@ -551,6 +580,9 @@ describe("benefits message and lines", () => {
       total: 160,
       subsidizedQuantity: 1,
       fullPriceQuantity: 0,
+      baseSubsidizedQuantity: 1,
+      withoutBaseSubsidyQuantity: 0,
+      weeklyLimitQuantity: 0,
       lines: [
         {
           subtotal: 320,

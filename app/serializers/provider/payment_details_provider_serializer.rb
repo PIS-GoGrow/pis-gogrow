@@ -3,5 +3,5 @@
 class Provider::PaymentDetailsProviderSerializer < ApplicationSerializer
   typelize_from Provider
 
-  attributes :bank_name, :bank_account_type, :bank_account_number, :bank_account_holder, :tax_id
+  attributes :bank_name, :bank_account_details, :beneficiary
 end

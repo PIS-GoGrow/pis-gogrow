@@ -95,4 +95,27 @@ describe("RejectPaymentDialog", () => {
       expect.anything(),
     )
   })
+
+  it("does not trigger onReviewed callback when response contains an alert flash", async () => {
+    const onReviewed = vi.fn()
+    render(
+      <RejectPaymentDialog
+        paymentId={17}
+        open
+        onOpenChange={() => undefined}
+        onReviewed={onReviewed}
+      />,
+    )
+    const user = userEvent.setup()
+    await user.click(screen.getByRole("radio", { name: "El pago es parcial" }))
+    await user.click(screen.getByRole("button", { name: "Continuar" }))
+
+    const callbacks = patch.mock.calls[0][2] as {
+      onSuccess: (page: { flash: { alert: string } }) => void
+    }
+    callbacks.onSuccess({
+      flash: { alert: "Este comprobante ya fue revisado." },
+    })
+    expect(onReviewed).not.toHaveBeenCalled()
+  })
 })

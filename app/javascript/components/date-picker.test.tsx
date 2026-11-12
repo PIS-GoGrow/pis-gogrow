@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { describe, expect, it, vi } from "vitest"
 
@@ -87,6 +87,25 @@ describe("DateRangePicker", () => {
 
     expect(button).toHaveTextContent("09/06/27")
     expect(button).not.toHaveTextContent("–")
+  })
+
+  it("renders the calendar inline when requested", async () => {
+    const user = userEvent.setup()
+
+    render(
+      <DateRangePicker id="range" from="" to="" inline onChange={vi.fn()} />,
+    )
+
+    const trigger = screen.getByRole("button", { name: "Elegí un rango" })
+
+    await user.click(trigger)
+
+    const container = trigger.parentElement
+    expect(container).not.toBeNull()
+
+    expect(
+      within(container!).getAllByText(/^(do|lu|ma|mi|ju|vi|sá)$/),
+    ).toHaveLength(7)
   })
 })
 

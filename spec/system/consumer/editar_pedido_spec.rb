@@ -22,8 +22,7 @@ RSpec.describe "Modificar un pedido desde la pantalla del plato", type: :system 
   let!(:schedule) do
     Schedule.create!(
       menu: sorrentinos,
-      date: Date.current + 2.days,
-      amount: 10
+      date: Date.current + 2.days
     )
   end
 
@@ -90,5 +89,24 @@ RSpec.describe "Modificar un pedido desde la pantalla del plato", type: :system 
     visit_hydrated order_path(order)
     expect(page).to have_content("Edición desde mobile")
     expect(order.reload.notes).to eq("Edición desde mobile")
+  end
+
+  it "mantiene el monto a pagar en la barra fija al editar en mobile" do
+    page.current_window.resize_to(375, 667)
+
+    visit_hydrated edit_order_path(order)
+
+    total = find("span", text: "Monto a pagar")
+    bar = total.find(:xpath, "ancestor::div[contains(@class, 'fixed')]")
+    expect(bar).to have_button("Modificar")
+    expect(page).to have_no_css("div.fixed", text: "Precio vianda")
+
+    page.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+    viewport_height = page.evaluate_script("window.innerHeight")
+    top = page.evaluate_script("arguments[0].getBoundingClientRect().top", total.native)
+    bottom = page.evaluate_script("arguments[0].getBoundingClientRect().bottom", total.native)
+
+    expect(top).to be >= 0
+    expect(bottom).to be <= viewport_height
   end
 end

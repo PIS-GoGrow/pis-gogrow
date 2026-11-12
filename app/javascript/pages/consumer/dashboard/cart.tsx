@@ -167,6 +167,7 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
           <ConsumerCart
             monthlyLimit={benefit.monthly_limit}
             monthlyRemaining={benefit.monthly_remaining}
+            weeklyLimit={benefit.weekly_limit}
             pricing={pricing}
             loading={loading}
             cart={cart}

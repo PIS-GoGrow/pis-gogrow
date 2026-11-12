@@ -28,6 +28,7 @@ export default function New(props: ProviderMenusNew) {
   const [defaultDate] = useState(props.default_date)
   const [addedOpen, setAddedOpen] = useState(false)
   const [addedDate, setAddedDate] = useState<string | null>(null)
+  const [addedCount, setAddedCount] = useState(1)
   const [addedOrigin, setAddedOrigin] = useState<AddedOrigin | null>(null)
   const [formKey, setFormKey] = useState(0)
   // Día al que se vuelve desde el cartel de "Plato agregado": el día donde quedó publicado.
@@ -93,6 +94,7 @@ export default function New(props: ProviderMenusNew) {
               onCreated={(publishedDate) => {
                 setAddedOrigin("new")
                 setAddedDate(null)
+                setAddedCount(1)
                 setLandingDate(publishedDate ?? defaultDate)
                 setAddedOpen(true)
               }}
@@ -106,9 +108,10 @@ export default function New(props: ProviderMenusNew) {
               published={props.published}
               today={props.today}
               maximumPublishDate={props.maximum_publish_date}
-              onPublished={(date) => {
+              onPublished={(date, count) => {
                 setAddedOrigin("saved")
                 setAddedDate(date)
+                setAddedCount(count)
                 setLandingDate(date)
                 setAddedOpen(true)
               }}
@@ -121,13 +124,22 @@ export default function New(props: ProviderMenusNew) {
         <AdaptableDialogContent showCloseButton={false} className="p-0">
           <AdaptableDialogHeader className="items-start px-6 pt-8 text-left">
             <AdaptableDialogTitle className="text-base">
-              {t(`${key}.added.title`)}
+              {t(
+                addedCount > 1
+                  ? `${key}.added.title_plural`
+                  : `${key}.added.title`,
+              )}
             </AdaptableDialogTitle>
             <AdaptableDialogDescription className="text-base">
               {addedDate
-                ? t(`${key}.added.description_date`, {
-                    date: formatLongDateInline(addedDate),
-                  })
+                ? t(
+                    addedCount > 1
+                      ? `${key}.added.description_date_plural`
+                      : `${key}.added.description_date`,
+                    {
+                      date: formatLongDateInline(addedDate),
+                    },
+                  )
                 : t(`${key}.added.description`)}
             </AdaptableDialogDescription>
           </AdaptableDialogHeader>

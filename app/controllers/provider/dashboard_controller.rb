@@ -9,7 +9,7 @@ class Provider::DashboardController < Provider::InertiaController
            .where(schedules: { date: Date.current })
            .where.not(status: [ :cancelled, :rejected ])
     month = Provider::ActivitySummary.new(@provider, Date.current.all_month)
-    pending_accounts = Account.pending.where(provider: @provider)
+    outstanding = ProviderCollectionSummary.new(provider: @provider).outstanding
 
     @today = DateFormat.long(Date.current)
     @today_orders_count = today_orders.count
@@ -22,32 +22,10 @@ class Provider::DashboardController < Provider::InertiaController
     @month_orders_count = month.orders_count
     @month_dishes_count = month.dishes_count
     @average_rating = month.average_rating
-    @top_rated = top_rated_dishes
+    @top_rated = month.top_rated_dishes.map { { name: it.name, rating: it.rating } }
     @completed_sections_count = @provider.completed_sections_count
     @sections_total = @provider.total_sections_count
-
-    @total_dishes_count =
-      Order.consumed
-           .where(
-              id: OrderAccount.where(account_id: pending_accounts.select(:id)).select(:order_id)
-           )
-           .sum(:amount)
-           .to_i
-    @total_debt = pending_accounts.select(:amount, :vat_rate).sum(&:payable_amount).to_i
-  end
-
-  private
-
-  # Platos del proveedor mejor valorados, por promedio de sus calificaciones
-  # válidas. Se agrupa por nombre para unir las variantes del mismo plato.
-  def top_rated_dishes
-    Review.joins(:menu)
-          .where(menus: { provider_id: @provider.id })
-          .where.not(rating: nil)
-          .group("menus.name")
-          .order(Arel.sql("AVG(reviews.rating) DESC, menus.name ASC"))
-          .limit(5)
-          .pluck(Arel.sql("menus.name"), Arel.sql("ROUND(AVG(reviews.rating)::numeric, 1)"))
-          .map { |name, rating| { name:, rating: rating.to_f } }
+    @total_dishes_count = outstanding[:meals]
+    @total_debt = outstanding[:total]
   end
 end

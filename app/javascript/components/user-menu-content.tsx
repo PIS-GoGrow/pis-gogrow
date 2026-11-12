@@ -18,9 +18,9 @@ import { UserInfo } from "@/components/user-info"
 import { useMobileNavigation } from "@/hooks/use-mobile-navigation"
 import {
   adminAccount,
+  consumerProfiles,
   providerAccount,
   sessions,
-  settingsProfiles,
 } from "@/routes"
 import type { User } from "@/types"
 
@@ -76,15 +76,14 @@ export function UserMenuContent({ auth }: UserMenuContentProps) {
       <DropdownMenuGroup>
         <DropdownMenuItem asChild>
           <Link
-            className="block w-full"
+            className="flex w-full items-center"
             href={
               session.role === "provider"
-                ? providerAccount()
+                ? providerAccount().url
                 : session.role === "admin"
-                  ? adminAccount()
-                  : settingsProfiles.show()
+                  ? adminAccount().url
+                  : consumerProfiles.show().url
             }
-            as="button"
             prefetch
             onClick={cleanup}
           >

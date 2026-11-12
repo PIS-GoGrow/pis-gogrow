@@ -27,8 +27,8 @@ RSpec.describe "Notifications", type: :request do
     end
   end
 
-  def sign_in(user)
-    session = user.sessions.create!(role: :consumer)
+  def sign_in(user, role: :consumer)
+    session = user.sessions.create!(role: role)
     cookies[:session_token] =
       AuthenticationHelpers.signed_cookie(:session_token, session.id)
   end
@@ -41,8 +41,8 @@ RSpec.describe "Notifications", type: :request do
       event: "order_confirmation",
       requires_action: false,
       notifiable:,
-      title: "Tu pedido fue confirmado",
-      description: "Tu pedido fue confirmado."
+      title_data: {},
+      description_data: { date: "12/12", provider: "TuViandita" }
     )
   end
 
@@ -137,6 +137,75 @@ RSpec.describe "Notifications", type: :request do
 
         expect(response).to have_http_status(:not_found)
       end
+
+      it "ignora parámetros adicionales en el body y cierra la notificación de forma segura" do
+        notification = create_notification(user:)
+
+        patch close_notification_path(notification), params: {
+          notification: { requires_action: true, role: "admin", closed_at: nil }
+        }
+
+        expect(response).to have_http_status(:see_other)
+        expect(notification.reload.closed_at).to be_present
+        expect(notification.requires_action).to be(false)
+        expect(notification.role).to eq("consumer")
+      end
+    end
+
+    context "con rol de administrador" do
+      let(:admin_user) do
+        User.create!(
+          email: "admin-close-test@gmail.com",
+          name: "Admin User",
+          password: "password123456"
+        ).tap do |u|
+          Admin.create!(user: u, company:)
+          u.reload
+        end
+      end
+
+      let(:admin_config) do
+        Notification::Configuration.find_or_create_by!(key: "company_payments") do |c|
+          c.roles = %w[admin]
+        end
+      end
+
+      let(:admin_notification) do
+        Notification.create!(
+          notification_configuration: admin_config,
+          user: admin_user,
+          role: "admin",
+          event: "company_payment_approved",
+          requires_action: false,
+          notifiable: admin_user,
+          title_data: {},
+          description_data: {
+            provider: "TuViandita",
+            company: "GoGrow",
+            period: "octubre 2026",
+            amount: "$5.000"
+          }
+        )
+      end
+
+      it "permite al admin cerrar su notificación cerrable" do
+        sign_in(admin_user, role: :admin)
+
+        patch close_notification_path(admin_notification)
+
+        expect(response).to have_http_status(:see_other)
+        expect(admin_notification.reload.closed_at).to be_present
+      end
+
+      it "no permite al admin cerrar una notificación de un consumidor" do
+        consumer_notification = create_notification(user:)
+        sign_in(admin_user, role: :admin)
+
+        patch close_notification_path(consumer_notification)
+
+        expect(response).to have_http_status(:not_found)
+        expect(consumer_notification.reload.closed_at).to be_nil
+      end
     end
   end
 
@@ -156,8 +225,6 @@ RSpec.describe "Notifications", type: :request do
       expect(notifications_prop.first).to match(
         a_hash_including(
           id: active_notification.id,
-          title: "Tu pedido fue confirmado",
-          description: "Tu pedido fue confirmado.",
           requires_action: false
         )
       )
@@ -172,8 +239,12 @@ RSpec.describe "Notifications", type: :request do
         event: "order_rejection",
         requires_action: false,
         notifiable: user,
-        title: "Tu pedido fue rechazado",
-        description: "Tu pedido del 10 de octubre de Milanesa fue rechazado por Tu Viandita porque no había stock disponible."
+        description_data: {
+          date: "10 de octubre",
+          dish: "Milanesa",
+          provider: "Tu Viandita",
+          reason: "porque no había stock disponible"
+        }
       )
       sign_in(user)
 
@@ -198,9 +269,7 @@ RSpec.describe "Notifications", type: :request do
         role: "consumer",
         event: "order_rejection",
         requires_action: false,
-        notifiable: user,
-        title: "Tu pedido fue rechazado",
-        description: "Tu pedido del 10 de octubre fue rechazado."
+        notifiable: user
       )
       Provider.create!(user:, onboarding_completed_at: Time.current)
       session = user.sessions.create!(role: :provider)

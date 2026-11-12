@@ -77,6 +77,9 @@ const benefit: Benefit = {
   monthly_limit: 20,
   monthly_used: 0,
   monthly_remaining: 20,
+  weekly_limit: 5,
+  weekly_used: 0,
+  weekly_remaining: 5,
   specials: [],
 }
 
@@ -98,6 +101,7 @@ async function renderCart(
   const defaults = {
     monthlyLimit: 20,
     monthlyRemaining: 20,
+    weeklyLimit: 5,
     pricing: result,
     cart,
     addresses,
@@ -187,6 +191,24 @@ describe("ConsumerCart delivery address", () => {
     expect(
       screen.getByRole("button", { name: "Ver mis direcciones" }),
     ).toBeDisabled()
+    expect(
+      screen.getByText(
+        "Endulzate by Noe solo entrega en la Oficina, así que este pedido no puede ir a otra dirección.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("does not say the order must go to the office when a provider delivers home", async () => {
+    await renderCart({
+      cart: [
+        cartItem("Tu Viandita", true),
+        cartItem("Endulzate by Noe", false),
+      ],
+    })
+
+    expect(
+      screen.queryByText(/así que este pedido no puede ir a otra dirección/),
+    ).not.toBeInTheDocument()
   })
 
   it("warns which provider only delivers to the office in a mixed cart", async () => {
@@ -279,6 +301,9 @@ describe("ConsumerCart without subsidy", () => {
     ],
     subsidizedQuantity: subsidized,
     fullPriceQuantity: quantity - subsidized,
+    baseSubsidizedQuantity: subsidized,
+    withoutBaseSubsidyQuantity: quantity - subsidized,
+    weeklyLimitQuantity: 0,
   })
 
   it("shows the GoGrow subsidy at zero for a dish without benefit", async () => {
@@ -334,6 +359,43 @@ describe("ConsumerCart without subsidy", () => {
         "Te queda 1 vianda subsidiada este mes. De este pedido, 1 con beneficio y 2 a precio completo.",
       ),
     ).toBeInTheDocument()
+  })
+
+  it("warns before confirmation when the cart exceeds the weekly quota", async () => {
+    await renderCart({
+      weeklyLimit: 5,
+      pricing: {
+        ...fullPrice(3, 1),
+        baseSubsidizedQuantity: 1,
+        withoutBaseSubsidyQuantity: 2,
+        weeklyLimitQuantity: 2,
+      },
+    })
+
+    expect(
+      screen.getByText(
+        "Con Subsidio Base: 1. Sin Subsidio Base por el límite semanal: 2.",
+      ),
+    ).toBeInTheDocument()
+  })
+
+  it("allows ordering at full price after the weekly quota is used up", async () => {
+    await renderCart({
+      weeklyLimit: 5,
+      pricing: {
+        ...fullPrice(2),
+        weeklyLimitQuantity: 2,
+      },
+    })
+
+    expect(
+      screen.getByText(
+        "Alcanzaste el límite de 5 viandas subsidiadas de esta semana. Podés seguir realizando pedidos, pero las próximas viandas no recibirán el Subsidio Base.",
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Confirmar pedido" }),
+    ).toBeEnabled()
   })
 })
 

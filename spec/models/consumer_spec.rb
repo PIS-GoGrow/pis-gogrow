@@ -38,7 +38,7 @@ RSpec.describe Consumer, type: :model do
 
     def home_order(address, created_at:)
       menu = Menu.create!(provider: providers(:tuviandita), name: "Milanesa", description: "Plato de prueba", price: 300)
-      schedule = Schedule.create!(menu:, date: Date.current + 1, amount: 5)
+      schedule = Schedule.create!(menu:, date: Date.current + 1)
       Order.create!(consumer:, schedule:, amount: 1, price: 300, address:, delivery_method: :home, created_at:)
     end
 
@@ -96,7 +96,7 @@ RSpec.describe Consumer, type: :model do
     end
 
     let(:menu) { menus(:milanesa) }
-    let(:today_schedule) { Schedule.create!(menu:, date: Date.current, amount: 30) }
+    let(:today_schedule) { Schedule.create!(menu:, date: Date.current) }
 
     it "counts orders delivered within the current month" do
       Order.create!(
@@ -124,8 +124,13 @@ RSpec.describe Consumer, type: :model do
     end
 
     it "does not count orders delivered in previous or future months" do
-      past_schedule = Schedule.create!(menu:, date: 1.month.ago.beginning_of_month, amount: 30)
-      future_schedule = Schedule.create!(menu:, date: 1.month.from_now.beginning_of_month, amount: 30)
+      past_schedule = Schedule.create!(menu:, date: 1.month.ago.beginning_of_month)
+      future_schedule = Schedule.create!(menu:, date: 1.month.from_now.beginning_of_month)
+      future_benefit = consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly),
+        amount: 20, percentage: 50,
+        due_date: 1.month.from_now.end_of_month, status: :future
+      )
 
       Order.create!(
         consumer:, schedule: past_schedule, amount: 5,
@@ -134,7 +139,7 @@ RSpec.describe Consumer, type: :model do
       Order.create!(
         consumer:, schedule: future_schedule, amount: 4,
         price: 1200, address: consumer.company.address, delivery_method: :office, status: :confirmed
-      ).apply_benefit! benefits(:monthly), 4
+      ).apply_benefit! future_benefit, 4
 
       expect(consumer.monthly_benefit_used_this_month).to eq(0)
       expect(consumer.remaining_monthly_benefit).to eq(20)
@@ -160,6 +165,16 @@ RSpec.describe Consumer, type: :model do
       benefits(:monthly).destroy
 
       expect(consumer.monthly_benefit_available).to eq(0)
+    end
+
+    it "ignores a current benefit that has already expired by date" do
+      consumer.benefits.where.not(id: benefits(:monthly).id).destroy_all
+      benefits(:monthly).update_columns(due_date: Date.current.yesterday)
+
+      expect(consumer.current_monthly_benefit).to be_nil
+      expect(consumer.monthly_benefit_available).to eq(0)
+      expect(consumer.weekly_benefit_limit).to eq(0)
+      expect(consumer.remaining_weekly_benefit).to eq(0)
     end
   end
 
@@ -284,7 +299,7 @@ RSpec.describe Consumer, type: :model do
     end
 
     let(:menu) { menus(:milanesa) }
-    let(:today_schedule) { Schedule.create!(menu:, date: Date.current, amount: 30) }
+    let(:today_schedule) { Schedule.create!(menu:, date: Date.current) }
 
     it "sums active orders delivered in the current month" do
       Order.create!(
@@ -304,6 +319,44 @@ RSpec.describe Consumer, type: :model do
     end
   end
 
+  describe "weekly subsidized meals" do
+    before do
+      Order.destroy_all
+      Schedule.delete_all
+    end
+
+    let(:menu) { menus(:milanesa) }
+    let(:monday) { Date.current.beginning_of_week(:monday) }
+
+    def subsidized_order(date:, amount:, status: :pending)
+      schedule = Schedule.create!(menu:, date:)
+      order = Order.create!(
+        consumer:, schedule:, amount:, price: menu.price * amount,
+        address: consumer.company.address, delivery_method: :office, status:,
+        rejection_reason: (:out_of_stock if status == :rejected)
+      )
+      order.apply_benefit!(benefits(:monthly), amount)
+    end
+
+    it "counts quantities delivered in the same workweek" do
+      subsidized_order(date: monday, amount: 2)
+      subsidized_order(date: monday + 4.days, amount: 1, status: :confirmed)
+      subsidized_order(date: monday + 7.days, amount: 4)
+
+      expect(consumer.weekly_benefit_used(date: monday)).to eq(3)
+      expect(consumer.remaining_weekly_benefit(date: monday)).to eq(2)
+      expect(consumer.weekly_benefit_used(date: monday + 7.days)).to eq(4)
+    end
+
+    it "gives back weekly quota when an order is cancelled or rejected" do
+      subsidized_order(date: monday, amount: 2, status: :cancelled)
+      subsidized_order(date: monday + 1.day, amount: 1, status: :rejected)
+
+      expect(consumer.weekly_benefit_used(date: monday)).to eq(0)
+      expect(consumer.remaining_weekly_benefit(date: monday)).to eq(Consumer::WEEKLY_BENEFIT_LIMIT)
+    end
+  end
+
   describe "#monthly_benefit_usages" do
     before do
       Order.destroy_all
@@ -311,7 +364,7 @@ RSpec.describe Consumer, type: :model do
     end
 
     let(:menu) { menus(:milanesa) }
-    let(:today_schedule) { Schedule.create!(menu:, date: Date.current, amount: 30) }
+    let(:today_schedule) { Schedule.create!(menu:, date: Date.current) }
 
     it "returns an ActiveRecord relation that can be queried and aggregated" do
       relation = consumer.monthly_benefit_usages
@@ -377,10 +430,15 @@ RSpec.describe Consumer, type: :model do
     end
 
     it "strictly bounds dates to the current month" do
-      first_day_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month, amount: 10)
-      last_day_schedule = Schedule.create!(menu:, date: Date.current.end_of_month, amount: 10)
-      prev_month_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month - 1.day, amount: 10)
-      next_month_schedule = Schedule.create!(menu:, date: Date.current.end_of_month + 1.day, amount: 10)
+      first_day_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month)
+      last_day_schedule = Schedule.create!(menu:, date: Date.current.end_of_month)
+      prev_month_schedule = Schedule.create!(menu:, date: Date.current.beginning_of_month - 1.day)
+      next_month_schedule = Schedule.create!(menu:, date: Date.current.end_of_month + 1.day)
+      next_month_benefit = consumer.benefits.create!(
+        benefit_configuration: benefit_configurations(:monthly),
+        amount: 20, percentage: 50,
+        due_date: (Date.current.end_of_month + 1.day).end_of_month, status: :future
+      )
 
       Order.create!(
         consumer:, schedule: first_day_schedule, amount: 1,
@@ -400,7 +458,7 @@ RSpec.describe Consumer, type: :model do
       Order.create!(
         consumer:, schedule: next_month_schedule, amount: 4,
         price: 1200, address: consumer.company.address, delivery_method: :office, status: :confirmed
-      ).apply_benefit! benefits(:monthly), 4
+      ).apply_benefit! next_month_benefit, 4
 
       expect(consumer.monthly_benefit_usages.sum(:benefit_used)).to eq(3)
     end

@@ -1,5 +1,5 @@
 import { Head } from "@inertiajs/react"
-import { CircleCheck } from "lucide-react"
+import { CircleCheck, Receipt } from "lucide-react"
 import { useState } from "react"
 import type { JSX } from "react"
 import { useTranslation } from "react-i18next"
@@ -21,6 +21,13 @@ import Stat from "@/components/stat"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty"
 import { Progress } from "@/components/ui/progress"
 import { Spinner } from "@/components/ui/spinner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -89,6 +96,20 @@ export default function Index({
     },
   ]
 
+  const historyEmpty = (key: "history_empty" | "history_filtered_empty") => (
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Receipt aria-hidden="true" />
+        </EmptyMedia>
+        <EmptyTitle>{t(`pages.accounts.index.${key}_title`)}</EmptyTitle>
+        <EmptyDescription>
+          {t(`pages.accounts.index.${key}_description`)}
+        </EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  )
+
   const accountsJSX: Record<string | number, JSX.Element[]> = {}
 
   accounts.forEach((account: Account) => {
@@ -104,6 +125,10 @@ export default function Index({
         setDetail={setDetail}
         setLoading={setLoading}
         account={account}
+        paymentDetailsComplete={
+          providers.find(({ id }) => id === providerId)
+            ?.payment_details_complete ?? false
+        }
       />,
     )
   })
@@ -234,9 +259,7 @@ export default function Index({
             </TabsContent>
             <TabsContent className="grid w-full gap-2" value="history">
               {history_accounts.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  {t("pages.accounts.index.history_empty")}
-                </p>
+                historyEmpty("history_empty")
               ) : (
                 <>
                   <div className="flex items-center">
@@ -257,24 +280,21 @@ export default function Index({
                     />
                   </div>
 
-                  {filteredHistory.length === 0 ? (
-                    <p className="text-muted-foreground text-sm">
-                      {t("pages.accounts.index.history_filtered_empty")}
-                    </p>
-                  ) : (
-                    filteredHistory.map((account) => (
-                      <PaymentHistoryCard
-                        key={account.id}
-                        account={account}
-                        providerName={
-                          providers.find(({ id }) => id === account.provider_id)
-                            ?.name
-                        }
-                        setDetail={setDetail}
-                        setLoading={setLoading}
-                      />
-                    ))
-                  )}
+                  {filteredHistory.length === 0
+                    ? historyEmpty("history_filtered_empty")
+                    : filteredHistory.map((account) => (
+                        <PaymentHistoryCard
+                          key={account.id}
+                          account={account}
+                          providerName={
+                            providers.find(
+                              ({ id }) => id === account.provider_id,
+                            )?.name
+                          }
+                          setDetail={setDetail}
+                          setLoading={setLoading}
+                        />
+                      ))}
                 </>
               )}
             </TabsContent>

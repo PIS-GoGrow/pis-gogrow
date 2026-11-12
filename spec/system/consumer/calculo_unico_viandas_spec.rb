@@ -2,7 +2,7 @@
 
 require "rails_helper"
 
-RSpec.describe "Cálculo único de viandas del cupo mensual", type: :system do
+RSpec.describe "Cálculo único de viandas subsidiadas", type: :system do
   fixtures :users, :companies, :consumers, :providers, :benefit_configurations,
            :benefit_rules, :benefits, :menus, :schedules, :admins, :accounts, :orders
 
@@ -21,9 +21,9 @@ RSpec.describe "Cálculo único de viandas del cupo mensual", type: :system do
     Schedule.delete_all
   end
 
-  it "unifies monthly benefit counts across Inicio, Pagos, Cuenta and RRHH detail" do
-    schedule1 = Schedule.create!(menu: menu1, date: Date.current, amount: 20)
-    schedule2 = Schedule.create!(menu: menu2, date: Date.current, amount: 20)
+  it "unifies benefit counts across the weekly dashboard and monthly views" do
+    schedule1 = Schedule.create!(menu: menu1, date: Date.current)
+    schedule2 = Schedule.create!(menu: menu2, date: Date.current)
 
     # Pedido 1 con Proveedor 1: 2 viandas confirmadas con beneficio mensual
     Order.create!(
@@ -43,11 +43,11 @@ RSpec.describe "Cálculo único de viandas del cupo mensual", type: :system do
       address: consumer.company.address, delivery_method: :office, status: :cancelled
     ).apply_benefit! benefits(:monthly), 4
 
-    # 1. Pantalla Inicio: muestra "3 de 20 viandas pedidas"
+    # 1. Pantalla Inicio: muestra las 3 viandas contra el cupo semanal de 5
     sign_in consumer_user, role: :consumer
     visit dashboard_path
 
-    expect(page).to have_content("3 de 20")
+    expect(page).to have_content("3 de 5")
     expect(page).to have_content("viandas pedidas")
 
     # 2. Pantalla Pagos: muestra "3 de 20 viandas"

@@ -16,6 +16,11 @@ RSpec.describe "Subida de varios comprobantes y eliminación por el empleado", t
   let(:account) { accounts(:one_tuviandita_current) }
 
   before do
+    account.provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     # Dejamos solo la cuenta de tuviandita para consumers(:one) y sin pagos previos
     consumers(:one).accounts.where.not(id: account.id).destroy_all
     Payment.where(account:).destroy_all

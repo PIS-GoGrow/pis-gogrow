@@ -17,26 +17,24 @@ RSpec.describe Menus::AgendaScheduler do
   end
 
   it "programs the agenda weekdays up to the maximum publish date" do
-    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 8)
+    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current)
 
     described_class.call(menu)
 
     expect(scheduled_dates(menu)).to eq([ Date.new(2030, 1, 9), Date.new(2030, 1, 14), Date.new(2030, 1, 16) ])
-    expect(menu.schedules.pluck(:amount).uniq).to eq([ 8 ])
   end
 
   it "does not program twice the same date" do
-    menu.agendas.create!(weekdays: [ 3 ], starts_on: Date.current, amount: 8)
-    menu.schedules.create!(date: Date.current, amount: 2)
+    menu.agendas.create!(weekdays: [ 3 ], starts_on: Date.current)
+    menu.schedules.create!(date: Date.current)
 
     2.times { described_class.call(menu) }
 
     expect(scheduled_dates(menu)).to eq([ Date.new(2030, 1, 9), Date.new(2030, 1, 16) ])
-    expect(menu.schedules.find_by(date: Date.current).amount).to eq(2)
   end
 
   it "skips the dates the provider has closed" do
-    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 8)
+    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current)
     providers(:tuviandita).closures.create!(starts_on: Date.new(2030, 1, 14), ends_on: Date.new(2030, 1, 15), reason: "Vacaciones")
 
     described_class.call(menu)
@@ -45,7 +43,7 @@ RSpec.describe Menus::AgendaScheduler do
   end
 
   it "does not program a date the provider removed" do
-    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 8)
+    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current)
     menu.update!(skipped_dates: [ Date.new(2030, 1, 14) ])
 
     described_class.call(menu)
@@ -54,7 +52,7 @@ RSpec.describe Menus::AgendaScheduler do
   end
 
   it "programs the dates again once the closure is removed" do
-    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current, amount: 8)
+    menu.agendas.create!(weekdays: [ 1, 3 ], starts_on: Date.current)
     closure = providers(:tuviandita).closures.create!(starts_on: Date.new(2030, 1, 14), ends_on: Date.new(2030, 1, 15), reason: "Vacaciones")
     described_class.call(menu)
 
@@ -65,7 +63,7 @@ RSpec.describe Menus::AgendaScheduler do
   end
 
   it "does not close another provider's dates" do
-    menu.agendas.create!(weekdays: [ 1 ], starts_on: Date.current, amount: 8)
+    menu.agendas.create!(weekdays: [ 1 ], starts_on: Date.current)
     providers(:endulzate).closures.create!(starts_on: Date.new(2030, 1, 14), ends_on: Date.new(2030, 1, 14), reason: "Vacaciones")
 
     described_class.call(menu)
@@ -74,10 +72,10 @@ RSpec.describe Menus::AgendaScheduler do
   end
 
   it "uses the agenda of a ranged variant during its range and the saved dish after it" do
-    menu.agendas.create!(weekdays: [ 1, 2, 3, 4, 5 ], starts_on: Date.current, amount: 5)
+    menu.agendas.create!(weekdays: [ 1, 2, 3, 4, 5 ], starts_on: Date.current)
     variant = menu.build_variant(valid_from: Date.new(2030, 1, 14), valid_until: Date.new(2030, 1, 15))
     variant.name = "Sorrentinos de verdura"
-    variant.agendas.build(weekdays: [ 2 ], starts_on: Date.new(2030, 1, 14), ends_on: Date.new(2030, 1, 15), amount: 3)
+    variant.agendas.build(weekdays: [ 2 ], starts_on: Date.new(2030, 1, 14), ends_on: Date.new(2030, 1, 15))
     variant.save!
 
     described_class.call(menu)
@@ -88,7 +86,7 @@ RSpec.describe Menus::AgendaScheduler do
   end
 
   it "programs a plain variant on the dates it covers" do
-    menu.agendas.create!(weekdays: [ 4, 5 ], starts_on: Date.current, amount: 5)
+    menu.agendas.create!(weekdays: [ 4, 5 ], starts_on: Date.current)
     variant = menu.build_variant(valid_from: Date.new(2030, 1, 10), valid_until: Date.new(2030, 1, 10))
     variant.save!
 
@@ -98,7 +96,7 @@ RSpec.describe Menus::AgendaScheduler do
   end
 
   it "stops at the end of a finished agenda" do
-    menu.agendas.create!(weekdays: [ 1, 2, 3, 4, 5 ], starts_on: Date.current, ends_on: Date.new(2030, 1, 10), amount: 5)
+    menu.agendas.create!(weekdays: [ 1, 2, 3, 4, 5 ], starts_on: Date.current, ends_on: Date.new(2030, 1, 10))
 
     described_class.call(menu)
 
@@ -109,11 +107,18 @@ RSpec.describe Menus::AgendaScheduler do
     expect { described_class.call(menu) }.not_to change(Schedule, :count)
   end
 
+  it "rescues RecordNotUnique or RecordInvalid when another process creates the schedule" do
+    menu.agendas.create!(weekdays: [ 3 ], starts_on: Date.current)
+    allow(menu.schedules).to receive(:create!).and_raise(ActiveRecord::RecordNotUnique.new("duplicate"))
+
+    expect { described_class.call(menu) }.not_to raise_error
+  end
+
   describe ".call_all" do
     it "programs schedules for all saved dishes with active agendas" do
-      menu.agendas.create!(weekdays: [ 1 ], starts_on: Date.current, amount: 5)
+      menu.agendas.create!(weekdays: [ 1 ], starts_on: Date.current)
       other_menu = providers(:endulzate).menus.create!(name: "Tarta", description: "De calabaza", price: 200)
-      other_menu.agendas.create!(weekdays: [ 5 ], starts_on: Date.current, amount: 4)
+      other_menu.agendas.create!(weekdays: [ 5 ], starts_on: Date.current)
 
       described_class.call_all
 

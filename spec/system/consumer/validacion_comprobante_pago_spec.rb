@@ -12,12 +12,17 @@ RSpec.describe "Validación de comprobante de pago en español", type: :system d
   let(:receipt_file) { Rails.root.join("public/icon.png").to_s }
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     consumer.orders.destroy_all
     consumer.accounts.destroy_all
 
     travel_to(Time.zone.local(closed_month.year, closed_month.month, 5, 12)) do
       menu = Menu.create!(provider:, name: "Torta de fiambre", description: "Porción", price: 500)
-      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer:, schedule:,

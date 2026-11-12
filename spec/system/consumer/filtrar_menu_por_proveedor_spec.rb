@@ -33,7 +33,7 @@ RSpec.describe "Filtrar el menú semanal por proveedor" do
   end
 
   def publish(menu, date)
-    Schedule.create!(menu:, date:, amount: 5)
+    Schedule.create!(menu:, date:)
   end
 
   def open_provider_filter

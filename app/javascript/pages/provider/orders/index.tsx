@@ -1,15 +1,19 @@
-import { Head } from "@inertiajs/react"
+import { Head, usePage } from "@inertiajs/react"
 import { Download, Search } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import DeliveryFilterSheet from "@/components/orders/delivery-filter-sheet"
 import ProviderOrderDays from "@/components/orders/provider-order-days"
+import ProviderOrderDecidedSheet, {
+  type ProviderOrderDecision,
+} from "@/components/orders/provider-order-decided-sheet"
 import PageContainer from "@/components/page-container"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import AppLayout from "@/layouts/app-layout"
+import { db } from "@/lib/offline-db"
 import {
   type DeliveryFilter,
   type StatusFilter,
@@ -32,12 +36,31 @@ export default function Index({
   past_orders,
 }: ProviderOrdersIndex) {
   const { t } = useTranslation()
+  const { auth } = usePage().props
+
   const [period, setPeriod] = useState<Period>("upcoming")
   const [status, setStatus] = useState<StatusFilter>("all")
   const [delivery, setDelivery] = useState<DeliveryFilter>("all")
   const [search, setSearch] = useState("")
+  const [decision, setDecision] = useState<ProviderOrderDecision | null>(null)
+
+  useEffect(() => {
+    db.provider_orders
+      .put({
+        id: 1,
+        session_id: auth?.session?.id, // Los ? solo aplican para los tests, si no la sesión está definida
+        upcoming_orders,
+        saved_at: Date.now(),
+      })
+      .catch((error) => {
+        console.error("Error al cachear órdenes: ", error)
+      })
+  }, [upcoming_orders, auth?.session?.id])
 
   const orders = period === "upcoming" ? upcoming_orders : past_orders
+  // Sin pedidos en el período no hay nada que filtrar: el estado vacío mobile
+  // va solo, debajo de las pestañas.
+  const hiddenWhenEmpty = orders.length === 0 && "max-lg:hidden"
   const filters = { status, delivery, search }
   const visible = filterOrders(orders, filters, (order) =>
     searchableText(order, t),
@@ -62,97 +85,111 @@ export default function Index({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.provider_orders.index.title")} />
 
-      <PageContainer
-        title={t("pages.provider_orders.index.title")}
-        titleVariant="prominent"
-      >
-        <div className={cn("grid gap-4", ordersColumns)}>
-          <Tabs
-            value={period}
-            onValueChange={(value) => setPeriod(value as Period)}
-            className="lg:col-start-1 lg:row-start-2"
-          >
-            <TabsList className="w-full">
-              {periods.map((value) => (
-                <TabsTrigger key={value} value={value}>
-                  {t(`pages.provider_orders.index.tabs.${value}`)}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-
-          <Tabs
-            value={status}
-            onValueChange={(value) => setStatus(value as StatusFilter)}
-            className="lg:col-start-2 lg:row-start-2"
-          >
-            <TabsList
-              className="w-full"
-              aria-label={t("pages.provider_orders.index.status_filter_label")}
+      <div className="max-md:[&>div]:px-6">
+        <PageContainer
+          title={t("pages.provider_orders.index.title")}
+          titleVariant="prominent"
+        >
+          <div className={cn("grid gap-4", ordersColumns)}>
+            <Tabs
+              value={period}
+              onValueChange={(value) => setPeriod(value as Period)}
+              className="lg:col-start-1 lg:row-start-2"
             >
-              {statusFilters.map((value) => (
-                <TabsTrigger key={value} value={value}>
-                  {t(`pages.provider_orders.index.status_filters.${value}`)}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+              <TabsList className="w-full">
+                {periods.map((value) => (
+                  <TabsTrigger key={value} value={value}>
+                    {t(`pages.provider_orders.index.tabs.${value}`)}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
 
-          <div className="grid gap-4 lg:col-span-2 lg:row-start-1 lg:flex lg:flex-row-reverse lg:items-center lg:gap-6">
-            <div className="flex items-center justify-between gap-2 lg:shrink-0 lg:gap-3">
-              <p className="text-sm">
-                {t("pages.provider_orders.index.delivery_label")}{" "}
-                <span className="text-muted-foreground">
-                  {t(
-                    `pages.provider_orders.index.delivery_filters.${delivery}`,
-                  )}
-                </span>
-              </p>
-              <DeliveryFilterSheet value={delivery} onApply={setDelivery} />
-            </div>
-
-            <div className="relative lg:flex-1">
-              <Input
-                type="text"
-                autoComplete="off"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={t(
-                  "pages.provider_orders.index.search_placeholder",
+            <Tabs
+              value={status}
+              onValueChange={(value) => setStatus(value as StatusFilter)}
+              className={cn("lg:col-start-2 lg:row-start-2", hiddenWhenEmpty)}
+            >
+              <TabsList
+                className="w-full"
+                aria-label={t(
+                  "pages.provider_orders.index.status_filter_label",
                 )}
-                aria-label={t("pages.provider_orders.index.search_label")}
-                className="pr-9"
-              />
-              <Search
-                className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2"
-                aria-hidden="true"
-              />
+              >
+                {statusFilters.map((value) => (
+                  <TabsTrigger key={value} value={value}>
+                    {t(`pages.provider_orders.index.status_filters.${value}`)}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+
+            <div
+              className={cn(
+                "grid gap-4 lg:col-span-2 lg:row-start-1 lg:flex lg:flex-row-reverse lg:items-center lg:gap-6",
+                hiddenWhenEmpty,
+              )}
+            >
+              <div className="flex items-center justify-between gap-2 lg:shrink-0 lg:gap-3">
+                <p className="text-sm">
+                  {t("pages.provider_orders.index.delivery_label")}{" "}
+                  <span className="text-muted-foreground">
+                    {t(
+                      `pages.provider_orders.index.delivery_filters.${delivery}`,
+                    )}
+                  </span>
+                </p>
+                <DeliveryFilterSheet value={delivery} onApply={setDelivery} />
+              </div>
+
+              <div className="relative lg:flex-1">
+                <Input
+                  type="text"
+                  autoComplete="off"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder={t(
+                    "pages.provider_orders.index.search_placeholder",
+                  )}
+                  aria-label={t("pages.provider_orders.index.search_label")}
+                  className="pr-9"
+                />
+                <Search
+                  className="text-muted-foreground pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2"
+                  aria-hidden="true"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <ProviderOrderDays
-          key={period}
-          orders={orders}
-          today={today}
-          period={period}
-          filters={filters}
-          footer={
-            visible.length > 0 && (
-              <Button
-                asChild
-                variant="secondary"
-                className="h-11.5 w-full rounded-md"
-              >
-                <a href={exportUrl} download>
-                  <Download aria-hidden="true" />
-                  {t("pages.provider_orders.index.export")}
-                </a>
-              </Button>
-            )
-          }
-        />
-      </PageContainer>
+          <ProviderOrderDays
+            key={period}
+            orders={orders}
+            today={today}
+            filters={filters}
+            onDecided={setDecision}
+            footer={
+              visible.length > 0 && (
+                <Button
+                  asChild
+                  variant="secondary"
+                  className="h-11.5 w-full rounded-md"
+                >
+                  <a href={exportUrl} download>
+                    <Download aria-hidden="true" />
+                    {t("pages.provider_orders.index.export")}
+                  </a>
+                </Button>
+              )
+            }
+          />
+        </PageContainer>
+      </div>
+
+      <ProviderOrderDecidedSheet
+        decision={decision}
+        onClose={() => setDecision(null)}
+      />
     </AppLayout>
   )
 }

@@ -108,7 +108,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
     it "lists the past orders of the signed-in provider, most recent delivery first" do
       other_provider_order
-      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10, amount: 5)
+      older_schedule = Schedule.create!(menu: menus(:milanesa), date: Date.current - 10)
       older = Order.create!(
         consumer: consumers(:one),
         schedule: older_schedule,
@@ -151,8 +151,7 @@ RSpec.describe "Provider::Orders", type: :request do
 
       tomorrow_schedule = Schedule.create!(
         menu: menus(:milanesa),
-        date: Date.current + 1.day,
-        amount: 5
+        date: Date.current + 1.day
       )
       order_tomorrow = Order.create!(
         consumer: consumers(:one),
@@ -266,16 +265,14 @@ RSpec.describe "Provider::Orders", type: :request do
         delivery_method: :office, price: 601, discounted_price: 300.50
       )
       original_name = order.menu_name
-      original_description = order.menu_description
       order.menu.update!(name: "Plato nuevo", description: "Descripción nueva", price: 999)
       sign_in users(:provider_user), role: :provider
 
       get provider_order_path(order)
 
       expect(inertia).to have_props { |props|
-        props["order"].slice("menu_name", "menu_description", "amount", "price", "discounted_price", "subsidy") == {
-          "menu_name" => original_name, "menu_description" => original_description,
-          "amount" => 2, "price" => 601.0, "discounted_price" => 300.50, "subsidy" => 300.50
+        props["order"].slice("menu_name", "amount", "price") == {
+          "menu_name" => original_name, "amount" => 2, "price" => 601.0
         }
       }
     end
@@ -296,12 +293,7 @@ RSpec.describe "Provider::Orders", type: :request do
           order[:consumer_name] == "Test User" &&
           order[:consumer_email] == "one@example.com" &&
           order[:consumer_company] == "GoGrow" &&
-          order[:menu_name] == "Milanesa con papas fritas" &&
-          order[:menu_description] == "Opción de carne o pollo" &&
-          order[:discounted_price] == 150.25 &&
-          order[:subsidy] == 150.25 &&
-          order[:schedule_amount] == 5 &&
-          order[:remaining_amount] == 4
+          order[:menu_name] == "Milanesa con papas fritas"
       }
     end
 
@@ -444,8 +436,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.reload).to be_confirmed
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "redirects back to the order detail when deciding from the detail page" do
@@ -497,14 +488,13 @@ RSpec.describe "Provider::Orders", type: :request do
     it "still confirms the order when the notification cannot be saved" do
       sign_in users(:provider_user), role: :provider
       order = orders(:upcoming_pending_today)
-      allow(Notification).to receive(:create!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
+      allow_any_instance_of(Notification).to receive(:save!).and_raise(ActiveRecord::RecordInvalid.new(Notification.new))
 
       patch confirm_provider_order_path(order)
 
       expect(order.reload).to be_confirmed
       expect(response).to redirect_to(provider_orders_path)
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_confirmed"))
+      expect(flash[:notice]).to be_nil
     end
   end
 
@@ -549,8 +539,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.rejected_at).to be_present
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "rejects a pending order with 'other' reason and details" do
@@ -564,8 +553,7 @@ RSpec.describe "Provider::Orders", type: :request do
       expect(order.rejection_details).to eq("Cerrado por reformas")
       expect(response).to redirect_to(provider_orders_path)
 
-      follow_redirect!
-      expect(inertia).to have_flash(notice: I18n.t("flash.order_rejected"))
+      expect(flash[:notice]).to be_nil
     end
 
     it "refuses to reject without a reason and returns an error flash" do

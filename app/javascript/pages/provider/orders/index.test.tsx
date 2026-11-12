@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react"
+import { act, render, screen, waitFor } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type React from "react"
 import { describe, expect, it, vi } from "vitest"
@@ -7,13 +7,15 @@ import type { ProviderOrder } from "@/types"
 
 import Index from "./index"
 
+const patchMock = vi.hoisted(() => vi.fn())
+
 vi.mock("@inertiajs/react", async () => {
   const actual = await vi.importActual("@inertiajs/react")
   return {
     ...actual,
     Head: () => null,
     usePage: () => ({ props: { locale: "es" } }),
-    router: { patch: vi.fn() },
+    router: { patch: patchMock },
     Link: ({
       children,
       href,
@@ -69,6 +71,7 @@ const upcoming = [
   order({
     id: 3,
     status: "cancelled",
+    rejectable: false,
     consumer_name: "Camila Herrera",
     menu_name: "Focaccia crispy",
   }),
@@ -164,13 +167,46 @@ describe("Provider orders page", () => {
     ).not.toBeInTheDocument()
   })
 
-  it("no ofrece exportar un día de hoy sin pedidos", () => {
+  it("sin pedidos en el período muestra el estado vacío y no ofrece exportar", () => {
     render(<Index today={TODAY} upcoming_orders={[]} past_orders={past} />)
 
-    expect(screen.getByText("No hay pedidos")).toBeInTheDocument()
+    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
+    expect(screen.queryByText("No hay pedidos")).not.toBeInTheDocument()
     expect(
       screen.queryByRole("link", { name: "Exportar pedidos" }),
     ).not.toBeInTheDocument()
+  })
+
+  it("oculta los filtros en mobile solo si el período no tiene pedidos", async () => {
+    const user = userEvent.setup()
+    render(<Index today={TODAY} upcoming_orders={[]} past_orders={past} />)
+    const statusTabs = () =>
+      screen
+        .getByRole("tab", { name: "Por revisar" })
+        .closest("[data-slot=tabs]")
+
+    expect(statusTabs()).toHaveClass("max-lg:hidden")
+
+    await user.click(screen.getByRole("tab", { name: "Historial" }))
+
+    expect(statusTabs()).not.toHaveClass("max-lg:hidden")
+  })
+
+  it("deja los filtros a la vista cuando son ellos los que vacían la lista", async () => {
+    const user = userEvent.setup()
+    renderPage()
+
+    await user.type(
+      screen.getByPlaceholderText("Buscar pedido, plato, consumidor..."),
+      "zzz",
+    )
+
+    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
+    expect(
+      screen
+        .getByRole("tab", { name: "Por revisar" })
+        .closest("[data-slot=tabs]"),
+    ).not.toHaveClass("max-lg:hidden")
   })
 
   it("muestra solo los pedidos por revisar", async () => {
@@ -198,7 +234,7 @@ describe("Provider orders page", () => {
     expect(screen.queryByText("Bruno Pérez - GoGrow")).not.toBeInTheDocument()
   })
 
-  it("muestra deshabilitado el botón de rechazar para un pedido confirmado pasado en el historial", async () => {
+  it("no muestra acciones para un pedido confirmado pasado en el historial", async () => {
     const user = userEvent.setup()
     render(
       <Index
@@ -218,8 +254,13 @@ describe("Provider orders page", () => {
 
     await user.click(screen.getByRole("tab", { name: "Historial" }))
 
-    expect(screen.getByRole("button", { name: /rechazar/i })).toBeDisabled()
-    expect(screen.getByRole("button", { name: /confirmar/i })).toBeDisabled()
+    expect(screen.getByText("Ana Gómez - GoGrow")).toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Rechazar" }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole("button", { name: "Confirmar" }),
+    ).not.toBeInTheDocument()
   })
 
   it("mantiene los filtros al cambiar de pestaña", async () => {
@@ -232,9 +273,86 @@ describe("Provider orders page", () => {
     )
     await user.click(screen.getByRole("tab", { name: "Historial" }))
 
+    expect(screen.getByText("No tenés pedidos")).toBeInTheDocument()
     expect(
-      screen.getByText("No tenés pedidos que coincidan con los filtros."),
-    ).toBeInTheDocument()
+      screen.getByPlaceholderText("Buscar pedido, plato, consumidor..."),
+    ).toHaveValue("zzz")
+  })
+
+  describe("al decidir un pedido que sale de la lista filtrada", () => {
+    function finishDecision() {
+      const options = patchMock.mock.lastCall?.[2] as {
+        onSuccess: (page: unknown) => void
+        onFinish: () => void
+      }
+
+      act(() => {
+        options.onSuccess({ props: {} })
+        options.onFinish()
+      })
+    }
+
+    it("mantiene la hoja de confirmado aunque la tarjeta desaparezca de Por revisar", async () => {
+      const user = userEvent.setup()
+      const pending = order({ id: 1 })
+      const { rerender } = render(
+        <Index today={TODAY} upcoming_orders={[pending]} past_orders={past} />,
+      )
+
+      await user.click(screen.getByRole("tab", { name: "Por revisar" }))
+      await user.click(screen.getByRole("button", { name: "Confirmar" }))
+      rerender(
+        <Index
+          today={TODAY}
+          upcoming_orders={[{ ...pending, status: "confirmed" }]}
+          past_orders={past}
+        />,
+      )
+      finishDecision()
+
+      expect(screen.queryByText("Bruno Pérez - GoGrow")).not.toBeInTheDocument()
+      expect(screen.getByText("Pedido confirmado")).toBeInTheDocument()
+      expect(
+        screen.getByText(
+          "El pedido #1 quedó confirmado y Bruno Pérez recibirá una notificación.",
+        ),
+      ).toBeInTheDocument()
+
+      await user.click(screen.getByRole("button", { name: "Listo" }))
+      await waitFor(() =>
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+      )
+    })
+
+    it("mantiene la hoja de rechazado aunque la tarjeta desaparezca de Confirmados", async () => {
+      const user = userEvent.setup()
+      const confirmed = order({ id: 2, status: "confirmed" })
+      const { rerender } = render(
+        <Index
+          today={TODAY}
+          upcoming_orders={[confirmed]}
+          past_orders={past}
+        />,
+      )
+
+      await user.click(screen.getByRole("tab", { name: "Confirmados" }))
+      await user.click(screen.getByRole("button", { name: "Rechazar" }))
+      await user.click(screen.getByLabelText("Sin stock disponible"))
+      await user.click(screen.getByRole("button", { name: "Rechazar pedido" }))
+      rerender(
+        <Index
+          today={TODAY}
+          upcoming_orders={[
+            { ...confirmed, status: "rejected", rejectable: false },
+          ]}
+          past_orders={past}
+        />,
+      )
+      finishDecision()
+
+      expect(screen.queryByText("Bruno Pérez - GoGrow")).not.toBeInTheDocument()
+      expect(screen.getByText("Pedido rechazado")).toBeInTheDocument()
+    })
   })
 
   it("busca entre los pedidos", async () => {

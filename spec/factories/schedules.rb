@@ -3,7 +3,6 @@
 FactoryBot.define do
   factory :schedule do
     date { "2026-09-03" }
-    amount { 1 }
     menu { nil }
   end
 end
@@ -13,7 +12,6 @@ end
 # Table name: schedules
 #
 #  id                         :bigint           not null, primary key
-#  amount                     :integer
 #  availability_changed_at    :datetime
 #  available                  :boolean          default(TRUE), not null
 #  date                       :date             not null

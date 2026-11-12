@@ -27,7 +27,7 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   def confirmed_order(consumer:, provider:, month:, quantity:, discounted_price:)
     travel_to(Time.zone.local(month.year, month.month, month.day, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa al pan", description: "Con papas", price: 1000)
-      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer:, schedule:,
@@ -38,6 +38,11 @@ RSpec.describe "El cambio de estado de un pago hecho por el proveedor" do
   end
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     consumers(:one).orders.destroy_all
     consumers(:one).accounts.destroy_all
   end

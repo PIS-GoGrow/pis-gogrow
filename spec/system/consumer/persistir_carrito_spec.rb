@@ -20,8 +20,8 @@ RSpec.describe "Persistir carrito del consumidor", type: :system do
     sign_in users(:one), role: :consumer
   end
 
-  def publish(menu, date = monday, amount: 10)
-    Schedule.create!(menu:, date:, amount:)
+  def publish(menu, date = monday)
+    Schedule.create!(menu:, date:)
   end
 
   def click_until(selector, expected_text)

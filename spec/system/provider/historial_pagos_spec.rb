@@ -24,6 +24,11 @@ RSpec.describe "Historial de pagos del proveedor" do
   let(:previous_month) { Date.current.beginning_of_month.months_ago(1) }
 
   before do
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     Account.where(provider:).destroy_all
     consumers(:one).orders.destroy_all
   end
@@ -38,7 +43,7 @@ RSpec.describe "Historial de pagos del proveedor" do
   def confirmed_order(month:)
     travel_to(Time.zone.local(month.year, month.month, 5, 12)) do
       menu = Menu.create!(provider:, name: "Milanesa al pan", description: "Con papas", price: 1000)
-      schedule = Schedule.create!(menu:, date: Date.current, amount: 20)
+      schedule = Schedule.create!(menu:, date: Date.current)
 
       Order.create!(
         consumer: consumers(:one), schedule:, amount: 1, price: 1000, discounted_price: 300,

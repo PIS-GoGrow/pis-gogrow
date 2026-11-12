@@ -29,12 +29,14 @@ interface AccountCardProps {
   account: Account
   setDetail: React.Dispatch<React.SetStateAction<AccountDetail | null>>
   setLoading: React.Dispatch<React.SetStateAction<boolean>>
+  paymentDetailsComplete: boolean
 }
 
 export default function AccountCard({
   account,
   setDetail,
   setLoading,
+  paymentDetailsComplete,
 }: AccountCardProps) {
   const { t } = useTranslation()
   const payments = [...account.payments].sort(
@@ -131,9 +133,15 @@ export default function AccountCard({
             canUpload={
               !account.current && account.collection_status !== "approved"
             }
-            uploadDisabled={account.payments.some(
-              ({ status }) => status === "submitted",
-            )}
+            uploadDisabled={
+              !paymentDetailsComplete ||
+              account.payments.some(({ status }) => status === "submitted")
+            }
+            uploadDisabledHint={
+              !paymentDetailsComplete
+                ? t("pages.admin.payments.index.bank.missing_upload_hint")
+                : undefined
+            }
             payments={payments}
           />
         )}

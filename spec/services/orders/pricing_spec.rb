@@ -9,9 +9,9 @@ RSpec.describe Orders::Pricing do
 
   let(:consumer) { consumers(:one) }
   let(:menu) { Menu.create!(provider: providers(:tuviandita), name: "Milanesa", description: "Con puré", price: 300) }
-  let(:schedule) { Schedule.create!(menu:, date: Date.new(2026, 9, 16), amount: 20) }
+  let(:schedule) { Schedule.create!(menu:, date: Date.new(2026, 9, 16)) }
   let(:cheap_menu) { Menu.create!(provider: providers(:tuviandita), name: "Ensalada", description: "Con huevo", price: 100) }
-  let(:cheap_schedule) { Schedule.create!(menu: cheap_menu, date: Date.new(2026, 9, 16), amount: 20) }
+  let(:cheap_schedule) { Schedule.create!(menu: cheap_menu, date: Date.new(2026, 9, 16)) }
 
   before { consumer.benefits.destroy_all }
 
@@ -123,6 +123,85 @@ RSpec.describe Orders::Pricing do
 
         expect(line.discounted_price).to eq(2100)
         expect(line.benefits).to eq([ [ special, Orders::Pricing::BenefitUsed.new(10, 900) ] ].to_h)
+      end
+    end
+
+    describe "weekly base subsidy limit" do
+      it "applies the base subsidy only to the first five meals of the week" do
+        base = base!
+
+        line = price(6)
+
+        expect(line).to have_attributes(
+          discounted_price: 1050,
+          base_subsidized_quantity: 5,
+          weekly_limit_quantity: 1
+        )
+        expect(line.benefits).to eq(base => Orders::Pricing::BenefitUsed.new(5, 750))
+      end
+
+      it "splits a cart when four meals already consumed the weekly quota" do
+        base = base!
+        place!(4)
+
+        line = price(3)
+
+        expect(line).to have_attributes(
+          discounted_price: 750,
+          base_subsidized_quantity: 1,
+          weekly_limit_quantity: 2
+        )
+        expect(line.benefits).to eq(base => Orders::Pricing::BenefitUsed.new(1, 150))
+      end
+
+      it "resets the weekly quota without resetting the monthly quota" do
+        base = base!(amount: 20)
+        place!(5)
+        next_week = Schedule.create!(menu:, date: Date.new(2026, 9, 21))
+
+        line = price(1, on: next_week)
+
+        expect(line).to have_attributes(base_subsidized_quantity: 1, weekly_limit_quantity: 0)
+        expect(line.benefits).to eq(base => Orders::Pricing::BenefitUsed.new(1, 150))
+        expect(described_class.new(consumer.reload).remaining_uses(base)).to eq(15)
+      end
+
+      it "keeps the lower monthly limit" do
+        base = base!(amount: 4)
+
+        line = price(6)
+
+        expect(line).to have_attributes(
+          discounted_price: 1200,
+          base_subsidized_quantity: 4,
+          weekly_limit_quantity: 0
+        )
+        expect(line.benefits).to eq(base => Orders::Pricing::BenefitUsed.new(4, 600))
+      end
+
+      it "keeps applying special subsidies after the weekly base limit" do
+        base!
+        place!(5)
+        special = special!
+
+        line = price(1)
+
+        expect(line).to have_attributes(
+          discounted_price: 210,
+          base_subsidized_quantity: 0,
+          weekly_limit_quantity: 1
+        )
+        expect(line.benefits).to eq(special => Orders::Pricing::BenefitUsed.new(1, 90))
+      end
+
+      it "returns the quota held by the order being modified" do
+        base = base!
+        order = place!(5)
+
+        line = price(6, modifiable_order: order)
+
+        expect(line).to have_attributes(base_subsidized_quantity: 5, weekly_limit_quantity: 1)
+        expect(line.benefits).to eq(base => Orders::Pricing::BenefitUsed.new(5, 750))
       end
     end
 
@@ -353,7 +432,7 @@ RSpec.describe Orders::Pricing do
 
       it "uses the delivery date, not today, to decide if the special still applies" do
         special!(due_date: Date.new(2026, 9, 16))
-        later = Schedule.create!(menu:, date: Date.new(2026, 9, 17), amount: 20)
+        later = Schedule.create!(menu:, date: Date.new(2026, 9, 17))
 
         result = price_cart([ schedule, 1, [] ], [ later, 1, [] ])
 

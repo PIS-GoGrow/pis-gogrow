@@ -19,8 +19,7 @@ RSpec.describe "Contador de cantidad y botón quitar en el carrito del consumido
     Order.delete_all
     Schedule.delete_all
 
-    # Stock limitado a 3 unidades para probar tope de stock
-    Schedule.create!(menu: milanesa, date: monday, amount: 3)
+    Schedule.create!(menu: milanesa, date: monday)
 
     page.current_window.resize_to(1400, 1400)
     sign_in users(:one), role: :consumer
@@ -39,7 +38,7 @@ RSpec.describe "Contador de cantidad y botón quitar en el carrito del consumido
     expect(page).to have_content("Tu carrito")
   end
 
-  it "permite aumentar la cantidad, respeta el stock máximo y genera el pedido con la cantidad editada" do
+  it "permite aumentar la cantidad y genera el pedido con la cantidad editada" do
     add_milanesa_to_cart
 
     # Cantidad inicial 1: el botón '-' se muestra como tacho con label 'Quitar <nombre>'
@@ -52,15 +51,13 @@ RSpec.describe "Contador de cantidad y botón quitar en el carrito del consumido
     expect(page).to have_button("Quitar una unidad de Milanesa con papas fritas")
     expect(page).to have_no_button("Quitar Milanesa con papas fritas")
 
-    # Aumentar a 3 (máximo de stock disponible): el botón '+' queda deshabilitado
+    # Aumentar a 3
     click_button "Agregar una unidad de Milanesa con papas fritas"
     expect(page).to have_content("Milanesa con papas fritas x3")
-    expect(page).to have_button("Agregar una unidad de Milanesa con papas fritas", disabled: true)
 
     # Reducir a 2 y confirmar el pedido
     click_button "Quitar una unidad de Milanesa con papas fritas"
     expect(page).to have_content("Milanesa con papas fritas x2")
-    expect(page).to have_button("Agregar una unidad de Milanesa con papas fritas", disabled: false)
 
     click_button "Confirmar pedido"
     expect(page).to have_content("¡Pedido recibido!")
@@ -68,6 +65,39 @@ RSpec.describe "Contador de cantidad y botón quitar en el carrito del consumido
     # Integridad en base de datos: el pedido se persistió con cantidad 2
     expect(Order.count).to eq(1)
     expect(Order.last.amount).to eq(2)
+  end
+
+  it "subsidia solo 5 de 6 viandas y muestra el cupo semanal consumido en Inicio" do
+    add_milanesa_to_cart
+
+    5.times do
+      click_button "Agregar una unidad de Milanesa con papas fritas"
+    end
+
+    expect(page).to have_content("Milanesa con papas fritas x6")
+    expect(page).to have_content(
+      /Con Subsidio Base: 5.*Sin Subsidio Base por el límite semanal: 1/
+    )
+
+    click_button "Confirmar pedido"
+    expect(page).to have_content("¡Pedido recibido!")
+
+    order = Order.last
+    expect(order.amount).to eq(6)
+    expect(order.order_benefits.sum(:benefit_used)).to eq(5)
+
+    visit dashboard_path
+    expect(page).to have_content("5 de 5")
+    expect(page).to have_content("viandas pedidas")
+  end
+
+  it "no muestra cupo semanal cuando el beneficio mensual está vencido" do
+    benefits(:monthly).update_columns(due_date: Date.current.yesterday)
+
+    visit_hydrated dashboard_path
+
+    expect(page).to have_no_content("Tu consumo")
+    expect(page).to have_no_content("de 5")
   end
 
   it "elimina el plato del carrito al presionar el ícono de tacho cuando la cantidad es 1" do
