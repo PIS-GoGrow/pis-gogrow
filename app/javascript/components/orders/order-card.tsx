@@ -42,7 +42,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               {order.reviewable ? (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="w-full"
                   asChild
@@ -55,7 +55,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               ) : (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="w-full"
                   disabled
@@ -79,7 +79,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
                 <div className="flex flex-col gap-1">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     className="w-full"
                     disabled
@@ -99,7 +99,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               {order.modifiable ? (
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   size="sm"
                   className="w-full"
                   asChild
@@ -113,7 +113,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
                 <div className="flex flex-col gap-1">
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     className="w-full"
                     disabled

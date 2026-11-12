@@ -48,7 +48,7 @@ export function QuantityInput({
         onClick={() =>
           removing ? onRemove?.() : onChange(Math.max(min, value - 1))
         }
-        className="hover:bg-primary hover:text-primary-foreground dark:hover:!bg-primary dark:hover:!text-primary-foreground h-full rounded-r-none"
+        className="hover:bg-secondary/80 hover:text-secondary-foreground dark:hover:bg-secondary/80 h-full rounded-r-none"
       >
         {removing ? (
           <Trash2 aria-hidden="true" className="size-3.5" />
@@ -64,7 +64,7 @@ export function QuantityInput({
         aria-label={increaseLabel}
         disabled={disabled || value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
-        className="hover:bg-primary hover:text-primary-foreground dark:hover:!bg-primary dark:hover:!text-primary-foreground h-full rounded-l-none"
+        className="hover:bg-secondary/80 hover:text-secondary-foreground dark:hover:bg-secondary/80 h-full rounded-l-none"
       >
         <Plus aria-hidden="true" className="size-3" />
       </Button>

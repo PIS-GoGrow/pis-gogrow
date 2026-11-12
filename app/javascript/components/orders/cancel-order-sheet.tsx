@@ -91,7 +91,7 @@ export default function CancelOrderSheet({ order }: { order: Order }) {
     <>
       <Button
         type="button"
-        variant="outline"
+        variant="secondary"
         size="sm"
         className="w-full"
         onClick={() => setOpen(true)}

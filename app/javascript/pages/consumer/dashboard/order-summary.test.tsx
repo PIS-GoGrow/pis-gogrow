@@ -31,10 +31,10 @@ describe("OrderSummary", () => {
     )
 
     expect(
-      screen.getByText("Subsidio Base (80%)").nextSibling,
+      screen.getByText("Beneficio GoGrow (80%)").nextSibling,
     ).toHaveTextContent("- $256")
     expect(
-      screen.getByText("Subsidio Base (50%)").nextSibling,
+      screen.getByText("Beneficio GoGrow (50%)").nextSibling,
     ).toHaveTextContent("- $320")
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$384",
@@ -54,9 +54,42 @@ describe("OrderSummary", () => {
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
       "$640",
     )
-    expect(screen.getByText("Subsidio Base (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$320",
+    )
+  })
+
+  it("keeps the name of a special benefit separate from the base benefit", () => {
+    render(
+      <OrderSummary
+        loading={false}
+        subtotal={300}
+        total={0}
+        tiers={[
+          {
+            id: 1,
+            name: "Subsidio base",
+            percentage: 50,
+            quantity: 1,
+            discount: 150,
+          },
+          {
+            id: 3,
+            name: "Desafío de pasos",
+            percentage: 50,
+            quantity: 1,
+            discount: 150,
+          },
+        ]}
+        specialBenefitIds={[3]}
+      />,
+    )
+
+    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Desafío de pasos (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
+      "$0",
     )
   })
 
@@ -70,7 +103,7 @@ describe("OrderSummary", () => {
       />,
     )
 
-    expect(screen.getByText("Subsidio Base (0%)")).toBeInTheDocument()
+    expect(screen.getByText("Beneficio GoGrow (0%)")).toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$640",
     )
@@ -90,7 +123,7 @@ describe("OrderSummary", () => {
     )
 
     expect(screen.queryByText("Precio vianda")).not.toBeInTheDocument()
-    expect(screen.queryByText("Subsidio Base (50%)")).not.toBeInTheDocument()
+    expect(screen.queryByText("Beneficio GoGrow (50%)")).not.toBeInTheDocument()
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$320",
     )
@@ -110,7 +143,7 @@ describe("OrderSummary", () => {
     expect(screen.getByText("Precio vianda").nextSibling).toHaveTextContent(
       "$640",
     )
-    expect(screen.getByText("Subsidio Base (50%)")).toBeInTheDocument()
+    expect(screen.getByText("Beneficio GoGrow (50%)")).toBeInTheDocument()
     expect(screen.queryByText("Monto a pagar")).not.toBeInTheDocument()
   })
 
@@ -128,7 +161,7 @@ describe("OrderSummary", () => {
       "$640,50",
     )
     expect(
-      screen.getByText("Subsidio Base (50%)").nextSibling,
+      screen.getByText("Beneficio GoGrow (50%)").nextSibling,
     ).toHaveTextContent("- $320,40")
     expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
       "$320,10",

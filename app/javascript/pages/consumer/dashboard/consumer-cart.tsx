@@ -3,7 +3,7 @@ import { type TFunction } from "i18next"
 import { ChevronLeft, TriangleAlert } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-import { BottomAction, MobileCard } from "@/components/consumer/mobile-card"
+import { MobileCard } from "@/components/consumer/mobile-card"
 import { QuantityInput } from "@/components/quantity-input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
@@ -22,6 +22,7 @@ import type { DiscountTier, Pricing } from "./pricing"
 import { SavedAddressesSheet } from "./saved-addresses-sheet"
 
 interface Props {
+  specialBenefitIds?: number[]
   monthlyLimit: number
   monthlyRemaining: number
   weeklyLimit: number
@@ -40,6 +41,7 @@ interface Props {
 }
 
 export function ConsumerCart({
+  specialBenefitIds = [],
   monthlyLimit,
   monthlyRemaining,
   weeklyLimit,
@@ -95,7 +97,7 @@ export function ConsumerCart({
     })
 
   return (
-    <MobileCard>
+    <MobileCard className="pb-6">
       <Link href={consumerDashboard.index()}>
         <Button
           type="button"
@@ -192,7 +194,7 @@ export function ConsumerCart({
         <Spinner className="mx-auto my-3" />
       ) : (
         <>
-          <section className="border-border mt-6 pb-4 text-sm md:border-b">
+          <section className="mt-6 pb-4 text-sm">
             {cart.map((item, i) => {
               const line = pricing?.lines?.[i]?.subtotal ?? 0 // El caso de 0 nunca va a ocurrir
               return (
@@ -212,7 +214,10 @@ export function ConsumerCart({
                     <span>{formatMoney(line)}</span>
                   </div>
                   {pricing?.lines?.[i] && (
-                    <ItemBenefitLines tiers={pricing.lines[i].tiers} />
+                    <ItemBenefitLines
+                      tiers={pricing.lines[i].tiers}
+                      specialBenefitIds={specialBenefitIds}
+                    />
                   )}
                   {/* Antes lo elegido viajaba dentro de las notas; ahora es un dato
                     aparte, así que el carrito lo muestra por su cuenta. */}
@@ -258,33 +263,32 @@ export function ConsumerCart({
               </p>
             )}
           </section>
-          <BottomAction>
-            <OrderSummary
-              loading={loading}
-              subtotal={pricing?.subtotal}
-              total={pricing?.total}
-              compact
-            />
-            <Button
-              disabled={
-                !cart.length || processing || !selectedAddress || missingOffice
-              }
-              onClick={confirm}
-              className={cn(
-                "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
-                processing && "bg-muted hover:bg-muted",
-              )}
-            >
-              {processing ? (
-                <>
-                  <Spinner />
-                  {t("pages.cart.confirming")}
-                </>
-              ) : (
-                t("pages.cart.confirm")
-              )}
-            </Button>
-          </BottomAction>
+          <OrderSummary
+            loading={loading}
+            subtotal={pricing?.subtotal}
+            total={pricing?.total}
+            compact
+            className="border-border border-t pt-3"
+          />
+          <Button
+            disabled={
+              !cart.length || processing || !selectedAddress || missingOffice
+            }
+            onClick={confirm}
+            className={cn(
+              "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground mt-4 h-12 w-full disabled:opacity-100",
+              processing && "bg-muted hover:bg-muted",
+            )}
+          >
+            {processing ? (
+              <>
+                <Spinner />
+                {t("pages.cart.confirming")}
+              </>
+            ) : (
+              t("pages.cart.confirm")
+            )}
+          </Button>
           {error && (
             <Alert variant="destructive" className="mt-3">
               <AlertDescription>
@@ -335,7 +339,13 @@ function fullPriceNotice(
   return [reason, detail].filter(Boolean).join(" ")
 }
 
-function ItemBenefitLines({ tiers }: { tiers: DiscountTier[] }) {
+function ItemBenefitLines({
+  tiers,
+  specialBenefitIds,
+}: {
+  tiers: DiscountTier[]
+  specialBenefitIds: number[]
+}) {
   const discounted = tiers.filter((tier) => tier.discount > 0)
 
   if (discounted.length === 0) return <BenefitLine className="mt-3" />
@@ -344,6 +354,7 @@ function ItemBenefitLines({ tiers }: { tiers: DiscountTier[] }) {
     <BenefitLine
       key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
       tier={tier}
+      special={specialBenefitIds.includes(tier.id)}
       className="mt-3"
     />
   ))

@@ -11,6 +11,7 @@ interface Props {
   subtotal?: number
   total?: number
   tiers?: DiscountTier[]
+  specialBenefitIds?: number[]
   compact?: boolean
   showTotal?: boolean
   className?: string
@@ -21,6 +22,7 @@ export function OrderSummary({
   subtotal,
   total,
   tiers = [],
+  specialBenefitIds = [],
   compact = false,
   showTotal = true,
   className,
@@ -43,6 +45,7 @@ export function OrderSummary({
               <BenefitLine
                 key={`${tier.name ?? "base"}-${tier.percentage}-${index}`}
                 tier={tier}
+                special={specialBenefitIds.includes(tier.id)}
               />
             ))}
           </>
@@ -69,9 +72,11 @@ export function OrderSummary({
 // $0, para que el desglose diga cuánto cubre GoGrow aunque sea nada.
 export function BenefitLine({
   tier,
+  special = false,
   className,
 }: {
   tier?: DiscountTier
+  special?: boolean
   className?: string
 }) {
   const { t } = useTranslation()
@@ -87,9 +92,10 @@ export function BenefitLine({
     )
   }
 
-  const label = tier.name
-    ? `${tier.name} (${tier.percentage}%)`
-    : t("pages.cart.benefit", { percentage: tier.percentage })
+  const label =
+    special && tier.name
+      ? `${tier.name} (${tier.percentage}%)`
+      : t("pages.cart.benefit", { percentage: tier.percentage })
 
   return (
     <div className={cn("flex justify-between", className)}>

@@ -118,6 +118,112 @@ async function renderCart(
   return render(<ConsumerCart {...defaults} {...props} />)
 }
 
+describe("ConsumerCart price summary", () => {
+  it.each([1, 2])(
+    "places the total after %i dish(es) and before confirmation",
+    async (count) => {
+      const cart = Array.from({ length: count }, (_, index) =>
+        cartItem("Tu Viandita", true, index + 1),
+      )
+      const pricing: Pricing = {
+        subtotal: 280 * count,
+        discount: 140 * count,
+        total: 140 * count,
+        lines: cart.map(() => ({
+          subtotal: 280,
+          discount: 140,
+          total: 140,
+          tiers: [
+            {
+              id: 1,
+              name: "Subsidio base",
+              percentage: 50,
+              quantity: 1,
+              discount: 140,
+            },
+          ],
+        })),
+        subsidizedQuantity: count,
+        fullPriceQuantity: 0,
+        baseSubsidizedQuantity: count,
+        withoutBaseSubsidyQuantity: 0,
+        weeklyLimitQuantity: 0,
+      }
+
+      await renderCart({ cart, pricing })
+
+      const list = screen.getByText("Plato 1 x1").closest("section")
+      const summary =
+        screen.getByText("Monto a pagar").parentElement?.parentElement
+      const confirm = screen.getByRole("button", { name: "Confirmar pedido" })
+
+      expect(list?.nextElementSibling).toBe(summary)
+      expect(summary?.nextElementSibling).toBe(confirm)
+      expect(summary).not.toHaveClass("fixed")
+      expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
+        `$${140 * count}`,
+      )
+      if (count === 2)
+        expect(screen.getByText("Plato 2 x1")).toBeInTheDocument()
+    },
+  )
+
+  it.each([1, 2])(
+    "keeps a named special discount beside the base for %i unit(s)",
+    async (quantity) => {
+      const pricing: Pricing = {
+        subtotal: 280 * quantity,
+        discount: 210 * quantity,
+        total: 70 * quantity,
+        lines: [
+          {
+            subtotal: 280 * quantity,
+            discount: 210 * quantity,
+            total: 70 * quantity,
+            tiers: [
+              {
+                id: 1,
+                name: "Subsidio base",
+                percentage: 50,
+                quantity,
+                discount: 140 * quantity,
+              },
+              {
+                id: 3,
+                name: "Desafío de pasos",
+                percentage: 25,
+                quantity,
+                discount: 70 * quantity,
+              },
+            ],
+          },
+        ],
+        subsidizedQuantity: quantity,
+        fullPriceQuantity: 0,
+        baseSubsidizedQuantity: quantity,
+        withoutBaseSubsidyQuantity: 0,
+        weeklyLimitQuantity: 0,
+      }
+
+      await renderCart({
+        cart: [{ ...cartItem("Tu Viandita", true), quantity }],
+        pricing,
+        specialBenefitIds: [3],
+      })
+
+      expect(
+        screen.getByText("Beneficio GoGrow (50%)").nextSibling,
+      ).toHaveTextContent(`- $${140 * quantity}`)
+      expect(
+        screen.getByText("Desafío de pasos (25%)").nextSibling,
+      ).toHaveTextContent(`- $${70 * quantity}`)
+      expect(screen.getByText("Monto a pagar").nextSibling).toHaveTextContent(
+        `$${70 * quantity}`,
+      )
+    },
+  )
+})
+
 describe("ConsumerCart delivery address", () => {
   it("shows the office and the last custom address used", async () => {
     await renderCart()
