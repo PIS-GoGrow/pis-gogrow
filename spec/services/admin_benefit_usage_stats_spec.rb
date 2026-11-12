@@ -248,6 +248,36 @@ RSpec.describe AdminBenefitUsageStats do
 
     before { allow(Date).to receive(:current).and_return(Date.new(2032, 4, 17)) }
 
+    it "sends the four-employee participation scenario without personal data" do
+      extra_consumers = 2.times.map do |index|
+        user = User.create!(name: "Empleado privado #{index}", email: "privado-#{index}@example.test",
+                            password: "secret-password-123")
+        Consumer.create!(user:, company:)
+      end
+      (company.consumers.to_a).each { grant_monthly(consumer: it) }
+      insert_order(consumer: consumers(:one))
+      insert_order(consumer: consumers(:other))
+      insert_order(status: :pending, consumer: extra_consumers.first)
+
+      expect(stats[:employees]).to include(known_eligible_with_confirmed_orders: 2,
+                                          eligible_without_orders: 1, participation_percent: 50.0)
+      client = instance_double(AnthropicMessagesClient)
+      payload_json = nil
+      allow(client).to receive(:create_summary) do |**received|
+        payload_json = received.fetch(:payload_json)
+        { ok: true, text: "Resumen simulado." }
+      end
+      result = AdminBenefitUsageSummary.new(payload: AdminBenefitUsageAiPayload.new(stats:), client:).call
+
+      expect(result).to eq(ok: true, text: "Resumen simulado.")
+      parsed = JSON.parse(payload_json)
+      expect(parsed.fetch("participation")).to eq(
+        "percent" => 50.0, "eligible_employees" => 4, "eligible_with_confirmed_orders" => 2,
+        "eligible_without_confirmed_orders" => 2, "eligible_without_orders" => 1
+      )
+      expect(payload_json).not_to include("Empleado privado", "@example.test", "consumer_id")
+    end
+
     it "classifies recorded monthly grants and uses their configured quota" do
       grant_monthly(consumer: consumers(:one))
       grant_monthly(consumer: consumers(:other))
@@ -307,6 +337,29 @@ RSpec.describe AdminBenefitUsageStats do
       expect(stats[:employees][:participation_percent]).to eq(0.0)
       expect(stats[:employees][:eligible_without_orders]).to eq(1)
       expect(stats[:benefits][:monthly_pending_reserved_meals]).to eq(1)
+    end
+
+    it "does not count cancelled or rejected orders as participation or as no order" do
+      grant_monthly(consumer: consumers(:one))
+      grant_monthly(consumer: consumers(:other))
+      insert_order(status: :cancelled, consumer: consumers(:one))
+      insert_order(status: :rejected, consumer: consumers(:other))
+
+      expect(AdminBenefitUsageAiPayload.new(stats:).to_h[:participation]).to eq(
+        percent: 0.0, eligible_employees: 2, eligible_with_confirmed_orders: 0,
+        eligible_without_confirmed_orders: 2, eligible_without_orders: 0
+      )
+    end
+
+    it "counts multiple confirmed orders from one eligible employee only once" do
+      grant_monthly(consumer: consumers(:one))
+      grant_monthly(consumer: consumers(:other))
+      2.times { insert_order(consumer: consumers(:one)) }
+
+      expect(AdminBenefitUsageAiPayload.new(stats:).to_h[:participation]).to eq(
+        percent: 50.0, eligible_employees: 2, eligible_with_confirmed_orders: 1,
+        eligible_without_confirmed_orders: 1, eligible_without_orders: 1
+      )
     end
 
     it "uses onboarding after the month as evidence of ineligibility without a conflicting grant" do
