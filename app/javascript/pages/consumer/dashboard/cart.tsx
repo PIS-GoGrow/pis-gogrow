@@ -1,16 +1,19 @@
-import { useForm } from "@inertiajs/react"
-import { router } from "@inertiajs/react"
+import { router, useForm, usePage } from "@inertiajs/react"
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
-import { useConsumerCart } from "@/hooks/use-consumer-cart"
+import {
+  consumerCartStorageKey,
+  useConsumerCart,
+} from "@/hooks/use-consumer-cart"
+import { readSessionStorage } from "@/hooks/use-session-storage"
 import AppLayout from "@/layouts/app-layout"
 import { consumerDashboard, consumerOrders } from "@/routes"
 import type { ConsumerDashboardCart } from "@/types"
 
 import { ConsumerCart } from "./consumer-cart"
-import type { DeliveryAddressOption } from "./consumer-types"
+import type { CartItem, DeliveryAddressOption } from "./consumer-types"
 import { OrderError } from "./order-error"
 import type { Pricing } from "./pricing"
 import { cartPricedItem, priceItems } from "./pricing"
@@ -18,6 +21,20 @@ import { cartPricedItem, priceItems } from "./pricing"
 // Es un formulario que redirige a ConsumerCart o a OrderError según si el formulario
 // tiene o no errores.
 export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
+  const { t } = useTranslation()
+  const { auth } = usePage().props
+  const storageKey = consumerCartStorageKey(auth.session)
+
+  // Se lee el storage y no `cart`: en la hidratación del SSR el primer render
+  // ve el carrito vacío. Solo se controla al entrar; si el empleado quita el
+  // último plato, se queda viendo el carrito vacío.
+  useEffect(() => {
+    if (readSessionStorage<CartItem[]>(storageKey, []).length > 0) return
+
+    toast.error(t("pages.cart.empty_cart"), { id: "empty-cart" })
+    router.visit(consumerDashboard.index().url, { replace: true })
+  }, [storageKey, t])
+
   const [unsavedAddresses, setUnsavedAddresses] = useState<
     DeliveryAddressOption[]
   >([])
@@ -132,14 +149,6 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
       preserveScroll: false,
       onSuccess: () => setCart([]),
     })
-  }
-
-  const { t } = useTranslation()
-
-  if (cart.length === 0) {
-    toast.error(t("pages.cart.empty_cart"), { id: "empty-cart" })
-    router.visit(consumerDashboard.index().url)
-    return
   }
 
   return (

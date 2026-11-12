@@ -3,13 +3,15 @@ import type { ReactNode } from "react"
 import type { ComponentProps } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { consumerOrders } from "@/routes"
+import { consumerDashboard, consumerOrders } from "@/routes"
 
 import Cart from "./cart"
 
 const mocks = vi.hoisted(() => ({
   priceItems: vi.fn(),
   consumerCart: vi.fn(),
+  visit: vi.fn(),
+  toastError: vi.fn(),
   orderError: vi.fn(),
   state: { initialCart: [] as unknown[] },
   form: {
@@ -22,7 +24,19 @@ const mocks = vi.hoisted(() => ({
   },
 }))
 
-vi.mock("@inertiajs/react", () => ({ useForm: () => mocks.form }))
+vi.mock("@inertiajs/react", () => ({
+  useForm: () => mocks.form,
+  usePage: () => ({
+    props: { auth: { session: { id: 1, role: "consumer" } } },
+  }),
+  router: { visit: mocks.visit },
+}))
+
+vi.mock("sonner", () => ({ toast: { error: mocks.toastError } }))
+
+vi.mock("@/hooks/use-session-storage", () => ({
+  readSessionStorage: () => mocks.state.initialCart,
+}))
 
 vi.mock("@/layouts/app-layout", () => ({
   default: ({ children }: { children: ReactNode }) => <>{children}</>,
@@ -36,7 +50,10 @@ vi.mock("@/pages/consumer/dashboard/pricing", () => ({
 
 vi.mock("@/hooks/use-consumer-cart", async () => {
   const { useState } = await import("react")
-  return { useConsumerCart: () => useState(mocks.state.initialCart) }
+  return {
+    consumerCartStorageKey: () => "consumer-cart:consumer:1",
+    useConsumerCart: () => useState(mocks.state.initialCart),
+  }
 })
 
 vi.mock("@/pages/consumer/dashboard/consumer-cart", () => {
@@ -164,6 +181,33 @@ beforeEach(() => {
 })
 
 afterEach(cleanup)
+
+describe("acceso con el carrito vacío", () => {
+  it("redirige al menú con un aviso si se entra con el carrito vacío", async () => {
+    await renderCart()
+
+    expect(mocks.toastError).toHaveBeenCalledOnce()
+    expect(mocks.visit).toHaveBeenCalledWith(consumerDashboard.index().url, {
+      replace: true,
+    })
+  })
+
+  it("no redirige si el carrito tiene platos", async () => {
+    await renderCart({ cart: [makeItem("a")] })
+
+    expect(mocks.visit).not.toHaveBeenCalled()
+    expect(mocks.toastError).not.toHaveBeenCalled()
+  })
+
+  it("no redirige al quitar el último plato desde el carrito", async () => {
+    await renderCart({ cart: [makeItem("a")] })
+
+    act(() => cartProps().remove("a"))
+
+    expect(cartProps().cart).toEqual([])
+    expect(mocks.visit).not.toHaveBeenCalled()
+  })
+})
 
 // ---------------------------------------------------------------------------
 // Cálculo de precio
