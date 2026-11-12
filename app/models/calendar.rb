@@ -13,7 +13,13 @@ class Calendar
   def schedule_week_range
     start_date = @today.on_weekend? ? @today.next_occurring(:monday) : @today.beginning_of_week(:monday)
 
-    start_date..start_date.next_occurring(:friday)
+    self.class.week_range(start_date)
+  end
+
+  def self.week_range(date)
+    monday = date.beginning_of_week(:monday)
+
+    monday..monday.next_occurring(:friday)
   end
 
   # Define en qué fechas se puede hacer un pedido. Si es fin de semana, es toda la

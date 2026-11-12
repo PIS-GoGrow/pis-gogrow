@@ -42,6 +42,9 @@ const benefit: Benefit = {
   monthly_limit: 20,
   monthly_used: 0,
   monthly_remaining: 20,
+  weekly_limit: 5,
+  weekly_used: 0,
+  weekly_remaining: 5,
   specials: [],
 }
 
@@ -541,6 +544,9 @@ describe("benefits message and lines", () => {
       total: 320,
       subsidizedQuantity: 0,
       fullPriceQuantity: 1,
+      baseSubsidizedQuantity: 0,
+      withoutBaseSubsidyQuantity: 1,
+      weeklyLimitQuantity: 0,
       lines: [
         {
           subtotal: 320,
@@ -574,6 +580,9 @@ describe("benefits message and lines", () => {
       total: 160,
       subsidizedQuantity: 1,
       fullPriceQuantity: 0,
+      baseSubsidizedQuantity: 1,
+      withoutBaseSubsidyQuantity: 0,
+      weeklyLimitQuantity: 0,
       lines: [
         {
           subtotal: 320,

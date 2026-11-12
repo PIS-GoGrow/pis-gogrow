@@ -1,8 +1,18 @@
 import { router, usePage } from "@inertiajs/react"
-import { X } from "lucide-react"
+import { Bell, X } from "lucide-react"
+import * as React from "react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
+import {
+  AdaptableDialog,
+  AdaptableDialogContent,
+  AdaptableDialogHeader,
+  AdaptableDialogTitle,
+  AdaptableDialogTrigger,
+} from "@/components/adaptable-dialog"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { notifications as notificationRoutes } from "@/routes"
 import type { Notification } from "@/types"
@@ -81,14 +91,84 @@ function DismissableAlertIcon({ className }: { className?: string }) {
   )
 }
 
-interface NotificationBannersProps {
-  className?: string
+function notificationDescription(notification: Notification) {
+  if (typeof notification.description === "string")
+    return notification.description
+  if (
+    typeof notification.description === "object" &&
+    notification.description !== null
+  ) {
+    const plural = notification.description as Record<string, string>
+    return plural.other || plural.one || ""
+  }
+  return ""
 }
 
-export default function NotificationBanners({
-  className,
-}: NotificationBannersProps) {
-  const notifications = usePage().props.notifications ?? []
+interface NotificationAlertProps {
+  notification: Notification
+  closing: boolean
+  onClose: (notification: Notification) => void
+}
+
+function NotificationAlert({
+  notification,
+  closing,
+  onClose,
+}: NotificationAlertProps) {
+  const { t } = useTranslation()
+  const requiresAction = notification.requires_action
+
+  return (
+    <Alert
+      variant={requiresAction ? "destructive" : "default"}
+      className={
+        requiresAction
+          ? "rounded-[10px] border-[#E5E5E5] bg-white px-4 py-3 text-[#B91C1C]"
+          : "text-foreground pr-10"
+      }
+    >
+      {requiresAction ? (
+        <NonDismissableAlertIcon className="size-4" />
+      ) : (
+        <DismissableAlertIcon className="size-4" />
+      )}
+
+      <AlertTitle
+        className={
+          requiresAction
+            ? "text-sm leading-5 font-semibold text-[#B91C1C]"
+            : "text-sm leading-5 font-semibold"
+        }
+      >
+        {notification.title}
+      </AlertTitle>
+
+      <AlertDescription
+        className={
+          requiresAction
+            ? "text-sm leading-5 font-normal text-[#B91C1C]"
+            : "text-foreground text-sm leading-5"
+        }
+      >
+        {notificationDescription(notification)}
+      </AlertDescription>
+
+      {!requiresAction && (
+        <button
+          type="button"
+          aria-label={t("components.notification_inbox.close")}
+          disabled={closing}
+          onClick={() => onClose(notification)}
+          className="absolute top-3 right-4 grid size-5 cursor-pointer place-items-center rounded-sm disabled:cursor-default disabled:opacity-50"
+        >
+          <X className="size-4" aria-hidden="true" />
+        </button>
+      )}
+    </Alert>
+  )
+}
+
+function useCloseNotification() {
   const [closingId, setClosingId] = useState<number | null>(null)
 
   function closeNotification(notification: Notification) {
@@ -106,63 +186,104 @@ export default function NotificationBanners({
     )
   }
 
-  if (notifications.length === 0) return null
+  return { closingId, closeNotification }
+}
+
+interface NotificationInboxProps {
+  children?: React.ReactNode
+}
+
+export function NotificationInbox({ children }: NotificationInboxProps = {}) {
+  const { t } = useTranslation()
+  const notifications = usePage().props.notifications ?? []
+  const { closingId, closeNotification } = useCloseNotification()
+
+  const inbox = notifications.filter((n) => !n.requires_action)
+  const extraCount = React.Children.count(children)
+  const totalCount = inbox.length + extraCount
+  const label =
+    totalCount > 0
+      ? t("components.notification_inbox.trigger", { count: totalCount })
+      : t("components.notification_inbox.title")
+
+  return (
+    <AdaptableDialog desktopVariant="sheet">
+      <AdaptableDialogTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          aria-label={label}
+          className="border-border bg-card hover:bg-accent relative size-9 shrink-0 rounded-full shadow-none"
+        >
+          <Bell className="size-5" strokeWidth={1.5} aria-hidden="true" />
+          {totalCount > 0 && (
+            <span
+              aria-hidden="true"
+              className="bg-foreground text-background absolute -top-1 -right-1 grid h-4 min-w-4 place-items-center rounded-full px-1 text-[10px] leading-none font-semibold tabular-nums"
+            >
+              {totalCount > 9 ? "9+" : totalCount}
+            </span>
+          )}
+        </Button>
+      </AdaptableDialogTrigger>
+
+      <AdaptableDialogContent
+        aria-describedby={undefined}
+        className="gap-0 p-0 sm:max-w-md"
+      >
+        <AdaptableDialogHeader className="border-b p-5">
+          <AdaptableDialogTitle className="text-base leading-6 font-semibold">
+            {t("components.notification_inbox.title")}
+          </AdaptableDialogTitle>
+        </AdaptableDialogHeader>
+
+        {totalCount > 0 ? (
+          <div className="flex flex-col gap-3 overflow-y-auto p-5">
+            {children}
+            {inbox.map((notification) => (
+              <NotificationAlert
+                key={notification.id}
+                notification={notification}
+                closing={closingId === notification.id}
+                onClose={closeNotification}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted-foreground p-5 text-sm">
+            {t("components.notification_inbox.empty")}
+          </p>
+        )}
+      </AdaptableDialogContent>
+    </AdaptableDialog>
+  )
+}
+
+interface NotificationBannersProps {
+  className?: string
+}
+
+export default function NotificationBanners({
+  className,
+}: NotificationBannersProps) {
+  const notifications = usePage().props.notifications ?? []
+  const { closingId, closeNotification } = useCloseNotification()
+
+  const banners = notifications.filter((n) => n.requires_action)
+
+  if (banners.length === 0) return null
 
   return (
     <div className={cn("flex flex-col gap-3", className)}>
-      {notifications.map((notification) => {
-        const requiresAction = notification.requires_action
-
-        return (
-          <Alert
-            key={notification.id}
-            variant={requiresAction ? "destructive" : "default"}
-            className={
-              requiresAction
-                ? "rounded-[10px] border-[#E5E5E5] bg-white px-4 py-3 text-[#B91C1C]"
-                : "text-foreground"
-            }
-          >
-            {requiresAction ? (
-              <NonDismissableAlertIcon className="size-4" />
-            ) : (
-              <DismissableAlertIcon className="size-4" />
-            )}
-
-            <AlertTitle
-              className={
-                requiresAction
-                  ? "text-sm leading-5 font-semibold text-[#B91C1C]"
-                  : "text-sm leading-5 font-semibold"
-              }
-            >
-              {notification.title}
-            </AlertTitle>
-
-            <AlertDescription
-              className={
-                requiresAction
-                  ? "text-sm leading-5 font-normal text-[#B91C1C]"
-                  : "text-foreground text-sm leading-5"
-              }
-            >
-              {notification.description}
-            </AlertDescription>
-
-            {!requiresAction && (
-              <button
-                type="button"
-                aria-label="Cerrar notificación"
-                disabled={closingId === notification.id}
-                onClick={() => closeNotification(notification)}
-                className="absolute top-3 right-4 grid size-5 cursor-pointer place-items-center rounded-sm disabled:cursor-default disabled:opacity-50"
-              >
-                <X className="size-4" aria-hidden="true" />
-              </button>
-            )}
-          </Alert>
-        )
-      })}
+      {banners.map((notification) => (
+        <NotificationAlert
+          key={notification.id}
+          notification={notification}
+          closing={closingId === notification.id}
+          onClose={closeNotification}
+        />
+      ))}
     </div>
   )
 }

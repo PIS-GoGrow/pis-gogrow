@@ -18,6 +18,11 @@ RSpec.describe "Notificaciones al proveedor durante cierres programados", type: 
 
   before do
     page.current_window.resize_to(1400, 1400)
+    provider.update!(
+      bank_name: "Santander",
+      bank_account_details: "Cuenta: 1150260\nMoneda: UYU",
+      beneficiary: "Tu Viandita S.A."
+    )
     provider.closures.destroy_all
     Payment.where(account:).destroy_all
     account.update!(month: Date.current.prev_month.beginning_of_month)
@@ -85,6 +90,7 @@ RSpec.describe "Notificaciones al proveedor durante cierres programados", type: 
 
       sign_in provider_user, role: :provider
       visit_hydrated provider_dashboard_path
+      open_notifications
 
       expect(page).to have_content(order_cancellation_title)
       expect(page).to have_content(
@@ -113,6 +119,7 @@ RSpec.describe "Notificaciones al proveedor durante cierres programados", type: 
 
       sign_in provider_user, role: :provider
       visit_hydrated provider_dashboard_path
+      open_notifications
 
       expect(page).to have_content(payment_receipt_title)
       expect(page).to have_content("#{consumer_user.name} envió un comprobante de pago")

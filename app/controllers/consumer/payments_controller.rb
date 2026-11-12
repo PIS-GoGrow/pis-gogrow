@@ -9,6 +9,7 @@ class Consumer::PaymentsController < Consumer::InertiaController
     account = consumer_accounts.find(payment_account_id)
     return reject_current_account if account.current?
     return reject_closed_payment if account.settled?
+    return reject_missing_payment_details unless account.provider.payment_details_complete?
 
     @payment = account.payments.build(
       provider: account.provider,
@@ -90,6 +91,16 @@ class Consumer::PaymentsController < Consumer::InertiaController
   def reject_closed_payment
     redirect_back fallback_location: accounts_path, inertia: {
       errors: { receipt: [ t("validations.payment_closed") ] }
+    }, status: :see_other
+  end
+
+  def reject_missing_payment_details
+    redirect_back fallback_location: accounts_path, inertia: {
+      errors: {
+        receipt: [
+          t("activerecord.errors.models.payment.attributes.receipt.provider_payment_details_missing")
+        ]
+      }
     }, status: :see_other
   end
 end

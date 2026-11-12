@@ -146,9 +146,9 @@ menus = [
 
 menus.each do |attributes|
   day = attributes.delete(:day)
-  amount = attributes.delete(:amount)
+  attributes.delete(:amount)
   menu = Menu.create!(**attributes)
-  Schedule.create!(menu:, date: week_start + day.days, amount:)
+  Schedule.create!(menu:, date: week_start + day.days)
 end
 
 Review.create!(
@@ -214,8 +214,7 @@ consumer.saved_addresses.create!(
 # incluida la orden sin schedule que deja el dependent: :nullify.
 past_schedule = Schedule.create!(
   menu: Menu.first,
-  date: week_start - 7.days,
-  amount: 7
+  date: week_start - 7.days
 )
 
 # Un pedido de un plato con opciones necesita la elección del empleado, así que
@@ -292,8 +291,7 @@ order.apply_benefit! benefit, 1
   travel_to(data[:months_ago].months.ago.beginning_of_month + 3.days) do
     schedule = Schedule.create!(
       menu:,
-      date: Date.current,
-      amount: 5
+      date: Date.current
     )
 
     Order.create!(

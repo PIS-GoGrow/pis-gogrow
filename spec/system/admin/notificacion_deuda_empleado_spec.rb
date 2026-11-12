@@ -55,6 +55,7 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
   def open_admin_home(user = admin_user)
     sign_in user, role: :admin
     visit admin_dashboard_path
+    open_notifications
   end
 
   def period
@@ -114,6 +115,7 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
     expect(page).to have_no_content(title)
 
     refresh
+    open_notifications
     expect(page).to have_no_content(title)
   end
 
@@ -126,6 +128,7 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
     run_reminders(on: overdue)
 
     refresh
+    open_notifications
     expect(page).to have_no_content(title)
   end
 
@@ -136,6 +139,7 @@ RSpec.describe "Notificación de deudas de empleados a proveedores", type: :syst
     expect(page).to have_content(title)
 
     refresh
+    open_notifications
     expect(page).to have_content(title)
 
     sign_out

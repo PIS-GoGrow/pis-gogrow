@@ -78,7 +78,7 @@ RSpec.describe Provider::CollectionPaymentSerializer do
     expect(described_class.new(payment).to_h["receipt_size"]).to be_nil
 
     payment.receipt.attach(
-      io: Rails.root.join("public/icon.png").open,
+      io: file_fixture("comprobante.png").open,
       filename: "comprobante.png",
       content_type: "image/png"
     )

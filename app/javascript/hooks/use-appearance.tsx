@@ -11,6 +11,23 @@ const prefersDark = () =>
 const mediaQuery = () =>
   isBrowser ? window.matchMedia("(prefers-color-scheme: dark)") : null
 
+const THEME_COLORS = {
+  light: "#fafafa",
+  dark: "#171717",
+} as const
+
+const setThemeColor = (isDark: boolean) => {
+  let meta = document.querySelector<HTMLMetaElement>(
+    'meta[name="theme-color"]:not([media])',
+  )
+  if (!meta) {
+    meta = document.createElement("meta")
+    meta.name = "theme-color"
+    document.head.appendChild(meta)
+  }
+  meta.content = isDark ? THEME_COLORS.dark : THEME_COLORS.light
+}
+
 const applyTheme = (appearance: Appearance) => {
   if (!isBrowser) return
 
@@ -19,6 +36,7 @@ const applyTheme = (appearance: Appearance) => {
 
   document.documentElement.classList.toggle("dark", isDark)
   document.documentElement.style.colorScheme = isDark ? "dark" : "light"
+  setThemeColor(isDark)
 }
 
 const handleSystemThemeChange = () => {

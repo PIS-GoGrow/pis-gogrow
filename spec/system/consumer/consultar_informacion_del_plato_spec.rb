@@ -5,11 +5,8 @@ require "rails_helper"
 # Historia: "Como EMPLEADO, quiero consultar la información relevante de cada
 # plato, para tomar una decisión informada."
 #
-# El detalle del plato no tiene ruta propia: es una vista del dashboard que se
-# abre al tocar un plato de la lista. Por eso el límite de permisos no se
-# repite acá — es el mismo /dashboard que ya cubre
-# consultar_menu_por_fecha_spec.rb, y no hay endpoint aparte al que un rol
-# equivocado pueda llegar de forma directa.
+# El detalle del plato tiene una URL propia basada en el Schedule.
+# Puede abrirse desde el menú semanal o directamente mediante su ruta.
 #
 # TODO(integración): falta corregir el bloque de opiniones antes de poder
 # testear qué ve el empleado cuando un plato no tiene reseñas. Hoy la pantalla
@@ -153,5 +150,31 @@ RSpec.describe "Consultar la información de un plato" do
     refresh
 
     expect(page).to have_content("Sorrentinos artesanales")
+  end
+
+  it "navigates to the dish URL and preserves the detail after reloading" do
+    schedule = publish(menus(:sorrentinos), monday)
+    sign_in users(:one)
+
+    visit dashboard_path
+    open_dish(menus(:sorrentinos))
+
+    expect(page).to have_current_path(dashboard_dish_path(schedule))
+
+    refresh
+    expect(page).to have_css("h1", text: "Sorrentinos artesanales")
+
+    click_on "Volver"
+    expect(page).to have_current_path(dashboard_path)
+  end
+
+  it "opens a dish directly through its URL, even from another week" do
+    schedule = publish(menus(:sorrentinos), monday - 7.days)
+    sign_in users(:one)
+
+    visit dashboard_dish_path(schedule)
+
+    expect(page).to have_current_path(dashboard_dish_path(schedule))
+    expect(page).to have_css("h1", text: "Sorrentinos artesanales")
   end
 end

@@ -8,7 +8,9 @@ import FavoritesPanel from "@/components/consumer/menus/favorites-panel"
 import MenuItem from "@/components/consumer/menus/menu-item"
 import WeekNav from "@/components/consumer/menus/week-nav"
 import { ProviderFilterSheet } from "@/components/consumer/provider-filter-sheet"
-import NotificationBanners from "@/components/notification-banners"
+import NotificationBanners, {
+  NotificationInbox,
+} from "@/components/notification-banners"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -117,24 +119,26 @@ export function WeeklyMenu({
   return (
     <>
       <div className="mx-auto w-full max-w-300 px-5 pt-6 pb-40 md:px-8 md:pb-24 lg:pb-10">
-        <header className="mb-4">
-          <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
-          <p className="text-muted-foreground text-sm">
-            {formatLongDate(currentDate)}
-          </p>
+        <header className="mb-4 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold">Hola, {name} 👋</h1>
+            <p className="text-muted-foreground text-sm">
+              {formatLongDate(currentDate)}
+            </p>
+          </div>
+          <NotificationInbox>
+            {soonClosures.map((closure) => (
+              <ClosureBanner
+                key={closure.id}
+                closure={closure}
+                when="soon"
+                onDismiss={() => dismiss(`soon-${closure.id}`)}
+              />
+            ))}
+          </NotificationInbox>
         </header>
 
-        <div className="mb-6 flex flex-col gap-3">
-          <NotificationBanners />
-          {soonClosures.map((closure) => (
-            <ClosureBanner
-              key={closure.id}
-              closure={closure}
-              when="soon"
-              onDismiss={() => dismiss(`soon-${closure.id}`)}
-            />
-          ))}
-        </div>
+        <NotificationBanners className="mb-6" />
 
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_330px] lg:gap-8">
           <section className="min-w-0">
@@ -228,6 +232,8 @@ export function WeeklyMenu({
                       ordersClosed={item.orders_closed}
                       isPast={item.date < currentDate}
                       addedQuantity={addedQuantity || undefined}
+                      pendingQuantity={item.ordered?.pending}
+                      confirmedQuantity={item.ordered?.confirmed}
                       onSelect={() => openDetail(item)}
                       favorite={favoriteMenuIds.has(item.menu.saved_menu_id)}
                       onToggleFavorite={() =>

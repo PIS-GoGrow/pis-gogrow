@@ -1,6 +1,13 @@
 # frozen_string_literal: true
 
 class AdminBenefitUsageStats
+  # Los pedidos de los empleados de la empresa con entrega en [from, before).
+  def self.orders_delivered_between(company, from, before)
+    Order.where(consumer_id: company.consumers.select(:id))
+         .left_joins(:schedule)
+         .where("COALESCE(orders.delivery_date, schedules.date) >= ? AND COALESCE(orders.delivery_date, schedules.date) < ?", from, before)
+  end
+
   def initialize(company:, month:)
     @company = company
     @month = month.to_date.beginning_of_month
@@ -9,7 +16,7 @@ class AdminBenefitUsageStats
   def to_h
     confirmed = orders.confirmed
     pending = orders.pending
-    confirmed_meals = confirmed_meals_for(confirmed)
+    confirmed_meals = valid_meal_total_for(confirmed)
     monthly_benefits = Benefit.monthly.where(consumer_id: consumers.select(:id))
                               .where(benefit_configuration_id: @company.benefit_configurations.select(:id))
     confirmed_uses = monthly_uses_for(confirmed, monthly_benefits)
@@ -67,7 +74,7 @@ class AdminBenefitUsageStats
         confirmed_orders: confirmed.count,
         confirmed_meals:,
         pending_orders: pending.count,
-        pending_meals: pending.sum(:amount)
+        pending_meals: valid_meal_total_for(pending)
       },
       benefits: {
         monthly_subsidized_meals: (confirmed_uses.values.sum unless missing_confirmed || invalid_confirmed_uses || mismatched_confirmed_uses),
@@ -113,9 +120,7 @@ class AdminBenefitUsageStats
   end
 
   def orders_for(month)
-    Order.where(consumer_id: consumers.select(:id))
-         .left_joins(:schedule)
-         .where("COALESCE(orders.delivery_date, schedules.date) >= ? AND COALESCE(orders.delivery_date, schedules.date) < ?", month, month.next_month)
+    self.class.orders_delivered_between(@company, month, month.next_month)
   end
 
   def company_subsidy_for(relation)
@@ -125,7 +130,7 @@ class AdminBenefitUsageStats
     relation.sum("orders.price - orders.discounted_price").to_d
   end
 
-  def confirmed_meals_for(relation)
+  def valid_meal_total_for(relation)
     return if relation.where("orders.amount IS NULL OR orders.amount <= 0").exists?
 
     relation.sum(:amount)
@@ -186,7 +191,7 @@ class AdminBenefitUsageStats
     unknown_monthly = missing_benefit_records?(confirmed) || invalid_monthly_uses?(confirmed, uses) ||
                       mismatched_benefit_uses?(confirmed)
     subsidy_amount = company_subsidy_for(confirmed)
-    confirmed_meals = confirmed_meals_for(confirmed)
+    confirmed_meals = valid_meal_total_for(confirmed)
     warnings << { code: "trend_monthly_subsidy_unknown", scope: "trends", month: } if unknown_monthly
     warnings << { code: "trend_company_subsidy_unknown", scope: "trends", month: } if subsidy_amount.nil?
     warnings << { code: "trend_confirmed_meals_unknown", scope: "trends", month: } if confirmed_meals.nil?
