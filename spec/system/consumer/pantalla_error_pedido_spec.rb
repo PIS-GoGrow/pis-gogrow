@@ -138,6 +138,8 @@ RSpec.describe "Pantalla de error al confirmar un pedido", type: :system do
 
       expect(page).to have_content("No se pudo procesar el pedido")
       expect(page).to have_content(I18n.t("validations.schedule_unavailable"))
+      expect(page).to have_current_path(dashboard_cart_path)
+      expect(page).to have_no_content("Todavía no agregaste platos al carrito.")
 
       expect_buttons_within_container_and_balanced
 
