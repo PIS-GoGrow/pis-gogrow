@@ -28,7 +28,7 @@ export function MobileCard({
   return (
     <div
       className={cn(
-        "bg-background border-border mx-auto min-h-screen max-w-128 gap-2 rounded-xl p-6 pb-28 md:my-8 md:min-h-0 md:border md:pb-6",
+        "bg-background border-border mx-auto min-h-screen max-w-300 gap-2 rounded-xl p-6 pb-28 md:my-8 md:min-h-0 md:border md:pb-6",
         className,
       )}
       {...props}

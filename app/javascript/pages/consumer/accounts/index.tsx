@@ -167,7 +167,7 @@ export default function Index({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.accounts.index.payments")} />
 
-      <div className="mx-auto grid w-full max-w-128 gap-6 p-5 pb-24 md:pb-5">
+      <div className="mx-auto grid w-full max-w-300 gap-6 p-5 pb-24 md:pb-5">
         <AdaptableDialog desktopVariant="sheet">
           <h1 className="text-2xl font-bold">
             {" "}

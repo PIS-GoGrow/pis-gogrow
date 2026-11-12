@@ -50,7 +50,7 @@ export default function AdminPreferences() {
           </Button>
         }
       >
-        <div className="max-w-xl border-t">
+        <div className="border-t">
           {options.map(({ title, description, href }) => (
             <Link
               key={href}
