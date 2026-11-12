@@ -197,7 +197,12 @@ describe("Provider Dashboard Page", () => {
     expect(screen.getByText("42")).toBeInTheDocument()
     expect(screen.getByText("8")).toBeInTheDocument()
     expect(screen.getByText("4.8")).toBeInTheDocument()
-    expect(screen.getByText("Generado por IA")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Generá conclusiones sobre las reseñas desde Hallazgos.",
+      ),
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Generado por IA")).not.toBeInTheDocument()
   })
 
   it("lleva a Hallazgos desde el encabezado de los hallazgos del mes", () => {

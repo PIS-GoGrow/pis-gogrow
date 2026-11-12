@@ -85,6 +85,7 @@ Rails.application.routes.draw do
     resources :closures, path: "cierres", only: [ :create, :update, :destroy ]
     get "inicio", to: "dashboard#index", as: :dashboard
     get "inicio/hallazgos", to: "insights#index", as: :insights
+    post "inicio/hallazgos/conclusiones", to: "insights#create_conclusions", as: :insights_conclusions
     resources :payments, path: "comprobantes", only: [ :update ] do
       get :receipt, on: :member, path: "archivo"
     end
