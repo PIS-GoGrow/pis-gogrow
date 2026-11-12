@@ -314,6 +314,14 @@ RSpec.describe "Provider::Dashboard", type: :request do
           { "name" => "Milanesa con papas fritas", "rating" => 4.5 }
         ])
       end
+
+      it "toma los mejor valorados del mismo mes que la valoración promedio" do
+        Review.create!(menu: menus(:milanesa), rating: 5, created_at: Date.current.prev_month.in_time_zone)
+
+        get provider_dashboard_path
+
+        expect(inertia).to have_props(average_rating: nil, top_rated: [])
+      end
     end
   end
 
@@ -392,6 +400,19 @@ RSpec.describe "Provider::Dashboard", type: :request do
 
       expect(inertia.props[:total_debt]).to eq(total)
       expect(inertia.props[:total_dishes_count]).to eq(dishes)
+    end
+
+    it "conserva los centavos y descuenta los pagos parciales, igual que la pantalla de cobros" do
+      accounts(:one_tuviandita_current).payments.create!(provider:, status: :approved, expected_amount: 100.50)
+      sign_in provider_user, role: :provider
+
+      get provider_collections_path
+      total = inertia.props[:outstanding]["total"]
+
+      get provider_dashboard_path
+
+      expect(total).to eq(1101.5)
+      expect(inertia.props[:total_debt]).to eq(total)
     end
   end
 end
