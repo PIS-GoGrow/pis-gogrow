@@ -5,6 +5,7 @@ require "rails_helper"
 RSpec.describe AnthropicMessagesClient do
   let(:configuration) { { "ANTHROPIC_API_KEY" => "test-only-key", "ANTHROPIC_MODEL" => "configured-test-model" } }
   let(:response_status) { 200 }
+  let(:response_headers) { { "Content-Type" => "application/json", "request-id" => "req_anthropic_123" } }
   let(:response_body) do
     JSON.generate(type: "message", role: "assistant", stop_reason: "end_turn",
                   content: [ { type: "text", text: "Resumen claro." } ])
@@ -15,7 +16,7 @@ RSpec.describe AnthropicMessagesClient do
       faraday.adapter :test do |stub|
         stub.post("/v1/messages") do |request|
           requests << { url: request.url.to_s, headers: request.request_headers.to_h, body: request.body.dup }
-          [ response_status, { "Content-Type" => "application/json" }, response_body ]
+          [ response_status, response_headers, response_body ]
         end
       end
     end
@@ -217,5 +218,132 @@ RSpec.describe AnthropicMessagesClient do
       ok: false, error: { code: "timeout" }
     )
     expect(attempts).to eq(1)
+  end
+
+  context "diagnostic logging" do
+    let(:logs) { [] }
+
+    before do
+      allow(Rails.logger).to receive(:info) { |line| logs << JSON.parse(line) }
+      allow(Rails.logger).to receive(:warn) { |line| logs << JSON.parse(line) }
+    end
+
+    def logged(event)
+      logs.find { it["event"] == event }
+    end
+
+    it "records a completed response with correlation, usage and no contents" do
+      body = JSON.generate(type: "message", role: "assistant", stop_reason: "end_turn",
+                           usage: { input_tokens: 82, output_tokens: 31 },
+                           content: [ { type: "text", text: "Texto privado generado" } ])
+      allow(client).to receive(:connection).and_return(Faraday.new(url: "https://api.anthropic.com") do |faraday|
+        faraday.adapter :test do |stub|
+          stub.post("/v1/messages") { [ 200, response_headers, body ] }
+        end
+      end)
+
+      Current.set(request_id: "rails-request-123") { expect(result[:ok]).to be(true) }
+
+      expect(logged("anthropic.request_started")).to include("request_id" => "rails-request-123",
+                                                               "model" => "configured-test-model", "max_tokens" => 2500)
+      expect(logged("anthropic.request_completed")).to include(
+        "request_id" => "rails-request-123", "http_status" => 200, "anthropic_request_id" => "req_anthropic_123",
+        "stop_reason" => "end_turn", "block_types" => [ "text" ], "text_blocks" => 1,
+        "usable_text" => true, "output_characters" => 22, "input_tokens" => 82, "output_tokens" => 31
+      )
+      expect(logged("anthropic.request_completed")["duration_ms"]).to be >= 0
+      expect(logs.to_json).not_to include("test-only-key", "Instrucciones de prueba", "schema_version", "Texto privado generado")
+    end
+
+    it "records thinking block types without the reasoning content" do
+      body = JSON.generate(type: "message", role: "assistant", stop_reason: "end_turn", content: [
+        { type: "thinking", thinking: "Razonamiento privado", signature: "firma privada" },
+        { type: "redacted_thinking", data: "datos privados" },
+        { type: "text", text: "Resumen visible." }
+      ])
+      allow(client).to receive(:connection).and_return(Faraday.new(url: "https://api.anthropic.com") do |faraday|
+        faraday.adapter :test do |stub|
+          stub.post("/v1/messages") { [ 200, response_headers, body ] }
+        end
+      end)
+
+      expect(result).to eq(ok: true, text: "Resumen visible.")
+      expect(logged("anthropic.request_completed")).to include(
+        "block_types" => %w[thinking redacted_thinking text], "text_blocks" => 1, "usable_text" => true
+      )
+      expect(logs.to_json).not_to include("Razonamiento privado", "firma privada", "datos privados", "Resumen visible.")
+    end
+
+    it "distinguishes exhausted tokens from malformed JSON and absent text" do
+      bodies = [
+        [ JSON.generate(type: "message", role: "assistant", stop_reason: "max_tokens", content: []), "max_tokens_exhausted" ],
+        [ "invalid json", "malformed_json" ],
+        [ JSON.generate(type: "message", role: "assistant", stop_reason: "end_turn",
+                        content: [ { type: "text", text: "   " } ]), "empty_response" ]
+      ]
+      bodies.each do |body, reason|
+        logs.clear
+        allow(client).to receive(:connection).and_return(Faraday.new(url: "https://api.anthropic.com") do |faraday|
+          faraday.adapter :test do |stub|
+            stub.post("/v1/messages") { [ 200, response_headers, body ] }
+          end
+        end)
+
+        expect(client.create_summary(system: "Secreto", payload_json: "{}")[:ok]).to be(false)
+        expect(logged("anthropic.request_completed")["reason"]).to eq(reason)
+      end
+      expect(logs.to_json).not_to include("Secreto", "invalid json")
+    end
+
+    it "records a model refusal without logging its text" do
+      body = JSON.generate(type: "message", role: "assistant", stop_reason: "refusal",
+                           content: [ { type: "text", text: "Explicación privada del rechazo" } ])
+      allow(client).to receive(:connection).and_return(Faraday.new(url: "https://api.anthropic.com") do |faraday|
+        faraday.adapter :test do |stub|
+          stub.post("/v1/messages") { [ 200, response_headers, body ] }
+        end
+      end)
+
+      expect(result).to eq(ok: false, error: { code: "refused" })
+      expect(logged("anthropic.request_completed")).to include(
+        "stage" => "response_validation", "reason" => "generation_refused", "stop_reason" => "refusal"
+      )
+      expect(logs.to_json).not_to include("Explicación privada")
+    end
+
+    it "records only allowlisted error types and statuses for external failures" do
+      [ [ 400, "invalid_request_error" ], [ 401, "authentication_error" ], [ 429, "rate_limit_error" ] ].each do |status, type|
+        logs.clear
+        body = JSON.generate(type: "error", error: { type:, message: "Credencial privada test-only-key" })
+        allow(client).to receive(:connection).and_return(Faraday.new(url: "https://api.anthropic.com") do |faraday|
+          faraday.adapter :test do |stub|
+            stub.post("/v1/messages") { [ status, response_headers, body ] }
+          end
+        end)
+
+        expect(client.create_summary(system: "Secreto", payload_json: "{}")[:ok]).to be(false)
+        expect(logged("anthropic.request_failed")).to include(
+          "stage" => "http", "reason" => "http_error", "http_status" => status, "error_type" => type,
+          "anthropic_request_id" => "req_anthropic_123"
+        )
+        expect(logs.to_json).not_to include("Credencial privada", "test-only-key")
+      end
+    end
+
+    it "distinguishes timeout and connection failure without exception messages" do
+      [ [ Faraday::TimeoutError, "timeout" ], [ Faraday::ConnectionFailed, "connection_failed" ] ].each do |error, reason|
+        logs.clear
+        failing = Faraday.new(url: "https://api.anthropic.com") do |faraday|
+          faraday.adapter :test do |stub|
+            stub.post("/v1/messages") { raise error, "secret transport details" }
+          end
+        end
+        client = described_class.new(connection: failing, env: configuration)
+
+        expect(client.create_summary(system: "Secreto", payload_json: "{}")[:ok]).to be(false)
+        expect(logged("anthropic.request_failed")).to include("stage" => "transport", "reason" => reason)
+        expect(logs.to_json).not_to include("secret transport details", "Secreto")
+      end
+    end
   end
 end

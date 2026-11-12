@@ -72,6 +72,7 @@ class ApplicationController < ActionController::Base
   def set_current_request_details
     Current.user_agent = request.user_agent
     Current.ip_address = request.ip
+    Current.request_id = request.request_id
   end
 
   # Identify the user in Sentry without sending PII — the id is enough to
