@@ -1752,6 +1752,7 @@ es:
       confirm: "Confirmar pedido"
       confirming: "Confirmando pedido"
       empty: "Todavía no agregaste platos."
+      empty_cart: "Todavía no agregaste platos al carrito."
       delivery_address: "Dirección de entrega"
       add_address: "Agregar"
       my_addresses: "Ver mis direcciones"
