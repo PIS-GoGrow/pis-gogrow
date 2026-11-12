@@ -1,7 +1,7 @@
-import { render, screen, within } from "@testing-library/react"
+import { render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type React from "react"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import ProviderInsights from "./index"
 
@@ -34,7 +34,34 @@ vi.mock("@/layouts/app-layout", () => ({
   ),
 }))
 
-beforeEach(() => routerGet.mockClear())
+const fetchMock = vi.fn<typeof fetch>()
+const response = (data: unknown, status = 200) =>
+  new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  })
+
+function deferred() {
+  let resolve!: (value: Response) => void
+  const promise = new Promise<Response>((done) => {
+    resolve = done
+  })
+  return { promise, resolve }
+}
+
+beforeEach(() => {
+  routerGet.mockClear()
+  fetchMock.mockReset()
+  vi.stubGlobal("fetch", fetchMock)
+  const meta = document.createElement("meta")
+  meta.name = "csrf-token"
+  meta.content = "test-csrf-token"
+  document.head.appendChild(meta)
+})
+afterEach(() => {
+  vi.unstubAllGlobals()
+  document.querySelector('meta[name="csrf-token"]')?.remove()
+})
 
 describe("Provider Insights Page", () => {
   const defaultProps = {
@@ -65,6 +92,15 @@ describe("Provider Insights Page", () => {
     ],
   }
 
+  const conclusion = (from = defaultProps.from, to = defaultProps.to) => ({
+    success: true,
+    text: "La milanesa recibe buenas valoraciones.\n\nAlgunas reseñas mencionan demoras.",
+    period: { from, to },
+    review_count: 6,
+    generated_by_ai: true,
+    comments: ["comentario individual privado"],
+  })
+
   it("muestra el título, el volver al Inicio y el período elegido", () => {
     render(<ProviderInsights {...defaultProps} />)
 
@@ -79,7 +115,7 @@ describe("Provider Insights Page", () => {
     )
   })
 
-  it("muestra las métricas del período y la tarjeta generada por IA", () => {
+  it("muestra métricas y una tarjeta inicial sin conclusiones ni leyenda de IA", () => {
     render(<ProviderInsights {...defaultProps} />)
 
     expect(screen.getByText("84")).toBeInTheDocument()
@@ -88,7 +124,16 @@ describe("Provider Insights Page", () => {
     expect(screen.getByText("Platos")).toBeInTheDocument()
     expect(screen.getByText("4.7")).toBeInTheDocument()
     expect(screen.getByText("Valoración")).toBeInTheDocument()
-    expect(screen.getByText("Generado por IA")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Las conclusiones de las reseñas estarán disponibles cuando las generes.",
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    ).toBeEnabled()
+    expect(screen.queryByText("Generado por IA")).not.toBeInTheDocument()
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it("lista los platos más pedidos y los mejor valorados", () => {
@@ -163,7 +208,7 @@ describe("Provider Insights Page", () => {
     expect(routerGet).toHaveBeenCalledExactlyOnceWith(
       "/proveedor/inicio/hallazgos?desde=2026-09-01&hasta=2026-09-30",
       {},
-      { preserveScroll: true },
+      { preserveScroll: true, onFinish: expect.any(Function) as () => void },
     )
     expect(
       screen.queryByRole("button", { name: "Hoy" }),
@@ -187,7 +232,7 @@ describe("Provider Insights Page", () => {
     expect(routerGet).toHaveBeenCalledExactlyOnceWith(
       "/proveedor/inicio/hallazgos",
       {},
-      { preserveScroll: true },
+      { preserveScroll: true, onFinish: expect.any(Function) as () => void },
     )
   })
 
@@ -203,7 +248,7 @@ describe("Provider Insights Page", () => {
     expect(routerGet).toHaveBeenCalledExactlyOnceWith(
       "/proveedor/inicio/hallazgos?desde=2026-10-05&hasta=2026-10-12",
       {},
-      { preserveScroll: true },
+      { preserveScroll: true, onFinish: expect.any(Function) as () => void },
     )
   })
 
@@ -218,7 +263,172 @@ describe("Provider Insights Page", () => {
     expect(routerGet).toHaveBeenCalledExactlyOnceWith(
       "/proveedor/inicio/hallazgos?desde=2026-10-12&hasta=2026-10-12",
       {},
-      { preserveScroll: true },
+      { preserveScroll: true, onFinish: expect.any(Function) as () => void },
     )
+  })
+
+  it("genera solo con un clic y envía el período y el token CSRF", async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(response(conclusion()))
+    render(<ProviderInsights {...defaultProps} />)
+
+    expect(fetchMock).not.toHaveBeenCalled()
+    await user.click(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    )
+
+    await screen.findByText(/La milanesa recibe buenas valoraciones/)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      "/proveedor/inicio/hallazgos/conclusiones",
+    )
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        "X-CSRF-Token": "test-csrf-token",
+      },
+      body: JSON.stringify({ desde: "2026-10-01", hasta: "2026-10-31" }),
+    })
+    expect(screen.getByText("Generado por IA")).toBeInTheDocument()
+    expect(
+      screen.getByText(
+        "Período analizado: 01/10/26 – 31/10/26 · 6 reseñas consideradas",
+      ),
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByText("comentario individual privado"),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    ).toBeEnabled()
+  })
+
+  it("bloquea el doble clic mientras genera y permite regenerar al terminar", async () => {
+    const user = userEvent.setup()
+    const pending = deferred()
+    fetchMock
+      .mockReturnValueOnce(pending.promise)
+      .mockResolvedValue(response(conclusion()))
+    render(<ProviderInsights {...defaultProps} />)
+
+    await user.dblClick(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(
+      screen.getByRole("button", { name: "Generando conclusiones…" }),
+    ).toBeDisabled()
+
+    pending.resolve(response(conclusion()))
+    await screen.findByText("Generado por IA")
+    await user.click(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    )
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
+  })
+
+  it.each([
+    ["insufficient_data", 422, "Se necesitan al menos 5 reseñas válidas"],
+    ["rate_limited", 429, "Alcanzaste el límite temporal"],
+    ["invalid_request", 400, "El período seleccionado ya no es válido"],
+    ["invalid_period", 422, "El período seleccionado ya no es válido"],
+    ["timeout", 504, "La generación tardó demasiado"],
+    ["invalid_response", 502, "No pudimos generar las conclusiones"],
+    ["refused", 502, "No pudimos generar las conclusiones"],
+    ["configuration_missing", 503, "No pudimos generar las conclusiones"],
+    ["external_unavailable", 503, "No pudimos generar las conclusiones"],
+  ])("muestra un mensaje seguro para %s", async (code, status, message) => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(
+      response({ success: false, error: { code } }, status),
+    )
+    render(<ProviderInsights {...defaultProps} />)
+
+    await user.click(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    )
+
+    expect(await screen.findByText(new RegExp(message))).toBeInTheDocument()
+    expect(screen.queryByText("Generado por IA")).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    ).toBeEnabled()
+  })
+
+  it("rechaza una respuesta exitosa con un período distinto", async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(
+      response(conclusion("2026-09-01", "2026-09-30")),
+    )
+    render(<ProviderInsights {...defaultProps} />)
+
+    await user.click(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    )
+
+    expect(
+      await screen.findByText(/No pudimos generar las conclusiones/),
+    ).toBeInTheDocument()
+    expect(screen.queryByText("Generado por IA")).not.toBeInTheDocument()
+  })
+
+  it("borra las conclusiones al seleccionar otro período", async () => {
+    const user = userEvent.setup()
+    fetchMock.mockResolvedValue(response(conclusion()))
+    const { rerender } = render(<ProviderInsights {...defaultProps} />)
+    await user.click(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    )
+    await screen.findByText("Generado por IA")
+
+    await user.click(screen.getByRole("button", { name: "Período" }))
+    await user.click(screen.getByRole("button", { name: "Mes pasado" }))
+    expect(screen.queryByText("Generado por IA")).not.toBeInTheDocument()
+
+    rerender(
+      <ProviderInsights
+        {...defaultProps}
+        from="2026-09-01"
+        to="2026-09-30"
+        month_label="Septiembre 2026"
+      />,
+    )
+    expect(
+      screen.queryByText(/La milanesa recibe buenas valoraciones/),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    ).toBeEnabled()
+  })
+
+  it("ignora una respuesta tardía del período anterior", async () => {
+    const user = userEvent.setup()
+    const pending = deferred()
+    fetchMock.mockReturnValueOnce(pending.promise)
+    const { rerender } = render(<ProviderInsights {...defaultProps} />)
+    await user.click(
+      screen.getByRole("button", { name: "Generar conclusiones con IA" }),
+    )
+
+    await user.click(screen.getByRole("button", { name: "Período" }))
+    await user.click(screen.getByRole("button", { name: "Mes pasado" }))
+    expect(fetchMock.mock.calls[0][1]?.signal?.aborted).toBe(true)
+
+    rerender(
+      <ProviderInsights
+        {...defaultProps}
+        from="2026-09-01"
+        to="2026-09-30"
+        month_label="Septiembre 2026"
+      />,
+    )
+    pending.resolve(response(conclusion()))
+    expect(
+      screen.queryByText(/La milanesa recibe buenas valoraciones/),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByText("Generado por IA")).not.toBeInTheDocument()
   })
 })

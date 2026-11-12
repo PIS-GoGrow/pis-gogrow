@@ -78,19 +78,30 @@ class AdminBenefitUsageSummary
   end
 
   def call
-    return failure("invalid_payload") unless @payload.is_a?(AdminBenefitUsageAiPayload)
+    unless @payload.is_a?(AdminBenefitUsageAiPayload)
+      log_validation_failure("invalid_payload")
+      return failure("invalid_payload")
+    end
 
     payload_json = JSON.generate(@payload.to_h)
-    return failure("payload_too_large") if payload_json.bytesize > MAX_PAYLOAD_BYTES
+    if payload_json.bytesize > MAX_PAYLOAD_BYTES
+      log_validation_failure("payload_too_large")
+      return failure("payload_too_large")
+    end
 
     @client.create_summary(system: SYSTEM_PROMPT, payload_json:)
   rescue AdminBenefitUsageAiPayload::InsufficientData
     failure("insufficient_data")
   rescue ArgumentError, KeyError, JSON::GeneratorError
+    log_validation_failure("invalid_payload")
     failure("invalid_payload")
   end
 
   private
+
+  def log_validation_failure(reason)
+    AiDiagnosticLog.write(:warn, event: "benefit_usage.validation_failed", reason:)
+  end
 
   def failure(code)
     { ok: false, error: { code: } }
