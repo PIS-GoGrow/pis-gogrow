@@ -43,10 +43,11 @@ RSpec.describe "Pedido rechazado por falta de respuesta del proveedor", type: :s
 
   def at(hour, min) = Time.zone.local(monday.year, monday.month, monday.day, hour, min)
 
-  # Criterio 4: el empleado se entera por la notificación y lo ve en su historial.
+  # Criterio 4: el empleado se entera por el buzón de notificaciones y lo ve en su historial.
   it "le avisa al empleado y le muestra el pedido rechazado con el motivo" do
     sign_in consumer_user, role: :consumer
     visit_hydrated dashboard_path
+    open_notifications
 
     expect(page).to have_content("Tu pedido fue rechazado")
     expect(page).to have_content("porque no lo confirmó a tiempo")
@@ -98,11 +99,12 @@ RSpec.describe "Pedido rechazado por falta de respuesta del proveedor", type: :s
     expect(order.reload).to be_rejected
   end
 
-  # Privacidad entre pares: otro empleado no ve el aviso ni el pedido.
+  # Privacidad entre pares: otro empleado no tiene el aviso en su buzón ni ve el pedido.
   it "no le muestra el rechazo a otro empleado" do
     sign_in users(:other_consumer_user), role: :consumer
     visit_hydrated dashboard_path
     expect(page).to have_content("Hola,")
+    open_notifications
     expect(page).to have_no_content("Tu pedido fue rechazado")
 
     visit order_path(order)
