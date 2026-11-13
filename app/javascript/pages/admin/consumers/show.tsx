@@ -66,6 +66,7 @@ export default function Show({
 
       <PageContainer
         title={t(`${page}.title`)}
+        titleVariant="prominent"
         mobileCentered
         back={
           <Button variant="ghost" size="icon" asChild>
@@ -76,7 +77,7 @@ export default function Show({
         }
       >
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="gap-4 py-4">
+          <Card className="gap-4 py-4 lg:col-span-2">
             <CardContent className="grid gap-4 px-4">
               <div className="flex items-center gap-3">
                 <Avatar size="lg">
@@ -130,8 +131,6 @@ export default function Show({
               )}
             </CardContent>
           </Card>
-
-          <div></div>
 
           <Card className="bg-muted/50 gap-3 py-4">
             <CardHeader className="px-4">

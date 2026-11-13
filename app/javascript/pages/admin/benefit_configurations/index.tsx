@@ -94,7 +94,7 @@ export default function Index({
           <Button
             variant="ghost"
             size="icon"
-            className="size-9 rounded-[10px] p-0"
+            className="size-9 rounded-[10px] p-0 md:hidden"
             asChild
           >
             <Link

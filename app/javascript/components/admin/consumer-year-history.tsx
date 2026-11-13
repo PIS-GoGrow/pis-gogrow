@@ -48,7 +48,9 @@ export default function ConsumerYearHistory({
   return (
     <>
       <div className="flex items-center justify-between gap-4">
-        <HeadingSmall title={t(`${page}.history`)} />
+        <div className="shrink-0 whitespace-nowrap">
+          <HeadingSmall title={t(`${page}.history`)} />
+        </div>
 
         {!neverOrdered && (
           <Select
@@ -59,7 +61,11 @@ export default function ConsumerYearHistory({
               setSheetOpen(false)
             }}
           >
-            <SelectTrigger size="sm" aria-label={t(`${page}.year_label`)}>
+            <SelectTrigger
+              size="sm"
+              aria-label={t(`${page}.year_label`)}
+              className="w-28"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent align="end">

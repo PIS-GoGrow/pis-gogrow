@@ -121,7 +121,10 @@ export default function Index({
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title={t("pages.schedules.index.title")} />
 
-      <PageContainer title={t("pages.schedules.index.title")}>
+      <PageContainer
+        title={t("pages.schedules.index.title")}
+        titleVariant="prominent"
+      >
         <Tabs value={tab} onValueChange={setTab} className="gap-4">
           <TabsList className="w-full">
             <TabsTrigger value="week">

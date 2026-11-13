@@ -788,7 +788,7 @@
           "coming_soon": "Próximamente",
           "debts": {
             "empty": "Ningún empleado tiene saldos pendientes.",
-            "title": "Ranking deuda de empleados",
+            "title": "Saldos pendientes por empleado",
             "view": "Ver empleados con saldos pendientes"
           },
           "greeting": "Hola, %{name} 👋",

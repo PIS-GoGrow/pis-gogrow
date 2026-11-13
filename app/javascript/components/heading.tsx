@@ -14,6 +14,7 @@ export default function Heading({
   centered = false,
   mobileCentered = false,
   actionsCentered = false,
+  mobileBack = false,
 }: {
   title: string
   description?: string
@@ -26,11 +27,12 @@ export default function Heading({
   centered?: boolean
   mobileCentered?: boolean
   actionsCentered?: boolean
+  mobileBack?: boolean
 }) {
   return (
     <div className={cn("grid gap-4", compact ? "mb-4" : "mb-8")}>
       {back && !centered && !mobileCentered && (
-        <div className="flex">{back}</div>
+        <div className={cn("flex", mobileBack && "md:hidden")}>{back}</div>
       )}
 
       {back && mobileCentered && <div className="hidden md:flex">{back}</div>}

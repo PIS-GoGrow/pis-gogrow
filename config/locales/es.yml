@@ -720,7 +720,7 @@ es:
           view: "Ver pagos a proveedores"
           empty: "No hay pagos a proveedores de %{month}."
         debts:
-          title: "Ranking deuda de empleados"
+          title: "Saldos pendientes por empleado"
           view: "Ver empleados con saldos pendientes"
           empty: "Ningún empleado tiene saldos pendientes."
       reports:
