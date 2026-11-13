@@ -15,7 +15,7 @@ export function AddressOption({ option, selected, disabled = false }: Props) {
       className={cn(
         "flex min-h-[66px] cursor-pointer items-start gap-3 rounded-[10px] border p-3 transition-colors",
         selected
-          ? "border-primary border-[#171717] bg-[#F5F5F5] dark:border-neutral-200 dark:bg-neutral-800"
+          ? "border-primary bg-[#F5F5F5] dark:bg-neutral-800"
           : "bg-card border-[#E5E5E5] dark:border-neutral-700",
         disabled && "cursor-not-allowed opacity-50",
       )}
