@@ -40,7 +40,7 @@ export default function OptionChoices({
             name: neutralName(group.name),
           })}
         </h2>
-        <span className="text-[#737373] dark:text-neutral-400 shrink-0 text-xs">
+        <span className="shrink-0 text-xs text-[#737373] dark:text-neutral-400">
           {t(
             group.required
               ? "pages.consumer_dashboard.options.required"
@@ -49,7 +49,7 @@ export default function OptionChoices({
         </span>
       </div>
       {group.limit > 1 && (
-        <p className="text-[#737373] dark:text-neutral-400 mt-1 text-xs">
+        <p className="mt-1 text-xs text-[#737373] dark:text-neutral-400">
           {t("pages.consumer_dashboard.options.limit", { count: group.limit })}
         </p>
       )}

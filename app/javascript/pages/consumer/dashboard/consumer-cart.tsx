@@ -105,12 +105,14 @@ export function ConsumerCart({
           size="icon"
           disabled={processing}
           aria-label="Volver"
-          className="size-9 rounded-[10px] mb-2 -ml-2"
+          className="mb-2 -ml-2 size-9 rounded-[10px]"
         >
           <ChevronLeft aria-hidden="true" className="size-5" />
         </Button>
       </Link>
-      <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-50">{t("pages.cart.title")}</h1>
+      <h1 className="text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-50">
+        {t("pages.cart.title")}
+      </h1>
       {singleDeliveryDate && (
         <p className="mt-1 text-base text-[#737373] dark:text-neutral-400">
           {deliveryLabel(singleDeliveryDate)}
@@ -118,7 +120,9 @@ export function ConsumerCart({
       )}
       <section className="mt-6 pb-2">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">{t("pages.cart.delivery_address")}</h2>
+          <h2 className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">
+            {t("pages.cart.delivery_address")}
+          </h2>
           <AddAddressSheet disabled={customDisabled} onAdd={onAddAddress} />
         </div>
         <RadioGroup
@@ -194,13 +198,13 @@ export function ConsumerCart({
         <Spinner className="mx-auto my-3" />
       ) : (
         <>
-          <section className="mt-4 text-sm border-t border-[#898887]">
+          <section className="mt-4 border-t border-[#898887] text-sm">
             {cart.map((item, i) => {
               const line = pricing?.lines?.[i]?.subtotal ?? 0 // El caso de 0 nunca va a ocurrir
               return (
                 <div
                   key={item.cartId}
-                  className="py-3 border-b border-[#E5E5E5] last:border-b-0"
+                  className="border-b border-[#E5E5E5] py-3 last:border-b-0"
                 >
                   {!singleDeliveryDate && (
                     <p className="text-muted-foreground mb-1 text-xs">
@@ -231,7 +235,7 @@ export function ConsumerCart({
                           name: item.menu.name,
                         })}
                       />
-                      <span className="font-normal text-[#171717] dark:text-neutral-100 min-w-12 text-right">
+                      <span className="min-w-12 text-right font-normal text-[#171717] dark:text-neutral-100">
                         {formatMoney(line)}
                       </span>
                     </div>
@@ -247,7 +251,10 @@ export function ConsumerCart({
                   {item.menu.option_groups
                     .filter((group) => item.selections[group.id]?.length)
                     .map((group) => (
-                      <p key={group.id} className="text-muted-foreground mt-1.5 text-xs">
+                      <p
+                        key={group.id}
+                        className="text-muted-foreground mt-1.5 text-xs"
+                      >
                         {group.name}: {item.selections[group.id].join(", ")}
                       </p>
                     ))}
@@ -279,7 +286,7 @@ export function ConsumerCart({
               }
               onClick={confirm}
               className={cn(
-                "h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 hover:text-[#FAFAFA] disabled:opacity-100 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200 mt-2",
+                "mt-2 h-12 w-full rounded-[10px] bg-[#171717] text-base font-medium text-[#FAFAFA] hover:bg-[#171717]/90 hover:text-[#FAFAFA] disabled:opacity-100 dark:bg-neutral-50 dark:text-neutral-900 dark:hover:bg-neutral-200",
                 processing && "bg-muted hover:bg-muted",
               )}
             >

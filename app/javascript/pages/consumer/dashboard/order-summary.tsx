@@ -38,7 +38,9 @@ export function OrderSummary({
               <span className="text-muted-foreground text-sm">
                 {t("pages.cart.subtotal")}
               </span>
-              <span className="text-sm font-normal text-[#171717] dark:text-neutral-100">{formatMoney(subtotal ?? 0)}</span>
+              <span className="text-sm font-normal text-[#171717] dark:text-neutral-100">
+                {formatMoney(subtotal ?? 0)}
+              </span>
             </div>
             {tiers.length === 0 && <BenefitLine />}
             {tiers.map((tier, index) => (
@@ -100,7 +102,9 @@ export function BenefitLine({
   return (
     <div className={cn("flex justify-between text-sm", className)}>
       <span className="text-[#737373] dark:text-neutral-400">{label}</span>
-      <span className="text-[#15803D] font-normal">- {formatMoney(tier.discount)}</span>
+      <span className="font-normal text-[#15803D]">
+        - {formatMoney(tier.discount)}
+      </span>
     </div>
   )
 }

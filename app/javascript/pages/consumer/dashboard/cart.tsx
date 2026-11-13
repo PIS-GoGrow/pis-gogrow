@@ -174,7 +174,9 @@ export default function Cart({ benefit, addresses }: ConsumerDashboardCart) {
           />
         ) : (
           <ConsumerCart
-            specialBenefitIds={benefit?.specials?.map((special) => special.id) ?? []}
+            specialBenefitIds={
+              benefit?.specials?.map((special) => special.id) ?? []
+            }
             monthlyLimit={benefit?.monthly_limit ?? 0}
             monthlyRemaining={benefit?.monthly_remaining ?? 0}
             weeklyLimit={benefit?.weekly_limit ?? 0}

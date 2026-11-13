@@ -89,8 +89,11 @@ export default function MenuItem({
             </span>
           )}
         </div>
-        <p className="font-semibold leading-snug">
-          {name} <span className="font-normal text-muted-foreground whitespace-nowrap">| {formatMoney(price)}</span>
+        <p className="leading-snug font-semibold">
+          {name}{" "}
+          <span className="text-muted-foreground font-normal whitespace-nowrap">
+            | {formatMoney(price)}
+          </span>
         </p>
         {description && (
           <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">

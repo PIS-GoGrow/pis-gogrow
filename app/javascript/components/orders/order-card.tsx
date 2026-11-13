@@ -115,7 +115,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
               {!order.cancellable &&
                 order.status !== "confirmed" &&
                 order.cancellation_block_reason && (
-                  <p className="col-span-2 text-muted-foreground text-xs">
+                  <p className="text-muted-foreground col-span-2 text-xs">
                     {t(
                       `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
                     )}
@@ -126,7 +126,7 @@ export default function OrderCard({ order, section }: OrderCardProps) {
                 order.modification_block_reason &&
                 order.modification_block_reason !==
                   order.cancellation_block_reason && (
-                  <p className="col-span-2 text-muted-foreground text-xs">
+                  <p className="text-muted-foreground col-span-2 text-xs">
                     {t(
                       `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
                     )}

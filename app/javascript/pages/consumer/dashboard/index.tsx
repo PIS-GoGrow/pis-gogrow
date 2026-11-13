@@ -139,7 +139,10 @@ export default function Index({
             item.cartId === cartId
               ? {
                   ...item,
-                  quantity: Math.min(item.remaining, item.quantity + availableQuantity),
+                  quantity: Math.min(
+                    item.remaining,
+                    item.quantity + availableQuantity,
+                  ),
                 }
               : item,
           )
@@ -166,7 +169,10 @@ export default function Index({
             item.cartId === cartId
               ? {
                   ...item,
-                  quantity: Math.min(item.remaining, item.quantity + availableQuantity),
+                  quantity: Math.min(
+                    item.remaining,
+                    item.quantity + availableQuantity,
+                  ),
                 }
               : item,
           )

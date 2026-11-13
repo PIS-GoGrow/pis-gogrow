@@ -36,7 +36,11 @@ export function QuantityInput({
     <div
       className={cn(
         "bg-secondary text-secondary-foreground flex w-fit items-center rounded-lg",
-        size === "compact" ? "h-7 text-xs" : size === "sm" ? "h-8 text-sm" : "h-12",
+        size === "compact"
+          ? "h-7 text-xs"
+          : size === "sm"
+            ? "h-8 text-sm"
+            : "h-12",
       )}
     >
       <Button
@@ -54,12 +58,23 @@ export function QuantityInput({
         )}
       >
         {removing ? (
-          <Trash2 aria-hidden="true" className={size === "compact" ? "size-3" : "size-3.5"} />
+          <Trash2
+            aria-hidden="true"
+            className={size === "compact" ? "size-3" : "size-3.5"}
+          />
         ) : (
-          <Minus aria-hidden="true" className={size === "compact" ? "size-2.5" : "size-3"} />
+          <Minus
+            aria-hidden="true"
+            className={size === "compact" ? "size-2.5" : "size-3"}
+          />
         )}
       </Button>
-      <span className={cn("text-center", size === "compact" ? "min-w-4 px-0.5 font-medium" : "min-w-6")}>
+      <span
+        className={cn(
+          "text-center",
+          size === "compact" ? "min-w-4 px-0.5 font-medium" : "min-w-6",
+        )}
+      >
         {value}
       </span>
       <Button
@@ -74,7 +89,10 @@ export function QuantityInput({
           size === "compact" && "size-7 px-1.5",
         )}
       >
-        <Plus aria-hidden="true" className={size === "compact" ? "size-2.5" : "size-3"} />
+        <Plus
+          aria-hidden="true"
+          className={size === "compact" ? "size-2.5" : "size-3"}
+        />
       </Button>
     </div>
   )

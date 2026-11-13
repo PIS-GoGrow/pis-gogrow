@@ -213,7 +213,7 @@ export function DishDetail({
         size="icon"
         onClick={back}
         aria-label="Volver"
-        className="size-9 rounded-[10px] mb-2 -ml-2"
+        className="mb-2 -ml-2 size-9 rounded-[10px]"
       >
         <ChevronLeft aria-hidden="true" className="size-5" />
       </Button>
@@ -223,13 +223,17 @@ export function DishDetail({
         </p>
         {badge ?? (inCart > 0 && <AddedBadge />)}
       </div>
-      <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-50">{item.menu.name}</h1>
+      <h1 className="mt-1 text-2xl font-bold tracking-tight text-[#0A0A0A] dark:text-neutral-50">
+        {item.menu.name}
+      </h1>
       {item.menu.description && (
-        <p className="mt-1 text-base text-[#737373] dark:text-neutral-400 leading-normal">
+        <p className="mt-1 text-base leading-normal text-[#737373] dark:text-neutral-400">
           {item.menu.description}
         </p>
       )}
-      <p className="mt-2 text-xl font-bold text-[#0A0A0A] dark:text-neutral-100">{formatMoney(item.menu.price)}</p>
+      <p className="mt-2 text-xl font-bold text-[#0A0A0A] dark:text-neutral-100">
+        {formatMoney(item.menu.price)}
+      </p>
       {item.orders_closed && (
         <p className="text-destructive mt-3 text-sm">
           {t("pages.consumer_dashboard.index.orders_closed")}
@@ -247,10 +251,12 @@ export function DishDetail({
       ))}
       <section className="border-border border-b py-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">{t("pages.consumer_dashboard.index.reviews.title")}</h2>
+          <h2 className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">
+            {t("pages.consumer_dashboard.index.reviews.title")}
+          </h2>
           {ratingCount > 0 && ratingAverage !== null && (
-            <span className="text-sm font-semibold text-[#0A0A0A] dark:text-neutral-100 flex items-center">
-              <Star className="fill-[#0A0A0A] text-[#0A0A0A] dark:fill-neutral-100 dark:text-neutral-100 mr-1 inline size-4" />
+            <span className="flex items-center text-sm font-semibold text-[#0A0A0A] dark:text-neutral-100">
+              <Star className="mr-1 inline size-4 fill-[#0A0A0A] text-[#0A0A0A] dark:fill-neutral-100 dark:text-neutral-100" />
               {ratingAverage.toFixed(1)} ({ratingCount})
             </span>
           )}
@@ -260,7 +266,7 @@ export function DishDetail({
             {reviews.map((review) => (
               <article
                 key={review.id}
-                className="border-[#E5E5E5] bg-[#F5F5F5] dark:border-neutral-700 dark:bg-neutral-800 flex min-h-[136px] w-[280px] shrink-0 flex-col justify-between rounded-lg border p-4"
+                className="flex min-h-[136px] w-[280px] shrink-0 flex-col justify-between rounded-lg border border-[#E5E5E5] bg-[#F5F5F5] p-4 dark:border-neutral-700 dark:bg-neutral-800"
               >
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -280,19 +286,24 @@ export function DishDetail({
                   </p>
                 </div>
                 {review.description && (
-                  <p className="text-xs text-[#0A0A0A] dark:text-neutral-200 line-clamp-3 leading-snug">{review.description}</p>
+                  <p className="line-clamp-3 text-xs leading-snug text-[#0A0A0A] dark:text-neutral-200">
+                    {review.description}
+                  </p>
                 )}
               </article>
             ))}
           </div>
         ) : (
-          <p className="text-[#737373] dark:text-neutral-400 mt-3 text-sm">
+          <p className="mt-3 text-sm text-[#737373] dark:text-neutral-400">
             {t("pages.consumer_dashboard.index.reviews.empty")}
           </p>
         )}
       </section>
       <section className="border-border border-b py-5">
-        <label htmlFor="notes" className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100">
+        <label
+          htmlFor="notes"
+          className="text-base font-semibold text-[#0A0A0A] dark:text-neutral-100"
+        >
           Notas para este plato
         </label>
         <Textarea
@@ -301,9 +312,9 @@ export function DishDetail({
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Escribí las notas que necesites..."
-          className="mt-3 field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-base text-[#737373] dark:text-neutral-300 placeholder:text-[#737373]"
+          className="mt-3 field-sizing-fixed h-20 w-full max-w-full min-w-0 resize-none rounded-lg p-3 text-base text-[#737373] placeholder:text-[#737373] dark:text-neutral-300"
         />
-        <p className="text-[#737373] dark:text-neutral-400 text-right text-sm mt-1">
+        <p className="mt-1 text-right text-sm text-[#737373] dark:text-neutral-400">
           {notes.length}/140
         </p>
       </section>
@@ -354,13 +365,16 @@ export function DishDetail({
           specialBenefitIds={benefit.specials.map((special) => special.id)}
           className="pt-0"
         />
-        {!item.sold_out && !isPast && maxQuantity > 0 && quantity >= maxQuantity && (
-          <p role="status" className="text-muted-foreground text-sm">
-            {t("pages.consumer_dashboard.detail.stock_limit", {
-              count: maxQuantity,
-            })}
-          </p>
-        )}
+        {!item.sold_out &&
+          !isPast &&
+          maxQuantity > 0 &&
+          quantity >= maxQuantity && (
+            <p role="status" className="text-muted-foreground text-sm">
+              {t("pages.consumer_dashboard.detail.stock_limit", {
+                count: maxQuantity,
+              })}
+            </p>
+          )}
         <div className="flex gap-2">
           <QuantityInput
             value={quantity}

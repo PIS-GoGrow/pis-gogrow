@@ -208,7 +208,7 @@ export default function Show({ order, historical }: ConsumerOrdersShow) {
                 showCancelAction &&
                 order.status !== "confirmed" &&
                 order.cancellation_block_reason && (
-                  <p className="col-span-full text-muted-foreground text-xs">
+                  <p className="text-muted-foreground col-span-full text-xs">
                     {t(
                       `pages.orders.index.cannot_cancel.${order.cancellation_block_reason}`,
                     )}
@@ -220,7 +220,7 @@ export default function Show({ order, historical }: ConsumerOrdersShow) {
                 order.modification_block_reason &&
                 order.modification_block_reason !==
                   order.cancellation_block_reason && (
-                  <p className="col-span-full text-muted-foreground text-xs">
+                  <p className="text-muted-foreground col-span-full text-xs">
                     {t(
                       `pages.orders.show.cannot_edit.${order.modification_block_reason}`,
                     )}
