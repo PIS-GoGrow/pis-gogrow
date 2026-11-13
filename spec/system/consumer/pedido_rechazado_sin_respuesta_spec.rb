@@ -16,8 +16,9 @@ RSpec.describe "Pedido rechazado por falta de respuesta del proveedor", type: :s
   let(:endulzate) { providers(:endulzate) }
   let(:tarta) { endulzate.menus.create!(name: "Tarta de verdura", description: "Con ensalada", price: 280) }
   # Un lunes futuro: el servidor lo toma como "hoy" y el navegador, que no viaja
-  # en el tiempo, no lo marca como fecha pasada.
-  let(:monday) { Date.current.next_week(:monday) }
+  # en el tiempo, no lo marca como fecha pasada. Una semana más allá del próximo
+  # para no caer nunca en hoy + 3, la fecha de schedules(:future) de la milanesa.
+  let(:monday) { Date.current.next_week(:monday) + 1.week }
   let!(:order) do
     Order.create!(
       consumer: consumers(:one), schedule: milanesa.schedules.create!(date: monday), amount: 1,

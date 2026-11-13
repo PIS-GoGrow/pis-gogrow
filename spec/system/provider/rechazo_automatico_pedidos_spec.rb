@@ -23,8 +23,9 @@ RSpec.describe "Rechazo automático de pedidos sin respuesta del proveedor", typ
   let(:provider) { providers(:tuviandita) }
   let(:milanesa) { menus(:milanesa) }
   # Un lunes futuro: el servidor lo toma como "hoy" y el navegador, que no viaja
-  # en el tiempo, no lo marca como fecha pasada.
-  let(:monday) { Date.current.next_week(:monday) }
+  # en el tiempo, no lo marca como fecha pasada. Una semana más allá del próximo
+  # para no caer nunca en hoy + 3, la fecha de schedules(:future) de la milanesa.
+  let(:monday) { Date.current.next_week(:monday) + 1.week }
   let(:message) { I18n.t("validations.order_response_window_closed") }
 
   around do |example|
