@@ -10,7 +10,7 @@ RSpec.describe Order, type: :model do
   it do
     expect(subject).to define_enum_for(:rejection_reason)
       .with_values(out_of_stock: 0, duplicate_order: 1, customer_request: 2, order_error: 3, other: 4, dish_modified: 5,
-                    dish_deleted: 6, dish_unpublished: 7)
+                    dish_deleted: 6, dish_unpublished: 7, no_response: 8)
       .with_prefix(:rejection_reason)
   end
 
@@ -682,6 +682,44 @@ RSpec.describe Order, type: :model do
     end
   end
 
+  describe "#reject_unanswered!" do
+    let(:order) { orders(:upcoming_pending_today) }
+
+    before { order.provider.update!(order_deadline: "12:00") }
+
+    it "rejects a pending order for today once the response deadline passed" do
+      travel_to Date.current.in_time_zone.change(hour: 12, min: 30)
+
+      expect(order.reject_unanswered!).to be(true)
+      expect(order.reload).to be_rejected
+      expect(order).to be_rejection_reason_no_response
+      expect(order.rejected_at).to be_present
+      expect(order.rejected_by).to be_nil
+    end
+
+    it "leaves the order pending before the response deadline" do
+      travel_to Date.current.in_time_zone.change(hour: 12, min: 29)
+
+      expect(order.reject_unanswered!).to be(false)
+      expect(order.reload).to be_pending
+    end
+
+    it "leaves an order the provider already confirmed" do
+      order.update!(status: :confirmed)
+      travel_to Date.current.in_time_zone.change(hour: 12, min: 30)
+
+      expect(order.reject_unanswered!).to be(false)
+      expect(order.reload).to be_confirmed
+    end
+
+    it "notifies the consumer that the provider did not answer in time" do
+      travel_to Date.current.in_time_zone.change(hour: 12, min: 30)
+
+      expect { order.reject_unanswered! }.to change(Notification, :count).by(1)
+      expect(Notification.order(:created_at).last.description).to include("porque no lo confirmó a tiempo")
+    end
+  end
+
   describe "#decide" do
     it "confirms a pending order and returns true" do
       order = orders(:upcoming_pending_today)
@@ -778,6 +816,42 @@ RSpec.describe Order, type: :model do
 
       expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
       expect(order.errors[:base]).to eq([ I18n.t("validations.order_not_rejectable") ])
+      expect(order.reload).to be_confirmed
+    end
+
+    context "when the provider's response deadline has passed" do
+      let(:order) { orders(:upcoming_pending_today) }
+
+      before do
+        order.provider.update!(order_deadline: "12:00")
+        travel_to Date.current.in_time_zone.change(hour: 12, min: 30)
+      end
+
+      it "refuses to confirm a pending order for today" do
+        expect(order.decide(:confirmed)).to be(false)
+        expect(order.errors[:base]).to eq([ I18n.t("validations.order_response_window_closed") ])
+        expect(order.reload).to be_pending
+      end
+
+      it "refuses to reject a pending order for today" do
+        expect(order.decide(:rejected, reason: :out_of_stock)).to be(false)
+        expect(order.reload).to be_pending
+      end
+
+      it "still rejects a confirmed order for today" do
+        order.update!(status: :confirmed)
+
+        expect(order.decide(:rejected, reason: :out_of_stock)).to be(true)
+        expect(order.reload).to be_rejected
+      end
+    end
+
+    it "confirms a pending order for today within the half hour after the deadline" do
+      order = orders(:upcoming_pending_today)
+      order.provider.update!(order_deadline: "12:00")
+      travel_to Date.current.in_time_zone.change(hour: 12, min: 29)
+
+      expect(order.decide(:confirmed)).to be(true)
       expect(order.reload).to be_confirmed
     end
 

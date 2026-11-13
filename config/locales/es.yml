@@ -248,6 +248,7 @@ es:
     order_not_cancellable: "Este pedido ya no se puede cancelar."
     order_not_pending: "Este pedido ya fue resuelto, así que no se puede confirmar ni rechazar."
     order_not_rejectable: "No se puede rechazar un pedido confirmado cuya fecha de entrega ya pasó."
+    order_response_window_closed: "Pasó la hora límite para responder este pedido, así que se rechaza automáticamente."
     invalid_code: "Código incorrecto."
     invalid_email: "Ingresá un correo válido."
     password_required: "Ingresá una contraseña."
@@ -322,6 +323,7 @@ es:
         dish_modified: "porque el plato fue modificado"
         dish_deleted: "porque el plato fue eliminado"
         dish_unpublished: "porque el plato fue retirado del menú de ese día"
+        no_response: "porque no lo confirmó a tiempo"
     order_deadline_reminder:
       title: "Recordatorio de pedido"
       description: "¡No te quedes sin almuerzo! Todavía no pediste tu vianda de hoy."
@@ -1446,6 +1448,7 @@ es:
         dish_modified: "Plato modificado"
         dish_deleted: "Plato eliminado"
         dish_unpublished: "Plato retirado del menú"
+        no_response: "Sin respuesta del proveedor"
       statuses:
         pending: "Por revisar"
         confirmed: "Confirmado"
