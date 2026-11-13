@@ -29,11 +29,8 @@ RSpec.describe "Perfil y preferencias de notificación de RRHH", type: :system d
   def open_profile(user = admin_user)
     sign_in user, role: :admin
     visit admin_account_path
-    click_link "Perfil y Apariencia"
-    # Esperar a que cargue la pantalla de preferencias: mientras tanto, en Cuenta
-    # "Perfil" matchea (por substring) el propio link "Perfil y Apariencia".
-    expect(page).to have_current_path(admin_preferences_path)
-    click_link href: settings_profile_path
+    click_link "Perfil"
+    expect(page).to have_current_path(settings_profile_path)
     expect(page).to have_content("Información del perfil")
   end
 
