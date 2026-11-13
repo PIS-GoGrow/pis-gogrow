@@ -22,6 +22,8 @@ export function benefitUsageFixture(month = "2026-10"): BenefitUsageStats {
     participation: {
       percent: 72,
       eligible_employees: 25,
+      eligible_with_confirmed_orders: 18,
+      eligible_without_confirmed_orders: 7,
       eligible_without_orders: 7,
     },
     employee_activity: {

@@ -13,7 +13,8 @@ RSpec.describe AdminBenefitUsageSummary do
         company_subsidy_amount: BigDecimal("1500.25"), monthly_pending_reserved_meals: 1,
         monthly_quota_meals: nil, monthly_available_meals: nil
       },
-      employees: { participation_percent: nil, eligibility: { eligible: 0 }, eligible_without_orders: nil },
+      employees: { participation_percent: nil, eligibility: { eligible: 0 },
+                   known_eligible_with_confirmed_orders: 0, eligible_without_orders: nil },
       trends: { months: [
         { month: Date.new(2032, 4, 1), complete: false, confirmed_orders: 2, confirmed_meals: 3,
           monthly_subsidized_meals: 2, company_subsidy_amount: BigDecimal("1500.25"),
@@ -56,6 +57,10 @@ RSpec.describe AdminBenefitUsageSummary do
     expect(prompt).to include("difference_points", "puntos porcentuales", "No recalcules")
     expect(prompt).to include("No califiques automáticamente un aumento como positivo", "No atribuyas resultados")
     expect(prompt).to include("sin pedidos confirmados", "no realizaron ningún pedido", "mes actual permanece abierto")
+    expect(prompt).to include("participación cuenta exclusivamente elegibles con al menos un pedido confirmado",
+                              "solo tienen pedidos pendientes no participan", "eligible_without_confirmed_orders")
+    expect(prompt).to include("nunca deduzcas participantes restando eligible_without_orders de eligible_employees")
+    expect(prompt).to include("Antes de declarar una inconsistencia", "Si faltan datos para comprobarla")
   end
 
   it "returns a controlled error for oversized payloads without sending them" do

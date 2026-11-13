@@ -15,7 +15,8 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
         monthly_quota_meals: nil, monthly_available_meals: nil
       },
       employees: {
-        participation_percent: nil, eligibility: { eligible: 0 }, eligible_without_orders: nil,
+        participation_percent: nil, eligibility: { eligible: 0 },
+        known_eligible_with_confirmed_orders: 0, eligible_without_orders: nil,
         current_employees: 2, current_employees_with_confirmed_orders: 1
       },
       trends: { months: [
@@ -487,6 +488,10 @@ RSpec.describe "Admin::BenefitUsage", type: :request do
         expect(response.parsed_body.dig("consumption", "confirmed_meals")).to eq(meals)
         expect(response.parsed_body.dig("consumption", "monthly_subsidized_meals")).to eq(meals)
         expect(response.parsed_body.dig("consumption", "company_subsidy_amount")).to eq(subsidy)
+        expect(response.parsed_body.fetch("participation").keys).to contain_exactly(
+          "percent", "eligible_employees", "eligible_with_confirmed_orders",
+          "eligible_without_confirmed_orders", "eligible_without_orders"
+        )
         expect(response.parsed_body.dig("trends", 2)).to include("confirmed_meals" => prior_meals,
                                                                 "company_subsidy_amount" => prior_subsidy)
         expect(response.body).not_to include("PRIVATE-", "@example.test", "PRIVATE-ORDER-NOTES")

@@ -49,6 +49,7 @@ class AdminBenefitUsageAiPayload
     employees = @stats.fetch(:employees)
     trusted_roster = !closed && !benefits.fetch(:monthly_quota_meals).nil?
     eligible = integer(employees.fetch(:eligibility).fetch(:eligible)) if trusted_roster
+    eligible_with_confirmed = integer(employees.fetch(:known_eligible_with_confirmed_orders)) if trusted_roster
 
     consumption = {
       confirmed_orders: integer(orders.fetch(:confirmed_orders)),
@@ -83,6 +84,8 @@ class AdminBenefitUsageAiPayload
       participation: {
         percent: (percent(employees.fetch(:participation_percent)) if trusted_roster),
         eligible_employees: eligible,
+        eligible_with_confirmed_orders: eligible_with_confirmed,
+        eligible_without_confirmed_orders: (eligible - eligible_with_confirmed if eligible && eligible_with_confirmed),
         eligible_without_orders: (integer(employees.fetch(:eligible_without_orders)) if trusted_roster)
       },
       trends: trend_months(months),

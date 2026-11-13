@@ -141,28 +141,38 @@ export default function AdminDashboard({
                 />
               </div>
 
-              <Button
-                disabled={consumption === null}
-                onClick={() => {
-                  setProviderId(null)
-                  setDetailOpen(true)
-                }}
-                className="w-full bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
-              >
-                {t(`${page}.benefit.view_detail`)}
-              </Button>
-              <Button asChild variant="link" className="w-full md:hidden">
-                <Link
-                  href={adminBenefitUsage.analysis({ query: { month } }).url}
+              <div className="grid gap-3">
+                <Button
+                  disabled={consumption === null}
+                  onClick={() => {
+                    setProviderId(null)
+                    setDetailOpen(true)
+                  }}
+                  className="w-full bg-neutral-900 text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
                 >
-                  {t("benefit_usage.ui.analysis_link")}
-                </Link>
-              </Button>
-              <Button asChild variant="link" className="w-full">
-                <Link href={adminReports.index().url}>
-                  {t(`${page}.benefit.reports_link`)}
-                </Link>
-              </Button>
+                  {t(`${page}.benefit.view_detail`)}
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50 md:hidden dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-700"
+                >
+                  <Link
+                    href={adminBenefitUsage.analysis({ query: { month } }).url}
+                  >
+                    {t("benefit_usage.ui.analysis_link")}
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-50 dark:hover:bg-neutral-700"
+                >
+                  <Link href={adminReports.index().url}>
+                    {t(`${page}.benefit.reports_link`)}
+                  </Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
 

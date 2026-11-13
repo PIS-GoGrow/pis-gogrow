@@ -27,7 +27,8 @@ RSpec.describe AdminBenefitUsageAiPayload do
         monthly_quota_meals: 20, monthly_available_meals: 16, monthly_unused_closed_meals: nil
       },
       employees: {
-        participation_percent: 50.0, eligibility: { eligible: 4 }, eligible_without_orders: 1,
+        participation_percent: 50.0, eligibility: { eligible: 4 }, known_eligible_with_confirmed_orders: 2,
+        eligible_without_orders: 1,
         current_employees: 5
       },
       trends: { months: }, anomalies: [], warnings: []
@@ -41,13 +42,48 @@ RSpec.describe AdminBenefitUsageAiPayload do
       confirmed_orders: 2, confirmed_meals: 3, monthly_subsidized_meals: 2,
       confirmed_meals_without_monthly_subsidy: 1, company_subsidy_amount: "1500.25"
     )
-    expect(payload[:participation]).to eq(percent: nil, eligible_employees: nil, eligible_without_orders: nil)
+    expect(payload[:participation]).to eq(percent: nil, eligible_employees: nil,
+                                          eligible_with_confirmed_orders: nil,
+                                          eligible_without_confirmed_orders: nil, eligible_without_orders: nil)
   end
 
   it "includes participation only for an open month with a trusted roster" do
     stats[:trends][:months].last[:complete] = false
 
-    expect(payload[:participation]).to eq(percent: 50.0, eligible_employees: 4, eligible_without_orders: 1)
+    expect(payload[:participation]).to eq(percent: 50.0, eligible_employees: 4,
+                                          eligible_with_confirmed_orders: 2,
+                                          eligible_without_confirmed_orders: 2, eligible_without_orders: 1)
+  end
+
+  it "keeps zero, full participation, and an empty eligible roster distinct" do
+    stats[:trends][:months].last[:complete] = false
+
+    stats[:employees][:known_eligible_with_confirmed_orders] = 4
+    stats[:employees][:participation_percent] = 100.0
+    expect(payload[:participation]).to include(eligible_with_confirmed_orders: 4,
+                                               eligible_without_confirmed_orders: 0)
+
+    stats[:employees][:known_eligible_with_confirmed_orders] = 0
+    stats[:employees][:participation_percent] = 0.0
+    expect(described_class.new(stats:).to_h[:participation]).to include(eligible_with_confirmed_orders: 0,
+                                                                        eligible_without_confirmed_orders: 4)
+
+    stats[:employees][:eligibility][:eligible] = 0
+    stats[:employees][:eligible_without_orders] = 0
+    stats[:employees][:participation_percent] = nil
+    expect(described_class.new(stats:).to_h[:participation]).to eq(percent: nil, eligible_employees: 0,
+                                                                   eligible_with_confirmed_orders: 0,
+                                                                   eligible_without_confirmed_orders: 0,
+                                                                   eligible_without_orders: 0)
+  end
+
+  it "keeps the complement unknown when the confirmed count is unknown" do
+    stats[:trends][:months].last[:complete] = false
+    stats[:employees][:known_eligible_with_confirmed_orders] = nil
+
+    expect(payload[:participation]).to include(eligible_employees: 4,
+                                               eligible_with_confirmed_orders: nil,
+                                               eligible_without_confirmed_orders: nil)
   end
 
   it "includes only the existing aggregate monthly capacity for an open month" do
@@ -117,6 +153,8 @@ RSpec.describe AdminBenefitUsageAiPayload do
     expect(parsed.dig("consumption", "monthly_subsidized_meals")).to be_nil
     expect(parsed.dig("consumption", "company_subsidy_amount")).to be_nil
     expect(parsed.dig("participation", "eligible_employees")).to be_nil
+    expect(parsed.dig("participation", "eligible_with_confirmed_orders")).to be_nil
+    expect(parsed.dig("participation", "eligible_without_confirmed_orders")).to be_nil
     expect(parsed.dig("participation", "percent")).to be_nil
     expect(parsed.dig("trends", 3, "monthly_subsidized_meals")).to be_nil
   end
